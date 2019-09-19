@@ -23,11 +23,16 @@ module("bpnodedef", package.seeall, bpcommon.rescope(bpschema))
 -- locals = {} are node-local variables to use in code
 
 NodeTypes = {
+	["Init"] = EVENT {
+		pins = {},
+		code = [[]]
+	},
 	["Think"] = EVENT {
 		pins = {
 			{ PD_Out, PN_Number, "dt" },
 			{ PD_Out, PN_Number, "curTime" },
 		},
+		hook = "Think",
 		code = [[
 			#2 = FrameTime() 
 			#3 = CurTime()
@@ -40,6 +45,7 @@ NodeTypes = {
 			{ PD_Out, PN_Number, "dt" },
 			{ PD_Out, PN_Number, "curTime" },
 		},
+		hook = "PlayerTick",
 		code = [[
 			#2 = arg[1] 
 			#3 = arg[2] 
@@ -52,6 +58,7 @@ NodeTypes = {
 			{ PD_Out, PN_Player, "player" },
 			{ PD_Out, PN_Bool, "transition" },
 		},
+		hook = "PlayerSpawn",
 		code = [[
 			#2 = arg[1] 
 			#3 = arg[2] 
@@ -62,6 +69,7 @@ NodeTypes = {
 			{ PD_Out, PN_Player, "player" },
 			{ PD_Out, PN_Entity, "entity" },
 		},
+		hook = "PlayerUse",
 		code = [[
 			#2 = arg[1] 
 			#3 = arg[2] 
@@ -73,6 +81,7 @@ NodeTypes = {
 			{ PD_Out, PN_String, "text" },
 			{ PD_Out, PN_Bool, "teamChat" },
 		},
+		hook = "PlayerSay",
 		code = [[
 			#2 = arg[1] 
 			#3 = arg[2] 

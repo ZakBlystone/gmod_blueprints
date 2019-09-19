@@ -5,6 +5,44 @@ module("bpnet", package.seeall)
 if SERVER then
 
 	local ServerGraph = bpgraph.New()
+	ServerModule = ServerModule or nil
+
+	local function HookModule( bp )
+
+		for k,v in pairs(bp.events) do
+			if not v.hook then continue end
+			local function safeCall(...) bp.call(k, ...) end
+			hook.Add(v.hook, "__bphook_" .. v.graphID .. "_" .. v.nodeID, safeCall)
+		end
+
+	end
+
+	local function UnhookModule( bp )
+
+		for k,v in pairs(bp.events) do
+			if not v.hook then continue end
+			hook.Remove(v.hook, "__bphook_" .. v.graphID .. "_" .. v.nodeID)
+		end		
+
+	end
+
+	local function SetModule( bp )
+
+		if ServerModule then UnhookModule(ServerModule) end
+		ServerModule = bp
+
+		HookModule(bp)
+
+		bp.onError = function( msg, graphID, nodeID )
+
+			UnhookModule(bp)
+			print("BLUEPRINT ERROR: " .. tostring(msg) .. " at " .. tostring(graphID) .. "[" .. tostring(nodeID) .. "]")
+
+		end
+
+		if bp.events["Init"] then bp.call("Init") end
+
+	end
 
 	local function LoadGraphFromString( graph, str )
 		local inStream = bpdata.InStream()
@@ -33,8 +71,8 @@ if SERVER then
 			LoadGraphFromString( ServerGraph, graphdata )
 
 			local compiled = bpcompile.Compile( ServerGraph )
+			SetModule(compiled)
 			print("Executing blueprint on server...")
-			RunString(compiled)
 
 		elseif cmd == 2 then
 

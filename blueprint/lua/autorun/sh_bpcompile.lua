@@ -289,13 +289,21 @@ function CompileNodeSingle(cs, nodeID)
 
 	local code = ntype.code
 	code = string.Replace(code, "\t", "")
-	if ntype.type == NT_Event then
-		code = string.Replace(code, "\n", "\n\t")
-	else
-		code = string.Replace(code, "\n", "\n\t\t")
+	code = CompileVars(cs, code, inVars, outVars, nodeID, ntype)
+
+	if cs.ilp and ntype.type == NT_Function or ntype.type == NT_Special then
+		cs.emit("__ilp = __ilp + 1 if __ilp > " .. cs.ilpmax .. " then __ilptrip = true goto __terminus end")
 	end
 
-	cs.emit(CompileVars(cs, code, inVars, outVars, nodeID, ntype))
+	if cs.debug then
+		cs.emit("__dbgnode = " .. nodeID)
+	end
+
+	for _, l in pairs(string.Explode("\n", code)) do
+		cs.emit(l)
+	end
+
+	--cs.emit("\t" .. code)
 	cs.finish()
 
 	popi()
@@ -380,11 +388,11 @@ function CompileNodeFunction(cs, nodeID)
 		if emitted[pure] then return end
 		emitted[pure] = true
 		printi(cs.graph.nodes[pure].nodeType.name)
-		cs.emit( "\t" .. table.concat( cs.getContext( CTX_SingleNode .. pure ), "\n\t" ) )
+		cs.emitContext( CTX_SingleNode .. pure, 1 )
 	end)
 	popi()
 
-	cs.emit( "\t" .. table.concat( cs.getContext( CTX_SingleNode .. nodeID ), "\n\t" ) )
+	cs.emitContext( CTX_SingleNode .. nodeID, 1 )
 
 	popi()
 
@@ -477,7 +485,11 @@ function CompileGraphEntry(cs)
 
 	cs.emit("\nlocal function graph_" .. cs.graph.id .. "_entry( ip )\n")
 
-	cs.emit( "\t" .. table.concat( cs.getContext( CTX_Vars .. cs.graph.id ), "\n\t" ) )
+	if cs.debug then
+		cs.emit( "\t__dbggraph = " .. cs.graph.id)
+	end
+
+	cs.emitContext( CTX_Vars .. cs.graph.id, 1 )
 
 	cs.emit( "\n\tlocal cs = {}" )
 	cs.emit( "\tlocal function pushjmp(i) table.insert(cs, 1, i) end")
@@ -488,11 +500,11 @@ function CompileGraphEntry(cs)
 
 	cs.emit( "\n\t::jumpto::" )
 
-	cs.emit( "\n\t" .. table.concat( cs.getContext( CTX_JumpTable .. cs.graph.id ), "\n\t" ) )
+	cs.emitContext( CTX_JumpTable .. cs.graph.id, 1 )
 
 	local code = cs.getFilteredContexts("functionnode")
-	for _, v in pairs(code) do
-		cs.emit( "\n\t" .. table.concat( v, "\n\t" ) )
+	for k, _ in pairs(code) do
+		cs.emitContext( k, 1 )
 	end
 
 	cs.emit("\n\t::__terminus::\n")
@@ -508,26 +520,72 @@ function CompileCodeSegment(cs)
 
 	cs.begin(CTX_Code)
 
-	cs.emit( table.concat( cs.getContext( CTX_MetaTables ), "\n" ) )
+	cs.emitContext( CTX_MetaTables )
 
-	cs.emit( "\n" .. table.concat( cs.getContext( CTX_Vars .. "global" ), "\n" ) )
+	if cs.debug then
+		cs.emit( "local __dbgnode = -1")
+		cs.emit( "local __dbggraph = -1")
+	end
 
-	cs.emit( table.concat( cs.getContext( CTX_Graph .. cs.graph.id ), "\n" ) )
+	if cs.ilp then
+		cs.emit( "local __ilptrip = false" )
+		cs.emit( "local __ilp = 0" )
+	end
+
+	cs.emitContext( CTX_Vars .. "global" )
+	cs.emitContext( CTX_Graph .. cs.graph.id  )
+
+	cs.emit("local __bpm = {}")
+	cs.emit("__bpm.onError = function(msg, graph, node) end")
+	cs.emit("__bpm.call = function(eventName, ...)")
+
+	cs.emit("\tlocal evt = __bpm.events[eventName]")
+	cs.emit("\tif not evt then __bpm.onError(\"Event \" .. eventName .. \" doesn't exist.\",-1,-1) return end")
+	cs.emit("\tlocal s, a,b,c,d,e,f,g = pcall( evt.func, ... )")
+	cs.emit("\tif not s then __bpm.onError(a:sub(a:find(':', 11)+2, -1), __dbggraph or -1, __dbgnode or -1) end")
+
+	cs.emit("end")
+
+	cs.emit("__bpm.events = {")
 
 	for k, v in pairs(cs.graph.nodes) do
 		if v.nodeType.type == NT_Event then
-			cs.emit("hook.Add( \"" .. v.nodeType.name .. "\", \"bphook_" .. v.nodeType.name .. "\", function(...)\n")
 
-			cs.emit("\tlocal arg = {...}")
+			cs.emit("\t[\"" .. v.nodeType.name .. "\"] = {")
 
-			cs.emit("\t" .. table.concat( cs.getContext( CTX_SingleNode .. k ), "\n" ) )
+			if v.nodeType.hook then
 
-			cs.emit("\tgraph_" .. cs.graph.id .. "_entry(" .. k .. ")")
+				cs.emit("\t\thook = \"" .. v.nodeType.hook .. "\",")
 
-			cs.emit("\nend)")
+			end
+
+			cs.emit("\t\tgraphID = " .. cs.graph.id .. ",")
+			cs.emit("\t\tnodeID = " .. k .. ",")
+			cs.emit("\t\tfunc = function(...)")
+
+			cs.emit("\t\t\tlocal arg = {...}")
+
+			cs.emitContext( CTX_SingleNode .. k, 3 )
+
+			if cs.ilp then cs.emit("\t\t\t__ilptrip = false") cs.emit("\t\t\t__ilp = 0") end
+
+			cs.emit("\t\t\tgraph_" .. cs.graph.id .. "_entry(" .. k .. ")")
+
+			if cs.ilp then
+				cs.emit("\t\t\tif __ilptrip then __bpm.onError(\"Infinite loop\", __dbggraph or -1, __dbgnode or -1) end")
+			end
+
+			cs.emit("\t\tend")
+
+			cs.emit("\t},")
 
 		end
 	end
+
+	cs.emit("}")
+
+	cs.emit("__BPMODULE = __bpm")
+
 
 	cs.finish()
 
@@ -545,6 +603,9 @@ function Compile(graph)
 		contexts = {},
 		current_context = nil,
 		buffer = "",
+		debug = true,
+		ilp = true,
+		ilpmax = 10000,
 	}
 	cs.begin = function(ctx)
 		cs.current_context = ctx
@@ -552,6 +613,15 @@ function Compile(graph)
 	end
 	cs.emit = function(text)
 		table.insert(cs.buffer, text)
+	end
+	cs.emitIndented = function(lines, tabcount)
+		local t = string.rep("\t", tabcount or 0)
+		for _, l in pairs(lines) do
+			cs.emit( t .. l )
+		end
+	end
+	cs.emitContext = function(context, tabcount)
+		cs.emitIndented( cs.getContext( context ), tabcount )
 	end
 	cs.finish = function()
 		cs.contexts[cs.current_context] = cs.buffer
@@ -598,12 +668,10 @@ function Compile(graph)
 
 	file.Write("last_compile.txt", cs.compiled)
 
-	return cs.compiled
-
-	--PrintTable(cs.contexts)
-
-	--print("VARS: ")
-	--PrintTable(cs.vars)
+	RunString(cs.compiled)
+	local x = __BPMODULE
+	__BPMODULE = nil
+	return x
 
 end
 
