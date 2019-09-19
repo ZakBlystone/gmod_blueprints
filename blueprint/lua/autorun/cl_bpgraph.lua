@@ -65,6 +65,8 @@ end
 
 function PANEL:NodeAdded( newNode, id )
 
+	print("CREATED NODE: " .. id .. " : " .. tostring(newNode.nodeType.name))
+
 	local b,e = pcall(function()
 		local node = vgui.Create("BPNode", self.canvas)
 		node:Setup( self.graph, newNode )
@@ -72,12 +74,15 @@ function PANEL:NodeAdded( newNode, id )
 		local x,y = node:GetPos()
 		node:SetPos( x + canvasBack, y + canvasBack )
 		node.canvasBack = canvasBack
-		table.insert( self.nodes, node )
+		--table.insert( self.nodes, node )
+		self.nodes[id] = node
 	end)
 
 end
 
 function PANEL:NodeRemoved( node, id )
+
+	print("NODE REMOVE: " .. node.id .. ", " .. id)
 
 	self.nodes[id]:Remove()
 	table.remove( self.nodes, id )
@@ -86,12 +91,14 @@ end
 
 function PANEL:NodeRemap( node, oldID, newID )
 
+	print("NODE REMAP[" .. node.id .. "]: " .. oldID .. " => " .. newID)
+	self.nodes[oldID].nodeID = newID
 
 end
 
-function PANEL:NodeMove( node, x, y )
+function PANEL:NodeMove( node, nodeID, x, y )
 
-	self.nodes[node.id]:SetPos(x + canvasBack, y + canvasBack)
+	self.nodes[nodeID]:SetPos(x + canvasBack, y + canvasBack)
 
 end
 
@@ -225,9 +232,9 @@ function PANEL:OnPinGrab( vnode, vpin, grabbing )
 		if self.grabbedPin ~= nil and vpin ~= nil and self.grabbedPin ~= vpin then
 
 			self.graph:ConnectNodes( 
-				self.grabbedPin.node, 
+				self.grabbedPin.vnode.nodeID, 
 				self.grabbedPin.pinID,
-				vpin.node,
+				vpin.vnode.nodeID,
 				vpin.pinID )
 
 		end
@@ -377,7 +384,7 @@ function PANEL:OpenContext()
 
 			x, y = self.canvas:ScreenToLocal(x, y)
 
-			local node = self.graph:AddNode({
+			self.graph:AddNode({
 				nodeType = NodeTypes[v],
 				x = x - canvasBack,
 				y = y - canvasBack,

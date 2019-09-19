@@ -71,8 +71,8 @@ if SERVER then
 			LoadGraphFromString( ServerGraph, graphdata )
 
 			local compiled = bpcompile.Compile( ServerGraph )
-			SetModule(compiled)
 			print("Executing blueprint on server...")
+			SetModule(compiled)
 
 		elseif cmd == 2 then
 

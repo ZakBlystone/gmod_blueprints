@@ -49,9 +49,42 @@ end
 
 end]]
 
-function meta:GetNodePin(node, pinid)
+function meta:GetNode(nodeID)
 
-	return node.nodeType.pins[pinid]
+	return self.nodes[nodeID]
+
+end
+
+function meta:GetNodePin(nodeID, pinID)
+
+	return self.nodes[nodeID].nodeType.pins[pinID]
+
+end
+
+function meta:FindConnection(nodeID0, pinID0, nodeID1, pinID1)
+
+	local p0 = self:GetNodePin( nodeID0, pinID0 )
+	local dir = p0[1]
+
+	if dir == PD_Out then
+
+		for _, connection in pairs(self.connections) do
+
+			if connection[1] ~= nodeID0 or connection[2] ~= pinID0 then continue end
+			if connection[3] == nodeID1 and connection[4] == pinID1 then return connection end
+
+		end
+
+	else
+
+		for _, connection in pairs(self.connections) do
+
+			if connection[3] ~= nodeID0 or connection[4] ~= pinID0 then continue end
+			if connection[1] == nodeID1 and connection[2] == pinID1 then return connection end
+
+		end
+
+	end
 
 end
 
@@ -66,10 +99,12 @@ function meta:IsPinConnected(nodeID, pinID)
 
 end
 
-function meta:CanConnect(node0, pin0, node1, pin1)
+function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
-	local p0 = self:GetNodePin(node0, pin0)
-	local p1 = self:GetNodePin(node1, pin1)
+	if self:FindConnection(nodeID0, pinID0, nodeID1, pinID1) ~= nil then return false, "Already connected" end
+
+	local p0 = self:GetNodePin(nodeID0, pinID0)
+	local p1 = self:GetNodePin(nodeID1, pinID1)
 	if p0[1] == p1[1] then return false, "Can't connect " .. (p0[1] == PD_Out and "m/m" or "f/f") .. " pins" end
 	if bit.band(p0[4], PNF_Table) ~= bit.band(p1[4], PNF_Table) then return false, "Can't connect table to non-table pin" end
 
@@ -91,18 +126,18 @@ function meta:CanConnect(node0, pin0, node1, pin1)
 
 end
 
-function meta:ConnectNodes(node0, pin0, node1, pin1)
+function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 
-	if node0.graphID ~= self.id or node1.graphID ~= self.id then return false end
-	if not self:CanConnect(node0, pin0, node1, pin1) then return false end
+	local cc, m = self:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
+	if not cc then print(m) return false end
 
-	local p0 = self:GetNodePin(node0, pin0)
-	local p1 = self:GetNodePin(node1, pin1)
+	local p0 = self:GetNodePin(nodeID0, pinID0)
+	local p1 = self:GetNodePin(nodeID1, pinID1)
 
 	if p0[1] == PD_In and p1[1] == PD_Out then
-		table.insert(self.connections, { node1.id, pin1, node0.id, pin0 })
+		table.insert(self.connections, { nodeID1, pinID1, nodeID0, pinID0 })
 	else
-		table.insert(self.connections, { node0.id, pin0, node1.id, pin1 })
+		table.insert(self.connections, { nodeID0, pinID0, nodeID1, pinID1 })
 	end
 
 	self:FireListeners(CB_CONNECTION_ADD, self.connections[#self.connections], #self.connections)
@@ -133,7 +168,10 @@ end
 function meta:AddNode(node)
 
 	table.insert(self.nodes, node)
-	node.id = #self.nodes
+
+	local id = #self.nodes
+
+	node.id = id
 	node.graphID = self.id
 	node.literals = node.literals or {}
 
@@ -155,12 +193,13 @@ function meta:AddNode(node)
 	node.x = math.Round(node.x / 15) * 15
 	node.y = math.Round(node.y / 15) * 15
 
-	self:FireListeners(CB_NODE_ADD, self.nodes[#self.nodes], #self.nodes)
+	self:FireListeners(CB_NODE_ADD, node, id)
 
-	return node
+	return id
 
 end
 
+-- Not Used
 function meta:SwapNodes(nodeA, nodeB)
 
 	if nodeA == nodeB then return end
@@ -194,15 +233,15 @@ function meta:SortGraph()
 
 end
 
-function meta:RemapConnectionIds(node, newID)
+function meta:RemapConnectionIds(nodeID, newID)
 
 	local connections = self.connections
 	for i=#connections, 1, -1 do
 
 		local c = connections[i]
 		local changed = false
-		if c[1] == node.id then c[1] = newID changed = true end
-		if c[3] == node.id then c[3] = newID changed = true end
+		if c[1] == nodeID then c[1] = newID changed = true end
+		if c[3] == nodeID then c[3] = newID changed = true end
 		if changed then self:FireListeners(CB_CONNECTION_REMAP, c, i) end
 
 	end
@@ -215,13 +254,15 @@ function meta:RefreshNodeIds()
 		if node.id ~= i then
 			self:FireListeners(CB_NODE_REMAP, node, node.id, i)
 			node.id = i
-			self:RemapConnectionIds(node, i)
+			self:RemapConnectionIds(node.id, i)
 		end
 	end
 
 end
 
-function meta:MoveNode(node, x, y)
+function meta:MoveNode(nodeID, x, y)
+
+	local node = self.nodes[nodeID]
 
 	x = math.Round(x / 15) * 15
 	y = math.Round(y / 15) * 15
@@ -229,7 +270,7 @@ function meta:MoveNode(node, x, y)
 	node.x = x
 	node.y = y
 
-	self:FireListeners(CB_NODE_MOVE, node, x, y)
+	self:FireListeners(CB_NODE_MOVE, node, nodeID, x, y)
 
 end
 
@@ -243,16 +284,16 @@ function meta:RemoveConnectionID(id)
 
 end
 
-function meta:RemoveConnection(node0, pin0, node1, pin1)
+function meta:RemoveConnection(nodeID0, pinID0, nodeID1, pinID1)
 
 	local connections = self.connections
 	for i=#connections, 1, -1 do
 
 		local c = connections[i]
-		if (c[1] == node0.id and c[3] == node1.id) and (c[2] == pin0 and c[4] == pin1) then
+		if (c[1] == nodeID0 and c[3] == nodeID1) and (c[2] == pinID0 and c[4] == pinID1) then
 			table.remove(connections, i)
 			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
-		elseif (c[1] == node1.id and c[3] == node0.id) and (c[2] == pin1 and c[4] == pin0) then
+		elseif (c[1] == nodeID1 and c[3] == nodeID0) and (c[2] == pinID1 and c[4] == pinID0) then
 			table.remove(connections, i)
 			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
 		end
@@ -261,18 +302,18 @@ function meta:RemoveConnection(node0, pin0, node1, pin1)
 
 end
 
-function meta:RemoveNode(node)
+function meta:RemoveNode(nodeID)
 
-	local id = node.id
-
-	table.remove(self.nodes, id)
-	self:FireListeners(CB_NODE_REMOVE, node, node.id)
+	local node = self.nodes[nodeID]
+	table.remove(self.nodes, nodeID)
+	self:RefreshNodeIds()
+	self:FireListeners(CB_NODE_REMOVE, node, nodeID)
 
 	local connections = self.connections
 	for i=#connections, 1, -1 do
 
 		local c = connections[i]
-		if c[1] == id or c[3] == id then
+		if c[1] == nodeID or c[3] == nodeID then
 			table.remove(connections, i)
 			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
 		end
@@ -283,13 +324,11 @@ function meta:RemoveNode(node)
 
 		local c = connections[i]
 		local changed = false
-		if c[1] > id then c[1] = c[1] - 1 changed = true end
-		if c[3] > id then c[3] = c[3] - 1 changed = true end
+		if c[1] > nodeID then c[1] = c[1] - 1 changed = true end
+		if c[3] > nodeID then c[3] = c[3] - 1 changed = true end
 		if changed then self:FireListeners(CB_CONNECTION_REMAP, c, i) end
 
 	end
-
-	self:RefreshNodeIds()
 
 end
 
@@ -339,7 +378,8 @@ function meta:ReadFromStream(stream)
 		local nodeX = stream:ReadFloat()
 		local nodeY = stream:ReadFloat()
 		local literals = bpdata.ReadValue( stream )
-		local node = self:AddNode({
+		
+		self:AddNode({
 			nodeType = NodeTypes[ nodeTypeName ],
 			x = nodeX,
 			y = nodeY,

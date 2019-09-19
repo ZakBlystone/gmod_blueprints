@@ -66,6 +66,7 @@ end
 function PANEL:Setup( graph, node )
 
 	self.node = node
+	self.nodeID = self.node.id
 	self.graph = graph
 	self.vgraph = self:GetParent():GetParent()
 
@@ -198,7 +199,7 @@ function PANEL:OnKeyCodePressed( code )
 
 	if not self:HasFocus() then return end
 	if code == KEY_DELETE then
-		self.graph:RemoveNode(self.node)
+		self.graph:RemoveNode(self.node.id)
 	end
 
 end
@@ -226,7 +227,7 @@ function PANEL:Think()
 		end
 
 		--self:SetPos( x, y )
-		self.graph:MoveNode( self.node, x - self.canvasBack, y - self.canvasBack )
+		self.graph:MoveNode( self.nodeID, x - self.canvasBack, y - self.canvasBack )
 
 	end
 

@@ -456,7 +456,16 @@ NodeTypes = {
 			{ PD_Out, PN_Entity, "entities", PNF_Table },
 		},
 		code = "#1 = ents.FindByClass( $1 )"
-	}
+	},
+	["Concat"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "a" },
+			{ PD_In, PN_String, "b" },
+			{ PD_Out, PN_String, "result" },
+		},
+		compact = false,
+		code = "#1 = $1 .. $2"
+	},
 }
 --[[
 		pins = {
