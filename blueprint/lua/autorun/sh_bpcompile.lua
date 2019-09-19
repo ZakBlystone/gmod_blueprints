@@ -35,7 +35,7 @@ function EnumerateVars(cs, nodeType)
 
 			for _, l in pairs(ntype.locals or {}) do
 
-				local key = "loca`l_" .. ntype.name .. "_v_" .. l
+				local key = "local_" .. ntype.name .. "_v_" .. l
 				if unique[key] ~= nil then
 					local id = 1
 					local kx = key .. id
@@ -102,7 +102,7 @@ function EnumerateVars(cs, nodeType)
 					var = key,
 					type = pin[2],
 					init = Defaults[pin[2]],
-					global = ntype.type == NT_Event,
+					global = ntype.type ~= NT_Pure,
 					node = nodeID,
 					pin = pinID,
 				})
@@ -232,7 +232,7 @@ function CompileNodeSingle(cs, nodeID)
 			if literalVar ~= nil then
 				inVars[lookupID] = literalVar
 			else
-				error("ERROR: COULD NOT FIND LITERAL VAR FOR: " .. pin[3])
+				error("Pin must be connected: " .. ntype.name .. "." .. pin[3])
 			end
 		end
 
@@ -244,10 +244,6 @@ function CompileNodeSingle(cs, nodeID)
 		
 		local lookupID = lookup[pinID][2]
 		local connections = GetPinConnections(cs, PD_Out, nodeID, pinID)
-		if #connections == 0 and pin[2] == PN_Exec then
-			outVars[lookupID] = { var = "goto popcall" }
-		end
-
 		if ntype.type == NT_Event then
 
 			outVars[lookupID] = FindVarForPin(cs, nodeID, pinID)
@@ -255,20 +251,13 @@ function CompileNodeSingle(cs, nodeID)
 
 		else
 
-			for _, v in pairs(connections) do
+			if pin[2] == PN_Exec then
+				outVars[lookupID] = {
+					var = #connections == 0 and "0" or connections[1][3],
+					jump = true,
+				}
 
-				if pin[2] == PN_Exec then
-
-					outVars[lookupID] = {
-						var = tostring(v[3]),
-						jump = true,
-					}
-
-				end
-
-			end
-
-			if pin[2] ~= PN_Exec then
+			else
 
 				local var = FindVarForPin(cs, nodeID, pinID)
 				if var then 
@@ -276,7 +265,7 @@ function CompileNodeSingle(cs, nodeID)
 					printi("ASGN >> " .. pinID .. " : " .. lookupID .. " => " .. pin[3])
 					outVars[lookupID] = var
 				else
-					error("COULDN'T FIND OUTPUT VAR FOR " .. ntype.name)
+					error("Unable to find var for pin " .. ntype.name .. "." .. pin[3])
 				end
 
 			end
@@ -353,6 +342,9 @@ function CompileNodeFunction(cs, nodeID)
 	local node = cs.graph.nodes[nodeID]
 	if node.nodeType.type == NT_Event then 
 		cs.begin(CTX_FunctionNode .. nodeID)
+
+		if cs.debugcomments then cs.emit("-- " .. node.nodeType.name) end
+
 		cs.emit("::jmp_" .. nodeID .. "::")
 
 		local jumps = false
@@ -377,6 +369,9 @@ function CompileNodeFunction(cs, nodeID)
 	end
 
 	cs.begin(CTX_FunctionNode .. nodeID)
+
+	if cs.debugcomments then cs.emit("-- " .. node.nodeType.name) end
+
 	cs.emit("::jmp_" .. nodeID .. "::")
 
 	pushi()
@@ -423,6 +418,8 @@ function CompileJumpTable(cs)
 	cs.begin(CTX_JumpTable .. cs.graph.id)
 
 	local nextJumpID = 0
+
+	cs.emit( "if ip == 0 then goto jmp_0 end" )
 
 	for k, v in pairs(cs.graph.nodes) do
 		if v.nodeType.type ~= NT_Pure then
@@ -483,6 +480,7 @@ function CompileGraphEntry(cs)
 
 	cs.begin(CTX_Graph .. cs.graph.id)
 
+	cs.emit("\nlocal cs = {}")
 	cs.emit("\nlocal function graph_" .. cs.graph.id .. "_entry( ip )\n")
 
 	if cs.debug then
@@ -491,12 +489,11 @@ function CompileGraphEntry(cs)
 
 	cs.emitContext( CTX_Vars .. cs.graph.id, 1 )
 
-	cs.emit( "\n\tlocal cs = {}" )
 	cs.emit( "\tlocal function pushjmp(i) table.insert(cs, 1, i) end")
 
 	cs.emit( "\tgoto jumpto" )
 
-	cs.emit( "\n\t::popcall::\n\tif #cs > 0 then ip = cs[1] table.remove(cs, 1) else goto __terminus end" )
+	cs.emit( "\n\t::jmp_0:: ::popcall::\n\tif #cs > 0 then ip = cs[1] table.remove(cs, 1) else goto __terminus end" )
 
 	cs.emit( "\n\t::jumpto::" )
 
@@ -604,6 +601,7 @@ function Compile(graph)
 		current_context = nil,
 		buffer = "",
 		debug = true,
+		debugcomments = true,
 		ilp = true,
 		ilpmax = 10000,
 	}
