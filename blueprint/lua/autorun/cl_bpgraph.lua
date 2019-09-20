@@ -369,7 +369,7 @@ end
 function PANEL:OpenContext()
 
 	self:CloseContext()
-	self.menu = DermaMenu( false, self )
+	--self.menu = DermaMenu( false, self )
 
 	local x, y = gui.MouseX(), gui.MouseY()
 
@@ -379,7 +379,7 @@ function PANEL:OpenContext()
 	end
 
 	table.sort(options)
-	for k,v in pairs(options) do
+	--[[for k,v in pairs(options) do
 		self.menu:AddOption( v, function() 
 
 			x, y = self.canvas:ScreenToLocal(x, y)
@@ -391,12 +391,42 @@ function PANEL:OpenContext()
 			})
 
 		end )
+	end]]
+
+	local createMenu = vgui.Create("BPCreateMenu")
+
+	if x + createMenu:GetWide() > ScrW() then
+		x = ScrW() - createMenu:GetWide()
 	end
 
+	if y + createMenu:GetTall() > ScrH() then
+		y = ScrH() - createMenu:GetTall()
+	end
+
+	createMenu:SetPos(x,y)
+	createMenu:SetVisible( true )
+	createMenu:MakePopup()
+	createMenu.OnNodeTypeSelected = function( menu, nodeType )
+
+		x, y = self.canvas:ScreenToLocal(x, y)
+
+		self.graph:AddNode({
+			nodeType = nodeType,
+			x = x - canvasBack,
+			y = y - canvasBack,
+		})
+
+	end
+	--createMenu:SetKeyboardInputEnabled(true)
+	--createMenu:SetMouseInputEnabled(true)
+
+	self.menu = createMenu
+
+	--self.menu:AddPanel(createMenu)
 	
 
-	self.menu:SetMinimumWidth( 300 )
-	self.menu:Open( x, y, false, self )
+	--self.menu:SetMinimumWidth( 300 )
+	--self.menu:Open( x, y, false, self )
 
 end
 
@@ -408,10 +438,16 @@ function PANEL:CloseContext()
 
 end
 
+function PANEL:OnRemove()
+
+	self:CloseContext()
+
+end
+
 function PANEL:OnMousePressed( mouse )
 
 	self:RequestFocus()
-
+	self:CloseContext()
 
 	if mouse ~= MOUSE_RIGHT then return end
 
@@ -425,9 +461,11 @@ end
 
 function PANEL:OnMouseReleased( mouse )
 
-	if self.grabbedPin then
-		self.rerouteConnection = false
-		self.grabbedPin = nil
+	if mouse == MOUSE_LEFT then
+		if self.grabbedPin then
+			self.rerouteConnection = false
+			self.grabbedPin = nil
+		end
 	end
 
 	if mouse ~= MOUSE_RIGHT then return end
