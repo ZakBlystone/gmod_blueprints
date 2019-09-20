@@ -14,8 +14,11 @@ PN_Number = 3
 PN_PhysObj = 4
 PN_Player = 5
 PN_Entity = 6
-PN_Any = 7
-PN_String = 8
+PN_Npc = 7
+PN_Vehicle = 8
+PN_Any = 9
+PN_String = 10
+PN_Color = 11
 
 NT_Pure = 0
 NT_Function = 1
@@ -24,6 +27,7 @@ NT_Special = 3
 
 PNF_None = 0
 PNF_Table = 1
+PNF_Nullable = 2
 
 NodeTypeColors = {
 	[NT_Pure] = Color(60,150,60),
@@ -40,12 +44,17 @@ NodePinColors = {
 	[PN_PhysObj] = Color(80,255,255),
 	[PN_Player] = Color(255,100,255),
 	[PN_Entity] = Color(80,255,80),
+	[PN_Npc] = Color(255,50,50),
+	[PN_Vehicle] = Color(50,127,255),
 	[PN_Any] = Color(100,100,100),
 	[PN_String] = Color(255,255,100),
+	[PN_Color] = Color(140,50,200),
 }
 
 NodePinImplicitConversions = {
-	[PN_Player] = { PN_Entity }
+	[PN_Player] = { PN_Entity },
+	[PN_Npc] = { PN_Entity },
+	[PN_Vehicle] = { PN_Entity },
 }
 
 NodeLiteralTypes = {

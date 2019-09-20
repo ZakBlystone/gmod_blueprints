@@ -165,6 +165,8 @@ function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 	printi("Compile Code: '" .. code .. "': " .. #inVars .. " " .. #outVars)
 
 	str = string.Replace( str, "@graph", "graph_" .. cs.graph.id .. "_entry" )
+	str = string.Replace( str, "!node", tostring(nodeID))
+	str = string.Replace( str, "!graph", tostring(cs.graph.id))
 
 	for k,v in pairs(inVars) do
 		str = string.Replace( str, "$" .. k, v.var )
@@ -225,14 +227,20 @@ function CompileNodeSingle(cs, nodeID)
 			end
 
 		end
-		if #connections == 0 then 
+		if #connections == 0 then
 			printi("Pin Not Connected: " .. pin[3]) 
 
 			local literalVar = FindVarForPin(cs, nodeID, pinID)
 			if literalVar ~= nil then
 				inVars[lookupID] = literalVar
 			else
-				error("Pin must be connected: " .. ntype.name .. "." .. pin[3])
+				local nullable = bit.band(pin[4], PNF_Nullable) ~= 0
+				if nullable then
+					printi("Pin is nullable")
+					inVars[lookupID] = { var = "nil" }
+				else
+					error("Pin must be connected: " .. ntype.name .. "." .. pin[3])
+				end
 			end
 		end
 
@@ -480,8 +488,9 @@ function CompileGraphEntry(cs)
 
 	cs.begin(CTX_Graph .. cs.graph.id)
 
-	cs.emit("\nlocal cs = {}")
 	cs.emit("\nlocal function graph_" .. cs.graph.id .. "_entry( ip )\n")
+
+	cs.emit("\tlocal cs = {}")
 
 	if cs.debug then
 		cs.emit( "\t__dbggraph = " .. cs.graph.id)

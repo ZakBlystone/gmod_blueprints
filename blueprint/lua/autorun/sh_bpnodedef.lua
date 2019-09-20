@@ -12,6 +12,8 @@ module("bpnodedef", package.seeall, bpcommon.rescope(bpschema))
 --            [inputs start at $2, outputs start at #2]
 
 -- pin = { pin direction, pin type, pin name, [pin flags] }
+-- !node is the node's id
+-- !graph is the graph's id
 -- # is output pin
 -- $ is input pin
 -- ^ is jump label
@@ -37,56 +39,6 @@ NodeTypes = {
 			#2 = FrameTime() 
 			#3 = CurTime()
 		]],
-	},
-	["PlayerTick"] = EVENT {
-		pins = {
-			{ PD_Out, PN_Player, "player" },
-			{ PD_Out, PN_Any, "moveData" },
-			{ PD_Out, PN_Number, "dt" },
-			{ PD_Out, PN_Number, "curTime" },
-		},
-		hook = "PlayerTick",
-		code = [[
-			#2 = arg[1] 
-			#3 = arg[2] 
-			#4 = FrameTime() 
-			#5 = CurTime()
-		]],
-	},
-	["PlayerSpawn"] = EVENT {
-		pins = {
-			{ PD_Out, PN_Player, "player" },
-			{ PD_Out, PN_Bool, "transition" },
-		},
-		hook = "PlayerSpawn",
-		code = [[
-			#2 = arg[1] 
-			#3 = arg[2] 
-		]],		
-	},
-	["PlayerUse"] = EVENT {
-		pins = {
-			{ PD_Out, PN_Player, "player" },
-			{ PD_Out, PN_Entity, "entity" },
-		},
-		hook = "PlayerUse",
-		code = [[
-			#2 = arg[1] 
-			#3 = arg[2] 
-		]],		
-	},
-	["PlayerSay"] = EVENT {
-		pins = {
-			{ PD_Out, PN_Player, "player" },
-			{ PD_Out, PN_String, "text" },
-			{ PD_Out, PN_Bool, "teamChat" },
-		},
-		hook = "PlayerSay",
-		code = [[
-			#2 = arg[1] 
-			#3 = arg[2] 
-			#4 = arg[3]
-		]],		
 	},
 	["Alive"] = PURE {
 		pins = {
@@ -123,11 +75,23 @@ NodeTypes = {
 		},
 		code = "if $3 then Player_.KillSilent($2) else Player_.Kill($2) end",
 	},
+	["RemoveAllItems"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+		},
+		code = "Player_.RemoveAllItems($2)",
+	},
+	["RemoveAllAmmo"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+		},
+		code = "Player_.RemoveAllAmmo($2)",
+	},
 	["Remove"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },		
 		},
-		code = "if not Entity_.IsPlayer($2) then Entity_.Remove($2) end",
+		code = "if not $2:IsPlayer($2) then Entity_.Remove($2) end", -- safe check here
 	},
 	["GetClass"] = PURE {
 		pins = {
@@ -178,6 +142,19 @@ NodeTypes = {
 			{ PD_Out, PN_Vector, "aimvector" },
 		},
 		code = "#1 = Player_.GetAimVector($1)",
+	},
+	["GetShootPos"] = PURE {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_Out, PN_Vector, "pos" },
+		},
+		code = "#1 = Player_.GetShootPos($1)",
+	},
+	["CreateRagdoll"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+		},
+		code = "Player_.CreateRagdoll($2)",
 	},
 	["If"] = SPECIAL {
 		pins = {
@@ -236,6 +213,26 @@ NodeTypes = {
 		},
 		code = "print($2)",
 	},
+	["Color"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "r" },
+			{ PD_In, PN_Number, "g" },
+			{ PD_In, PN_Number, "b" },
+			{ PD_In, PN_Number, "a" },
+			{ PD_Out, PN_Color, "color" },
+		},
+		code = "#1 = Color($1, $2, $3, $4)",
+	},
+	["BreakColor"] = PURE {
+		pins = {
+			{ PD_In, PN_Color, "color" },
+			{ PD_Out, PN_Number, "r" },
+			{ PD_Out, PN_Number, "g" },
+			{ PD_Out, PN_Number, "b" },
+			{ PD_Out, PN_Number, "a" },
+		},
+		code = "#1, #2, #3, #4 = $1.r, $1.g, $1.b, $1.a",
+	},
 	["Vector"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "x" },
@@ -244,6 +241,15 @@ NodeTypes = {
 			{ PD_Out, PN_Vector, "vector" },
 		},
 		code = "#1 = Vector($1, $2, $3)",
+	},
+	["BreakVector"] = PURE {
+		pins = {
+			{ PD_In, PN_Vector, "vector" },
+			{ PD_Out, PN_Number, "x" },
+			{ PD_Out, PN_Number, "y" },
+			{ PD_Out, PN_Number, "z" },
+		},
+		code = "#1, #2, #3 = $1.x, $1.y, $1.z",
 	},
 	--[[["LocalPlayer"] = PURE {
 		pins = {
@@ -293,11 +299,26 @@ NodeTypes = {
 		},
 		code = "#1 = IsValid($1)",
 	},
+	["IsPlayer"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Bool, "isPlayer" },
+		},
+		code = "#1 = $1:IsPlayer()", -- not great
+	},
 	["CurTime"] = PURE {
 		pins = {
 			{ PD_Out, PN_Number, "curtime" },
 		},
 		code = "#1 = CurTime()",
+		compact = true,
+	},
+	["FrameTime"] = PURE {
+		pins = {
+			{ PD_Out, PN_Number, "frametime" },
+		},
+		code = "#1 = FrameTime()",
+		compact = true,
 	},
 	["MultiplyNumber"] = PURE {
 		pins = {
@@ -306,6 +327,15 @@ NodeTypes = {
 			{ PD_Out, PN_Number, "result" },
 		},
 		code = "#1 = $1 * $2",
+		compact = true,
+	},
+	["AddVector"] = PURE {
+		pins = {
+			{ PD_In, PN_Vector, "vector" },
+			{ PD_In, PN_Vector, "vector" },
+			{ PD_Out, PN_Vector, "result" },
+		},
+		code = "#1 = $1 + $2",
 		compact = true,
 	},
 	["ScaleVector"] = PURE {
@@ -386,6 +416,41 @@ NodeTypes = {
 		},
 		code = "Entity_.SetParent($2, $3)",
 	},
+	["SetModel"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_String, "model" },
+		},
+		code = "Entity_.SetModel($2, Model($3))",
+	},
+	["SetColor"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Color, "color" },
+		},
+		code = "Entity_.SetColor($2, $3)",
+	},
+	["GetColor"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Color, "color" },
+		},
+		code = "#1 = Entity_.GetColor($1)",		
+	},
+	["SetName"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_String, "name" },
+		},
+		code = "Entity_.SetName($2, $3)",
+	},
+	["GetName"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_String, "name" },
+		},
+		code = "#1 = Entity_.GetName($1)",		
+	},
 	["ForEach"] = SPECIAL {
 		pins = {
 			{ PD_In, PN_Exec, "Exec" },
@@ -434,7 +499,23 @@ NodeTypes = {
 			{ PD_Out, PN_Exec, "Thru" },
 		},	
 		code = [[
-			timer.Simple($2, function() @graph(#_1) end)
+			timer.Remove("bp_timer_!graph_!node")
+			timer.Create("bp_timer_!graph_!node", $2, 1, function() @graph(#_1) end)
+			goto popcall
+		]],
+	},
+	["Sequence"] = SPECIAL {
+		pins = {
+			{ PD_In, PN_Exec, "Exec" },
+			{ PD_Out, PN_Exec, "1" },
+			{ PD_Out, PN_Exec, "2" },
+		},
+		jumpSymbols = {"a", "b"},
+		code = [[
+			pushjmp(^_a) ip = #_1 goto jumpto
+			::^a::
+			pushjmp(^_b) ip = #_2 goto jumpto
+			::^b::
 			goto popcall
 		]],
 	},
@@ -457,6 +538,13 @@ NodeTypes = {
 		},
 		code = "#1 = ents.FindByClass( $1 )"
 	},
+	["AllEntitiesByName"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "name" },
+			{ PD_Out, PN_Entity, "entities", PNF_Table },
+		},
+		code = "#1 = ents.FindByName( $1 )"
+	},
 	["Concat"] = PURE {
 		pins = {
 			{ PD_In, PN_String, "a" },
@@ -466,7 +554,79 @@ NodeTypes = {
 		compact = false,
 		code = "#1 = $1 .. $2"
 	},
+	["TraceLine"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Vector, "start" },
+			{ PD_In, PN_Vector, "end" },
+			{ PD_In, PN_Entity, "filter", PNF_Nullable },
+			{ PD_Out, PN_Bool, "hit" },
+			{ PD_Out, PN_Entity, "entity" },
+			{ PD_Out, PN_Vector, "pos" },
+			{ PD_Out, PN_Vector, "normal" },
+			{ PD_Out, PN_Number, "fraction" },
+		},
+		locals = {"tr"},
+		code = [[
+			%tr = util.TraceLine({
+				start = $2,
+				endpos = $3,
+				filter = $4,
+			})
+			#2 = %tr.Hit
+			#3 = %tr.Entity
+			#4 = %tr.HitPos
+			#5 = %tr.HitNormal
+			#6 = %tr.Fraction
+		]],
+	}
 }
+
+local function AddHook(name, args)
+
+	local pins = {}
+	local code = ""
+	local ipin = 2
+	for k, v in pairs(args) do
+
+		table.insert( pins, { PD_Out, v[2], v[1] })
+		code = code .. "#" .. ipin .. " = arg[" .. ipin-1 .. "]\n"
+
+		ipin = ipin + 1
+
+	end
+
+	if code:len() > 0 then
+		code = code:sub(0, -2)
+	end
+
+	NodeTypes[name] = EVENT {
+		pins = pins,
+		hook = name,
+		code = code,
+	}
+
+end
+
+
+AddHook("OnNPCKilled", { {"npc", PN_Npc}, {"attacker", PN_Entity}, {"inflictor", PN_Entity} })
+AddHook("PlayerSpawn", { {"player", PN_Player}, {"transition", PN_Bool} })
+AddHook("PlayerSetModel", { {"player", PN_Player} })
+AddHook("PlayerUse", { {"player", PN_Player}, {"entity", PN_Entity} })
+AddHook("PlayerSay", { {"player", PN_Player}, {"text", PN_String}, {"teamChat", PN_Bool} })
+AddHook("PlayerDeath", { {"victim", PN_Player}, {"inflictor", PN_Entity}, {"attacker", PN_Entity} })
+AddHook("PlayerDisconnected", { {"player", PN_Player} })
+AddHook("PlayerEnteredVehicle", { {"player", PN_Player}, {"vehicle", PN_Vehicle}, {"role", PN_Number} })
+AddHook("PlayerLeaveVehicle", { {"player", PN_Player}, {"vehicle", PN_Vehicle} })
+AddHook("PlayerFrozeObject", { {"player", PN_Player}, {"entity", PN_Entity}, {"physobj", PN_PhysObj} })
+AddHook("PlayerUnfrozeObject", { {"player", PN_Player}, {"entity", PN_Entity}, {"physobj", PN_PhysObj} })
+AddHook("PlayerHurt", { {"victim", PN_Player}, {"attacker", PN_Entity}, {"health", PN_Number}, {"damage", PN_Number} })
+AddHook("PlayerTick", { {"player", PN_Player}, {"moveData", PN_Any} })
+AddHook("GravGunOnDropped", { {"player", PN_Player}, {"entity", PN_Entity} })
+AddHook("GravGunOnPickedUp", { {"player", PN_Player}, {"entity", PN_Entity} })
+AddHook("PlayerButtonDown", { {"player", PN_Player}, {"button", PN_Number} })
+AddHook("PlayerButtonUp", { {"player", PN_Player}, {"button", PN_Number} })
+AddHook("PlayerSwitchFlashlight", { {"player", PN_Player}, {"enabled", PN_Bool} })
+
 --[[
 		pins = {
 			{ PD_In, PN_Exec, "Exec" },

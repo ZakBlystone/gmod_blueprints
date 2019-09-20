@@ -115,6 +115,8 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 		if p0Type == PN_Any and p1Type ~= PN_Exec then return true end
 		if p1Type == PN_Any and p0Type ~= PN_Exec then return true end
 
+		-- Does not work properly, take into account pin directions to determine what conversion is being attempted
+		-- Maybe rectify pin ordering so pin0 is always PD_Out, and pin1 is always PD_In
 		if NodePinImplicitConversions[p0Type] and table.HasValue(NodePinImplicitConversions[p0Type], p1Type) then
 			return true
 		else
