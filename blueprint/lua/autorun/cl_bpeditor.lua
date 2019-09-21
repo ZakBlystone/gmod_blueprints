@@ -17,6 +17,38 @@ function PANEL:Init()
 		["Compile and upload"] = function()
 			bpnet.SendGraph( self.graph )
 		end,
+		["Save"] = function()
+			Derma_StringRequest(
+				"Save Graph",
+				"What filename though?",
+				"",
+				function( text ) 
+
+					local outStream = bpdata.OutStream()
+					self.graph:WriteToStream(outStream)
+					outStream:WriteToFile("bp_" .. text .. ".txt", true, true)
+
+				end,
+				function( text ) end
+			)
+		end,
+		["Load"] = function()
+			Derma_StringRequest(
+				"Load Graph",
+				"What filename though?",
+				"",
+				function( text ) 
+
+					if file.Exists("bp_" .. text .. ".txt") then
+						local inStream = bpdata.InStream()
+						inStream:LoadFile("bp_" .. text .. ".txt", compress, base64)
+						self.graph:ReadFromStream( inStream )
+					end
+
+				end,
+				function( text ) end
+			)
+		end,
 	}
 
 	--x = 20
@@ -34,9 +66,11 @@ function PANEL:Init()
 	self.Menu:Dock( TOP )
 	self.Menu:SetBackgroundColor( Color(80,80,80) )
 
+	local optX = 0
 	for k,v in pairs(MenuOptions) do
 		local opt = vgui.Create("DButton", self.Menu)
-		opt:SetText("Compile and upload")
+		opt:SetPos(optX, 0)
+		opt:SetText(k)
 		opt:SizeToContentsX()
 		opt:SetWide( opt:GetWide() + 10 )
 		opt:SetTall( 25 )
@@ -50,6 +84,7 @@ function PANEL:Init()
 				self.StatusText:SetText("")
 			end
 		end
+		optX = optX + opt:GetWide() + 2
 	end
 
 	self.Menu:SizeToChildren( true, true )
