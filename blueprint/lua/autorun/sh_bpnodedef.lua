@@ -40,12 +40,51 @@ NodeTypes = {
 			#3 = CurTime()
 		]],
 	},
+	["EntityFireBullets"] = EVENT {
+		pins = {
+			{ PD_Out, PN_Entity, "entity" },
+			{ PD_Out, PN_Entity, "attacker" },
+			{ PD_Out, PN_Number, "damage" },
+			{ PD_Out, PN_Number, "count" },
+			{ PD_Out, PN_Vector, "source" },
+			{ PD_Out, PN_Vector, "direction" },
+		},
+		hook = "EntityFireBullets",
+		code = [[
+			#2 = arg[1]
+			#3 = arg[2].Attacker
+			#4 = arg[2].Damage
+			#5 = arg[2].Num
+			#6 = arg[2].Src
+			#7 = arg[2].Dir
+		]],
+	},
+	["EntityEmitSound"] = EVENT {
+		pins = {
+			{ PD_Out, PN_Entity, "entity" },
+			{ PD_Out, PN_String, "soundname" },
+			{ PD_Out, PN_String, "originalSound" },
+		},
+		hook = "EntityEmitSound",
+		code = [[
+			#2 = arg[1].Entity
+			#3 = arg[1].SoundName
+			#4 = arg[1].OriginalSoundName
+		]],
+	},
 	["Alive"] = PURE {
 		pins = {
 			{ PD_In, PN_Player, "player" },
 			{ PD_Out, PN_Bool, "isAlive" },
 		},
 		code = "#1 = Player_.Alive($1)",
+	},
+	["PlayerName"] = PURE {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_Out, PN_String, "name" },
+		},
+		code = "#1 = Player_.Nick($1)",
 	},
 	["SetVelocity"] = FUNCTION {
 		pins = {
@@ -74,6 +113,22 @@ NodeTypes = {
 			{ PD_In, PN_Bool, "silent" },
 		},
 		code = "if $3 then Player_.KillSilent($2) else Player_.Kill($2) end",
+	},
+	["EmitSound"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "target" },
+			{ PD_In, PN_String, "sound" },
+		},
+		code = "Entity_.EmitSound( $2, $3 )",
+	},
+	["TakeDamage"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "target" },
+			{ PD_In, PN_Number, "damage" },
+			{ PD_In, PN_Entity, "attacker", PNF_Nullable },
+			{ PD_In, PN_Entity, "inflictor", PNF_Nullable },
+		},
+		code = "Entity_.TakeDamage($2, $3, $4, $5)",
 	},
 	["RemoveAllItems"] = FUNCTION {
 		pins = {
@@ -107,12 +162,25 @@ NodeTypes = {
 		},
 		code = "Player_.ChatPrint($2, $3)",		
 	},
+	["ChatPrintAll"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_String, "message" },
+		},
+		code = "for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $2) end",
+	},
 	["ApplyForceCenter"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_PhysObj, "physObj" },
 			{ PD_In, PN_Vector, "force" },
 		},
 		code = "PhysObj_.ApplyForceCenter($2, $3)",
+	},
+	["SetMass"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_PhysObj, "physObj" },
+			{ PD_In, PN_Number, "mass" },
+		},
+		code = "PhysObj_.SetMass($2, $3)",
 	},
 	["GetRagdollEntity"] = PURE {
 		pins = {
@@ -197,7 +265,31 @@ NodeTypes = {
 			{ PD_In, PN_Number, "Max" },
 			{ PD_Out, PN_Number, "Result" },
 		},
-		code = "#1 = math.Rand($1, $2)"
+		code = "#1 = math.Rand($1, $2)",
+	},
+	["Floor"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "in" },
+			{ PD_Out, PN_Number, "out" },
+		},
+		code = "#1 = math.floor($1)",
+		compact = true,
+	},
+	["Ceil"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "in" },
+			{ PD_Out, PN_Number, "out" },
+		},
+		code = "#1 = math.ceil($1)",
+		compact = true,
+	},
+	["Round"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "in" },
+			{ PD_Out, PN_Number, "out" },
+		},
+		code = "#1 = math.Round($1)",
+		compact = true,
 	},
 	["ToString"] = PURE {
 		pins = {
@@ -242,6 +334,14 @@ NodeTypes = {
 		},
 		code = "#1 = Vector($1, $2, $3)",
 	},
+	["VectorNormalize"] = PURE {
+		pins = {
+			{ PD_In, PN_Vector, "vector" },
+			{ PD_Out, PN_Vector, "normal" },
+		},
+		code = "#1 = $1:GetNormal()",
+		compact = true,
+	},
 	["BreakVector"] = PURE {
 		pins = {
 			{ PD_In, PN_Vector, "vector" },
@@ -264,12 +364,51 @@ NodeTypes = {
 		},
 		code = "#1 = player.GetAll()[$1]",
 	},
+	["Entity"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "id" },	
+			{ PD_Out, PN_Entity, "entity" },
+		},
+		code = "#1 = Entity($1)",
+	},
+	["EntIndex"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },	
+			{ PD_Out, PN_Number, "id" },
+		},
+		code = "#1 = Entity_.EntIndex($1)",
+	},
+	["ToNumber"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "value" },	
+			{ PD_Out, PN_Number, "number" },			
+		},
+		code = "#1 = tonumber($1) or 0",
+	},
 	["Number"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "num" },
 			{ PD_Out, PN_Number, "num" },
 		},
 		code = "#1 = $1",
+	},
+	["LessThan"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "a" },
+			{ PD_In, PN_Number, "b" },
+			{ PD_Out, PN_Bool, "result" },
+		},
+		code = "#1 = $1 < $2",
+		compact = true,
+	},
+	["GreaterThan"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "a" },
+			{ PD_In, PN_Number, "b" },
+			{ PD_Out, PN_Bool, "result" },
+		},
+		code = "#1 = $1 > $2",
+		compact = true,
 	},
 	["String"] = PURE {
 		pins = {
@@ -329,6 +468,24 @@ NodeTypes = {
 		code = "#1 = $1 * $2",
 		compact = true,
 	},
+	["AddNumber"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "A" },
+			{ PD_In, PN_Number, "B" },
+			{ PD_Out, PN_Number, "result" },
+		},
+		code = "#1 = $1 + $2",
+		compact = true,
+	},
+	["SubNumber"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "A" },
+			{ PD_In, PN_Number, "B" },
+			{ PD_Out, PN_Number, "result" },
+		},
+		code = "#1 = $1 - $2",
+		compact = true,
+	},
 	["AddVector"] = PURE {
 		pins = {
 			{ PD_In, PN_Vector, "vector" },
@@ -336,6 +493,23 @@ NodeTypes = {
 			{ PD_Out, PN_Vector, "result" },
 		},
 		code = "#1 = $1 + $2",
+		compact = true,
+	},
+	["SubVector"] = PURE {
+		pins = {
+			{ PD_In, PN_Vector, "vector" },
+			{ PD_In, PN_Vector, "vector" },
+			{ PD_Out, PN_Vector, "result" },
+		},
+		code = "#1 = $1 - $2",
+		compact = true,
+	},
+	["VectorLength"] = PURE {
+		pins = {
+			{ PD_In, PN_Vector, "vector" },
+			{ PD_Out, PN_Number, "result" },
+		},
+		code = "#1 = $1:Length()",
 		compact = true,
 	},
 	["ScaleVector"] = PURE {
@@ -379,6 +553,13 @@ NodeTypes = {
 		},
 		code = "Entity_.SetPos($2, $3)",
 	},
+	["SetOwner"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Entity, "owner", PNF_Nullable },	
+		},
+		code = "Entity_.SetOwner($2, $3)",
+	},
 	["EntityCreate"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_String, "classname" },
@@ -409,6 +590,14 @@ NodeTypes = {
 		},
 		code = "Entity_.SetKeyValue($2, $3, $4)",
 	},
+	["GetKeyValue"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_String, "key" },
+			{ PD_Out, PN_String, "value" },
+		},
+		code = "#1 = Entity_.GetKeyValues($1)[$2] or \"\"",
+	},
 	["SetParent"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
@@ -422,6 +611,13 @@ NodeTypes = {
 			{ PD_In, PN_String, "model" },
 		},
 		code = "Entity_.SetModel($2, Model($3))",
+	},
+	["GetModel"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_String, "model" },
+		},
+		code = "#1 = Entity_.GetModel($1)",
 	},
 	["SetColor"] = FUNCTION {
 		pins = {
@@ -545,6 +741,16 @@ NodeTypes = {
 		},
 		code = "#1 = ents.FindByName( $1 )"
 	},
+	["ScreenShake"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Vector, "pos" },
+			{ PD_In, PN_Number, "amplitude" },
+			{ PD_In, PN_Number, "frequency" },
+			{ PD_In, PN_Number, "duration" },
+			{ PD_In, PN_Number, "radius" },
+		},
+		code = "util.ScreenShake( $2, $3, $4, $5, $6 )"
+	},
 	["Concat"] = PURE {
 		pins = {
 			{ PD_In, PN_String, "a" },
@@ -553,6 +759,32 @@ NodeTypes = {
 		},
 		compact = false,
 		code = "#1 = $1 .. $2"
+	},
+	["ContainsString"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "string" },
+			{ PD_In, PN_String, "find" },
+			{ PD_Out, PN_Bool, "result" },
+		},
+		compact = false,
+		code = "#1 = string.find($1, $2) ~= nil"
+	},
+	["TableGetIndex"] = PURE {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Number, "index" },
+			{ PD_Out, PN_Any, "result" },
+		},
+		compact = true,
+		code = "#1 = $1[$2]",
+	},
+	["TableGetNum"] = PURE {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_Out, PN_Number, "num" },
+		},
+		compact = true,
+		code = "#1 = #$1",
 	},
 	["TraceLine"] = FUNCTION {
 		pins = {
@@ -626,6 +858,7 @@ AddHook("GravGunOnPickedUp", { {"player", PN_Player}, {"entity", PN_Entity} })
 AddHook("PlayerButtonDown", { {"player", PN_Player}, {"button", PN_Number} })
 AddHook("PlayerButtonUp", { {"player", PN_Player}, {"button", PN_Number} })
 AddHook("PlayerSwitchFlashlight", { {"player", PN_Player}, {"enabled", PN_Bool} })
+AddHook("EntityTakeDamage", { {"target", PN_Entity}, {"damageInfo", PN_Any} })
 
 --[[
 		pins = {
