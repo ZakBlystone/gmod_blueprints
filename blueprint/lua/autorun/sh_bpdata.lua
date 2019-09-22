@@ -250,6 +250,16 @@ function OUT:WriteToFile(name, compressed, base64encoded)
 	end
 end
 
+function OUT:WriteToNet(compressed)
+
+	local str, len = self:GetString(compressed, false)
+	net.WriteUInt(len, 32)
+	for i=1, len do
+		net.WriteUInt(string.byte(str[i]), 8)
+	end
+
+end
+
 function OUT:WriteBit(v)
 	if not self.bitstream then error("buffer is not a bitstream") end
 	local byte = rshift(self.bit, 3) + 1
@@ -320,6 +330,17 @@ function IN:LoadFile(name, compressed, base64encoded)
 	else
 		self:LoadString( name:Read(name:Size()), compressed, base64encoded )
 	end
+end
+
+function IN:ReadFromNet(compressed)
+
+	local str = ""
+	local len = net.ReadUInt(32)
+	for i=1, len do
+		str = str .. string.char(net.ReadUInt(8))
+	end
+	self:LoadString(str, compressed, false)
+
 end
 
 function IN:ReadBit()

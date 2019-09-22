@@ -536,23 +536,45 @@ function CompileCodeSegment(cs)
 	if cs.ilp then
 		cs.emit( "local __ilptrip = false" )
 		cs.emit( "local __ilp = 0" )
+		cs.emit( "local __ilph = 0" )
 	end
 
+	cs.emit("local __bpm = {}")
 	cs.emitContext( CTX_Vars .. "global" )
 	cs.emitContext( CTX_Graph .. cs.graph.id  )
 
-	cs.emit("local __bpm = {}")
+	if cs.ilp then
+		cs.emit("__bpm.checkilp = function()")
+		cs.emit("\tif __ilph > " .. cs.ilpmaxh .. " then __bpm.onError(\"Infinite loop in hook\", __dbggraph or -1, __dbgnode or -1) return true end")
+		cs.emit("\tif __ilptrip then __bpm.onError(\"Infinite loop\", __dbggraph or -1, __dbgnode or -1) return true end")
+		cs.emit("end")
+	end
+	cs.emit("__bpm.delays = {}")
+	cs.emit("__bpm.delay = function(graph, node, delay, func)")
+	cs.emit("\tlocal key = graph .. node")
+	cs.emit("\tfor i=#__bpm.delays, 1, -1 do if __bpm.delays[i].key == key then table.remove(__bpm.delays, i) end end")
+	cs.emit("\ttable.insert( __bpm.delays, { key = key, func = func, time = delay })")
+	cs.emit("end")
+
 	cs.emit("__bpm.onError = function(msg, graph, node) end")
 	cs.emit("__bpm.call = function(eventName, ...)")
-
 	cs.emit("\tlocal evt = __bpm.events[eventName]")
 	cs.emit("\tif not evt then __bpm.onError(\"Event \" .. eventName .. \" doesn't exist.\",-1,-1) return end")
 	cs.emit("\tlocal s, a,b,c,d,e,f,g = pcall( evt.func, ... )")
 	cs.emit("\tif not s then __bpm.onError(a:sub(a:find(':', 11)+2, -1), __dbggraph or -1, __dbgnode or -1) end")
+	cs.emit("end")
 
+	cs.emit("__bpm.update = function()")
+	cs.emit("\tlocal dt = FrameTime()")
+	if cs.ilp then cs.emit("\t__ilph = 0") end
+	cs.emit("\tfor i=#__bpm.delays, 1, -1 do")
+	cs.emit("\t\t__bpm.delays[i].time = __bpm.delays[i].time - dt")
+	cs.emit("\t\tif __bpm.delays[i].time <= 0 then __bpm.delays[i].func() table.remove(__bpm.delays, i) end")
+	cs.emit("\tend")
 	cs.emit("end")
 
 	cs.emit("__bpm.events = {")
+	cs.emit("\t[\"InternalUpdate\"] = { hook = \"Think\", graphID = " .. cs.graph.id .. ", nodeID = -1, func = __bpm.update },")
 
 	for k, v in pairs(cs.graph.nodes) do
 		if v.nodeType.type == NT_Event then
@@ -573,12 +595,18 @@ function CompileCodeSegment(cs)
 
 			cs.emitContext( CTX_SingleNode .. k, 3 )
 
-			if cs.ilp then cs.emit("\t\t\t__ilptrip = false") cs.emit("\t\t\t__ilp = 0") end
+			if cs.ilp then
+				cs.emit("\t\t\tif __bpm.checkilp() then return end")
+				cs.emit("\t\t\t__ilptrip = false")
+				cs.emit("\t\t\t__ilp = 0")
+				cs.emit("\t\t\t__ilph = __ilph + 1")
+			end
 
 			cs.emit("\t\t\tgraph_" .. cs.graph.id .. "_entry(" .. k .. ")")
 
 			if cs.ilp then
-				cs.emit("\t\t\tif __ilptrip then __bpm.onError(\"Infinite loop\", __dbggraph or -1, __dbgnode or -1) end")
+				cs.emit("\t\t\tif __bpm.checkilp() then return end")
+				cs.emit("\t\t\t__ilph = __ilph - 1")
 			end
 
 			cs.emit("\t\tend")
@@ -613,6 +641,7 @@ function Compile(graph)
 		debugcomments = true,
 		ilp = true,
 		ilpmax = 10000,
+		ilpmaxh = 4,
 	}
 	cs.begin = function(ctx)
 		cs.current_context = ctx

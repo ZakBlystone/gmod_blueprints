@@ -10,7 +10,26 @@ include("sh_bpgraph.lua")
 module("bpuigraph", package.seeall, bpcommon.rescope(bpgraph, bpschema, bpnodedef))
 
 local PANEL = {}
-local canvasBack = 50000
+
+surface.CreateFont( "GraphTitle", {
+	font = "Arial", -- Use the font-name which is shown to you by your operating system Font Viewer, not the file name
+	extended = false,
+	size = 52,
+	weight = 1200,
+	blursize = 0,
+	scanlines = 0,
+	antialias = true,
+	underline = false,
+	italic = false,
+	strikeout = false,
+	symbol = false,
+	rotary = false,
+	shadow = false,
+	additive = false,
+	outline = false,
+} )
+
+AccessorFunc( PANEL, "m_bIsLocked",	"IsLocked", FORCE_BOOL )
 
 function PANEL:Init()
 
@@ -35,8 +54,14 @@ function PANEL:Init()
 		self:OnPinGrab(...)
 
 	end
+	self.canvas.Paint = function( canvas, ... )
 
-	self.canvas:SetPos(-canvasBack,-canvasBack)
+		self:CanvasPaint(...)
+
+	end
+
+	self.canvas:SetPos(0,0)
+	self.canvas:NoClipping(true)
 
 	self.canvas:InvalidateLayout(true)
 	self.canvas:SizeToContents()
@@ -72,8 +97,7 @@ function PANEL:NodeAdded( newNode, id )
 		node:Setup( self.graph, newNode )
 
 		local x,y = node:GetPos()
-		node:SetPos( x + canvasBack, y + canvasBack )
-		node.canvasBack = canvasBack
+		node:SetPos( x, y )
 		--table.insert( self.nodes, node )
 		self.nodes[id] = node
 	end)
@@ -98,7 +122,7 @@ end
 
 function PANEL:NodeMove( node, nodeID, x, y )
 
-	self.nodes[nodeID]:SetPos(x + canvasBack, y + canvasBack)
+	self.nodes[nodeID]:SetPos(x, y)
 
 end
 
@@ -156,7 +180,16 @@ local function ClosestDistanceToCubicHermite(k, p0, p1, m0, m1)
 
 end
 
-local function drawHermite(x0,y0,x1,y1,c0,c1,samples)
+function PANEL:DrawHermite(x0,y0,x1,y1,c0,c1,samples)
+
+	local w,h = self:GetSize()
+
+	if x0 < 0 and x1 < 0 then return end
+	if x0 > w and x1 > w then return end
+	if y0 < 0 and y1 < 0 then return end
+	if y0 > h and y1 > h then return end
+
+	--print(x0)
 
 	local px = x0
 	local py = y0
@@ -268,7 +301,7 @@ function PANEL:DrawConnection(connection)
 
 	--surface.SetDrawColor(NodePinColors[ a.nodeType.pins[connection[2]][2] ])
 
-	drawHermite( ax, ay, bx, by, 
+	self:DrawHermite( ax, ay, bx, by, 
 		NodePinColors[ a.node.nodeType.pins[connection[2]][2] ], 
 		NodePinColors[ b.node.nodeType.pins[connection[4]][2] ] 
 	)
@@ -301,7 +334,7 @@ function PANEL:DrawConnections()
 			local ax, ay = self:ScreenToLocal(gui.MouseX(), gui.MouseY())
 			local bx, by = self:PinPos(self.grabbedPin)
 
-			drawHermite( ax, ay, bx, by, 
+			self:DrawHermite( ax, ay, bx, by, 
 				Color(255,255,255),
 				NodePinColors[ self.grabbedPin.pin[2] ]
 			)
@@ -311,7 +344,7 @@ function PANEL:DrawConnections()
 			local ax, ay = self:PinPos(self.grabbedPin)
 			local bx, by = self:ScreenToLocal(gui.MouseX(), gui.MouseY())
 
-			drawHermite( ax, ay, bx, by, 
+			self:DrawHermite( ax, ay, bx, by, 
 				NodePinColors[ self.grabbedPin.pin[2] ],
 				Color(255,255,255)
 			)
@@ -322,11 +355,51 @@ function PANEL:DrawConnections()
 
 end
 
+function PANEL:CanvasPaint(w, h)
+
+end
+
+function PANEL:DrawGrid(spacing, color)
+
+	local x,y = self.canvas:GetPos()
+	local w,h = self:GetSize()
+
+	local scrollX = math.fmod(x, spacing)
+	local scrollY = math.fmod(y, spacing)
+
+	for xoff = 0, w, spacing do
+		surface.SetDrawColor(color)
+		surface.DrawRect(scrollX + xoff,0,2,h)
+	end
+
+	for yoff = 0, h, spacing do
+		surface.SetDrawColor(color)
+		surface.DrawRect(0,scrollY + yoff,w,2)
+	end
+
+end
+
 function PANEL:Paint(w, h)
 
-	draw.RoundedBox(6, 0, 0, w, h, Color(40,40,40))
+	draw.RoundedBox(0, 0, 0, w, h, Color(40,40,40))
+
+	self:DrawGrid(15, Color(255,255,255,2))
+	self:DrawGrid(90, Color(255,255,255,5))
+
+	draw.SimpleText( "Title", "GraphTitle", 10, 10, Color( 255, 255, 255, 120 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
 	self:DrawConnections()
 	return true
+
+end
+
+function PANEL:PaintOver(w, h)
+
+	if self:GetIsLocked() then 
+
+		draw.RoundedBox(0, 0, 0, w, h, Color(20,20,20,150))
+
+	end
 
 end
 
@@ -368,30 +441,13 @@ end
 
 function PANEL:OpenContext()
 
+	if self:GetIsLocked() then return end
+
 	self:CloseContext()
 	--self.menu = DermaMenu( false, self )
 
 	local x, y = gui.MouseX(), gui.MouseY()
 
-	local options = {}
-	for k,v in pairs(NodeTypes) do
-		table.insert(options, k)
-	end
-
-	table.sort(options)
-	--[[for k,v in pairs(options) do
-		self.menu:AddOption( v, function() 
-
-			x, y = self.canvas:ScreenToLocal(x, y)
-
-			self.graph:AddNode({
-				nodeType = NodeTypes[v],
-				x = x - canvasBack,
-				y = y - canvasBack,
-			})
-
-		end )
-	end]]
 
 	local createMenu = vgui.Create("BPCreateMenu")
 
@@ -412,8 +468,8 @@ function PANEL:OpenContext()
 
 		self.graph:AddNode({
 			nodeType = nodeType,
-			x = x - canvasBack,
-			y = y - canvasBack,
+			x = x,
+			y = y,
 		})
 
 	end

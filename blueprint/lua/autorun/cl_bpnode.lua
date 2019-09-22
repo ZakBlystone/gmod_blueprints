@@ -176,6 +176,8 @@ end
 function PANEL:OnMousePressed()
 
 	if not self.node then return end
+	if self.vgraph:GetIsLocked() then return end
+
 	local ntype = self.node.nodeType
 
 	local screenX, screenY = self:LocalToScreen( 0, 0 )
@@ -198,6 +200,8 @@ end
 function PANEL:OnKeyCodePressed( code )
 
 	if not self:HasFocus() then return end
+	if self.vgraph:GetIsLocked() then return end
+
 	if code == KEY_DELETE then
 		self.graph:RemoveNode(self.node.id)
 	end
@@ -227,14 +231,14 @@ function PANEL:Think()
 		end
 
 		--self:SetPos( x, y )
-		self.graph:MoveNode( self.nodeID, x - self.canvasBack, y - self.canvasBack )
+		self.graph:MoveNode( self.nodeID, x, y )
 
 	end
 
 
 	local screenX, screenY = self:LocalToScreen( 0, 0 )
 
-	if self.Hovered then
+	if self.Hovered and not self.vgraph:GetIsLocked() then
 		self:SetCursor( "sizeall" )
 		return
 	end

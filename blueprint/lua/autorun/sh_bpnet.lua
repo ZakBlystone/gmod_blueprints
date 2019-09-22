@@ -5,7 +5,9 @@ module("bpnet", package.seeall)
 if SERVER then
 
 	local ServerGraph = bpgraph.New()
-	ServerModule = ServerModule or nil
+	PlayerModules = PlayerModules or {}
+	PlayerGraphs = PlayerGraphs or {}
+
 
 	local function HookModule( bp )
 
@@ -26,12 +28,12 @@ if SERVER then
 
 	end
 
-	local function SetModule( bp )
+	local function GetPlayerModule( ply ) return PlayerModules[ply:SteamID()] end
+	local function SetPlayerModule( ply, bp )
 
-		if ServerModule then UnhookModule(ServerModule) end
-		ServerModule = bp
-
-		HookModule(bp)
+		local prev = GetPlayerModule( ply )
+		if prev ~= nil then UnhookModule(prev) end
+		PlayerModules[ply:SteamID()] = bp
 
 		bp.onError = function( msg, graphID, nodeID )
 
@@ -40,49 +42,48 @@ if SERVER then
 
 		end
 
+		HookModule(bp)
 		if bp.events["Init"] then bp.call("Init") end
 
 	end
 
-	local function LoadGraphFromString( graph, str )
-		local inStream = bpdata.InStream()
-		inStream:LoadString(str, true, true)
-		graph:ReadFromStream( inStream )
-	end
-
-	local graphData = file.Read("last_server_graph.txt")
-	if graphData ~= nil and string.len(graphData) > 0 then
-		LoadGraphFromString(ServerGraph, graphData)
+	local function GetPlayerGraph( ply )
+		PlayerGraphs[ply:SteamID()] = PlayerGraphs[ply:SteamID()] or bpgraph.New()
+		return PlayerGraphs[ply:SteamID()]
 	end
 
 	util.AddNetworkString("bpclientcmd")
 	util.AddNetworkString("bpservercmd")
 
+	local CMD_Upload = 1
+	local CMD_Download = 2
+
 	net.Receive("bpservercmd", function(len, ply)
 
 		local cmd = net.ReadUInt(4)
 
-		if cmd == 1 then
+		if cmd == CMD_Upload then
 
-			local graphdata = net.ReadString()
-			print("BP GRAPH: " .. graphdata)
-			file.Write("last_server_graph.txt", graphdata)
+			local graph = GetPlayerGraph( ply )
+			--file.Write("last_server_graph_" .. ply:SteamID() .. ".txt", graphdata)
 
-			LoadGraphFromString( ServerGraph, graphdata )
+			local inStream = bpdata.InStream()
+			inStream:ReadFromNet(true)
+			graph:ReadFromStream( inStream )
 
-			local compiled = bpcompile.Compile( ServerGraph )
+			local compiled = bpcompile.Compile( graph )
 			print("Executing blueprint on server...")
-			SetModule(compiled)
+			SetPlayerModule( ply, compiled )
 
-		elseif cmd == 2 then
+		elseif cmd == CMD_Download then
 
+			local steamID = net.ReadString()
+			local graph = GetPlayerGraph( ply )
 			local outStream = bpdata.OutStream()
-			ServerGraph:WriteToStream(outStream)
-
-			local toSend = outStream:GetString(true, true)
+			graph:WriteToStream(outStream)
 
 			net.Start("bpclientcmd")
-			net.WriteString(toSend)
+			outStream:WriteToNet(true)
 			net.Send( ply )
 
 		end
@@ -93,22 +94,23 @@ else
 
 	local downloadTarget = nil
 
-	net.Receive("bpclientcmd", function()
+	net.Receive("bpclientcmd", function(len)
 
-		local graphdata = net.ReadString()
+		print("RECEIVE: " .. len .. " bytes")
 
 		local inStream = bpdata.InStream()
-		inStream:LoadString(graphdata, true, true)
+		inStream:ReadFromNet(true)
 		downloadTarget:ReadFromStream( inStream )
 
 	end)
 
-	function DownloadServerGraph( graph )
+	function DownloadServerGraph( graph, steamid )
 
 		downloadTarget = graph
 
 		net.Start("bpservercmd")
 		net.WriteUInt(2, 4)
+		net.WriteString( steamid or LocalPlayer():SteamID() )
 		net.SendToServer()
 
 	end
@@ -122,10 +124,11 @@ else
 
 		local outStream = bpdata.OutStream()
 		graph:WriteToStream(outStream)
+		outStream:WriteToNet(true)
 
-		local toSend = outStream:GetString(true, true)
+		--local toSend = outStream:GetString(true, true)
 
-		net.WriteString(toSend)
+		--net.WriteString(toSend)
 		net.SendToServer()
 
 	end

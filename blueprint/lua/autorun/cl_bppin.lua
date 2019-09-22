@@ -213,11 +213,15 @@ end
 
 function PANEL:OnMousePressed(mouse)
 
+	if self.vgraph:GetIsLocked() then return end
+
 	self.vnode:OnPinGrab( self, true )
 
 end
 
 function PANEL:OnMouseReleased(mouse)
+
+	if self.vgraph:GetIsLocked() then return end
 
 	self.vnode:OnPinGrab( self, false )
 

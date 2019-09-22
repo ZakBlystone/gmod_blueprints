@@ -14,10 +14,10 @@ function PANEL:Init()
 	local y = (ScrH() - h)/2
 
 	local MenuOptions = {
-		["Compile and upload"] = function()
-			bpnet.SendGraph( self.graph )
-		end,
-		["Save"] = function()
+		{"New", function(p)
+			p:SetGraph( bpgraph.New() )
+		end},
+		{"Save", function()
 			Derma_StringRequest(
 				"Save Graph",
 				"What filename though?",
@@ -31,8 +31,8 @@ function PANEL:Init()
 				end,
 				function( text ) end
 			)
-		end,
-		["Load"] = function()
+		end},
+		{"Load", function()
 			Derma_StringRequest(
 				"Load Graph",
 				"What filename though?",
@@ -48,10 +48,32 @@ function PANEL:Init()
 				end,
 				function( text ) end
 			)
-		end,
+		end},
+		{"Compile and upload", function()
+			bpnet.SendGraph( self.graph )
+		end},
 	}
 
 	--x = 20
+
+	self.fullScreen = false
+	self.btnMaxim:SetDisabled(false)
+	self.btnMaxim.DoClick = function ( button )
+		self.fullScreen = not self.fullScreen
+		if self.fullScreen then
+			self.px, self.py = self:GetPos()
+			self.pw, self.ph = self:GetSize()
+			self:SetPos(0,0)
+			self:SetSize(ScrW(), ScrH())
+			self:SetDraggable(false)
+			self:SetSizable(false)
+		else
+			self:SetPos(self.px,self.py)
+			self:SetSize(self.pw,self.ph)
+			self:SetDraggable(true)
+			self:SetSizable(true)
+		end
+	end
 
 	self:SetPos(x, y)
 	self:SetSize(w, h)
@@ -70,12 +92,12 @@ function PANEL:Init()
 	for k,v in pairs(MenuOptions) do
 		local opt = vgui.Create("DButton", self.Menu)
 		opt:SetPos(optX, 0)
-		opt:SetText(k)
+		opt:SetText(v[1])
 		opt:SizeToContentsX()
 		opt:SetWide( opt:GetWide() + 10 )
 		opt:SetTall( 25 )
 		opt.DoClick = function(btn)
-			local b,e = pcall( v )
+			local b,e = pcall( v[2], self )
 			if not b then
 				self.StatusText:SetTextColor( Color(255,100,100) )
 				self.StatusText:SetText(e)
@@ -99,9 +121,18 @@ function PANEL:Init()
 	self.StatusText:SetText("")
 
 
-	self.Content = vgui.Create("BPGraph", self)
+	self.Content = vgui.Create("DHorizontalDivider", self)
 	self.Content:Dock( FILL )
-	self.Content:DockMargin( 0, 0, 0, 0 )
+
+	self.MenuPanel = vgui.Create("DPanel", self.Content)
+
+	self.GraphView = vgui.Create("BPGraph", self.Content)
+	self.GraphView:DockMargin( 0, 0, 0, 0 )
+	--self.GraphView:SetIsLocked(true)
+
+	self.Content:SetLeft(self.MenuPanel)
+	self.Content:SetRight(self.GraphView)
+	self.Content:Dock( FILL )
 
 	print(tostring(e))
 
@@ -110,7 +141,7 @@ end
 function PANEL:SetGraph( graph )
 
 	self.graph = graph
-	self.Content:SetGraph( graph )
+	self.GraphView:SetGraph( graph )
 
 end
 

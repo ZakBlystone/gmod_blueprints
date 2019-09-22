@@ -695,8 +695,7 @@ NodeTypes = {
 			{ PD_Out, PN_Exec, "Thru" },
 		},	
 		code = [[
-			timer.Remove("bp_timer_!graph_!node")
-			timer.Create("bp_timer_!graph_!node", $2, 1, function() @graph(#_1) end)
+			__bpm.delay(!graph, !node, $2, function() @graph(#_1) end)
 			goto popcall
 		]],
 	},
