@@ -12,6 +12,7 @@ bpcommon.CallbackList({
 	"NODE_REMOVE",
 	"NODE_REMAP",
 	"NODE_MOVE",
+	"PIN_EDITLITERAL",
 	"CONNECTION_ADD",
 	"CONNECTION_REMOVE",
 	"CONNECTION_REMAP",
@@ -34,21 +35,6 @@ function meta:Init(...)
 	return self
 
 end
-
---[[function meta:GetPinType(pin)
-
-	local ntype = node.nodeType
-	if ntype.meta and ntype.meta.informs then
-
-		local i = ntype.meta.informs[pinID]
-		if i then
-			return ntype.pins[i][2]
-		end
-
-	end
-	return pin[2]
-
-end]]
 
 function meta:GetNode(nodeID)
 
@@ -139,8 +125,12 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
 	if self:FindConnection(nodeID0, pinID0, nodeID1, pinID1) ~= nil then return false, "Already connected" end
 
-	local p0 = self:GetNodePin(nodeID0, pinID0)
-	local p1 = self:GetNodePin(nodeID1, pinID1)
+	local p0 = self:GetNodePin(nodeID0, pinID0) --always PD_Out
+	local p1 = self:GetNodePin(nodeID1, pinID1) --always PD_In
+
+	if p0[2] == PN_Exec and self:IsPinConnected(nodeID0, pinID0) then return false, "Only one connection outgoing for exec pins" end
+	if p1[2] ~= PN_Exec and self:IsPinConnected(nodeID1, pinID1) then return false, "Only one connection for inputs" end
+
 	if p0[1] == p1[1] then return false, "Can't connect " .. (p0[1] == PD_Out and "m/m" or "f/f") .. " pins" end
 	if bit.band(p0[4], PNF_Table) ~= bit.band(p1[4], PNF_Table) then return false, "Can't connect table to non-table pin" end
 
@@ -166,17 +156,19 @@ end
 
 function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 
-	local cc, m = self:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
-	if not cc then print(m) return false end
-
 	local p0 = self:GetNodePin(nodeID0, pinID0)
 	local p1 = self:GetNodePin(nodeID1, pinID1)
 
+	-- swap connection to ensure first is output and second is input
 	if p0[1] == PD_In and p1[1] == PD_Out then
-		table.insert(self.connections, { nodeID1, pinID1, nodeID0, pinID0 })
-	else
-		table.insert(self.connections, { nodeID0, pinID0, nodeID1, pinID1 })
+		local t = nodeID0 nodeID0 = nodeID1 nodeID1 = t
+		local t = pinID0 pinID0 = pinID1 pinID1 = t
 	end
+
+	local cc, m = self:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
+	if not cc then print(m) return false end
+
+	table.insert(self.connections, { nodeID0, pinID0, nodeID1, pinID1 })
 
 	self:FireListeners(CB_CONNECTION_ADD, self.connections[#self.connections], #self.connections)
 
@@ -203,6 +195,23 @@ function meta:Clear()
 
 end
 
+function meta:GetPinLiteral(nodeID, pinID)
+
+	local node = self.nodes[nodeID]
+	return node.literals[pinID]
+
+end
+
+function meta:SetPinLiteral(nodeID, pinID, value)
+
+	local node = self.nodes[nodeID]
+	value = tostring(value)
+
+	node.literals[pinID] = value
+	self:FireListeners(CB_PIN_EDITLITERAL, nodeID, pinID, value)
+
+end
+
 function meta:AddNode(node)
 
 	table.insert(self.nodes, node)
@@ -213,6 +222,11 @@ function meta:AddNode(node)
 	node.graphID = self.id
 	node.literals = node.literals or {}
 
+	node.x = math.Round(node.x / 15) * 15
+	node.y = math.Round(node.y / 15) * 15
+
+	self:FireListeners(CB_NODE_ADD, node, id)
+
 	for pinID, pin in pairs(node.nodeType.pins) do
 
 		if pin[1] == PD_In then
@@ -220,18 +234,15 @@ function meta:AddNode(node)
 			local literal = NodeLiteralTypes[pin[2]]
 			if literal then
 
-				node.literals[pinID] = node.literals[pinID] or Defaults[pin[2]]
+				if self:GetPinLiteral(id, pinID) == nil then
+					self:SetPinLiteral(id, pinID, Defaults[pin[2]])
+				end
 
 			end
 
 		end
 
 	end
-
-	node.x = math.Round(node.x / 15) * 15
-	node.y = math.Round(node.y / 15) * 15
-
-	self:FireListeners(CB_NODE_ADD, node, id)
 
 	return id
 
@@ -417,12 +428,17 @@ function meta:ReadFromStream(stream)
 		local nodeY = stream:ReadFloat()
 		local literals = bpdata.ReadValue( stream )
 		
-		self:AddNode({
+		local id = self:AddNode({
 			nodeType = NodeTypes[ nodeTypeName ],
 			x = nodeX,
 			y = nodeY,
 			literals = literals,
 		})
+
+		for k, v in pairs(literals) do
+			print("LOAD LITERAL[" .. id .. "|" .. self.nodes[id].nodeType.name .. "]: " .. tostring(k) .. " = " .. tostring(v))
+			self:SetPinLiteral( id, k, v )
+		end
 
 	end
 

@@ -3,7 +3,7 @@ if SERVER then AddCSLuaFile() return end
 include("sh_bpschema.lua")
 include("sh_bpnodedef.lua")
 
-module("bpuipin", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
+module("bpuipin", package.seeall, bpcommon.rescope(bpschema, bpnodedef, bpgraph))
 
 
 local PANEL = {}
@@ -22,7 +22,19 @@ function PANEL:GetHotSpot()
 
 end
 
+function PANEL:OnRemove()
+
+	if self.graph then
+		self.graph:RemoveListener(self.callback)
+	end
+
+end
+
 function PANEL:Setup(graph, node, pin, pinID)
+
+	self.callback = function(...)
+		self:OnGraphCallback(...)
+	end
 
 	self.vnode = self:GetParent()
 	self.vgraph = self.vnode.vgraph
@@ -31,6 +43,7 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self.pin = pin
 	self.pinID = pinID
 	self.pinType = self.graph:GetPinType( self.node.id, self.pinID )
+	self.graph:AddListener(self.callback, CB_PIN_EDITLITERAL)
 
 	self.pinSpot = vgui.Create("DPanel", self)
 	self.pinSpot:SetSize(10,10)
@@ -103,7 +116,7 @@ function PANEL:InitLiteral()
 		local literalType = NodeLiteralTypes[ self.pinType ]
 		if literalType then
 			self.literalType = literalType
-			local literal = self.node.literals[ self.pinID ] or ""
+			local literal = self.graph:GetPinLiteral(self.node.id, self.pinID) or ""
 
 			if self.literalType == "bool" then
 				self.checkBox = vgui.Create("DCheckBox", self)
@@ -114,10 +127,10 @@ function PANEL:InitLiteral()
 					self.checkBox:SetPos( 15, -shift_up )
 				end
 
-				self.checkBox:SetChecked( literal == "true" )
 				self.checkBox.OnChange = function(cb, val)
-					self.node.literals[self.pinID] = val and "true" or "false"
+					self.graph:SetPinLiteral( self.node.id, self.pinID, val and "true" or "false" )
 				end
+				self.checkBox:SetChecked(literal == "true" and true or false)
 
 			else
 				self.textEntry = vgui.Create("DTextEntry", self)
@@ -130,9 +143,9 @@ function PANEL:InitLiteral()
 				--self.textEntry:SetUpdateOnType(true)
 
 				
-				self.textEntry:SetText(literal)
 				--self.textEntry:SetPaintBackground(false)
 				--self.textEntry:SetTextColor( Color(255,255,255))
+				self.textEntry:SetText(literal) 
 				if literalType ~= "string" then self.textEntry:SetWide( 40 ) end
 				if literalType == "number" then self.textEntry:SetNumeric( true ) end
 				self.textEntry.OnValueChange = function(te, ...) self:OnTextValue(...) end
@@ -148,6 +161,21 @@ function PANEL:InitLiteral()
 
 end
 
+function PANEL:OnGraphCallback(cb, ...)
+
+	if cb == CB_PIN_EDITLITERAL then return self:OnLiteralEdit(...) end
+
+end
+
+function PANEL:OnLiteralEdit(nodeID, pinID, value)
+
+	if nodeID ~= self.node.id or pinID ~= self.pinID then return end
+
+	if IsValid(self.textEntry) then self.textEntry:SetText(value) end
+	if IsValid(self.checkBox) then self.checkBox:SetChecked(value == "true" and true or false) end
+
+end
+
 function PANEL:OnTextValue(str)
 
 	local literal = nil
@@ -158,8 +186,7 @@ function PANEL:OnTextValue(str)
 
 	elseif self.literalType == "number" then
 
-		literal = tonumber(str)
-		self.textEntry:SetText(tostring(literal))
+		literal = tonumber(str) or 0
 
 	elseif self.literalType == "bool" then
 
@@ -168,13 +195,12 @@ function PANEL:OnTextValue(str)
 		else
 			literal = false
 		end
-		self.textEntry:SetText(tostring(literal))
 
 	end
 
 	if literal ~= nil then
 
-		self.node.literals[self.pinID] = literal
+		self.graph:SetPinLiteral( self.node.id, self.pinID, literal )
 
 	end
 

@@ -165,8 +165,6 @@ function PANEL:SetGraph( graph )
 	self.scroll_x = 0
 	self.scroll_y = 0
 
-	print("ALL: " .. tostring(CB_ALL))
-
 	graph:AddListener(self.callback, bpgraph.CB_ALL)
 
 

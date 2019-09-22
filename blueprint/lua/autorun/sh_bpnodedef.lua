@@ -470,6 +470,15 @@ NodeTypes = {
 		code = "#1 = FrameTime()",
 		compact = true,
 	},
+	["DivideNumber"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "A" },
+			{ PD_In, PN_Number, "B" },
+			{ PD_Out, PN_Number, "result" },
+		},
+		code = "#1 = $1 / $2",
+		compact = true,
+	},
 	["MultiplyNumber"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "A" },

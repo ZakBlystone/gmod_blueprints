@@ -52,6 +52,7 @@ NodePinColors = {
 }
 
 NodePinImplicitConversions = {
+	[PN_Entity] = { PN_Player },
 	[PN_Player] = { PN_Entity },
 	[PN_Npc] = { PN_Entity },
 	[PN_Vehicle] = { PN_Entity },
