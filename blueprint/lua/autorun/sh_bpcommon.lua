@@ -2,6 +2,8 @@ AddCSLuaFile()
 
 module("bpcommon", package.seeall)
 
+file.CreateDir("blueprints")
+
 function rescope(...)
 	local scopes = {...}
 	local vars = {}

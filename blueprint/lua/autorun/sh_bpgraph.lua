@@ -62,6 +62,41 @@ function meta:GetNodePin(nodeID, pinID)
 
 end
 
+function meta:GetPinType(nodeID, pinID)
+
+	local node = self.nodes[nodeID]
+	local ntype = node.nodeType
+
+	if ntype.meta and ntype.meta.informs then
+
+		local hasInform = false
+		for i = 1, #ntype.meta.informs do
+			local t = ntype.meta.informs[i]
+			if t == pinID then hasInform = true end
+		end
+
+		if hasInform then
+			for i = 1, #ntype.meta.informs do
+
+				local t = ntype.meta.informs[i]
+
+				local isConnected, connection = self:IsPinConnected(nodeID, t)
+				if isConnected and connection ~= nil then
+
+					if connection[1] == nodeID and self:GetNodePin(connection[3], connection[4])[2] ~= PN_Any then return self:GetPinType(connection[3], connection[4]) end
+					if connection[3] == nodeID and self:GetNodePin(connection[1], connection[2])[2] ~= PN_Any then return self:GetPinType(connection[1], connection[2]) end
+
+				end
+
+			end
+		end
+
+	end
+
+	return ntype.pins[pinID][2]
+
+end
+
 function meta:FindConnection(nodeID0, pinID0, nodeID1, pinID1)
 
 	local p0 = self:GetNodePin( nodeID0, pinID0 )

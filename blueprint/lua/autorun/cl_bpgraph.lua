@@ -31,6 +31,8 @@ surface.CreateFont( "GraphTitle", {
 
 AccessorFunc( PANEL, "m_bIsLocked",	"IsLocked", FORCE_BOOL )
 
+local canvasFix = 50000
+
 function PANEL:Init()
 
 	self:SetMouseInputEnabled( true )
@@ -40,6 +42,7 @@ function PANEL:Init()
 		self:OnGraphCallback(...)
 	end
 
+	self.titleText = "Blueprint"
 	self.canvas = vgui.Create( "Panel", self )
 	self.canvas.OnMousePressed = function( self, code ) self:GetParent():OnMousePressed( code ) end
 	self.canvas.OnMouseReleased = function( self, code ) self:GetParent():OnMouseReleased( code ) end
@@ -60,8 +63,7 @@ function PANEL:Init()
 
 	end
 
-	self.canvas:SetPos(0,0)
-	self.canvas:NoClipping(true)
+	self.canvas:SetPos(-canvasFix,-canvasFix)
 
 	self.canvas:InvalidateLayout(true)
 	self.canvas:SizeToContents()
@@ -95,9 +97,10 @@ function PANEL:NodeAdded( newNode, id )
 	local b,e = pcall(function()
 		local node = vgui.Create("BPNode", self.canvas)
 		node:Setup( self.graph, newNode )
+		node.canvasFix = canvasFix
 
 		local x,y = node:GetPos()
-		node:SetPos( x, y )
+		node:SetPos( x + canvasFix, y + canvasFix )
 		--table.insert( self.nodes, node )
 		self.nodes[id] = node
 	end)
@@ -122,7 +125,7 @@ end
 
 function PANEL:NodeMove( node, nodeID, x, y )
 
-	self.nodes[nodeID]:SetPos(x, y)
+	self.nodes[nodeID]:SetPos(x + canvasFix, y + canvasFix)
 
 end
 
@@ -299,11 +302,14 @@ function PANEL:DrawConnection(connection)
 	local ax, ay = self:PinPos(avpin)
 	local bx, by = self:PinPos(bvpin)
 
+	local apintype = graph:GetPinType( connection[1], connection[2] )
+	local bpintype = graph:GetPinType( connection[3], connection[4] )
+
 	--surface.SetDrawColor(NodePinColors[ a.nodeType.pins[connection[2]][2] ])
 
 	self:DrawHermite( ax, ay, bx, by, 
-		NodePinColors[ a.node.nodeType.pins[connection[2]][2] ], 
-		NodePinColors[ b.node.nodeType.pins[connection[4]][2] ] 
+		NodePinColors[ apintype ], 
+		NodePinColors[ bpintype ] 
 	)
 
 end
@@ -386,7 +392,7 @@ function PANEL:Paint(w, h)
 	self:DrawGrid(15, Color(255,255,255,2))
 	self:DrawGrid(90, Color(255,255,255,5))
 
-	draw.SimpleText( "Title", "GraphTitle", 10, 10, Color( 255, 255, 255, 120 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+	draw.SimpleText( self.titleText, "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 
 	self:DrawConnections()
 	return true
@@ -468,8 +474,8 @@ function PANEL:OpenContext()
 
 		self.graph:AddNode({
 			nodeType = nodeType,
-			x = x,
-			y = y,
+			x = x - canvasFix,
+			y = y - canvasFix,
 		})
 
 	end

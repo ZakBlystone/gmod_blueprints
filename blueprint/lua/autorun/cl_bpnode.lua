@@ -74,6 +74,17 @@ function PANEL:Setup( graph, node )
 	self:SetWide( w )
 	self:SetTall( h )
 	self:SetPos( node.x, node.y )
+	self:BuildPins()
+
+end
+
+function PANEL:BuildPins()
+
+	if self.pins ~= nil then
+		for _, v in pairs(self.pins) do
+			v:Remove()
+		end
+	end
 
 	self.pins = {}
 
@@ -89,7 +100,7 @@ function PANEL:Setup( graph, node )
 		local vpin = vgui.Create("BPPin", self)
 		vpin:SetPos(x,y)
 		vpin:SetTall(10)
-		vpin:Setup(graph, node, pin, pinID)
+		vpin:Setup(self.graph, self.node, pin, pinID)
 
 		self.pins[pinID] = vpin
 
@@ -104,7 +115,7 @@ function PANEL:Setup( graph, node )
 		local vpin = vgui.Create("BPPin", self)
 		vpin:SetPos(x,y)
 		vpin:SetTall(10)
-		vpin:Setup(graph, node, pin, pinID)
+		vpin:Setup(self.graph, self.node, pin, pinID)
 
 		self.pins[pinID] = vpin
 
@@ -231,7 +242,7 @@ function PANEL:Think()
 		end
 
 		--self:SetPos( x, y )
-		self.graph:MoveNode( self.nodeID, x, y )
+		self.graph:MoveNode( self.nodeID, x - self.canvasFix, y - self.canvasFix )
 
 	end
 

@@ -550,8 +550,12 @@ function CompileCodeSegment(cs)
 		cs.emit("end")
 	end
 	cs.emit("__bpm.delays = {}")
-	cs.emit("__bpm.delay = function(graph, node, delay, func)")
-	cs.emit("\tlocal key = graph .. node")
+	cs.emit("__bpm.delayExists = function(key)")
+	cs.emit("\tfor i=#__bpm.delays, 1, -1 do if __bpm.delays[i].key == key then return true end end")
+	cs.emit("\treturn false")
+	cs.emit("end")
+
+	cs.emit("__bpm.delay = function(key, delay, func)")
 	cs.emit("\tfor i=#__bpm.delays, 1, -1 do if __bpm.delays[i].key == key then table.remove(__bpm.delays, i) end end")
 	cs.emit("\ttable.insert( __bpm.delays, { key = key, func = func, time = delay })")
 	cs.emit("end")
@@ -702,7 +706,7 @@ function Compile(graph)
 	cs.compiled = table.concat( cs.getContext( CTX_Code ), "\n" )
 	print(cs.compiled)
 
-	file.Write("last_compile.txt", cs.compiled)
+	file.Write("blueprints/last_compile.txt", cs.compiled)
 
 	RunString(cs.compiled)
 	local x = __BPMODULE

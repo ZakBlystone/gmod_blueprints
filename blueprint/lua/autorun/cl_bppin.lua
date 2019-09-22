@@ -30,28 +30,29 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self.node = node
 	self.pin = pin
 	self.pinID = pinID
-
-	self.pinColor = NodePinColors[ self.pin[2] ]
+	self.pinType = self.graph:GetPinType( self.node.id, self.pinID )
 
 	self.pinSpot = vgui.Create("DPanel", self)
 	self.pinSpot:SetSize(10,10)
-	self.pinSpot:SetBackgroundColor(Color(self.pinColor.r,self.pinColor.g,self.pinColor.b,255))
 
-	if bit.band(self.pin[4], PNF_Table) ~= 0 then
+	local isTable = bit.band(self.pin[4], PNF_Table) ~= 0
 
-		self.pinSpot.Paint = function(pinspot,w,h)
+	self.pinSpot.Paint = function(pinspot,w,h)
 
-			surface.SetDrawColor( pinspot:GetBackgroundColor() )
-			surface.DrawRect(0,0,w,h)
-			surface.SetDrawColor( Color(0,0,0,255) )
+		local pt = self.pinType
 
+		surface.SetDrawColor( NodePinColors[ pt ] )
+		surface.DrawRect(0,0,w,h)
+		surface.SetDrawColor( Color(0,0,0,255) )
+
+		if isTable then
 			surface.DrawRect(w/2 - 1,0,2,h)
 			surface.DrawRect(w*.25 - 1,0,2,h)
 			surface.DrawRect(w*.75,0,2,h)
-
 		end
 
 	end
+
 
 	self.pinSpot.OnMousePressed = function(...)
 
@@ -65,7 +66,7 @@ function PANEL:Setup(graph, node, pin, pinID)
 	
 	end
 
-	self:SetBackgroundColor(Color(self.pinColor.r,self.pinColor.g,self.pinColor.b,0))
+	self:SetBackgroundColor(Color(0,0,0,0))
 	self:SetSize(10,10)
 
 	local shift_up = 2
@@ -85,12 +86,24 @@ function PANEL:Setup(graph, node, pin, pinID)
 
 	end
 
+	self:InitLiteral()
+
+	self:InvalidateLayout( true )
+	self:SizeToChildren(true, true)
+
+end
+
+function PANEL:InitLiteral()
+
+	local shift_up = 2
+	if IsValid(self.checkBox) then self.checkBox:Remove() self.checkBox = nil end
+	if IsValid(self.textEntry) then self.textEntry:Remove() self.textEntry = nil end
+
 	if self.pin[1] == PD_In then
-		local literalType = NodeLiteralTypes[self.pin[2]]
+		local literalType = NodeLiteralTypes[ self.pinType ]
 		if literalType then
-			print("LITERAL TYPE: " .. literalType)
 			self.literalType = literalType
-			local literal = node.literals[ self.pinID ] or ""
+			local literal = self.node.literals[ self.pinID ] or ""
 
 			if self.literalType == "bool" then
 				self.checkBox = vgui.Create("DCheckBox", self)
@@ -101,7 +114,10 @@ function PANEL:Setup(graph, node, pin, pinID)
 					self.checkBox:SetPos( 15, -shift_up )
 				end
 
-				self.checkBox:SetChecked( literal == true )
+				self.checkBox:SetChecked( literal == "true" )
+				self.checkBox.OnChange = function(cb, val)
+					self.node.literals[self.pinID] = val and "true" or "false"
+				end
 
 			else
 				self.textEntry = vgui.Create("DTextEntry", self)
@@ -166,16 +182,12 @@ end
 
 function PANEL:Think()
 
-	--[[if self.vgraph.grabbedPin and self.vgraph.grabbedPin ~= self then
+	local prev = self.pinType
+	self.pinType = self.graph:GetPinType( self.node.id, self.pinID )
 
-		self.pinSpot:SetBackgroundColor(Color(self.pinColor.r,self.pinColor.g,self.pinColor.b,80))
-
-	else
-
-		self.pinSpot:SetBackgroundColor(Color(self.pinColor.r,self.pinColor.g,self.pinColor.b,255))
-
-	end]]
-
+	if self.pinType ~= prev then
+		self:OnPinTypeChanged( self.pinType )
+	end
 
 	if self.graph:IsPinConnected( self.node.id, self.pinID ) then
 
@@ -188,6 +200,13 @@ function PANEL:Think()
 		if self.checkBox ~= nil then self.checkBox:SetVisible(true) end
 
 	end
+
+end
+
+function PANEL:OnPinTypeChanged( pt )
+
+	print("PIN TYPE CHANGED")
+	self:InitLiteral()
 
 end
 

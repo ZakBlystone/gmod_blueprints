@@ -28,12 +28,12 @@ if SERVER then
 
 	end
 
-	local function GetPlayerModule( ply ) return PlayerModules[ply:SteamID()] end
+	local function GetPlayerModule( ply ) return PlayerModules[ply:AccountID()] end
 	local function SetPlayerModule( ply, bp )
 
 		local prev = GetPlayerModule( ply )
 		if prev ~= nil then UnhookModule(prev) end
-		PlayerModules[ply:SteamID()] = bp
+		PlayerModules[ply:AccountID()] = bp
 
 		bp.onError = function( msg, graphID, nodeID )
 
@@ -48,8 +48,30 @@ if SERVER then
 	end
 
 	local function GetPlayerGraph( ply )
-		PlayerGraphs[ply:SteamID()] = PlayerGraphs[ply:SteamID()] or bpgraph.New()
-		return PlayerGraphs[ply:SteamID()]
+		local isNew = false
+		if PlayerGraphs[ply:AccountID()] == nil then
+			PlayerGraphs[ply:AccountID()] = bpgraph.New()
+			isNew = true
+		end
+		return PlayerGraphs[ply:AccountID()], isNew
+	end
+
+	local function SavePlayerGraph( ply )
+		local name = ("blueprints/playergraph_" .. ply:AccountID() .. ".txt")
+		local graph = GetPlayerGraph( ply )
+		local outStream = bpdata.OutStream()
+		graph:WriteToStream(outStream)
+		outStream:WriteToFile(name, true, true)
+		print("Saving: " .. name)
+	end
+
+	local function LoadPlayerGraph( ply )
+		local name = ("blueprints/playergraph_" .. ply:AccountID() .. ".txt")
+		local graph = GetPlayerGraph( ply )
+		local inStream = bpdata.InStream()
+		if not file.Exists(name, "DATA") then return end
+		inStream:LoadFile(name, true, true)
+		graph:ReadFromStream(inStream)
 	end
 
 	util.AddNetworkString("bpclientcmd")
@@ -65,7 +87,7 @@ if SERVER then
 		if cmd == CMD_Upload then
 
 			local graph = GetPlayerGraph( ply )
-			--file.Write("last_server_graph_" .. ply:SteamID() .. ".txt", graphdata)
+			--file.Write("last_server_graph_" .. ply:AccountID() .. ".txt", graphdata)
 
 			local inStream = bpdata.InStream()
 			inStream:ReadFromNet(true)
@@ -74,12 +96,16 @@ if SERVER then
 			local compiled = bpcompile.Compile( graph )
 			print("Executing blueprint on server...")
 			SetPlayerModule( ply, compiled )
+			SavePlayerGraph( ply )
 
 		elseif cmd == CMD_Download then
 
 			local steamID = net.ReadString()
-			local graph = GetPlayerGraph( ply )
+			local graph, isNew = GetPlayerGraph( ply )
 			local outStream = bpdata.OutStream()
+
+			if isNew then LoadPlayerGraph( ply ) end
+
 			graph:WriteToStream(outStream)
 
 			net.Start("bpclientcmd")
@@ -110,7 +136,7 @@ else
 
 		net.Start("bpservercmd")
 		net.WriteUInt(2, 4)
-		net.WriteString( steamid or LocalPlayer():SteamID() )
+		net.WriteString( steamid or LocalPlayer():AccountID() )
 		net.SendToServer()
 
 	end

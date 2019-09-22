@@ -29,6 +29,17 @@ NodeTypes = {
 		pins = {},
 		code = [[]]
 	},
+	["Pin"] = SPECIAL {
+		pins = { 
+			{ PD_In, PN_Any, "" },
+			{ PD_Out, PN_Any, "" },
+		},
+		meta = {
+			informs = {1,2}
+		},
+		code = "#1 = $1",
+		compact = true,
+	},
 	["Think"] = EVENT {
 		pins = {
 			{ PD_Out, PN_Number, "dt" },
@@ -527,6 +538,9 @@ NodeTypes = {
 			{ PD_In, PN_Any, "scalar" },
 			{ PD_Out, PN_Bool, "result" },
 		},
+		meta = {
+			informs = {1, 2}
+		},
 		code = "#1 = $1 == $2",
 		compact = true,		
 	},
@@ -572,6 +586,12 @@ NodeTypes = {
 			{ PD_In, PN_Entity, "entity" },
 		},
 		code = "Entity_.Spawn($2)",
+	},
+	["Activate"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+		},
+		code = "Entity_.Activate($2)",
 	},
 	["Fire"] = FUNCTION {
 		pins = {
@@ -657,10 +677,7 @@ NodeTypes = {
 			{ PD_Out, PN_Any, "value" },
 		},
 		meta = {
-			informs = {
-				[5] = 2,
-				[6] = 2,
-			}
+			informs = {2,6}
 		},
 		jumpSymbols = {"iter"},
 		code = [[
@@ -695,8 +712,25 @@ NodeTypes = {
 			{ PD_Out, PN_Exec, "Thru" },
 		},	
 		code = [[
-			__bpm.delay(!graph, !node, $2, function() @graph(#_1) end)
+			__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)
 			goto popcall
+		]],
+	},
+	["Debounce"] = SPECIAL {
+		pins = {
+			{ PD_In, PN_Exec, "Exec" },
+			{ PD_In, PN_Number, "delay" },
+			{ PD_In, PN_Bool, "alwaysReset"},
+			{ PD_Out, PN_Exec, "Thru" },
+			{ PD_Out, PN_Exec, "Debounced" },
+		},	
+		locals = {"debounced"},
+		code = [[
+			%debounced = __bpm.delayExists("debounce_!graph_!node")
+			if %debounced and $3 then __bpm.delay("debounce_!graph_!node", $2, function() end) end
+			if %debounced then #2 end
+			__bpm.delay("debounce_!graph_!node", $2, function() end)
+			#1
 		]],
 	},
 	["Sequence"] = SPECIAL {
