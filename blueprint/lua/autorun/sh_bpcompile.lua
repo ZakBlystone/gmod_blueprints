@@ -58,11 +58,12 @@ function EnumerateVars(cs, nodeType)
 
 			for _, pinID in pairs(ntype.pinlayout.inputs) do
 				local pin = ntype.pins[pinID]
+				local pinType = cs.graph:GetPinType( nodeID, pinID )
 
 				if node.literals and node.literals[pinID] ~= nil then
 
 					local l = tostring(node.literals[pinID])
-					if pin[2] == PN_String then
+					if pinType == PN_String then
 						l = "\"" .. l .. "\""
 					end
 
@@ -70,7 +71,7 @@ function EnumerateVars(cs, nodeType)
 					table.insert(cs.vars, {
 						id = #cs.vars,
 						var = l,
-						type = pin[2],
+						type = pinType,
 						literal = true,
 						node = nodeID,
 						pin = pinID,
@@ -84,9 +85,11 @@ function EnumerateVars(cs, nodeType)
 
 			for _, pinID in pairs(ntype.pinlayout.outputs) do
 				local pin = ntype.pins[pinID]
-				if pin[2] == PN_Exec then continue end
+				local pinType = cs.graph:GetPinType( nodeID, pinID )
 
-				local key = "fcall_" .. ntype.name .. "_ret_" .. pin[3]
+				if pinType == PN_Exec then continue end
+
+				local key = "fcall_" .. ntype.name .. "_ret_" .. (pin[3] ~= "" and pin[3] or "pin")
 				if unique[key] ~= nil then
 					local id = 1
 					local kx = key .. id
@@ -100,8 +103,8 @@ function EnumerateVars(cs, nodeType)
 				table.insert(cs.vars, {
 					id = #cs.vars,
 					var = key,
-					type = pin[2],
-					init = Defaults[pin[2]],
+					type = pinType,
+					init = Defaults[pinType],
 					global = ntype.type ~= NT_Pure,
 					node = nodeID,
 					pin = pinID,
@@ -213,7 +216,8 @@ function CompileNodeSingle(cs, nodeID)
 	local outVars = {}
 
 	for pinID, pin in pairs( GetNodePins(cs, nodeID, PD_In) ) do
-		if pin[2] == PN_Exec then continue end
+		local pinType = cs.graph:GetPinType( nodeID, pinID )
+		if pinType == PN_Exec then continue end
 
 		local lookupID = lookup[pinID][2]
 		local connections = GetPinConnections(cs, PD_In, nodeID, pinID)
@@ -250,6 +254,7 @@ function CompileNodeSingle(cs, nodeID)
 
 	for pinID, pin in pairs( GetNodePins(cs, nodeID, PD_Out) ) do
 		
+		local pinType = cs.graph:GetPinType( nodeID, pinID )
 		local lookupID = lookup[pinID][2]
 		local connections = GetPinConnections(cs, PD_Out, nodeID, pinID)
 		if ntype.type == NT_Event then
@@ -259,7 +264,7 @@ function CompileNodeSingle(cs, nodeID)
 
 		else
 
-			if pin[2] == PN_Exec then
+			if pinType == PN_Exec then
 				outVars[lookupID] = {
 					var = #connections == 0 and "0" or connections[1][3],
 					jump = true,
@@ -357,8 +362,9 @@ function CompileNodeFunction(cs, nodeID)
 
 		local jumps = false
 		for pinID, pin in pairs( GetNodePins(cs, nodeID, PD_Out) ) do
+			local pinType = cs.graph:GetPinType( nodeID, pinID )
 
-			if pin[2] == PN_Exec then
+			if pinType == PN_Exec then
 				local connections = GetPinConnections(cs, PD_Out, nodeID, pinID)
 				for _, v in pairs(connections) do
 					cs.emit("\tgoto jmp_" .. v[3])

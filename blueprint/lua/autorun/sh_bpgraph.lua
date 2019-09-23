@@ -16,6 +16,7 @@ bpcommon.CallbackList({
 	"CONNECTION_ADD",
 	"CONNECTION_REMOVE",
 	"CONNECTION_REMAP",
+	"GRAPH_CLEAR",
 })
 
 local meta = {}
@@ -189,6 +190,8 @@ function meta:GetNodeNum(id)
 end
 
 function meta:Clear()
+
+	self:FireListeners(CB_GRAPH_CLEAR)
 
 	self.nodes = {}
 	self.connections = {}

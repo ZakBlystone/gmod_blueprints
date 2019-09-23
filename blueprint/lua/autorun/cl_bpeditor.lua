@@ -39,9 +39,9 @@ function PANEL:Init()
 				"",
 				function( text ) 
 
-					if file.Exists("bp_" .. text .. ".txt") then
+					if file.Exists("bp_" .. text .. ".txt", "DATA") then
 						local inStream = bpdata.InStream()
-						inStream:LoadFile("bp_" .. text .. ".txt", compress, base64)
+						inStream:LoadFile("bp_" .. text .. ".txt", true, true)
 						self.graph:ReadFromStream( inStream )
 					end
 
@@ -119,6 +119,10 @@ function PANEL:Init()
 	self.StatusText:SetFont("DermaDefaultBold")
 	self.StatusText:Dock( FILL )
 	self.StatusText:SetText("")
+
+	if _G.G_BPError ~= nil then
+		self.StatusText:SetText( "Blueprint Error: " .. _G.G_BPError.msg )
+	end
 
 
 	self.Content = vgui.Create("DHorizontalDivider", self)

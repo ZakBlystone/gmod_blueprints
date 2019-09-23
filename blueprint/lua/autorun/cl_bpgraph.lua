@@ -87,6 +87,7 @@ function PANEL:OnGraphCallback( cb, ... )
 	if cb == CB_CONNECTION_ADD then return self:ConnectionAdded(...) end
 	if cb == CB_CONNECTION_REMOVE then return self:ConnectionRemoved(...) end
 	if cb == CB_CONNECTION_REMAP then return self:ConnectionRemap(...) end
+	if cb == CB_GRAPH_CLEAR then return self:GraphCleared(...) end
 
 end
 
@@ -146,6 +147,19 @@ function PANEL:ConnectionRemoved( connection, id )
 
 	--self.connections[id] = nil
 	table.remove( self.connections, id )
+
+end
+
+function PANEL:GraphCleared()
+
+	for k,v in pairs(self.nodes or {}) do
+		if IsValid(v) then v:Remove() end
+	end
+
+	self.nodes = {}
+	self.connections = {}
+	self.scroll_x = 0
+	self.scroll_y = 0
 
 end
 

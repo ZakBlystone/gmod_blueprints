@@ -29,7 +29,7 @@ NodeTypes = {
 		pins = {},
 		code = [[]]
 	},
-	["Pin"] = SPECIAL {
+	["Pin"] = PURE {
 		pins = { 
 			{ PD_In, PN_Any, "" },
 			{ PD_Out, PN_Any, "" },
@@ -562,6 +562,13 @@ NodeTypes = {
 		code = "#1 = $1 ~= $2",
 		compact = true,		
 	},
+	["WaterLevel"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Number, "level" },
+		},
+		code = "#1 = Entity_.WaterLevel($1)",
+	},
 	["GetPos"] = PURE {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
@@ -610,6 +617,23 @@ NodeTypes = {
 			{ PD_In, PN_Number, "delay" },
 		},
 		code = "Entity_.Fire($2, $3, $4, $5)",
+	},
+	["SetEntityValue"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_String, "key" },
+			{ PD_In, PN_Any, "value" },
+		},
+		code = "if IsValid($2) then $2[\"bp_!graph_\" .. $3] = $4 end",
+	},
+	["GetEntityValue"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_String, "key" },
+			{ PD_Out, PN_Bool, "hasvalue"},
+			{ PD_Out, PN_Any, "value" },
+		},
+		code = "if IsValid($1) then #1 = $1[\"bp_!graph_\" .. $2] ~= nil #2 = $1[\"bp_!graph_\" .. $2] else #1 = false #2 = nil end",
 	},
 	["SetKeyValue"] = FUNCTION {
 		pins = {
@@ -793,6 +817,22 @@ NodeTypes = {
 		},
 		code = "util.ScreenShake( $2, $3, $4, $5, $6 )"
 	},
+	["MakeExplosion"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "owner", PNF_Nullable },
+			{ PD_In, PN_Vector, "position" },
+			{ PD_In, PN_Number, "damage" }
+		},
+		locals = {"ent"},
+		code = [[
+			%ent = ents.Create("env_explosion")
+			%ent:SetOwner($2)
+			%ent:SetPos($3)
+			%ent:Spawn()
+			%ent:SetKeyValue("iMagnitude", $4)
+			%ent:Fire("Explode")
+		]],
+	},
 	["Concat"] = PURE {
 		pins = {
 			{ PD_In, PN_String, "a" },
@@ -810,6 +850,35 @@ NodeTypes = {
 		},
 		compact = false,
 		code = "#1 = string.find($1, $2) ~= nil"
+	},
+	["StrFind"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "string" },
+			{ PD_In, PN_String, "find" },
+			{ PD_Out, PN_Number, "start" },
+			{ PD_Out, PN_Number, "end" },
+		},
+		compact = false,
+		locals = {"start", "end"},
+		code = "%start, %end = string.find($1, $2) #1 = %start or 0 #2 = %end or 0"
+	},
+	["StrSub"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "string" },
+			{ PD_In, PN_Number, "start" },
+			{ PD_In, PN_Number, "end" },
+			{ PD_Out, PN_String, "result" },
+		},
+		compact = false,
+		code = "#1 = string.sub($1, $2, $3) or \"\""
+	},
+	["StrTrim"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "string" },
+			{ PD_Out, PN_String, "trimmed" },
+		},
+		compact = false,
+		code = "#1 = string.Trim($1)"
 	},
 	["TableGetIndex"] = PURE {
 		pins = {

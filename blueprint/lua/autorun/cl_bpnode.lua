@@ -169,6 +169,13 @@ function PANEL:Paint(w, h)
 		draw.RoundedBox(8, 0, 0, w, h, Color(200,150,80,255))
 	end
 
+	local err = _G.G_BPError
+	if err ~= nil then
+		if err.nodeID == self.node.id then
+			draw.RoundedBox(8, 0, 0, w, h, Color(200,80,80,255))
+		end
+	end
+
 
 	local ntc = NodeTypeColors[ ntype.type ]
 	draw.RoundedBox(6, inset, inset, w - inset*2, h - inset*2, Color(20,20,20,255))

@@ -2,12 +2,15 @@ if SERVER then AddCSLuaFile() end
 
 module("bpnet", package.seeall)
 
+local CMD_Upload = 1
+local CMD_Download = 2
+local CMD_Error = 3
+
 if SERVER then
 
 	local ServerGraph = bpgraph.New()
 	PlayerModules = PlayerModules or {}
 	PlayerGraphs = PlayerGraphs or {}
-
 
 	local function HookModule( bp )
 
@@ -39,6 +42,13 @@ if SERVER then
 
 			UnhookModule(bp)
 			print("BLUEPRINT ERROR: " .. tostring(msg) .. " at " .. tostring(graphID) .. "[" .. tostring(nodeID) .. "]")
+
+			net.Start("bpclientcmd")
+			net.WriteUInt(CMD_Error, 4)
+			net.WriteUInt(graphID, 32)
+			net.WriteUInt(nodeID, 32)
+			net.WriteString(msg)
+			net.Send( ply )
 
 		end
 
@@ -77,9 +87,6 @@ if SERVER then
 	util.AddNetworkString("bpclientcmd")
 	util.AddNetworkString("bpservercmd")
 
-	local CMD_Upload = 1
-	local CMD_Download = 2
-
 	net.Receive("bpservercmd", function(len, ply)
 
 		local cmd = net.ReadUInt(4)
@@ -109,6 +116,7 @@ if SERVER then
 			graph:WriteToStream(outStream)
 
 			net.Start("bpclientcmd")
+			net.WriteUInt(CMD_Download, 4)
 			outStream:WriteToNet(true)
 			net.Send( ply )
 
@@ -124,9 +132,23 @@ else
 
 		print("RECEIVE: " .. len .. " bytes")
 
-		local inStream = bpdata.InStream()
-		inStream:ReadFromNet(true)
-		downloadTarget:ReadFromStream( inStream )
+		local cmd = net.ReadUInt(4)
+
+		if cmd == CMD_Download then
+
+			local inStream = bpdata.InStream()
+			inStream:ReadFromNet(true)
+			downloadTarget:ReadFromStream( inStream )
+
+		elseif cmd == CMD_Error then
+
+			_G.G_BPError = {
+				graphID = net.ReadUInt(32),
+				nodeID = net.ReadUInt(32),
+				msg = net.ReadString(),
+			}
+
+		end
 
 	end)
 
@@ -135,7 +157,7 @@ else
 		downloadTarget = graph
 
 		net.Start("bpservercmd")
-		net.WriteUInt(2, 4)
+		net.WriteUInt(CMD_Download, 4)
 		net.WriteString( steamid or LocalPlayer():AccountID() )
 		net.SendToServer()
 
@@ -146,11 +168,13 @@ else
 		bpcompile.Compile( graph )
 
 		net.Start("bpservercmd")
-		net.WriteUInt(1, 4)
+		net.WriteUInt(CMD_Upload, 4)
 
 		local outStream = bpdata.OutStream()
 		graph:WriteToStream(outStream)
 		outStream:WriteToNet(true)
+
+		_G.G_BPError = nil
 
 		--local toSend = outStream:GetString(true, true)
 
