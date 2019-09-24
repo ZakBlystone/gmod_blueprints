@@ -37,6 +37,24 @@ function meta:Init(...)
 
 end
 
+function meta:SetName( name )
+
+	self.name = name
+
+end
+
+function meta:GetName()
+
+	return self.name or "Graph_" .. self.id
+
+end
+
+function meta:GetTitle()
+
+	return self:GetName()
+
+end
+
 function meta:GetNode(nodeID)
 
 	return self.nodes[nodeID]
@@ -439,7 +457,7 @@ function meta:ReadFromStream(stream)
 		})
 
 		for k, v in pairs(literals) do
-			print("LOAD LITERAL[" .. id .. "|" .. self.nodes[id].nodeType.name .. "]: " .. tostring(k) .. " = " .. tostring(v))
+			--print("LOAD LITERAL[" .. id .. "|" .. self.nodes[id].nodeType.name .. "]: " .. tostring(k) .. " = " .. tostring(v))
 			self:SetPinLiteral( id, k, v )
 		end
 

@@ -67,7 +67,7 @@ if SERVER then
 	end
 
 	local function SavePlayerGraph( ply )
-		local name = ("blueprints/playergraph_" .. ply:AccountID() .. ".txt")
+		local name = ("blueprints/playermodule_" .. ply:AccountID() .. ".txt")
 		local graph = GetPlayerGraph( ply )
 		local outStream = bpdata.OutStream()
 		graph:WriteToStream(outStream)
@@ -76,7 +76,7 @@ if SERVER then
 	end
 
 	local function LoadPlayerGraph( ply )
-		local name = ("blueprints/playergraph_" .. ply:AccountID() .. ".txt")
+		local name = ("blueprints/playermodule_" .. ply:AccountID() .. ".txt")
 		local graph = GetPlayerGraph( ply )
 		local inStream = bpdata.InStream()
 		if not file.Exists(name, "DATA") then return end

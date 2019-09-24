@@ -3,6 +3,8 @@ if SERVER then AddCSLuaFile() return end
 include("cl_bpnode.lua")
 include("cl_bppin.lua")
 
+module("bpuieditor", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
+
 local PANEL = {}
 local TITLE = "Blueprint Editor"
 
@@ -26,7 +28,7 @@ function PANEL:Init()
 
 					local outStream = bpdata.OutStream()
 					self.graph:WriteToStream(outStream)
-					outStream:WriteToFile("bp_" .. text .. ".txt", true, true)
+					outStream:WriteToFile("blueprints/bp_" .. text .. ".txt", true, true)
 
 				end,
 				function( text ) end
@@ -41,7 +43,7 @@ function PANEL:Init()
 
 					if file.Exists("bp_" .. text .. ".txt", "DATA") then
 						local inStream = bpdata.InStream()
-						inStream:LoadFile("bp_" .. text .. ".txt", true, true)
+						inStream:LoadFile("blueprints/bp_" .. text .. ".txt", true, true)
 						self.graph:ReadFromStream( inStream )
 					end
 
@@ -55,6 +57,10 @@ function PANEL:Init()
 	}
 
 	--x = 20
+
+	self.callback = function(...)
+		self:OnModuleCallback(...)
+	end
 
 	self.fullScreen = false
 	self.btnMaxim:SetDisabled(false)
@@ -129,23 +135,104 @@ function PANEL:Init()
 	self.Content:Dock( FILL )
 
 	self.MenuPanel = vgui.Create("DPanel", self.Content)
-
-	self.GraphView = vgui.Create("BPGraph", self.Content)
-	self.GraphView:DockMargin( 0, 0, 0, 0 )
-	--self.GraphView:SetIsLocked(true)
+	self.GraphList = vgui.Create("DListBox", self.MenuPanel)
+	self.GraphList:Dock( FILL )
 
 	self.Content:SetLeft(self.MenuPanel)
-	self.Content:SetRight(self.GraphView)
 	self.Content:Dock( FILL )
-
-	print(tostring(e))
 
 end
 
-function PANEL:SetGraph( graph )
+function PANEL:OnRemove()
 
-	self.graph = graph
-	self.GraphView:SetGraph( graph )
+	self:SetModule(nil)
+
+end
+
+function PANEL:SelectGraph(id)
+
+	if IsValid(self.SelectedGraph) then self.SelectedGraph:SetVisible(false) end
+	self.SelectedGraph = self.vgraphs[id]
+	self.SelectedGraph:SetVisible( true )
+	self.Content:SetRight( self.SelectedGraph )
+
+end
+
+function PANEL:OnModuleCallback( cb, ... )
+
+	print("CB: " .. cb)
+
+	if cb == CB_GRAPH_ADD then self:GraphAdded(...) end
+	if cb == CB_GRAPH_REMOVE then self:GraphRemoved(...) end
+	if cb == CB_GRAPH_REMAP then self:GraphRemap(...) end
+
+end
+
+function PANEL:BuildGraphList()
+
+	self.GraphList:Clear()
+
+	for i=1, self.module:GetNumGraphs() do
+
+		local graph = self.module:GetGraph(i)
+		local item = self.GraphList:AddItem( graph:GetTitle() )
+		item:SetFont("DermaDefaultBold")
+		--item:SetColor( Color(255,255,255) )
+		item.DoClick = function()
+			self:SelectGraph(i)
+		end
+		--item.Paint = function( self, w, h )end
+
+	end
+
+end
+
+function PANEL:GraphAdded( id )
+
+	local graph = self.module:GetGraph(id)
+	local vgraph = vgui.Create("BPGraph", self.Content)
+	vgraph:SetGraph( graph )
+	vgraph:SetVisible(false)
+
+	vgraph.id = id
+	self.vgraphs[id] = vgraph
+	self:SelectGraph(id)
+	self:BuildGraphList()
+
+end
+
+function PANEL:GraphRemoved( id )
+
+	if IsValid(self.SelectedGraph) and self.SelectedGraph.id == id then
+		self.SelectedGraph:SetVisible(false)
+		self.SelectedGraph = nil
+	end
+
+	self.vgraphs[id]:Remove()
+	self.vgraphs[id] = nil
+
+	self:BuildGraphList()
+
+end
+
+function PANEL:GraphRemap( graph, oldID, newID )
+
+	self.vgraphs[oldID].id = newID
+
+end
+
+function PANEL:SetModule( mod )
+
+	if self.module then
+		self.module:RemoveListener(self.callback)
+	end
+
+	if mod == nil then return end
+
+	self.vgraphs = {}
+
+	self.module = mod
+	self.module:AddListener(self.callback, bpmodule.CB_ALL)
 
 end
 
@@ -170,10 +257,13 @@ local function OpenEditor()
 	local editor = vgui.Create( "BPEditor" )
 	editor:SetVisible(true)
 	editor:MakePopup()
-	editor:SetGraph( graph )
 	--end
 
-	bpnet.DownloadServerGraph( graph )
+	local mod = bpmodule.New()
+	editor:SetModule(mod)
+	mod:CreateTestModule()
+
+	--bpnet.DownloadServerGraph( graph )
 	--graph:CreateTestGraph()
 	--graph:RemoveNode( graph.nodes[1] )
 

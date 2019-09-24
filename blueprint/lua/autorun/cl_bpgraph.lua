@@ -42,6 +42,9 @@ function PANEL:Init()
 		self:OnGraphCallback(...)
 	end
 
+	self.nodes = {}
+	self.connections = {}
+
 	self.titleText = "Blueprint"
 	self.canvas = vgui.Create( "Panel", self )
 	self.canvas.OnMousePressed = function( self, code ) self:GetParent():OnMousePressed( code ) end
@@ -404,7 +407,7 @@ function PANEL:Paint(w, h)
 	self:DrawGrid(15, Color(255,255,255,2))
 	self:DrawGrid(90, Color(255,255,255,5))
 
-	draw.SimpleText( self.titleText, "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+	draw.SimpleText( self.graph:GetTitle(), "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 
 	self:DrawConnections()
 	return true
