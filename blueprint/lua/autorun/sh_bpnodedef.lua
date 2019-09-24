@@ -635,6 +635,13 @@ NodeTypes = {
 		},
 		code = "if IsValid($1) then #1 = $1[\"bp_!graph_\" .. $2] ~= nil #2 = $1[\"bp_!graph_\" .. $2] else #1 = false #2 = nil end",
 	},
+	["ClearEntityValue"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_String, "key" },
+		},
+		code = "if IsValid($2) then $2[\"bp_!graph_\" .. $3] = nil end",
+	},
 	["SetKeyValue"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
@@ -921,7 +928,19 @@ NodeTypes = {
 			#5 = %tr.HitNormal
 			#6 = %tr.Fraction
 		]],
-	}
+	},
+	["CheckValue"] = PURE {
+		pins = {
+			{ PD_In, PN_Any, "value" },
+			{ PD_In, PN_Any, "default" },
+			{ PD_Out, PN_Any, "out" },
+		},
+		compact = false,
+		meta = {
+			informs = {1,2}
+		},
+		code = [[#1 = (type($1) == type($2)) and $1 or $2]],
+	},
 }
 
 local function AddHook(name, args)
