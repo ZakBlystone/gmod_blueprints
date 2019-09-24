@@ -24,15 +24,17 @@ local CTX_JumpTable = "jumptable_"
 local CTX_MetaTables = "metatables_"
 local CTX_Vars = "vars_"
 local CTX_Code = "code"
+local CTX_MetaEvents = "metaevents_"
 
-function EnumerateVars(cs, nodeType)
+function EnumerateGraphVars(cs, nodeType, uniqueKeys)
 
-	local unique = {}
+	unique = uniqueKeys or {}
 	for nodeID, node in pairs(cs.graph.nodes) do
 		local ntype = node.nodeType
 		local extType = ntype.type
 		if extType == nodeType then
 
+			-- some nodetypes have local variables exclusive to themselves
 			for _, l in pairs(ntype.locals or {}) do
 
 				local key = "local_" .. ntype.name .. "_v_" .. l
@@ -52,10 +54,12 @@ function EnumerateVars(cs, nodeType)
 					var = key,
 					localvar = l,
 					node = nodeID,
+					graph = cs.graph.id,
 				})
 
 			end
 
+			-- unconnected pins can contain literals, make internal variables for them
 			for _, pinID in pairs(ntype.pinlayout.inputs) do
 				local pin = ntype.pins[pinID]
 				local pinType = cs.graph:GetPinType( nodeID, pinID )
@@ -75,6 +79,7 @@ function EnumerateVars(cs, nodeType)
 						literal = true,
 						node = nodeID,
 						pin = pinID,
+						graph = cs.graph.id,
 					})
 
 				end
@@ -83,6 +88,7 @@ function EnumerateVars(cs, nodeType)
 
 			PrintTable(node.literals)
 
+			-- output pins create local variables, if the function is non-pure, the return variable is global
 			for _, pinID in pairs(ntype.pinlayout.outputs) do
 				local pin = ntype.pins[pinID]
 				local pinType = cs.graph:GetPinType( nodeID, pinID )
@@ -108,6 +114,7 @@ function EnumerateVars(cs, nodeType)
 					global = ntype.type ~= NT_Pure,
 					node = nodeID,
 					pin = pinID,
+					graph = cs.graph.id,
 				})
 			end
 		end
@@ -120,6 +127,7 @@ function FindLocalVarForNode(cs, nodeID, vname)
 	for k,v in pairs(cs.vars) do
 
 		if not v.localvar then continue end
+		if v.graph ~= cs.graph.id then continue end
 		if v.node == nodeID and v.localvar == vname then return v end
 
 	end
@@ -131,9 +139,17 @@ function FindVarForPin(cs, nodeID, pinID)
 	for k,v in pairs(cs.vars) do
 
 		if v.localvar then continue end
+		if v.graph ~= cs.graph.id then continue end
 		if v.node == nodeID and v.pin == pinID then return v end
 
 	end
+
+end
+
+function GetVarCode(cs, var)
+
+	if var.global then return "__self." .. var.var end
+	return var.var
 
 end
 
@@ -172,18 +188,18 @@ function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 	str = string.Replace( str, "!graph", tostring(cs.graph.id))
 
 	for k,v in pairs(inVars) do
-		str = string.Replace( str, "$" .. k, v.var )
+		str = string.Replace( str, "$" .. k, GetVarCode(cs, v) )
 	end
 
 	for k,v in pairs(outVars) do
-		str = string.Replace( str, "#" .. k, v.jump and "goto jmp_" .. v.var or v.var )
-		str = string.Replace( str, "#_" .. k, v.var )
+		str = string.Replace( str, "#" .. k, v.jump and "goto jmp_" .. GetVarCode(cs, v) or GetVarCode(cs, v) )
+		str = string.Replace( str, "#_" .. k, GetVarCode(cs, v) )
 	end
 
 	for k,v in pairs(ntype.locals or {}) do
 		local var = FindLocalVarForNode(cs, nodeID, v)
 		if var == nil then error("Failed to find internal variable: " .. tostring(v)) end
-		str = string.Replace( str, "%" .. v, var.var )
+		str = string.Replace( str, "%" .. v, GetVarCode(cs, var) )
 	end
 
 	for k,v in pairs(cs.nodejumps[nodeID] or {}) do
@@ -427,7 +443,7 @@ function CompileMetaTableLookup(cs)
 
 end
 
-function CompileJumpTable(cs)
+function CompileGraphJumpTable(cs)
 
 	cs.begin(CTX_JumpTable .. cs.graph.id)
 
@@ -458,7 +474,7 @@ function CompileJumpTable(cs)
 
 end
 
-function CompileVarListing(cs)
+function CompileGlobalVarListing(cs)
 
 	cs.begin(CTX_Vars .. "global")
 
@@ -466,7 +482,7 @@ function CompileVarListing(cs)
 
 		if not v.literal and v.global then
 
-			cs.emit("local " .. v.var .. " = nil")
+			cs.emit("instance." .. v.var .. " = nil")
 
 		end
 
@@ -474,10 +490,15 @@ function CompileVarListing(cs)
 
 	cs.finish()
 
+end
+
+function CompileGraphVarListing(cs)
+
 	cs.begin(CTX_Vars .. cs.graph.id)
 
 	for k, v in pairs(cs.vars) do
 
+		if v.graph ~= cs.graph.id then continue end
 		if not v.literal and not v.global then
 
 			cs.emit("local " .. v.var .. " = nil")
@@ -492,17 +513,20 @@ end
 
 function CompileGraphEntry(cs)
 
-	cs.begin(CTX_Graph .. cs.graph.id)
+	local graphID = cs.graph.id
 
-	cs.emit("\nlocal function graph_" .. cs.graph.id .. "_entry( ip )\n")
+	print("ENTRY: " .. CTX_Graph .. graphID)
+	cs.begin(CTX_Graph .. graphID)
+
+	cs.emit("\nlocal function graph_" .. graphID .. "_entry( ip )\n")
 
 	cs.emit("\tlocal cs = {}")
 
 	if cs.debug then
-		cs.emit( "\t__dbggraph = " .. cs.graph.id)
+		cs.emit( "\t__dbggraph = " .. graphID)
 	end
 
-	cs.emitContext( CTX_Vars .. cs.graph.id, 1 )
+	cs.emitContext( CTX_Vars .. graphID, 1 )
 
 	cs.emit( "\tlocal function pushjmp(i) table.insert(cs, 1, i) end")
 
@@ -512,7 +536,7 @@ function CompileGraphEntry(cs)
 
 	cs.emit( "\n\t::jumpto::" )
 
-	cs.emitContext( CTX_JumpTable .. cs.graph.id, 1 )
+	cs.emitContext( CTX_JumpTable .. graphID, 1 )
 
 	local code = cs.getFilteredContexts("functionnode")
 	for k, _ in pairs(code) do
@@ -533,6 +557,7 @@ function CompileCodeSegment(cs)
 	cs.begin(CTX_Code)
 
 	cs.emitContext( CTX_MetaTables )
+	cs.emit("local __self = nil")
 
 	if cs.debug then
 		cs.emit( "local __dbgnode = -1")
@@ -546,15 +571,21 @@ function CompileCodeSegment(cs)
 	end
 
 	cs.emit("local __bpm = {}")
-	cs.emitContext( CTX_Vars .. "global" )
-	cs.emitContext( CTX_Graph .. cs.graph.id  )
+	--cs.emitContext( CTX_Graph .. cs.graph.id  )
+
+	for i=1, cs.module:GetNumGraphs() do
+		print("EMIT: " .. CTX_Graph .. cs.module:GetGraph(i).id)
+		cs.emitContext( CTX_Graph .. cs.module:GetGraph(i).id )
+	end
 
 	if cs.ilp then
 		cs.emit("__bpm.checkilp = function()")
-		cs.emit("\tif __ilph > " .. cs.ilpmaxh .. " then __bpm.onError(\"Infinite loop in hook\", __dbggraph or -1, __dbgnode or -1) return true end")
-		cs.emit("\tif __ilptrip then __bpm.onError(\"Infinite loop\", __dbggraph or -1, __dbgnode or -1) return true end")
+		cs.emit("\tif __ilph > " .. cs.ilpmaxh .. " then __bpm.onError(\"Infinite loop in hook\", " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) return true end")
+		cs.emit("\tif __ilptrip then __bpm.onError(\"Infinite loop\", " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) return true end")
 		cs.emit("end")
 	end
+	cs.emit("local meta = BLUEPRINT_OVERRIDE_META or {}")
+	cs.emit("if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end")
 	cs.emit("__bpm.delays = {}")
 	cs.emit("__bpm.delayExists = function(key)")
 	cs.emit("\tfor i=#__bpm.delays, 1, -1 do if __bpm.delays[i].key == key then return true end end")
@@ -566,12 +597,12 @@ function CompileCodeSegment(cs)
 	cs.emit("\ttable.insert( __bpm.delays, { key = key, func = func, time = delay })")
 	cs.emit("end")
 
-	cs.emit("__bpm.onError = function(msg, graph, node) end")
+	cs.emit("__bpm.onError = function(msg, mod, graph, node) end")
 	cs.emit("__bpm.call = function(eventName, ...)")
 	cs.emit("\tlocal evt = __bpm.events[eventName]")
 	cs.emit("\tif not evt then __bpm.onError(\"Event \" .. eventName .. \" doesn't exist.\",-1,-1) return end")
 	cs.emit("\tlocal s, a,b,c,d,e,f,g = pcall( evt.func, ... )")
-	cs.emit("\tif not s then __bpm.onError(a:sub(a:find(':', 11)+2, -1), __dbggraph or -1, __dbgnode or -1) end")
+	cs.emit("\tif not s then __bpm.onError(a:sub(a:find(':', 11)+2, -1), " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) end")
 	cs.emit("end")
 
 	cs.emit("__bpm.update = function()")
@@ -583,43 +614,28 @@ function CompileCodeSegment(cs)
 	cs.emit("\tend")
 	cs.emit("end")
 
+	local code = cs.getFilteredContexts(CTX_MetaEvents)
+	for k, _ in pairs(code) do
+		cs.emitContext( k )
+	end
+
+	cs.emit("__bpm.new = function()")
+	cs.emit("\tlocal instance = setmetatable({}, meta)")
+	cs.emitContext( CTX_Vars .. "global", 1 )
+	cs.emit("\treturn instance")
+	cs.emit("end")
 	cs.emit("__bpm.events = {")
-	cs.emit("\t[\"InternalUpdate\"] = { hook = \"Think\", graphID = " .. cs.graph.id .. ", nodeID = -1, func = __bpm.update },")
+	cs.emit("\t[\"InternalUpdate\"] = { hook = \"Think\", moduleID = " .. cs.module.id .. ", nodeID = -1, func = __bpm.update },")
 
 	for k, v in pairs(cs.graph.nodes) do
-		if v.nodeType.type == NT_Event then
+		if v.nodeType.type == NT_Event and v.nodeType.hook then
 
 			cs.emit("\t[\"" .. v.nodeType.name .. "\"] = {")
 
-			if v.nodeType.hook then
-
-				cs.emit("\t\thook = \"" .. v.nodeType.hook .. "\",")
-
-			end
-
+			cs.emit("\t\thook = \"" .. v.nodeType.hook .. "\",")
 			cs.emit("\t\tgraphID = " .. cs.graph.id .. ",")
 			cs.emit("\t\tnodeID = " .. k .. ",")
-			cs.emit("\t\tfunc = function(...)")
-
-			cs.emit("\t\t\tlocal arg = {...}")
-
-			cs.emitContext( CTX_SingleNode .. k, 3 )
-
-			if cs.ilp then
-				cs.emit("\t\t\tif __bpm.checkilp() then return end")
-				cs.emit("\t\t\t__ilptrip = false")
-				cs.emit("\t\t\t__ilp = 0")
-				cs.emit("\t\t\t__ilph = __ilph + 1")
-			end
-
-			cs.emit("\t\t\tgraph_" .. cs.graph.id .. "_entry(" .. k .. ")")
-
-			if cs.ilp then
-				cs.emit("\t\t\tif __bpm.checkilp() then return end")
-				cs.emit("\t\t\t__ilph = __ilph - 1")
-			end
-
-			cs.emit("\t\tend")
+			--cs.emit("\t\tfunc = nil,")
 
 			cs.emit("\t},")
 
@@ -635,12 +651,83 @@ function CompileCodeSegment(cs)
 
 end
 
-function Compile(graph)
+function PreCompileGraph(cs, graph, uniqueKeys)
 
-	print("COMPILE GRAPH")
+	cs.graph = graph
+
+	EnumerateGraphVars(cs, NT_Pure)
+	EnumerateGraphVars(cs, NT_Function, uniqueKeys)
+	EnumerateGraphVars(cs, NT_Event, uniqueKeys)
+	EnumerateGraphVars(cs, NT_Special, uniqueKeys)
+
+	CompileGraphJumpTable(cs)
+	CompileGraphVarListing(cs)
+
+end
+
+function CompileGraphMetaHook(cs, graph, nodeID)
+
+	local node = cs.graph.nodes[nodeID]
+
+	cs.begin(CTX_MetaEvents .. node.nodeType.name)
+
+	cs.emit("function meta:" .. node.nodeType.name .. "(...)")
+
+	cs.emit("\tlocal arg = {...}")
+	cs.emit("\t__self = self")
+	cs.emitContext( CTX_SingleNode .. nodeID, 1 )
+
+	if cs.ilp then
+		cs.emit("\tif __bpm.checkilp() then return end")
+		cs.emit("\t__ilptrip = false")
+		cs.emit("\t__ilp = 0")
+		cs.emit("\t__ilph = __ilph + 1")
+	end
+
+	cs.emit("\tlocal b,e = pcall(graph_" .. cs.graph.id .. "_entry, " .. nodeID .. ")")
+	cs.emit("\tif not b then __bpm.onError(tostring(e), " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) end")
+
+	if cs.ilp then
+		cs.emit("\tif __bpm.checkilp() then return end")
+		cs.emit("\t__ilph = __ilph - 1")
+	end
+
+	cs.emit("end")
+
+	cs.finish()
+
+end
+
+function CompileGraph(cs, graph)
+
+	cs.graph = graph
+
+	for k, v in pairs(cs.graph.nodes) do
+		CompileNodeSingle(cs, k)
+	end
+
+	for k, v in pairs(cs.graph.nodes) do
+		if v.nodeType.type ~= NT_Pure then
+			CompileNodeFunction(cs, k)
+		end
+	end
+
+	for k, v in pairs(cs.graph.nodes) do
+		if v.nodeType.type == NT_Event then
+			CompileGraphMetaHook(cs, graph, k)
+		end
+	end
+
+	CompileGraphEntry(cs)
+
+end
+
+function Compile(mod)
+
+	print("COMPILE MODULE")
 
 	local cs = {
-		graph = graph,
+		module = mod,
 		compiledNodes = {},
 		vars = {},
 		nodejumps = {},
@@ -685,36 +772,27 @@ function Compile(graph)
 		return out
 	end
 
-	EnumerateVars(cs, NT_Pure)
-	EnumerateVars(cs, NT_Function)
-	EnumerateVars(cs, NT_Event)
-	EnumerateVars(cs, NT_Special)
-
-	CompileJumpTable(cs)
-
-	for k, v in pairs(cs.graph.nodes) do
-		--if v.nodeType.type ~= NT_Event then
-			CompileNodeSingle(cs, k)
-		--end
-	end
-
-	for k, v in pairs(cs.graph.nodes) do
-		if v.nodeType.type ~= NT_Pure then
-			CompileNodeFunction(cs, k)
-		end
-	end
-
 	CompileMetaTableLookup(cs)
-	CompileVarListing(cs)
-	CompileGraphEntry(cs)
+
+	local uniqueKeys = {}
+	for i=1, mod:GetNumGraphs() do
+		PreCompileGraph( cs, mod:GetGraph(i), uniqueKeys )
+	end
+
+	CompileGlobalVarListing(cs)
+
+	for i=1, mod:GetNumGraphs() do
+		CompileGraph( cs, mod:GetGraph(i) )
+	end
+
 	CompileCodeSegment(cs)
 
 	cs.compiled = table.concat( cs.getContext( CTX_Code ), "\n" )
-	print(cs.compiled)
 
+	--print(cs.compiled)
 	file.Write("blueprints/last_compile.txt", cs.compiled)
 
-	RunString(cs.compiled)
+	RunString(cs.compiled, "")
 	local x = __BPMODULE
 	__BPMODULE = nil
 	return x
@@ -722,6 +800,15 @@ function Compile(graph)
 end
 
 if SERVER then
-	local graph = bpgraph.CreateTestGraph()
-	local code = Compile(graph)
+	local mod = bpmodule.CreateTestModule()
+	local code = Compile(mod)
+	local inst = code.new()
+
+	code.onError = function(msg, mod, graph, node)
+		print("BLUEPRINT ERROR[" .. mod .. "]: " .. tostring(msg) .. " at " .. tostring(graph) .. "[" .. tostring(node) .. "]")
+	end
+
+	print("New Instance: " .. tostring(inst))
+	PrintTable(getmetatable(inst))
+	inst:PlayerTick()
 end

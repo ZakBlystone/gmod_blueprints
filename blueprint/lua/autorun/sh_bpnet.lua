@@ -67,7 +67,7 @@ if SERVER then
 	end
 
 	local function SavePlayerGraph( ply )
-		local name = ("blueprints/playermodule_" .. ply:AccountID() .. ".txt")
+		local name = ("blueprints/playerblueprint_" .. ply:AccountID() .. ".txt")
 		local graph = GetPlayerGraph( ply )
 		local outStream = bpdata.OutStream()
 		graph:WriteToStream(outStream)
@@ -76,7 +76,7 @@ if SERVER then
 	end
 
 	local function LoadPlayerGraph( ply )
-		local name = ("blueprints/playermodule_" .. ply:AccountID() .. ".txt")
+		local name = ("blueprints/playerblueprint_" .. ply:AccountID() .. ".txt")
 		local graph = GetPlayerGraph( ply )
 		local inStream = bpdata.InStream()
 		if not file.Exists(name, "DATA") then return end
@@ -93,21 +93,21 @@ if SERVER then
 
 		if cmd == CMD_Upload then
 
-			local graph = GetPlayerGraph( ply )
+			local mod = bpmodule.New() --GetPlayerGraph( ply )
 			--file.Write("last_server_graph_" .. ply:AccountID() .. ".txt", graphdata)
 
 			local inStream = bpdata.InStream()
 			inStream:ReadFromNet(true)
-			graph:ReadFromStream( inStream )
+			mod:ReadFromStream( inStream )
 
-			local compiled = bpcompile.Compile( graph )
+			local compiled = bpcompile.Compile( mod )
 			print("Executing blueprint on server...")
-			SetPlayerModule( ply, compiled )
-			SavePlayerGraph( ply )
+			--SetPlayerModule( ply, compiled )
+			--SavePlayerGraph( ply )
 
 		elseif cmd == CMD_Download then
 
-			local steamID = net.ReadString()
+			--[[local steamID = net.ReadString()
 			local graph, isNew = GetPlayerGraph( ply )
 			local outStream = bpdata.OutStream()
 
@@ -118,7 +118,7 @@ if SERVER then
 			net.Start("bpclientcmd")
 			net.WriteUInt(CMD_Download, 4)
 			outStream:WriteToNet(true)
-			net.Send( ply )
+			net.Send( ply )]]
 
 		end
 
@@ -152,9 +152,9 @@ else
 
 	end)
 
-	function DownloadServerGraph( graph, steamid )
+	function DownloadServerModule( mod, steamid )
 
-		downloadTarget = graph
+		downloadTarget = mod
 
 		net.Start("bpservercmd")
 		net.WriteUInt(CMD_Download, 4)
@@ -163,15 +163,15 @@ else
 
 	end
 
-	function SendGraph( graph )
+	function SendModule( mod )
 
-		bpcompile.Compile( graph )
+		bpcompile.Compile( mod )
 
 		net.Start("bpservercmd")
 		net.WriteUInt(CMD_Upload, 4)
 
 		local outStream = bpdata.OutStream()
-		graph:WriteToStream(outStream)
+		mod:WriteToStream(outStream)
 		outStream:WriteToNet(true)
 
 		_G.G_BPError = nil

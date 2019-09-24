@@ -2,6 +2,7 @@ if SERVER then AddCSLuaFile() return end
 
 include("cl_bpnode.lua")
 include("cl_bppin.lua")
+include("sh_bpmodule.lua")
 
 module("bpuieditor", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
@@ -16,19 +17,35 @@ function PANEL:Init()
 	local y = (ScrH() - h)/2
 
 	local MenuOptions = {
-		{"New", function(p)
-			p:SetGraph( bpgraph.New() )
+		{"New Module", function(p)
+			p:SetModule( bpmodule.New() )
+		end},
+		{"New Graph", function(p)
+			local m = p:GetModule()
+			if m ~= nil then
+				Derma_StringRequest(
+					"New Graph",
+					"What to call it?",
+					"",
+					function( text ) 
+
+						m:NewGraph(text)
+
+					end,
+					function( text ) end
+				)				
+			end
 		end},
 		{"Save", function()
 			Derma_StringRequest(
-				"Save Graph",
+				"Save Blueprint",
 				"What filename though?",
 				"",
 				function( text ) 
 
 					local outStream = bpdata.OutStream()
-					self.graph:WriteToStream(outStream)
-					outStream:WriteToFile("blueprints/bp_" .. text .. ".txt", true, true)
+					self.module:WriteToStream(outStream)
+					outStream:WriteToFile("blueprints/bpm_" .. text .. ".txt", true, true)
 
 				end,
 				function( text ) end
@@ -36,15 +53,15 @@ function PANEL:Init()
 		end},
 		{"Load", function()
 			Derma_StringRequest(
-				"Load Graph",
+				"Load Blueprint",
 				"What filename though?",
 				"",
 				function( text ) 
 
-					if file.Exists("bp_" .. text .. ".txt", "DATA") then
+					if file.Exists("blueprints/bpm_" .. text .. ".txt", "DATA") then
 						local inStream = bpdata.InStream()
-						inStream:LoadFile("blueprints/bp_" .. text .. ".txt", true, true)
-						self.graph:ReadFromStream( inStream )
+						inStream:LoadFile("blueprints/bpm_" .. text .. ".txt", true, true)
+						self.module:ReadFromStream( inStream )
 					end
 
 				end,
@@ -52,7 +69,7 @@ function PANEL:Init()
 			)
 		end},
 		{"Compile and upload", function()
-			bpnet.SendGraph( self.graph )
+			bpnet.SendModule( self.module )
 		end},
 	}
 
@@ -162,6 +179,7 @@ function PANEL:OnModuleCallback( cb, ... )
 
 	print("CB: " .. cb)
 
+	if cb == CB_MODULE_CLEAR then self:Clear(...) end
 	if cb == CB_GRAPH_ADD then self:GraphAdded(...) end
 	if cb == CB_GRAPH_REMOVE then self:GraphRemoved(...) end
 	if cb == CB_GRAPH_REMAP then self:GraphRemap(...) end
@@ -172,6 +190,7 @@ function PANEL:BuildGraphList()
 
 	self.GraphList:Clear()
 
+	if self.module == nil then return end
 	for i=1, self.module:GetNumGraphs() do
 
 		local graph = self.module:GetGraph(i)
@@ -184,6 +203,17 @@ function PANEL:BuildGraphList()
 		--item.Paint = function( self, w, h )end
 
 	end
+
+end
+
+function PANEL:Clear()
+
+	for _, v in pairs(self.vgraphs or {}) do
+		v:Remove()
+	end
+
+	self.vgraphs = {}
+	self:BuildGraphList()
 
 end
 
@@ -227,12 +257,17 @@ function PANEL:SetModule( mod )
 		self.module:RemoveListener(self.callback)
 	end
 
-	if mod == nil then return end
-
-	self.vgraphs = {}
-
 	self.module = mod
+	self:Clear()
+
+	if mod == nil then return end
 	self.module:AddListener(self.callback, bpmodule.CB_ALL)
+
+end
+
+function PANEL:GetModule()
+
+	return self.module
 
 end
 
@@ -261,9 +296,9 @@ local function OpenEditor()
 
 	local mod = bpmodule.New()
 	editor:SetModule(mod)
-	mod:CreateTestModule()
+	--mod:CreateTestModule()
 
-	--bpnet.DownloadServerGraph( graph )
+	--bpnet.DownloadServerModule( mod )
 	--graph:CreateTestGraph()
 	--graph:RemoveNode( graph.nodes[1] )
 
