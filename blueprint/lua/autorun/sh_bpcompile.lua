@@ -25,6 +25,7 @@ local CTX_MetaTables = "metatables_"
 local CTX_Vars = "vars_"
 local CTX_Code = "code"
 local CTX_MetaEvents = "metaevents_"
+local CTX_Hooks = "hooks_"
 
 function EnumerateGraphVars(cs, nodeType, uniqueKeys)
 
@@ -586,6 +587,7 @@ function CompileCodeSegment(cs)
 	end
 	cs.emit("local meta = BLUEPRINT_OVERRIDE_META or {}")
 	cs.emit("if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end")
+	cs.emit("__bpm.meta = meta")
 	cs.emit("__bpm.delays = {}")
 	cs.emit("__bpm.delayExists = function(key)")
 	cs.emit("\tfor i=#__bpm.delays, 1, -1 do if __bpm.delays[i].key == key then return true end end")
@@ -614,8 +616,7 @@ function CompileCodeSegment(cs)
 	cs.emit("\tend")
 	cs.emit("end")
 
-	local code = cs.getFilteredContexts(CTX_MetaEvents)
-	for k, _ in pairs(code) do
+	for k, _ in pairs( cs.getFilteredContexts(CTX_MetaEvents) ) do
 		cs.emitContext( k )
 	end
 
@@ -625,21 +626,9 @@ function CompileCodeSegment(cs)
 	cs.emit("\treturn instance")
 	cs.emit("end")
 	cs.emit("__bpm.events = {")
-	cs.emit("\t[\"InternalUpdate\"] = { hook = \"Think\", moduleID = " .. cs.module.id .. ", nodeID = -1, func = __bpm.update },")
 
-	for k, v in pairs(cs.graph.nodes) do
-		if v.nodeType.type == NT_Event and v.nodeType.hook then
-
-			cs.emit("\t[\"" .. v.nodeType.name .. "\"] = {")
-
-			cs.emit("\t\thook = \"" .. v.nodeType.hook .. "\",")
-			cs.emit("\t\tgraphID = " .. cs.graph.id .. ",")
-			cs.emit("\t\tnodeID = " .. k .. ",")
-			--cs.emit("\t\tfunc = nil,")
-
-			cs.emit("\t},")
-
-		end
+	for k, _ in pairs( cs.getFilteredContexts(CTX_Hooks) ) do
+		cs.emitContext( k, 1 )
 	end
 
 	cs.emit("}")
@@ -719,6 +708,27 @@ function CompileGraph(cs, graph)
 	end
 
 	CompileGraphEntry(cs)
+
+	cs.begin(CTX_Hooks .. cs.graph.id)
+
+	for k, v in pairs(cs.graph.nodes) do
+		if v.nodeType.type == NT_Event and v.nodeType.hook then
+
+			cs.emit("[\"" .. v.nodeType.name .. "\"] = {")
+
+			cs.emit("\thook = \"" .. v.nodeType.hook .. "\",")
+			cs.emit("\tgraphID = " .. cs.graph.id .. ",")
+			cs.emit("\tnodeID = " .. k .. ",")
+			cs.emit("\tmoduleID = " .. cs.module.id .. ",")
+			cs.emit("\tkey = \"__bphook_" .. cs.module.id .. "\"")
+			--cs.emit("\t\tfunc = nil,")
+
+			cs.emit("},")
+
+		end
+	end
+
+	cs.finish()
 
 end
 
@@ -801,7 +811,8 @@ end
 
 if SERVER then
 	local mod = bpmodule.CreateTestModule()
-	local code = Compile(mod)
+	mod:Compile()
+	--[[local code = Compile(mod)
 	local inst = code.new()
 
 	code.onError = function(msg, mod, graph, node)
@@ -810,5 +821,5 @@ if SERVER then
 
 	print("New Instance: " .. tostring(inst))
 	PrintTable(getmetatable(inst))
-	inst:PlayerTick()
+	inst:PlayerTick()]]
 end

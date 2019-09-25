@@ -6,82 +6,68 @@ local CMD_Upload = 1
 local CMD_Download = 2
 local CMD_Error = 3
 
+local function PlayerKey(ply)
+	return ply:AccountID() or "singleplayer"
+end
+
 if SERVER then
 
 	local ServerGraph = bpgraph.New()
 	PlayerModules = PlayerModules or {}
-	PlayerGraphs = PlayerGraphs or {}
 
-	local function HookModule( bp )
+	local function ErrorHandler( bp, msg, graphID, nodeID )
 
-		for k,v in pairs(bp.events) do
-			if not v.hook then continue end
-			local function safeCall(...) bp.call(k, ...) end
-			hook.Add(v.hook, "__bphook_" .. v.graphID .. "_" .. v.nodeID, safeCall)
-		end
+		bp:SetEnabled(false)
+		print("BLUEPRINT ERROR: " .. tostring(msg) .. " at " .. tostring(graphID) .. "[" .. tostring(nodeID) .. "]")
 
-	end
-
-	local function UnhookModule( bp )
-
-		for k,v in pairs(bp.events) do
-			if not v.hook then continue end
-			hook.Remove(v.hook, "__bphook_" .. v.graphID .. "_" .. v.nodeID)
-		end		
+		net.Start("bpclientcmd")
+		net.WriteUInt(CMD_Error, 4)
+		net.WriteUInt(bp.id, 32)
+		net.WriteUInt(graphID, 32)
+		net.WriteUInt(nodeID, 32)
+		net.WriteString(msg)
+		net.Send( bp.owner )
 
 	end
 
-	local function GetPlayerModule( ply ) return PlayerModules[ply:AccountID()] end
+	local function GetPlayerModule( ply ) return PlayerModules[PlayerKey(ply)] end
 	local function SetPlayerModule( ply, bp )
 
 		local prev = GetPlayerModule( ply )
-		if prev ~= nil then UnhookModule(prev) end
-		PlayerModules[ply:AccountID()] = bp
+		if prev ~= nil then prev:SetEnabled(false) end
+		PlayerModules[PlayerKey(ply)] = bp
 
-		bp.onError = function( msg, graphID, nodeID )
-
-			UnhookModule(bp)
-			print("BLUEPRINT ERROR: " .. tostring(msg) .. " at " .. tostring(graphID) .. "[" .. tostring(nodeID) .. "]")
-
-			net.Start("bpclientcmd")
-			net.WriteUInt(CMD_Error, 4)
-			net.WriteUInt(graphID, 32)
-			net.WriteUInt(nodeID, 32)
-			net.WriteString(msg)
-			net.Send( ply )
-
-		end
-
-		HookModule(bp)
-		if bp.events["Init"] then bp.call("Init") end
+		bp.owner = ply
+		bp:SetErrorHandler( ErrorHandler )
+		bp:SetEnabled(true)
 
 	end
 
-	local function GetPlayerGraph( ply )
+	local function GetPlayerBlueprint( ply )
 		local isNew = false
-		if PlayerGraphs[ply:AccountID()] == nil then
-			PlayerGraphs[ply:AccountID()] = bpgraph.New()
+		if PlayerModules[PlayerKey(ply)] == nil then
+			PlayerModules[PlayerKey(ply)] = bpmodule.New()
 			isNew = true
 		end
-		return PlayerGraphs[ply:AccountID()], isNew
+		return PlayerModules[PlayerKey(ply)], isNew
 	end
 
-	local function SavePlayerGraph( ply )
-		local name = ("blueprints/playerblueprint_" .. ply:AccountID() .. ".txt")
-		local graph = GetPlayerGraph( ply )
+	local function SavePlayerBlueprint( ply )
+		local name = ("blueprints/playerblueprint_" .. PlayerKey(ply) .. ".txt")
+		local bp = GetPlayerBlueprint( ply )
 		local outStream = bpdata.OutStream()
-		graph:WriteToStream(outStream)
+		bp:WriteToStream(outStream)
 		outStream:WriteToFile(name, true, true)
 		print("Saving: " .. name)
 	end
 
-	local function LoadPlayerGraph( ply )
-		local name = ("blueprints/playerblueprint_" .. ply:AccountID() .. ".txt")
-		local graph = GetPlayerGraph( ply )
+	local function LoadPlayerBlueprint( ply )
+		local name = ("blueprints/playerblueprint_" .. PlayerKey(ply) .. ".txt")
+		local bp = GetPlayerBlueprint( ply )
 		local inStream = bpdata.InStream()
 		if not file.Exists(name, "DATA") then return end
 		inStream:LoadFile(name, true, true)
-		graph:ReadFromStream(inStream)
+		bp:ReadFromStream(inStream)
 	end
 
 	util.AddNetworkString("bpclientcmd")
@@ -93,32 +79,29 @@ if SERVER then
 
 		if cmd == CMD_Upload then
 
-			local mod = bpmodule.New() --GetPlayerGraph( ply )
-			--file.Write("last_server_graph_" .. ply:AccountID() .. ".txt", graphdata)
-
+			local mod = bpmodule.New()
 			local inStream = bpdata.InStream()
 			inStream:ReadFromNet(true)
 			mod:ReadFromStream( inStream )
-
-			local compiled = bpcompile.Compile( mod )
+			mod:Compile()
+			SetPlayerModule( ply, mod )
+			SavePlayerBlueprint( ply )
 			print("Executing blueprint on server...")
-			--SetPlayerModule( ply, compiled )
-			--SavePlayerGraph( ply )
 
 		elseif cmd == CMD_Download then
 
-			--[[local steamID = net.ReadString()
-			local graph, isNew = GetPlayerGraph( ply )
+			local steamID = net.ReadString()
+			local mod, isNew = GetPlayerBlueprint( ply )
 			local outStream = bpdata.OutStream()
 
-			if isNew then LoadPlayerGraph( ply ) end
+			if isNew then LoadPlayerBlueprint( ply ) end
 
-			graph:WriteToStream(outStream)
+			mod:WriteToStream(outStream)
 
 			net.Start("bpclientcmd")
 			net.WriteUInt(CMD_Download, 4)
 			outStream:WriteToNet(true)
-			net.Send( ply )]]
+			net.Send( ply )
 
 		end
 
@@ -143,6 +126,7 @@ else
 		elseif cmd == CMD_Error then
 
 			_G.G_BPError = {
+				moduleID = net.ReadUInt(32),
 				graphID = net.ReadUInt(32),
 				nodeID = net.ReadUInt(32),
 				msg = net.ReadString(),
@@ -158,14 +142,14 @@ else
 
 		net.Start("bpservercmd")
 		net.WriteUInt(CMD_Download, 4)
-		net.WriteString( steamid or LocalPlayer():AccountID() )
+		net.WriteString( steamid or PlayerKey(LocalPlayer()) )
 		net.SendToServer()
 
 	end
 
 	function SendModule( mod )
 
-		bpcompile.Compile( mod )
+		mod:Compile()
 
 		net.Start("bpservercmd")
 		net.WriteUInt(CMD_Upload, 4)

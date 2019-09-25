@@ -298,7 +298,7 @@ local function OpenEditor()
 	editor:SetModule(mod)
 	--mod:CreateTestModule()
 
-	--bpnet.DownloadServerModule( mod )
+	bpnet.DownloadServerModule( mod )
 	--graph:CreateTestGraph()
 	--graph:RemoveNode( graph.nodes[1] )
 
