@@ -39,7 +39,7 @@ function meta:Init()
 
 end
 
-function meta:GetNodeTypes( graph )
+function meta:GetNodeTypes( graphID )
 
 	return NodeTypes
 
@@ -60,6 +60,7 @@ function meta:NewGraph(name)
 
 	table.insert(self.graphs, graph)
 	graph.id = #self.graphs
+	graph.module = self
 
 	self:FireListeners(CB_GRAPH_ADD, graph.id)
 
@@ -108,6 +109,9 @@ function meta:WriteToStream(stream)
 	stream:WriteInt( fmtVersion, false )
 	stream:WriteInt( #self.graphs, false )
 	for k, v in pairs(self.graphs) do
+		local name = v:GetName()
+		stream:WriteInt( name:len(), false )
+		stream:WriteStr( name )
 		v:WriteToStream(stream)
 	end
 
@@ -120,8 +124,9 @@ function meta:ReadFromStream(stream)
 	if stream:ReadInt( false ) ~= fmtMagic then error("Invalid blueprint data") end
 	if stream:ReadInt( false ) ~= fmtVersion then error("Blueprint data version mismatch") end
 	for i=1, stream:ReadInt( false ) do
-		local id = self:NewGraph()
-		self:GetGraph(id):ReadFromStream(stream)
+		local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )
+		local graph = self:GetGraph(id)
+		graph:ReadFromStream(stream)
 	end
 
 end

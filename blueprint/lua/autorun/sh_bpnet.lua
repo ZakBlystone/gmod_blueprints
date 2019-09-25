@@ -113,7 +113,7 @@ else
 
 	net.Receive("bpclientcmd", function(len)
 
-		print("RECEIVE: " .. len .. " bytes")
+		print("RECV: " .. math.ceil(len/8) .. " bytes (" .. math.ceil(len/8192) .. "kb)")
 
 		local cmd = net.ReadUInt(4)
 

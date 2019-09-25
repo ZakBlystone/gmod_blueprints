@@ -483,6 +483,7 @@ function PANEL:OpenContext()
 	createMenu:SetPos(x,y)
 	createMenu:SetVisible( true )
 	createMenu:MakePopup()
+	createMenu:Setup( self.graph )
 	createMenu.OnNodeTypeSelected = function( menu, nodeType )
 
 		x, y = self.canvas:ScreenToLocal(x, y)

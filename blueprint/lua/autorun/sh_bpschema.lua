@@ -74,9 +74,30 @@ Defaults = {
 	[PN_String] = "",
 }
 
+function ConfigureNodeType(t)
+	t.pinlayout = { inputs = {}, outputs = {} }
+	t.pinlookup = {}
+
+	for i, pin in pairs(t.pins) do
+		if pin[1] == PD_In then 
+			table.insert( t.pinlayout.inputs, i ) t.pinlookup[i] = { t.pinlayout.inputs, #t.pinlayout.inputs, PD_In } 
+		elseif pin[1] == PD_Out then 
+			table.insert( t.pinlayout.outputs, i ) t.pinlookup[i] = { t.pinlayout.outputs, #t.pinlayout.outputs, PD_Out } 
+		end
+		pin[4] = pin[4] or PNF_None
+		pin.nodeType = t
+		pin.id = i
+	end
+
+	if t.type == NT_Function and t.code then
+		t.code = t.code .. " #1"
+	end
+end
+
 function PURE(t) 
 	t.pins = t.pins or {}
 	t.type = NT_Pure
+	ConfigureNodeType(t)
 	return t 
 end
 
@@ -85,18 +106,21 @@ function FUNCTION(t)
 	t.type = NT_Function
 	table.insert(t.pins, 1, { PD_Out, PN_Exec, "Thru" })
 	table.insert(t.pins, 1, { PD_In, PN_Exec, "Exec" })
+	ConfigureNodeType(t)
 	return t
 end
 
 function EVENT(t)
 	t.pins = t.pins or {}
 	t.type = NT_Event
-	table.insert(t.pins, 1, { PD_Out, PN_Exec, "Exec" }) 
+	table.insert(t.pins, 1, { PD_Out, PN_Exec, "Exec" })
+	ConfigureNodeType(t)
 	return t 
 end
 
 function SPECIAL(t)
 	t.pins = t.pins or {}
 	t.type = NT_Special
+	ConfigureNodeType(t)
 	return t
 end

@@ -9,14 +9,15 @@ module("bpuicreatemenu", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
 local PANEL = {}
 
 
-local function SortedFilteredNodeList( filter, res )
+local function SortedFilteredNodeList( graph, filter, res )
 	local options = {}
-	for k,v in pairs(NodeTypes) do
+	local types = graph:GetNodeTypes()
+	for k,v in pairs(types) do
 		if filter(v) then table.insert(options, k) end
 	end
 	table.sort(options)
 	for _, v in pairs(options) do
-		res( v, NodeTypes[v] )
+		res( v, types[v] )
 	end
 end
 
@@ -82,27 +83,6 @@ function PANEL:Init()
 	self.tabs:DockMargin(5, 0, 5, 5)
 	self.tabs:Dock( FILL )
 
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "All", list, "icon16/user.png", false, false, "All nodes" )
-	SortedFilteredNodeList( function() return true end, inserter(list) )
-
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "Hooks", list, "icon16/connect.png", false, false, "Hook nodes" )
-	SortedFilteredNodeList( FilterByType(NT_Event), inserter(list) )
-
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "Entity", list, "icon16/bricks.png", false, false, "Entity nodes" )
-	SortedFilteredNodeList( FilterByPinType(PN_Entity), inserter(list) )
-
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "Player", list, "icon16/user.png", false, false, "Player nodes" )
-	SortedFilteredNodeList( FilterByPinType(PN_Player), inserter(list) )
-
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "Special", list, "icon16/plugin.png", false, false, "Special nodes" )
-	SortedFilteredNodeList( CombineFilter( FilterByType(NT_Special), FilterByPinType(PN_Any) ), inserter(list) )
-
-
 	self.resultList = vgui.Create("DListBox", self )
 	self.resultList:DockMargin(5, 0, 5, 5)
 	self.resultList:Dock( FILL )
@@ -115,6 +95,32 @@ function PANEL:Init()
 
 end
 
+function PANEL:Setup( graph )
+
+	self.graph = graph
+
+	local list = vgui.Create("DListBox" )
+	self.tabs:AddSheet( "All", list, "icon16/user.png", false, false, "All nodes" )
+	SortedFilteredNodeList( self.graph, function() return true end, self.inserter(list) )
+
+	local list = vgui.Create("DListBox" )
+	self.tabs:AddSheet( "Hooks", list, "icon16/connect.png", false, false, "Hook nodes" )
+	SortedFilteredNodeList( self.graph, FilterByType(NT_Event), self.inserter(list) )
+
+	local list = vgui.Create("DListBox" )
+	self.tabs:AddSheet( "Entity", list, "icon16/bricks.png", false, false, "Entity nodes" )
+	SortedFilteredNodeList( self.graph, FilterByPinType(PN_Entity), self.inserter(list) )
+
+	local list = vgui.Create("DListBox" )
+	self.tabs:AddSheet( "Player", list, "icon16/user.png", false, false, "Player nodes" )
+	SortedFilteredNodeList( self.graph, FilterByPinType(PN_Player), self.inserter(list) )
+
+	local list = vgui.Create("DListBox" )
+	self.tabs:AddSheet( "Special", list, "icon16/plugin.png", false, false, "Special nodes" )
+	SortedFilteredNodeList( self.graph, CombineFilter( FilterByType(NT_Special), FilterByPinType(PN_Any) ), self.inserter(list) )
+
+end
+
 function PANEL:OnSearchTerm( text )
 
 	if text:len() > 0 then
@@ -122,7 +128,7 @@ function PANEL:OnSearchTerm( text )
 		self.tabs:SetVisible(false)
 
 		self.resultList:Clear()
-		SortedFilteredNodeList( FilterBySubstring( text:lower() ), self.inserter(self.resultList) )
+		SortedFilteredNodeList( self.graph, FilterBySubstring( text:lower() ), self.inserter(self.resultList) )
 	else
 		self.resultList:SetVisible(false)
 		self.tabs:SetVisible(true)

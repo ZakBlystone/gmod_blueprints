@@ -55,6 +55,25 @@ function meta:GetTitle()
 
 end
 
+function meta:GetModule()
+
+	return self.module
+
+end
+
+function meta:GetNodeTypes()
+
+	local types = {}
+	local base = self:GetModule():GetNodeTypes( self.id )
+
+	for k,v in pairs(base) do
+		if not types[k] then types[k] = v end
+	end
+
+	return types
+
+end
+
 function meta:GetNode(nodeID)
 
 	return self.nodes[nodeID]

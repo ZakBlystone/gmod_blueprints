@@ -1011,21 +1011,4 @@ print(a, b)]]
 
 for k,v in pairs(NodeTypes) do 
 	v.name = k
-	v.pinlayout = { inputs = {}, outputs = {} }
-	v.pinlookup = {}
-
-	for i, pin in pairs(v.pins) do
-		if pin[1] == PD_In then 
-			table.insert( v.pinlayout.inputs, i ) v.pinlookup[i] = { v.pinlayout.inputs, #v.pinlayout.inputs, PD_In } 
-		elseif pin[1] == PD_Out then 
-			table.insert( v.pinlayout.outputs, i ) v.pinlookup[i] = { v.pinlayout.outputs, #v.pinlayout.outputs, PD_Out } 
-		end
-		pin[4] = pin[4] or PNF_None
-		pin.nodeType = v
-		pin.id = i
-	end
-
-	if v.type == NT_Function and v.code then
-		v.code = v.code .. " #1"
-	end
 end
