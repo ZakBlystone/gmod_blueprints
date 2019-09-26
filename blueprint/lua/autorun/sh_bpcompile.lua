@@ -178,6 +178,13 @@ function GetNodePins(cs, nodeID, pinDir)
 
 end
 
+function GetGraphJumpTable(cs)
+
+	cs.nodejumps[cs.graph.id] = cs.nodejumps[cs.graph.id] or {}
+	return cs.nodejumps[cs.graph.id]
+
+end
+
 function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 
 	local str = code
@@ -203,8 +210,9 @@ function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 		str = string.Replace( str, "%" .. v, GetVarCode(cs, var) )
 	end
 
-	for k,v in pairs(cs.nodejumps[nodeID] or {}) do
-		print("REPL JUMP VECTOR: " .. k)
+	local jumpTable = GetGraphJumpTable(cs)[nodeID]
+	for k,v in pairs(jumpTable or {}) do
+		print("REPL JUMP VECTOR: " .. k .. " = " .. v)
 		str = string.Replace( str, "^" .. k, "jmp_" .. v )
 		str = string.Replace( str, "^_" .. k, tostring(v) )
 	end
@@ -224,7 +232,7 @@ function CompileNodeSingle(cs, nodeID)
 		return
 	end
 
-	cs.begin(CTX_SingleNode .. nodeID)
+	cs.begin(CTX_SingleNode .. cs.graph.id .. "_" .. nodeID)
 
 	pushi()
 	printi("Compile Node: " .. node.nodeType.name .. "[" .. nodeID .. "]")
@@ -371,7 +379,7 @@ function CompileNodeFunction(cs, nodeID)
 
 	local node = cs.graph.nodes[nodeID]
 	if node.nodeType.type == NT_Event then 
-		cs.begin(CTX_FunctionNode .. nodeID)
+		cs.begin(CTX_FunctionNode .. cs.graph.id .. "_" .. nodeID)
 
 		if cs.debugcomments then cs.emit("-- " .. node.nodeType.name) end
 
@@ -399,7 +407,7 @@ function CompileNodeFunction(cs, nodeID)
 		return 
 	end
 
-	cs.begin(CTX_FunctionNode .. nodeID)
+	cs.begin(CTX_FunctionNode .. cs.graph.id .. "_" .. nodeID)
 
 	if cs.debugcomments then cs.emit("-- " .. node.nodeType.name) end
 
@@ -414,11 +422,11 @@ function CompileNodeFunction(cs, nodeID)
 		if emitted[pure] then return end
 		emitted[pure] = true
 		printi(cs.graph.nodes[pure].nodeType.name)
-		cs.emitContext( CTX_SingleNode .. pure, 1 )
+		cs.emitContext( CTX_SingleNode .. cs.graph.id .. "_" .. pure, 1 )
 	end)
 	popi()
 
-	cs.emitContext( CTX_SingleNode .. nodeID, 1 )
+	cs.emitContext( CTX_SingleNode .. cs.graph.id .. "_" .. nodeID, 1 )
 
 	popi()
 
@@ -459,11 +467,12 @@ function CompileGraphJumpTable(cs)
 		nextJumpID = math.max(nextJumpID, k+1)
 	end
 
+	local jumpTable = GetGraphJumpTable(cs)
 	for k, v in pairs(cs.graph.nodes) do
 		for _, j in pairs(v.nodeType.jumpSymbols or {}) do
 
-			cs.nodejumps[k] = cs.nodejumps[k] or {}
-			cs.nodejumps[k][j] = nextJumpID
+			jumpTable[k] = jumpTable[k] or {}
+			jumpTable[k][j] = nextJumpID
 			print("JUMP VECTOR: " .. j .. " = " .. nextJumpID)
 			cs.emit( "if ip == " .. nextJumpID .. " then goto jmp_" .. nextJumpID .. " end" )
 			nextJumpID = nextJumpID + 1
@@ -539,7 +548,7 @@ function CompileGraphEntry(cs)
 
 	cs.emitContext( CTX_JumpTable .. graphID, 1 )
 
-	local code = cs.getFilteredContexts("functionnode")
+	local code = cs.getFilteredContexts( CTX_FunctionNode .. cs.graph.id )
 	for k, _ in pairs(code) do
 		cs.emitContext( k, 1 )
 	end
@@ -664,7 +673,7 @@ function CompileGraphMetaHook(cs, graph, nodeID)
 
 	cs.emit("\tlocal arg = {...}")
 	cs.emit("\t__self = self")
-	cs.emitContext( CTX_SingleNode .. nodeID, 1 )
+	cs.emitContext( CTX_SingleNode .. cs.graph.id .. "_" .. nodeID, 1 )
 
 	if cs.ilp then
 		cs.emit("\tif __bpm.checkilp() then return end")
@@ -772,6 +781,7 @@ function Compile(mod)
 		cs.current_context = nil
 	end
 	cs.getContext = function(ctx)
+		if not cs.contexts[ctx] then error("Compiler context not found: '" .. ctx .. "'") end
 		return cs.contexts[ctx]
 	end
 	cs.getFilteredContexts = function(filter)

@@ -20,22 +20,6 @@ function PANEL:Init()
 		{"New Module", function(p)
 			p:SetModule( bpmodule.New() )
 		end},
-		{"New Graph", function(p)
-			local m = p:GetModule()
-			if m ~= nil then
-				Derma_StringRequest(
-					"New Graph",
-					"What to call it?",
-					"",
-					function( text ) 
-
-						m:NewGraph(text)
-
-					end,
-					function( text ) end
-				)				
-			end
-		end},
 		{"Save", function()
 			Derma_StringRequest(
 				"Save Blueprint",
@@ -147,13 +131,51 @@ function PANEL:Init()
 		self.StatusText:SetText( "Blueprint Error: " .. _G.G_BPError.msg )
 	end
 
+	self.ContentPanel = vgui.Create("DPanel", self)
+	self.ContentPanel:Dock( FILL )
+	self.ContentPanel:SetBackgroundColor( Color(50,50,50) )
 
-	self.Content = vgui.Create("DHorizontalDivider", self)
+	self.Content = vgui.Create("DHorizontalDivider", self.ContentPanel)
 	self.Content:Dock( FILL )
+	self.Content:SetBackgroundColor( Color(30,30,30) )
 
 	self.MenuPanel = vgui.Create("DPanel", self.Content)
+	self.MenuPanel:SetBackgroundColor( Color(30,30,30) )
+
+	self.GraphListControls = vgui.Create("DPanel", self.MenuPanel)
+	self.GraphAdd = vgui.Create("DButton", self.GraphListControls)
+	self.GraphRemove = vgui.Create("DButton", self.GraphListControls)
+
+	self.GraphAdd:SetText("+")
+	self.GraphRemove:SetText("-")
+
+	self.GraphAdd:Dock( LEFT )
+	self.GraphRemove:Dock( FILL )
+	self.GraphListControls:Dock( TOP )
+
+	self.GraphAdd.DoClick = function()
+		Derma_StringRequest(
+			"Add Graph",
+			"Give it a name",
+			"",
+			function( text ) 
+
+				self.module:NewGraph( text )
+
+			end,
+			function( text ) end
+		)
+	end
+
+	self.GraphRemove.DoClick = function()
+		if IsValid(self.SelectedGraph) then
+			self.module:RemoveGraph(self.SelectedGraph.id)
+		end
+	end
+
 	self.GraphList = vgui.Create("DListBox", self.MenuPanel)
 	self.GraphList:Dock( FILL )
+	self.GraphList.Paint = function( p, w, h ) end
 
 	self.Content:SetLeft(self.MenuPanel)
 	self.Content:Dock( FILL )
@@ -196,11 +218,22 @@ function PANEL:BuildGraphList()
 		local graph = self.module:GetGraph(i)
 		local item = self.GraphList:AddItem( graph:GetTitle() )
 		item:SetFont("DermaDefaultBold")
-		--item:SetColor( Color(255,255,255) )
-		item.DoClick = function()
-			self:SelectGraph(i)
+		item:SetTextColor( Color(255,255,255) )
+		item.graphID = graph.id
+		item.OnMousePressed = function( item, mcode )
+			if ( mcode == MOUSE_LEFT ) then item:Select( true ) end
 		end
-		--item.Paint = function( self, w, h )end
+		item.DoClick = function()
+			self:SelectGraph(graph.id)
+		end
+		item.Paint = function( item, w, h )
+			if self.SelectedGraph and item.graphID == self.SelectedGraph.id then
+				surface.SetDrawColor(120,120,120,255)
+			else
+				surface.SetDrawColor(60,60,60,255)
+			end
+			surface.DrawRect(0,0,w,h)
+		end
 
 	end
 
@@ -225,7 +258,7 @@ function PANEL:GraphAdded( id )
 	vgraph:SetVisible(false)
 
 	vgraph.id = id
-	self.vgraphs[id] = vgraph
+	table.insert(self.vgraphs, vgraph)
 	self:SelectGraph(id)
 	self:BuildGraphList()
 
@@ -239,7 +272,7 @@ function PANEL:GraphRemoved( id )
 	end
 
 	self.vgraphs[id]:Remove()
-	self.vgraphs[id] = nil
+	table.remove(self.vgraphs, id)
 
 	self:BuildGraphList()
 
@@ -307,8 +340,6 @@ local function OpenEditor()
 end
 
 concommand.Add("open_blueprint", function()
-
-
 
 end)
 

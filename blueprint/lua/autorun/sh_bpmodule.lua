@@ -56,7 +56,7 @@ end
 function meta:NewGraph(name)
 
 	local graph = bpgraph.New()
-	graph.name = name
+	if name ~= "" then graph.name = name end
 
 	table.insert(self.graphs, graph)
 	graph.id = #self.graphs

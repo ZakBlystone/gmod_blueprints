@@ -267,7 +267,11 @@ function meta:AddNode(node)
 
 	self:FireListeners(CB_NODE_ADD, node, id)
 
+	local defaults = node.nodeType.defaults or {}
+
 	for pinID, pin in pairs(node.nodeType.pins) do
+
+		local default = defaults[node.nodeType.pinlookup[pinID][2]]
 
 		if pin[1] == PD_In then
 
@@ -275,7 +279,7 @@ function meta:AddNode(node)
 			if literal then
 
 				if self:GetPinLiteral(id, pinID) == nil then
-					self:SetPinLiteral(id, pinID, Defaults[pin[2]])
+					self:SetPinLiteral(id, pinID, default or Defaults[pin[2]])
 				end
 
 			end

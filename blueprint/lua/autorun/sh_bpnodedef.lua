@@ -129,8 +129,16 @@ NodeTypes = {
 		pins = {
 			{ PD_In, PN_Entity, "target" },
 			{ PD_In, PN_String, "sound" },
+			{ PD_In, PN_Number, "soundLevel" },
+			{ PD_In, PN_Number, "pitch" },
+			{ PD_In, PN_Number, "volume" },
 		},
-		code = "Entity_.EmitSound( $2, $3 )",
+		defaults = {
+			[4] = 75,
+			[5] = 100,
+			[6] = 1,
+		},
+		code = "Entity_.EmitSound( $2, $3, $4, $5, $6 )",
 	},
 	["TakeDamage"] = FUNCTION {
 		pins = {
@@ -185,6 +193,13 @@ NodeTypes = {
 			{ PD_In, PN_Vector, "force" },
 		},
 		code = "PhysObj_.ApplyForceCenter($2, $3)",
+	},
+	["ApplyTorqueCenter"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_PhysObj, "physObj" },
+			{ PD_In, PN_Vector, "force" },
+		},
+		code = "PhysObj_.ApplyTorqueCenter($2, $3)",
 	},
 	["SetMass"] = FUNCTION {
 		pins = {
@@ -448,6 +463,15 @@ NodeTypes = {
 			{ PD_Out, PN_Bool, "valid" },
 		},
 		code = "#1 = IsValid($1)",
+	},
+	["CheckValid"] = SPECIAL {
+		pins = {
+			{ PD_In, PN_Exec, "Exec" },
+			{ PD_In, PN_Any, "thing" },
+			{ PD_Out, PN_Exec, "valid" },
+			{ PD_Out, PN_Exec, "notvalid" },
+		},
+		code = "if IsValid($2) then #1 else #2 end",
 	},
 	["IsPlayer"] = PURE {
 		pins = {
