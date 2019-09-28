@@ -85,18 +85,14 @@ function PANEL:OnGraphCallback( cb, ... )
 
 	if cb == CB_NODE_ADD then return self:NodeAdded(...) end
 	if cb == CB_NODE_REMOVE then return self:NodeRemoved(...) end
-	if cb == CB_NODE_REMAP then return self:NodeRemap(...) end
 	if cb == CB_NODE_MOVE then return self:NodeMove(...) end
 	if cb == CB_CONNECTION_ADD then return self:ConnectionAdded(...) end
 	if cb == CB_CONNECTION_REMOVE then return self:ConnectionRemoved(...) end
-	if cb == CB_CONNECTION_REMAP then return self:ConnectionRemap(...) end
 	if cb == CB_GRAPH_CLEAR then return self:GraphCleared(...) end
 
 end
 
 function PANEL:NodeAdded( newNode, id )
-
-	print("CREATED NODE: " .. id .. " : " .. tostring(newNode.nodeType.name))
 
 	local b,e = pcall(function()
 		local node = vgui.Create("BPNode", self.canvas)
@@ -105,7 +101,6 @@ function PANEL:NodeAdded( newNode, id )
 
 		local x,y = node:GetPos()
 		node:SetPos( x + canvasFix, y + canvasFix )
-		--table.insert( self.nodes, node )
 		self.nodes[id] = node
 	end)
 
@@ -116,14 +111,7 @@ function PANEL:NodeRemoved( node, id )
 	print("NODE REMOVE: " .. node.id .. ", " .. id)
 
 	self.nodes[id]:Remove()
-	table.remove( self.nodes, id )
-
-end
-
-function PANEL:NodeRemap( node, oldID, newID )
-
-	print("NODE REMAP[" .. node.id .. "]: " .. oldID .. " => " .. newID)
-	self.nodes[oldID].nodeID = newID
+	self.nodes[id] = nil
 
 end
 
@@ -137,12 +125,6 @@ function PANEL:ConnectionAdded( newConnection, id )
 
 	--self.connections[id] = newConnection
 	table.insert( self.connections, newConnection )
-
-end
-
-function PANEL:ConnectionRemap( connection, id )
-
-	self.connections[id] = connection
 
 end
 

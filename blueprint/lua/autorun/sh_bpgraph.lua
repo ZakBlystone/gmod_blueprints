@@ -10,12 +10,10 @@ module("bpgraph", package.seeall, bpcommon.rescope(bpschema, bpnodedef)) --bpnod
 bpcommon.CallbackList({
 	"NODE_ADD",
 	"NODE_REMOVE",
-	"NODE_REMAP",
 	"NODE_MOVE",
 	"PIN_EDITLITERAL",
 	"CONNECTION_ADD",
 	"CONNECTION_REMOVE",
-	"CONNECTION_REMAP",
 	"GRAPH_CLEAR",
 })
 
@@ -23,12 +21,14 @@ local meta = {}
 meta.__index = meta
 
 local nextGraphID = 0
+New = nil
 
 function meta:Init(...)
 
 	self.nodes = {}
 	self.connections = {}
 	self.id = nextGraphID
+	self.nextNodeID = 1
 
 	bpcommon.MakeObservable(self)
 
@@ -76,19 +76,64 @@ end
 
 function meta:GetNode(nodeID)
 
-	return self.nodes[nodeID]
+	for id, node in self:Nodes() do
+		if node.id == nodeID then return node end
+	end
+
+end
+
+function meta:Connections()
+
+	local i = 0
+	local n = #self.connections
+	return function() 
+		i = i + 1
+		if i <= n then return i, self.connections[i] end
+	end
+
+end
+
+function meta:Nodes()
+
+	local i = 0
+	local n = #self.nodes
+	return function() 
+		i = i + 1
+		if i <= n then return self.nodes[i].id, self.nodes[i] end
+	end
+
+end
+
+function meta:NodeIDs()
+
+	local i = 0
+	local n = #self.nodes
+	return function() 
+		i = i + 1
+		if i <= n then return self.nodes[i].id end
+	end
+
+end
+
+function meta:NodeIDToIndex( nodeID )
+
+	local n = 1
+	for id in self:NodeIDs() do
+		if id == nodeID then return n end
+		n = n + 1
+	end
 
 end
 
 function meta:GetNodePin(nodeID, pinID)
 
-	return self.nodes[nodeID].nodeType.pins[pinID]
+	return self:GetNode(nodeID).nodeType.pins[pinID]
 
 end
 
 function meta:GetPinType(nodeID, pinID)
 
-	local node = self.nodes[nodeID]
+	local node = self:GetNode(nodeID)
 	local ntype = node.nodeType
 
 	if ntype.meta and ntype.meta.informs then
@@ -128,7 +173,7 @@ function meta:FindConnection(nodeID0, pinID0, nodeID1, pinID1)
 
 	if dir == PD_Out then
 
-		for _, connection in pairs(self.connections) do
+		for _, connection in self:Connections() do
 
 			if connection[1] ~= nodeID0 or connection[2] ~= pinID0 then continue end
 			if connection[3] == nodeID1 and connection[4] == pinID1 then return connection end
@@ -137,7 +182,7 @@ function meta:FindConnection(nodeID0, pinID0, nodeID1, pinID1)
 
 	else
 
-		for _, connection in pairs(self.connections) do
+		for _, connection in self:Connections() do
 
 			if connection[3] ~= nodeID0 or connection[4] ~= pinID0 then continue end
 			if connection[1] == nodeID1 and connection[2] == pinID1 then return connection end
@@ -150,7 +195,7 @@ end
 
 function meta:IsPinConnected(nodeID, pinID)
 
-	for _, connection in pairs(self.connections) do
+	for _, connection in self:Connections() do
 
 		if connection[1] == nodeID and connection[2] == pinID then return true, connection end
 		if connection[3] == nodeID and connection[4] == pinID then return true, connection end
@@ -220,12 +265,6 @@ function meta:GetNodeCount()
 
 end
 
-function meta:GetNodeNum(id)
-
-	return self.nodes[id]
-
-end
-
 function meta:Clear()
 
 	self:FireListeners(CB_GRAPH_CLEAR)
@@ -237,14 +276,14 @@ end
 
 function meta:GetPinLiteral(nodeID, pinID)
 
-	local node = self.nodes[nodeID]
+	local node = self:GetNode(nodeID)
 	return node.literals[pinID]
 
 end
 
 function meta:SetPinLiteral(nodeID, pinID, value)
 
-	local node = self.nodes[nodeID]
+	local node = self:GetNode(nodeID)
 	value = tostring(value)
 
 	node.literals[pinID] = value
@@ -256,7 +295,8 @@ function meta:AddNode(node)
 
 	table.insert(self.nodes, node)
 
-	local id = #self.nodes
+	local id = self.nextNodeID
+	self.nextNodeID = self.nextNodeID + 1
 
 	node.id = id
 	node.graphID = self.id
@@ -292,70 +332,9 @@ function meta:AddNode(node)
 
 end
 
--- Not Used
-function meta:SwapNodes(nodeA, nodeB)
-
-	if nodeA == nodeB then return end
-
-	local t = nodeA.id
-	nodeA.id = nodeB.id
-	nodeB.id = t
-
-	self.nodes[nodeA.id] = nodeA
-	self.nodes[nodeB.id] = nodeB
-
-	for _, connection in pairs(self.connections) do
-
-		if connection[1] == nodeA.id or connection[1] == nodeB.id then
-			connection[1] = (connection[1] == nodeA.id) and nodeB.id or nodeA.id
-		end
-		
-		if connection[3] == nodeA.id or connection[3] == nodeB.id then
-			connection[3] = (connection[3] == nodeA.id) and nodeB.id or nodeA.id
-		end
-
-	end
-
-end
-
-function meta:SortGraph()
-
---	graph:SwapNodes(n2, n3)
-
-
-
-end
-
-function meta:RemapConnectionIds(nodeID, newID)
-
-	local connections = self.connections
-	for i=#connections, 1, -1 do
-
-		local c = connections[i]
-		local changed = false
-		if c[1] == nodeID then c[1] = newID changed = true end
-		if c[3] == nodeID then c[3] = newID changed = true end
-		if changed then self:FireListeners(CB_CONNECTION_REMAP, c, i) end
-
-	end
-
-end
-
-function meta:RefreshNodeIds()
-
-	for i, node in pairs(self.nodes) do
-		if node.id ~= i then
-			self:FireListeners(CB_NODE_REMAP, node, node.id, i)
-			node.id = i
-			self:RemapConnectionIds(node.id, i)
-		end
-	end
-
-end
-
 function meta:MoveNode(nodeID, x, y)
 
-	local node = self.nodes[nodeID]
+	local node = self:GetNode(nodeID)
 
 	x = math.Round(x / 15) * 15
 	y = math.Round(y / 15) * 15
@@ -397,9 +376,10 @@ end
 
 function meta:RemoveNode(nodeID)
 
-	local node = self.nodes[nodeID]
-	table.remove(self.nodes, nodeID)
-	self:RefreshNodeIds()
+	local node = self:GetNode( nodeID )
+	
+	table.RemoveByValue(self.nodes, node)
+
 	self:FireListeners(CB_NODE_REMOVE, node, nodeID)
 
 	local connections = self.connections
@@ -413,16 +393,6 @@ function meta:RemoveNode(nodeID)
 
 	end
 
-	for i=#connections, 1, -1 do
-
-		local c = connections[i]
-		local changed = false
-		if c[1] > nodeID then c[1] = c[1] - 1 changed = true end
-		if c[3] > nodeID then c[3] = c[3] - 1 changed = true end
-		if changed then self:FireListeners(CB_CONNECTION_REMAP, c, i) end
-
-	end
-
 end
 
 function meta:WriteToStream(stream)
@@ -431,8 +401,8 @@ function meta:WriteToStream(stream)
 	local nametable = {}
 	local nodeentries = {}
 
-	for k, v in pairs(self.nodes) do
-		local name = v.nodeType.name
+	for id, node in self:Nodes() do
+		local name = node.nodeType.name
 		if not namelookup[name] then 
 			table.insert(nametable, name)
 			namelookup[name] = #nametable
@@ -443,15 +413,25 @@ function meta:WriteToStream(stream)
 	for _, str in pairs(nametable) do stream:WriteByte( str:len(), false ) stream:WriteStr(str) end
 
 	stream:WriteInt( #self.nodes, false )
-	for k, v in pairs(self.nodes) do
-		local name = v.nodeType.name
+	for id, node in self:Nodes() do
+		local name = node.nodeType.name
 		stream:WriteInt( namelookup[name], false )
-		stream:WriteFloat( v.x or 0 )
-		stream:WriteFloat( v.y or 0 )
-		bpdata.WriteValue( v.literals or {}, stream )
+		stream:WriteFloat( node.x or 0 )
+		stream:WriteFloat( node.y or 0 )
+		bpdata.WriteValue( node.literals or {}, stream )
 	end
 
-	bpdata.WriteValue( self.connections, stream )
+	local remappedConnections = {}
+	for id, connection in self:Connections() do
+		table.insert(remappedConnections, {
+			self:NodeIDToIndex(connection[1]),
+			connection[2],
+			self:NodeIDToIndex(connection[3]),
+			connection[4],
+		})
+	end
+
+	bpdata.WriteValue( remappedConnections, stream )
 
 end
 
@@ -465,7 +445,8 @@ function meta:ReadFromStream(stream)
 		table.insert(nametable, stream:ReadStr( size ) )
 	end
 
-	for i=1, stream:ReadInt( false ) do
+	local count = stream:ReadInt( false )
+	for i=1, count do
 
 		local nodeTypeName = nametable[stream:ReadInt( false )]
 		local nodeX = stream:ReadFloat()
@@ -487,9 +468,24 @@ function meta:ReadFromStream(stream)
 	end
 
 	self.connections = bpdata.ReadValue( stream )
-	for i, connection in pairs( self.connections ) do
+	for i, connection in self:Connections() do
 		self:FireListeners(CB_CONNECTION_ADD, connection, i)
 	end
+
+end
+
+-- Quickly banging this out using existing tech
+function meta:Copy()
+
+	local graph = New()
+	local outStream = bpdata.OutStream()
+	self:WriteToStream(outStream)
+
+	local inStream = bpdata.InStream()
+	inStream:LoadString(outStream:GetString())
+	graph:ReadFromStream( inStream )
+
+	return graph
 
 end
 
@@ -580,7 +576,7 @@ function meta:CreateTestGraph()
 
 end
 
-function New(...)
+New = function(...)
 	return setmetatable({}, meta):Init(...)
 end
 

@@ -204,7 +204,6 @@ function PANEL:OnModuleCallback( cb, ... )
 	if cb == CB_MODULE_CLEAR then self:Clear(...) end
 	if cb == CB_GRAPH_ADD then self:GraphAdded(...) end
 	if cb == CB_GRAPH_REMOVE then self:GraphRemoved(...) end
-	if cb == CB_GRAPH_REMAP then self:GraphRemap(...) end
 
 end
 
@@ -213,18 +212,17 @@ function PANEL:BuildGraphList()
 	self.GraphList:Clear()
 
 	if self.module == nil then return end
-	for i=1, self.module:GetNumGraphs() do
+	for id, graph in self.module:Graphs() do
 
-		local graph = self.module:GetGraph(i)
 		local item = self.GraphList:AddItem( graph:GetTitle() )
 		item:SetFont("DermaDefaultBold")
 		item:SetTextColor( Color(255,255,255) )
-		item.graphID = graph.id
+		item.graphID = id
 		item.OnMousePressed = function( item, mcode )
 			if ( mcode == MOUSE_LEFT ) then item:Select( true ) end
 		end
 		item.DoClick = function()
-			self:SelectGraph(graph.id)
+			self:SelectGraph(id)
 		end
 		item.Paint = function( item, w, h )
 			if self.SelectedGraph and item.graphID == self.SelectedGraph.id then
@@ -254,11 +252,12 @@ function PANEL:GraphAdded( id )
 
 	local graph = self.module:GetGraph(id)
 	local vgraph = vgui.Create("BPGraph", self.Content)
+
 	vgraph:SetGraph( graph )
 	vgraph:SetVisible(false)
 
 	vgraph.id = id
-	table.insert(self.vgraphs, vgraph)
+	self.vgraphs[id] = vgraph
 	self:SelectGraph(id)
 	self:BuildGraphList()
 
@@ -272,15 +271,9 @@ function PANEL:GraphRemoved( id )
 	end
 
 	self.vgraphs[id]:Remove()
-	table.remove(self.vgraphs, id)
+	self.vgraphs[id] = nil
 
 	self:BuildGraphList()
-
-end
-
-function PANEL:GraphRemap( graph, oldID, newID )
-
-	self.vgraphs[oldID].id = newID
 
 end
 

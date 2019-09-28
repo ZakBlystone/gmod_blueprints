@@ -30,7 +30,7 @@ local CTX_Hooks = "hooks_"
 function EnumerateGraphVars(cs, nodeType, uniqueKeys)
 
 	unique = uniqueKeys or {}
-	for nodeID, node in pairs(cs.graph.nodes) do
+	for nodeID, node in cs.graph:Nodes() do
 		local ntype = node.nodeType
 		local extType = ntype.type
 		if extType == nodeType then
@@ -157,7 +157,7 @@ end
 function GetPinConnections(cs, pinDir, nodeID, pinID)
 
 	local out = {}
-	for k, v in pairs(cs.graph.connections) do
+	for k, v in cs.graph:Connections() do
 		if pinDir == PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
 		if pinDir == PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
 		table.insert(out, v)
@@ -169,7 +169,7 @@ end
 function GetNodePins(cs, nodeID, pinDir)
 
 	local out = {}
-	local node = cs.graph.nodes[nodeID]
+	local node = cs.graph:GetNode(nodeID)
 	for pinID, pin in pairs(node.nodeType.pins) do
 		if pin[1] ~= pinDir then continue end
 		out[pinID] = pin
@@ -223,7 +223,7 @@ end
 
 function CompileNodeSingle(cs, nodeID)
 
-	local node = cs.graph.nodes[nodeID]
+	local node = cs.graph:GetNode(nodeID)
 	local ntype = node.nodeType
 	local lookup = ntype.pinlookup
 
@@ -358,7 +358,7 @@ function WalkBackPureNodes(cs, nodeID, call)
 			local connections = GetPinConnections(cs, PD_In, pnode, pinID)
 			for _, v in pairs(connections) do
 
-				if cs.graph.nodes[ v[1] ].nodeType.type == NT_Pure then
+				if cs.graph:GetNode( v[1] ).nodeType.type == NT_Pure then
 					table.insert(stack, v[1])
 					table.insert(output, v[1])
 				end
@@ -377,7 +377,7 @@ end
 
 function CompileNodeFunction(cs, nodeID)
 
-	local node = cs.graph.nodes[nodeID]
+	local node = cs.graph:GetNode(nodeID)
 	if node.nodeType.type == NT_Event then 
 		cs.begin(CTX_FunctionNode .. cs.graph.id .. "_" .. nodeID)
 
@@ -421,7 +421,7 @@ function CompileNodeFunction(cs, nodeID)
 	WalkBackPureNodes(cs, nodeID, function(pure)
 		if emitted[pure] then return end
 		emitted[pure] = true
-		printi(cs.graph.nodes[pure].nodeType.name)
+		printi(cs.graph:GetNode(pure).nodeType.name)
 		cs.emitContext( CTX_SingleNode .. cs.graph.id .. "_" .. pure, 1 )
 	end)
 	popi()
@@ -460,20 +460,20 @@ function CompileGraphJumpTable(cs)
 
 	cs.emit( "if ip == 0 then goto jmp_0 end" )
 
-	for k, v in pairs(cs.graph.nodes) do
-		if v.nodeType.type ~= NT_Pure then
-			cs.emit( "if ip == " .. k .. " then goto jmp_" .. k .. " end" )
+	for id, node in cs.graph:Nodes() do
+		if node.nodeType.type ~= NT_Pure then
+			cs.emit( "if ip == " .. id .. " then goto jmp_" .. id .. " end" )
 		end
-		nextJumpID = math.max(nextJumpID, k+1)
+		nextJumpID = math.max(nextJumpID, id+1)
 	end
 
 	local jumpTable = GetGraphJumpTable(cs)
-	for k, v in pairs(cs.graph.nodes) do
-		for _, j in pairs(v.nodeType.jumpSymbols or {}) do
+	for id, node in cs.graph:Nodes() do
+		for _, j in pairs(node.nodeType.jumpSymbols or {}) do
 
-			jumpTable[k] = jumpTable[k] or {}
-			jumpTable[k][j] = nextJumpID
-			print("JUMP VECTOR: " .. j .. " = " .. nextJumpID)
+			jumpTable[id] = jumpTable[id] or {}
+			jumpTable[id][j] = nextJumpID
+			MsgC(Color(80,255,80), "JUMP VECTOR: " .. id .. " = " .. nextJumpID .. "\n")
 			cs.emit( "if ip == " .. nextJumpID .. " then goto jmp_" .. nextJumpID .. " end" )
 			nextJumpID = nextJumpID + 1
 
@@ -583,9 +583,9 @@ function CompileCodeSegment(cs)
 	cs.emit("local __bpm = {}")
 	--cs.emitContext( CTX_Graph .. cs.graph.id  )
 
-	for i=1, cs.module:GetNumGraphs() do
-		print("EMIT: " .. CTX_Graph .. cs.module:GetGraph(i).id)
-		cs.emitContext( CTX_Graph .. cs.module:GetGraph(i).id )
+	for id in cs.module:GraphIDs() do
+		print("EMIT: " .. CTX_Graph .. id )
+		cs.emitContext( CTX_Graph .. id )
 	end
 
 	if cs.ilp then
@@ -665,7 +665,7 @@ end
 
 function CompileGraphMetaHook(cs, graph, nodeID)
 
-	local node = cs.graph.nodes[nodeID]
+	local node = cs.graph:GetNode(nodeID)
 
 	cs.begin(CTX_MetaEvents .. node.nodeType.name)
 
@@ -700,19 +700,19 @@ function CompileGraph(cs, graph)
 
 	cs.graph = graph
 
-	for k, v in pairs(cs.graph.nodes) do
-		CompileNodeSingle(cs, k)
+	for id in cs.graph:NodeIDs() do
+		CompileNodeSingle(cs, id)
 	end
 
-	for k, v in pairs(cs.graph.nodes) do
-		if v.nodeType.type ~= NT_Pure then
-			CompileNodeFunction(cs, k)
+	for id, node in cs.graph:Nodes() do
+		if node.nodeType.type ~= NT_Pure then
+			CompileNodeFunction(cs, id)
 		end
 	end
 
-	for k, v in pairs(cs.graph.nodes) do
-		if v.nodeType.type == NT_Event then
-			CompileGraphMetaHook(cs, graph, k)
+	for id, node in cs.graph:Nodes() do
+		if node.nodeType.type == NT_Event then
+			CompileGraphMetaHook(cs, graph, id)
 		end
 	end
 
@@ -720,14 +720,14 @@ function CompileGraph(cs, graph)
 
 	cs.begin(CTX_Hooks .. cs.graph.id)
 
-	for k, v in pairs(cs.graph.nodes) do
-		if v.nodeType.type == NT_Event and v.nodeType.hook then
+	for id, node in cs.graph:Nodes() do
+		if node.nodeType.type == NT_Event and node.nodeType.hook then
 
-			cs.emit("[\"" .. v.nodeType.name .. "\"] = {")
+			cs.emit("[\"" .. node.nodeType.name .. "\"] = {")
 
-			cs.emit("\thook = \"" .. v.nodeType.hook .. "\",")
+			cs.emit("\thook = \"" .. node.nodeType.hook .. "\",")
 			cs.emit("\tgraphID = " .. cs.graph.id .. ",")
-			cs.emit("\tnodeID = " .. k .. ",")
+			cs.emit("\tnodeID = " .. id .. ",")
 			cs.emit("\tmoduleID = " .. cs.module.id .. ",")
 			cs.emit("\tkey = \"__bphook_" .. cs.module.id .. "\"")
 			--cs.emit("\t\tfunc = nil,")
@@ -795,14 +795,14 @@ function Compile(mod)
 	CompileMetaTableLookup(cs)
 
 	local uniqueKeys = {}
-	for i=1, mod:GetNumGraphs() do
-		PreCompileGraph( cs, mod:GetGraph(i), uniqueKeys )
+	for id, graph in mod:Graphs() do
+		PreCompileGraph( cs, graph, uniqueKeys )
 	end
 
 	CompileGlobalVarListing(cs)
 
-	for i=1, mod:GetNumGraphs() do
-		CompileGraph( cs, mod:GetGraph(i) )
+	for id, graph in mod:Graphs() do
+		CompileGraph( cs, graph )
 	end
 
 	CompileCodeSegment(cs)

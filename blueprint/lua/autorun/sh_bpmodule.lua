@@ -13,7 +13,6 @@ bpcommon.CallbackList({
 	"MODULE_CLEAR",
 	"GRAPH_ADD",
 	"GRAPH_REMOVE",
-	"GRAPH_REMAP",
 	"VARIABLE_ADD",
 	"VARIABLE_REMOVE",
 })
@@ -31,11 +30,18 @@ function meta:Init()
 	self.graphs = {}
 	self.variables = {}
 	self.id = nextModuleID
+	self.nextGraphID = 1
 
 	bpcommon.MakeObservable(self)
 
 	nextModuleID = nextModuleID + 1
 	return self
+
+end
+
+function meta:GetNextGraphID()
+
+	return self.nextGraphID
 
 end
 
@@ -59,47 +65,55 @@ function meta:NewGraph(name)
 	if name ~= "" then graph.name = name end
 
 	table.insert(self.graphs, graph)
-	graph.id = #self.graphs
+	graph.id = self.nextGraphID
 	graph.module = self
+
+	self.nextGraphID = self.nextGraphID + 1
 
 	self:FireListeners(CB_GRAPH_ADD, graph.id)
 
-	return #self.graphs
-
-end
-
-function meta:RefreshGraphIds()
-
-	for i, graph in pairs(self.graphs) do
-		if graph.id ~= i then
-			self:FireListeners(CB_GRAPH_REMAP, graph, graph.id, i)
-			graph.id = i
-		end
-	end
+	return graph.id
 
 end
 
 function meta:RemoveGraph( graphID )
 
-	local graph = self.graphs[graphID]
+	local graph = self:GetGraph( graphID )
 	if graph == nil then return end
 
-	table.remove(self.graphs, graphID)
+	table.RemoveByValue(self.graphs, graph)
 
-	self:RefreshGraphIds()
 	self:FireListeners(CB_GRAPH_REMOVE, graphID)
 
 end
 
-function meta:GetGraph(id)
+function meta:Graphs()
 
-	return self.graphs[id]
+	local i = 0
+	local n = #self.graphs
+	return function() 
+		i = i + 1
+		if i <= n then return self.graphs[i].id, self.graphs[i] end
+	end
 
 end
 
-function meta:GetNumGraphs()
+function meta:GraphIDs()
 
-	return #self.graphs
+	local i = 0
+	local n = #self.graphs
+	return function() 
+		i = i + 1
+		if i <= n then return self.graphs[i].id end
+	end
+
+end
+
+function meta:GetGraph( graphID )
+
+	for id, graph in self:Graphs() do
+		if graph.id == graphID then return graph end
+	end
 
 end
 
@@ -108,11 +122,11 @@ function meta:WriteToStream(stream)
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
 	stream:WriteInt( #self.graphs, false )
-	for k, v in pairs(self.graphs) do
-		local name = v:GetName()
+	for id, graph in self:Graphs() do
+		local name = graph:GetName()
 		stream:WriteInt( name:len(), false )
 		stream:WriteStr( name )
-		v:WriteToStream(stream)
+		graph:WriteToStream(stream)
 	end
 
 end
@@ -123,7 +137,8 @@ function meta:ReadFromStream(stream)
 
 	if stream:ReadInt( false ) ~= fmtMagic then error("Invalid blueprint data") end
 	if stream:ReadInt( false ) ~= fmtVersion then error("Blueprint data version mismatch") end
-	for i=1, stream:ReadInt( false ) do
+	local count = stream:ReadInt( false )
+	for i=1, count do
 		local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )
 		local graph = self:GetGraph(id)
 		graph:ReadFromStream(stream)
