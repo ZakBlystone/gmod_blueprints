@@ -7,6 +7,7 @@ include("sh_bpnodedef.lua")
 
 module("bpcompile", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
 
+-- Some print utilities that I never fully used
 indent = 0
 function printi(...)
 	Msg(string.rep(" ", indent))
@@ -17,6 +18,7 @@ end
 function pushi() indent = indent + 1 end
 function popi() indent = indent - 1 end
 
+-- Context prefixes, a context stores lines of code
 local CTX_SingleNode = "singlenode_"
 local CTX_FunctionNode = "functionnode_"
 local CTX_Graph = "graph_"
@@ -26,6 +28,21 @@ local CTX_Vars = "vars_"
 local CTX_Code = "code"
 local CTX_MetaEvents = "metaevents_"
 local CTX_Hooks = "hooks_"
+
+--[[
+This function goes through all nodes of a certain type in the current graph and creates variable entries for them.
+These variables are used to connect node outputs to inputs among other things
+
+There are currently 3 types of vars:
+	node-locals, return-values, and literals
+
+Node-locals are internal variables scoped to a specific node.
+The foreach node uses this to keep track of its iteration.
+
+Return-values hold the output of non-pure function calls.
+
+Literals are values stored on unconnected input pins.
+]]
 
 function EnumerateGraphVars(cs, nodeType, uniqueKeys)
 
@@ -38,20 +55,9 @@ function EnumerateGraphVars(cs, nodeType, uniqueKeys)
 			-- some nodetypes have local variables exclusive to themselves
 			for _, l in pairs(ntype.locals or {}) do
 
-				local key = "local_" .. ntype.name .. "_v_" .. l
-				if unique[key] ~= nil then
-					local id = 1
-					local kx = key .. id
-					while unique[kx] ~= nil do
-						id = id + 1
-						kx = key .. id
-					end
-					key = kx
-				end
-				unique[key] = 1
+				local key = bpcommon.CreateUniqueKey(unique, "local_" .. ntype.name .. "_v_" .. l)
 
 				table.insert(cs.vars, {
-					id = #cs.vars,
 					var = key,
 					localvar = l,
 					node = nodeID,
@@ -68,13 +74,12 @@ function EnumerateGraphVars(cs, nodeType, uniqueKeys)
 				if node.literals and node.literals[pinID] ~= nil then
 
 					local l = tostring(node.literals[pinID])
-					if pinType == PN_String then
-						l = "\"" .. l .. "\""
-					end
 
-					print("LITERAL: " .. node.literals[pinID] .. " " .. ntype.name .. "(" .. nodeID .. ")[" .. pinID .. "]")
+					-- string literals need to be surrounded by quotes
+					-- TODO: Sanitize these
+					if pinType == PN_String then l = "\"" .. l .. "\"" end
+
 					table.insert(cs.vars, {
-						id = #cs.vars,
 						var = l,
 						type = pinType,
 						literal = true,
@@ -87,28 +92,16 @@ function EnumerateGraphVars(cs, nodeType, uniqueKeys)
 
 			end
 
-			PrintTable(node.literals)
-
-			-- output pins create local variables, if the function is non-pure, the return variable is global
+			-- output pins create local variables, if the function is non-pure, the variable is global
 			for _, pinID in pairs(ntype.pinlayout.outputs) do
 				local pin = ntype.pins[pinID]
 				local pinType = cs.graph:GetPinType( nodeID, pinID )
 
 				if pinType == PN_Exec then continue end
 
-				local key = "fcall_" .. ntype.name .. "_ret_" .. (pin[3] ~= "" and pin[3] or "pin")
-				if unique[key] ~= nil then
-					local id = 1
-					local kx = key .. id
-					while unique[kx] ~= nil do
-						id = id + 1
-						kx = key .. id
-					end
-					key = kx
-				end
-				unique[key] = 1
+				local key = bpcommon.CreateUniqueKey(unique, "fcall_" .. ntype.name .. "_ret_" .. (pin[3] ~= "" and pin[3] or "pin"))
+
 				table.insert(cs.vars, {
-					id = #cs.vars,
 					var = key,
 					type = pinType,
 					init = Defaults[pinType],
@@ -117,12 +110,14 @@ function EnumerateGraphVars(cs, nodeType, uniqueKeys)
 					pin = pinID,
 					graph = cs.graph.id,
 				})
+
 			end
 		end
 	end
 
 end
 
+-- find a node-local variable by name for a given node
 function FindLocalVarForNode(cs, nodeID, vname)
 
 	for k,v in pairs(cs.vars) do
@@ -135,6 +130,7 @@ function FindLocalVarForNode(cs, nodeID, vname)
 
 end
 
+-- find the variable that is assigned to the given node/pin
 function FindVarForPin(cs, nodeID, pinID)
 
 	for k,v in pairs(cs.vars) do
@@ -147,6 +143,7 @@ function FindVarForPin(cs, nodeID, pinID)
 
 end
 
+-- basically just adds a self prefix for global variables to scope them into the module
 function GetVarCode(cs, var)
 
 	if var.global then return "__self." .. var.var end
@@ -154,6 +151,7 @@ function GetVarCode(cs, var)
 
 end
 
+-- returns all connections to a given node's pin
 function GetPinConnections(cs, pinDir, nodeID, pinID)
 
 	local out = {}
@@ -166,6 +164,7 @@ function GetPinConnections(cs, pinDir, nodeID, pinID)
 
 end
 
+-- returns all pins on a node that have the specified direction (in/out)
 function GetNodePins(cs, nodeID, pinDir)
 
 	local out = {}
@@ -178,6 +177,7 @@ function GetNodePins(cs, nodeID, pinDir)
 
 end
 
+-- finds or creates a jump table for the current graph
 function GetGraphJumpTable(cs)
 
 	cs.nodejumps[cs.graph.id] = cs.nodejumps[cs.graph.id] or {}
@@ -185,34 +185,39 @@ function GetGraphJumpTable(cs)
 
 end
 
+-- replaces meta-code in the node type (see top of sh_bpnodedef) with references to actual variables
 function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 
 	local str = code
 
 	printi("Compile Code: '" .. code .. "': " .. #inVars .. " " .. #outVars)
 
+	-- replace macros
 	str = string.Replace( str, "@graph", "graph_" .. cs.graph.id .. "_entry" )
 	str = string.Replace( str, "!node", tostring(nodeID))
 	str = string.Replace( str, "!graph", tostring(cs.graph.id))
 
+	-- replace input pin codes
 	for k,v in pairs(inVars) do
 		str = string.Replace( str, "$" .. k, GetVarCode(cs, v) )
 	end
 
+	-- replace output pin codes
 	for k,v in pairs(outVars) do
 		str = string.Replace( str, "#" .. k, v.jump and "goto jmp_" .. GetVarCode(cs, v) or GetVarCode(cs, v) )
 		str = string.Replace( str, "#_" .. k, GetVarCode(cs, v) )
 	end
 
+	-- replace node-local variables
 	for k,v in pairs(ntype.locals or {}) do
 		local var = FindLocalVarForNode(cs, nodeID, v)
 		if var == nil then error("Failed to find internal variable: " .. tostring(v)) end
 		str = string.Replace( str, "%" .. v, GetVarCode(cs, var) )
 	end
 
+	-- replace jumps
 	local jumpTable = GetGraphJumpTable(cs)[nodeID]
 	for k,v in pairs(jumpTable or {}) do
-		print("REPL JUMP VECTOR: " .. k .. " = " .. v)
 		str = string.Replace( str, "^" .. k, "jmp_" .. v )
 		str = string.Replace( str, "^_" .. k, tostring(v) )
 	end
@@ -221,29 +226,34 @@ function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 
 end
 
+-- compiles a single node
 function CompileNodeSingle(cs, nodeID)
 
 	local node = cs.graph:GetNode(nodeID)
 	local ntype = cs.graph:GetNodeType(node)
-	local lookup = ntype.pinlookup
+	local lookup = ntype.pinlookup --maps pinIDs into their respective positions in the input / output lists
 
 	if not ntype.code then
 		ErrorNoHalt("No code for node: " .. ntype.name .. "\n")
 		return
 	end
 
+	-- the context to emit (singlenode_graph#_node#)
 	cs.begin(CTX_SingleNode .. cs.graph.id .. "_" .. nodeID)
 
 	pushi()
 	printi("Compile Node: " .. ntype.name .. "[" .. nodeID .. "]")
 
+	-- list of inputs/outputs to compile
 	local inVars = {}
 	local outVars = {}
 
+	-- iterate through all input pins
 	for pinID, pin in pairs( GetNodePins(cs, nodeID, PD_In) ) do
 		local pinType = cs.graph:GetPinType( nodeID, pinID )
 		if pinType == PN_Exec then continue end
 
+		-- iterate through all of this pin's connections, and find variables on the pins it's connected to.
 		local lookupID = lookup[pinID][2]
 		local connections = GetPinConnections(cs, PD_In, nodeID, pinID)
 		for _, v in pairs(connections) do
@@ -256,6 +266,8 @@ function CompileNodeSingle(cs, nodeID)
 			end
 
 		end
+
+		-- if there are no connections, try to assign literals on this pin
 		if #connections == 0 then
 			printi("Pin Not Connected: " .. pin[3]) 
 
@@ -263,6 +275,7 @@ function CompileNodeSingle(cs, nodeID)
 			if literalVar ~= nil then
 				inVars[lookupID] = literalVar
 			else
+				-- unconnected nullable pins just have their value set to nil
 				local nullable = bit.band(pin[4], PNF_Nullable) ~= 0
 				if nullable then
 					printi("Pin is nullable")
@@ -277,6 +290,7 @@ function CompileNodeSingle(cs, nodeID)
 
 	end
 
+	-- iterate through all output pins
 	for pinID, pin in pairs( GetNodePins(cs, nodeID, PD_Out) ) do
 		
 		local pinType = cs.graph:GetPinType( nodeID, pinID )
@@ -284,12 +298,15 @@ function CompileNodeSingle(cs, nodeID)
 		local connections = GetPinConnections(cs, PD_Out, nodeID, pinID)
 		if ntype.type == NT_Event then
 
+			-- assign return values for all event pins
 			outVars[lookupID] = FindVarForPin(cs, nodeID, pinID)
 			if outVars[lookupID] ~= nil then PrintTable(outVars[lookupID]) end
 
 		else
 
 			if pinType == PN_Exec then
+
+				-- unconnect exec pins jump to ::jmp_0:: which just pops the stack
 				outVars[lookupID] = {
 					var = #connections == 0 and "0" or connections[1][3],
 					jump = true,
@@ -297,6 +314,7 @@ function CompileNodeSingle(cs, nodeID)
 
 			else
 
+				-- find output variable to write to on this pin
 				local var = FindVarForPin(cs, nodeID, pinID)
 				if var then 
 					--table.insert(outVars, var)
@@ -314,36 +332,42 @@ function CompileNodeSingle(cs, nodeID)
 
 	end	
 
+	-- grab code off node type and remove tabs
 	local code = ntype.code
 	code = string.Replace(code, "\t", "")
+
+	-- take all the mapped variables and place them in the code string
 	code = CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 
+	-- emit some infinite-loop-protection code
 	if cs.ilp and ntype.type == NT_Function or ntype.type == NT_Special then
 		cs.emit("__ilp = __ilp + 1 if __ilp > " .. cs.ilpmax .. " then __ilptrip = true goto __terminus end")
 	end
 
+	-- and debugging info
 	if cs.debug then
 		cs.emit("__dbgnode = " .. nodeID)
 	end
 
+	-- break the code apart and emit each line
 	for _, l in pairs(string.Explode("\n", code)) do
 		cs.emit(l)
 	end
 
-	--cs.emit("\t" .. code)
 	cs.finish()
 
 	popi()
 
-	--PrintTable(node)
-
 end
 
+-- given a non-pure function, walk back through the tree of pure nodes that contribute to its inputs
+-- traversal order follows proceedural execution of nodes (inputs traversed, then node)
 function WalkBackPureNodes(cs, nodeID, call)
 
 	local max = 10000
 	local stack = {}
 	local output = {}
+
 	table.insert(stack, nodeID)
 
 	while #stack > 0 and max > 0 do
@@ -370,56 +394,56 @@ function WalkBackPureNodes(cs, nodeID, call)
 
 	end
 
+	if max == 0 then
+		error("Infinite pure-node loop in graph")
+	end
+
 	for i=#output, 1, -1 do
 		call(output[i])
 	end
 
 end
 
+-- compiles a non-pure function by collapsing all connected pure nodes into it and emitting labels/jumps
 function CompileNodeFunction(cs, nodeID)
 
 	local node = cs.graph:GetNode(nodeID)
 	local nodeType = cs.graph:GetNodeType(node)
 
+	cs.begin(CTX_FunctionNode .. cs.graph.id .. "_" .. nodeID)
+	if cs.debugcomments then cs.emit("-- " .. nodeType.name) end
+	cs.emit("::jmp_" .. nodeID .. "::")
+
+	-- event nodes are really just jump stubs
 	if nodeType.type == NT_Event then 
-		cs.begin(CTX_FunctionNode .. cs.graph.id .. "_" .. nodeID)
 
-		if cs.debugcomments then cs.emit("-- " .. nodeType.name) end
-
-		cs.emit("::jmp_" .. nodeID .. "::")
-
-		local jumps = false
 		for pinID, pin in pairs( GetNodePins(cs, nodeID, PD_Out) ) do
 			local pinType = cs.graph:GetPinType( nodeID, pinID )
+			if pinType ~= PN_Exec then continue end
 
-			if pinType == PN_Exec then
-				local connections = GetPinConnections(cs, PD_Out, nodeID, pinID)
-				for _, v in pairs(connections) do
-					cs.emit("\tgoto jmp_" .. v[3])
-					jumps = true
-				end
+			-- get the exec pin's connection and jump to the node it's connected to
+			local connection = GetPinConnections(cs, PD_Out, nodeID, pinID)[1]
+			if connection ~= nil then
+				cs.emit("\tgoto jmp_" .. connection[3])
+				cs.finish()
+				return
 			end
 
 		end
-
-		if not jumps then
-			cs.emit("\tgoto popcall")
-		end
-
+		
+		-- unconnected exec pins just pop the callstack
+		cs.emit("\tgoto popcall")
 		cs.finish()
-		return 
+		return
+
 	end
-
-	cs.begin(CTX_FunctionNode .. cs.graph.id .. "_" .. nodeID)
-
-	if cs.debugcomments then cs.emit("-- " .. nodeType.name) end
-
-	cs.emit("::jmp_" .. nodeID .. "::")
 
 	pushi()
 	printi("COMPILE FUNC: " .. nodeType.name)
 
 	pushi()
+
+	-- walk through all connected pure nodes, emit each node's code context once
 	local emitted = {}
 	WalkBackPureNodes(cs, nodeID, function(pure)
 		if emitted[pure] then return end
@@ -429,6 +453,7 @@ function CompileNodeFunction(cs, nodeID)
 	end)
 	popi()
 
+	-- emit this non-pure node's code
 	cs.emitContext( CTX_SingleNode .. cs.graph.id .. "_" .. nodeID, 1 )
 
 	popi()
@@ -437,6 +462,7 @@ function CompileNodeFunction(cs, nodeID)
 
 end
 
+-- emits some boilerplate code for indexing gmod's metatables
 function CompileMetaTableLookup(cs)
 
 	cs.begin(CTX_MetaTables)
@@ -455,14 +481,17 @@ function CompileMetaTableLookup(cs)
 
 end
 
+-- lua doesn't have a switch/case construct, so build a massive 'if' bank to jump to each section of the code.
 function CompileGraphJumpTable(cs)
 
 	cs.begin(CTX_JumpTable .. cs.graph.id)
 
 	local nextJumpID = 0
 
+	-- jmp_0 just pops the call stack
 	cs.emit( "if ip == 0 then goto jmp_0 end" )
 
+	-- emit jumps for all non-pure functions
 	for id, node in cs.graph:Nodes() do
 		local nodeType = cs.graph:GetNodeType(node)
 		if nodeType.type ~= NT_Pure then
@@ -471,6 +500,8 @@ function CompileGraphJumpTable(cs)
 		nextJumpID = math.max(nextJumpID, id+1)
 	end
 
+	-- some nodes have internal jump symbols to control program flow (delay / sequence)
+	-- create jump vectors for each of those
 	local jumpTable = GetGraphJumpTable(cs)
 	for id, node in cs.graph:Nodes() do
 		local nodeType = cs.graph:GetNodeType(node)
@@ -478,7 +509,6 @@ function CompileGraphJumpTable(cs)
 
 			jumpTable[id] = jumpTable[id] or {}
 			jumpTable[id][j] = nextJumpID
-			MsgC(Color(80,255,80), "JUMP VECTOR: " .. id .. " = " .. nextJumpID .. "\n")
 			cs.emit( "if ip == " .. nextJumpID .. " then goto jmp_" .. nextJumpID .. " end" )
 			nextJumpID = nextJumpID + 1
 
@@ -489,75 +519,71 @@ function CompileGraphJumpTable(cs)
 
 end
 
+-- builds global variable initializer code for module construction
 function CompileGlobalVarListing(cs)
 
 	cs.begin(CTX_Vars .. "global")
 
 	for k, v in pairs(cs.vars) do
-
 		if not v.literal and v.global then
-
 			cs.emit("instance." .. v.var .. " = nil")
-
 		end
-
 	end
 
 	cs.finish()
 
 end
 
+-- builds local variable initializer code for graph entry function
 function CompileGraphVarListing(cs)
 
 	cs.begin(CTX_Vars .. cs.graph.id)
 
 	for k, v in pairs(cs.vars) do
-
 		if v.graph ~= cs.graph.id then continue end
 		if not v.literal and not v.global then
-
 			cs.emit("local " .. v.var .. " = nil")
-
 		end
-
 	end
 
 	cs.finish()
 
 end
 
+-- compiles the graph entry function
 function CompileGraphEntry(cs)
 
 	local graphID = cs.graph.id
 
-	print("ENTRY: " .. CTX_Graph .. graphID)
 	cs.begin(CTX_Graph .. graphID)
 
+	-- graph function header and callstack
 	cs.emit("\nlocal function graph_" .. graphID .. "_entry( ip )\n")
-
 	cs.emit("\tlocal cs = {}")
 
+	-- debugging info
 	if cs.debug then
 		cs.emit( "\t__dbggraph = " .. graphID)
 	end
 
+	-- emit graph-local variables
 	cs.emitContext( CTX_Vars .. graphID, 1 )
 
+	-- emit jump table
 	cs.emit( "\tlocal function pushjmp(i) table.insert(cs, 1, i) end")
-
 	cs.emit( "\tgoto jumpto" )
-
 	cs.emit( "\n\t::jmp_0:: ::popcall::\n\tif #cs > 0 then ip = cs[1] table.remove(cs, 1) else goto __terminus end" )
-
 	cs.emit( "\n\t::jumpto::" )
 
 	cs.emitContext( CTX_JumpTable .. graphID, 1 )
 
+	-- emit all functions belonging to this graph
 	local code = cs.getFilteredContexts( CTX_FunctionNode .. cs.graph.id )
 	for k, _ in pairs(code) do
 		cs.emitContext( k, 1 )
 	end
 
+	-- emit terminus jump vector
 	cs.emit("\n\t::__terminus::\n")
 	cs.emit("end")
 
@@ -567,6 +593,7 @@ function CompileGraphEntry(cs)
 
 end
 
+-- glues all the code together
 function CompileCodeSegment(cs)
 
 	cs.begin(CTX_Code)

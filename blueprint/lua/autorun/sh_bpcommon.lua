@@ -73,6 +73,23 @@ function Sanitize(str)
 
 end
 
+-- Creates a unique key if needed
+function CreateUniqueKey(tab, key)
+
+	if tab[key] ~= nil then
+		local id = 1
+		local kx = key .. id
+		while tab[kx] ~= nil do
+			id = id + 1
+			kx = key .. id
+		end
+		key = kx
+	end
+	tab[key] = 1
+	return key
+
+end
+
 --Makes the object observable (creates listener system)
 function MakeObservable(obj, cblist)
 	local env = getfenv(2)

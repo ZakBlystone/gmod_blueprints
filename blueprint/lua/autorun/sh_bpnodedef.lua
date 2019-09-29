@@ -14,7 +14,9 @@ module("bpnodedef", package.seeall, bpcommon.rescope(bpschema))
 -- pin = { pin direction, pin type, pin name, [pin flags] }
 -- !node is the node's id
 -- !graph is the graph's id
+-- @graph is the graph's entry function
 -- # is output pin
+-- #_ is output exec pin's target jump
 -- $ is input pin
 -- ^ is jump label
 -- ^_ is jump vector
