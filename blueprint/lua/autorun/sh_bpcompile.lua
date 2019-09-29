@@ -601,6 +601,7 @@ function CompileCodeSegment(cs)
 	cs.emitContext( CTX_MetaTables )
 	cs.emit("local __self = nil")
 
+	-- debugging and infinite-loop-protection
 	if cs.debug then
 		cs.emit( "local __dbgnode = -1")
 		cs.emit( "local __dbggraph = -1")
@@ -612,34 +613,39 @@ function CompileCodeSegment(cs)
 		cs.emit( "local __ilph = 0" )
 	end
 
+	-- __bpm is the module table, it contains utilities and listings for module functions
 	cs.emit("local __bpm = {}")
-	--cs.emitContext( CTX_Graph .. cs.graph.id  )
 
+	-- emit each graph's entry function
 	for id in cs.module:GraphIDs() do
-		print("EMIT: " .. CTX_Graph .. id )
 		cs.emitContext( CTX_Graph .. id )
 	end
 
+	-- infinite-loop-protection checker
 	if cs.ilp then
 		cs.emit("__bpm.checkilp = function()")
 		cs.emit("\tif __ilph > " .. cs.ilpmaxh .. " then __bpm.onError(\"Infinite loop in hook\", " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) return true end")
 		cs.emit("\tif __ilptrip then __bpm.onError(\"Infinite loop\", " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) return true end")
 		cs.emit("end")
 	end
+
+	-- metatable for the module
 	cs.emit("local meta = BLUEPRINT_OVERRIDE_META or {}")
 	cs.emit("if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end")
 	cs.emit("__bpm.meta = meta")
+
+	-- delay manager (so that delays can be cancelled when a module is unloaded)
 	cs.emit("__bpm.delays = {}")
 	cs.emit("__bpm.delayExists = function(key)")
 	cs.emit("\tfor i=#__bpm.delays, 1, -1 do if __bpm.delays[i].key == key then return true end end")
 	cs.emit("\treturn false")
 	cs.emit("end")
-
 	cs.emit("__bpm.delay = function(key, delay, func)")
 	cs.emit("\tfor i=#__bpm.delays, 1, -1 do if __bpm.delays[i].key == key then table.remove(__bpm.delays, i) end end")
 	cs.emit("\ttable.insert( __bpm.delays, { key = key, func = func, time = delay })")
 	cs.emit("end")
 
+	-- error management, allows for custom error handling with debug info about which node / graph the error happened in
 	cs.emit("__bpm.onError = function(msg, mod, graph, node) end")
 	cs.emit("__bpm.call = function(eventName, ...)")
 	cs.emit("\tlocal evt = __bpm.events[eventName]")
@@ -648,6 +654,7 @@ function CompileCodeSegment(cs)
 	cs.emit("\tif not s then __bpm.onError(a:sub(a:find(':', 11)+2, -1), " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) end")
 	cs.emit("end")
 
+	-- update function, runs delays and resets the ilp recursion value for hooks
 	cs.emit("__bpm.update = function()")
 	cs.emit("\tlocal dt = FrameTime()")
 	if cs.ilp then cs.emit("\t__ilph = 0") end
@@ -657,23 +664,26 @@ function CompileCodeSegment(cs)
 	cs.emit("\tend")
 	cs.emit("end")
 
+	-- emit all meta events (functions with graph entry points)
 	for k, _ in pairs( cs.getFilteredContexts(CTX_MetaEvents) ) do
 		cs.emitContext( k )
 	end
 
+	-- constructor
 	cs.emit("__bpm.new = function()")
 	cs.emit("\tlocal instance = setmetatable({}, meta)")
 	cs.emitContext( CTX_Vars .. "global", 1 )
 	cs.emit("\treturn instance")
 	cs.emit("end")
-	cs.emit("__bpm.events = {")
 
+	-- event listing
+	cs.emit("__bpm.events = {")
 	for k, _ in pairs( cs.getFilteredContexts(CTX_Hooks) ) do
 		cs.emitContext( k, 1 )
 	end
-
 	cs.emit("}")
 
+	-- assign local to _G.__BPMODULE so we can grab it from RunString
 	cs.emit("__BPMODULE = __bpm")
 
 
@@ -681,20 +691,27 @@ function CompileCodeSegment(cs)
 
 end
 
+-- called on all graphs before main compile pass, generates all potentially shared data between graphs
 function PreCompileGraph(cs, graph, uniqueKeys)
 
 	cs.graph = graph
 
+	-- 'uniqueKeys' is a table for keeping keys distinct, global variables must be distinct when each graph generates them.
+	-- pure node variables do not need exclusive keys between graphs because they are local
 	EnumerateGraphVars(cs, NT_Pure)
+
+	-- generate variables for all other node types
 	EnumerateGraphVars(cs, NT_Function, uniqueKeys)
 	EnumerateGraphVars(cs, NT_Event, uniqueKeys)
 	EnumerateGraphVars(cs, NT_Special, uniqueKeys)
 
+	-- compile jump table and variable listing for this graph
 	CompileGraphJumpTable(cs)
 	CompileGraphVarListing(cs)
 
 end
 
+-- compiles a metamethod for a given event
 function CompileGraphMetaHook(cs, graph, nodeID)
 
 	local node = cs.graph:GetNode(nodeID)
@@ -704,10 +721,15 @@ function CompileGraphMetaHook(cs, graph, nodeID)
 
 	cs.emit("function meta:" .. nodeType.name .. "(...)")
 
+	-- build argument table and store reference to 'self'
 	cs.emit("\tlocal arg = {...}")
 	cs.emit("\t__self = self")
+
+	-- emit the code for the event node
 	cs.emitContext( CTX_SingleNode .. cs.graph.id .. "_" .. nodeID, 1 )
 
+	-- infinite-loop-protection, prevents a loop case where an event calls a function which in turn calls the event.
+	-- a counter is incremented and as recursion happens, the counter increases.
 	if cs.ilp then
 		cs.emit("\tif __bpm.checkilp() then return end")
 		cs.emit("\t__ilptrip = false")
@@ -715,9 +737,11 @@ function CompileGraphMetaHook(cs, graph, nodeID)
 		cs.emit("\t__ilph = __ilph + 1")
 	end
 
+	-- protected call into graph entrypoint, calls error handler on error
 	cs.emit("\tlocal b,e = pcall(graph_" .. cs.graph.id .. "_entry, " .. nodeID .. ")")
 	cs.emit("\tif not b then __bpm.onError(tostring(e), " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) end")
 
+	-- infinite-loop-protection, after calling the event the counter is decremented.
 	if cs.ilp then
 		cs.emit("\tif __bpm.checkilp() then return end")
 		cs.emit("\t__ilph = __ilph - 1")
@@ -729,28 +753,34 @@ function CompileGraphMetaHook(cs, graph, nodeID)
 
 end
 
+-- compile a full graph
 function CompileGraph(cs, graph)
 
 	cs.graph = graph
 
+	-- compile each single-node context in the graph
 	for id in cs.graph:NodeIDs() do
 		CompileNodeSingle(cs, id)
 	end
 
+	-- compile all non-pure function nodes in the graph (and events / special nodes)
 	for id, node in cs.graph:Nodes() do
 		if cs.graph:GetNodeType(node).type ~= NT_Pure then
 			CompileNodeFunction(cs, id)
 		end
 	end
 
+	-- compile all events nodes in the graph
 	for id, node in cs.graph:Nodes() do
 		if cs.graph:GetNodeType(node).type == NT_Event then
 			CompileGraphMetaHook(cs, graph, id)
 		end
 	end
 
+	-- compile graph's entry function
 	CompileGraphEntry(cs)
 
+	-- compile hook listing for each event (only events that have hook designations)
 	cs.begin(CTX_Hooks .. cs.graph.id)
 
 	for id, node in cs.graph:Nodes() do
@@ -779,6 +809,7 @@ function Compile(mod)
 
 	print("COMPILE MODULE")
 
+	-- compiler state
 	local cs = {
 		module = mod,
 		compiledNodes = {},
@@ -793,6 +824,8 @@ function Compile(mod)
 		ilpmax = 10000,
 		ilpmaxh = 4,
 	}
+
+	-- context control functions
 	cs.begin = function(ctx)
 		cs.current_context = ctx
 		cs.buffer = {}
@@ -828,24 +861,30 @@ function Compile(mod)
 
 	CompileMetaTableLookup(cs)
 
+	-- pre-compile all graphs in the module
+	-- each graph shares a unique key table to ensure global variable names are distinct
 	local uniqueKeys = {}
 	for id, graph in mod:Graphs() do
 		PreCompileGraph( cs, graph, uniqueKeys )
 	end
 
+	-- compile the global variable listing (contains all global variables accross all graphs)
 	CompileGlobalVarListing(cs)
 
+	-- compile each graph
 	for id, graph in mod:Graphs() do
 		CompileGraph( cs, graph )
 	end
 
+	-- compile main code segment
 	CompileCodeSegment(cs)
 
 	cs.compiled = table.concat( cs.getContext( CTX_Code ), "\n" )
 
-	--print(cs.compiled)
+	-- write compiled output to file for debugging
 	file.Write("blueprints/last_compile.txt", cs.compiled)
 
+	-- run the code and grab the __BPMODULE global
 	RunString(cs.compiled, "")
 	local x = __BPMODULE
 	__BPMODULE = nil
