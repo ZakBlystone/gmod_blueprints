@@ -9,29 +9,28 @@ module("bpuinode", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
 local PANEL_INSET = 4
 
 -- NODE TOOLS
-local function pinCount(ntype, dir)
+local function pinCount(nodeType, dir)
 
-	local t = dir == PD_In and ntype.pinlayout.inputs or ntype.pinlayout.outputs
+	local t = dir == PD_In and nodeType.pinlayout.inputs or nodeType.pinlayout.outputs
 	return #t
 
 end
 
-local function getLayoutPin(ntype, dir, id)
+local function getLayoutPin(nodeType, dir, id)
 
-	local t = dir == PD_In and ntype.pinlayout.inputs or ntype.pinlayout.outputs
+	local t = dir == PD_In and nodeType.pinlayout.inputs or nodeType.pinlayout.outputs
 	return t[id]
 
 end
 
-local function calculateNodeSize(node)
+local function calculateNodeSize(nodeType)
 
-	local ntype = node.nodeType
-	local maxVertical = math.max(#ntype.pinlayout.inputs, #ntype.pinlayout.outputs)
+	local maxVertical = math.max(#nodeType.pinlayout.inputs, #nodeType.pinlayout.outputs)
 	local width = 180
 	local headHeight = 30
 
-	if ntype.compact then
-		width = 40 + string.len(ntype.name) * 8
+	if nodeType.compact then
+		width = 40 + string.len(nodeType.name) * 8
 		width = math.max(width, 80)
 		headHeight = 15
 	end
@@ -40,13 +39,13 @@ local function calculateNodeSize(node)
 
 end
 
-local function pinLocation(node, ntype, dir, id)
+local function pinLocation(nodeType, dir, id)
 
 	local x = 0
 	local y = 15
-	local w, h = calculateNodeSize(node)
-	local p = getLayoutPin(ntype, dir, id)
-	if ntype.compact then y = -4 end
+	local w, h = calculateNodeSize(nodeType)
+	local p = getLayoutPin(nodeType, dir, id)
+	if nodeType.compact then y = -4 end
 	if dir == PD_In then
 		return x, y + id * 15
 	else
@@ -69,8 +68,9 @@ function PANEL:Setup( graph, node )
 	self.nodeID = self.node.id
 	self.graph = graph
 	self.vgraph = self:GetParent():GetParent()
+	self.nodeType = self.graph:GetNodeType( self.node )
 
-	local w,h = calculateNodeSize(self.node)
+	local w,h = calculateNodeSize( self.nodeType )
 	self:SetWide( w )
 	self:SetTall( h )
 	self:SetPos( node.x, node.y )
@@ -89,13 +89,13 @@ function PANEL:BuildPins()
 	self.pins = {}
 
 	local node = self.node
-	local ntype = node.nodeType
-	for i=1, pinCount(ntype, PD_In) do
+	local nodeType = self.nodeType
+	for i=1, pinCount(nodeType, PD_In) do
 
-		local pinID = getLayoutPin(ntype, PD_In, i)
-		local pin = ntype.pins[pinID]
+		local pinID = getLayoutPin(nodeType, PD_In, i)
+		local pin = nodeType.pins[pinID]
 		local lit = node.literals and node.literals[pinID]
-		local x,y = pinLocation(node, ntype, PD_In, i)
+		local x,y = pinLocation(nodeType, PD_In, i)
 
 		local vpin = vgui.Create("BPPin", self)
 		vpin:SetPos(x,y)
@@ -106,11 +106,11 @@ function PANEL:BuildPins()
 
 	end
 
-	for i=1, pinCount(ntype, PD_Out) do
+	for i=1, pinCount(nodeType, PD_Out) do
 
-		local pinID = getLayoutPin(ntype, PD_Out, i)
-		local pin = ntype.pins[pinID]
-		local x,y = pinLocation(node, ntype, PD_Out, i)
+		local pinID = getLayoutPin(nodeType, PD_Out, i)
+		local pin = nodeType.pins[pinID]
+		local x,y = pinLocation(nodeType, PD_Out, i)
 
 		local vpin = vgui.Create("BPPin", self)
 		vpin:SetPos(x,y)
@@ -137,12 +137,12 @@ end
 
 function PANEL:PerformLayout(pw, ph)
 
-	local ntype = self.node.nodeType
+	local ntype = self.nodeType
 	local inset = self.inset
 	for i=1, pinCount(ntype, PD_In) do
 
 		local pinID = getLayoutPin(ntype, PD_In, i)
-		local x,y = pinLocation(self.node, ntype, PD_In, i)
+		local x,y = pinLocation(ntype, PD_In, i)
 		local w,h = self.pins[pinID]:GetSize()
 		self.pins[pinID]:SetPos(x + inset, y + inset)
 
@@ -151,7 +151,7 @@ function PANEL:PerformLayout(pw, ph)
 	for i=1, pinCount(ntype, PD_Out) do
 
 		local pinID = getLayoutPin(ntype, PD_Out, i)
-		local x,y = pinLocation(self.node, ntype, PD_Out, i)
+		local x,y = pinLocation(ntype, PD_Out, i)
 		local w,h = self.pins[pinID]:GetSize()
 		self.pins[pinID]:SetPos(x - w - inset, y + inset)
 
@@ -162,7 +162,7 @@ end
 function PANEL:Paint(w, h)
 
 	if not self.node then return end
-	local ntype = self.node.nodeType
+	local ntype = self.nodeType
 
 	local inset = self.inset
 	if self:HasFocus() then
@@ -196,8 +196,6 @@ function PANEL:OnMousePressed()
 	if not self.node then return end
 	if self.vgraph:GetIsLocked() then return end
 
-	local ntype = self.node.nodeType
-
 	local screenX, screenY = self:LocalToScreen( 0, 0 )
 	self:MoveToFront()
 	self:RequestFocus()
@@ -229,7 +227,6 @@ end
 function PANEL:Think()
 
 	if not self.node then return end
-	local ntype = self.node.nodeType
 
 	local mousex = math.Clamp( gui.MouseX(), 1, ScrW() - 1 )
 	local mousey = math.Clamp( gui.MouseY(), 1, ScrH() - 1 )

@@ -82,6 +82,13 @@ function meta:GetNode(nodeID)
 
 end
 
+function meta:GetNodeType(node)
+
+	local types = self:GetNodeTypes()
+	return types[ node.nodeType ]
+
+end
+
 function meta:Connections()
 
 	local i = 0
@@ -127,14 +134,14 @@ end
 
 function meta:GetNodePin(nodeID, pinID)
 
-	return self:GetNode(nodeID).nodeType.pins[pinID]
+	return self:GetNodeType(self:GetNode(nodeID)).pins[pinID]
 
 end
 
 function meta:GetPinType(nodeID, pinID)
 
 	local node = self:GetNode(nodeID)
-	local ntype = node.nodeType
+	local ntype = self:GetNodeType(node)
 
 	if ntype.meta and ntype.meta.informs then
 
@@ -284,6 +291,8 @@ end
 function meta:SetPinLiteral(nodeID, pinID, value)
 
 	local node = self:GetNode(nodeID)
+	if node == nil then error("Tried to set literal on null node") end
+
 	value = tostring(value)
 
 	node.literals[pinID] = value
@@ -292,6 +301,13 @@ function meta:SetPinLiteral(nodeID, pinID, value)
 end
 
 function meta:AddNode(node)
+
+	local ntype = self:GetNodeType(node)
+	if ntype == nil then
+		ErrorNoHalt("Failed to create node type: " .. tostring(node.nodeType))
+		self.nextNodeID = self.nextNodeID + 1
+		return
+	end
 
 	table.insert(self.nodes, node)
 
@@ -307,11 +323,12 @@ function meta:AddNode(node)
 
 	self:FireListeners(CB_NODE_ADD, node, id)
 
-	local defaults = node.nodeType.defaults or {}
+	
+	local defaults = ntype.defaults or {}
 
-	for pinID, pin in pairs(node.nodeType.pins) do
+	for pinID, pin in pairs(ntype.pins) do
 
-		local default = defaults[node.nodeType.pinlookup[pinID][2]]
+		local default = defaults[ntype.pinlookup[pinID][2]]
 
 		if pin[1] == PD_In then
 
@@ -374,6 +391,21 @@ function meta:RemoveConnection(nodeID0, pinID0, nodeID1, pinID1)
 
 end
 
+function meta:RemoveInvalidConnections()
+
+	local connections = self.connections
+	for i=#connections, 1, -1 do
+
+		local c = connections[i]
+		if not self:GetNode(c[1]) or not self:GetNode(c[3]) then
+			print("Removed invalid connection: " .. i)
+			table.remove(connections, i)
+		end
+
+	end	
+
+end
+
 function meta:RemoveNode(nodeID)
 
 	local node = self:GetNode( nodeID )
@@ -395,14 +427,14 @@ function meta:RemoveNode(nodeID)
 
 end
 
-function meta:WriteToStream(stream)
+function meta:WriteToStream(stream, version)
 
 	local namelookup = {}
 	local nametable = {}
 	local nodeentries = {}
 
 	for id, node in self:Nodes() do
-		local name = node.nodeType.name
+		local name = self:GetNodeType(node).name
 		if not namelookup[name] then 
 			table.insert(nametable, name)
 			namelookup[name] = #nametable
@@ -414,7 +446,7 @@ function meta:WriteToStream(stream)
 
 	stream:WriteInt( #self.nodes, false )
 	for id, node in self:Nodes() do
-		local name = node.nodeType.name
+		local name = self:GetNodeType(node).name
 		stream:WriteInt( namelookup[name], false )
 		stream:WriteFloat( node.x or 0 )
 		stream:WriteFloat( node.y or 0 )
@@ -435,7 +467,7 @@ function meta:WriteToStream(stream)
 
 end
 
-function meta:ReadFromStream(stream)
+function meta:ReadFromStream(stream, version)
 
 	self:Clear()
 
@@ -454,20 +486,24 @@ function meta:ReadFromStream(stream)
 		local literals = bpdata.ReadValue( stream )
 		
 		local id = self:AddNode({
-			nodeType = NodeTypes[ nodeTypeName ],
+			nodeType = nodeTypeName,
 			x = nodeX,
 			y = nodeY,
 			literals = literals,
 		})
 
-		for k, v in pairs(literals) do
-			--print("LOAD LITERAL[" .. id .. "|" .. self.nodes[id].nodeType.name .. "]: " .. tostring(k) .. " = " .. tostring(v))
-			self:SetPinLiteral( id, k, v )
+		if id ~= nil then
+			for k, v in pairs(literals) do
+				--print("LOAD LITERAL[" .. id .. "|" .. self.nodes[id].nodeType.name .. "]: " .. tostring(k) .. " = " .. tostring(v))
+				self:SetPinLiteral( id, k, v )
+			end
 		end
 
 	end
 
 	self.connections = bpdata.ReadValue( stream )
+
+	self:RemoveInvalidConnections()
 	for i, connection in self:Connections() do
 		self:FireListeners(CB_CONNECTION_ADD, connection, i)
 	end
@@ -493,62 +529,62 @@ function meta:CreateTestGraph()
 
 	local graph = self
 	local n1 = graph:AddNode({
-		nodeType = NodeTypes["If"],
+		nodeType = "If",
 		x = 700,
 		y = 10,
 	})
 
 	local n2 = graph:AddNode({
-		nodeType = NodeTypes["Crouching"],
+		nodeType = "Crouching",
 		x = 350,
 		y = 150,
 	})
 
 	local n4 = graph:AddNode({
-		nodeType = NodeTypes["SetVelocity"],
+		nodeType = "SetVelocity",
 		x = 1000,
 		y = 100,
 	})
 
 	local n5 = graph:AddNode({
-		nodeType = NodeTypes["Vector"],
+		nodeType = "Vector",
 		x = 750,
 		y = 200,
 		literals = {0,0,800}
 	})
 
 	local n6 = graph:AddNode({
-		nodeType = NodeTypes["Alive"],
+		nodeType = "Alive",
 		x = 350,
 		y = 350,
 	})
 
 	local n7 = graph:AddNode({
-		nodeType = NodeTypes["And"],
+		nodeType = "And",
 		x = 600,
 		y = 300,
 	})
 
 	local n8 = graph:AddNode({
-		nodeType = NodeTypes["ToString"],
+		nodeType = "ToString",
 		x = 650,
 		y = 500,
 	})
 
 	local n9 = graph:AddNode({
-		nodeType = NodeTypes["Print"],
+		nodeType = "Print",
 		x = 1000,
 		y = 500,
 	})
 
 	local n10 = graph:AddNode({
-		nodeType = NodeTypes["PlayerTick"],
+		nodeType = "PlayerTick",
 		x = 10,
 		y = 10,
 	})
 
 	local n11 = graph:AddNode({
-		nodeType = NodeTypes["GetVelocity"],
+		nodeType = "GetVelocity",
 		x = 350,
 		y = 500,
 	})
@@ -580,7 +616,7 @@ New = function(...)
 	return setmetatable({}, meta):Init(...)
 end
 
-function CreateTestGraph()
+--[[function CreateTestGraph()
 
 	local graph = New()
 	graph:CreateTestGraph()
@@ -605,4 +641,4 @@ function CreateTestGraph()
 
 end
 
-CreateTestGraph()
+CreateTestGraph()]]

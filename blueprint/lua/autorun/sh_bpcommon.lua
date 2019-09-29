@@ -56,6 +56,23 @@ function CallbackList(t, listindex)
 	cblist["CB_ALL"] = cbx-1
 end
 
+function Camelize(str)
+
+	if str:len() == 0 then return "" end
+
+	return str[1]:upper() .. str:sub(2,-1)
+
+end
+
+function Sanitize(str)
+
+	local out = ""
+	for str in str:gmatch("[%w_]") do out = out .. str end
+	if out:len() == 0 then return nil end
+	return out
+
+end
+
 --Makes the object observable (creates listener system)
 function MakeObservable(obj, cblist)
 	local env = getfenv(2)

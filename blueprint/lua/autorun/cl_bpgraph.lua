@@ -302,8 +302,6 @@ function PANEL:DrawConnection(connection)
 	local apintype = graph:GetPinType( connection[1], connection[2] )
 	local bpintype = graph:GetPinType( connection[3], connection[4] )
 
-	--surface.SetDrawColor(NodePinColors[ a.nodeType.pins[connection[2]][2] ])
-
 	self:DrawHermite( ax, ay, bx, by, 
 		NodePinColors[ apintype ], 
 		NodePinColors[ bpintype ] 
@@ -471,7 +469,7 @@ function PANEL:OpenContext()
 		x, y = self.canvas:ScreenToLocal(x, y)
 
 		self.graph:AddNode({
-			nodeType = nodeType,
+			nodeType = nodeType.name,
 			x = x - canvasFix,
 			y = y - canvasFix,
 		})

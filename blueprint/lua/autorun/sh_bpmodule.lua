@@ -32,6 +32,17 @@ function meta:Init()
 	self.id = nextModuleID
 	self.nextGraphID = 1
 
+	--[[table.insert(self.variables, {
+		name = "NumberOfBarrels",
+		type = PN_Number,
+	})
+
+	table.insert(self.variables, {
+		name = "CoolEntities",
+		type = PN_Entity,
+		flags = PNF_Table,
+	})]]
+
 	bpcommon.MakeObservable(self)
 
 	nextModuleID = nextModuleID + 1
@@ -47,7 +58,36 @@ end
 
 function meta:GetNodeTypes( graphID )
 
-	return NodeTypes
+	local types = {}
+	local base = NodeTypes
+
+	for k, v in pairs(self.variables) do
+
+		types["Set" .. v.name] = FUNCTION {
+			pins = {
+				{PD_In, v.type, "value", v.flags or 0},
+			},
+			defaults = { [1] = v.default },
+			code = "__self.__" .. v.name .. " = $2",
+			compact = true,
+		}
+
+		types["Get" .. v.name] = PURE {
+			pins = {
+				{PD_Out, v.type, "value", v.flags or 0},
+			},
+			code = "#1 = __self.__" .. v.name,
+			compact = true,
+		}
+
+	end
+
+	for k,v in pairs(types) do v.name = k end
+	for k,v in pairs(base) do
+		if not types[k] then types[k] = v end
+	end
+
+	return types
 
 end
 
@@ -62,7 +102,8 @@ end
 function meta:NewGraph(name)
 
 	local graph = bpgraph.New()
-	if name ~= "" then graph.name = name end
+	name = bpcommon.Sanitize(name)
+	if name ~= nil then graph.name = bpcommon.Camelize(name) end
 
 	table.insert(self.graphs, graph)
 	graph.id = self.nextGraphID
@@ -126,7 +167,7 @@ function meta:WriteToStream(stream)
 		local name = graph:GetName()
 		stream:WriteInt( name:len(), false )
 		stream:WriteStr( name )
-		graph:WriteToStream(stream)
+		graph:WriteToStream(stream, fmtVersion)
 	end
 
 end
@@ -135,13 +176,16 @@ function meta:ReadFromStream(stream)
 
 	self:Clear()
 
-	if stream:ReadInt( false ) ~= fmtMagic then error("Invalid blueprint data") end
-	if stream:ReadInt( false ) ~= fmtVersion then error("Blueprint data version mismatch") end
+	local magic = stream:ReadInt( false )
+	local version = stream:ReadInt( false )
+
+	if magic ~= fmtMagic then error("Invalid blueprint data") end
+	if version > fmtVersion then error("Blueprint data version is newer") end
 	local count = stream:ReadInt( false )
 	for i=1, count do
 		local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )
 		local graph = self:GetGraph(id)
-		graph:ReadFromStream(stream)
+		graph:ReadFromStream(stream, version)
 	end
 
 end

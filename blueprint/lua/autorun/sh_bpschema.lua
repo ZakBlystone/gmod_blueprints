@@ -85,7 +85,6 @@ function ConfigureNodeType(t)
 			table.insert( t.pinlayout.outputs, i ) t.pinlookup[i] = { t.pinlayout.outputs, #t.pinlayout.outputs, PD_Out } 
 		end
 		pin[4] = pin[4] or PNF_None
-		pin.nodeType = t
 		pin.id = i
 	end
 
