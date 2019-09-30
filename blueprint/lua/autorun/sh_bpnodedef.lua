@@ -92,12 +92,38 @@ NodeTypes = {
 		},
 		code = "#1 = Player_.Alive($1)",
 	},
+	["PlayerGetWeapon"] = PURE {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_String, "classname"},
+			{ PD_Out, PN_Weapon, "weapon" },
+		},
+		code = "#1 = Player_.GetWeapon($1, $2)",		
+	},
+	["PlayerGetActiveWeapon"] = PURE {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_Out, PN_Weapon, "weapon" },
+		},
+		code = "#1 = Player_.GetActiveWeapon($1)",
+	},
 	["PlayerName"] = PURE {
 		pins = {
 			{ PD_In, PN_Player, "player" },
 			{ PD_Out, PN_String, "name" },
 		},
 		code = "#1 = Player_.Nick($1)",
+	},
+	["FireBullets"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Vector, "spread", PNF_Nullable },
+			{ PD_In, PN_Vector, "source" },
+			{ PD_In, PN_Vector, "dir" },
+			{ PD_In, PN_Number, "num" },
+			{ PD_In, PN_Number, "damage" },
+		},
+		code = "Entity_.FireBullets($2, { Spread = $3, Src = $4, Dir = $5, Num = $6, Damage = $7 })",
 	},
 	["SetVelocity"] = FUNCTION {
 		pins = {
@@ -112,6 +138,13 @@ NodeTypes = {
 			{ PD_Out, PN_Vector, "velocity" },
 		},
 		code = "#1 = Entity_.GetVelocity($1)",
+	},
+	["GetGroundEntity"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Entity, "groundEntity" },
+		},
+		code = "#1 = Entity_.GetGroundEntity($1)",
 	},
 	["Crouching"] = PURE {
 		pins = {
@@ -189,6 +222,12 @@ NodeTypes = {
 		},
 		code = "for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $2) end",
 	},
+	["Wake"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_PhysObj, "physObj" },
+		},
+		code = "PhysObj_.Wake($2)",
+	},
 	["ApplyForceCenter"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_PhysObj, "physObj" },
@@ -209,6 +248,13 @@ NodeTypes = {
 			{ PD_In, PN_Number, "mass" },
 		},
 		code = "PhysObj_.SetMass($2, $3)",
+	},
+	["EnableMotion"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_PhysObj, "physObj" },
+			{ PD_In, PN_Bool, "enabled" },
+		},
+		code = "PhysObj_.EnableMotion($2, $3)",
 	},
 	["GetRagdollEntity"] = PURE {
 		pins = {
@@ -295,6 +341,14 @@ NodeTypes = {
 		},
 		code = "#1 = math.Rand($1, $2)",
 	},
+	["RandInt"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "Min" },
+			{ PD_In, PN_Number, "Max" },
+			{ PD_Out, PN_Number, "Result" },
+		},
+		code = "#1 = math.random($1, $2)",
+	},
 	["Floor"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "in" },
@@ -352,6 +406,51 @@ NodeTypes = {
 			{ PD_Out, PN_Number, "a" },
 		},
 		code = "#1, #2, #3, #4 = $1.r, $1.g, $1.b, $1.a",
+	},
+	["Angles"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "p" },
+			{ PD_In, PN_Number, "y" },
+			{ PD_In, PN_Number, "r" },
+			{ PD_Out, PN_Angles, "angles" },			
+		},
+		code = "#1 = Angle($1, $2, $3)",
+	},
+	["RotateAroundAxis"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Angles, "angles" },
+			{ PD_In, PN_Vector, "axis" },
+			{ PD_In, PN_Number, "rotation" },
+		},
+		code = "$2:RotateAroundAxis($3, $4)",
+		compact = false,
+	},
+	["VectorToAngle"] = PURE {
+		pins = {
+			{ PD_In, PN_Vector, "vector" },
+			{ PD_Out, PN_Angles, "angles" },
+		},
+		code = "#1 = $1:Angle()",
+		compact = true,
+	},
+	["AngleVectors"] = PURE {
+		pins = {
+			{ PD_In, PN_Angles, "angles" },
+			{ PD_Out, PN_Vector, "forward" },
+			{ PD_Out, PN_Vector, "right" },
+			{ PD_Out, PN_Vector, "up" },
+		},
+		code = "$2 = $1:Forward() $3 = $1:Right() $4 = $1:Up()",
+		compact = false,
+	},
+	["BreakAngles"] = PURE {
+		pins = {
+			{ PD_In, PN_Angles, "angles" },
+			{ PD_Out, PN_Number, "p" },
+			{ PD_Out, PN_Number, "y" },
+			{ PD_Out, PN_Number, "r" },
+		},
+		code = "#1, #2, #3 = $1.p, $1.y, $1.r",
 	},
 	["Vector"] = PURE {
 		pins = {
@@ -569,8 +668,8 @@ NodeTypes = {
 	},
 	["Equal"] = PURE {
 		pins = {
-			{ PD_In, PN_Any, "vector" },
-			{ PD_In, PN_Any, "scalar" },
+			{ PD_In, PN_Any, "a" },
+			{ PD_In, PN_Any, "b" },
 			{ PD_Out, PN_Bool, "result" },
 		},
 		meta = {
@@ -594,6 +693,20 @@ NodeTypes = {
 			{ PD_Out, PN_Number, "level" },
 		},
 		code = "#1 = Entity_.WaterLevel($1)",
+	},
+	["GetAngles"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Angles, "angles" },
+		},
+		code = "#1 = Entity_.GetAngles($1)",
+	},
+	["SetAngles"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Angles, "angles" },	
+		},
+		code = "Entity_.SetAngles($2, $3)",
 	},
 	["GetPos"] = PURE {
 		pins = {
@@ -875,6 +988,14 @@ NodeTypes = {
 		compact = false,
 		code = "#1 = $1 .. $2"
 	},
+	["StrLower"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "str" },
+			{ PD_Out, PN_String, "result" },
+		},
+		compact = false,
+		code = "#1 = string.lower($1)",		
+	},
 	["ContainsString"] = PURE {
 		pins = {
 			{ PD_In, PN_String, "string" },
@@ -913,11 +1034,26 @@ NodeTypes = {
 		compact = false,
 		code = "#1 = string.Trim($1)"
 	},
+	["TableGet"] = PURE {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Any, "key" },
+			{ PD_Out, PN_Any, "result" },
+		},
+		meta = {
+			informs = {1,3}
+		},
+		compact = true,
+		code = "#1 = $1[$2]",
+	},
 	["TableGetIndex"] = PURE {
 		pins = {
 			{ PD_In, PN_Any, "table", PNF_Table },
 			{ PD_In, PN_Number, "index" },
 			{ PD_Out, PN_Any, "result" },
+		},
+		meta = {
+			informs = {1,3}
 		},
 		compact = true,
 		code = "#1 = $1[$2]",
@@ -929,6 +1065,77 @@ NodeTypes = {
 		},
 		compact = true,
 		code = "#1 = #$1",
+	},
+	["TableInsert"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Any, "value" },
+		},
+		meta = {
+			informs = {3,4}
+		},
+		compact = true,
+		code = "table.insert($2, $3)",
+	},
+	["TableSet"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Any, "key" },
+			{ PD_In, PN_Any, "value", PNF_Nullable },
+		},
+		meta = {
+			informs = {3,5}
+		},
+		compact = true,
+		code = "$2[$3] = $4",
+	},
+	["TableSetI"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Number, "key" },
+			{ PD_In, PN_Any, "value", PNF_Nullable },
+		},
+		meta = {
+			informs = {3,5}
+		},
+		compact = true,
+		code = "$2[$3] = $4",
+	},
+	["TableHasKey"] = PURE {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Any, "key" },
+			{ PD_Out, PN_Bool, "has" },
+		},
+		compact = true,
+		code = "#1 = $1[$2] ~= nil",
+	},
+	["TableHasValue"] = PURE {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Any, "value" },
+			{ PD_Out, PN_Bool, "has" },
+		},
+		meta = {
+			informs = {1,2}
+		},
+		compact = true,
+		code = "#1 = table.HasValue($1, $2)",
+	},
+	["TableClearKey"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Any, "key" },
+		},
+		compact = true,
+		code = "$2[$3] = nil",
+	},
+	["TableClear"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+		},
+		compact = true,
+		code = "$2 = {}",
 	},
 	["TraceLine"] = FUNCTION {
 		pins = {
@@ -967,6 +1174,19 @@ NodeTypes = {
 		},
 		code = [[#1 = (type($1) == type($2)) and $1 or $2]],
 	},
+}
+
+local allpins = {}
+for i=1, PN_Max do
+	table.insert(allpins, { PD_In, i, PinTypeNames[i] })
+end
+for i=1, PN_Max do
+	table.insert(allpins, { PD_Out, i, PinTypeNames[i] })
+end
+
+NodeTypes["DEBUGALLPINTYPES"] = PURE {
+	pins = allpins,
+	compact = false,
 }
 
 local function AddHook(name, args)
@@ -1013,6 +1233,8 @@ AddHook("GravGunOnDropped", { {"player", PN_Player}, {"entity", PN_Entity} })
 AddHook("GravGunOnPickedUp", { {"player", PN_Player}, {"entity", PN_Entity} })
 AddHook("PlayerButtonDown", { {"player", PN_Player}, {"button", PN_Number} })
 AddHook("PlayerButtonUp", { {"player", PN_Player}, {"button", PN_Number} })
+AddHook("KeyPress", { {"player", PN_Player}, {"key", PN_Number} })
+AddHook("KeyRelease", { {"player", PN_Player}, {"key", PN_Number} })
 AddHook("PlayerSwitchFlashlight", { {"player", PN_Player}, {"enabled", PN_Bool} })
 AddHook("EntityTakeDamage", { {"target", PN_Entity}, {"damageInfo", PN_Any} })
 

@@ -18,12 +18,15 @@ bpcommon.CallbackList({
 })
 
 local fmtMagic = 0x42504D58
-local fmtVersion = 1
+local fmtVersion = 2
 local meta = {}
 meta.__index = meta
 
 nextModuleID = nextModuleID or 0
 activeModules = activeModules or {}
+
+bpcommon.CreateIndexableListIterators(meta, "graphs")
+bpcommon.CreateIndexableListIterators(meta, "variables")
 
 function meta:Init()
 
@@ -31,6 +34,7 @@ function meta:Init()
 	self.variables = {}
 	self.id = nextModuleID
 	self.nextGraphID = 1
+	self.nextVarID = 1
 
 	--[[table.insert(self.variables, {
 		name = "NumberOfBarrels",
@@ -56,6 +60,12 @@ function meta:GetNextGraphID()
 
 end
 
+function meta:GetNextVarID()
+
+	return self.nextVarID
+
+end
+
 function meta:GetNodeTypes( graphID )
 
 	local types = {}
@@ -67,7 +77,6 @@ function meta:GetNodeTypes( graphID )
 			pins = {
 				{PD_In, v.type, "value", v.flags or 0},
 			},
-			defaults = { [1] = v.default },
 			code = "__self.__" .. v.name .. " = $2",
 			compact = true,
 		}
@@ -96,6 +105,38 @@ function meta:Clear()
 	self:FireListeners(CB_MODULE_CLEAR)
 
 	self.graphs = {}
+	self.variables = {}
+
+end
+
+function meta:NewVariable(name, type, default, flags)
+
+	local var = { name = "var_" .. self.nextVarID }
+	name = bpcommon.Sanitize(name)
+	if name ~= nil then var.name = bpcommon.Camelize(name) end
+
+	table.insert(self.variables, var)
+	var.id = self.nextVarID
+	var.type = type or PN_Number
+	var.default = bit.band(flags, PNF_Table) and "{}" or (default or Defaults[var.type])
+	var.flags = flags or 0
+
+	self.nextVarID = self.nextVarID + 1
+
+	self:FireListeners(CB_VARIABLE_ADD, var.id)
+
+	return var.id
+
+end
+
+function meta:RemoveVariable( varID )
+
+	local var = self:GetVariable( varID )
+	if var == nil then return end
+
+	table.RemoveByValue(self.variables, var)
+
+	self:FireListeners(CB_VARIABLE_REMOVE, varID)
 
 end
 
@@ -128,40 +169,13 @@ function meta:RemoveGraph( graphID )
 
 end
 
-function meta:Graphs()
-
-	local i = 0
-	local n = #self.graphs
-	return function() 
-		i = i + 1
-		if i <= n then return self.graphs[i].id, self.graphs[i] end
-	end
-
-end
-
-function meta:GraphIDs()
-
-	local i = 0
-	local n = #self.graphs
-	return function() 
-		i = i + 1
-		if i <= n then return self.graphs[i].id end
-	end
-
-end
-
-function meta:GetGraph( graphID )
-
-	for id, graph in self:Graphs() do
-		if graph.id == graphID then return graph end
-	end
-
-end
-
 function meta:WriteToStream(stream)
 
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
+
+	bpdata.WriteValue( self.variables, stream )
+
 	stream:WriteInt( #self.graphs, false )
 	for id, graph in self:Graphs() do
 		local name = graph:GetName()
@@ -181,6 +195,14 @@ function meta:ReadFromStream(stream)
 
 	if magic ~= fmtMagic then error("Invalid blueprint data") end
 	if version > fmtVersion then error("Blueprint data version is newer") end
+
+	if version >= 2 then
+		local vars = bpdata.ReadValue( stream )
+		for _, v in pairs(vars) do
+			self:NewVariable(v.name, v.type, v.default, v.flags)
+		end
+	end
+
 	local count = stream:ReadInt( false )
 	for i=1, count do
 		local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )

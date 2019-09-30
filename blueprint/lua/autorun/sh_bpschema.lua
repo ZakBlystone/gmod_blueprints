@@ -19,6 +19,9 @@ PN_Vehicle = 8
 PN_Any = 9
 PN_String = 10
 PN_Color = 11
+PN_Weapon = 12
+PN_Angles = 13
+PN_Max = 13
 
 NT_Pure = 0
 NT_Function = 1
@@ -36,6 +39,23 @@ NodeTypeColors = {
 	[NT_Special] = Color(100,100,100),
 }
 
+PinTypeNames = {
+	[PN_Exec] = "Exec",
+	[PN_Bool] = "Boolean",
+	[PN_Vector] = "Vector",
+	[PN_Number] = "Number",
+	[PN_PhysObj] = "Physics Object",
+	[PN_Player] = "Player",
+	[PN_Entity] = "Entity",
+	[PN_Npc] = "NPC",
+	[PN_Vehicle] = "Vehicle",
+	[PN_Any] = "Any",
+	[PN_String] = "String",
+	[PN_Color] = "Color",
+	[PN_Weapon] = "Weapon",
+	[PN_Angles] = "Angles",
+}
+
 NodePinColors = {
 	[PN_Exec] = Color(255,255,255),
 	[PN_Bool] = Color(255,80,80),
@@ -47,13 +67,16 @@ NodePinColors = {
 	[PN_Npc] = Color(255,50,50),
 	[PN_Vehicle] = Color(50,127,255),
 	[PN_Any] = Color(100,100,100),
-	[PN_String] = Color(255,255,100),
+	[PN_String] = Color(250,170,150),
 	[PN_Color] = Color(140,50,200),
+	[PN_Weapon] = Color(180,255,100),
+	[PN_Angles] = Color(80,150,180),
 }
 
 NodePinImplicitConversions = {
 	[PN_Entity] = { PN_Player },
 	[PN_Player] = { PN_Entity },
+	[PN_Weapon] = { PN_Entity },
 	[PN_Npc] = { PN_Entity },
 	[PN_Vehicle] = { PN_Entity },
 }

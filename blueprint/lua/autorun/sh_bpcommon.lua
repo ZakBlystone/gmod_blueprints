@@ -73,6 +73,12 @@ function Sanitize(str)
 
 end
 
+function GetSingular(str)
+
+	return str:sub(-1,-1) == "s" and str:sub(1,-2) or str
+
+end
+
 -- Creates a unique key if needed
 function CreateUniqueKey(tab, key)
 
@@ -87,6 +93,47 @@ function CreateUniqueKey(tab, key)
 	end
 	tab[key] = 1
 	return key
+
+end
+
+-- List of items which have ids
+function CreateIndexableListIterators(meta, variable)
+
+	local singular = GetSingular(variable)
+	local varName = Camelize(singular)
+	local iteratorName = varName .. "s"
+	local idIteratorName = varName .. "IDs"
+
+	meta[iteratorName] = function(self)
+
+		local i = 0
+		local n = #self[variable]
+		return function() 
+			i = i + 1
+			if i <= n then return self[variable][i].id, self[variable][i] end
+		end
+
+	end
+
+	meta[idIteratorName] = function(self)
+
+		local i = 0
+		local n = #self[variable]
+		return function() 
+			i = i + 1
+			if i <= n then return self[variable][i].id end
+		end
+
+	end
+
+	local iter = meta[iteratorName]
+	meta["Get" .. varName] = function(self, id)
+
+		for _, item in iter(self) do
+			if item.id == id then return item end
+		end
+
+	end
 
 end
 

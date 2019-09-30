@@ -2,12 +2,16 @@ if SERVER then AddCSLuaFile() return end
 
 include("cl_bpnode.lua")
 include("cl_bppin.lua")
+include("cl_bpvarcreatemenu.lua")
+include("sh_bpschema.lua")
 include("sh_bpmodule.lua")
 
 module("bpuieditor", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
 local PANEL = {}
 local TITLE = "Blueprint Editor"
+
+LastSavedFile = nil
 
 function PANEL:Init()
 
@@ -16,24 +20,40 @@ function PANEL:Init()
 	local x = (ScrW() - w)/2
 	local y = (ScrH() - h)/2
 
+	local SaveFunc = function( text ) 
+		local outStream = bpdata.OutStream()
+		self.module:WriteToStream(outStream)
+		outStream:WriteToFile("blueprints/bpm_" .. text .. ".txt", true, true)
+		LastSavedFile = text
+	end
+
 	local MenuOptions = {
 		{"New Module", function(p)
+			LastSavedFile = nil
 			p:SetModule( bpmodule.New() )
 		end},
 		{"Save", function()
-			Derma_StringRequest(
-				"Save Blueprint",
-				"What filename though?",
-				"",
-				function( text ) 
 
-					local outStream = bpdata.OutStream()
-					self.module:WriteToStream(outStream)
-					outStream:WriteToFile("blueprints/bpm_" .. text .. ".txt", true, true)
+			if LastSavedFile ~= nil then
 
-				end,
-				function( text ) end
-			)
+				Derma_Query("Overwrite " .. LastSavedFile .. "?",
+							"Save File",
+							"Yes",
+							function() 
+								SaveFunc( LastSavedFile )
+							end,
+							"No",
+							function() 
+
+								Derma_StringRequest( "Save Blueprint", "What filename though?", "", SaveFunc, function( text ) end )
+
+							end)
+
+				return
+
+			end
+
+			Derma_StringRequest( "Save Blueprint", "What filename though?", "", SaveFunc, function( text ) end )
 		end},
 		{"Load", function()
 			Derma_StringRequest(
@@ -43,6 +63,7 @@ function PANEL:Init()
 				function( text ) 
 
 					if file.Exists("blueprints/bpm_" .. text .. ".txt", "DATA") then
+						LastSavedFile = text
 						local inStream = bpdata.InStream()
 						inStream:LoadFile("blueprints/bpm_" .. text .. ".txt", true, true)
 						self.module:ReadFromStream( inStream )
@@ -54,6 +75,10 @@ function PANEL:Init()
 		end},
 		{"Compile and upload", function()
 			bpnet.SendModule( self.module )
+
+			if LastSavedFile then
+				SaveFunc( LastSavedFile )
+			end
 		end},
 	}
 
@@ -139,10 +164,50 @@ function PANEL:Init()
 	self.Content:Dock( FILL )
 	self.Content:SetBackgroundColor( Color(30,30,30) )
 
-	self.MenuPanel = vgui.Create("DPanel", self.Content)
-	self.MenuPanel:SetBackgroundColor( Color(30,30,30) )
+	local menu = vgui.Create("DVerticalDivider", self.Content)
+	menu:SetTopHeight(300)
 
-	self.GraphListControls = vgui.Create("DPanel", self.MenuPanel)
+	self.VarMenuPanel = vgui.Create("DPanel", menu)
+	self.VarMenuPanel:SetBackgroundColor( Color(30,30,30) )
+
+	self.GraphMenuPanel = vgui.Create("DPanel", menu)
+	self.GraphMenuPanel:SetBackgroundColor( Color(30,30,30) )
+
+	self.VarListControls = vgui.Create("DPanel", self.VarMenuPanel)
+	self.VarAdd = vgui.Create("DButton", self.VarListControls)
+	self.VarRemove = vgui.Create("DButton", self.VarListControls)
+
+	self.VarAdd:SetText("+")
+	self.VarRemove:SetText("-")
+
+	self.VarAdd:Dock( LEFT )
+	self.VarRemove:Dock( FILL )
+	self.VarListControls:Dock( TOP )
+
+	self.VarAdd.DoClick = function()
+		--[[Derma_StringRequest(
+			"Add Graph",
+			"Give it a name",
+			"",
+			function( text ) 
+
+				self.module:NewVariable( text )
+
+			end,
+			function( text ) end
+		)]]
+		bpuivarcreatemenu.RequestVarSpec( function(name, type, flags) 
+			self.module:NewVariable( name, type, nil, flags )
+		end)
+	end
+
+	self.VarRemove.DoClick = function()
+		if IsValid(self.SelectedVar) then
+			self.module:RemoveVariable(self.SelectedVar.id)
+		end
+	end
+
+	self.GraphListControls = vgui.Create("DPanel", self.GraphMenuPanel)
 	self.GraphAdd = vgui.Create("DButton", self.GraphListControls)
 	self.GraphRemove = vgui.Create("DButton", self.GraphListControls)
 
@@ -173,12 +238,25 @@ function PANEL:Init()
 		end
 	end
 
-	self.GraphList = vgui.Create("DListBox", self.MenuPanel)
+	self.VarList = vgui.Create("DListBox", self.VarMenuPanel)
+	self.VarList:Dock( FILL )
+	self.VarList.Paint = function( p, w, h ) end
+
+	self.GraphList = vgui.Create("DListBox", self.GraphMenuPanel)
 	self.GraphList:Dock( FILL )
 	self.GraphList.Paint = function( p, w, h ) end
 
-	self.Content:SetLeft(self.MenuPanel)
+	self.Content:SetLeft(menu)
 	self.Content:Dock( FILL )
+
+	menu:SetTop(self.GraphMenuPanel)
+	menu:SetBottom(self.VarMenuPanel)
+
+	self.vvars = {}
+	self.vgraphs = {}
+
+	--self.VarMenuPanel:Dock( FILL )
+	--self.GraphMenuPanel:Dock( FILL )
 
 end
 
@@ -197,6 +275,15 @@ function PANEL:SelectGraph(id)
 
 end
 
+function PANEL:SelectVar(id)
+
+	if IsValid(self.SelectedVar) then self.SelectedVar:SetVisible(false) end
+	self.SelectedVar = self.vvars[id]
+	--self.SelectedVar:SetVisible( true )
+	--self.Content:SetRight( self.SelectedVar )
+
+end
+
 function PANEL:OnModuleCallback( cb, ... )
 
 	print("CB: " .. cb)
@@ -204,6 +291,40 @@ function PANEL:OnModuleCallback( cb, ... )
 	if cb == CB_MODULE_CLEAR then self:Clear(...) end
 	if cb == CB_GRAPH_ADD then self:GraphAdded(...) end
 	if cb == CB_GRAPH_REMOVE then self:GraphRemoved(...) end
+	if cb == CB_VARIABLE_ADD then self:VarAdded(...) end
+	if cb == CB_VARIABLE_REMOVE then self:VarRemoved(...) end
+
+end
+
+function PANEL:BuildVarList()
+
+	self.VarList:Clear()
+
+	if self.module == nil then return end
+	for id, var in self.module:Variables() do
+
+		local item = self.VarList:AddItem( var.name )
+		item:SetFont("DermaDefaultBold")
+		item:SetTextColor( Color(255,255,255) )
+		item.varID = id
+		item.OnMousePressed = function( item, mcode )
+			if ( mcode == MOUSE_LEFT ) then item:Select( true ) end
+		end
+		item.DoClick = function()
+			self:SelectVar(id)
+		end
+		item.Paint = function( item, w, h )
+			local var = self.module:GetVariable(item.varID)
+			local vcolor = bpschema.NodePinColors[var.type]
+			if self.SelectedVar and item.varID == self.SelectedVar.id then
+				surface.SetDrawColor(vcolor)
+			else
+				surface.SetDrawColor(Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5))
+			end
+			surface.DrawRect(0,0,w,h)
+		end
+
+	end
 
 end
 
@@ -239,12 +360,13 @@ end
 
 function PANEL:Clear()
 
-	for _, v in pairs(self.vgraphs or {}) do
-		v:Remove()
-	end
+	for _, v in pairs(self.vvars or {}) do v:Remove() end
+	for _, v in pairs(self.vgraphs or {}) do v:Remove() end
 
+	self.vvars = {}
 	self.vgraphs = {}
 	self:BuildGraphList()
+	self:BuildVarList()
 
 end
 
@@ -274,6 +396,34 @@ function PANEL:GraphRemoved( id )
 	self.vgraphs[id] = nil
 
 	self:BuildGraphList()
+
+end
+
+function PANEL:VarAdded( id )
+
+	local var = self.module:GetVariable(id)
+	local vvar = vgui.Create("DPanel", self.Content)
+
+	vvar:SetVisible(false)
+	vvar.id = id
+
+	self.vvars[id] = vvar
+	self:SelectVar(id)
+	self:BuildVarList()
+
+end
+
+function PANEL:VarRemoved( id )
+
+	if IsValid(self.SelectedVar) and self.SelectedVar.id == id then
+		self.SelectedVar:SetVisible(false)
+		self.SelectedVar = nil
+	end
+
+	self.vvars[id]:Remove()
+	self.vvars[id] = nil
+
+	self:BuildVarList()
 
 end
 

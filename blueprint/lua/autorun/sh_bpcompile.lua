@@ -530,6 +530,10 @@ function CompileGlobalVarListing(cs)
 		end
 	end
 
+	for id, var in cs.module:Variables() do
+		cs.emit("instance.__" .. var.name .. " = " .. var.default)
+	end
+
 	cs.finish()
 
 end
@@ -660,7 +664,11 @@ function CompileCodeSegment(cs)
 	if cs.ilp then cs.emit("\t__ilph = 0") end
 	cs.emit("\tfor i=#__bpm.delays, 1, -1 do")
 	cs.emit("\t\t__bpm.delays[i].time = __bpm.delays[i].time - dt")
-	cs.emit("\t\tif __bpm.delays[i].time <= 0 then __bpm.delays[i].func() table.remove(__bpm.delays, i) end")
+	cs.emit("\t\tif __bpm.delays[i].time <= 0 then")
+	cs.emit("\t\t\tlocal s,e = pcall(__bpm.delays[i].func)")
+	cs.emit("\t\t\tif not s then __bpm.delays = {} __bpm.onError(e:sub(e:find(':', 11)+2, -1), " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) end")
+	cs.emit("\t\t\ttable.remove(__bpm.delays, i)")
+	cs.emit("\t\tend")
 	cs.emit("\tend")
 	cs.emit("end")
 
