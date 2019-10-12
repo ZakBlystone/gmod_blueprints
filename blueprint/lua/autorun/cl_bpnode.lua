@@ -33,6 +33,10 @@ local function calculateNodeSize(nodeType)
 		width = 40 + string.len(nodeType.name) * 8
 		width = math.max(width, 80)
 		headHeight = 15
+
+		if nodeType.name == "Pin" then
+			width = 40
+		end
 	end
 
 	return width, headHeight + maxVertical * 15 + PANEL_INSET * 2
@@ -184,7 +188,10 @@ function PANEL:Paint(w, h)
 		draw.RoundedBox(6, inset, inset, w - inset * 2, 20, Color(ntc.r,ntc.g,ntc.b,180))
 		draw.SimpleText(ntype.name, "HudHintTextLarge", inset + 2, inset + 2)
 	else
-		draw.SimpleText(ntype.name, "HudHintTextLarge", w/2, h/2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		-- HACK
+		if ntype.name ~= "Pin" then
+			draw.SimpleText(ntype.name, "HudHintTextLarge", w/2, h/2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
 	end
 
 	return true

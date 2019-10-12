@@ -637,6 +637,7 @@ function CompileCodeSegment(cs)
 	cs.emit("local meta = BLUEPRINT_OVERRIDE_META or {}")
 	cs.emit("if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end")
 	cs.emit("__bpm.meta = meta")
+	cs.emit("__bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end")
 
 	-- delay manager (so that delays can be cancelled when a module is unloaded)
 	cs.emit("__bpm.delays = {}")

@@ -528,6 +528,15 @@ NodeTypes = {
 		code = "#1 = $1 < $2",
 		compact = true,
 	},
+	["LessThanEqual"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "a" },
+			{ PD_In, PN_Number, "b" },
+			{ PD_Out, PN_Bool, "result" },
+		},
+		code = "#1 = $1 <= $2",
+		compact = true,
+	},
 	["GreaterThan"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "a" },
@@ -535,6 +544,15 @@ NodeTypes = {
 			{ PD_Out, PN_Bool, "result" },
 		},
 		code = "#1 = $1 > $2",
+		compact = true,
+	},
+	["GreaterThanEqual"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "a" },
+			{ PD_In, PN_Number, "b" },
+			{ PD_Out, PN_Bool, "result" },
+		},
+		code = "#1 = $1 >= $2",
 		compact = true,
 	},
 	["String"] = PURE {
@@ -563,7 +581,7 @@ NodeTypes = {
 			{ PD_In, PN_Any, "thing" },
 			{ PD_Out, PN_Bool, "valid" },
 		},
-		code = "#1 = IsValid($1)",
+		code = "#1 = __bpm.genericIsValid($1)",
 	},
 	["CheckValid"] = SPECIAL {
 		pins = {
@@ -572,7 +590,7 @@ NodeTypes = {
 			{ PD_Out, PN_Exec, "valid" },
 			{ PD_Out, PN_Exec, "notvalid" },
 		},
-		code = "if IsValid($2) then #1 else #2 end",
+		code = "if __bpm.genericIsValid($2) then #1 else #2 end",
 	},
 	["IsPlayer"] = PURE {
 		pins = {
@@ -1045,6 +1063,19 @@ NodeTypes = {
 		},
 		compact = true,
 		code = "#1 = $1[$2]",
+	},
+	["TableGetOrDefault"] = PURE {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Any, "key" },
+			{ PD_In, PN_Any, "default" },
+			{ PD_Out, PN_Any, "result" },
+		},
+		meta = {
+			informs = {1,3,4}
+		},
+		compact = true,
+		code = "#1 = $1[$2] or $3",
 	},
 	["TableGetIndex"] = PURE {
 		pins = {
