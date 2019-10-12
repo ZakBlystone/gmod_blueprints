@@ -102,10 +102,10 @@ end
 
 function meta:Clear()
 
-	self:FireListeners(CB_MODULE_CLEAR)
-
 	self.graphs = {}
 	self.variables = {}
+
+	self:FireListeners(CB_MODULE_CLEAR)
 
 end
 
