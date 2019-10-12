@@ -41,6 +41,7 @@ NodeTypes = {
 		},
 		code = "#1 = $1",
 		compact = true,
+		collapse = true,
 	},
 	["Think"] = EVENT {
 		pins = {

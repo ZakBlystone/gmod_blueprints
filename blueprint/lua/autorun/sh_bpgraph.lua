@@ -427,6 +427,56 @@ function meta:RemoveNode(nodeID)
 
 end
 
+function meta:CollapseSingleRerouteNode(nodeID)
+
+	local node = self:GetNode( nodeID )
+
+	print("COLLAPSING REROUTE NODE: " .. nodeID)
+
+	local insert = {}
+	local connections = self.connections
+	local input = nil
+	for i=#connections, 1, -1 do
+
+		local c = connections[i]
+		if c[1] == nodeID then --output
+			print(" -output on " .. c[2] .. " => " .. c[3] .. "[" .. c[4] .. "]")
+			table.insert(insert, {c[3],c[4]})
+			table.remove(connections, i)
+			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
+		elseif c[3] == nodeID then --input
+			print(" -input on " .. c[4] .. " <= " .. c[1] .. "[" .. c[2] .. "]")
+			input = {c[1],c[2]}
+			table.remove(connections, i)
+			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
+		end
+
+	end	
+
+	if input == nil then print("Reroute node did not have input connection") return end
+
+	for _, c in pairs(insert) do
+		if not self:ConnectNodes(input[1], input[2], c[1], c[2]) then error("Unable to reconnect re-route nodes") end
+	end
+
+	self:RemoveNode( nodeID )
+
+end
+
+function meta:CollapseRerouteNodes()
+
+	local nodes = self.nodes
+	for i=#nodes, 1, -1 do
+
+		local node = nodes[i]
+		if self:GetNodeType(node).collapse then
+			self:CollapseSingleRerouteNode( node.id )
+		end
+
+	end	
+
+end
+
 function meta:WriteToStream(stream, version)
 
 	local namelookup = {}
@@ -511,17 +561,20 @@ function meta:ReadFromStream(stream, version)
 end
 
 -- Quickly banging this out using existing tech
-function meta:Copy()
+function meta:CopyInto(other)
 
-	local graph = New()
 	local outStream = bpdata.OutStream()
 	self:WriteToStream(outStream)
 
-	local inStream = bpdata.InStream()
-	inStream:LoadString(outStream:GetString())
-	graph:ReadFromStream( inStream )
+	other.module = self.module
+	other.id = self.id
+	other.name = self.name
 
-	return graph
+	local inStream = bpdata.InStream()
+	inStream:LoadString(outStream:GetString(false, false), false, false)
+	other:ReadFromStream( inStream )
+
+	return other
 
 end
 

@@ -80,6 +80,11 @@ function PANEL:Init()
 				SaveFunc( LastSavedFile )
 			end
 		end},
+		--[[{"Test Reroute collapse", function()
+
+			self.module:GetGraph( 1 ):CollapseRerouteNodes()
+
+		end}]]
 	}
 
 	--x = 20

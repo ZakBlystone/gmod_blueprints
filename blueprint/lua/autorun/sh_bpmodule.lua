@@ -169,6 +169,18 @@ function meta:RemoveGraph( graphID )
 
 end
 
+function meta:CopyGraph( graphID )
+
+	local graph = self:GetGraph( graphID )
+	if graph == nil then return end
+
+	local copy = self:GetGraph( self:NewGraph( "graphproxy_" .. self.nextGraphID ) )
+	graph:CopyInto(copy)
+
+	return copy
+
+end
+
 function meta:WriteToStream(stream)
 
 	stream:WriteInt( fmtMagic, false )

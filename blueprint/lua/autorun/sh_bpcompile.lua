@@ -262,7 +262,7 @@ function CompileNodeSingle(cs, nodeID)
 			if var then
 				inVars[lookupID] = var
 			else
-				error("COULDN'T FIND INPUT VAR FOR " .. ntype.name)
+				error("COULDN'T FIND INPUT VAR FOR " .. ntype.name .. " [" .. pin[3] .. "]")
 			end
 
 		end
@@ -704,6 +704,7 @@ end
 function PreCompileGraph(cs, graph, uniqueKeys)
 
 	cs.graph = graph
+	cs.graph:CollapseRerouteNodes()
 
 	-- 'uniqueKeys' is a table for keeping keys distinct, global variables must be distinct when each graph generates them.
 	-- pure node variables do not need exclusive keys between graphs because they are local
@@ -822,6 +823,7 @@ function Compile(mod)
 	local cs = {
 		module = mod,
 		compiledNodes = {},
+		graphs = {},
 		vars = {},
 		nodejumps = {},
 		contexts = {},
@@ -870,10 +872,15 @@ function Compile(mod)
 
 	CompileMetaTableLookup(cs)
 
+	-- make local copies of all module graphs so they can be edited without changing the module
+	for id, graph in mod:Graphs() do
+		table.insert( cs.graphs, graph:CopyInto( bpgraph.New() ) )
+	end
+
 	-- pre-compile all graphs in the module
 	-- each graph shares a unique key table to ensure global variable names are distinct
 	local uniqueKeys = {}
-	for id, graph in mod:Graphs() do
+	for _, graph in pairs( cs.graphs ) do
 		PreCompileGraph( cs, graph, uniqueKeys )
 	end
 
@@ -881,7 +888,7 @@ function Compile(mod)
 	CompileGlobalVarListing(cs)
 
 	-- compile each graph
-	for id, graph in mod:Graphs() do
+	for _, graph in pairs( cs.graphs ) do
 		CompileGraph( cs, graph )
 	end
 
