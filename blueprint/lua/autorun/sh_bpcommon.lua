@@ -139,13 +139,13 @@ function MakeObservable(obj, cblist)
 	obj.__incall = false
 	obj.__handleDeferred = false
 	obj.AddListener 	= function(self, func, mask)
-		if self.__incall then table.insert(self.__deferred, {1, func, mask or cblist.CB_ALL}) self.__handleDeferred = true return end
-		self.__callbacks[func] = mask or cblist.CB_ALL 
+		if self.__incall then table.insert(self.__deferred, {1, func, mask or cblist.CB_ALL}) self.__handleDeferred = true return true end
+		self.__callbacks[func] = mask or cblist.CB_ALL
 	end
 	
 	obj.RemoveListener 	= function(self, func) 
-		if self.__incall then table.insert(self.__deferred, {2, func}) self.__handleDeferred = true return end
-		self.__callbacks[func] = nil 
+		if self.__incall then table.insert(self.__deferred, {2, func}) self.__handleDeferred = true return true end
+		self.__callbacks[func] = nil
 	end
 	
 	obj.FireListeners 	= function(self, cb, ...) 
@@ -155,9 +155,11 @@ function MakeObservable(obj, cblist)
 		end
 		obj.__incall = false
 		if self.__handleDeferred then
-			for k, v in pairs(self.__deferred) do
+			for i=#self.__deferred, 1, -1 do
+				local v = self.__deferred[i]
 				if v[1] == 1 then self:AddListener(v[2], v[3]) end
 				if v[1] == 2 then self:RemoveListener(v[2]) end
+				table.remove(self.__deferred, i)
 			end
 			self.__handleDeferred = false
 		end

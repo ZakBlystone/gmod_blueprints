@@ -24,10 +24,7 @@ New = nil
 
 bpcommon.CreateIndexableListIterators(meta, "nodes")
 
-function meta:Init(module, name)
-
-	name = bpcommon.Sanitize(name)
-	if name ~= nil then self.name = bpcommon.Camelize(name) end
+function meta:Init(module)
 
 	self.module = module
 	self.nodes = bplist.New()
@@ -62,7 +59,7 @@ end
 
 function meta:GetName()
 
-	return self.name or "Graph_" .. self.id
+	return self.name
 
 end
 

@@ -24,17 +24,13 @@ end
 
 function PANEL:OnRemove()
 
-	if self.graph then
+	if self.graph and self.callback then
 		self.graph:RemoveListener(self.callback)
 	end
 
 end
 
 function PANEL:Setup(graph, node, pin, pinID)
-
-	self.callback = function(...)
-		self:OnGraphCallback(...)
-	end
 
 	self.vnode = self:GetParent()
 	self.vgraph = self.vnode.vgraph
@@ -44,7 +40,15 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self.pinID = pinID
 	self.nodeType = self.graph:GetNodeType( self.node )
 	self.pinType = self.graph:GetPinType( self.node.id, self.pinID )
-	self.graph:AddListener(self.callback, CB_PIN_EDITLITERAL)
+
+	-- input pins watch for literal changes
+	if self.pin[1] == PD_In and self.pinType ~= PN_Exec then
+		self.callback = function(...)
+			print("CALL PIN ON : " .. tostring(self))
+			self:OnGraphCallback(...)
+		end
+		self.graph:AddListener(self.callback, CB_PIN_EDITLITERAL)
+	end
 
 	self.pinSpot = vgui.Create("DPanel", self)
 	self.pinSpot:SetSize(10,10)

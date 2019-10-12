@@ -6,6 +6,7 @@ include("sh_bpnodedef.lua")
 include("sh_bpdata.lua")
 include("sh_bpgraph.lua")
 include("sh_bpcompile.lua")
+include("sh_bpvariable.lua")
 
 module("bpmodule", package.seeall, bpcommon.rescope(bpschema, bpnodedef)) --bpnodedef is temporary
 
@@ -30,8 +31,8 @@ bpcommon.CreateIndexableListIterators(meta, "variables")
 
 function meta:Init()
 
-	self.graphs = bplist.New()
-	self.variables = bplist.New()
+	self.graphs = bplist.New():NamedItems("Graph")
+	self.variables = bplist.New():NamedItems("Var")
 	self.id = nextModuleID
 
 	self.graphs:AddListener(function(cb, id)
@@ -87,21 +88,9 @@ function meta:GetNodeTypes( graphID )
 
 	for _, v in self:Variables() do
 
-		types["Set" .. v.name] = FUNCTION {
-			pins = {
-				{PD_In, v.type, "value", v.flags or 0},
-			},
-			code = "__self.__" .. v.name .. " = $2",
-			compact = true,
-		}
-
-		types["Get" .. v.name] = PURE {
-			pins = {
-				{PD_Out, v.type, "value", v.flags or 0},
-			},
-			code = "#1 = __self.__" .. v.name,
-			compact = true,
-		}
+		local name = v:GetName()
+		types["Set" .. name] = v:SetterNodeType()
+		types["Get" .. name] = v:GetterNodeType()
 
 	end
 
@@ -125,21 +114,13 @@ end
 
 function meta:NewVariable(name, type, default, flags)
 
-	local var = { name = "var_" .. self.variables:NextIndex() }
-	name = bpcommon.Sanitize(name)
-	if name ~= nil then var.name = bpcommon.Camelize(name) end
-
-	var.type = type or PN_Number
-	var.default = bit.band(flags, PNF_Table) and "{}" or (default or Defaults[var.type])
-	var.flags = flags or 0
-
-	return self.variables:Add( var )
+	return self.variables:Add( bpvariable.New(self, type, default, flags), name )
 
 end
 
 function meta:NewGraph(name)
 
-	return self.graphs:Add( bpgraph.New(self, name) )
+	return self.graphs:Add( bpgraph.New(self), name )
 
 end
 

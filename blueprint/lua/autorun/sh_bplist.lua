@@ -6,6 +6,7 @@ bpcommon.CallbackList({
 	"ADD",
 	"REMOVE",
 	"CLEAR",
+	"RENAME",
 })
 
 local meta = {}
@@ -15,6 +16,14 @@ function meta:Init(...)
 
 	bpcommon.MakeObservable(self)
 	return self:Clear()
+
+end
+
+function meta:NamedItems( prefix )
+
+	self.namedItems = true
+	self.namePrefix = (prefix or "Item") .. "_"
+	return self
 
 end
 
@@ -84,14 +93,26 @@ function meta:Size()
 
 end
 
-function meta:Add( item )
+function meta:GetNameForItem( optName, item )
+
+	local name = bpcommon.Sanitize(optName) 
+	if name == nil then name = self.namePrefix .. item.id end
+	return bpcommon.Camelize(name)
+
+end
+
+function meta:Add( item, optName )
 
 	if item.id ~= nil then error("Cannot add uniquely indexed items to multiple lists") end
-	item.id = self.nextID
+	item.id = self:NextIndex()
+
+	if self.namedItems then
+		item.name = self:GetNameForItem( optName, item )
+	end
 
 	table.insert( self.items, item )
 	self.itemLookup[item.id] = item
-	self.nextID = self.nextID + 1
+	self:Advance()
 
 	self:FireListeners(CB_ADD, item.id, item)
 
@@ -125,6 +146,17 @@ function meta:RemoveIf( cond )
 	end
 
 	return removed
+
+end
+
+function meta:Rename( id, newName )
+
+	local item = self:Get(id)
+	if item == nil then return false end
+
+	local prev = item.name
+	item.name = self:GetNameForItem( newName, item )
+	self:FireListeners(CB_RENAME, item.id, prev, item.name)
 
 end
 
