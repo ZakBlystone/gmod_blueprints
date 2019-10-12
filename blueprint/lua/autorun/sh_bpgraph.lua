@@ -409,7 +409,7 @@ end
 
 function meta:CollapseRerouteNodes()
 
-	for _, node in self:Nodes() do
+	for _, node in self:Nodes(true) do
 		if self:GetNodeType(node).collapse then
 			self:CollapseSingleRerouteNode( node.id )
 		end

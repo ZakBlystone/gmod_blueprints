@@ -134,14 +134,14 @@ function PANEL:Init()
 		opt:SetWide( opt:GetWide() + 10 )
 		opt:SetTall( 25 )
 		opt.DoClick = function(btn)
-			local b,e = pcall( v[2], self )
-			if not b then
+			self.StatusText:SetTextColor( Color(255,255,255) )
+			self.StatusText:SetText("")
+
+			local b = xpcall( v[2], function( err )
 				self.StatusText:SetTextColor( Color(255,100,100) )
-				self.StatusText:SetText(e)
-			else
-				self.StatusText:SetTextColor( Color(255,255,255) )
-				self.StatusText:SetText("")
-			end
+				self.StatusText:SetText( err )
+				print( debug.traceback() )
+			end, self )
 		end
 		optX = optX + opt:GetWide() + 2
 	end

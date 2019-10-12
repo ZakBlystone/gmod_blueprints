@@ -107,24 +107,24 @@ function CreateIndexableListIterators(meta, variable)
 	local iteratorName = varName .. "s"
 	local idIteratorName = varName .. "IDs"
 
-	meta[iteratorName] = function(self)
-		return self[variable]:Items()
+	meta[iteratorName] = function(self, ...)
+		return self[variable]:Items(...)
 	end
 
-	meta[idIteratorName] = function(self)
-		return self[variable]:ItemIDs()
+	meta[idIteratorName] = function(self, ...)
+		return self[variable]:ItemIDs(...)
 	end
 
-	meta["Get" .. varName] = function(self, id)
-		return self[variable]:Get(id)
+	meta["Get" .. varName] = function(self, ...)
+		return self[variable]:Get(...)
 	end
 
-	meta["Remove" .. varName .. "If"] = function(self, cond)
-		return self[variable]:RemoveIf( cond )
+	meta["Remove" .. varName .. "If"] = function(self, ...)
+		return self[variable]:RemoveIf(...)
 	end
 
-	meta["Remove" .. varName] = function(self, id)
-		return self[variable]:Remove( id )
+	meta["Remove" .. varName] = function(self, ...)
+		return self[variable]:Remove(...)
 	end
 
 end

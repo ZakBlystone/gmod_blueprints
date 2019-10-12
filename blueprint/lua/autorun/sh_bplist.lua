@@ -48,7 +48,8 @@ function meta:Items( reverse )
 		end
 	else
 		local i, n = 0, #items
-		return function() 
+		return function()
+			if #items ~= n then error("Concurrent modification of list!") end
 			i = i + 1
 			if i <= n then return items[i].id, items[i] end
 		end
@@ -69,6 +70,7 @@ function meta:ItemIDs( reverse )
 	else
 		local i, n = 0, #items
 		return function() 
+			if #items ~= n then error("Concurrent modification of list!") end
 			i = i + 1
 			if i <= n then return items[i].id end
 		end

@@ -270,12 +270,17 @@ end
 
 function meta:Compile(compileErrorHandler)
 
-	local b,e = pcall(bpcompile.Compile, self )
-	if not b then
-		if compileErrorHandler then compileErrorHandler(self, e) return end
-		error("Failed to compile module: " .. tostring(e))
+	local ok, res = false, nil
+	if compileErrorHandler then
+		ok, res = xpcall(bpcompile.Compile, function(err)
+			if compileErrorHandler then compileErrorHandler(self, debug.traceback()) return end
+		end, self)
 	else
-		self.compiled = e
+		ok, res = true, bpcompile.Compile(self)
+	end
+
+	if ok then
+		self.compiled = res
 		self:AttachErrorHandler()
 	end
 
