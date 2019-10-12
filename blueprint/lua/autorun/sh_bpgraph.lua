@@ -20,21 +20,36 @@ bpcommon.CallbackList({
 local meta = {}
 meta.__index = meta
 
-local nextGraphID = 0
 New = nil
 
 bpcommon.CreateIndexableListIterators(meta, "nodes")
 
-function meta:Init(...)
+function meta:Init(module, name)
 
-	self.nodes = {}
+	name = bpcommon.Sanitize(name)
+	if name ~= nil then self.name = bpcommon.Camelize(name) end
+
+	self.module = module
+	self.nodes = bplist.New()
 	self.connections = {}
-	self.id = nextGraphID
-	self.nextNodeID = 1
+
+	self.nodes:AddListener(function(cb, id)
+
+		if cb == bplist.CB_ADD then
+			self:FireListeners(CB_NODE_ADD, id)
+		elseif cb == bplist.CB_REMOVE then
+			for i, c in self:Connections() do
+				if c[1] == id or c[3] == id then
+					self:RemoveConnectionID(i)
+				end
+			end
+
+			self:FireListeners(CB_NODE_REMOVE, id)
+		end
+
+	end, bplist.CB_ALL)
 
 	bpcommon.MakeObservable(self)
-
-	nextGraphID = nextGraphID + 1
 	return self
 
 end
@@ -231,15 +246,9 @@ function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 
 	table.insert(self.connections, { nodeID0, pinID0, nodeID1, pinID1 })
 
-	self:FireListeners(CB_CONNECTION_ADD, self.connections[#self.connections], #self.connections)
+	self:FireListeners(CB_CONNECTION_ADD, #self.connections, self.connections[#self.connections])
 
 	return true
-
-end
-
-function meta:GetNodeCount()
-
-	return #self.nodes
 
 end
 
@@ -247,7 +256,7 @@ function meta:Clear()
 
 	self:FireListeners(CB_GRAPH_CLEAR)
 
-	self.nodes = {}
+	self.nodes:Clear()
 	self.connections = {}
 
 end
@@ -275,26 +284,18 @@ function meta:AddNode(node)
 
 	local ntype = self:GetNodeType(node)
 	if ntype == nil then
-		ErrorNoHalt("Failed to create node type: " .. tostring(node.nodeType))
-		self.nextNodeID = self.nextNodeID + 1
+		ErrorNoHalt("Failed to create node type: " .. tostring(node.nodeType) .. "\n")
+		self.nodes:Advance()
 		return
 	end
 
-	table.insert(self.nodes, node)
-
-	local id = self.nextNodeID
-	self.nextNodeID = self.nextNodeID + 1
-
-	node.id = id
 	node.graphID = self.id
 	node.literals = node.literals or {}
 
 	node.x = math.Round(node.x / 15) * 15
 	node.y = math.Round(node.y / 15) * 15
 
-	self:FireListeners(CB_NODE_ADD, node, id)
-
-	
+	local id = self.nodes:Add( node )
 	local defaults = ntype.defaults or {}
 
 	for pinID, pin in pairs(ntype.pins) do
@@ -330,7 +331,7 @@ function meta:MoveNode(nodeID, x, y)
 	node.x = x
 	node.y = y
 
-	self:FireListeners(CB_NODE_MOVE, node, nodeID, x, y)
+	self:FireListeners(CB_NODE_MOVE, nodeID, x, y)
 
 end
 
@@ -339,7 +340,7 @@ function meta:RemoveConnectionID(id)
 	local c = self.connections[id]
 	if c ~= nil then
 		table.remove(self.connections, id)
-		self:FireListeners(CB_CONNECTION_REMOVE, c, id)
+		self:FireListeners(CB_CONNECTION_REMOVE, id, c)
 	end
 
 end
@@ -370,22 +371,6 @@ function meta:RemoveInvalidConnections()
 		end
 
 	end	
-
-end
-
-function meta:RemoveNode(nodeID)
-
-	local node = self:GetNode( nodeID )
-	
-	table.RemoveByValue(self.nodes, node)
-
-	self:FireListeners(CB_NODE_REMOVE, node, nodeID)
-
-	for i, c in self:Connections() do
-		if c[1] == nodeID or c[3] == nodeID then
-			self:RemoveConnectionID(i)
-		end
-	end
 
 end
 
@@ -451,7 +436,7 @@ function meta:WriteToStream(stream, version)
 	stream:WriteInt( #nametable, false )
 	for _, str in pairs(nametable) do stream:WriteByte( str:len(), false ) stream:WriteStr(str) end
 
-	stream:WriteInt( #self.nodes, false )
+	stream:WriteInt( self.nodes:Size(), false )
 	for id, node in self:Nodes() do
 		local name = self:GetNodeType(node).name
 		stream:WriteInt( namelookup[name], false )
@@ -503,7 +488,7 @@ function meta:ReadFromStream(stream, version)
 
 		if id ~= nil then
 			for k, v in pairs(literals) do
-				--print("LOAD LITERAL[" .. id .. "|" .. self.nodes[id].nodeType.name .. "]: " .. tostring(k) .. " = " .. tostring(v))
+				--print("LOAD LITERAL[" .. id .. "|" .. nodeTypeName .. "]: " .. tostring(k) .. " = " .. tostring(v))
 				self:SetPinLiteral( id, k, v )
 			end
 		end

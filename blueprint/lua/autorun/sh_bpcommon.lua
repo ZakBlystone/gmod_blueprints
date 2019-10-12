@@ -1,5 +1,7 @@
 AddCSLuaFile()
 
+include("sh_bplist.lua")
+
 module("bpcommon", package.seeall)
 
 file.CreateDir("blueprints")
@@ -66,6 +68,7 @@ end
 
 function Sanitize(str)
 
+	if str == nil then return nil end
 	local out = ""
 	for str in str:gmatch("[%w_]") do out = out .. str end
 	if out:len() == 0 then return nil end
@@ -105,32 +108,23 @@ function CreateIndexableListIterators(meta, variable)
 	local idIteratorName = varName .. "IDs"
 
 	meta[iteratorName] = function(self)
-
-		local i = #self[variable] + 1
-		return function() 
-			i = i - 1
-			if i > 0 then return self[variable][i].id, self[variable][i] end
-		end
-
+		return self[variable]:Items()
 	end
 
 	meta[idIteratorName] = function(self)
-
-		local i = #self[variable] + 1
-		return function() 
-			i = i - 1
-			if i > 0 then return self[variable][i].id end
-		end
-
+		return self[variable]:ItemIDs()
 	end
 
-	local iter = meta[iteratorName]
 	meta["Get" .. varName] = function(self, id)
+		return self[variable]:Get(id)
+	end
 
-		for _, item in iter(self) do
-			if item.id == id then return item end
-		end
+	meta["Remove" .. varName .. "If"] = function(self, cond)
+		return self[variable]:RemoveIf( cond )
+	end
 
+	meta["Remove" .. varName] = function(self, id)
+		return self[variable]:Remove( id )
 	end
 
 end

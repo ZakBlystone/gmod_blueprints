@@ -90,11 +90,11 @@ function PANEL:OnGraphCallback( cb, ... )
 
 end
 
-function PANEL:NodeAdded( newNode, id )
+function PANEL:NodeAdded( id )
 
 	local b,e = pcall(function()
 		local node = vgui.Create("BPNode", self.canvas)
-		node:Setup( self.graph, newNode )
+		node:Setup( self.graph, self.graph:GetNode(id) )
 		node.canvasFix = canvasFix
 
 		local x,y = node:GetPos()
@@ -104,32 +104,21 @@ function PANEL:NodeAdded( newNode, id )
 
 end
 
-function PANEL:NodeRemoved( node, id )
-
-	print("NODE REMOVE: " .. node.id .. ", " .. id)
+function PANEL:NodeRemoved( id )
 
 	self.nodes[id]:Remove()
 	self.nodes[id] = nil
 
 end
 
-function PANEL:NodeMove( node, nodeID, x, y )
+function PANEL:NodeMove( id, x, y )
 
-	self.nodes[nodeID]:SetPos(x + canvasFix, y + canvasFix)
-
-end
-
-function PANEL:ConnectionAdded( newConnection, id )
-
-	--self.connections[id] = newConnection
+	self.nodes[id]:SetPos(x + canvasFix, y + canvasFix)
 
 end
 
-function PANEL:ConnectionRemoved( connection, id )
-
-	--self.connections[id] = nil
-
-end
+function PANEL:ConnectionAdded( id ) end
+function PANEL:ConnectionRemoved( id ) end
 
 function PANEL:GraphCleared()
 

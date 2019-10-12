@@ -30,22 +30,36 @@ bpcommon.CreateIndexableListIterators(meta, "variables")
 
 function meta:Init()
 
-	self.graphs = {}
-	self.variables = {}
+	self.graphs = bplist.New()
+	self.variables = bplist.New()
 	self.id = nextModuleID
-	self.nextGraphID = 1
-	self.nextVarID = 1
 
-	--[[table.insert(self.variables, {
-		name = "NumberOfBarrels",
-		type = PN_Number,
-	})
+	self.graphs:AddListener(function(cb, id)
 
-	table.insert(self.variables, {
-		name = "CoolEntities",
-		type = PN_Entity,
-		flags = PNF_Table,
-	})]]
+		if cb == bplist.CB_ADD then
+			self:FireListeners(CB_GRAPH_ADD, id)
+		elseif cb == bplist.CB_REMOVE then
+			self:FireListeners(CB_GRAPH_REMOVE, id)
+		end
+
+	end, bplist.CB_ALL)
+
+	self.variables:AddListener(function(cb, id, var)
+
+		if cb == bplist.CB_ADD then
+			self:FireListeners(CB_VARIABLE_ADD, id)
+		elseif cb == bplist.CB_REMOVE then
+			local match = {["Set" .. var.name] = 1, ["Get" .. var.name] = 1}
+			for _, graph in self:Graphs() do
+				graph:RemoveNodeIf( function( node )
+					return match[node.nodeType]
+				end )
+			end
+
+			self:FireListeners(CB_VARIABLE_REMOVE, id)
+		end
+
+	end, bplist.CB_ALL)
 
 	bpcommon.MakeObservable(self)
 
@@ -71,7 +85,7 @@ function meta:GetNodeTypes( graphID )
 	local types = {}
 	local base = NodeTypes
 
-	for k, v in pairs(self.variables) do
+	for _, v in self:Variables() do
 
 		types["Set" .. v.name] = FUNCTION {
 			pins = {
@@ -102,8 +116,8 @@ end
 
 function meta:Clear()
 
-	self.graphs = {}
-	self.variables = {}
+	self.graphs:Clear()
+	self.variables:Clear()
 
 	self:FireListeners(CB_MODULE_CLEAR)
 
@@ -111,73 +125,21 @@ end
 
 function meta:NewVariable(name, type, default, flags)
 
-	local var = { name = "var_" .. self.nextVarID }
+	local var = { name = "var_" .. self.variables:NextIndex() }
 	name = bpcommon.Sanitize(name)
 	if name ~= nil then var.name = bpcommon.Camelize(name) end
 
-	table.insert(self.variables, var)
-	var.id = self.nextVarID
 	var.type = type or PN_Number
 	var.default = bit.band(flags, PNF_Table) and "{}" or (default or Defaults[var.type])
 	var.flags = flags or 0
 
-	self.nextVarID = self.nextVarID + 1
-
-	self:FireListeners(CB_VARIABLE_ADD, var.id)
-
-	return var.id
-
-end
-
-function meta:RemoveVariable( varID )
-
-	local var = self:GetVariable( varID )
-	if var == nil then return end
-
-	local setter = "Set" .. var.name
-	local getter = "Get" .. var.name
-
-	for _, graph in self:Graphs() do
-		for id, node in graph:Nodes() do
-			local name = node.nodeType
-			if name == setter or name == getter then
-				graph:RemoveNode(id)
-			end
-		end
-	end
-
-	table.RemoveByValue(self.variables, var)
-
-	self:FireListeners(CB_VARIABLE_REMOVE, varID)
+	return self.variables:Add( var )
 
 end
 
 function meta:NewGraph(name)
 
-	local graph = bpgraph.New()
-	name = bpcommon.Sanitize(name)
-	if name ~= nil then graph.name = bpcommon.Camelize(name) end
-
-	table.insert(self.graphs, graph)
-	graph.id = self.nextGraphID
-	graph.module = self
-
-	self.nextGraphID = self.nextGraphID + 1
-
-	self:FireListeners(CB_GRAPH_ADD, graph.id)
-
-	return graph.id
-
-end
-
-function meta:RemoveGraph( graphID )
-
-	local graph = self:GetGraph( graphID )
-	if graph == nil then return end
-
-	table.RemoveByValue(self.graphs, graph)
-
-	self:FireListeners(CB_GRAPH_REMOVE, graphID)
+	return self.graphs:Add( bpgraph.New(self, name) )
 
 end
 
@@ -198,9 +160,9 @@ function meta:WriteToStream(stream)
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
 
-	bpdata.WriteValue( self.variables, stream )
+	bpdata.WriteValue( self.variables:GetTable(), stream )
 
-	stream:WriteInt( #self.graphs, false )
+	stream:WriteInt( self.graphs:Size(), false )
 	for id, graph in self:Graphs() do
 		local name = graph:GetName()
 		stream:WriteInt( name:len(), false )

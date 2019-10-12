@@ -240,7 +240,6 @@ end
 
 function PANEL:OnPinTypeChanged( pt )
 
-	print("PIN TYPE CHANGED")
 	self:InitLiteral()
 
 end
