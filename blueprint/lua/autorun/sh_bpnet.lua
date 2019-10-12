@@ -70,6 +70,13 @@ if SERVER then
 		bp:ReadFromStream(inStream)
 	end
 
+	hook.Add("PlayerDisconnected", "bphandledisconnect", function(ply)
+
+		local m = GetPlayerModule(ply)
+		if m ~= nil then m:SetEnabled(false) end
+
+	end)
+
 	util.AddNetworkString("bpclientcmd")
 	util.AddNetworkString("bpservercmd")
 

@@ -43,8 +43,6 @@ function PANEL:Init()
 	end
 
 	self.nodes = {}
-	self.connections = {}
-
 	self.titleText = "Blueprint"
 	self.canvas = vgui.Create( "Panel", self )
 	self.canvas.OnMousePressed = function( self, code ) self:GetParent():OnMousePressed( code ) end
@@ -124,14 +122,12 @@ end
 function PANEL:ConnectionAdded( newConnection, id )
 
 	--self.connections[id] = newConnection
-	table.insert( self.connections, newConnection )
 
 end
 
 function PANEL:ConnectionRemoved( connection, id )
 
 	--self.connections[id] = nil
-	table.remove( self.connections, id )
 
 end
 
@@ -142,7 +138,6 @@ function PANEL:GraphCleared()
 	end
 
 	self.nodes = {}
-	self.connections = {}
 	self.scroll_x = 0
 	self.scroll_y = 0
 
@@ -159,7 +154,6 @@ function PANEL:SetGraph( graph )
 	end
 
 	self.nodes = {}
-	self.connections = {}
 	self.graph = graph
 	self.scroll_x = 0
 	self.scroll_y = 0
@@ -242,7 +236,7 @@ function PANEL:OnPinGrab( vnode, vpin, grabbing )
 			--self.rerouteConnection = true
 
 			self.grabbedPin = nil
-			for k,v in pairs(self.connections) do
+			for k,v in self.graph:Connections() do
 
 				if v[1] == vnode.node.id and v[2] == vpin.pinID then
 
@@ -311,7 +305,7 @@ end
 
 function PANEL:DrawConnections()
 
-	for _, connection in pairs(self.connections) do
+	for _, connection in self.graph:Connections() do
 
 		--[[if self.grabbedPin and self.rerouteConnection then
 
@@ -389,7 +383,15 @@ function PANEL:Paint(w, h)
 
 	draw.SimpleText( self.graph:GetTitle(), "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 
-	self:DrawConnections()
+	local b,e = pcall( function()
+		self:DrawConnections()
+	end )
+
+	if e and not self.errored then
+		self.errored = true
+		ErrorNoHalt( e )
+	end
+
 	return true
 
 end

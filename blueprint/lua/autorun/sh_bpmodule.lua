@@ -134,6 +134,18 @@ function meta:RemoveVariable( varID )
 	local var = self:GetVariable( varID )
 	if var == nil then return end
 
+	local setter = "Set" .. var.name
+	local getter = "Get" .. var.name
+
+	for _, graph in self:Graphs() do
+		for id, node in graph:Nodes() do
+			local name = node.nodeType
+			if name == setter or name == getter then
+				graph:RemoveNode(id)
+			end
+		end
+	end
+
 	table.RemoveByValue(self.variables, var)
 
 	self:FireListeners(CB_VARIABLE_REMOVE, varID)

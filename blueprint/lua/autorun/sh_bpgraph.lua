@@ -23,6 +23,8 @@ meta.__index = meta
 local nextGraphID = 0
 New = nil
 
+bpcommon.CreateIndexableListIterators(meta, "nodes")
+
 function meta:Init(...)
 
 	self.nodes = {}
@@ -74,14 +76,6 @@ function meta:GetNodeTypes()
 
 end
 
-function meta:GetNode(nodeID)
-
-	for id, node in self:Nodes() do
-		if node.id == nodeID then return node end
-	end
-
-end
-
 function meta:GetNodeType(node)
 
 	local types = self:GetNodeTypes()
@@ -91,33 +85,10 @@ end
 
 function meta:Connections()
 
-	local i = 0
-	local n = #self.connections
+	local i = #self.connections + 1
 	return function() 
-		i = i + 1
-		if i <= n then return i, self.connections[i] end
-	end
-
-end
-
-function meta:Nodes()
-
-	local i = 0
-	local n = #self.nodes
-	return function() 
-		i = i + 1
-		if i <= n then return self.nodes[i].id, self.nodes[i] end
-	end
-
-end
-
-function meta:NodeIDs()
-
-	local i = 0
-	local n = #self.nodes
-	return function() 
-		i = i + 1
-		if i <= n then return self.nodes[i].id end
+		i = i - 1
+		if i > 0 then return i, self.connections[i] end
 	end
 
 end
@@ -375,16 +346,12 @@ end
 
 function meta:RemoveConnection(nodeID0, pinID0, nodeID1, pinID1)
 
-	local connections = self.connections
-	for i=#connections, 1, -1 do
+	for i, c in self:Connections() do
 
-		local c = connections[i]
 		if (c[1] == nodeID0 and c[3] == nodeID1) and (c[2] == pinID0 and c[4] == pinID1) then
-			table.remove(connections, i)
-			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
+			self:RemoveConnectionID(i)
 		elseif (c[1] == nodeID1 and c[3] == nodeID0) and (c[2] == pinID1 and c[4] == pinID0) then
-			table.remove(connections, i)
-			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
+			self:RemoveConnectionID(i)
 		end
 
 	end
@@ -414,15 +381,10 @@ function meta:RemoveNode(nodeID)
 
 	self:FireListeners(CB_NODE_REMOVE, node, nodeID)
 
-	local connections = self.connections
-	for i=#connections, 1, -1 do
-
-		local c = connections[i]
+	for i, c in self:Connections() do
 		if c[1] == nodeID or c[3] == nodeID then
-			table.remove(connections, i)
-			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
+			self:RemoveConnectionID(i)
 		end
-
 	end
 
 end
@@ -436,19 +398,16 @@ function meta:CollapseSingleRerouteNode(nodeID)
 	local insert = {}
 	local connections = self.connections
 	local input = nil
-	for i=#connections, 1, -1 do
+	for i, c in self:Connections() do
 
-		local c = connections[i]
 		if c[1] == nodeID then --output
 			print(" -output on " .. c[2] .. " => " .. c[3] .. "[" .. c[4] .. "]")
 			table.insert(insert, {c[3],c[4]})
-			table.remove(connections, i)
-			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
+			self:RemoveConnectionID(i)
 		elseif c[3] == nodeID then --input
 			print(" -input on " .. c[4] .. " <= " .. c[1] .. "[" .. c[2] .. "]")
 			input = {c[1],c[2]}
-			table.remove(connections, i)
-			self:FireListeners(CB_CONNECTION_REMOVE, c, i)
+			self:RemoveConnectionID(i)
 		end
 
 	end	
@@ -465,19 +424,17 @@ end
 
 function meta:CollapseRerouteNodes()
 
-	local nodes = self.nodes
-	for i=#nodes, 1, -1 do
-
-		local node = nodes[i]
+	for _, node in self:Nodes() do
 		if self:GetNodeType(node).collapse then
 			self:CollapseSingleRerouteNode( node.id )
 		end
-
 	end	
 
 end
 
 function meta:WriteToStream(stream, version)
+
+	print("WRITE GRAPH TO STREAM")
 
 	local namelookup = {}
 	local nametable = {}
@@ -518,6 +475,8 @@ function meta:WriteToStream(stream, version)
 end
 
 function meta:ReadFromStream(stream, version)
+
+	print("READ GRAPH FROM STREAM")
 
 	self:Clear()
 

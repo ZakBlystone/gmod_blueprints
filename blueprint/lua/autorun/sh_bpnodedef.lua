@@ -108,6 +108,20 @@ NodeTypes = {
 		},
 		code = "#1 = Player_.GetActiveWeapon($1)",
 	},
+	["Clip1"] = PURE {
+		pins = {
+			{ PD_In, PN_Weapon, "weapon" },
+			{ PD_Out, PN_Number, "clip" },
+		},
+		code = "#1 = Weapon_.Clip1($1)",
+	},
+	["SetClip1"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Weapon, "weapon" },
+			{ PD_In, PN_Number, "clip" },
+		},
+		code = "Weapon_.SetClip1($2, $3)",
+	},
 	["PlayerName"] = PURE {
 		pins = {
 			{ PD_In, PN_Player, "player" },
@@ -184,6 +198,30 @@ NodeTypes = {
 			{ PD_In, PN_Entity, "inflictor", PNF_Nullable },
 		},
 		code = "Entity_.TakeDamage($2, $3, $4, $5)",
+	},
+	["Give"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_String, "classname" },
+		},
+		code = "Player_.Give($2, $3)",
+	},
+	["GiveAmmo"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_Number, "amount" },
+			{ PD_In, PN_String, "type" },
+			{ PD_In, PN_Bool, "hidePopup" },
+		},
+		code = "Player_.GiveAmmo($2, $3, $4, $5)",
+	},
+	["SetAmmo"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_Number, "amount" },
+			{ PD_In, PN_String, "type" },
+		},
+		code = "Player_.SetAmmo($2, $3, $4)",
 	},
 	["RemoveAllItems"] = FUNCTION {
 		pins = {
@@ -278,6 +316,13 @@ NodeTypes = {
 			{ PD_Out, PN_PhysObj, "physObj" },
 		},
 		code = "#1 = Entity_.GetPhysicsObject($1)",
+	},
+	["EyeAngles"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Angles, "angles" },
+		},
+		code = "#1 = Entity_.EyeAngles($1)",
 	},
 	["GetAimVector"] = PURE {
 		pins = {
@@ -441,7 +486,7 @@ NodeTypes = {
 			{ PD_Out, PN_Vector, "right" },
 			{ PD_Out, PN_Vector, "up" },
 		},
-		code = "$2 = $1:Forward() $3 = $1:Right() $4 = $1:Up()",
+		code = "#1 = $1:Forward() #2 = $1:Right() #3 = $1:Up()",
 		compact = false,
 	},
 	["BreakAngles"] = PURE {

@@ -106,22 +106,20 @@ function CreateIndexableListIterators(meta, variable)
 
 	meta[iteratorName] = function(self)
 
-		local i = 0
-		local n = #self[variable]
+		local i = #self[variable] + 1
 		return function() 
-			i = i + 1
-			if i <= n then return self[variable][i].id, self[variable][i] end
+			i = i - 1
+			if i > 0 then return self[variable][i].id, self[variable][i] end
 		end
 
 	end
 
 	meta[idIteratorName] = function(self)
 
-		local i = 0
-		local n = #self[variable]
+		local i = #self[variable] + 1
 		return function() 
-			i = i + 1
-			if i <= n then return self[variable][i].id end
+			i = i - 1
+			if i > 0 then return self[variable][i].id end
 		end
 
 	end
