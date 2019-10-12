@@ -526,6 +526,7 @@ NodeTypes = {
 			{ PD_Out, PN_Bool, "result" },
 		},
 		code = "#1 = $1 < $2",
+		displayName = "<",
 		compact = true,
 	},
 	["LessThanEqual"] = PURE {
@@ -535,6 +536,7 @@ NodeTypes = {
 			{ PD_Out, PN_Bool, "result" },
 		},
 		code = "#1 = $1 <= $2",
+		displayName = "<=",
 		compact = true,
 	},
 	["GreaterThan"] = PURE {
@@ -544,6 +546,7 @@ NodeTypes = {
 			{ PD_Out, PN_Bool, "result" },
 		},
 		code = "#1 = $1 > $2",
+		displayName = ">",
 		compact = true,
 	},
 	["GreaterThanEqual"] = PURE {
@@ -553,6 +556,7 @@ NodeTypes = {
 			{ PD_Out, PN_Bool, "result" },
 		},
 		code = "#1 = $1 >= $2",
+		displayName = ">=",
 		compact = true,
 	},
 	["String"] = PURE {
@@ -693,6 +697,7 @@ NodeTypes = {
 		meta = {
 			informs = {1, 2}
 		},
+		displayName = "==",
 		code = "#1 = $1 == $2",
 		compact = true,		
 	},
@@ -702,6 +707,7 @@ NodeTypes = {
 			{ PD_In, PN_Any, "scalar" },
 			{ PD_Out, PN_Bool, "result" },
 		},
+		displayName = "!=",
 		code = "#1 = $1 ~= $2",
 		compact = true,		
 	},

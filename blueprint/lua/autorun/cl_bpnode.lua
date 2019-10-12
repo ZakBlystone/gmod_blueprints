@@ -28,9 +28,10 @@ local function calculateNodeSize(nodeType)
 	local maxVertical = math.max(#nodeType.pinlayout.inputs, #nodeType.pinlayout.outputs)
 	local width = 180
 	local headHeight = 30
+	local name = nodeType.displayName or nodeType.name
 
 	if nodeType.compact then
-		width = 40 + string.len(nodeType.name) * 8
+		width = 40 + string.len(name) * 8
 		width = math.max(width, 80)
 		headHeight = 15
 
@@ -63,6 +64,12 @@ local PANEL = {}
 function PANEL:Init()
 
 	self.inset = PANEL_INSET
+
+end
+
+function PANEL:GetDisplayName()
+
+	return self.nodeType.displayName or self.nodeType.name
 
 end
 
@@ -186,11 +193,11 @@ function PANEL:Paint(w, h)
 
 	if not ntype.compact then
 		draw.RoundedBox(6, inset, inset, w - inset * 2, 20, Color(ntc.r,ntc.g,ntc.b,180))
-		draw.SimpleText(ntype.name, "HudHintTextLarge", inset + 2, inset + 2)
+		draw.SimpleText(self:GetDisplayName(), "HudHintTextLarge", inset + 2, inset + 2)
 	else
 		-- HACK
 		if ntype.name ~= "Pin" then
-			draw.SimpleText(ntype.name, "HudHintTextLarge", w/2, h/2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			draw.SimpleText(self:GetDisplayName(), "HudHintTextLarge", w/2, h/2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 	end
 

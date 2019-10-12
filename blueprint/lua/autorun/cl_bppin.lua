@@ -135,6 +135,8 @@ function PANEL:InitLiteral()
 
 			else
 				self.textEntry = vgui.Create("DTextEntry", self)
+				self.textEntry:SetPaintBackground(true)
+				self.textEntry:SetTextColor( Color(255,255,255) )
 
 				if self.label then
 					self.textEntry:SetPos( 15 + self.label:GetWide(), -shift_up - 4 )
@@ -152,6 +154,12 @@ function PANEL:InitLiteral()
 				self.textEntry.OnValueChange = function(te, ...) self:OnTextValue(...) end
 				self.textEntry.OnFocusChanged = function(te, gained)
 					if not gained then self:OnTextValue( te:GetText() ) end
+				end
+				self.textEntry.Paint = function(te)
+					local w,h = te:GetSize()
+					surface.SetDrawColor(Color(255,255,255,30))
+					surface.DrawRect(0,0,w,h)
+					te:DrawTextEntryText( te:GetTextColor(), te:GetHighlightColor(), te:GetCursorColor() )
 				end
 			end
 		end

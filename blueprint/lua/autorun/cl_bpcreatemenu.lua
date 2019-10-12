@@ -8,6 +8,9 @@ module("bpuicreatemenu", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
 
 local PANEL = {}
 
+local function DisplayName(nodeType)
+	return nodeType.displayName or nodeType.name
+end
 
 local function SortedFilteredNodeList( graph, filter, res )
 	local options = {}
@@ -15,7 +18,7 @@ local function SortedFilteredNodeList( graph, filter, res )
 	for k,v in pairs(types) do
 		if filter(v) then table.insert(options, k) end
 	end
-	table.sort(options)
+	table.sort(options, function(a,b) return DisplayName(types[a]) < DisplayName(types[b]) end)
 	for _, v in pairs(options) do
 		res( v, types[v] )
 	end
@@ -35,7 +38,7 @@ local function FilterByPinType( pinType ) return function(n)
 end
 
 local function FilterBySubstring( str ) return function(n)
-		return string.find( n.name:lower(), str) ~= nil
+		return string.find( DisplayName(n):lower(), str) ~= nil
 	end 
 end
 
@@ -53,7 +56,7 @@ function PANEL:Init()
 		return function( name, nodeType )
 			local c = NodeTypeColors[nodeType.type]
 			local cx = Color(c.r/2, c.g/2, c.b/2, 255)
-			local item = list:AddItem( name )
+			local item = list:AddItem( nodeType.displayName or name )
 			item:SetFont("DermaDefaultBold")
 			item:SetColor( Color(255,255,255) )
 			item.DoClick = function()
