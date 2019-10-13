@@ -1,7 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bplist.lua")
-
 module("bpcommon", package.seeall)
 
 file.CreateDir("blueprints")

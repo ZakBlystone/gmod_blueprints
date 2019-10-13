@@ -44,7 +44,6 @@ function PANEL:Setup(graph, node, pin, pinID)
 	-- input pins watch for literal changes
 	if self.pin[1] == PD_In and self.pinType ~= PN_Exec then
 		self.callback = function(...)
-			print("CALL PIN ON : " .. tostring(self))
 			self:OnGraphCallback(...)
 		end
 		self.graph:AddListener(self.callback, CB_PIN_EDITLITERAL)

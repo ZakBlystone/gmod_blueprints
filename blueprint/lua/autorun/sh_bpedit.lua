@@ -1,3 +1,6 @@
+--DEPRECATED
+if true then return end
+
 AddCSLuaFile()
 
 include("sh_bpcommon.lua")

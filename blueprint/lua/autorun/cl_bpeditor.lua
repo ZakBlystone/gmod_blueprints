@@ -37,17 +37,17 @@ function PANEL:Init()
 			if LastSavedFile ~= nil then
 
 				Derma_Query("Overwrite " .. LastSavedFile .. "?",
-							"Save File",
-							"Yes",
-							function() 
-								SaveFunc( LastSavedFile )
-							end,
-							"No",
-							function() 
+					"Save File",
+					"Yes",
+					function() 
+						SaveFunc( LastSavedFile )
+					end,
+					"No",
+					function() 
 
-								Derma_StringRequest( "Save Blueprint", "What filename though?", "", SaveFunc, function( text ) end )
+						Derma_StringRequest( "Save Blueprint", "What filename though?", "", SaveFunc, function( text ) end )
 
-							end)
+					end)
 
 				return
 
@@ -172,120 +172,65 @@ function PANEL:Init()
 	local menu = vgui.Create("DVerticalDivider", self.Content)
 	menu:SetTopHeight(300)
 
-	self.VarMenuPanel = vgui.Create("DPanel", menu)
-	self.VarMenuPanel:SetBackgroundColor( Color(30,30,30) )
+	self.Content:SetLeft(menu)
+	self.Content:Dock( FILL )
 
-	self.GraphMenuPanel = vgui.Create("DPanel", menu)
-	self.GraphMenuPanel:SetBackgroundColor( Color(30,30,30) )
-
-	self.VarListControls = vgui.Create("DPanel", self.VarMenuPanel)
-	self.VarAdd = vgui.Create("DButton", self.VarListControls)
-	self.VarRemove = vgui.Create("DButton", self.VarListControls)
-
-	self.VarAdd:SetText("+")
-	self.VarRemove:SetText("-")
-
-	self.VarAdd:Dock( LEFT )
-	self.VarRemove:Dock( FILL )
-	self.VarListControls:Dock( TOP )
-
-	self.VarAdd.DoClick = function()
-		--[[Derma_StringRequest(
-			"Add Graph",
-			"Give it a name",
-			"",
-			function( text ) 
-
-				self.module:NewVariable( text )
-
-			end,
-			function( text ) end
-		)]]
-		bpuivarcreatemenu.RequestVarSpec( function(name, type, flags) 
-			self.module:NewVariable( name, type, nil, flags )
-		end)
-	end
-
-	self.VarRemove.DoClick = function()
-		if IsValid(self.SelectedVar) then
-			self.module:RemoveVariable(self.SelectedVar.id)
-		end
-	end
-
-	self.GraphListControls = vgui.Create("DPanel", self.GraphMenuPanel)
-	self.GraphAdd = vgui.Create("DButton", self.GraphListControls)
-	self.GraphRemove = vgui.Create("DButton", self.GraphListControls)
-
-	self.GraphAdd:SetText("+")
-	self.GraphRemove:SetText("-")
-
-	self.GraphAdd:Dock( LEFT )
-	self.GraphRemove:Dock( FILL )
-	self.GraphListControls:Dock( TOP )
-
-	self.GraphAdd.DoClick = function()
+	self.GraphList = vgui.Create("BPListView", menu)
+	self.GraphList:SetText("Graphs")
+	self.GraphList.HandleAddItem = function(list)
 		Derma_StringRequest(
 			"Add Graph",
 			"Give it a name",
 			"",
-			function( text ) 
-
-				self.module:NewGraph( text )
-
-			end,
+			function( text ) self.module:NewGraph( text ) end,
 			function( text ) end
 		)
 	end
 
-	self.GraphRemove.DoClick = function()
-		if IsValid(self.SelectedGraph) then
-			self.module:RemoveGraph(self.SelectedGraph.id)
+	self.VarList = vgui.Create("BPListView", menu)
+	self.VarList:SetText("Variables")
+	self.VarList.HandleAddItem = function(list)
+		bpuivarcreatemenu.RequestVarSpec( function(name, type, flags) 
+			self.module:NewVariable( name, type, nil, flags )
+		end)
+	end
+	self.VarList.ItemBackgroundColor = function( list, id, item, selected )
+		local vcolor = bpschema.NodePinColors[item.type]
+		if selected then
+			return vcolor
+		else
+			return Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5)
 		end
 	end
 
-	self.VarList = vgui.Create("DListBox", self.VarMenuPanel)
-	self.VarList:Dock( FILL )
-	self.VarList.Paint = function( p, w, h ) end
-
-	self.GraphList = vgui.Create("DListBox", self.GraphMenuPanel)
-	self.GraphList:Dock( FILL )
-	self.GraphList.Paint = function( p, w, h ) end
-
-	self.Content:SetLeft(menu)
-	self.Content:Dock( FILL )
-
-	menu:SetTop(self.GraphMenuPanel)
-	menu:SetBottom(self.VarMenuPanel)
+	menu:SetTop(self.GraphList)
+	menu:SetBottom(self.VarList)
 
 	self.vvars = {}
 	self.vgraphs = {}
 
-	--self.VarMenuPanel:Dock( FILL )
-	--self.GraphMenuPanel:Dock( FILL )
+end
+
+function PANEL:Think()
+
+	self.BaseClass.Think(self)
+
+	local selectedGraphID = self.GraphList:GetSelectedID()
+
+	for id, vgraph in pairs( self.vgraphs ) do
+		if id == selectedGraphID then
+			vgraph:SetVisible(true)
+			self.Content:SetRight( vgraph )
+		else
+			vgraph:SetVisible(false)
+		end
+	end
 
 end
 
 function PANEL:OnRemove()
 
 	self:SetModule(nil)
-
-end
-
-function PANEL:SelectGraph(id)
-
-	if IsValid(self.SelectedGraph) then self.SelectedGraph:SetVisible(false) end
-	self.SelectedGraph = self.vgraphs[id]
-	self.SelectedGraph:SetVisible( true )
-	self.Content:SetRight( self.SelectedGraph )
-
-end
-
-function PANEL:SelectVar(id)
-
-	if IsValid(self.SelectedVar) then self.SelectedVar:SetVisible(false) end
-	self.SelectedVar = self.vvars[id]
-	--self.SelectedVar:SetVisible( true )
-	--self.Content:SetRight( self.SelectedVar )
 
 end
 
@@ -296,70 +241,6 @@ function PANEL:OnModuleCallback( cb, ... )
 	if cb == CB_MODULE_CLEAR then self:Clear(...) end
 	if cb == CB_GRAPH_ADD then self:GraphAdded(...) end
 	if cb == CB_GRAPH_REMOVE then self:GraphRemoved(...) end
-	if cb == CB_VARIABLE_ADD then self:VarAdded(...) end
-	if cb == CB_VARIABLE_REMOVE then self:VarRemoved(...) end
-
-end
-
-function PANEL:BuildVarList()
-
-	self.VarList:Clear()
-
-	if self.module == nil then return end
-	for id, var in self.module:Variables() do
-
-		local item = self.VarList:AddItem( var.name )
-		item:SetFont("DermaDefaultBold")
-		item:SetTextColor( Color(255,255,255) )
-		item.varID = id
-		item.OnMousePressed = function( item, mcode )
-			if ( mcode == MOUSE_LEFT ) then item:Select( true ) end
-		end
-		item.DoClick = function()
-			self:SelectVar(id)
-		end
-		item.Paint = function( item, w, h )
-			local var = self.module:GetVariable(item.varID)
-			local vcolor = bpschema.NodePinColors[var.type]
-			if self.SelectedVar and item.varID == self.SelectedVar.id then
-				surface.SetDrawColor(vcolor)
-			else
-				surface.SetDrawColor(Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5))
-			end
-			surface.DrawRect(0,0,w,h)
-		end
-
-	end
-
-end
-
-function PANEL:BuildGraphList()
-
-	self.GraphList:Clear()
-
-	if self.module == nil then return end
-	for id, graph in self.module:Graphs() do
-
-		local item = self.GraphList:AddItem( graph:GetTitle() )
-		item:SetFont("DermaDefaultBold")
-		item:SetTextColor( Color(255,255,255) )
-		item.graphID = id
-		item.OnMousePressed = function( item, mcode )
-			if ( mcode == MOUSE_LEFT ) then item:Select( true ) end
-		end
-		item.DoClick = function()
-			self:SelectGraph(id)
-		end
-		item.Paint = function( item, w, h )
-			if self.SelectedGraph and item.graphID == self.SelectedGraph.id then
-				surface.SetDrawColor(120,120,120,255)
-			else
-				surface.SetDrawColor(60,60,60,255)
-			end
-			surface.DrawRect(0,0,w,h)
-		end
-
-	end
 
 end
 
@@ -370,23 +251,18 @@ function PANEL:Clear()
 
 	self.vvars = {}
 	self.vgraphs = {}
-	self:BuildGraphList()
-	self:BuildVarList()
 
 end
 
 function PANEL:GraphAdded( id )
 
+	print("GRAPH ADDED: " .. id)
 	local graph = self.module:GetGraph(id)
 	local vgraph = vgui.Create("BPGraph", self.Content)
 
 	vgraph:SetGraph( graph )
 	vgraph:SetVisible(false)
-
-	vgraph.id = id
 	self.vgraphs[id] = vgraph
-	self:SelectGraph(id)
-	self:BuildGraphList()
 
 end
 
@@ -400,36 +276,6 @@ function PANEL:GraphRemoved( id )
 	self.vgraphs[id]:Remove()
 	self.vgraphs[id] = nil
 
-	self:BuildGraphList()
-
-end
-
-function PANEL:VarAdded( id )
-
-	local var = self.module:GetVariable(id)
-	local vvar = vgui.Create("DPanel", self.Content)
-
-	vvar:SetVisible(false)
-	vvar.id = id
-
-	self.vvars[id] = vvar
-	self:SelectVar(id)
-	self:BuildVarList()
-
-end
-
-function PANEL:VarRemoved( id )
-
-	if IsValid(self.SelectedVar) and self.SelectedVar.id == id then
-		self.SelectedVar:SetVisible(false)
-		self.SelectedVar = nil
-	end
-
-	self.vvars[id]:Remove()
-	self.vvars[id] = nil
-
-	self:BuildVarList()
-
 end
 
 function PANEL:SetModule( mod )
@@ -442,6 +288,8 @@ function PANEL:SetModule( mod )
 	self:Clear()
 
 	if mod == nil then return end
+	self.VarList:SetList( self.module.variables )
+	self.GraphList:SetList( self.module.graphs )
 	self.module:AddListener(self.callback, bpmodule.CB_ALL)
 
 end

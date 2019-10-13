@@ -4,6 +4,7 @@ include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
 include("sh_bpnodedef.lua")
 include("sh_bpdata.lua")
+include("sh_bplist.lua")
 
 module("bpgraph", package.seeall, bpcommon.rescope(bpschema, bpnodedef)) --bpnodedef is temporary
 

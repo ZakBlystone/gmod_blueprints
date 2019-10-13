@@ -5,8 +5,8 @@ include("sh_bpschema.lua")
 include("sh_bpnodedef.lua")
 include("sh_bpdata.lua")
 include("sh_bpgraph.lua")
-include("sh_bpcompile.lua")
 include("sh_bpvariable.lua")
+include("sh_bplist.lua")
 
 module("bpmodule", package.seeall, bpcommon.rescope(bpschema, bpnodedef)) --bpnodedef is temporary
 
@@ -66,18 +66,6 @@ function meta:Init()
 
 	nextModuleID = nextModuleID + 1
 	return self
-
-end
-
-function meta:GetNextGraphID()
-
-	return self.nextGraphID
-
-end
-
-function meta:GetNextVarID()
-
-	return self.nextVarID
 
 end
 

@@ -146,6 +146,7 @@ function PANEL:SetGraph( graph )
 	self.graph = graph
 	self.scroll_x = 0
 	self.scroll_y = 0
+	self.id = graph.id
 
 	graph:AddListener(self.callback, bpgraph.CB_ALL)
 

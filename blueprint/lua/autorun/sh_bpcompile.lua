@@ -4,6 +4,7 @@ include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
 include("sh_bpgraph.lua")
 include("sh_bpnodedef.lua")
+include("sh_bpmodule.lua")
 
 module("bpcompile", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
 
