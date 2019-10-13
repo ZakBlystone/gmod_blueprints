@@ -38,7 +38,7 @@ local function FilterByPinType( pinType ) return function(n)
 end
 
 local function FilterBySubstring( str ) return function(n)
-		return string.find( DisplayName(n):lower(), str) ~= nil
+		return string.find( DisplayName(n):lower(), str, 1, true ) ~= nil
 	end 
 end
 

@@ -565,6 +565,16 @@ NodeTypes = {
 		},
 		code = "#1 = $1",
 	},
+	["Modulo"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "a" },
+			{ PD_In, PN_Number, "b" },
+			{ PD_Out, PN_Number, "result" },
+		},
+		code = "#1 = $1 % $2",
+		displayName = "%",
+		compact = true,
+	},
 	["LessThan"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "a" },
@@ -687,6 +697,7 @@ NodeTypes = {
 			{ PD_In, PN_Number, "B" },
 			{ PD_Out, PN_Number, "result" },
 		},
+		displayName = "+",
 		code = "#1 = $1 + $2",
 		compact = true,
 	},
@@ -696,6 +707,7 @@ NodeTypes = {
 			{ PD_In, PN_Number, "B" },
 			{ PD_Out, PN_Number, "result" },
 		},
+		displayName = "-",
 		code = "#1 = $1 - $2",
 		compact = true,
 	},
@@ -1103,6 +1115,17 @@ NodeTypes = {
 		},
 		compact = false,
 		code = "#1 = string.Trim($1)"
+	},
+	["TableRandom"] = PURE {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_Out, PN_Any, "result" },
+		},
+		meta = {
+			informs = {1,2}
+		},
+		compact = true,
+		code = "#1 = $1[ math.random(1, #$1) ]",
 	},
 	["TableGet"] = PURE {
 		pins = {
