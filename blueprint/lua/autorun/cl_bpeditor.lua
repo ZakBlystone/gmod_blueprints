@@ -80,14 +80,7 @@ function PANEL:Init()
 				SaveFunc( LastSavedFile )
 			end
 		end},
-		--[[{"Test Reroute collapse", function()
-
-			self.module:GetGraph( 1 ):CollapseRerouteNodes()
-
-		end}]]
 	}
-
-	--x = 20
 
 	self.callback = function(...)
 		self:OnModuleCallback(...)
@@ -235,8 +228,6 @@ function PANEL:OnRemove()
 end
 
 function PANEL:OnModuleCallback( cb, ... )
-
-	print("CB: " .. cb)
 
 	if cb == CB_MODULE_CLEAR then self:Clear(...) end
 	if cb == CB_GRAPH_ADD then self:GraphAdded(...) end
