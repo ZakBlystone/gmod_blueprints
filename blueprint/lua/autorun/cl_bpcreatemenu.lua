@@ -103,7 +103,7 @@ function PANEL:Setup( graph )
 	self.graph = graph
 
 	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "All", list, "icon16/user.png", false, false, "All nodes" )
+	self.tabs:AddSheet( "All", list, "icon16/book.png", false, false, "All nodes" )
 	SortedFilteredNodeList( self.graph, function() return true end, self.inserter(list) )
 
 	local list = vgui.Create("DListBox" )
@@ -121,6 +121,10 @@ function PANEL:Setup( graph )
 	local list = vgui.Create("DListBox" )
 	self.tabs:AddSheet( "Special", list, "icon16/plugin.png", false, false, "Special nodes" )
 	SortedFilteredNodeList( self.graph, CombineFilter( FilterByType(NT_Special), FilterByPinType(PN_Any) ), self.inserter(list) )
+
+	local list = vgui.Create("DListBox" )
+	self.tabs:AddSheet( "Custom", list, "icon16/wrench.png", false, false, "User created nodes" )
+	SortedFilteredNodeList( self.graph, function(n) return n.custom == true end, self.inserter(list) )	
 
 end
 

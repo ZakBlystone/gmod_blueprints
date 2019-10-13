@@ -8,9 +8,8 @@ module("bpvariable", package.seeall, bpcommon.rescope(bpschema))
 local meta = {}
 meta.__index = meta
 
-function meta:Init(module, type, default, flags)
+function meta:Init(type, default, flags)
 
-	self.module = module
 	self.type = type or PN_Number
 	self.default = bit.band(flags, PNF_Table) and "{}" or (default or Defaults[var.type])
 	self.flags = flags or 0
@@ -50,6 +49,7 @@ function meta:GetterNodeType()
 		},
 		code = "#1 = __self.__" .. self:GetName(),
 		compact = true,
+		custom = true,
 	}
 
 end
@@ -62,6 +62,7 @@ function meta:SetterNodeType()
 		},
 		code = "__self.__" .. self:GetName() .. " = $2",
 		compact = true,
+		custom = true,
 	}
 
 end

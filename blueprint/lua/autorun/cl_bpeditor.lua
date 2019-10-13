@@ -30,7 +30,9 @@ function PANEL:Init()
 	local MenuOptions = {
 		{"New Module", function(p)
 			LastSavedFile = nil
-			p:SetModule( bpmodule.New() )
+			local m = bpmodule.New()
+			p:SetModule( m )
+			m:NewGraph("EventGraph")
 		end},
 		{"Save", function()
 

@@ -16,10 +16,18 @@ function PANEL:ItemBackgroundColor( id, item, selected )
 
 end
 
+function PANEL:ItemIcon( id, item )
+
+	return nil
+
+end
+
 function PANEL:CreateItemPanel( id, item )
 
 	local panel = vgui.Create("DPanel")
 	panel:SetMouseInputEnabled( true )
+
+	local icon = self:ItemIcon( id, item )
 
 	local btn = vgui.Create("DLabel", panel)
 	btn:SetTextColor( Color(255,255,255) )
@@ -27,6 +35,16 @@ function PANEL:CreateItemPanel( id, item )
 	btn:SetText( item:GetName() )
 	btn:DockMargin( 8,0,2,0 )
 	btn:Dock( FILL )
+
+	if icon ~= nil then
+	
+		local img = vgui.Create("DImage", panel)
+		img:SetImage( icon )
+		img:SetSize(10,16)
+		img:DockMargin( 4,6,0,6 )
+		img:Dock( LEFT )
+
+	end
 
 	local rmv = vgui.Create("DButton", panel)
 	rmv:SetWide(18)
@@ -186,6 +204,7 @@ function PANEL:Init()
 	self.listview = vgui.Create("DPanelList", self)
 	self.listview:Dock( FILL )
 	self.listview.Paint = function() end
+	self.listview:EnableVerticalScrollbar()
 
 end
 

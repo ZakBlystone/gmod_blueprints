@@ -25,8 +25,9 @@ New = nil
 
 bpcommon.CreateIndexableListIterators(meta, "nodes")
 
-function meta:Init(module)
+function meta:Init(module, type)
 
+	self.type = type or GT_Event
 	self.module = module
 	self.nodes = bplist.New()
 	self.connections = {}
@@ -49,6 +50,12 @@ function meta:Init(module)
 
 	bpcommon.MakeObservable(self)
 	return self
+
+end
+
+function meta:GetType()
+
+	return self.type
 
 end
 
@@ -423,6 +430,10 @@ function meta:WriteToStream(stream, version)
 	local nametable = {}
 	local nodeentries = {}
 
+	if version >= 3 then
+		stream:WriteInt( self.type, false )
+	end
+
 	for id, node in self:Nodes() do
 		local name = self:GetNodeType(node).name
 		if not namelookup[name] then 
@@ -463,8 +474,15 @@ function meta:ReadFromStream(stream, version)
 
 	self:Clear()
 
+	if version >= 3 then
+		self.type = stream:ReadInt( false )
+	else
+		self.type = GT_Event
+	end
+
 	local nametable = {}
-	for i=1, stream:ReadInt( false ) do 
+	local count = stream:ReadInt( false )
+	for i=1, count do 
 		local size = stream:ReadByte( false ) 
 		table.insert(nametable, stream:ReadStr( size ) )
 	end
@@ -506,7 +524,7 @@ end
 function meta:CopyInto(other)
 
 	local outStream = bpdata.OutStream()
-	self:WriteToStream(outStream)
+	self:WriteToStream( outStream, bpmodule.fmtVersion )
 
 	other.module = self.module
 	other.id = self.id
@@ -514,7 +532,7 @@ function meta:CopyInto(other)
 
 	local inStream = bpdata.InStream()
 	inStream:LoadString(outStream:GetString(false, false), false, false)
-	other:ReadFromStream( inStream )
+	other:ReadFromStream( inStream, bpmodule.fmtVersion )
 
 	return other
 

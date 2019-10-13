@@ -47,8 +47,10 @@ if SERVER then
 		local isNew = false
 		if PlayerModules[PlayerKey(ply)] == nil then
 			PlayerModules[PlayerKey(ply)] = bpmodule.New()
+			PlayerModules[PlayerKey(ply)]:NewGraph("EventGraph")
 			isNew = true
 		end
+
 		return PlayerModules[PlayerKey(ply)], isNew
 	end
 

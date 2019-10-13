@@ -32,11 +32,19 @@ PNF_None = 0
 PNF_Table = 1
 PNF_Nullable = 2
 
+GT_Event = 0
+GT_Function = 1
+
 NodeTypeColors = {
 	[NT_Pure] = Color(60,150,60),
 	[NT_Function] = Color(60,80,150),
 	[NT_Event] = Color(150,20,20),
 	[NT_Special] = Color(100,100,100),
+}
+
+GraphTypeNames = {
+	[GT_Event] = "EventGraph",
+	[GT_Function] = "Function",
 }
 
 PinTypeNames = {

@@ -18,8 +18,9 @@ bpcommon.CallbackList({
 	"VARIABLE_REMOVE",
 })
 
-local fmtMagic = 0x42504D58
-local fmtVersion = 2
+fmtMagic = 0x42504D58
+fmtVersion = 3
+
 local meta = {}
 meta.__index = meta
 
@@ -102,13 +103,13 @@ end
 
 function meta:NewVariable(name, type, default, flags)
 
-	return self.variables:Add( bpvariable.New(self, type, default, flags), name )
+	return self.variables:Add( bpvariable.New(type, default, flags), name )
 
 end
 
 function meta:NewGraph(name)
 
-	return self.graphs:Add( bpgraph.New(self), name )
+	return self.graphs:Add( bpgraph.New(self, GT_Event), name )
 
 end
 
