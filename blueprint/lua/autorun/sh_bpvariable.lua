@@ -59,8 +59,9 @@ function meta:SetterNodeType()
 	return FUNCTION {
 		pins = {
 			{PD_In, self:GetType(), "value", self:GetFlags()},
+			{PD_Out, self:GetType(), "value", self:GetFlags()},
 		},
-		code = "__self.__" .. self:GetName() .. " = $2",
+		code = "__self.__" .. self:GetName() .. " = $2 #2 = $2",
 		compact = true,
 		custom = true,
 	}

@@ -129,6 +129,13 @@ NodeTypes = {
 		},
 		code = "#1 = Player_.Nick($1)",
 	},
+	["Use"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Player, "activator" },
+		},
+		code = "Entity_.Use($1, $2, $2, USE_TOGGLE, 1)",
+	},
 	["FireBullets"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
@@ -139,6 +146,17 @@ NodeTypes = {
 			{ PD_In, PN_Number, "damage" },
 		},
 		code = "Entity_.FireBullets($2, { Spread = $3, Src = $4, Dir = $5, Num = $6, Damage = $7 })",
+	},
+	["SetModelScale"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Number, "scale" },
+			{ PD_In, PN_Number, "deltaTime" },
+		},
+		code = "Entity_.SetModelScale($2, $3, $4)",
+		defaults = {
+			[4] = 0,
+		},
 	},
 	["SetVelocity"] = FUNCTION {
 		pins = {
@@ -153,6 +171,13 @@ NodeTypes = {
 			{ PD_Out, PN_Vector, "velocity" },
 		},
 		code = "#1 = Entity_.GetVelocity($1)",
+	},
+	["SetGroundEntity"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Entity, "groundEntity", PNF_Nullable },
+		},
+		code = "Entity_.SetGroundEntity($2, $3)",
 	},
 	["GetGroundEntity"] = PURE {
 		pins = {
@@ -199,6 +224,27 @@ NodeTypes = {
 		},
 		code = "Entity_.TakeDamage($2, $3, $4, $5)",
 	},
+	["SetHealth"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Number, "health" },
+		},
+		code = "Entity_.SetHealth($2, $3)",
+	},
+	["SetArmor"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_Number, "armor" },
+		},
+		code = "Player_.SetArmor($2, $3)",
+	},
+	["ViewPunch"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_Angles, "angles" },
+		},
+		code = "Player_.ViewPunch($2, $3)"
+	},
 	["Give"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Player, "player" },
@@ -222,6 +268,13 @@ NodeTypes = {
 			{ PD_In, PN_String, "type" },
 		},
 		code = "Player_.SetAmmo($2, $3, $4)",
+	},
+	["StripWeapon"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_String, "weapon" },
+		},
+		code = "Player_.StripWeapon($2, $3)",
 	},
 	["RemoveAllItems"] = FUNCTION {
 		pins = {
@@ -343,6 +396,14 @@ NodeTypes = {
 			{ PD_In, PN_Player, "player" },
 		},
 		code = "Player_.CreateRagdoll($2)",
+	},
+	["Say"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_String, "text" },
+			{ PD_In, PN_Bool, "teamOnly" },
+		},
+		code = "Player_.Say($2, $3, $4)",
 	},
 	["If"] = SPECIAL {
 		pins = {
@@ -688,6 +749,7 @@ NodeTypes = {
 			{ PD_In, PN_Number, "B" },
 			{ PD_Out, PN_Number, "result" },
 		},
+		displayName = "*",
 		code = "#1 = $1 * $2",
 		compact = true,
 	},
@@ -966,6 +1028,23 @@ NodeTypes = {
 			#1
 		]],
 	},
+	["DelayBoxed"] = SPECIAL {
+		pins = {
+			{ PD_In, PN_Exec, "Exec" },
+			{ PD_In, PN_Number, "delay" },
+			{ PD_In, PN_Any, "value" },
+			{ PD_Out, PN_Exec, "Thru" },
+			{ PD_Out, PN_Any, "value" },
+		},
+		meta = {
+			informs = {3,5}
+		},
+		code = [[
+			#2 = $3
+			__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)
+			goto popcall
+		]],
+	},
 	["Delay"] = SPECIAL {
 		pins = {
 			{ PD_In, PN_Exec, "Exec" },
@@ -1008,6 +1087,14 @@ NodeTypes = {
 			::^b::
 			goto popcall
 		]],
+	},
+	["FindPlayerByName"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "name" },
+			{ PD_Out, PN_Player, "player" },
+			{ PD_Out, PN_Bool, "found" },
+		},
+		code = "#2 = false for _, pl in pairs(player.GetAll()) do if pl:Nick():find( $1 ) ~= nil then #1 = pl #2 = true end end"
 	},
 	["AllPlayers"] = PURE {
 		pins = {

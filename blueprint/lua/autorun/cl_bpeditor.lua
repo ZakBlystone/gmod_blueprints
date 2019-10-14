@@ -82,6 +82,11 @@ function PANEL:Init()
 				SaveFunc( LastSavedFile )
 			end
 		end},
+		{"Asset Browser", function()
+
+			RunConsoleCommand("pac_asset_browser")
+
+		end},
 	}
 
 	self.callback = function(...)
