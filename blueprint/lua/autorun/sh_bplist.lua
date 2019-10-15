@@ -95,6 +95,7 @@ end
 
 function meta:GetNameForItem( optName, item )
 
+	optName = optName or item.name
 	local name = bpcommon.Sanitize(optName) 
 	if name == nil then name = self.namePrefix .. item.id end
 	return bpcommon.Camelize(name)

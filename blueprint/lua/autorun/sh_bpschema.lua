@@ -27,6 +27,8 @@ NT_Pure = 0
 NT_Function = 1
 NT_Event = 2
 NT_Special = 3
+NT_FuncInput = 4
+NT_FuncOutput = 5
 
 PNF_None = 0
 PNF_Table = 1
@@ -35,11 +37,14 @@ PNF_Nullable = 2
 GT_Event = 0
 GT_Function = 1
 
+
 NodeTypeColors = {
 	[NT_Pure] = Color(60,150,60),
 	[NT_Function] = Color(60,80,150),
 	[NT_Event] = Color(150,20,20),
 	[NT_Special] = Color(100,100,100),
+	[NT_FuncInput] = Color(120,100,250),
+	[NT_FuncOutput] = Color(120,100,250),
 }
 
 GraphTypeNames = {
@@ -62,6 +67,11 @@ PinTypeNames = {
 	[PN_Color] = "Color",
 	[PN_Weapon] = "Weapon",
 	[PN_Angles] = "Angles",
+}
+
+GraphTypeColors = {
+	[GT_Event] = Color(120,80,80),
+	[GT_Function] = Color(60,80,150),
 }
 
 NodePinColors = {
@@ -151,6 +161,21 @@ end
 function SPECIAL(t)
 	t.pins = t.pins or {}
 	t.type = NT_Special
+	ConfigureNodeType(t)
+	return t
+end
+
+function FUNC_INPUT(t)
+	t.pins = t.pins or {}
+	t.type = NT_FuncInput
+	t.hidden = true
+	ConfigureNodeType(t)
+	return t
+end
+
+function FUNC_OUTPUT(t)
+	t.pins = t.pins or {}
+	t.type = NT_FuncOutput
 	ConfigureNodeType(t)
 	return t
 end

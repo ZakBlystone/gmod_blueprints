@@ -16,7 +16,7 @@ local function SortedFilteredNodeList( graph, filter, res )
 	local options = {}
 	local types = graph:GetNodeTypes()
 	for k,v in pairs(types) do
-		if filter(v) then table.insert(options, k) end
+		if filter(v) and not v.hidden then table.insert(options, k) end
 	end
 	table.sort(options, function(a,b) return DisplayName(types[a]) < DisplayName(types[b]) end)
 	for _, v in pairs(options) do

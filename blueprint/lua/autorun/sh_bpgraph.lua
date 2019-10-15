@@ -24,6 +24,8 @@ meta.__index = meta
 New = nil
 
 bpcommon.CreateIndexableListIterators(meta, "nodes")
+bpcommon.CreateIndexableListIterators(meta, "inputs")
+bpcommon.CreateIndexableListIterators(meta, "outputs")
 
 function meta:Init(module, type)
 
@@ -31,6 +33,8 @@ function meta:Init(module, type)
 	self.module = module
 	self.nodes = bplist.New()
 	self.connections = {}
+	self.inputs = bplist.New():NamedItems("Inputs")
+	self.outputs = bplist.New():NamedItems("Outputs")
 
 	self.nodes:AddListener(function(cb, id)
 
@@ -49,6 +53,23 @@ function meta:Init(module, type)
 	end, bplist.CB_ALL)
 
 	bpcommon.MakeObservable(self)
+
+	if type == GT_Function then
+
+		self:AddNode({
+			nodeType = "__Entry",
+			x = 0,
+			y = 200,
+		})
+
+		self:AddNode({
+			nodeType = "__Exit",
+			x = 400,
+			y = 200,
+		})
+
+	end
+
 	return self
 
 end
@@ -87,6 +108,26 @@ function meta:GetNodeTypes()
 
 	local types = {}
 	local base = self:GetModule():GetNodeTypes( self.id )
+
+	if self.type == GT_Function then
+
+		types["__Entry"] = FUNC_INPUT {
+			pins = {
+				{ PD_Out, PN_Exec, "Exec" },
+			},
+			displayName = self:GetName(),
+			name = "__Entry",
+		}
+
+		types["__Exit"] = FUNC_OUTPUT {
+			pins = {
+				{ PD_In, PN_Exec, "Exec" },
+			},
+			displayName = "Return",
+			name = "__Exit",
+		}
+
+	end
 
 	for k,v in pairs(base) do
 		if not types[k] then types[k] = v end
@@ -262,6 +303,8 @@ function meta:Clear()
 	self:FireListeners(CB_GRAPH_CLEAR)
 
 	self.nodes:Clear()
+	self.inputs:Clear()
+	self.outputs:Clear()
 	self.connections = {}
 
 end
@@ -434,6 +477,20 @@ function meta:WriteToStream(stream, version)
 		stream:WriteInt( self.type, false )
 	end
 
+	if self.type == GT_Function then
+
+		stream:WriteInt( self.inputs:Size(), false )
+		stream:WriteInt( self.outputs:Size(), false )
+		for id, input in self:Inputs() do
+			input:WriteToStream( stream, version )
+		end
+
+		for id, output in self:Outputs() do
+			output:WriteToStream( stream, version )
+		end
+
+	end
+
 	for id, node in self:Nodes() do
 		local name = self:GetNodeType(node).name
 		if not namelookup[name] then 
@@ -478,6 +535,21 @@ function meta:ReadFromStream(stream, version)
 		self.type = stream:ReadInt( false )
 	else
 		self.type = GT_Event
+	end
+
+	if self.type == GT_Function then
+		local numInputs = stream:ReadInt( false )
+		local numOutputs = stream:ReadInt( false )
+		for i=1, numInputs do
+			local v = bpvariable.New()
+			v:ReadFromStream( stream, version )
+			self.inputs:Add(v)
+		end
+		for i=1, numOutputs do
+			local v = bpvariable.New()
+			v:ReadFromStream( stream, version )
+			self.outputs:Add(v)
+		end
 	end
 
 	local nametable = {}

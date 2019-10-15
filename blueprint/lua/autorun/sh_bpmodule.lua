@@ -107,9 +107,9 @@ function meta:NewVariable(name, type, default, flags)
 
 end
 
-function meta:NewGraph(name)
+function meta:NewGraph(name, type)
 
-	return self.graphs:Add( bpgraph.New(self, GT_Event), name )
+	return self.graphs:Add( bpgraph.New(self, type), name )
 
 end
 

@@ -150,6 +150,8 @@ function PANEL:SetGraph( graph )
 
 	graph:AddListener(self.callback, bpgraph.CB_ALL)
 
+	for id in self.graph:NodeIDs() do self:NodeAdded(id) end
+
 
 end
 

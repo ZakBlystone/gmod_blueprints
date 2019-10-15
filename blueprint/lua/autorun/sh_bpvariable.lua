@@ -11,7 +11,7 @@ meta.__index = meta
 function meta:Init(type, default, flags)
 
 	self.type = type or PN_Number
-	self.default = bit.band(flags, PNF_Table) and "{}" or (default or Defaults[var.type])
+	self.default = bit.band(flags, PNF_Table) and "{}" or (default or Defaults[self.type])
 	self.flags = flags or 0
 	return self
 
@@ -41,6 +41,12 @@ function meta:GetDefaultValue()
 
 end
 
+function meta:CreatePin( dir )
+
+	return {dir, self:GetType(), self:GetName(), self:GetFlags()}
+
+end
+
 function meta:GetterNodeType()
 
 	return PURE {
@@ -65,6 +71,24 @@ function meta:SetterNodeType()
 		compact = true,
 		custom = true,
 	}
+
+end
+
+function meta:WriteToStream(stream, version)
+
+	stream:WriteInt( self.type )
+	stream:WriteInt( self.flags )
+	bpdata.WriteValue( self.default, stream )
+	bpdata.WriteValue( self.name, stream )
+
+end
+
+function meta:ReadFromStream(stream, version)
+
+	self.type = stream:ReadInt( false )
+	self.flags = stream:ReadInt( false )
+	self.default = bpdata.ReadValue( stream )
+	self.name = bpdata.ReadValue( stream )
 
 end
 

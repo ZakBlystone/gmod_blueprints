@@ -178,13 +178,43 @@ function PANEL:Init()
 	self.GraphList = vgui.Create("BPListView", menu)
 	self.GraphList:SetText("Graphs")
 	self.GraphList.HandleAddItem = function(list)
-		Derma_StringRequest(
-			"Add Graph",
-			"Give it a name",
-			"",
-			function( text ) self.module:NewGraph( text ) end,
-			function( text ) end
-		)
+
+		Derma_Query("Graph Type",
+			"Graph Type",
+			"Event Graph",
+			function() 
+
+				Derma_StringRequest(
+					"Add Graph",
+					"Give it a name",
+					"",
+					function( text ) self.module:NewGraph( text, bpschema.GT_Event ) end,
+					function( text ) end
+				)
+
+			end,
+			"Function",
+			function() 
+
+
+				Derma_StringRequest(
+					"Add Function",
+					"Give it a name",
+					"",
+					function( text ) self.module:NewGraph( text, bpschema.GT_Function ) end,
+					function( text ) end
+				)
+
+			end)
+
+	end
+	self.GraphList.ItemBackgroundColor = function( list, id, item, selected )
+		local vcolor = bpschema.GraphTypeColors[item.type]
+		if selected then
+			return vcolor
+		else
+			return Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5)
+		end
 	end
 
 	self.VarList = vgui.Create("BPListView", menu)
