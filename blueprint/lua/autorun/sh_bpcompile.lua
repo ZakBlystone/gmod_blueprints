@@ -473,6 +473,7 @@ function CompileMetaTableLookup(cs)
 		"Entity",
 		"PhysObj",
 		"Weapon",
+		"NPC",
 	}
 
 	for k, v in pairs(tables) do

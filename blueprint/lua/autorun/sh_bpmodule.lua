@@ -204,11 +204,14 @@ function meta:UnbindGamemodeHooks()
 
 	local bp = self:Get()
 	local meta = bp.meta
+	local instance = self:GetSingleton()
 
 	for k,v in pairs(bp.events) do
 		if not v.hook or type(meta[k]) ~= "function" then continue end
 		hook.Remove(v.hook, v.key)
 	end
+
+	if instance.Shutdown then instance:Shutdown() end
 
 end
 

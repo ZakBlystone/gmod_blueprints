@@ -31,6 +31,10 @@ NodeTypes = {
 		pins = {},
 		code = [[]]
 	},
+	["Shutdown"] = EVENT {
+		pins = {},
+		code = [[]]
+	},
 	["Pin"] = PURE {
 		pins = { 
 			{ PD_In, PN_Any, "" },
@@ -146,6 +150,13 @@ NodeTypes = {
 			{ PD_In, PN_Number, "damage" },
 		},
 		code = "Entity_.FireBullets($2, { Spread = $3, Src = $4, Dir = $5, Num = $6, Damage = $7 })",
+	},
+	["GetModelScale"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Number, "scale" },
+		},
+		code = "#1 = Entity_.GetModelScale($1)",
 	},
 	["SetModelScale"] = FUNCTION {
 		pins = {
@@ -369,6 +380,13 @@ NodeTypes = {
 			{ PD_Out, PN_PhysObj, "physObj" },
 		},
 		code = "#1 = Entity_.GetPhysicsObject($1)",
+	},
+	["EyePos"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Vector, "pos" },
+		},
+		code = "#1 = Entity_.EyePos($1)",
 	},
 	["EyeAngles"] = PURE {
 		pins = {
@@ -713,6 +731,13 @@ NodeTypes = {
 		},
 		code = "if __bpm.genericIsValid($2) then #1 else #2 end",
 	},
+	["IsNPC"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Bool, "isNPC" },
+		},
+		code = "#1 = $1:IsNPC()", -- not great
+	},
 	["IsPlayer"] = PURE {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
@@ -799,6 +824,16 @@ NodeTypes = {
 		code = "#1 = $1:Length()",
 		compact = true,
 	},
+	["VectorMA"] = PURE {
+		pins = {
+			{ PD_In, PN_Vector, "base" },
+			{ PD_In, PN_Vector, "dir" },
+			{ PD_In, PN_Number, "scalar" },
+			{ PD_Out, PN_Vector, "result" },
+		},
+		code = "#1 = $1 + ($2 * $3)",
+		compact = true,
+	},
 	["ScaleVector"] = PURE {
 		pins = {
 			{ PD_In, PN_Vector, "vector" },
@@ -869,9 +904,16 @@ NodeTypes = {
 	["SetOwner"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Entity, "owner", PNF_Nullable },	
+			{ PD_In, PN_Entity, "owner", PNF_Nullable },
 		},
 		code = "Entity_.SetOwner($2, $3)",
+	},
+	["GetOwner"] = PURE {
+		pins = {
+			{ PD_In, PN_Entity, "entity" },
+			{ PD_Out, PN_Entity, "owner" },	
+		},
+		code = "#1 = Entity_.GetOwner($1)",
 	},
 	["EntityCreate"] = FUNCTION {
 		pins = {
@@ -1270,6 +1312,25 @@ NodeTypes = {
 		compact = true,
 		code = "table.insert($2, $3)",
 	},
+	["TableRemove"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Number, "index" },
+		},
+		compact = true,
+		code = "table.remove($2, $3)",
+	},
+	["TableRemoveValue"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Any, "table", PNF_Table },
+			{ PD_In, PN_Any, "value" },
+		},
+		meta = {
+			informs = {3,4}
+		},
+		compact = true,
+		code = "table.RemoveByValue($2, $3)",
+	},
 	["TableSet"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Any, "table", PNF_Table },
@@ -1367,6 +1428,15 @@ NodeTypes = {
 		},
 		code = [[#1 = (type($1) == type($2)) and $1 or $2]],
 	},
+	["AddEntityRelationship"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Npc, "npc" },
+			{ PD_In, PN_Entity, "target" },
+			{ PD_In, PN_Number, "relationship" },
+			{ PD_In, PN_Number, "priority"},
+		},
+		code = [[NPC_.AddEntityRelationship($2, $3, $4, $5)]],
+	},
 }
 
 local allpins = {}
@@ -1430,6 +1500,7 @@ AddHook("KeyPress", { {"player", PN_Player}, {"key", PN_Number} })
 AddHook("KeyRelease", { {"player", PN_Player}, {"key", PN_Number} })
 AddHook("PlayerSwitchFlashlight", { {"player", PN_Player}, {"enabled", PN_Bool} })
 AddHook("EntityTakeDamage", { {"target", PN_Entity}, {"damageInfo", PN_Any} })
+AddHook("EntityRemoved", { {"entity", PN_Entity} })
 
 --[[
 		pins = {
