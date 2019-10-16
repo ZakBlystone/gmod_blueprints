@@ -45,6 +45,90 @@ Return-values hold the output of non-pure function calls.
 Literals are values stored on unconnected input pins.
 ]]
 
+function CreateFunctionGraphVars(cs, uniqueKeys)
+
+	local name = cs.graph:GetName()
+	local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_returned")
+	table.insert(cs.vars, {
+		var = key,
+		type = PN_Bool,
+		init = "false",
+		node = nil,
+		pin = nil,
+		graph = cs.graph.id,
+		isFunc = true,
+	})
+
+	for nodeID, node in cs.graph:Nodes() do
+		local ntype = cs.graph:GetNodeType(node)
+		if ntype.type == NT_FuncInput then
+
+			for _, pinID in pairs(ntype.pinlayout.outputs) do
+				local pin = ntype.pins[pinID]
+				local pinType = cs.graph:GetPinType( nodeID, pinID )
+				if pinType == PN_Exec then continue end
+
+				local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_in_" .. (pin[3] ~= "" and pin[3] or "pin"))
+				print(" " .. key)
+
+				table.insert(cs.vars, {
+					var = key,
+					init = Defaults[pinType],
+					type = pinType,
+					node = nodeID,
+					pin = pinID,
+					graph = cs.graph.id,
+					isFunc = true,
+				})
+			end
+
+		elseif ntype.type == NT_FuncOutput then
+
+			for _, pinID in pairs(ntype.pinlayout.inputs) do
+				local pin = ntype.pins[pinID]
+				local pinType = cs.graph:GetPinType( nodeID, pinID )
+				if pinType == PN_Exec then continue end
+
+				-- TODO, multiple return nodes access the same variables, make these graph-scope instead.
+				local key = bpcommon.CreateUniqueKey({}, "func_" .. name .. "_out_" .. (pin[3] ~= "" and pin[3] or "pin"))
+
+				if node.literals and node.literals[pinID] ~= nil then
+
+					local l = tostring(node.literals[pinID])
+
+					-- string literals need to be surrounded by quotes
+					-- TODO: Sanitize these
+					if pinType == PN_String then l = "\"" .. l .. "\"" end
+
+					table.insert(cs.vars, {
+						var = l,
+						type = pinType,
+						literal = true,
+						node = nodeID,
+						pin = pinID,
+						graph = cs.graph.id,
+						isFunc = true,
+					})
+
+				end
+
+				table.insert(cs.vars, {
+					var = key,
+					init = Defaults[pinType],
+					type = pinType,
+					node = nodeID,
+					pin = pinID,
+					graph = cs.graph.id,
+					output = true,
+					isFunc = true,
+				})
+			end
+
+		end
+	end
+
+end
+
 function EnumerateGraphVars(cs, nodeType, uniqueKeys)
 
 	unique = uniqueKeys or {}
@@ -132,10 +216,11 @@ function FindLocalVarForNode(cs, nodeID, vname)
 end
 
 -- find the variable that is assigned to the given node/pin
-function FindVarForPin(cs, nodeID, pinID)
+function FindVarForPin(cs, nodeID, pinID, noLiteral)
 
 	for k,v in pairs(cs.vars) do
 
+		if v.literal == true and noLiteral then continue end
 		if v.localvar then continue end
 		if v.graph ~= cs.graph.id then continue end
 		if v.node == nodeID and v.pin == pinID then return v end
@@ -147,7 +232,8 @@ end
 -- basically just adds a self prefix for global variables to scope them into the module
 function GetVarCode(cs, var)
 
-	if var.global then return "__self." .. var.var end
+	if var.literal then return var.var end
+	if var.global or var.isFunc then return "__self." .. var.var end
 	return var.var
 
 end
@@ -233,8 +319,38 @@ function CompileNodeSingle(cs, nodeID)
 	local node = cs.graph:GetNode(nodeID)
 	local ntype = cs.graph:GetNodeType(node)
 	local lookup = ntype.pinlookup --maps pinIDs into their respective positions in the input / output lists
+	local code = ntype.code
 
-	if not ntype.code then
+	-- tie function input pins
+	if ntype.type == NT_FuncInput then
+		code = ""
+		local ipin = 2
+		for k, v in pairs(ntype.pins) do
+			if v[1] ~= PD_Out or v[2] == PN_Exec then continue end
+			code = code .. "#" .. k .. " = arg[" .. ipin-1 .. "]\n"
+			ipin = ipin + 1
+		end
+
+		if code:len() > 0 then code = code:sub(0, -2) end
+	end
+
+	if ntype.type == NT_FuncOutput then
+		code = ""
+		local ipin = 2
+		for k, v in pairs(ntype.pins) do
+			if v[1] ~= PD_In or v[2] == PN_Exec then continue end
+			code = code .. "#" .. k .. " = $" .. k .. "\n"
+			ipin = ipin + 1
+		end
+
+		local ret = FindVarForPin(cs, nil, nil, true)
+		code = code .. GetVarCode(cs, ret) .. " = true\n"
+		code = code .. "goto __terminus\n"
+
+		if code:len() > 0 then code = code:sub(0, -2) end
+	end
+
+	if not code then
 		ErrorNoHalt("No code for node: " .. ntype.name .. "\n")
 		return
 	end
@@ -254,8 +370,13 @@ function CompileNodeSingle(cs, nodeID)
 		local pinType = cs.graph:GetPinType( nodeID, pinID )
 		if pinType == PN_Exec then continue end
 
-		-- iterate through all of this pin's connections, and find variables on the pins it's connected to.
 		local lookupID = lookup[pinID][2]
+		if ntype.type == NT_FuncOutput then
+			outVars[lookupID] = FindVarForPin(cs, nodeID, pinID, true)
+		end
+
+
+		-- iterate through all of this pin's connections, and find variables on the pins it's connected to.
 		local connections = GetPinConnections(cs, PD_In, nodeID, pinID)
 		for _, v in pairs(connections) do
 
@@ -334,14 +455,13 @@ function CompileNodeSingle(cs, nodeID)
 	end	
 
 	-- grab code off node type and remove tabs
-	local code = ntype.code
 	code = string.Replace(code, "\t", "")
 
 	-- take all the mapped variables and place them in the code string
 	code = CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 
 	-- emit some infinite-loop-protection code
-	if cs.ilp and ntype.type == NT_Function or ntype.type == NT_Special then
+	if cs.ilp and ntype.type == NT_Function or ntype.type == NT_Special or ntype.type == NT_FuncOutput then
 		cs.emit("__ilp = __ilp + 1 if __ilp > " .. cs.ilpmax .. " then __ilptrip = true goto __terminus end")
 	end
 
@@ -416,7 +536,7 @@ function CompileNodeFunction(cs, nodeID)
 	cs.emit("::jmp_" .. nodeID .. "::")
 
 	-- event nodes are really just jump stubs
-	if nodeType.type == NT_Event then 
+	if nodeType.type == NT_Event or nodeType.type == NT_FuncInput then 
 
 		for pinID, pin in pairs( GetNodePins(cs, nodeID, PD_Out) ) do
 			local pinType = cs.graph:GetPinType( nodeID, pinID )
@@ -429,7 +549,6 @@ function CompileNodeFunction(cs, nodeID)
 				cs.finish()
 				return
 			end
-
 		end
 		
 		-- unconnected exec pins just pop the callstack
@@ -548,7 +667,7 @@ function CompileGraphVarListing(cs)
 
 	for k, v in pairs(cs.vars) do
 		if v.graph ~= cs.graph.id then continue end
-		if not v.literal and not v.global then
+		if not v.literal and not v.global and not v.isFunc then
 			cs.emit("local " .. v.var .. " = nil")
 		end
 	end
@@ -718,6 +837,10 @@ function PreCompileGraph(cs, graph, uniqueKeys)
 	EnumerateGraphVars(cs, NT_Event, uniqueKeys)
 	EnumerateGraphVars(cs, NT_Special, uniqueKeys)
 
+	if cs.graph.type == GT_Function then
+		CreateFunctionGraphVars(cs, uniqueKeys)
+	end
+
 	-- compile jump table and variable listing for this graph
 	CompileGraphJumpTable(cs)
 	CompileGraphVarListing(cs)
@@ -725,14 +848,14 @@ function PreCompileGraph(cs, graph, uniqueKeys)
 end
 
 -- compiles a metamethod for a given event
-function CompileGraphMetaHook(cs, graph, nodeID)
+function CompileGraphMetaHook(cs, graph, nodeID, name)
 
 	local node = cs.graph:GetNode(nodeID)
 	local nodeType = cs.graph:GetNodeType(node)
 
-	cs.begin(CTX_MetaEvents .. nodeType.name)
+	cs.begin(CTX_MetaEvents .. name)
 
-	cs.emit("function meta:" .. nodeType.name .. "(...)")
+	cs.emit("function meta:" .. name .. "(...)")
 
 	-- build argument table and store reference to 'self'
 	cs.emit("\tlocal arg = {...}")
@@ -760,6 +883,28 @@ function CompileGraphMetaHook(cs, graph, nodeID)
 		cs.emit("\t__ilph = __ilph - 1")
 	end
 
+	if cs.graph.type == GT_Function then
+		cs.emit("\tif " .. GetVarCode(cs, FindVarForPin(cs, nil, nil)) .. " == true then")
+		cs.emit("\treturn")
+
+		local out = {}
+
+		local emitted = {}
+		for k,v in pairs(cs.vars) do
+			if emitted[v.var] then continue end
+			if v.graph == cs.graph.id and v.isFunc and v.output then
+				table.insert(out, v)
+				emitted[v.var] = true
+			end
+		end
+
+		for k, v in pairs(out) do
+			cs.emit("\t\t" .. GetVarCode(cs, v) .. (k == #out and "" or ","))
+		end
+
+		cs.emit("\tend")
+	end
+
 	cs.emit("end")
 
 	cs.finish()
@@ -785,8 +930,11 @@ function CompileGraph(cs, graph)
 
 	-- compile all events nodes in the graph
 	for id, node in cs.graph:Nodes() do
-		if cs.graph:GetNodeType(node).type == NT_Event then
-			CompileGraphMetaHook(cs, graph, id)
+		local ntype = cs.graph:GetNodeType(node)
+		if ntype.type == NT_Event then
+			CompileGraphMetaHook(cs, graph, id, ntype.name)
+		elseif ntype.type == NT_FuncInput then
+			CompileGraphMetaHook(cs, graph, id, graph:GetName())
 		end
 	end
 
@@ -912,8 +1060,15 @@ function Compile(mod)
 end
 
 if SERVER then
-	local mod = bpmodule.CreateTestModule()
+	local mod = bpmodule.New()
+	local graphid, graph = mod:NewGraph("MyFunction", GT_Function)
+	graph:ConnectNodes(1,1,2,1)
+	graph:ConnectNodes(1,2,2,2)
+	--graph:ConnectNodes(1,3,2,3)
 	mod:Compile()
+
+	--local mod = bpmodule.CreateTestModule()
+	--mod:Compile()
 	--[[local code = Compile(mod)
 	local inst = code.new()
 

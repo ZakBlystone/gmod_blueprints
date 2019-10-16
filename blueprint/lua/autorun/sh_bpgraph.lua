@@ -54,7 +54,13 @@ function meta:Init(module, type)
 
 	bpcommon.MakeObservable(self)
 
-	if type == GT_Function then
+	return self
+
+end
+
+function meta:PostInit()
+
+	if self.type == GT_Function then
 
 		self:AddNode({
 			nodeType = "__Entry",
@@ -104,6 +110,24 @@ function meta:GetModule()
 
 end
 
+function meta:GetFunctionType()
+
+	if self.type ~= GT_Function then return end
+
+	return FUNCTION {
+		pins = {
+			{ PD_In, PN_Number, "input" },
+			{ PD_In, PN_Number, "input2" },
+			{ PD_Out, PN_Number, "result" },
+			{ PD_Out, PN_Number, "result2" },
+		},
+		code = "#2, #3 = __self:" .. self:GetName() .. "($2, $3)",
+		displayName = self:GetName(),
+		custom = true,
+	}
+
+end
+
 function meta:GetNodeTypes()
 
 	local types = {}
@@ -114,6 +138,8 @@ function meta:GetNodeTypes()
 		types["__Entry"] = FUNC_INPUT {
 			pins = {
 				{ PD_Out, PN_Exec, "Exec" },
+				{ PD_Out, PN_Number, "input" },
+				{ PD_Out, PN_Number, "input2" },
 			},
 			displayName = self:GetName(),
 			name = "__Entry",
@@ -122,6 +148,8 @@ function meta:GetNodeTypes()
 		types["__Exit"] = FUNC_OUTPUT {
 			pins = {
 				{ PD_In, PN_Exec, "Exec" },
+				{ PD_In, PN_Number, "result" },
+				{ PD_In, PN_Number, "result2" },
 			},
 			displayName = "Return",
 			name = "__Exit",
@@ -467,8 +495,6 @@ end
 
 function meta:WriteToStream(stream, version)
 
-	print("WRITE GRAPH TO STREAM")
-
 	local namelookup = {}
 	local nametable = {}
 	local nodeentries = {}
@@ -527,8 +553,6 @@ end
 
 function meta:ReadFromStream(stream, version)
 
-	print("READ GRAPH FROM STREAM")
-
 	self:Clear()
 
 	if version >= 3 then
@@ -559,6 +583,8 @@ function meta:ReadFromStream(stream, version)
 		table.insert(nametable, stream:ReadStr( size ) )
 	end
 
+	self.deferred = {}
+
 	local count = stream:ReadInt( false )
 	for i=1, count do
 
@@ -566,16 +592,30 @@ function meta:ReadFromStream(stream, version)
 		local nodeX = stream:ReadFloat()
 		local nodeY = stream:ReadFloat()
 		local literals = bpdata.ReadValue( stream )
-		
-		local id = self:AddNode({
+
+		table.insert(self.deferred, {
 			nodeType = nodeTypeName,
 			x = nodeX,
 			y = nodeY,
-			literals = literals,
+			literals = literals,			
 		})
 
+	end
+
+	self.connections = bpdata.ReadValue( stream )
+
+end
+
+function meta:CreateDeferredData()
+
+	print("CREATE DEFERRED NODES: " .. #self.deferred)
+	for _, v in pairs(self.deferred) do
+
+		print(" " .. v.nodeType)
+
+		local id = self:AddNode(v)
 		if id ~= nil then
-			for k, v in pairs(literals) do
+			for k, v in pairs(v.literals) do
 				--print("LOAD LITERAL[" .. id .. "|" .. nodeTypeName .. "]: " .. tostring(k) .. " = " .. tostring(v))
 				self:SetPinLiteral( id, k, v )
 			end
@@ -583,12 +623,12 @@ function meta:ReadFromStream(stream, version)
 
 	end
 
-	self.connections = bpdata.ReadValue( stream )
-
 	self:RemoveInvalidConnections()
 	for i, connection in self:Connections() do
 		self:FireListeners(CB_CONNECTION_ADD, connection, i)
 	end
+
+	self.deferred = nil
 
 end
 
@@ -605,6 +645,7 @@ function meta:CopyInto(other)
 	local inStream = bpdata.InStream()
 	inStream:LoadString(outStream:GetString(false, false), false, false)
 	other:ReadFromStream( inStream, bpmodule.fmtVersion )
+	other:CreateDeferredData()
 
 	return other
 

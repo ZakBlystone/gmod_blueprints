@@ -75,11 +75,22 @@ function meta:GetNodeTypes( graphID )
 	local types = {}
 	local base = NodeTypes
 
+
 	for _, v in self:Variables() do
 
 		local name = v:GetName()
 		types["Set" .. name] = v:SetterNodeType()
 		types["Get" .. name] = v:GetterNodeType()
+
+	end
+
+	for id, v in self:Graphs() do
+
+		if v.type == GT_Function and id ~= graphID then
+
+			types["__Call" .. graphID] = v:GetFunctionType()
+
+		end
 
 	end
 
@@ -109,7 +120,9 @@ end
 
 function meta:NewGraph(name, type)
 
-	return self.graphs:Add( bpgraph.New(self, type), name )
+	local id, graph = self.graphs:Add( bpgraph.New(self, type), name )
+	graph:PostInit()
+	return id
 
 end
 
@@ -164,6 +177,10 @@ function meta:ReadFromStream(stream)
 		local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )
 		local graph = self:GetGraph(id)
 		graph:ReadFromStream(stream, version)
+	end
+
+	for _, graph in self:Graphs() do
+		graph:CreateDeferredData()
 	end
 
 end
