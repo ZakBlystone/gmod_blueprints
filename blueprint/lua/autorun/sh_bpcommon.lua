@@ -136,6 +136,12 @@ function MakeObservable(obj, cblist)
 	obj.__deferred = {}
 	obj.__incall = false
 	obj.__handleDeferred = false
+	obj.__suppressed = false
+
+	obj.SuppressEvents   = function(self, suppressed) 
+		self.__suppressed = suppressed 
+	end
+
 	obj.AddListener 	= function(self, func, mask)
 		if self.__incall then table.insert(self.__deferred, {1, func, mask or cblist.CB_ALL}) self.__handleDeferred = true return true end
 		self.__callbacks[func] = mask or cblist.CB_ALL
@@ -146,12 +152,15 @@ function MakeObservable(obj, cblist)
 		self.__callbacks[func] = nil
 	end
 	
-	obj.FireListeners 	= function(self, cb, ...) 
-		obj.__incall = true
+	obj.FireListeners 	= function(self, cb, ...)
+		if self.__suppressed then return end
+		self.__incall = true
 		for k,v in pairs(self.__callbacks) do 
-			if bit.band(cb, v) ~= 0 then local b,e = pcall(k, cb, ...) if not b then print(e) end end
+			if bit.band(cb, v) ~= 0 then 
+			local b,e = xpcall(k, function(err) print(err) print(debug.traceback()) end, cb, ...)
+			end
 		end
-		obj.__incall = false
+		self.__incall = false
 		if self.__handleDeferred then
 			for i=#self.__deferred, 1, -1 do
 				local v = self.__deferred[i]

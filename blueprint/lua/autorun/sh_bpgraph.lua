@@ -167,6 +167,8 @@ end
 
 function meta:GetNodeType(node)
 
+	if node == nil then error("Tried to get nodetype of nil") end
+
 	local types = self:GetNodeTypes()
 	return types[ node.nodeType ]
 
@@ -597,7 +599,7 @@ function meta:ReadFromStream(stream, version)
 			nodeType = nodeTypeName,
 			x = nodeX,
 			y = nodeY,
-			literals = literals,			
+			literals = literals,
 		})
 
 	end
@@ -608,10 +610,11 @@ end
 
 function meta:CreateDeferredData()
 
-	print("CREATE DEFERRED NODES: " .. #self.deferred)
-	for _, v in pairs(self.deferred) do
+	--print("CREATE DEFERRED NODES: " .. #self.deferred)
 
-		print(" " .. v.nodeType)
+	self:SuppressEvents( true )
+
+	for _, v in pairs(self.deferred) do
 
 		local id = self:AddNode(v)
 		if id ~= nil then
@@ -621,6 +624,12 @@ function meta:CreateDeferredData()
 			end
 		end
 
+	end
+
+	self:SuppressEvents( false )
+
+	for id, node in self:Nodes() do
+		self:FireListeners(CB_NODE_ADD, id)
 	end
 
 	self:RemoveInvalidConnections()

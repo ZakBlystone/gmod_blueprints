@@ -165,6 +165,8 @@ function meta:ReadFromStream(stream)
 	if magic ~= fmtMagic then error("Invalid blueprint data") end
 	if version > fmtVersion then error("Blueprint data version is newer") end
 
+	print("--LOAD STREAM  VERSION IS: " .. version)
+
 	if version >= 2 then
 		local vars = bpdata.ReadValue( stream )
 		for _, v in pairs(vars) do

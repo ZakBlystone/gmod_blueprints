@@ -92,15 +92,13 @@ end
 
 function PANEL:NodeAdded( id )
 
-	local b,e = pcall(function()
-		local node = vgui.Create("BPNode", self.canvas)
-		node:Setup( self.graph, self.graph:GetNode(id) )
-		node.canvasFix = canvasFix
+	local node = vgui.Create("BPNode", self.canvas)
+	node:Setup( self.graph, self.graph:GetNode(id) )
+	node.canvasFix = canvasFix
 
-		local x,y = node:GetPos()
-		node:SetPos( x + canvasFix, y + canvasFix )
-		self.nodes[id] = node
-	end)
+	local x,y = node:GetPos()
+	node:SetPos( x + canvasFix, y + canvasFix )
+	self.nodes[id] = node
 
 end
 
