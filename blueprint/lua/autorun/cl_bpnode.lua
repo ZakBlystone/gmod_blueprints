@@ -266,6 +266,7 @@ function PANEL:OnKeyCodePressed( code )
 	if self.vgraph:GetIsLocked() then return end
 
 	if code == KEY_DELETE then
+		if self.nodeType.noDelete then return end
 		self.graph:RemoveNode(self.node.id)
 	end
 

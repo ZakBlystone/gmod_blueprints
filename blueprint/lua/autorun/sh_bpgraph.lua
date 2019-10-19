@@ -180,6 +180,7 @@ function meta:GetNodeTypes()
 			pins = inPins,
 			displayName = self:GetName(),
 			name = "__Entry",
+			noDelete = true,
 		}
 
 		types["__Exit"] = FUNC_OUTPUT {
@@ -192,6 +193,14 @@ function meta:GetNodeTypes()
 
 	for k,v in pairs(base) do
 		if not types[k] then types[k] = v end
+	end
+
+	-- blacklist invalid types in function graphs
+	if self.type == GT_Function then
+		for k, v in pairs(types) do
+			if v.latent then types[k] = nil end
+			if v.type == NT_Event then types[k] = nil end
+		end
 	end
 
 	return types

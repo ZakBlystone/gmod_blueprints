@@ -1088,6 +1088,7 @@ NodeTypes = {
 		meta = {
 			informs = {3,5}
 		},
+		latent = true,
 		code = [[
 			#2 = $3
 			__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)
@@ -1099,7 +1100,8 @@ NodeTypes = {
 			{ PD_In, PN_Exec, "Exec" },
 			{ PD_In, PN_Number, "delay" },
 			{ PD_Out, PN_Exec, "Thru" },
-		},	
+		},
+		latent = true,
 		code = [[
 			__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)
 			goto popcall
@@ -1112,7 +1114,8 @@ NodeTypes = {
 			{ PD_In, PN_Bool, "alwaysReset"},
 			{ PD_Out, PN_Exec, "Thru" },
 			{ PD_Out, PN_Exec, "Debounced" },
-		},	
+		},
+		latent = true,
 		locals = {"debounced"},
 		code = [[
 			%debounced = __bpm.delayExists("debounce_!graph_!node")
