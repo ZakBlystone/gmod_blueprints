@@ -37,6 +37,11 @@ PNF_Nullable = 2
 GT_Event = 0
 GT_Function = 1
 
+MT_Library = 0
+MT_Game = 1
+MT_Entity = 2
+MT_Weapon = 3
+MT_NPC = 4
 
 NodeTypeColors = {
 	[NT_Pure] = Color(60,150,60),

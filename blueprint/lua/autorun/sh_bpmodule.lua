@@ -18,8 +18,16 @@ bpcommon.CallbackList({
 	"VARIABLE_REMOVE",
 })
 
+GRAPH_MODIFY_RENAME = 1
+GRAPH_MODIFY_SIGNATURE = 2
+GRAPH_NODETYPE_ACTIONS = {
+	[GRAPH_MODIFY_RENAME] = bpgraph.NODETYPE_MODIFY_RENAME,
+	[GRAPH_MODIFY_SIGNATURE] = bpgraph.NODETYPE_MODIFY_SIGNATURE,
+}
+
+
 fmtMagic = 0x42504D58
-fmtVersion = 3
+fmtVersion = 4
 
 local meta = {}
 meta.__index = meta
@@ -30,11 +38,13 @@ activeModules = activeModules or {}
 bpcommon.CreateIndexableListIterators(meta, "graphs")
 bpcommon.CreateIndexableListIterators(meta, "variables")
 
-function meta:Init()
+function meta:Init(type)
 
+	self.version = fmtVersion
 	self.graphs = bplist.New():NamedItems("Graph")
 	self.variables = bplist.New():NamedItems("Var")
 	self.id = nextModuleID
+	self.type = self.type or MT_Game
 
 	self.graphs:AddListener(function(cb, id)
 
@@ -46,12 +56,23 @@ function meta:Init()
 
 	end, bplist.CB_ALL)
 
+	self.graphs:AddListener(function(cb, action, id, graph)
+
+		if action ~= bplist.MODIFY_RENAME then return end
+		if cb == bplist.CB_PREMODIFY then
+			self:PreModifyGraph( GRAPH_MODIFY_RENAME, id, graph )
+		elseif cb == bplist.CB_POSTMODIFY then
+			self:PostModifyGraph( GRAPH_MODIFY_RENAME, id, graph )
+		end
+
+	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+
 	self.variables:AddListener(function(cb, id, var)
 
 		if cb == bplist.CB_ADD then
 			self:FireListeners(CB_VARIABLE_ADD, id)
 		elseif cb == bplist.CB_REMOVE then
-			local match = {["Set" .. var.name] = 1, ["Get" .. var.name] = 1}
+			local match = {["__VSet" .. id] = 1, ["__VGet" .. id] = 1}
 			for _, graph in self:Graphs() do
 				graph:RemoveNodeIf( function( node )
 					return match[node.nodeType]
@@ -63,10 +84,57 @@ function meta:Init()
 
 	end, bplist.CB_ALL)
 
+	self.variables:AddListener(function(cb, action, id, graph)
+
+		if action ~= bplist.MODIFY_RENAME then return end
+		if cb == bplist.CB_PREMODIFY then
+			self:PreModifyNodeType( "__VGet" .. id, bpgraph.NODETYPE_MODIFY_RENAME )
+			self:PreModifyNodeType( "__VSet" .. id, bpgraph.NODETYPE_MODIFY_RENAME )
+		elseif cb == bplist.CB_POSTMODIFY then
+			self:PostModifyNodeType( "__VGet" .. id, bpgraph.NODETYPE_MODIFY_RENAME )
+			self:PostModifyNodeType( "__VSet" .. id, bpgraph.NODETYPE_MODIFY_RENAME )
+		end
+
+	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+
 	bpcommon.MakeObservable(self)
 
 	nextModuleID = nextModuleID + 1
 	return self
+
+end
+
+function meta:PreModifyNodeType( nodeType, action )
+
+	for _, graph in self:Graphs() do
+		graph:PreModifyNodeType( nodeType, action )
+	end
+
+end
+
+function meta:PostModifyNodeType( nodeType, action )
+
+	for _, graph in self:Graphs() do
+		graph:PostModifyNodeType( nodeType, action )
+	end
+
+end
+
+function meta:PreModifyGraph( action, id, graph )
+
+	if graph:GetType() ~= GT_Function then return end
+
+	graph:PreModify(action)
+	self:PreModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action] )
+
+end
+
+function meta:PostModifyGraph( action, id, graph )
+
+	if graph:GetType() ~= GT_Function then return end
+
+	graph:PostModify(action)
+	self:PostModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action] )
 
 end
 
@@ -75,20 +143,19 @@ function meta:GetNodeTypes( graphID )
 	local types = {}
 	local base = NodeTypes
 
-
-	for _, v in self:Variables() do
+	for id, v in self:Variables() do
 
 		local name = v:GetName()
-		types["Set" .. name] = v:SetterNodeType()
-		types["Get" .. name] = v:GetterNodeType()
+		types["__VSet" .. id] = v:SetterNodeType()
+		types["__VGet" .. id] = v:GetterNodeType()
 
 	end
 
 	for id, v in self:Graphs() do
 
-		if v.type == GT_Function and id ~= graphID then
+		if v:GetType() == GT_Function and id ~= graphID then
 
-			types["__Call" .. graphID] = v:GetFunctionType()
+			types["__Call" .. id] = v:GetFunctionType()
 
 		end
 
@@ -122,7 +189,7 @@ function meta:NewGraph(name, type)
 
 	local id, graph = self.graphs:Add( bpgraph.New(self, type), name )
 	graph:PostInit()
-	return id
+	return id, graph
 
 end
 
@@ -140,8 +207,11 @@ end
 
 function meta:WriteToStream(stream)
 
+	print("--WRITE MODULE TYPE: " .. self.type .. " [" .. self.version .. "]")
+
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
+	stream:WriteInt( self.type, false )
 
 	bpdata.WriteValue( self.variables:GetTable(), stream )
 
@@ -165,7 +235,14 @@ function meta:ReadFromStream(stream)
 	if magic ~= fmtMagic then error("Invalid blueprint data") end
 	if version > fmtVersion then error("Blueprint data version is newer") end
 
-	print("--LOAD STREAM  VERSION IS: " .. version)
+	self.version = version
+
+	print("--LOAD STREAM VERSION IS: " .. version)
+
+	if version >= 4 then
+		self.type = stream:ReadInt( false )
+		print("MODULE TYPE: " .. self.type)
+	end
 
 	if version >= 2 then
 		local vars = bpdata.ReadValue( stream )
@@ -179,6 +256,28 @@ function meta:ReadFromStream(stream)
 		local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )
 		local graph = self:GetGraph(id)
 		graph:ReadFromStream(stream, version)
+	end
+
+	if version < 4 then
+
+		print("Blueprint uses old variable schema, remapping node types...")
+		local remaps = {}
+		for id, var in self:Variables() do
+			remaps["Set" .. var:GetName()] = "__VSet" .. id
+			remaps["Get" .. var:GetName()] = "__VGet" .. id
+		end
+
+		for _, graph in self:Graphs() do
+			graph:RemapNodeTypes( function(nodeType) 
+				local r = remaps[nodeType]
+				if r then
+					print(" " .. nodeType .. " => " .. r)
+					return r
+				end
+				return nodeType
+			end )
+		end
+
 	end
 
 	for _, graph in self:Graphs() do

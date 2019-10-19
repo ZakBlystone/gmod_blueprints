@@ -16,7 +16,12 @@ bpcommon.CallbackList({
 	"CONNECTION_ADD",
 	"CONNECTION_REMOVE",
 	"GRAPH_CLEAR",
+	"PREMODIFY_NODETYPE",
+	"POSTMODIFY_NODETYPE",
 })
+
+NODETYPE_MODIFY_RENAME = 1
+NODETYPE_MODIFY_SIGNATURE = 2
 
 local meta = {}
 meta.__index = meta
@@ -80,6 +85,36 @@ function meta:PostInit()
 
 end
 
+function meta:PreModifyNodeType( nodeType, action )
+
+	self:FireListeners(CB_PREMODIFY_NODETYPE, nodeType, action)
+
+end
+
+function meta:PostModifyNodeType( nodeType, action )
+
+	self:FireListeners(CB_POSTMODIFY_NODETYPE, nodeType, action)
+
+end
+
+function meta:PreModify(action)
+
+	if action == bpmodule.GRAPH_MODIFY_RENAME then
+		self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_RENAME)
+		self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_RENAME)
+	end
+
+end
+
+function meta:PostModify(action)
+
+	if action == bpmodule.GRAPH_MODIFY_RENAME then
+		self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_RENAME)
+		self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_RENAME)
+	end
+
+end
+
 function meta:GetType()
 
 	return self.type
@@ -114,16 +149,16 @@ function meta:GetFunctionType()
 
 	if self.type ~= GT_Function then return end
 
+	local pins = {}
+
+	for id, var in self.inputs:Items() do table.insert(pins, var:CreatePin( PD_In )) end
+	for id, var in self.outputs:Items() do table.insert(pins, var:CreatePin( PD_Out )) end
+
 	return FUNCTION {
-		pins = {
-			{ PD_In, PN_Number, "input" },
-			{ PD_In, PN_Number, "input2" },
-			{ PD_Out, PN_Number, "result" },
-			{ PD_Out, PN_Number, "result2" },
-		},
-		code = "#2, #3 = __self:" .. self:GetName() .. "($2, $3)",
+		pins = pins,
 		displayName = self:GetName(),
 		custom = true,
+		graphThunk = self.id,
 	}
 
 end
@@ -135,22 +170,20 @@ function meta:GetNodeTypes()
 
 	if self.type == GT_Function then
 
+		local inPins = { { PD_Out, PN_Exec, "Exec" } }
+		local outPins = { { PD_In, PN_Exec, "Exec" } }
+
+		for id, var in self.inputs:Items() do table.insert(inPins, var:CreatePin( PD_Out )) end
+		for id, var in self.outputs:Items() do table.insert(outPins, var:CreatePin( PD_In )) end
+
 		types["__Entry"] = FUNC_INPUT {
-			pins = {
-				{ PD_Out, PN_Exec, "Exec" },
-				{ PD_Out, PN_Number, "input" },
-				{ PD_Out, PN_Number, "input2" },
-			},
+			pins = inPins,
 			displayName = self:GetName(),
 			name = "__Entry",
 		}
 
 		types["__Exit"] = FUNC_OUTPUT {
-			pins = {
-				{ PD_In, PN_Exec, "Exec" },
-				{ PD_In, PN_Number, "result" },
-				{ PD_In, PN_Number, "result2" },
-			},
+			pins = outPins,
 			displayName = "Return",
 			name = "__Exit",
 		}
@@ -605,6 +638,20 @@ function meta:ReadFromStream(stream, version)
 	end
 
 	self.connections = bpdata.ReadValue( stream )
+
+end
+
+function meta:RemapNodeTypes( func )
+
+	if self.deferred then
+		for _, node in pairs(self.deferred) do
+			node.nodeType = func(node.nodeType)
+		end
+	else
+		for id, node in self:Nodes() do
+			node.nodeType = func(node.nodeType)
+		end
+	end
 
 end
 

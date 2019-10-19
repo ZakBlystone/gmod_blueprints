@@ -4,7 +4,7 @@ include("sh_bpschema.lua")
 include("sh_bpnodedef.lua")
 include("cl_bppin.lua")
 
-module("bpuinode", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
+module("bpuinode", package.seeall, bpcommon.rescope(bpschema, bpnodedef, bpgraph))
 
 local PANEL_INSET = 4
 
@@ -65,6 +65,10 @@ function PANEL:Init()
 
 	self.inset = PANEL_INSET
 
+	self.callback = function(...)
+		self:OnGraphCallback(...)
+	end
+
 end
 
 function PANEL:GetDisplayName()
@@ -82,10 +86,39 @@ function PANEL:Setup( graph, node )
 	self.nodeType = self.graph:GetNodeType( self.node )
 
 	local w,h = calculateNodeSize( self.nodeType )
-	self:SetWide( w )
-	self:SetTall( h )
+	self:SetSize( w, h )
 	self:SetPos( node.x, node.y )
 	self:BuildPins()
+
+	self.graph:AddListener(self.callback, bpgraph.CB_ALL)
+
+end
+
+function PANEL:OnRemove()
+
+	if self.graph then
+		self.graph:RemoveListener(self.callback)
+	end
+
+end
+
+function PANEL:OnGraphCallback( cb, ... )
+
+	if cb == CB_POSTMODIFY_NODETYPE then self:PostNodeTypeChanged( ... ) end
+
+end
+
+function PANEL:PostNodeTypeChanged( nodeType, action )
+
+	if nodeType == self.nodeType.name then
+		self.nodeType = self.graph:GetNodeType( self.node )
+		local w,h = calculateNodeSize( self.nodeType )
+		self:SetSize( w, h )
+
+		if action == bpgraph.NODETYPE_MODIFY_SIGNATURE then
+			self:BuildPins()
+		end
+	end
 
 end
 

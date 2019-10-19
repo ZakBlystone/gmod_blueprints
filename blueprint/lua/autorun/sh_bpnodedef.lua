@@ -138,7 +138,7 @@ NodeTypes = {
 			{ PD_In, PN_Entity, "entity" },
 			{ PD_In, PN_Player, "activator" },
 		},
-		code = "Entity_.Use($1, $2, $2, USE_TOGGLE, 1)",
+		code = "Entity_.Use($2, $3, $3, USE_TOGGLE, 1)",
 	},
 	["FireBullets"] = FUNCTION {
 		pins = {
@@ -824,6 +824,13 @@ NodeTypes = {
 		code = "#1 = $1:Length()",
 		compact = true,
 	},
+	["VectorRand"] = PURE {
+		pins = {
+			{ PD_Out, PN_Vector, "result" },
+		},
+		code = "#1 = VectorRand()",
+		compact = true,
+	},
 	["VectorMA"] = PURE {
 		pins = {
 			{ PD_In, PN_Vector, "base" },
@@ -1244,6 +1251,14 @@ NodeTypes = {
 		},
 		compact = false,
 		code = "#1 = string.Trim($1)"
+	},
+	["StrLen"] = PURE {
+		pins = {
+			{ PD_In, PN_String, "string" },
+			{ PD_Out, PN_Number, "length" },
+		},
+		compact = false,
+		code = "#1 = string.len($1)"
 	},
 	["TableRandom"] = PURE {
 		pins = {

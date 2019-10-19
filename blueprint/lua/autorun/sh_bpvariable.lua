@@ -11,7 +11,7 @@ meta.__index = meta
 function meta:Init(type, default, flags)
 
 	self.type = type or PN_Number
-	self.default = bit.band(flags, PNF_Table) and "{}" or (default or Defaults[self.type])
+	self.default = bit.band(flags or 0, PNF_Table) and "{}" or (default or Defaults[self.type])
 	self.flags = flags or 0
 	return self
 
@@ -56,6 +56,7 @@ function meta:GetterNodeType()
 		code = "#1 = __self.__" .. self:GetName(),
 		compact = true,
 		custom = true,
+		displayName = "Get" .. self:GetName(),
 	}
 
 end
@@ -70,6 +71,7 @@ function meta:SetterNodeType()
 		code = "__self.__" .. self:GetName() .. " = $2 #2 = $2",
 		compact = true,
 		custom = true,
+		displayName = "Set" .. self:GetName(),
 	}
 
 end

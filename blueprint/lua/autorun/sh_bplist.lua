@@ -7,7 +7,13 @@ bpcommon.CallbackList({
 	"REMOVE",
 	"CLEAR",
 	"RENAME",
+	"PREMODIFY",
+	"POSTMODIFY",
 })
+
+MODIFY_ADD = 0
+MODIFY_REMOVE = 1
+MODIFY_RENAME = 2
 
 local meta = {}
 meta.__index = meta
@@ -111,11 +117,14 @@ function meta:Add( item, optName )
 		item.name = self:GetNameForItem( optName, item )
 	end
 
+	self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
+
 	table.insert( self.items, item )
 	self.itemLookup[item.id] = item
 	self:Advance()
 
 	self:FireListeners(CB_ADD, item.id, item)
+	self:FireListeners(CB_POSTMODIFY, MODIFY_ADD, item.id, item)
 
 	return item.id, item
 
@@ -136,8 +145,11 @@ function meta:RemoveIf( cond )
 		local item = items[i]
 		if cond( item ) then
 
+			self:FireListeners(CB_PREMODIFY, MODIFY_REMOVE, item.id, item)
+
 			table.remove( items, i ) 
 			self:FireListeners(CB_REMOVE, item.id, item)
+			self:FireListeners(CB_POSTMODIFY, MODIFY_REMOVE, item.id, item)
 			self.itemLookup[item.id] = nil
 			item.id = nil
 			removed = removed + 1
@@ -155,9 +167,12 @@ function meta:Rename( id, newName )
 	local item = self:Get(id)
 	if item == nil then return false end
 
+	self:FireListeners(CB_PREMODIFY, MODIFY_RENAME, item.id, item)
+
 	local prev = item.name
 	item.name = self:GetNameForItem( newName, item )
 	self:FireListeners(CB_RENAME, item.id, prev, item.name)
+	self:FireListeners(CB_POSTMODIFY, MODIFY_RENAME, item.id, item)
 
 end
 

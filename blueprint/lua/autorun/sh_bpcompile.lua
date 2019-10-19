@@ -321,6 +321,26 @@ function CompileNodeSingle(cs, nodeID)
 	local lookup = ntype.pinlookup --maps pinIDs into their respective positions in the input / output lists
 	local code = ntype.code
 
+	-- TODO: Instead of building these strings, find a more direct approach of compiling these
+	-- generate code based on function graph inputs and outputs
+	if ntype.graphThunk ~= nil then
+		local target = cs.module:GetGraph( ntype.graphThunk )
+		print("---------------GRAPH THUNK: " .. ntype.graphThunk .. "---------------------------")
+		code = ""
+		local n = target.outputs:Size()
+		for i=1, n do
+			code = code .. "#" .. (i+1) .. (i~=n and ", " or " ")
+		end
+		if n ~= 0 then code = code .. "= " end
+		code = code .. "__self:" .. target:GetName() .. "("
+		local n = target.inputs:Size()
+		for i=1, n do
+			code = code .. "$" .. (i+1) .. (i~=n and ", " or "")
+		end
+		code = code .. ")"
+		print(code)
+	end
+
 	-- tie function input pins
 	if ntype.type == NT_FuncInput then
 		code = ""
@@ -1061,12 +1081,24 @@ end
 
 if SERVER then
 	local mod = bpmodule.New()
-	local graphid, graph = mod:NewGraph("MyFunction", GT_Function)
-	graph:ConnectNodes(1,1,2,1)
-	graph:ConnectNodes(1,2,2,2)
+	local funcid, graph = mod:NewGraph("MyFunction", GT_Function)
+	--graph:ConnectNodes(1,1,2,1)
+	--graph:ConnectNodes(1,2,2,2)
 	--graph:ConnectNodes(1,3,2,3)
-	mod:Compile()
 
+	graph.outputs:Add( bpvariable.New(), "retvar" )
+	graph.outputs:Add( bpvariable.New(), "retvar2" )
+	graph.inputs:Add( bpvariable.New(), "testVar" )
+
+	local graphid, graph = mod:NewGraph("Events", GT_Event)
+	graph:AddNode({
+		nodeType = "__Call" .. funcid,
+		x = 0,
+		y = 0,
+	})
+
+
+	mod:Compile()
 	--local mod = bpmodule.CreateTestModule()
 	--mod:Compile()
 	--[[local code = Compile(mod)

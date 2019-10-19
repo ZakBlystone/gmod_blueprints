@@ -1,5 +1,7 @@
 if SERVER then AddCSLuaFile() end
 
+include("sh_bpmodule.lua")
+
 module("bpnet", package.seeall)
 
 local CMD_Upload = 1
@@ -105,6 +107,7 @@ if SERVER then
 
 			if isNew then LoadPlayerBlueprint( ply ) end
 
+			print("SEND MODULE")
 			mod:WriteToStream(outStream)
 
 			net.Start("bpclientcmd")

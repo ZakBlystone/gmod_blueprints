@@ -26,6 +26,7 @@ function PANEL:CreateItemPanel( id, item )
 
 	local panel = vgui.Create("DPanel")
 	panel:SetMouseInputEnabled( true )
+	panel:SetKeyboardInputEnabled( true )
 
 	local icon = self:ItemIcon( id, item )
 
@@ -56,9 +57,20 @@ function PANEL:CreateItemPanel( id, item )
 
 	panel:SetTall(20)
 
+	panel.OnKeyCodePressed = function( pnl, code )
+
+		if code == KEY_DELETE then
+			rmv:DoClick()
+		elseif code == KEY_F2 then
+			self:Rename(id)
+		end
+
+	end
+
 	panel.OnMousePressed = function( pnl, code )
 		if code == MOUSE_LEFT then
 			self:Select(id)
+			pnl:RequestFocus()
 		end
 	end
 
@@ -69,6 +81,8 @@ function PANEL:CreateItemPanel( id, item )
 		surface.DrawRect(0,0,w,h)
 
 	end
+
+	panel.label = btn
 
 	rmv.DoClick = function( pnl )
 
@@ -91,6 +105,20 @@ function PANEL:HandleAddItem()
 
 end
 
+function PANEL:Rename( id )
+
+	local item = self.list:Get(id)
+
+	Derma_StringRequest(
+		"Add Graph",
+		"Rename " .. item:GetName(),
+		item:GetName(),
+		function( text ) self.list:Rename( id, text ) end,
+		function( text ) end
+	)
+
+end
+
 function PANEL:SetList( list )
 
 	self:Clear()
@@ -105,6 +133,7 @@ function PANEL:OnListCallback(cb, ...)
 
 	if cb == bplist.CB_ADD then self:ItemAdded(...) end
 	if cb == bplist.CB_REMOVE then self:ItemRemoved(...) end
+	if cb == bplist.CB_RENAME then self:ItemRenamed(...) end
 	if cb == bplist.CB_CLEAR then self:Clear() end
 
 end
@@ -124,6 +153,12 @@ function PANEL:ItemAdded(id, item)
 	end
 
 	self.selectedID = id
+
+end
+
+function PANEL:ItemRenamed(id, prev, new)
+
+	self.vitems[id].label:SetText(new)
 
 end
 
@@ -173,6 +208,7 @@ end
 
 function PANEL:Init()
 
+	self:SetKeyboardInputEnabled( true )
 	self:SetBackgroundColor( Color(30,30,30) )
 	self.callback = function(...) self:OnListCallback(...) end
 	self.controls = vgui.Create("DPanel", self)
