@@ -191,7 +191,19 @@ function meta:GetFunctionType()
 
 end
 
+function meta:EnableNodeTypeCache( cached )
+
+	if cached then
+		self.__cachedTypes = self:GetNodeTypes()
+	else
+		self.__cachedTypes = nil
+	end
+
+end
+
 function meta:GetNodeTypes()
+
+	if self.__cachedTypes then return self.__cachedTypes end
 
 	local types = {}
 	local base = self:GetModule():GetNodeTypes( self.id )
@@ -526,7 +538,7 @@ function meta:CollapseSingleRerouteNode(nodeID)
 
 	local node = self:GetNode( nodeID )
 
-	print("COLLAPSING REROUTE NODE: " .. nodeID)
+	--print("COLLAPSING REROUTE NODE: " .. nodeID)
 
 	local insert = {}
 	local connections = self.connections
@@ -534,11 +546,11 @@ function meta:CollapseSingleRerouteNode(nodeID)
 	for i, c in self:Connections() do
 
 		if c[1] == nodeID then --output
-			print(" -output on " .. c[2] .. " => " .. c[3] .. "[" .. c[4] .. "]")
+			--print(" -output on " .. c[2] .. " => " .. c[3] .. "[" .. c[4] .. "]")
 			table.insert(insert, {c[3],c[4]})
 			self:RemoveConnectionID(i)
 		elseif c[3] == nodeID then --input
-			print(" -input on " .. c[4] .. " <= " .. c[1] .. "[" .. c[2] .. "]")
+			--print(" -input on " .. c[4] .. " <= " .. c[1] .. "[" .. c[2] .. "]")
 			input = {c[1],c[2]}
 			self:RemoveConnectionID(i)
 		end
@@ -696,6 +708,7 @@ function meta:CreateDeferredData()
 
 	--print("CREATE DEFERRED NODES: " .. #self.deferred)
 
+	self:EnableNodeTypeCache( true )
 	self:SuppressEvents( true )
 
 	for _, v in pairs(self.deferred) do
@@ -721,6 +734,8 @@ function meta:CreateDeferredData()
 		self:FireListeners(CB_CONNECTION_ADD, connection, i)
 	end
 
+	self:EnableNodeTypeCache( false )
+
 	self.deferred = nil
 
 end
@@ -728,17 +743,19 @@ end
 -- Quickly banging this out using existing tech
 function meta:CopyInto(other)
 
-	local outStream = bpdata.OutStream()
-	self:WriteToStream( outStream, bpmodule.fmtVersion )
-
+	other:Clear()
 	other.module = self.module
 	other.id = self.id
 	other.name = self.name
+	other.type = self.type
 
-	local inStream = bpdata.InStream()
-	inStream:LoadString(outStream:GetString(false, false), false, false)
-	other:ReadFromStream( inStream, bpmodule.fmtVersion )
-	other:CreateDeferredData()
+	self.nodes:CopyInto( other.nodes )
+	self.inputs:CopyInto( other.inputs )
+	self.outputs:CopyInto( other.outputs )
+
+	for _, c in self:Connections() do
+		table.insert(other.connections, {c[1], c[2], c[3], c[4]})
+	end
 
 	return other
 

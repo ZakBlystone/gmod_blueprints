@@ -30,6 +30,22 @@ local CTX_Code = "code"
 local CTX_MetaEvents = "metaevents_"
 local CTX_Hooks = "hooks_"
 
+function Profile( cs, key, func, ... )
+
+	if not cs.profile then return func(...) end
+
+	cs.times[key] = cs.times[key] or {time = 0, samples = 0, min = 9999, max = 0}
+	local t = cs.times[key]
+	local s = os.clock()
+	local a,b,c,d,e,f,g = func(...)
+	t.max = math.max(t.max, (os.clock() - s))
+	t.min = math.min(t.min, (os.clock() - s))
+	t.time = t.time + (os.clock() - s)
+	t.samples = t.samples + 1
+	return a,b,c,d,e,f,g
+
+end
+
 --[[
 This function goes through all nodes of a certain type in the current graph and creates variable entries for them.
 These variables are used to connect node outputs to inputs among other things
@@ -69,7 +85,7 @@ function CreateFunctionGraphVars(cs, uniqueKeys)
 				if pinType == PN_Exec then continue end
 
 				local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_in_" .. (pin[3] ~= "" and pin[3] or "pin"))
-				print(" " .. key)
+				--print(" " .. key)
 
 				table.insert(cs.vars, {
 					var = key,
@@ -129,74 +145,83 @@ function CreateFunctionGraphVars(cs, uniqueKeys)
 
 end
 
-function EnumerateGraphVars(cs, nodeType, uniqueKeys)
+local nodeTypeEnumerateData = {
+	[NT_Pure] = { unique = false },
+	[NT_Function] = { unique = true },
+	[NT_Event] = { unique = true },
+	[NT_Special] = { unique = true },
+}
 
-	unique = uniqueKeys or {}
+function EnumerateGraphVars(cs, uniqueKeys)
+
+	local localScopeUnique = {}
 	for nodeID, node in cs.graph:Nodes() do
 		local ntype = cs.graph:GetNodeType(node)
 		local extType = ntype.type
-		if extType == nodeType then
+		local e = nodeTypeEnumerateData[extType]
+		if not e then continue end
 
-			-- some nodetypes have local variables exclusive to themselves
-			for _, l in pairs(ntype.locals or {}) do
+		local unique = e.unique and uniqueKeys or localScopeUnique
 
-				local key = bpcommon.CreateUniqueKey(unique, "local_" .. ntype.name .. "_v_" .. l)
+		-- some nodetypes have local variables exclusive to themselves
+		for _, l in pairs(ntype.locals or {}) do
 
-				table.insert(cs.vars, {
-					var = key,
-					localvar = l,
-					node = nodeID,
-					graph = cs.graph.id,
-				})
+			local key = bpcommon.CreateUniqueKey(unique, "local_" .. ntype.name .. "_v_" .. l)
 
-			end
+			table.insert(cs.vars, {
+				var = key,
+				localvar = l,
+				node = nodeID,
+				graph = cs.graph.id,
+			})
 
-			-- unconnected pins can contain literals, make internal variables for them
-			for _, pinID in pairs(ntype.pinlayout.inputs) do
-				local pin = ntype.pins[pinID]
-				local pinType = cs.graph:GetPinType( nodeID, pinID )
+		end
 
-				if node.literals and node.literals[pinID] ~= nil then
+		-- unconnected pins can contain literals, make internal variables for them
+		for _, pinID in pairs(ntype.pinlayout.inputs) do
+			local pin = ntype.pins[pinID]
+			local pinType = cs.graph:GetPinType( nodeID, pinID )
 
-					local l = tostring(node.literals[pinID])
+			if node.literals and node.literals[pinID] ~= nil then
 
-					-- string literals need to be surrounded by quotes
-					-- TODO: Sanitize these
-					if pinType == PN_String then l = "\"" .. l .. "\"" end
+				local l = tostring(node.literals[pinID])
 
-					table.insert(cs.vars, {
-						var = l,
-						type = pinType,
-						literal = true,
-						node = nodeID,
-						pin = pinID,
-						graph = cs.graph.id,
-					})
-
-				end
-
-			end
-
-			-- output pins create local variables, if the function is non-pure, the variable is global
-			for _, pinID in pairs(ntype.pinlayout.outputs) do
-				local pin = ntype.pins[pinID]
-				local pinType = cs.graph:GetPinType( nodeID, pinID )
-
-				if pinType == PN_Exec then continue end
-
-				local key = bpcommon.CreateUniqueKey(unique, "fcall_" .. ntype.name .. "_ret_" .. (pin[3] ~= "" and pin[3] or "pin"))
+				-- string literals need to be surrounded by quotes
+				-- TODO: Sanitize these
+				if pinType == PN_String then l = "\"" .. l .. "\"" end
 
 				table.insert(cs.vars, {
-					var = key,
+					var = l,
 					type = pinType,
-					init = Defaults[pinType],
-					global = ntype.type ~= NT_Pure,
+					literal = true,
 					node = nodeID,
 					pin = pinID,
 					graph = cs.graph.id,
 				})
 
 			end
+
+		end
+
+		-- output pins create local variables, if the function is non-pure, the variable is global
+		for _, pinID in pairs(ntype.pinlayout.outputs) do
+			local pin = ntype.pins[pinID]
+			local pinType = cs.graph:GetPinType( nodeID, pinID )
+
+			if pinType == PN_Exec then continue end
+
+			local key = bpcommon.CreateUniqueKey(unique, "fcall_" .. ntype.name .. "_ret_" .. (pin[3] ~= "" and pin[3] or "pin"))
+
+			table.insert(cs.vars, {
+				var = key,
+				type = pinType,
+				init = Defaults[pinType],
+				global = ntype.type ~= NT_Pure,
+				node = nodeID,
+				pin = pinID,
+				graph = cs.graph.id,
+			})
+
 		end
 	end
 
@@ -277,7 +302,7 @@ function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 
 	local str = code
 
-	printi("Compile Code: '" .. code .. "': " .. #inVars .. " " .. #outVars)
+	--printi("Compile Code: '" .. code .. "': " .. #inVars .. " " .. #outVars)
 
 	-- replace macros
 	str = string.Replace( str, "@graph", "graph_" .. cs.graph.id .. "_entry" )
@@ -316,8 +341,15 @@ end
 -- compiles a single node
 function CompileNodeSingle(cs, nodeID)
 
-	local node = cs.graph:GetNode(nodeID)
-	local ntype = cs.graph:GetNodeType(node)
+	local node,ntype
+
+	Profile(cs, "node-lookup", function()
+
+		node = cs.graph:GetNode(nodeID)
+		ntype = cs.graph:GetNodeType(node)
+
+	end)
+
 	local lookup = ntype.pinlookup --maps pinIDs into their respective positions in the input / output lists
 	local code = ntype.code
 
@@ -325,7 +357,7 @@ function CompileNodeSingle(cs, nodeID)
 	-- generate code based on function graph inputs and outputs
 	if ntype.graphThunk ~= nil then
 		local target = cs.module:GetGraph( ntype.graphThunk )
-		print("---------------GRAPH THUNK: " .. ntype.graphThunk .. "---------------------------")
+		--print("---------------GRAPH THUNK: " .. ntype.graphThunk .. "---------------------------")
 		code = ""
 		local n = target.outputs:Size()
 		for i=1, n do
@@ -338,7 +370,7 @@ function CompileNodeSingle(cs, nodeID)
 			code = code .. "$" .. (i+1) .. (i~=n and ", " or "")
 		end
 		code = code .. ")\n#1"
-		print(code)
+		--print(code)
 	end
 
 	-- tie function input pins
@@ -379,7 +411,7 @@ function CompileNodeSingle(cs, nodeID)
 	cs.begin(CTX_SingleNode .. cs.graph.id .. "_" .. nodeID)
 
 	pushi()
-	printi("Compile Node: " .. ntype.name .. "[" .. nodeID .. "]")
+	--printi("Compile Node: " .. ntype.name .. "[" .. nodeID .. "]")
 
 	-- list of inputs/outputs to compile
 	local inVars = {}
@@ -411,7 +443,7 @@ function CompileNodeSingle(cs, nodeID)
 
 		-- if there are no connections, try to assign literals on this pin
 		if #connections == 0 then
-			printi("Pin Not Connected: " .. pin[3]) 
+			--printi("Pin Not Connected: " .. pin[3]) 
 
 			local literalVar = FindVarForPin(cs, nodeID, pinID)
 			if literalVar ~= nil then
@@ -420,7 +452,7 @@ function CompileNodeSingle(cs, nodeID)
 				-- unconnected nullable pins just have their value set to nil
 				local nullable = bit.band(pin[4], PNF_Nullable) ~= 0
 				if nullable then
-					printi("Pin is nullable")
+					--printi("Pin is nullable")
 					inVars[lookupID] = { var = "nil" }
 				else
 					error("Pin must be connected: " .. ntype.name .. "." .. pin[3])
@@ -428,7 +460,7 @@ function CompileNodeSingle(cs, nodeID)
 			end
 		end
 
-		printi("<< " .. pinID .. " : " .. #inVars .. " => " .. pin[3])
+		--printi("<< " .. pinID .. " : " .. #inVars .. " => " .. pin[3])
 
 	end
 
@@ -442,7 +474,7 @@ function CompileNodeSingle(cs, nodeID)
 
 			-- assign return values for all event pins
 			outVars[lookupID] = FindVarForPin(cs, nodeID, pinID)
-			if outVars[lookupID] ~= nil then PrintTable(outVars[lookupID]) end
+			--if outVars[lookupID] ~= nil then PrintTable(outVars[lookupID]) end
 
 		else
 
@@ -460,7 +492,7 @@ function CompileNodeSingle(cs, nodeID)
 				local var = FindVarForPin(cs, nodeID, pinID)
 				if var then 
 					--table.insert(outVars, var)
-					printi("ASGN >> " .. pinID .. " : " .. lookupID .. " => " .. pin[3])
+					--printi("ASGN >> " .. pinID .. " : " .. lookupID .. " => " .. pin[3])
 					outVars[lookupID] = var
 				else
 					error("Unable to find var for pin " .. ntype.name .. "." .. pin[3])
@@ -470,7 +502,7 @@ function CompileNodeSingle(cs, nodeID)
 
 		end
 
-		printi(">> " .. pinID .. " : " .. lookupID .. " => " .. pin[3])
+		--printi(">> " .. pinID .. " : " .. lookupID .. " => " .. pin[3])
 
 	end	
 
@@ -478,7 +510,7 @@ function CompileNodeSingle(cs, nodeID)
 	code = string.Replace(code, "\t", "")
 
 	-- take all the mapped variables and place them in the code string
-	code = CompileVars(cs, code, inVars, outVars, nodeID, ntype)
+	code = Profile(cs, "vct", CompileVars, cs, code, inVars, outVars, nodeID, ntype)
 
 	-- emit some infinite-loop-protection code
 	if cs.ilp and ntype.type == NT_Function or ntype.type == NT_Special or ntype.type == NT_FuncOutput then
@@ -579,7 +611,7 @@ function CompileNodeFunction(cs, nodeID)
 	end
 
 	pushi()
-	printi("COMPILE FUNC: " .. nodeType.name)
+	--printi("COMPILE FUNC: " .. nodeType.name)
 
 	pushi()
 
@@ -588,7 +620,7 @@ function CompileNodeFunction(cs, nodeID)
 	WalkBackPureNodes(cs, nodeID, function(pure)
 		if emitted[pure] then return end
 		emitted[pure] = true
-		printi( cs.graph:GetNodeType(cs.graph:GetNode(pure)).name )
+		--printi( cs.graph:GetNodeType(cs.graph:GetNode(pure)).name )
 		cs.emitContext( CTX_SingleNode .. cs.graph.id .. "_" .. pure, 1 )
 	end)
 	popi()
@@ -846,24 +878,27 @@ end
 function PreCompileGraph(cs, graph, uniqueKeys)
 
 	cs.graph = graph
-	cs.graph:CollapseRerouteNodes()
+	cs.graph:EnableNodeTypeCache( true )
 
-	-- 'uniqueKeys' is a table for keeping keys distinct, global variables must be distinct when each graph generates them.
-	-- pure node variables do not need exclusive keys between graphs because they are local
-	EnumerateGraphVars(cs, NT_Pure)
+	Profile(cs, "collapse-reroutes", function()
+		cs.graph:CollapseRerouteNodes()
+	end)
 
-	-- generate variables for all other node types
-	EnumerateGraphVars(cs, NT_Function, uniqueKeys)
-	EnumerateGraphVars(cs, NT_Event, uniqueKeys)
-	EnumerateGraphVars(cs, NT_Special, uniqueKeys)
+	Profile(cs, "enumerate-graph-vars", function()
+
+		-- 'uniqueKeys' is a table for keeping keys distinct, global variables must be distinct when each graph generates them.
+		-- pure node variables do not need exclusive keys between graphs because they are local
+		EnumerateGraphVars(cs, uniqueKeys)
+
+	end)
 
 	if cs.graph.type == GT_Function then
-		CreateFunctionGraphVars(cs, uniqueKeys)
+		Profile(cs, "create-function-vars", CreateFunctionGraphVars, cs, uniqueKeys)
 	end
 
 	-- compile jump table and variable listing for this graph
-	CompileGraphJumpTable(cs)
-	CompileGraphVarListing(cs)
+	Profile(cs, "jump-table", CompileGraphJumpTable, cs)
+	Profile(cs, "var-listing", CompileGraphVarListing, cs)
 
 end
 
@@ -938,13 +973,13 @@ function CompileGraph(cs, graph)
 
 	-- compile each single-node context in the graph
 	for id in cs.graph:NodeIDs() do
-		CompileNodeSingle(cs, id)
+		Profile(cs, "single-node", CompileNodeSingle, cs, id)
 	end
 
 	-- compile all non-pure function nodes in the graph (and events / special nodes)
 	for id, node in cs.graph:Nodes() do
 		if cs.graph:GetNodeType(node).type ~= NT_Pure then
-			CompileNodeFunction(cs, id)
+			Profile(cs, "functions", CompileNodeFunction, cs, id)
 		end
 	end
 
@@ -959,7 +994,7 @@ function CompileGraph(cs, graph)
 	end
 
 	-- compile graph's entry function
-	CompileGraphEntry(cs)
+	Profile(cs, "graph-entries", CompileGraphEntry, cs)
 
 	-- compile hook listing for each event (only events that have hook designations)
 	cs.begin(CTX_Hooks .. cs.graph.id)
@@ -988,7 +1023,9 @@ end
 
 function Compile(mod)
 
-	print("COMPILE MODULE")
+	print("COMPILING MODULE...")
+
+	local start = os.clock()
 
 	-- compiler state
 	local cs = {
@@ -1005,6 +1042,8 @@ function Compile(mod)
 		ilp = true,
 		ilpmax = 10000,
 		ilpmaxh = 4,
+		times = {},
+		profile = false,
 	}
 
 	-- context control functions
@@ -1041,30 +1080,34 @@ function Compile(mod)
 		return out
 	end
 
-	CompileMetaTableLookup(cs)
+	Profile(cs, "meta-lookup", CompileMetaTableLookup, cs)
 
-	-- make local copies of all module graphs so they can be edited without changing the module
-	for id, graph in mod:Graphs() do
-		table.insert( cs.graphs, graph:CopyInto( bpgraph.New() ) )
-	end
+	Profile(cs, "copy-graphs", function()
+
+		-- make local copies of all module graphs so they can be edited without changing the module
+		for id, graph in mod:Graphs() do
+			table.insert( cs.graphs, graph:CopyInto( bpgraph.New() ) )
+		end
+
+	end)
 
 	-- pre-compile all graphs in the module
 	-- each graph shares a unique key table to ensure global variable names are distinct
 	local uniqueKeys = {}
 	for _, graph in pairs( cs.graphs ) do
-		PreCompileGraph( cs, graph, uniqueKeys )
+		Profile(cs, "pregraph", PreCompileGraph, cs, graph, uniqueKeys )
 	end
 
 	-- compile the global variable listing (contains all global variables accross all graphs)
-	CompileGlobalVarListing(cs)
+	Profile( cs, "global-var-listing", CompileGlobalVarListing, cs)
 
 	-- compile each graph
 	for _, graph in pairs( cs.graphs ) do
-		CompileGraph( cs, graph )
+		Profile(cs, "graph", CompileGraph, cs, graph )
 	end
 
 	-- compile main code segment
-	CompileCodeSegment(cs)
+	Profile(cs, "code-segment", CompileCodeSegment, cs)
 
 	cs.compiled = table.concat( cs.getContext( CTX_Code ), "\n" )
 
@@ -1075,6 +1118,28 @@ function Compile(mod)
 	RunString(cs.compiled, "")
 	local x = __BPMODULE
 	__BPMODULE = nil
+
+	local finish = os.clock()
+
+	local sorted = {}
+	for k,v in pairs(cs.times) do table.insert(sorted, {k = k, s = v.samples, t = v.time, v = v.time / v.samples, min = v.min, max = v.max}) end
+	table.sort(sorted, function(a,b) return a.t > b.t end)
+
+	print("COMPILE TOOK: " .. (finish - start) .. " seconds.")
+
+	if cs.profile then
+
+		print( string.format("%-32s%7s%10s%6s%8s", "function", "avg", "total", "min", "max") )
+		for _,t in pairs(sorted) do
+			print( string.format("%-32s%8.2f%8.2f%8.2f%8.2f", " -" .. t.k .. "[" .. t.s .. "]: ", 
+				t.v*1000, 
+				t.t*1000,
+				t.min*1000,
+				t.max*1000))
+		end
+
+	end
+
 	return x
 
 end

@@ -108,6 +108,14 @@ function meta:GetNameForItem( optName, item )
 
 end
 
+function meta:CopyInto( other )
+
+	other.items = table.Copy( self.items )
+	other.itemLookup = table.Copy( self.itemLookup )
+	other.nextID = self.nextID
+
+end
+
 function meta:Add( item, optName )
 
 	if item.id ~= nil then error("Cannot add uniquely indexed items to multiple lists") end

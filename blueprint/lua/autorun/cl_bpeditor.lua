@@ -302,7 +302,7 @@ end
 
 function PANEL:GraphAdded( id )
 
-	print("GRAPH ADDED: " .. id)
+	--print("GRAPH ADDED: " .. id)
 	local graph = self.module:GetGraph(id)
 	local vgraph = vgui.Create("BPGraph", self.Content)
 
