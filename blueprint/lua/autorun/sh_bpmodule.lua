@@ -324,12 +324,16 @@ function meta:UnbindGamemodeHooks()
 	local meta = bp.meta
 	local instance = self:GetSingleton()
 
+	if instance.shuttingDown then ErrorNoHalt("!!!!!Recursive shutdown!!!!!") return end
+
 	for k,v in pairs(bp.events) do
 		if not v.hook or type(meta[k]) ~= "function" then continue end
 		hook.Remove(v.hook, v.key)
 	end
 
+	instance.shuttingDown = true
 	if instance.Shutdown then instance:Shutdown() end
+	instance.shuttingDown = false
 
 end
 

@@ -63,6 +63,7 @@ Literals are values stored on unconnected input pins.
 
 function CreateFunctionGraphVars(cs, uniqueKeys)
 
+	local unique = uniqueKeys
 	local name = cs.graph:GetName()
 	local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_returned")
 	table.insert(cs.vars, {
@@ -513,7 +514,7 @@ function CompileNodeSingle(cs, nodeID)
 	code = Profile(cs, "vct", CompileVars, cs, code, inVars, outVars, nodeID, ntype)
 
 	-- emit some infinite-loop-protection code
-	if cs.ilp and ntype.type == NT_Function or ntype.type == NT_Special or ntype.type == NT_FuncOutput then
+	if cs.ilp and (ntype.type == NT_Function or ntype.type == NT_Special or ntype.type == NT_FuncOutput) then
 		cs.emit("__ilp = __ilp + 1 if __ilp > " .. cs.ilpmax .. " then __ilptrip = true goto __terminus end")
 	end
 
