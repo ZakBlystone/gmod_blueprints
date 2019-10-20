@@ -1,0 +1,149 @@
+ENUM CONTENTS
+{
+	CONTENTS_EMPTY, Things that are not solid
+	CONTENTS_SOLID, Things that are solid
+	CONTENTS_WINDOW, Glass
+	CONTENTS_AUX, 
+	CONTENTS_GRATE, Bullets go through, solids don't
+	CONTENTS_SLIME, 
+	CONTENTS_WATER, Hits world but not skybox
+	CONTENTS_BLOCKLOS, Things that block line of sight
+	CONTENTS_OPAQUE, Things that block light
+	CONTENTS_TESTFOGVOLUME, 
+	CONTENTS_TEAM4, 
+	CONTENTS_TEAM3, 
+	CONTENTS_TEAM1, 
+	CONTENTS_TEAM2, 
+	CONTENTS_IGNORE_NODRAW_OPAQUE, 
+	CONTENTS_MOVEABLE, 
+	CONTENTS_AREAPORTAL, 
+	CONTENTS_PLAYERCLIP, 
+	CONTENTS_MONSTERCLIP, 
+	CONTENTS_CURRENT_0, 
+	CONTENTS_CURRENT_180, 
+	CONTENTS_CURRENT_270, 
+	CONTENTS_CURRENT_90, 
+	CONTENTS_CURRENT_DOWN, 
+	CONTENTS_CURRENT_UP, 
+	CONTENTS_DEBRIS, 
+	CONTENTS_DETAIL, 
+	CONTENTS_HITBOX, Hitbox
+	CONTENTS_LADDER, Ladder
+	CONTENTS_MONSTER, NPCs
+	CONTENTS_ORIGIN, 
+	CONTENTS_TRANSLUCENT, Hits world but not skybox
+	LAST_VISIBLE_CONTENTS, Last visible contents enumeration
+	ALL_VISIBLE_CONTENTS, Sum of all the visible contents enumerations
+}
+
+ENUM MASK, Enumerations used as trace masks in Trace structure and HullTrace structure. These enumerations are simply combinations of CONTENTS_ Enums.
+{
+	MASK_ALL, Anything that is not empty space
+	MASK_BLOCKLOS, Anything that blocks line of sight for AI
+	MASK_BLOCKLOS_AND_NPCS, Anything that blocks line of sight for AI or NPCs
+	MASK_CURRENT, Water that is moving (may not work)
+	MASK_DEADSOLID, Anything that blocks corpse movement
+	MASK_NPCSOLID, Anything that blocks NPC movement
+	MASK_NPCSOLID_BRUSHONLY, Anything that blocks NPC movement, except other NPCs
+	MASK_NPCWORLDSTATIC, The world entity
+	MASK_OPAQUE, Anything that blocks lighting
+	MASK_OPAQUE_AND_NPCS, Anything that blocks lighting, including NPCs
+	MASK_PLAYERSOLID, Anything that blocks player movement
+	MASK_PLAYERSOLID_BRUSHONLY, World + Brushes + Player Clips
+	MASK_SHOT, Anything that stops a bullet (including hitboxes)
+	MASK_SHOT_HULL, Anything that stops a bullet (excluding hitboxes)
+	MASK_SHOT_PORTAL, Solids except for grates
+	MASK_SOLID, Anything that is (normally) solid
+	MASK_SOLID_BRUSHONLY, World + Brushes
+	MASK_SPLITAREAPORTAL, Things that split area portals
+	MASK_VISIBLE, Anything that blocks line of sight for players
+	MASK_VISIBLE_AND_NPCS, Anything that blocks line of sight for players, including NPCs
+	MASK_WATER, Anything that has water-like physics
+}
+
+ENUM MAT, Enumerations used in TraceResult structure and by Entity:GetMaterialType.
+{
+	MAT_ANTLION, Antlions
+	MAT_BLOODYFLESH, Similar to MAT_FLESH, only used by "bloodyflesh" surface property, has different impact sound
+	MAT_CONCRETE, Concrete
+	MAT_DIRT, Dirt
+	MAT_EGGSHELL, The egg sacs in the antlion tunnels in HL2: EP2
+	MAT_FLESH, Flesh
+	MAT_GRATE, Grates, chainlink fences
+	MAT_ALIENFLESH, Alien flesh - headcrabs and vortigaunts
+	MAT_CLIP, Unused
+	MAT_SNOW, Snow
+	MAT_PLASTIC, Plastic
+	MAT_METAL, Metal
+	MAT_SAND, Sand
+	MAT_FOLIAGE, Plants, only used by the "foliage" surface property
+	MAT_COMPUTER, Electronics, only used by "computer" surface property
+	MAT_SLOSH, Water, slime
+	MAT_TILE, Floor tiles
+	MAT_GRASS, Grass
+	MAT_VENT, Metallic vents
+	MAT_WOOD, Wood
+	MAT_DEFAULT, Skybox or nodraw texture
+	MAT_GLASS, Glass
+	MAT_WARPSHIELD, "wierd-looking jello effect for advisor shield."
+}
+
+ENUM DISPSURF
+{
+	DISPSURF_SURFACE,
+	DISPSURF_WALKABLE,
+	DISPSURF_BUILDABLE,
+	DISPSURF_SURFPROP1,
+	DISPSURF_SURFPROP2,
+}
+
+ENUM GLOBAL, Enumerations used by game.SetGlobalState and game.GetGlobalState.
+{
+	GLOBAL_OFF, Initial state, the global state is off.
+	GLOBAL_ON, The global state is enabled.
+	GLOBAL_DEAD, The global state is dead and is no longer active. It will be cleared., 
+}
+
+ENUM NAV_MESH, Enumerations used by CNavArea:GetAttributes and CNavArea:HasAttributes.
+{
+	NAV_MESH_INVALID, The nav area is invalid.
+	NAV_MESH_CROUCH, Must crouch to use this node/area
+	NAV_MESH_JUMP, Must jump to traverse this area (only used during generation)
+	NAV_MESH_PRECISE, Do not adjust for obstacles, just move along area
+	NAV_MESH_NO_JUMP, Inhibit discontinuity jumping
+	NAV_MESH_STOP, Must stop when entering this area
+	NAV_MESH_RUN, Must run to traverse this area
+	NAV_MESH_WALK, Must walk to traverse this area
+	NAV_MESH_AVOID, Avoid this area unless alternatives are too dangerous
+	NAV_MESH_TRANSIENT, Area may become blocked, and should be periodically checked
+	NAV_MESH_DONT_HIDE, Area should not be considered for hiding spot generation
+	NAV_MESH_STAND, Bots hiding in this area should stand
+	NAV_MESH_NO_HOSTAGES, Hostages shouldn't use this area
+	NAV_MESH_STAIRS, This area represents stairs, do not attempt to climb or jump them - just walk up
+	NAV_MESH_NO_MERGE, Don't merge this area with adjacent areas
+	NAV_MESH_OBSTACLE_TOP, This nav area is the climb point on the tip of an obstacle
+	NAV_MESH_CLIFF, This nav area is adjacent to a drop of at least CliffHeight
+	NAV_MESH_FUNC_COST, Area has designer specified cost controlled by func_nav_cost entities
+	NAV_MESH_HAS_ELEVATOR, Area is in an elevator's path
+	NAV_MESH_NAV_BLOCKER,
+}
+
+ENUM SURF, Surface flags, used by the TraceResult structure.
+{
+	SURF_LIGHT, Value will hold the light strength
+	SURF_SKY2D, The surface is a 2D skybox
+	SURF_SKY, This surface is a skybox, equivalent to HitSky in TraceResult structure
+	SURF_WARP, This surface is animated water
+	SURF_TRANS, This surface is translucent
+	SURF_NOPORTAL, This surface cannot have portals placed on, used by Portal's gun
+	SURF_TRIGGER, This surface is a trigger
+	SURF_NODRAW, This surface is an invisible entity, equivalent to HitNoDraw in TraceResult structure
+	SURF_HINT, Make a primary bsp splitter
+	SURF_SKIP, This surface can be ignored by impact effects
+	SURF_NOLIGHT, This surface has no lights calculated
+	SURF_BUMPLIGHT, Calculate three lightmaps for the surface for bumpmapping
+	SURF_NOSHADOWS, No shadows are cast on this surface
+	SURF_NODECALS, No decals are applied to this surface
+	SURF_NOCHOP, Don't subdivide patches on this surface
+	SURF_HITBOX, This surface is part of an entity's hitbox
+}

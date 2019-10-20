@@ -39,7 +39,7 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self.pin = pin
 	self.pinID = pinID
 	self.nodeType = self.graph:GetNodeType( self.node )
-	self.pinType = self.graph:GetPinType( self.node.id, self.pinID )
+	self.pinType, self.pinEx = self.graph:GetPinType( self.node.id, self.pinID )
 
 	-- input pins watch for literal changes
 	if self.pin[1] == PD_In and self.pinType ~= PN_Exec then
@@ -136,10 +136,42 @@ function PANEL:InitLiteral()
 				end
 				self.checkBox:SetChecked(literal == "true" and true or false)
 
+			elseif self.literalType == "enum" then
+				self.comboBox = vgui.Create("DComboBox", self)
+				self.comboBox:SetWide(100)
+				self.comboBox:SetTall(18)
+				self.comboBox:SetTextColor( Color(255,255,255) )
+
+				if self.label then
+					self.comboBox:SetPos( 15 + self.label:GetWide(), -shift_up )
+				else
+					self.comboBox:SetPos( 15, -shift_up )
+				end
+
+				local enum = bpdefs.GetEnum( self.pinEx )
+				if enum == nil then
+					ErrorNoHalt("NO ENUM FOR " .. tostring( self.pinEx ))
+				else
+					for k, entry in pairs(enum.entries) do
+						self.comboBox:AddChoice( entry.shortkey, entry.key, literal == "" and (k == 1) or (entry.key == literal) )
+					end
+				end
+
+				self.comboBox.OnSelect = function( pnl, index, value, data )
+					self.graph:SetPinLiteral( self.node.id, self.pinID, tostring(value) )
+				end
+				self.comboBox.Paint = function(te)
+					local w,h = te:GetSize()
+					surface.SetDrawColor(Color(255,255,255,30))
+					surface.DrawRect(0,0,w,h)
+					te:DrawTextEntryText( te:GetTextColor() )
+				end
+
 			else
 				self.textEntry = vgui.Create("DTextEntry", self)
 				self.textEntry:SetPaintBackground(true)
 				self.textEntry:SetTextColor( Color(255,255,255) )
+				self.textEntry:SetWide(100)
 
 				if self.label then
 					self.textEntry:SetPos( 15 + self.label:GetWide(), -shift_up - 4 )
@@ -185,6 +217,15 @@ function PANEL:OnLiteralEdit(nodeID, pinID, value)
 
 	if IsValid(self.textEntry) then self.textEntry:SetText(value) end
 	if IsValid(self.checkBox) then self.checkBox:SetChecked(value == "true" and true or false) end
+	if IsValid(self.comboBox) then
+		local enum = bpdefs.GetEnum( self.pinEx )
+		local found = enum.lookup[value]
+		if found then
+			self.comboBox:SetText( enum.entries[found].shortkey )
+		else
+			self.comboBox:SetText( value )
+		end
+	end
 
 end
 
@@ -221,21 +262,23 @@ end
 function PANEL:Think()
 
 	local prev = self.pinType
-	self.pinType = self.graph:GetPinType( self.node.id, self.pinID )
+	self.pinType, self.pinEx = self.graph:GetPinType( self.node.id, self.pinID )
 
 	if self.pinType ~= prev then
-		self:OnPinTypeChanged( self.pinType )
+		self:OnPinTypeChanged( self.pinType, self.pinEx )
 	end
 
 	if self.graph:IsPinConnected( self.node.id, self.pinID ) then
 
 		if self.textEntry ~= nil then self.textEntry:SetVisible(false) end
 		if self.checkBox ~= nil then self.checkBox:SetVisible(false) end
+		if self.comboBox ~= nil then self.comboBox:SetVisible(false) end
 
 	else
 
 		if self.textEntry ~= nil then self.textEntry:SetVisible(true) end
 		if self.checkBox ~= nil then self.checkBox:SetVisible(true) end
+		if self.comboBox ~= nil then self.comboBox:SetVisible(true) end
 
 	end
 

@@ -21,7 +21,8 @@ PN_String = 10
 PN_Color = 11
 PN_Weapon = 12
 PN_Angles = 13
-PN_Max = 13
+PN_Enum = 14
+PN_Max = 14
 
 NT_Pure = 0
 NT_Function = 1
@@ -72,6 +73,7 @@ PinTypeNames = {
 	[PN_Color] = "Color",
 	[PN_Weapon] = "Weapon",
 	[PN_Angles] = "Angles",
+	[PN_Enum] = "Enum"
 }
 
 GraphTypeColors = {
@@ -94,6 +96,7 @@ NodePinColors = {
 	[PN_Color] = Color(140,50,200),
 	[PN_Weapon] = Color(180,255,100),
 	[PN_Angles] = Color(80,150,180),
+	[PN_Enum] = Color(0,100,80),
 }
 
 NodePinImplicitConversions = {
@@ -102,12 +105,15 @@ NodePinImplicitConversions = {
 	[PN_Weapon] = { PN_Entity },
 	[PN_Npc] = { PN_Entity },
 	[PN_Vehicle] = { PN_Entity },
+	[PN_Enum] = { PN_Number },
+	[PN_Number] = { PN_Enum },
 }
 
 NodeLiteralTypes = {
 	[PN_Bool] = "bool",
 	[PN_Number] = "number",
 	[PN_String] = "string",
+	[PN_Enum] = "enum",
 }
 
 Defaults = {
@@ -118,6 +124,7 @@ Defaults = {
 	[PN_Player] = "nil",
 	[PN_Entity] = "nil",
 	[PN_String] = "",
+	[PN_Enum] = "0",
 }
 
 function ConfigureNodeType(t)

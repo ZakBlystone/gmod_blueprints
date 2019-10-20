@@ -1,0 +1,9 @@
+ENUM DOCK, Enumerations used by Panel:Dock.
+{
+	NODOCK, Don't dock
+	FILL, Fill parent
+	LEFT, Dock to the left
+	RIGHT, Dock to the right
+	TOP, Dock to the top
+	BOTTOM, Dock to the bottom
+}

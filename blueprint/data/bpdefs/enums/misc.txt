@@ -1,0 +1,127 @@
+ENUM FCVAR, Enumerations used by concommand.Add, CreateClientConVar and CreateConVar.
+{
+	FCVAR_ARCHIVE, Save the ConVar value into config.cfg Reported as "a" by cvarlist, except Lua ConVars
+	FCVAR_ARCHIVE_XBOX, Save the ConVar value into config.cfg on XBox
+	FCVAR_CHEAT, Requires sv_cheats to be enabled to change the ConVar or run the command. Reported as "cheat" by cvarlist
+	FCVAR_CLIENTCMD_CAN_EXECUTE, IVEngineClient::ClientCmd is allowed to execute this command. Reported as "clientcmd_can_execute" by cvarlist
+	FCVAR_CLIENTDLL, ConVar is defined by the client DLL. This flag is set automatically Reported as "cl" by cvarlist
+	FCVAR_DEMO, Force the ConVar to be recorded by demo recordings. Reported as "demo" by cvarlist
+	FCVAR_DONTRECORD, Opposite of FCVAR_DEMO, ensures the ConVar is not recorded in demos. Reported as "norecord" by cvarlist
+	FCVAR_GAMEDLL, ConVar is defined by the game DLL. This flag is set automatically. Reported as "sv" by cvarlist
+	FCVAR_LUA_CLIENT, Set automatically on all ConVars and console commands created by the client Lua state. Reported as "lua_client" by cvarlist
+	FCVAR_LUA_SERVER, Set automatically on all ConVars and console commands created by the server Lua state. Reported as "lua_server" by cvarlist
+	FCVAR_NEVER_AS_STRING, Tells the engine to never print this variable as a string. Reported as "numeric" by cvarlist
+	FCVAR_NONE, No flags
+	FCVAR_NOTIFY, For serverside ConVars, notifies all players with blue chat text when the value gets changed. Reported as "nf" by cvarlist
+	FCVAR_NOT_CONNECTED, Makes the ConVar not changeable while connected to a server or in singleplayer
+	FCVAR_PRINTABLEONLY, Forces the ConVar to only have printable characters ( No control characters ). Reported as "print" by cvarlist
+	FCVAR_PROTECTED, Makes the ConVar value hidden from all clients ( For example sv_password ). Reported as "prot" by cvarlist
+	FCVAR_REPLICATED, For serverside ConVars, it will send its value to all clients. The ConVar with the same name must also exist on the client! Reported as "rep" by cvarlist
+	FCVAR_SERVER_CANNOT_QUERY, Prevents the server from querying value of this ConVar
+	FCVAR_SERVER_CAN_EXECUTE, Makes the command only executable from the server console. Reported as "server_can_execute" by cvarlist
+	FCVAR_SPONLY, Executing the command or changing the ConVar is only allowed in singleplayer. Reported as "sp" by cvarlist
+	FCVAR_UNLOGGED, Don't log the ConVar changes to console/log files/users. Reported as "log" by cvarlist
+	FCVAR_UNREGISTERED, If this is set, the convar will become anonymous and won't show up in the 'find' results.
+	FCVAR_USERINFO, For clientside commands, sends the value to the server. Reported as "user" by cvarlist
+}
+
+ENUM FORCE, Enumerations used by AccessorFunc.
+{
+	FORCE_STRING, Forces the function to take strings only
+	FORCE_NUMBER, Forces the function to take numbers only
+	FORCE_BOOL, Forces the function to take booleans only
+}
+
+ENUM NOTIFY, Enumerations used by notification.AddLegacy. Clientside only.
+{
+	NOTIFY_GENERIC, Generic notification
+	NOTIFY_ERROR, Error notification
+	NOTIFY_UNDO, Undo notification
+	NOTIFY_HINT, Hint notification
+	NOTIFY_CLEANUP, Cleanup notification
+}
+
+ENUM PATTACH, Enumerations used by ParticleEffectAttach.
+{
+	PATTACH_ABSORIGIN, Particle spawns in entity's origin and does not follow it
+	PATTACH_ABSORIGIN_FOLLOW, Particle attaches to entity's origin and follows the entity
+	PATTACH_CUSTOMORIGIN, Create at a custom origin, but don't follow
+	PATTACH_POINT, Particle attaches to passed to ParticleEffectAttach attachment id, but does not follow the entity
+	PATTACH_POINT_FOLLOW, Particle attaches to passed to ParticleEffectAttach attachment id and follows the entity
+	PATTACH_WORLDORIGIN, Particle spawns in the beginning of coordinates ( Vector( 0, 0, 0 ) ), used for control points that don't attach to an entity
+}
+
+ENUM SENSORBONE, Enumerations used by Kinect SDK bindings.
+{
+	SENSORBONE.SHOULDER_RIGHT, 
+	SENSORBONE.SHOULDER_LEFT, 
+	SENSORBONE.HIP, 
+	SENSORBONE.ELBOW_RIGHT, 
+	SENSORBONE.KNEE_RIGHT, 
+	SENSORBONE.WRIST_RIGHT, 
+	SENSORBONE.ANKLE_LEFT, 
+	SENSORBONE.FOOT_LEFT, 
+	SENSORBONE.WRIST_LEFT, 
+	SENSORBONE.FOOT_RIGHT, 
+	SENSORBONE.HAND_RIGHT, 
+	SENSORBONE.SHOULDER, 
+	SENSORBONE.HIP_LEFT, 
+	SENSORBONE.HIP_RIGHT, 
+	SENSORBONE.HAND_LEFT, 
+	SENSORBONE.ANKLE_RIGHT, 
+	SENSORBONE.SPINE, 
+	SENSORBONE.ELBOW_LEFT, 
+	SENSORBONE.KNEE_LEFT, 
+	SENSORBONE.HEAD, 
+}
+
+ENUM TYPE, Enumerations used by net.ReadType and returned by TypeID
+{
+	TYPE_NONE, Invalid type
+	TYPE_INVALID, This feature is deprecated. You should avoid using it as it may be removed in a future version. Use TYPE_NONE instead! Invalid type
+	TYPE_NIL, nil
+	TYPE_BOOL, boolean
+	TYPE_LIGHTUSERDATA, light userdata
+	TYPE_NUMBER, number
+	TYPE_STRING, string
+	TYPE_TABLE, table
+	TYPE_FUNCTION, function
+	TYPE_USERDATA, userdata
+	TYPE_THREAD, thread
+	TYPE_ENTITY, Entity and entity sub-classes including Player, Weapon, NPC, Vehicle, CSEnt, and NextBot
+	TYPE_VECTOR, Vector
+	TYPE_ANGLE, Angle
+	TYPE_PHYSOBJ, PhysObj
+	TYPE_SAVE, ISave
+	TYPE_RESTORE, IRestore
+	TYPE_DAMAGEINFO, CTakeDamageInfo
+	TYPE_EFFECTDATA, CEffectData
+	TYPE_MOVEDATA, CMoveData
+	TYPE_RECIPIENTFILTER, CRecipientFilter
+	TYPE_USERCMD, CUserCmd
+	TYPE_SCRIPTEDVEHICLE, This feature is deprecated. You should avoid using it as it may be removed in a future version. Leftover from pre-GMod 13 days
+	TYPE_MATERIAL, IMaterial
+	TYPE_PANEL, Panel
+	TYPE_PARTICLE, CLuaParticle
+	TYPE_PARTICLEEMITTER, CLuaEmitter
+	TYPE_TEXTURE, ITexture
+	TYPE_USERMSG, bf_read
+	TYPE_CONVAR, ConVar
+	TYPE_IMESH, IMesh
+	TYPE_MATRIX, VMatrix
+	TYPE_SOUND, CSoundPatch
+	TYPE_PIXELVISHANDLE, pixelvis_handle_t
+	TYPE_DLIGHT, dlight_t. Metatable of a DynamicLight structure
+	TYPE_VIDEO, IVideoWriter
+	TYPE_FILE, File
+	TYPE_LOCOMOTION, CLuaLocomotion
+	TYPE_PATH, PathFollower
+	TYPE_NAVAREA, CNavArea
+	TYPE_SOUNDHANDLE, IGModAudioChannel
+	TYPE_NAVLADDER, CNavLadder
+	TYPE_PARTICLESYSTEM, CNewParticleEffect
+	TYPE_PROJECTEDTEXTURE, ProjectedTexture
+	TYPE_PHYSCOLLIDE, PhysCollide
+	TYPE_COUNT, Amount of TYPE_* enums
+	TYPE_COLOR, Metatable of a Color structure. NOTE, This doesn't actually represent a unique type returned by TypeID, but instead is a hack for networking colors with net.WriteType.
+}

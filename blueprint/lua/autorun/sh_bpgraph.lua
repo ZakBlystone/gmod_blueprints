@@ -371,7 +371,7 @@ function meta:GetPinType(nodeID, pinID)
 
 	end
 
-	return ntype.pins[pinID][2]
+	return ntype.pins[pinID][2], ntype.pins[pinID][5]
 
 end
 

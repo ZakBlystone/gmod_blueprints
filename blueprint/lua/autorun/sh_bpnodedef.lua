@@ -93,8 +93,12 @@ NodeTypes = {
 	["Spectate"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_Enum, "mode", PNF_None, "OBS_MODE" },
 		},
-		code = "$2:Spectate( OBS_MODE_CHASE )",
+		code = "$2:Spectate( $3 )",
+		defaults = {
+			[3] = "OBS_MODE_CHASE",
+		},
 	},
 	["SpectateEntity"] = FUNCTION {
 		pins = {
@@ -234,16 +238,18 @@ NodeTypes = {
 		pins = {
 			{ PD_In, PN_Entity, "target" },
 			{ PD_In, PN_String, "sound" },
-			{ PD_In, PN_Number, "soundLevel" },
+			{ PD_In, PN_Enum, "soundLevel", PNF_None, "SNDLVL" },
 			{ PD_In, PN_Number, "pitch" },
 			{ PD_In, PN_Number, "volume" },
+			{ PD_In, PN_Enum, "channel", PNF_None, "CHAN" },
 		},
 		defaults = {
-			[4] = 75,
+			[4] = "SNDLVL_NORM",
 			[5] = 100,
 			[6] = 1,
+			[7] = "CHAN_AUTO",
 		},
-		code = "Entity_.EmitSound( $2, $3, $4, $5, $6 )",
+		code = "Entity_.EmitSound( $2, $3, $4, $5, $6, $7 )",
 	},
 	["TakeDamage"] = FUNCTION {
 		pins = {
@@ -317,6 +323,13 @@ NodeTypes = {
 			{ PD_In, PN_Player, "player" },
 		},
 		code = "Player_.RemoveAllAmmo($2)",
+	},
+	["SetNoTarget"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_Bool, "visible" },
+		},
+		code = "Player_.SetNoTarget($2, $3)",
 	},
 	["Remove"] = FUNCTION {
 		pins = {
@@ -437,7 +450,7 @@ NodeTypes = {
 	["KeyDown"] = PURE {
 		pins = {
 			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Number, "key" },
+			{ PD_In, PN_Enum, "key", PNF_None, "IN" },
 			{ PD_Out, PN_Bool, "isDown" },
 		},
 		code = "#1 = $1:KeyDown($2)",
@@ -1442,6 +1455,8 @@ NodeTypes = {
 			{ PD_In, PN_Vector, "start" },
 			{ PD_In, PN_Vector, "end" },
 			{ PD_In, PN_Entity, "filter", PNF_Nullable },
+			{ PD_In, PN_Enum, "mask", PNF_None, "MASK" },
+			{ PD_In, PN_Enum, "collisionGroup", PNF_None, "COLLISION_GROUP" },
 			{ PD_Out, PN_Bool, "hit" },
 			{ PD_Out, PN_Entity, "entity" },
 			{ PD_Out, PN_Vector, "pos" },
@@ -1449,11 +1464,17 @@ NodeTypes = {
 			{ PD_Out, PN_Number, "fraction" },
 		},
 		locals = {"tr"},
+		defaults = {
+			[5] = "MASK_SOLID",
+			[6] = "COLLISION_GROUP_NONE",
+		},
 		code = [[
 			%tr = util.TraceLine({
 				start = $2,
 				endpos = $3,
 				filter = $4,
+				mask = $5,
+				collisiongroup = $6,
 			})
 			#2 = %tr.Hit
 			#3 = %tr.Entity
@@ -1478,8 +1499,11 @@ NodeTypes = {
 		pins = {
 			{ PD_In, PN_Npc, "npc" },
 			{ PD_In, PN_Entity, "target" },
-			{ PD_In, PN_Number, "relationship" },
+			{ PD_In, PN_Enum, "relationship", PNF_None, "D" },
 			{ PD_In, PN_Number, "priority"},
+		},
+		defaults = {
+			[4] = "D_HT",
 		},
 		code = [[NPC_.AddEntityRelationship($2, $3, $4, $5)]],
 	},
@@ -1505,7 +1529,7 @@ local function AddHook(name, args)
 	local ipin = 2
 	for k, v in pairs(args) do
 
-		table.insert( pins, { PD_Out, v[2], v[1] })
+		table.insert( pins, { PD_Out, v[2], v[1], v[3], v[4] })
 		code = code .. "#" .. ipin .. " = arg[" .. ipin-1 .. "]\n"
 
 		ipin = ipin + 1
@@ -1540,10 +1564,10 @@ AddHook("PlayerHurt", { {"victim", PN_Player}, {"attacker", PN_Entity}, {"health
 AddHook("PlayerTick", { {"player", PN_Player}, {"moveData", PN_Any} })
 AddHook("GravGunOnDropped", { {"player", PN_Player}, {"entity", PN_Entity} })
 AddHook("GravGunOnPickedUp", { {"player", PN_Player}, {"entity", PN_Entity} })
-AddHook("PlayerButtonDown", { {"player", PN_Player}, {"button", PN_Number} })
-AddHook("PlayerButtonUp", { {"player", PN_Player}, {"button", PN_Number} })
-AddHook("KeyPress", { {"player", PN_Player}, {"key", PN_Number} })
-AddHook("KeyRelease", { {"player", PN_Player}, {"key", PN_Number} })
+AddHook("PlayerButtonDown", { {"player", PN_Player}, {"button", PN_Enum, PNF_None, "BUTTON_CODE"} })
+AddHook("PlayerButtonUp", { {"player", PN_Player}, {"button", PN_Enum, PNF_None, "BUTTON_CODE"} })
+AddHook("KeyPress", { {"player", PN_Player}, {"key", PN_Enum, PNF_None, "IN"} })
+AddHook("KeyRelease", { {"player", PN_Player}, {"key", PN_Enum, PNF_None, "IN"} })
 AddHook("PlayerSwitchFlashlight", { {"player", PN_Player}, {"enabled", PN_Bool} })
 AddHook("EntityTakeDamage", { {"target", PN_Entity}, {"damageInfo", PN_Any} })
 AddHook("EntityRemoved", { {"entity", PN_Entity} })

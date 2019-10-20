@@ -1,0 +1,301 @@
+ENUM CLASS, Enumerations used by NPC:Classify.
+{
+	CLASS_NONE, None - default class for entities.
+	CLASS_PLAYER, Players.
+	CLASS_PLAYER_ALLY, HL2 player allies - monster_barney, npc_citizen, hacked npc_manhack, and friendly npc_turret_floor.
+	CLASS_PLAYER_ALLY_VITAL, HL2 vital player allies - npc_magnusson, npc_gman, npc_fisherman, npc_eli, npc_barney, npc_kleiner, npc_mossman, npc_alyx, npc_monk, npc_dog, and npc_vortigaunt at the end of EP2 (controlled by "MakeGameEndAlly" input).
+	CLASS_ANTLION, HL2 antlions - npc_antlion, npc_antlionguard, and npc_ichthyosaur.
+	CLASS_BARNACLE, HL2 barnacles - npc_barnacle.
+	CLASS_BULLSEYE, HL2 bullseyes - npc_bullseye.
+	CLASS_CITIZEN_PASSIVE, HL2 passive/non-rebel citizens - npc_citizen in the beginning of HL2.
+	CLASS_CITIZEN_REBEL, HL2 unused.
+	CLASS_COMBINE, HL2 combine troops - npc_combine, npc_advisor, apc_missile, npc_apcdriver, hostile npc_turret_floor, hostile npc_rollermine, npc_turret_ground when active, npc_turret_ceiling when active, and npc_strider when active (not being carried by the gunship).
+	CLASS_COMBINE_GUNSHIP, HL2 combine aircrafts - npc_combinegunship, npc_combinedropship, and npc_helicopter.
+	CLASS_CONSCRIPT, HL2 unused.
+	CLASS_HEADCRAB, HL2 headcrabs - visible npc_headcrab.
+	CLASS_MANHACK, HL2 manhacks - hostile npc_manhack not held by the gravity gun.
+	CLASS_METROPOLICE, HL2 metro police - npc_metropolice and npc_vehicledriver.
+	CLASS_MILITARY, HL2 combine military objects - func_guntarget, npc_spotlight, and active npc_combine_camera.
+	CLASS_SCANNER, HL2 combine scanners - npc_cscanner and npc_clawscanner.
+	CLASS_STALKER, HL2 stalkers - npc_stalker.
+	CLASS_VORTIGAUNT, HL2 vortigaunts - npc_vortigaunt before the end of EP2 (controlled by "MakeGameEndAlly" input).
+	CLASS_ZOMBIE, HL2 zombies - unslumped npc_zombie, npc_poisonzombie, npc_fastzombie, npc_fastzombie_torso, and npc_zombine.
+	CLASS_PROTOSNIPER, HL2 snipers - npc_sniper and proto_sniper.
+	CLASS_MISSILE, HL2 missiles - rpg_missile, apc_missile, and grenade_pathfollower.
+	CLASS_FLARE, HL2 flares - env_flare.
+	CLASS_EARTH_FAUNA, HL2 animals - npc_crow, npc_seagull, and npc_pigeon.
+	CLASS_HACKED_ROLLERMINE, HL2 friendly rollermines - hacked npc_rollermine.
+	CLASS_COMBINE_HUNTER, HL2 hunters - npc_hunter.
+	CLASS_MACHINE, HL:S turrets - monster_turret, monster_miniturret, monster_sentry.
+	CLASS_HUMAN_PASSIVE, HL:S friendly humans - monster_scientist.
+	CLASS_HUMAN_MILITARY, HL:S human military - monster_human_grunt and monster_apache.
+	CLASS_ALIEN_MILITARY, HL:S alien military - monster_alien_controller, monster_vortigaunt, monster_alien_grunt, monster_nihilanth, and monster_snark if it has an enemy of class CLASS_PLAYER, CLASS_HUMAN_PASSIVE, or CLASS_HUMAN_MILITARY.
+	CLASS_ALIEN_MONSTER, HL:S monsters - monster_tentacle, monster_barnacle, monster_zombie, monster_gargantua, monster_houndeye, monster_ichthyosaur, and monster_bigmomma.
+	CLASS_ALIEN_PREY, HL:S headcrabs - monster_headcrab.
+	CLASS_ALIEN_PREDATOR, HL:S alien predators - monster_bullsquid, xen_tree, and xen_hull.
+	CLASS_INSECT, HL:S insects - montser_roach and monster_leech.
+	CLASS_PLAYER_BIOWEAPON, HL:S player bioweapons - hornet fired by a player.
+	CLASS_ALIEN_BIOWEAPON, HL:S enemy bioweapons - hornet fired by anyone but a player, or monster_snark with no enemy or an enemy without the class CLASS_PLAYER, CLASS_HUMAN_PASSIVE, or CLASS_HUMAN_MILITARY.
+}
+
+ENUM COND, Enumerations for NPC conditions, used by NPC:SetCondition. Serverside only.
+{
+	COND_BEHIND_ENEMY, 
+	COND_BETTER_WEAPON_AVAILABLE, 
+	COND_CAN_MELEE_ATTACK1, 
+	COND_CAN_MELEE_ATTACK2, 
+	COND_CAN_RANGE_ATTACK1, 
+	COND_CAN_RANGE_ATTACK2, 
+	COND_ENEMY_DEAD, 
+	COND_ENEMY_FACING_ME, 
+	COND_ENEMY_OCCLUDED, 
+	COND_ENEMY_TOO_FAR, 
+	COND_ENEMY_UNREACHABLE, 
+	COND_ENEMY_WENT_NULL, 
+	COND_FLOATING_OFF_GROUND, 
+	COND_GIVE_WAY, 
+	COND_HAVE_ENEMY_LOS, 
+	COND_HAVE_TARGET_LOS, 
+	COND_HEALTH_ITEM_AVAILABLE, 
+	COND_HEAR_BUGBAIT, 
+	COND_HEAR_BULLET_IMPACT, 
+	COND_HEAR_COMBAT, 
+	COND_HEAR_DANGER, 
+	COND_HEAR_MOVE_AWAY, 
+	COND_HEAR_PHYSICS_DANGER, 
+	COND_HEAR_PLAYER, 
+	COND_HEAR_SPOOKY, 
+	COND_HEAR_THUMPER, 
+	COND_HEAR_WORLD, 
+	COND_HEAVY_DAMAGE, 
+	COND_IDLE_INTERRUPT, 
+	COND_IN_PVS, 
+	COND_LIGHT_DAMAGE, 
+	COND_LOST_ENEMY, 
+	COND_LOST_PLAYER, 
+	COND_LOW_PRIMARY_AMMO, 
+	COND_MOBBED_BY_ENEMIES, 
+	COND_NEW_ENEMY, 
+	COND_NO_CUSTOM_INTERRUPTS, 
+	COND_NO_HEAR_DANGER, 
+	COND_NO_PRIMARY_AMMO, 
+	COND_NO_SECONDARY_AMMO, 
+	COND_NO_WEAPON, 
+	COND_NONE, No additional conditions are being played
+	COND_NOT_FACING_ATTACK, 
+	COND_NPC_FREEZE, Freezes NPC movement
+	COND_NPC_UNFREEZE, Unfreezes NPC movement
+	COND_PHYSICS_DAMAGE, 
+	COND_PLAYER_ADDED_TO_SQUAD, 
+	COND_PLAYER_PUSHING, 
+	COND_PLAYER_REMOVED_FROM_SQUAD, 
+	COND_PROVOKED, 
+	COND_RECEIVED_ORDERS, 
+	COND_REPEATED_DAMAGE, 
+	COND_SCHEDULE_DONE, 
+	COND_SEE_DISLIKE, 
+	COND_SEE_ENEMY, 
+	COND_SEE_FEAR, 
+	COND_SEE_HATE, 
+	COND_SEE_NEMESIS, 
+	COND_SEE_PLAYER, 
+	COND_SMELL, 
+	COND_TALKER_RESPOND_TO_QUESTION, 
+	COND_TARGET_OCCLUDED, 
+	COND_TASK_FAILED, 
+	COND_TOO_CLOSE_TO_ATTACK, 
+	COND_TOO_FAR_TO_ATTACK, 
+	COND_WAY_CLEAR, 
+	COND_WEAPON_BLOCKED_BY_FRIEND, 
+	COND_WEAPON_HAS_LOS, 
+	COND_WEAPON_PLAYER_IN_SPREAD, 
+	COND_WEAPON_PLAYER_NEAR_TARGET, 
+	COND_WEAPON_SIGHT_OCCLUDED, 
+}
+
+ENUM CT, Citizen type, a KeyValue for npc_citizen( citizentype ), serverside only.
+{
+	CT_DEFAULT, Default citizen
+	CT_DOWNTRODDEN, 
+	CT_REFUGEE, Refugee
+	CT_REBEL, Rebel
+	CT_UNIQUE, Odessa?
+}
+
+ENUM D, Enumerations used by NPC:Disposition and ENTITY:GetRelationship.
+{
+	D_ER, Error
+	D_HT, Hate
+	D_FR, Frightened / Fear
+	D_LI, Like
+	D_NU, Neutral
+}
+
+ENUM HULL, Enumerations used by NPC:SetHullType and NPC:GetHullType. Serverside only.
+{
+	HULL_HUMAN, Hull of a Citizen
+	HULL_SMALL_CENTERED, 
+	HULL_WIDE_HUMAN, 
+	HULL_TINY, 
+	HULL_WIDE_SHORT, 
+	HULL_MEDIUM, 
+	HULL_TINY_CENTERED, 
+	HULL_LARGE, 
+	HULL_LARGE_CENTERED, 
+	HULL_MEDIUM_TALL, 
+}
+
+ENUM CAP, Enumerations used by NPC:CapabilitiesAdd, WEAPON:GetCapabilities and NPC:CapabilitiesGet. Serverside only.
+{
+	CAP_SIMPLE_RADIUS_DAMAGE, When hit by an explosion, we'll simply block it instead of spilling it to entities behind us, the sv_robust_explosions cvar can also enable this globally when set to 0
+	CAP_MOVE_GROUND, Walk/Run
+	CAP_MOVE_JUMP, Jump/Leap
+	CAP_MOVE_FLY, Can fly move all around
+	CAP_MOVE_CLIMB, climb ladders
+	CAP_MOVE_SWIM, 
+	CAP_MOVE_CRAWL, 
+	CAP_MOVE_SHOOT, Tries to shoot weapon while moving
+	CAP_SKIP_NAV_GROUND_CHECK, 
+	CAP_USE, Open doors/push buttons/pull levers
+	CAP_AUTO_DOORS, Can trigger auto doors
+	CAP_OPEN_DOORS, Can open manual doors
+	CAP_TURN_HEAD, Can turn head always bone controller 0
+	CAP_WEAPON_RANGE_ATTACK1, 
+	CAP_WEAPON_RANGE_ATTACK2, 
+	CAP_WEAPON_MELEE_ATTACK1, 
+	CAP_WEAPON_MELEE_ATTACK2, 
+	CAP_INNATE_RANGE_ATTACK1, 
+	CAP_INNATE_RANGE_ATTACK2, 
+	CAP_INNATE_MELEE_ATTACK1, 
+	CAP_INNATE_MELEE_ATTACK2, 
+	CAP_USE_WEAPONS, 
+	CAP_USE_SHOT_REGULATOR, 
+	CAP_ANIMATEDFACE, Has animated eyes/face
+	CAP_FRIENDLY_DMG_IMMUNE, Don't take damage from npc's that are D_LI
+	CAP_SQUAD, Can form squads
+	CAP_DUCK, Cover and Reload ducking
+	CAP_NO_HIT_PLAYER, Don't hit players
+	CAP_AIM_GUN, Use arms to aim gun, not just body
+	CAP_NO_HIT_SQUADMATES, 
+}
+
+ENUM NPC_STATE, Enumerations used by NPC:SetNPCState. Serverside only.
+{
+	NPC_STATE_INVALID, Invalid state
+	NPC_STATE_NONE, NPC default state
+	NPC_STATE_IDLE, NPC is idle
+	NPC_STATE_ALERT, NPC is alert and searching for enemies
+	NPC_STATE_COMBAT, NPC is in combat
+	NPC_STATE_SCRIPT, NPC is executing scripted sequence
+	NPC_STATE_PLAYDEAD, NPC is playing dead (used for expressions)
+	NPC_STATE_PRONE, NPC is prone to death
+	NPC_STATE_DEAD, NPC is dead
+}
+
+ENUM NUM
+{
+	NUM_AI_CLASSES, Amount of CLASS_ Enums. Used by Add_NPC_Class.
+	NUM_HULLS, Amount of HULL_ Enums.
+}
+
+ENUM SCHED, Enumerations for NPC schedules, used by ENTITY:StartEngineSchedule and NPC:SetSchedule. Serverside only.
+{
+	LAST_SHARED_SCHEDULE, The schedule enum limit
+	SCHED_AISCRIPT, Begins AI script based on NPC's m_hCine save value.
+	SCHED_ALERT_FACE, Idle stance and face ideal yaw angles.
+	SCHED_ALERT_FACE_BESTSOUND, 
+	SCHED_ALERT_REACT_TO_COMBAT_SOUND, 
+	SCHED_ALERT_SCAN, Rotate 180 degrees and back to check for enemies.
+	SCHED_ALERT_STAND, Remain idle until an enemy is heard or found.
+	SCHED_ALERT_WALK, Walk until an enemy is heard or found.
+	SCHED_AMBUSH, Remain idle until provoked or an enemy is found.
+	SCHED_ARM_WEAPON, Performs ACT_ARM.
+	SCHED_BACK_AWAY_FROM_ENEMY, Back away from enemy. If not possible to back away then go behind enemy.
+	SCHED_BACK_AWAY_FROM_SAVE_POSITION, 
+	SCHED_BIG_FLINCH, Heavy damage was taken for the first time in a while.
+	SCHED_CHASE_ENEMY, Begin chasing an enemy.
+	SCHED_CHASE_ENEMY_FAILED, Failed to chase enemy.
+	SCHED_COMBAT_FACE, Face current enemy.
+	SCHED_COMBAT_PATROL, Will walk around patrolling an area until an enemy is found.
+	SCHED_COMBAT_STAND, 
+	SCHED_COMBAT_SWEEP, 
+	SCHED_COMBAT_WALK, 
+	SCHED_COWER, When not moving, will perform ACT_COWER.
+	SCHED_DIE, Regular NPC death.
+	SCHED_DIE_RAGDOLL, Plays NPC death sound (doesn't kill NPC).
+	SCHED_DISARM_WEAPON, Holsters active weapon. (Only works with NPC's that can holster weapons)
+	SCHED_DROPSHIP_DUSTOFF, 
+	SCHED_DUCK_DODGE, Preform Ducking animation. (Only works with npc_alyx)
+	SCHED_ESTABLISH_LINE_OF_FIRE, Search for a place to shoot current enemy.
+	SCHED_ESTABLISH_LINE_OF_FIRE_FALLBACK, Fallback from an established line of fire.
+	SCHED_FAIL, Failed doing current schedule.
+	SCHED_FAIL_ESTABLISH_LINE_OF_FIRE, Failed to establish a line of fire.
+	SCHED_FAIL_NOSTOP, 
+	SCHED_FAIL_TAKE_COVER, Failed to take cover.
+	SCHED_FALL_TO_GROUND, Fall to ground when in the air.
+	SCHED_FEAR_FACE, Will express fear face. (Only works on NPCs with expressions)
+	SCHED_FLEE_FROM_BEST_SOUND, 
+	SCHED_FLINCH_PHYSICS, Plays ACT_FLINCH_PHYSICS.
+	SCHED_FORCED_GO, Force walk to position (debug).
+	SCHED_FORCED_GO_RUN, Force run to position (debug).
+	SCHED_GET_HEALTHKIT, Pick up item if within a radius of 5 units.
+	SCHED_HIDE_AND_RELOAD, Take cover and reload weapon.
+	SCHED_IDLE_STAND, Idle stance
+	SCHED_IDLE_WALK, Walk to position.
+	SCHED_IDLE_WANDER, Walk to random position within a radius of 200 units.
+	SCHED_INTERACTION_MOVE_TO_PARTNER, 
+	SCHED_INTERACTION_WAIT_FOR_PARTNER, 
+	SCHED_INVESTIGATE_SOUND, 
+	SCHED_MELEE_ATTACK1, 
+	SCHED_MELEE_ATTACK2, 
+	SCHED_MOVE_AWAY, Move away from player.
+	SCHED_MOVE_AWAY_END, Stop moving and continue enemy scan.
+	SCHED_MOVE_AWAY_FAIL, Failed to move away; stop moving.
+	SCHED_MOVE_AWAY_FROM_ENEMY, Move away from enemy while facing it and checking for new enemies.
+	SCHED_MOVE_TO_WEAPON_RANGE, Move to the range the weapon is preferably used at.
+	SCHED_NEW_WEAPON, Pick up a new weapon if within a radius of 5 units.
+	SCHED_NEW_WEAPON_CHEAT, Fail safe: Create the weapon that the NPC went to pick up if it was removed during pick up schedule.
+	SCHED_NONE, No schedule is being performed.
+	SCHED_NPC_FREEZE, Prevents movement until COND_NPC_UNFREEZE(68) is set.
+	SCHED_PATROL_RUN, Run to random position and stop if enemy is heard or found.
+	SCHED_PATROL_WALK, Walk to random position and stop if enemy is heard or found.
+	SCHED_PRE_FAIL_ESTABLISH_LINE_OF_FIRE, 
+	SCHED_RANGE_ATTACK1, 
+	SCHED_RANGE_ATTACK2, 
+	SCHED_RELOAD, Stop moving and reload until danger is heard.
+	SCHED_RUN_FROM_ENEMY, Retreat from the established enemy.
+	SCHED_RUN_FROM_ENEMY_FALLBACK, 
+	SCHED_RUN_FROM_ENEMY_MOB, 
+	SCHED_RUN_RANDOM, Run to random position within a radius of 500 units.
+	SCHED_SCENE_GENERIC, 
+	SCHED_SCRIPTED_CUSTOM_MOVE, 
+	SCHED_SCRIPTED_FACE, 
+	SCHED_SCRIPTED_RUN, 
+	SCHED_SCRIPTED_WAIT, 
+	SCHED_SCRIPTED_WALK, 
+	SCHED_SHOOT_ENEMY_COVER, Shoot cover that the enemy is behind.
+	SCHED_SLEEP, Sets the NPC to a sleep-like state.
+	SCHED_SMALL_FLINCH, 
+	SCHED_SPECIAL_ATTACK1, 
+	SCHED_SPECIAL_ATTACK2, 
+	SCHED_STANDOFF, 
+	SCHED_SWITCH_TO_PENDING_WEAPON, 
+	SCHED_TAKE_COVER_FROM_BEST_SOUND, 
+	SCHED_TAKE_COVER_FROM_ENEMY, Take cover from current enemy.
+	SCHED_TAKE_COVER_FROM_ORIGIN, 
+	SCHED_TARGET_CHASE, Chase set NPC target.
+	SCHED_TARGET_FACE, Face NPC target.
+	SCHED_VICTORY_DANCE, Human victory dance.
+	SCHED_WAIT_FOR_SCRIPT, 
+	SCHED_WAIT_FOR_SPEAK_FINISH, 
+	SCHED_WAKE_ANGRY, Spot an enemy and go from an idle state to combat state.
+}
+
+ENUM WEAPON_PROFICIENCY, Enumerations used by NPC:SetCurrentWeaponProficiency and NPC:GetCurrentWeaponProficiency.
+{
+	WEAPON_PROFICIENCY_POOR, The NPC will miss a large majority of their shots.
+	WEAPON_PROFICIENCY_AVERAGE, The NPC will miss about half of their shots.
+	WEAPON_PROFICIENCY_GOOD, The NPC will sometimes miss their shots.
+	WEAPON_PROFICIENCY_VERY_GOOD, The NPC will rarely miss their shots.
+	WEAPON_PROFICIENCY_PERFECT, The NPC will almost never miss their shots.
+}

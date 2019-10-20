@@ -1,0 +1,91 @@
+ENUM SND
+{
+	SND_NOFLAGS, To keep the compiler happy
+	SND_CHANGE_VOL, Change sound vol
+	SND_CHANGE_PITCH, Change sound pitch
+	SND_STOP, Stop the sound
+	SND_SPAWNING, We're spawning, used in some cases for ambients. Not sent over net, only a param between dll and server.
+	SND_DELAY, Sound has an initial delay
+	SND_STOP_LOOPING, Stop all looping sounds on the entity.
+	SND_SHOULDPAUSE, This sound should be paused if the game is paused
+	SND_IGNORE_PHONEMES, 
+	SND_IGNORE_NAME, Used to change all sounds emitted by an entity, regardless of scriptname
+	SND_DO_NOT_OVERWRITE_EXISTING_ON_CHANNEL, 
+}
+
+ENUM SNDLVL
+{
+	SNDLVL_NONE, Sound plays everywhere
+	SNDLVL_20dB, Rustling leaves
+	SNDLVL_25dB, Whispering
+	SNDLVL_30dB, Library
+	SNDLVL_35dB, 
+	SNDLVL_40dB, 
+	SNDLVL_45dB, Refrigerator
+	SNDLVL_50dB, Average home
+	SNDLVL_55dB, Stop the sound
+	SNDLVL_60dB
+	SNDLVL_IDLE, Normal conversation, clothes dryer
+	SNDLVL_65dB, Washing machine, dishwasher
+	SNDLVL_STATIC, 
+	SNDLVL_70dB, Car, vacuum cleaner, mixer, electric sewing machine
+	SNDLVL_75dB
+	SNDLVL_NORM, Busy traffic
+	SNDLVL_80dB
+	SNDLVL_TALKING, Mini-bike, alarm clock, noisy restaurant, office tabulator, outboard motor, passing snowmobile
+	SNDLVL_85dB, Average factory, electric shaver
+	SNDLVL_90dB, Screaming child, passing motorcycle, convertible ride on freeway
+	SNDLVL_95dB, 
+	SNDLVL_100dB, Subway train, diesel truck, woodworking shop, pneumatic drill, boiler shop, jackhammer
+	SNDLVL_105dB, Helicopter, power mower
+	SNDLVL_110dB, Snowmobile (drivers seat), inboard motorboat, sandblasting
+	SNDLVL_120dB, Car horn, propeller aircraft
+	SNDLVL_130dB, Air raid siren
+	SNDLVL_140dB
+	SNDLVL_GUNFIRE, Threshold of pain, gunshot, jet engine
+	SNDLVL_150dB, 
+	SNDLVL_180dB, Rocket launching
+}
+
+ENUM CHAN, Enumerations used by EmitSound and sound.Add.
+{
+	CHAN_REPLACE, Used when playing sounds through console commands.
+	CHAN_AUTO, Automatic channel
+	CHAN_WEAPON, Channel for weapon sounds
+	CHAN_VOICE, Channel for NPC voices
+	CHAN_ITEM, Channel for items ( Health kits, etc )
+	CHAN_BODY, Clothing, ragdoll impacts, footsteps, knocking/pounding/punching etc.
+	CHAN_STREAM, Stream channel from the static or dynamic area
+	CHAN_STATIC, A constant/background sound that doesn't require any reaction.
+	CHAN_VOICE2, TF2s Announcer dialogue channel
+	CHAN_VOICE_BASE, Channel for network voice data
+	CHAN_USER_BASE, 
+}
+
+ENUM GMOD_CHANNEL, Enumerations used by IGModAudioChannel:GetState. Clientside only.
+{
+	GMOD_CHANNEL_STOPPED, The channel is stopped
+	GMOD_CHANNEL_PLAYING, The channel is playing
+	GMOD_CHANNEL_PAUSED, The channel is paused
+	GMOD_CHANNEL_STALLED, The channel is buffering
+}
+
+ENUM FFT, Enumerations used by IGModAudioChannel:FFT. Clientside only.
+{
+	FFT_256, 128 levels
+	FFT_512, 256 levels
+	FFT_1024, 512 levels
+	FFT_2048, 1024 levels
+	FFT_4096, 2048 levels
+	FFT_8192, 4096 levels
+	FFT_16384, 8192 levels
+	FFT_32768, 16384 levels
+}
+
+ENUM STEPSOUNDTIME, Enumerations used in GM:PlayerStepSoundTime hook.
+{
+	STEPSOUNDTIME_NORMAL, Normal step
+	STEPSOUNDTIME_ON_LADDER, Step on ladder
+	STEPSOUNDTIME_WATER_KNEE, Step in water, with water reaching knee
+	STEPSOUNDTIME_WATER_FOOT, Step in water, with water reaching foot
+}

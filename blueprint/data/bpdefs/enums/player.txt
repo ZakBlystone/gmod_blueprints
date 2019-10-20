@@ -1,0 +1,100 @@
+ENUM OBS_MODE
+{
+	OBS_MODE_NONE, Not spectating
+	OBS_MODE_DEATHCAM, 
+	OBS_MODE_FREEZECAM, TF2-like freezecam
+	OBS_MODE_FIXED, Same as OBS_MODE_CHASE, but you can't rotate the view
+	OBS_MODE_IN_EYE, First person cam
+	OBS_MODE_CHASE, Chase camrd person cam, free rotation around the spectated target
+	OBS_MODE_ROAMING, Free roam/noclip-alike. Does not work from GM:PlayerDeath
+}
+
+ENUM GESTURE_SLOT, Enumerations used by Player:AnimResetGestureSlot and Player:AnimRestartGesture.
+{
+	GESTURE_SLOT_ATTACK_AND_RELOAD, Slot for weapon gestures
+	GESTURE_SLOT_GRENADE, 
+	GESTURE_SLOT_JUMP, Slot for jump gestures
+	GESTURE_SLOT_SWIM, Slot for swimming gestures
+	GESTURE_SLOT_FLINCH, Slot for flinching gestures
+	GESTURE_SLOT_VCD, 
+	GESTURE_SLOT_CUSTOM, Slot for custom gestures
+}
+
+ENUM HITGROUP, Enumerations used by GM:ScalePlayerDamage and GM:ScaleNPCDamage and returned by Player:LastHitGroup.
+{
+	HITGROUP_GENERIC, 1:1 damage. Melee weapons typically hit this hitgroup. This hitgroup is not present on default player models. It is unknown how this is generated in GM:ScalePlayerDamage, but it occurs when shot by NPCs ( npc_combine_s ) for example.
+	HITGROUP_HEAD, Head
+	HITGROUP_CHEST, Chest
+	HITGROUP_STOMACH, Stomach
+	HITGROUP_LEFTARM, Left arm
+	HITGROUP_RIGHTARM, Right arm
+	HITGROUP_LEFTLEG, Left leg
+	HITGROUP_RIGHTLEG, Right leg
+	HITGROUP_GEAR, Gear. Supposed to be belt area. This hitgroup is not present on default player models.
+}
+
+ENUM HUD, Enumerations used by Player:PrintMessage and PrintMessage.
+{
+	HUD_PRINTNOTIFY, No longer works; now same as HUD_PRINTCONSOLE
+	HUD_PRINTCONSOLE, Console
+	HUD_PRINTTALK, Chat, also prints to console
+	HUD_PRINTCENTER, Center of the screen
+}
+
+ENUM PLAYER
+{
+	PLAYER_IDLE, 
+	PLAYER_WALK, 
+	PLAYER_JUMP, 
+	PLAYER_SUPERJUMP, 
+	PLAYER_DIE, 
+	PLAYER_ATTACK1, Player attack according to current hold type, used in SWEPs
+	PLAYER_IN_VEHICLE, 
+	PLAYER_RELOAD, Player reload according to current hold type, used in SWEPs
+	PLAYER_START_AIMING, 
+	PLAYER_LEAVE_AIMING, 
+}
+
+ENUM PLAYERANIMEVENT
+{
+	PLAYERANIMEVENT_ATTACK_PRIMARY, Primary attack
+	PLAYERANIMEVENT_ATTACK_SECONDARY, Secondary attack
+	PLAYERANIMEVENT_ATTACK_GRENADE, Grenade throw
+	PLAYERANIMEVENT_RELOAD, Reload
+	PLAYERANIMEVENT_RELOAD_LOOP, Looping reload (single-reload shotguns)
+	PLAYERANIMEVENT_RELOAD_END, Looping reload end
+	PLAYERANIMEVENT_JUMP, Jump
+	PLAYERANIMEVENT_SWIM, Swim
+	PLAYERANIMEVENT_DIE, Die
+	PLAYERANIMEVENT_FLINCH_CHEST, 
+	PLAYERANIMEVENT_FLINCH_HEAD, 
+	PLAYERANIMEVENT_FLINCH_LEFTARM, 
+	PLAYERANIMEVENT_FLINCH_RIGHTARM, 
+	PLAYERANIMEVENT_FLINCH_LEFTLEG, 
+	PLAYERANIMEVENT_FLINCH_RIGHTLEG, 
+	PLAYERANIMEVENT_DOUBLEJUMP, 
+	PLAYERANIMEVENT_CANCEL, 
+	PLAYERANIMEVENT_SPAWN, Spawn
+	PLAYERANIMEVENT_SNAP_YAW, 
+	PLAYERANIMEVENT_CUSTOM, Custom activity
+	PLAYERANIMEVENT_CUSTOM_GESTURE, Play activity in gesture slot
+	PLAYERANIMEVENT_CUSTOM_SEQUENCE, Play sequence
+	PLAYERANIMEVENT_CUSTOM_GESTURE_SEQUENCE, Play sequence in gesture slot
+	PLAYERANIMEVENT_CANCEL_RELOAD, Cancel reload animation
+}
+
+ENUM SCREENFADE, Enumerations used by Player:ScreenFade.
+{
+	SCREENFADE.IN, Fade out after the hold time has passed
+	SCREENFADE.OUT, Fade in, hold time passes, disappear
+	SCREENFADE.MODULATE, With white color, turns the screen black
+	SCREENFADE.STAYOUT, No effects, never disappear
+	SCREENFADE.PURGE, Appear, Disappear, no effects
+}
+
+ENUM TEAM, Default defined teams in Garry's Mod. This does not include any custom teams created in custom gamemodes. Enumerations to use with Player:Team
+{
+	TEAM_CONNECTING, Connecting team ID, set when player connects to the server
+	TEAM_UNASSIGNED, Unassigned team ID, set right after player connected
+	TEAM_SPECTATOR, Spectator team ID
+}
