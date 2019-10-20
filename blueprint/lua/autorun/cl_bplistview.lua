@@ -180,6 +180,12 @@ function PANEL:SetList( list )
 
 end
 
+function PANEL:OnRemove()
+
+	if self.list then self.list:RemoveListener(self.callback) end
+
+end
+
 function PANEL:OnListCallback(cb, ...)
 
 	if cb == bplist.CB_ADD then self:ItemAdded(...) end

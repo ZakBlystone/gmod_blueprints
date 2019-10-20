@@ -40,17 +40,18 @@ function meta:Init(module, type)
 	self.connections = {}
 	self.inputs = bplist.New():NamedItems("Inputs")
 	self.outputs = bplist.New():NamedItems("Outputs")
+	self.heldConnections = {}
 
 	self.inputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE )
-			self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE)
-			self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE)
+			self.module:PreModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE, action)
+			self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE, action)
 		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE )
-			self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE)
-			self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE)
+			self.module:PostModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE, action )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -58,13 +59,13 @@ function meta:Init(module, type)
 	self.outputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE )
-			self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE)
-			self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE)
+			self.module:PreModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE, action )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE )
-			self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE)
-			self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE)
+			self.module:PostModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE, action )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -113,32 +114,89 @@ function meta:PostInit()
 
 end
 
-function meta:PreModifyNodeType( nodeType, action )
+function meta:PreModifyNodeType( nodeType, action, subaction )
 
 	self:FireListeners(CB_PREMODIFY_NODETYPE, nodeType, action)
 
-end
+	if action == NODETYPE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
 
-function meta:PostModifyNodeType( nodeType, action )
+		self.heldConnections[nodeType] = {}
+		local held = self.heldConnections[nodeType]
+		local ntype = self:GetNodeTypes()[nodeType]
+		if ntype == nil then return end
 
-	self:FireListeners(CB_POSTMODIFY_NODETYPE, nodeType, action)
+		for id, node in self:Nodes() do
+			if node.nodeType ~= nodeType then continue end
 
-end
+			for i, c in self:Connections() do
 
-function meta:PreModify(action)
+				if c[1] == id then --output
+					local pin = ntype.pins[c[2]]
+					self:RemoveConnectionID(i)
+					table.insert(held, {id, pin[1], pin[3], c[3], c[4]})
+				elseif c[3] == id then --input
+					local pin = ntype.pins[c[4]]
+					self:RemoveConnectionID(i)
+					table.insert(held, {id, pin[1], pin[3], c[1], c[2]})
+				end
 
-	if action == bpmodule.GRAPH_MODIFY_RENAME then
-		self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_RENAME)
-		self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_RENAME)
+			end
+
+		end
+
 	end
 
 end
 
-function meta:PostModify(action)
+function meta:PostModifyNodeType( nodeType, action, subaction )
+
+	self:FireListeners(CB_POSTMODIFY_NODETYPE, nodeType, action)
+
+	if action == NODETYPE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
+
+		local ntype = self:GetNodeTypes()[nodeType]
+		local held = self.heldConnections[nodeType]
+		if ntype == nil then return end
+		if held == nil then return end
+
+		local function findPin( dir, name )
+			for i=1, #ntype.pins do
+				if ntype.pins[i][1] == dir and ntype.pins[i][3] == name then return i end
+			end
+			return nil
+		end
+
+		for _, c in pairs(held) do
+
+			local pinID = findPin( c[2], c[3] )
+			if pinID then
+				self:ConnectNodes(c[1], pinID, c[4], c[5])
+			else
+				print("Couldn't find pin: " .. tostring(c[3]))
+			end
+
+		end
+
+		self.heldConnections[nodeType] = nil
+
+	end
+
+end
+
+function meta:PreModify(action, subaction)
 
 	if action == bpmodule.GRAPH_MODIFY_RENAME then
-		self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_RENAME)
-		self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_RENAME)
+		self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_RENAME, subaction)
+		self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_RENAME, subaction)
+	end
+
+end
+
+function meta:PostModify(action, subaction)
+
+	if action == bpmodule.GRAPH_MODIFY_RENAME then
+		self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_RENAME, subaction)
+		self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_RENAME, subaction)
 	end
 
 end

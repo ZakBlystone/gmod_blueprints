@@ -88,11 +88,11 @@ function meta:Init(type)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__VGet" .. id, bpgraph.NODETYPE_MODIFY_RENAME )
-			self:PreModifyNodeType( "__VSet" .. id, bpgraph.NODETYPE_MODIFY_RENAME )
+			self:PreModifyNodeType( "__VGet" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__VSet" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__VGet" .. id, bpgraph.NODETYPE_MODIFY_RENAME )
-			self:PostModifyNodeType( "__VSet" .. id, bpgraph.NODETYPE_MODIFY_RENAME )
+			self:PostModifyNodeType( "__VGet" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__VSet" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -104,28 +104,28 @@ function meta:Init(type)
 
 end
 
-function meta:PreModifyNodeType( nodeType, action )
+function meta:PreModifyNodeType( nodeType, action, subaction )
 
 	for _, graph in self:Graphs() do
-		graph:PreModifyNodeType( nodeType, action )
+		graph:PreModifyNodeType( nodeType, action, subaction )
 	end
 
 end
 
-function meta:PostModifyNodeType( nodeType, action )
+function meta:PostModifyNodeType( nodeType, action, subaction )
 
 	for _, graph in self:Graphs() do
-		graph:PostModifyNodeType( nodeType, action )
+		graph:PostModifyNodeType( nodeType, action, subaction )
 	end
 
 end
 
-function meta:PreModifyGraph( action, id, graph )
+function meta:PreModifyGraph( action, id, graph, subaction )
 
 	if graph:GetType() ~= GT_Function then return end
 
-	graph:PreModify(action)
-	self:PreModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action] )
+	graph:PreModify(action, subaction)
+	self:PreModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action], subaction )
 
 end
 
@@ -133,8 +133,8 @@ function meta:PostModifyGraph( action, id, graph )
 
 	if graph:GetType() ~= GT_Function then return end
 
-	graph:PostModify(action)
-	self:PostModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action] )
+	graph:PostModify(action, subaction)
+	self:PostModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action], subaction )
 
 end
 
