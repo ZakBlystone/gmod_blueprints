@@ -90,6 +90,25 @@ NodeTypes = {
 			#4 = arg[1].OriginalSoundName
 		]],
 	},
+	["Spectate"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+		},
+		code = "$2:Spectate( OBS_MODE_CHASE )",
+	},
+	["SpectateEntity"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_Entity, "entity", PNF_Nullable },
+		},
+		code = "$2:SpectateEntity( $3 )",
+	},
+	["UnSpectate"] = FUNCTION {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+		},
+		code = "$2:UnSpectate()",
+	},
 	["Alive"] = PURE {
 		pins = {
 			{ PD_In, PN_Player, "player" },
@@ -414,6 +433,15 @@ NodeTypes = {
 			{ PD_In, PN_Player, "player" },
 		},
 		code = "Player_.CreateRagdoll($2)",
+	},
+	["KeyDown"] = PURE {
+		pins = {
+			{ PD_In, PN_Player, "player" },
+			{ PD_In, PN_Number, "key" },
+			{ PD_Out, PN_Bool, "isDown" },
+		},
+		code = "#1 = $1:KeyDown($2)",
+		compact = true,	
 	},
 	["Say"] = FUNCTION {
 		pins = {

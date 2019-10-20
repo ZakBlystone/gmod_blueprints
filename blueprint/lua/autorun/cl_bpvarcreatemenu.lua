@@ -14,7 +14,7 @@ end
 
 vgui.Register( "BPVarCreateMenu", PANEL, "EditablePanel" )
 
-function RequestVarSpec( callback )
+function RequestVarSpec( callback, parent )
 
 	local Window = vgui.Create( "DFrame" )
 	Window:SetTitle( "Create Variable" )
@@ -33,12 +33,17 @@ function RequestVarSpec( callback )
 	Window.Think = function(self)
 		wthink(self)
 		ftime = ftime - FrameTime()
-		if ftime <= 0 and not self:HasFocus() and not NameEntry:HasFocus() then self:Close() end
+		if ftime <= 0 and not self:HasAnyFocus() then self:Close() end
 	end
 
 	local ButtonPanel = vgui.Create( "DPanel", Window )
 	ButtonPanel:SetTall( 30 )
 	ButtonPanel:SetPaintBackground( true )
+
+	local function DoClose()
+		if IsValid(parent) then parent:Hold() end -- dumb hack
+		Window:Close() 
+	end
 
 	local Button = vgui.Create( "DButton", ButtonPanel )
 	Button:SetText( "OK" )
@@ -56,7 +61,7 @@ function RequestVarSpec( callback )
 
 		callback( name, type, flags )
 
-		Window:Close() 
+		DoClose()
 	end
 
 	local ButtonCancel = vgui.Create( "DButton", ButtonPanel )
@@ -65,11 +70,15 @@ function RequestVarSpec( callback )
 	ButtonCancel:SetTall( 20 )
 	ButtonCancel:SetWide( Button:GetWide() + 20 )
 	ButtonCancel:SetPos( 5, 5 )
-	ButtonCancel.DoClick = function() Window:Close() end
+	ButtonCancel.DoClick = function() DoClose() end
 	ButtonCancel:MoveRightOf( Button, 5 )
 
 	ButtonPanel:SetWide( Button:GetWide() + 5 + ButtonCancel:GetWide() + 10 )
 
+
+	Window.HasAnyFocus = function(self)
+		return self:HasFocus() or NameEntry:HasFocus() or Button:HasFocus() or ButtonCancel:HasFocus()
+	end
 
 	for i=0, PN_Max do
 		if i == PN_Any or i == PN_Exec then continue end
@@ -101,6 +110,7 @@ function RequestVarSpec( callback )
 	ButtonPanel:AlignBottom( 8 )
 
 	Window:MakePopup()
+	return Window
 	--Window:DoModal()
 
 end

@@ -337,7 +337,7 @@ function CompileNodeSingle(cs, nodeID)
 		for i=1, n do
 			code = code .. "$" .. (i+1) .. (i~=n and ", " or "")
 		end
-		code = code .. ")\ngoto popcall"
+		code = code .. ")\n#1"
 		print(code)
 	end
 

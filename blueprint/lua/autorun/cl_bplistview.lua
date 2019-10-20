@@ -71,6 +71,8 @@ function PANEL:CreateItemPanel( id, item )
 		if code == MOUSE_LEFT then
 			self:Select(id)
 			pnl:RequestFocus()
+		elseif code == MOUSE_RIGHT then
+			self:OpenMenu(id)
 		end
 	end
 
@@ -86,6 +88,11 @@ function PANEL:CreateItemPanel( id, item )
 
 	rmv.DoClick = function( pnl )
 
+		if self.noConfirm then
+			self.list:Remove( id )
+			return
+		end
+
 		Derma_Query("Delete " .. item:GetName() .. "? This cannot be undone",
 		"",
 		"Yes",
@@ -98,6 +105,46 @@ function PANEL:CreateItemPanel( id, item )
 	end
 
 	return panel
+
+end
+
+function PANEL:SetNoConfirm()
+
+	self.noConfirm = true
+	return self
+
+end
+
+function PANEL:CloseMenu()
+
+	if IsValid( self.menu ) then
+		self.menu:Remove()
+	end
+
+end
+
+function PANEL:OpenMenu( id )
+
+	print("OPEN MENU: " .. id)
+
+	self:CloseMenu()
+
+	self.menu = DermaMenu( false, self )
+
+	local t = {}
+	self:PopulateMenuItems(t, id)
+	for k,v in pairs(t) do
+		self.menu:AddOption( v.name, v.func )
+	end
+
+	self.menu:SetMinimumWidth( 100 )
+	self.menu:Open( gui.MouseX(), gui.MouseY(), false, self )
+
+end
+
+function PANEL:PopulateMenuItems( items, id )
+
+	table.insert(items, { name = "Rename", func = function() self:Rename(id) end })
 
 end
 
@@ -126,6 +173,10 @@ function PANEL:SetList( list )
 	if self.list then self.list:RemoveListener(self.callback) end
 	self.list = list
 	self.list:AddListener(self.callback, bplist.CB_ALL)
+
+	for id, item in self.list:Items() do
+		self:ItemAdded(id, item)
+	end
 
 end
 

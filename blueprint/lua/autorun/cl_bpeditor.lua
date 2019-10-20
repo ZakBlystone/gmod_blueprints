@@ -3,6 +3,7 @@ if SERVER then AddCSLuaFile() return end
 include("cl_bpnode.lua")
 include("cl_bppin.lua")
 include("cl_bpvarcreatemenu.lua")
+include("cl_bpgrapheditmenu.lua")
 include("sh_bpschema.lua")
 include("sh_bpmodule.lua")
 
@@ -217,6 +218,17 @@ function PANEL:Init()
 		end
 	end
 
+	local prev = self.GraphList.PopulateMenuItems
+	self.GraphList.PopulateMenuItems = function(pnl, items, id)
+		prev(pnl, items, id)
+		if self.module:GetGraph(id).type == bpschema.GT_Function then
+			table.insert(items, {
+				name = "Edit Pins",
+				func = function() self:EditGraphPins(id) end,
+			})
+		end
+	end
+
 	self.VarList = vgui.Create("BPListView", menu)
 	self.VarList:SetText("Variables")
 	self.VarList.HandleAddItem = function(list)
@@ -238,6 +250,12 @@ function PANEL:Init()
 
 	self.vvars = {}
 	self.vgraphs = {}
+
+end
+
+function PANEL:EditGraphPins( id )
+
+	bpuigrapheditmenu.EditGraphParams( self.module:GetGraph(id) )
 
 end
 

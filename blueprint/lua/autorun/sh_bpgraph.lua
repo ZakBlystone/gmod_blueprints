@@ -41,6 +41,34 @@ function meta:Init(module, type)
 	self.inputs = bplist.New():NamedItems("Inputs")
 	self.outputs = bplist.New():NamedItems("Outputs")
 
+	self.inputs:AddListener(function(cb, action, id, var)
+
+		if cb == bplist.CB_PREMODIFY then
+			self.module:PreModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE )
+			self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE)
+			self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE)
+		elseif cb == bplist.CB_POSTMODIFY then
+			self.module:PostModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE )
+			self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE)
+			self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE)
+		end
+
+	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+
+	self.outputs:AddListener(function(cb, action, id, var)
+
+		if cb == bplist.CB_PREMODIFY then
+			self.module:PreModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE )
+			self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE)
+			self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE)
+		elseif cb == bplist.CB_POSTMODIFY then
+			self.module:PostModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE )
+			self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE)
+			self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE)
+		end
+
+	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+
 	self.nodes:AddListener(function(cb, id)
 
 		if cb == bplist.CB_ADD then
