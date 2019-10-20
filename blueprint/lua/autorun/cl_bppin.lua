@@ -158,7 +158,7 @@ function PANEL:InitLiteral()
 				end
 
 				self.comboBox.OnSelect = function( pnl, index, value, data )
-					self.graph:SetPinLiteral( self.node.id, self.pinID, tostring(value) )
+					self.graph:SetPinLiteral( self.node.id, self.pinID, tostring(data) )
 				end
 				self.comboBox.Paint = function(te)
 					local w,h = te:GetSize()

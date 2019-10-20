@@ -92,7 +92,6 @@ local function CreateReducedEnumKeys( enum )
 	local commonLen = common:len()
 	for k,v in pairs(enum.entries) do
 		v.shortkey = blacklisted[v.key] and v.key or v.key:sub(commonLen+1, -1)
-		print(v.shortkey)
 	end
 
 end
