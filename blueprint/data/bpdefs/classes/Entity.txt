@@ -1,0 +1,8 @@
+CLASS Entity, entity
+{
+	FUNC SERVER TakeDamageInfo
+	{
+		DESC Applies the damage specified by the damage info to the entity.
+		IN damageInfo, PN_Ref, PNF_None, CTakeDamageInfo, #The damage to apply.
+	}
+}

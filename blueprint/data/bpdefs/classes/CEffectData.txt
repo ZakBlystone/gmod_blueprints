@@ -1,0 +1,163 @@
+CLASS CEffectData, effectData
+{
+	PURE SHARED GetAngles
+	{
+		DESC Returns the angles of the effect.
+		OUT angles, PN_Angles, #The angles of the effect
+	}
+	PURE SHARED GetAttachment
+	{
+		DESC Returns the attachment ID for the effect.
+		OUT attachment, PN_Number, #The attachment ID of the effect.
+	}
+	PURE SHARED GetColor
+	{
+		DESC Returns byte which represents the color of the effect.
+		OUT color, PN_Number, #The color of the effect
+	}
+	PURE SHARED GetDamageType
+	{
+		DESC Returns the damage type of the effect.
+		OUT damageType, PN_Enum, PNF_None, DMG, #Damage type of the effect
+	}
+	PURE SERVER GetEntIndex
+	{
+		DESC Returns the entity index of the entity set for the effect.
+		OUT entIndex, PN_Number, #The entity index of the entity set for the effect.
+	}
+	PURE SHARED GetEntity
+	{
+		DESC Returns the entity assigned to the effect.
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity assigned to the effect.
+	}
+	PURE SHARED GetFlags
+	{
+		DESC Returns the flags of the effect.
+		OUT flags, PN_Number, #The flags of the effect.
+	}
+	PURE SHARED GetHitBox
+	{
+		DESC Returns the hit box ID of the effect.
+		OUT id, PN_Number, #The hit box ID of the effect.
+	}
+	PURE SHARED GetMagnitude
+	{
+		DESC Returns the magnitude of the effect.
+		OUT magnitude, PN_Number, #The magnitude of the effect.
+	}
+	PURE SHARED GetMaterialIndex
+	{
+		DESC Returns the material ID of the effect.
+		OUT index, PN_Number, #The material ID of the effect.
+	}
+	PURE SHARED GetNormal
+	{
+		DESC Returns the normalized direction vector of the effect.
+		OUT normal, PN_Vector, #The normalized direction vector of the effect.
+	}
+	PURE SHARED GetOrigin
+	{
+		DESC Returns the origin position of the effect.
+		OUT origin, PN_Vector, #The origin position of the effect.
+	}
+	PURE SHARED GetRadius
+	{
+		DESC Returns the radius of the effect.
+		OUT radius, PN_Number, #The radius of the effect.
+	}
+	PURE SHARED GetScale
+	{
+		DESC Returns the scale of the effect.
+		OUT scale, PN_Number, #The scale of the effect
+	}
+	PURE SHARED GetStart
+	{
+		DESC Returns the start position of the effect.
+		OUT start, PN_Vector, #The start position of the effect
+	}
+	PURE SHARED GetSurfaceProp
+	{
+		DESC Returns the surface property index of the effect.
+		OUT surfaceProp, PN_Number, #The surface property index of the effect
+	}
+	FUNC SHARED SetAngles
+	{
+		DESC Sets the angles of the effect.
+		IN angles, PN_Angles, #The new angles to be set.
+	}
+	FUNC SHARED SetAttachment
+	{
+		DESC Sets the attachment id of the effect to be created with this effect data.
+		IN attachment, PN_Number, #New attachment ID of the effect.
+	}
+	FUNC SHARED SetColor
+	{
+		DESC Sets the color the effect.
+		IN color, PN_Number, #Color represented by a byte.	
+	}
+	FUNC SHARED SetDamageType
+	{
+		DESC Sets the damage type of the effect to be created with this effect data.
+		IN damageType, PN_Enum, PNF_None, DMG, #Damage type.
+	}
+	FUNC SERVER SetEntIndex
+	{
+		DESC Sets the damage type of the effect to be created with this effect data.
+		IN entIndex, PN_Number, #The entity index to be set.
+	}
+	FUNC SHARED SetEntity
+	{
+		DESC Sets the entity of the effect to be created with this effect data.
+		IN entity, PN_Ref, PNF_None, Entity, #Entity of the effect, mostly used for parenting.
+	}
+	FUNC SHARED SetFlags
+	{
+		DESC Sets the flags of the effect.
+		IN flags, PN_Number, #The flags of the effect. Each effect has their own flags.
+	}
+	FUNC SHARED SetHitBox
+	{
+		DESC Sets the hit box index of the effect.
+		IN id, PN_Number, #The hit box index of the effect.
+	}
+	FUNC SHARED SetMagnitude
+	{
+		DESC Sets the magnitude of the effect.
+		IN magnitude, PN_Number, #Sets the magnitude of the effect.
+	}
+	FUNC SHARED SetMaterialIndex
+	{
+		DESC Sets the material index of the effect.
+		IN index, PN_Number, #The material index of the effect.
+	}
+	FUNC SHARED SetNormal
+	{
+		DESC Sets the normalized direction vector of the effect to be created with this effect data.
+		IN normal, PN_Vector, #The normalized direction vector of the effect.
+	}
+	FUNC SHARED SetOrigin
+	{
+		DESC Sets the origin of the effect to be created with this effect data.
+		IN origin, PN_Vector, #Origin of the effect.
+	}
+	FUNC SHARED SetRadius
+	{
+		DESC Sets the radius of the effect to be created with this effect data.
+		IN radius, PN_Number, #Radius of the effect.
+	}
+	FUNC SHARED SetScale
+	{
+		DESC Sets the scale of the effect to be created with this effect data.
+		IN scale, PN_Number, #Scale of the effect.
+	}
+	FUNC SHARED SetStart
+	{
+		DESC Sets the start of the effect to be created with this effect data.
+		IN start, PN_Vector, #Start of the effect.
+	}
+	FUNC SHARED SetSurfaceProp
+	{
+		DESC Sets the surface property index of the effect.
+		IN surfaceProp, PN_Number, #The surface property index of the effect.
+	}
+}

@@ -1,0 +1,25 @@
+LIB util
+{
+	FUNC SHARED Effect
+	{
+		DESC Creates an effect with the specified data.
+		IN effectName, PN_String, #The name of the effect to create.
+		IN effectData, PN_Ref, PNF_None, CEffectData, #The effect data describing the effect.
+		IN allowOverride=true, PN_Bool, #Whether Lua-defined effects should override engine-defined effects with the same name for this/single function call.
+		IN recipientFilter, PN_Any, PNF_Nullable
+	}
+	PURE SHARED PointContents
+	{
+		DESC Returns the contents of the position specified.
+		IN position, PN_Vector, #Position to get the contents sample from.
+		OUT contents, PN_Enum, PNF_Bitfield, CONTENTS, #Contents bitflag
+	}
+	FUNC SHARED Decal
+	{
+		DESC Performs a trace and paints a decal to the surface hit.
+		IN name, PN_String, #The name of decal to paint
+		IN start, PN_Vector, #The start of the trace.
+		IN end, PN_Vector, #The end of the trace.
+		IN entity, PN_Ref, PNF_Nullable, Entity, #If set, the decal will not be able to be placed on given entity. Can also be a table of entities.
+	}
+}

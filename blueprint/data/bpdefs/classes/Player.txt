@@ -1,0 +1,8 @@
+CLASS Player, player
+{
+	FUNC SERVER Kick
+	{
+		DESC Kicks the player from the server.
+		IN reason=No reason, PN_String, #Reason to show for disconnection.
+	}
+}

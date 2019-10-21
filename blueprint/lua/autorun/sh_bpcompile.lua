@@ -3,6 +3,7 @@ AddCSLuaFile()
 include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
 include("sh_bpgraph.lua")
+include("sh_bpdefs.lua")
 include("sh_bpnodedef.lua")
 include("sh_bpmodule.lua")
 
@@ -647,6 +648,10 @@ function CompileMetaTableLookup(cs)
 		"Weapon",
 		"NPC",
 	}
+
+	for k, v in pairs( bpdefs.GetClasses() ) do
+		table.insert(tables, v.name)
+	end
 
 	for k, v in pairs(tables) do
 		cs.emit("local " .. v ..  "_ = FindMetaTable(\"" .. v .. "\")")

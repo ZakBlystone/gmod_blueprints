@@ -1,0 +1,13 @@
+LIB GLOBAL
+{
+	FUNC SHARED EffectData
+	{
+		DESC Returns a CEffectData object to be used with util.Effect.
+		OUT effect, PN_Ref, PNF_None, CEffectData
+	}
+	FUNC SHARED DamageInfo
+	{
+		DESC Returns an CTakeDamageInfo object.
+		OUT damageInfo, PN_Ref, PNF_None, CTakeDamageInfo
+	}
+}

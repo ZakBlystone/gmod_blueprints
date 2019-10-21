@@ -1,0 +1,154 @@
+CLASS CTakeDamageInfo, damageInfo
+{
+	FUNC SHARED AddDamage
+	{
+		DESC Increases the damage by damageIncrease.
+		IN damageIncrease, PN_Number, #The damage to add
+	}
+	PURE SHARED GetAmmoType
+	{
+		DESC Returns the ammo type used by the weapon that inflicted the damage.
+		OUT ammoId, PN_Number, #Ammo type ID
+	}
+	PURE SHARED GetAttacker
+	{
+		DESC Returns the attacker ( character who originated the attack ), for example a player or an NPC that shot the weapon.
+		OUT attacker, PN_Ref, PNF_None, Entity, #The attacker
+	}
+	PURE SHARED GetBaseDamage
+	{
+		DESC Returns the initial unmodified by skill level ( game.GetSkillLevel ) damage.
+		OUT damage, PN_Number, #Base damage
+	}
+	PURE SHARED GetDamage
+	{
+		DESC Returns the total damage.
+		OUT damage, PN_Number, #Damage
+	}
+	PURE SHARED GetDamageBonus
+	{
+		DESC Gets the current bonus damage.
+		OUT number, PN_Number, #Bonus damage
+	}
+	PURE SHARED GetDamageCustom
+	{
+		DESC Gets the custom damage type. This is used by Day of Defeat: Source and Team Fortress 2 for extended damage info, but isn't used in Garry's Mod by default.
+		OUT number, PN_Number, #The custom damage type
+	}
+	PURE SHARED GetDamageForce
+	{
+		DESC Returns a vector representing the damage force.
+		OUT force, PN_Vector, #The damage force
+	}
+	PURE SHARED GetDamagePosition
+	{
+		DESC Returns the position where the damage was or is going to be applied to.
+		OUT position, PN_Vector, #The damage position
+	}
+	PURE SHARED GetDamageType
+	{
+		DESC Returns a bitflag which indicates the damage type(s) of the damage.
+		OUT damageTypes, PN_Number, #The damage type flags
+	}
+	PURE SHARED GetInflictor
+	{
+		DESC Returns the inflictor of the damage. This is not necessarily a weapon.
+		OUT inflictor, PN_Ref, PNF_None, Entity, #The inflictor
+	}
+	PURE SHARED GetMaxDamage
+	{
+		DESC Returns the maximum damage.
+		OUT max, PN_Number, #maxDmg
+	}
+	PURE SHARED GetReportedPosition
+	{
+		DESC Returns the initial, unmodified position where the damage occured.
+		OUT position, PN_Vector, #position
+	}
+	PURE SHARED IsBulletDamage
+	{
+		DESC Returns true if the damage was caused by a bullet.
+		OUT isBullet, PN_Bool, #isBulletDamage
+	}
+	PURE SHARED IsDamageType
+	{
+		DESC Returns whenever the damageinfo contains the damage type specified.
+		IN damageType, PN_Enum, PNF_None, DMG
+		OUT isType, PN_Bool, #Whether this damage contains specified damage type or not
+	}
+	PURE SHARED IsExplosionDamage
+	{
+		DESC Returns whenever the damageinfo contains explosion damage.
+		OUT isExplosive, PN_Bool
+	}
+	PURE SHARED IsFallDamage
+	{
+		DESC Returns whenever the damageinfo contains fall damage.
+		OUT isFall, PN_Bool
+	}
+	FUNC SHARED ScaleDamage
+	{
+		DESC Scales the damage by the given value.
+		IN scale, PN_Number, #Value to scale the damage with.
+	}
+	FUNC SHARED SetAmmoType
+	{
+		DESC Changes the ammo type used by the weapon that inflicted the damage.
+		IN ammoType, PN_Number, #Ammo type ID
+	}
+	FUNC SHARED SetAttacker
+	{
+		DESC Sets the attacker ( character who originated the attack ) of the damage, for example a player or an NPC.
+		IN entity, PN_Ref, PNF_None, Entity, #The entity to be set as the attacker.
+	}
+	FUNC SHARED SetDamage
+	{
+		DESC Sets the amount of damage.
+		IN damage, PN_Number, #The value to set the absolute damage to.
+	}
+	FUNC SHARED SetDamageBonus
+	{
+		DESC Sets the bonus damage. Bonus damage isn't automatically applied, so this will have no outer effect by default.
+		IN damage, PN_Number, #The extra damage to be added.
+	}
+	FUNC SHARED SetDamageCustom
+	{
+		DESC Sets the custom damage type. This is used by Day of Defeat: Source and Team Fortress 2 for extended damage info, but isn't used in Garry's Mod by default.
+		IN damageType, PN_Number, #Any integer - can be based on your own custom enums.
+	}
+	FUNC SHARED SetDamageForce
+	{
+		DESC Sets the directional force of the damage.
+		IN force, PN_Vector, #The vector to set the force to.
+	}
+	FUNC SHARED SetDamagePosition
+	{
+		DESC Sets the position of where the damage gets applied to.
+		IN position, PN_Vector, #The position where the damage will be applied.
+	}
+	FUNC SHARED SetDamageType
+	{
+		DESC Sets the damage type.
+		IN damageType, PN_Enum, PNF_None, DMG, #The damage type
+	}
+	FUNC SHARED SetInflictor
+	{
+		DESC Sets the inflictor of the damage for example a weapon.
+		IN inflictor, PN_Ref, PNF_None, Entity, #The new inflictor.
+	}
+	FUNC SHARED SetMaxDamage
+	{
+		DESC Sets the maximum damage the object can cause.
+		IN maxDamage, PN_Number
+	}
+	FUNC SHARED SetReportedPosition
+	{
+		DESC Sets the origin of the damage.
+		IN position, PN_Vector
+	}
+	FUNC SHARED SubtractDamage
+	{
+		DESC Subtracts the specified amount from the damage.
+		IN damage, PN_Number, #Value to subtract.
+	}
+}

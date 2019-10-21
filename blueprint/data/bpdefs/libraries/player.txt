@@ -1,0 +1,59 @@
+LIB player
+{
+	FUNC SERVER CreateNextBot
+	{
+		DESC Similar to the serverside command "bot", this function creates a new Player bot with the given name. This bot will not obey to the usual "bot_*" commands, and it's the same bot base used in TF2 and CS:S.
+		IN botName, PN_String, #The name of the bot, using an already existing name will append brackets at the end of it with a number pertaining it.
+		OUT player, PN_Ref, PNF_None, Player, #The newly created Player bot. Returns NULL if there's no Player slots available to host it.
+	}
+	PURE SHARED GetAll
+	{
+		DESC Gets all the current players in the server (not including connecting clients).
+		OUT players, PN_Ref, PNF_Table, Player, #All Players currently in the server.
+	}
+	PURE SHARED GetBots
+	{
+		DESC Returns a table of all bots on the server.
+		OUT bots, PN_Ref, PNF_Table, Player, #A table only containing bots ( AI / non human players )
+	}
+	PURE SHARED GetByAccountID
+	{
+		DESC Gets the player with the specified AccountID.
+		IN accountID, PN_String, #The Player:AccountID to find the player by.
+		OUT player, PN_Ref, PNF_None, Player, #Player if one is found, false otherwise.
+	}
+	PURE SHARED GetByID
+	{
+		DESC Gets the player with the specified connection ID.
+		IN connectionID, PN_Number, #The connection ID to find the player by.
+		OUT player, PN_Ref, PNF_None, Player, #Player if one is found, nil otherwise
+	}
+	PURE SHARED GetBySteamID
+	{
+		DESC Gets the player with the specified SteamID.
+		IN steamID, PN_String, #The Player:SteamID to find the player by.
+		OUT player, PN_Ref, PNF_None, Player, #Player if one is found, false otherwise.
+	}
+	PURE SHARED GetBySteamID64
+	{
+		DESC Gets the player with the specified SteamID64.
+		IN steamID, PN_String, #The Player:SteamID64 to find the player by. Also accepts numbers.
+		OUT player, PN_Ref, PNF_None, Player, #Player if one is found, false otherwise.
+	}
+	PURE SHARED GetByUniqueID
+	{
+		DESC Gets the player with the specified uniqueID (not recommended way to identify players).
+		IN uniqueID, PN_String, #The Player:UniqueID to find the player by.
+		OUT player, PN_Ref, PNF_None, Player, #Player if one is found, false otherwise.		
+	}
+	PURE SHARED GetCount
+	{
+		DESC Gives you the player count. Similar to #player.GetAll but with much better performance.
+		OUT count, PN_Number, #Number of players
+	}
+	PURE SHARED GetHumans
+	{
+		DESC Returns a table of all human ( non bot/AI ) players.
+		OUT humans, PN_Ref, PNF_Table, Player, #A table of all human ( non bot/AI ) players.
+	}
+}

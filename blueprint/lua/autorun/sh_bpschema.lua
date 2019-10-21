@@ -22,7 +22,8 @@ PN_Color = 11
 PN_Weapon = 12
 PN_Angles = 13
 PN_Enum = 14
-PN_Max = 14
+PN_Ref = 15
+PN_Max = 15
 
 NT_Pure = 0
 NT_Function = 1
@@ -34,6 +35,7 @@ NT_FuncOutput = 5
 PNF_None = 0
 PNF_Table = 1
 PNF_Nullable = 2
+PNF_Bitfield = 4
 
 GT_Event = 0
 GT_Function = 1
@@ -43,6 +45,10 @@ MT_Game = 1
 MT_Entity = 2
 MT_Weapon = 3
 MT_NPC = 4
+
+ROLE_Server = 0
+ROLE_Client = 1
+ROLE_Shared = 2
 
 NodeTypeColors = {
 	[NT_Pure] = Color(60,150,60),
@@ -73,7 +79,8 @@ PinTypeNames = {
 	[PN_Color] = "Color",
 	[PN_Weapon] = "Weapon",
 	[PN_Angles] = "Angles",
-	[PN_Enum] = "Enum"
+	[PN_Enum] = "Enum",
+	[PN_Ref] = "Ref",
 }
 
 GraphTypeColors = {
@@ -97,16 +104,17 @@ NodePinColors = {
 	[PN_Weapon] = Color(180,255,100),
 	[PN_Angles] = Color(80,150,180),
 	[PN_Enum] = Color(0,100,80),
+	[PN_Ref] = Color(0,180,255),
 }
 
 NodePinImplicitConversions = {
-	[PN_Entity] = { PN_Player },
-	[PN_Player] = { PN_Entity },
+	[PN_Entity] = { PN_Player, { PN_Ref, "Entity" } },
+	[PN_Player] = { PN_Entity, { PN_Ref, "Player" } },
 	[PN_Weapon] = { PN_Entity },
 	[PN_Npc] = { PN_Entity },
 	[PN_Vehicle] = { PN_Entity },
 	[PN_Enum] = { PN_Number },
-	[PN_Number] = { PN_Enum },
+	[PN_Number] = { PN_Enum, PN_String },
 }
 
 NodeLiteralTypes = {
@@ -125,9 +133,18 @@ Defaults = {
 	[PN_Entity] = "nil",
 	[PN_String] = "",
 	[PN_Enum] = "0",
+	[PN_Ref] = "nil",
 }
 
 function ConfigureNodeType(t)
+
+	if t.type == NT_Function then
+		table.insert(t.pins, 1, { PD_Out, PN_Exec, "Thru" })
+		table.insert(t.pins, 1, { PD_In, PN_Exec, "Exec" })
+	elseif t.type == NT_Event then
+		table.insert(t.pins, 1, { PD_Out, PN_Exec, "Exec" })
+	end
+
 	t.pinlayout = { inputs = {}, outputs = {} }
 	t.pinlookup = {}
 
@@ -156,8 +173,6 @@ end
 function FUNCTION(t) 
 	t.pins = t.pins or {}
 	t.type = NT_Function
-	table.insert(t.pins, 1, { PD_Out, PN_Exec, "Thru" })
-	table.insert(t.pins, 1, { PD_In, PN_Exec, "Exec" })
 	ConfigureNodeType(t)
 	return t
 end
@@ -165,7 +180,6 @@ end
 function EVENT(t)
 	t.pins = t.pins or {}
 	t.type = NT_Event
-	table.insert(t.pins, 1, { PD_Out, PN_Exec, "Exec" })
 	ConfigureNodeType(t)
 	return t 
 end

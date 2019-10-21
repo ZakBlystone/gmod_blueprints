@@ -79,7 +79,12 @@ end
 
 function PANEL:GetDisplayName()
 
-	return self.nodeType.displayName or self.nodeType.name
+	local name = self.nodeType.displayName or self.nodeType.name
+	local sub = string.find(name, "[:.]")
+	if sub then
+		name = name:sub(sub+1, -1)
+	end
+	return name
 
 end
 
@@ -230,8 +235,20 @@ function PANEL:Paint(w, h)
 	local ntc = NodeTypeColors[ ntype.type ]
 	draw.RoundedBox(6, inset, inset, w - inset*2, h - inset*2, Color(20,20,20,255))
 
+
+	if not ntype.compact then draw.RoundedBox(6, inset, inset, w - inset * 2, 20, Color(ntc.r,ntc.g,ntc.b,180)) end
+	if ntype.role then
+		if ntype.role == ROLE_Shared then
+			draw.RoundedBox(2, inset + w - 30, inset, 10, 20, Color(20,160,255,255))
+			draw.RoundedBox(2, inset + w - 30, inset + 10, 10, 10, Color(255,160,20,255))
+		elseif ntype.role == ROLE_Server then
+			draw.RoundedBox(2, inset + w - 30, inset, 10, 20, Color(20,160,255,255))
+		elseif ntype.role == ROLE_Client then
+			draw.RoundedBox(2, inset + w - 30, inset, 10, 20, Color(255,160,20,255))
+		end
+	end
+
 	if not ntype.compact then
-		draw.RoundedBox(6, inset, inset, w - inset * 2, 20, Color(ntc.r,ntc.g,ntc.b,180))
 		draw.SimpleText(self:GetDisplayName(), "HudHintTextLarge", inset + 2, inset + 2)
 	else
 		-- HACK

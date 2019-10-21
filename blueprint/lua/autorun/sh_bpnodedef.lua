@@ -2,6 +2,7 @@ AddCSLuaFile()
 
 include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
+include("sh_bpdefs.lua")
 
 module("bpnodedef", package.seeall, bpcommon.rescope(bpschema))
 
@@ -684,6 +685,13 @@ NodeTypes = {
 			{ PD_Out, PN_Number, "num" },
 		},
 		code = "#1 = $1",
+	},
+	["Boolean"] = PURE {
+		pins = {
+			{ PD_In, PN_Bool, "bool" },
+			{ PD_Out, PN_Bool, "bool" },
+		},
+		code = "#1 = $1",	
 	},
 	["Modulo"] = PURE {
 		pins = {
@@ -1569,7 +1577,7 @@ AddHook("PlayerButtonUp", { {"player", PN_Player}, {"button", PN_Enum, PNF_None,
 AddHook("KeyPress", { {"player", PN_Player}, {"key", PN_Enum, PNF_None, "IN"} })
 AddHook("KeyRelease", { {"player", PN_Player}, {"key", PN_Enum, PNF_None, "IN"} })
 AddHook("PlayerSwitchFlashlight", { {"player", PN_Player}, {"enabled", PN_Bool} })
-AddHook("EntityTakeDamage", { {"target", PN_Entity}, {"damageInfo", PN_Any} })
+AddHook("EntityTakeDamage", { {"target", PN_Entity}, {"damageInfo", PN_Ref, PNF_None, "CTakeDamageInfo"} })
 AddHook("EntityRemoved", { {"entity", PN_Entity} })
 
 --[[
@@ -1593,4 +1601,12 @@ print(a, b)]]
 
 for k,v in pairs(NodeTypes) do 
 	v.name = k
+end
+
+for k,v in pairs(bpdefs.GetClasses()) do
+	bpdefs.CreateLibNodes(v, NodeTypes)
+end
+
+for k,v in pairs(bpdefs.GetLibs()) do
+	bpdefs.CreateLibNodes(v, NodeTypes)
 end

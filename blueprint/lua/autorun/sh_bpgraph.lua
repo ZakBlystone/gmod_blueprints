@@ -413,6 +413,22 @@ function meta:IsPinConnected(nodeID, pinID)
 
 end
 
+function meta:CheckConversion(pin0, pin1)
+
+	local cv = NodePinImplicitConversions[pin0[2]]
+	if cv then
+		for k,v in pairs(cv) do
+			if type(v) == "table" then
+				if v[1] == pin1[2] and v[2] == pin1[5] then return true end
+			else
+				if v == pin1[2] then return true end
+			end
+		end
+	end
+	return false
+
+end
+
 function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
 	if self:FindConnection(nodeID0, pinID0, nodeID1, pinID1) ~= nil then return false, "Already connected" end
@@ -435,13 +451,16 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
 		-- Does not work properly, take into account pin directions to determine what conversion is being attempted
 		-- Maybe rectify pin ordering so pin0 is always PD_Out, and pin1 is always PD_In
-		if NodePinImplicitConversions[p0Type] and table.HasValue(NodePinImplicitConversions[p0Type], p1Type) then
+		if self:CheckConversion(p0, p1) or self:CheckConversion(p1, p0) then
 			return true
 		else
 			return false, "No explicit conversion between " .. p0Type .. " and " .. p1Type
 		end
 
 	end
+
+	if p0[5] ~= p1[5] then return false, "Can't connect " .. tostring(p0[5]) .. " to " .. tostring(p1[5]) end
+
 	return true
 
 end
