@@ -23,7 +23,8 @@ PN_Weapon = 12
 PN_Angles = 13
 PN_Enum = 14
 PN_Ref = 15
-PN_Max = 15
+PN_Struct = 16
+PN_Max = 16
 
 NT_Pure = 0
 NT_Function = 1
@@ -81,6 +82,7 @@ PinTypeNames = {
 	[PN_Angles] = "Angles",
 	[PN_Enum] = "Enum",
 	[PN_Ref] = "Ref",
+	[PN_Struct] = "Struct",
 }
 
 GraphTypeColors = {
@@ -105,6 +107,7 @@ NodePinColors = {
 	[PN_Angles] = Color(80,150,180),
 	[PN_Enum] = Color(0,100,80),
 	[PN_Ref] = Color(0,180,255),
+	[PN_Struct] = Color(40,80,255),
 }
 
 NodePinImplicitConversions = {

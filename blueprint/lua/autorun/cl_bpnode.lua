@@ -40,11 +40,13 @@ local function calculateNodeSize(nodeType)
 		end
 	end
 
+	local expand = false
 	for k,v in pairs(nodeType.pins) do
 		if v[2] == PN_String or v[2] == PN_Enum then
-			width = width + 50
+			expand = true
 		end
 	end
+	if expand then width = width + 50 end
 
 	return width, headHeight + maxVertical * 15 + PANEL_INSET * 2
 

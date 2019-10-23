@@ -153,8 +153,18 @@ local function ParseDef( filePath, search )
 					local c = args[i]:Trim()
 					if c:sub(1,1) == "#" then pin.desc = c:sub(2,-1) break else pin[params[i-1]] = c end
 				end
+
+				if pin.flags ~= nil and string.find(pin.flags, "|") then
+					local t = string.Explode("|", pin.flags)
+					pin.flags = 0
+					for _, fl in pairs(t) do
+						pin.flags = bit.bor(pin.flags, pinFlagLookup[fl])
+					end
+				else
+					pin.flags = pinFlagLookup[pin.flags] or PNF_None
+				end
+
 				pin.type = pinTypeLookup[pin.type]
-				pin.flags = pinFlagLookup[pin.flags] or PNF_None
 				table.insert(d2.pins, pin)
 			end
 		end

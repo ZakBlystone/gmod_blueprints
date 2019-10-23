@@ -524,6 +524,31 @@ NodeTypes = {
 		code = "#1 = math.floor($1)",
 		compact = true,
 	},
+	["Abs"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "in" },
+			{ PD_Out, PN_Number, "out" },
+		},
+		code = "#1 = math.abs($1)",
+		compact = true,
+	},
+	["Sqrt"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "in" },
+			{ PD_Out, PN_Number, "out" },
+		},
+		code = "#1 = math.sqrt($1)",
+		compact = true,
+	},
+	["Pow"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "in" },
+			{ PD_In, PN_Number, "power" },
+			{ PD_Out, PN_Number, "out" },
+		},
+		code = "#1 = math.pow($1, $2)",
+		compact = true,
+	},
 	["Ceil"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "in" },
