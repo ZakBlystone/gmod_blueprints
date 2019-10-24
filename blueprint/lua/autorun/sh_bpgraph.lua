@@ -314,7 +314,15 @@ function meta:GetNodeType(node)
 
 end
 
-function meta:Connections()
+function meta:Connections(forward)
+
+	if forward then
+		local i, n = 0, #self.connections
+		return function()
+			i = i + 1
+			if i <= n then return i, self.connections[i] end
+		end
+	end
 
 	local i = #self.connections + 1
 	return function() 
@@ -654,7 +662,7 @@ function meta:CollapseRerouteNodes()
 
 end
 
-function meta:WriteToStream(stream, version)
+function meta:WriteToStream(stream, mode, version)
 
 	local namelookup = {}
 	local nametable = {}
@@ -669,11 +677,11 @@ function meta:WriteToStream(stream, version)
 		stream:WriteInt( self.inputs:Size(), false )
 		stream:WriteInt( self.outputs:Size(), false )
 		for id, input in self:Inputs() do
-			input:WriteToStream( stream, version )
+			input:WriteToStream( stream, mode, version )
 		end
 
 		for id, output in self:Outputs() do
-			output:WriteToStream( stream, version )
+			output:WriteToStream( stream, mode, version )
 		end
 
 	end
@@ -699,7 +707,7 @@ function meta:WriteToStream(stream, version)
 	end
 
 	local remappedConnections = {}
-	for id, connection in self:Connections() do
+	for id, connection in self:Connections( version >= 5 ) do --as of version 5, fix connection order being flipped
 		table.insert(remappedConnections, {
 			self:NodeIDToIndex(connection[1]),
 			connection[2],
@@ -710,9 +718,28 @@ function meta:WriteToStream(stream, version)
 
 	bpdata.WriteValue( remappedConnections, stream )
 
+	if version >= 5 then
+
+		if mode == bpmodule.STREAM_FILE then
+			local connnectionMeta = {}
+			for id, c in self:Connections(true) do
+
+				local nt0 = self:GetNodeType(self:GetNode(c[1]))
+				local nt1 = self:GetNodeType(self:GetNode(c[3]))
+				local pin0 = nt0.pins[c[2]]
+				local pin1 = nt1.pins[c[4]]
+				connnectionMeta[id] = {nt0.name, pin0[3], nt1.name, pin1[3]}
+
+			end
+
+			bpdata.WriteValue( connnectionMeta, stream )
+		end
+
+	end
+
 end
 
-function meta:ReadFromStream(stream, version)
+function meta:ReadFromStream(stream, mode, version)
 
 	self:Clear()
 
@@ -727,12 +754,12 @@ function meta:ReadFromStream(stream, version)
 		local numOutputs = stream:ReadInt( false )
 		for i=1, numInputs do
 			local v = bpvariable.New()
-			v:ReadFromStream( stream, version )
+			v:ReadFromStream( stream, mode, version )
 			self.inputs:Add(v)
 		end
 		for i=1, numOutputs do
 			local v = bpvariable.New()
-			v:ReadFromStream( stream, version )
+			v:ReadFromStream( stream, mode, version )
 			self.outputs:Add(v)
 		end
 	end
@@ -765,6 +792,18 @@ function meta:ReadFromStream(stream, version)
 
 	self.connections = bpdata.ReadValue( stream )
 
+	if version >= 5 then
+
+		if mode == bpmodule.STREAM_FILE then
+
+			self.connectionMeta = bpdata.ReadValue( stream )
+			self.loadedFromFile = true
+			PrintTable( self.connectionMeta )
+
+		end
+
+	end
+
 end
 
 function meta:RemapNodeTypes( func )
@@ -777,6 +816,41 @@ function meta:RemapNodeTypes( func )
 		for id, node in self:Nodes() do
 			node.nodeType = func(node.nodeType)
 		end
+	end
+
+end
+
+function meta:ResolveConnectionMeta()
+
+	if self.connectionMeta ~= nil then
+		print("Resolving connection meta...")
+		for i, c in self:Connections(true) do
+			local meta = self.connectionMeta[i]
+			local nt0 = self:GetNodeType(self:GetNode(c[1]))
+			local nt1 = self:GetNodeType(self:GetNode(c[3]))
+			local pin0 = nt0.pins[c[2]]
+			local pin1 = nt1.pins[c[4]]
+
+			if meta == nil then continue end
+			if pin0 == nil or pin0[3] ~= meta[2] then
+				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")
+				c[2] = nil
+				for k, p in pairs(nt0.pins) do
+					if p[1] == PD_Out and p[3]:lower() == meta[2]:lower() then c[2] = k break end
+				end
+				MsgC( c[2] ~= nil and Color(100,255,100) or Color(255,100,100), c[2] ~= nil and " Resolved\n" or " Not resolved\n" )
+			end
+
+			if pin1 == nil or pin1[3] ~= meta[4] then
+				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
+				c[4] = nil
+				for k, p in pairs(nt0.pins) do
+					if p[1] == PD_In and p[3]:lower() == meta[4]:lower() then c[4] = k break end
+				end
+				MsgC( c[4] ~= nil and Color(100,255,100) or Color(255,100,100), c[4] ~= nil and " Resolved\n" or " Not resolved\n" )
+			end
+		end
+		self.connectionMeta = nil
 	end
 
 end
@@ -803,8 +877,13 @@ function meta:CreateDeferredData()
 	self:SuppressEvents( false )
 
 	for id, node in self:Nodes() do
-		self:FireListeners(CB_NODE_ADD, id)
+		local nodeType = self:GetNodeType(node) --TODO create impromptu nodetypes for missing nodes to satisfy connections
+		if nodeType ~= nil then
+			self:FireListeners(CB_NODE_ADD, id)
+		end
 	end
+
+	self:ResolveConnectionMeta()
 
 	self:RemoveInvalidConnections()
 	for i, connection in self:Connections() do
@@ -928,30 +1007,3 @@ end
 New = function(...)
 	return setmetatable({}, meta):Init(...)
 end
-
---[[function CreateTestGraph()
-
-	local graph = New()
-	graph:CreateTestGraph()
-
-	-- Serialize Test
-	local compress = true
-	local base64 = true
-	local outStream = bpdata.OutStream()
-
-	graph:WriteToStream(outStream)
-	outStream:WriteToFile("bpgraph.txt", compress, base64)
-
-	local inStream = bpdata.InStream()
-
-	inStream:LoadFile("bpgraph.txt", compress, base64)
-	local lgraph = New()
-	lgraph:ReadFromStream( inStream )
-
-	graph = lgraph
-
-	return graph
-
-end
-
-CreateTestGraph()]]

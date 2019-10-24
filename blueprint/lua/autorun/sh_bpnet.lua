@@ -59,19 +59,14 @@ if SERVER then
 	local function SavePlayerBlueprint( ply )
 		local name = ("blueprints/playerblueprint_" .. PlayerKey(ply) .. ".txt")
 		local bp = GetPlayerBlueprint( ply )
-		local outStream = bpdata.OutStream()
-		bp:WriteToStream(outStream)
-		outStream:WriteToFile(name, true, true)
-		print("Saving: " .. name)
+		bp:Save(name)
 	end
 
 	local function LoadPlayerBlueprint( ply )
 		local name = ("blueprints/playerblueprint_" .. PlayerKey(ply) .. ".txt")
 		local bp = GetPlayerBlueprint( ply )
-		local inStream = bpdata.InStream()
 		if not file.Exists(name, "DATA") then return end
-		inStream:LoadFile(name, true, true)
-		bp:ReadFromStream(inStream)
+		bp:Load(name)
 	end
 
 	hook.Add("PlayerDisconnected", "bphandledisconnect", function(ply)
@@ -91,9 +86,7 @@ if SERVER then
 		if cmd == CMD_Upload then
 
 			local mod = bpmodule.New()
-			local inStream = bpdata.InStream()
-			inStream:ReadFromNet(true)
-			mod:ReadFromStream( inStream )
+			mod:NetRecv()
 			mod:Compile()
 			SetPlayerModule( ply, mod )
 			SavePlayerBlueprint( ply )
@@ -103,16 +96,12 @@ if SERVER then
 
 			local steamID = net.ReadString()
 			local mod, isNew = GetPlayerBlueprint( ply )
-			local outStream = bpdata.OutStream()
 
 			if isNew then LoadPlayerBlueprint( ply ) end
 
-			print("SEND MODULE")
-			mod:WriteToStream(outStream)
-
 			net.Start("bpclientcmd")
 			net.WriteUInt(CMD_Download, 4)
-			outStream:WriteToNet(true)
+			mod:NetSend()
 			net.Send( ply )
 
 		end
@@ -131,9 +120,7 @@ else
 
 		if cmd == CMD_Download then
 
-			local inStream = bpdata.InStream()
-			inStream:ReadFromNet(true)
-			downloadTarget:ReadFromStream( inStream )
+			downloadTarget:NetRecv()
 
 		elseif cmd == CMD_Error then
 
@@ -165,10 +152,7 @@ else
 
 		net.Start("bpservercmd")
 		net.WriteUInt(CMD_Upload, 4)
-
-		local outStream = bpdata.OutStream()
-		mod:WriteToStream(outStream)
-		outStream:WriteToNet(true)
+		mod:NetSend()
 
 		_G.G_BPError = nil
 

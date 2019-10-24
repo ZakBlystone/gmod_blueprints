@@ -14,6 +14,17 @@ local TITLE = "Blueprint Editor"
 
 LastSavedFile = nil
 
+function PANEL:RunCommand( func, ... )
+	self.StatusText:SetTextColor( Color(255,255,255) )
+	self.StatusText:SetText("")
+
+	local b = xpcall( func, function( err )
+		self.StatusText:SetTextColor( Color(255,100,100) )
+		self.StatusText:SetText( err )
+		print( debug.traceback() )
+	end, self, ... )
+end
+
 function PANEL:Init()
 
 	local w = ScrW() * .8
@@ -22,9 +33,7 @@ function PANEL:Init()
 	local y = (ScrH() - h)/2
 
 	local SaveFunc = function( text ) 
-		local outStream = bpdata.OutStream()
-		self.module:WriteToStream(outStream)
-		outStream:WriteToFile("blueprints/bpm_" .. text .. ".txt", true, true)
+		self.module:Save("blueprints/bpm_" .. text .. ".txt")
 		LastSavedFile = text
 	end
 
@@ -43,7 +52,9 @@ function PANEL:Init()
 					"Save File",
 					"Yes",
 					function() 
+						self:RunCommand( function()
 						SaveFunc( LastSavedFile )
+						end)
 					end,
 					"No",
 					function() 
@@ -65,12 +76,12 @@ function PANEL:Init()
 				"",
 				function( text ) 
 
+					self:RunCommand( function()
 					if file.Exists("blueprints/bpm_" .. text .. ".txt", "DATA") then
 						LastSavedFile = text
-						local inStream = bpdata.InStream()
-						inStream:LoadFile("blueprints/bpm_" .. text .. ".txt", true, true)
-						self.module:ReadFromStream( inStream )
+						self.module:Load("blueprints/bpm_" .. text .. ".txt")
 					end
+					end)
 
 				end,
 				function( text ) end
@@ -87,6 +98,24 @@ function PANEL:Init()
 
 			RunConsoleCommand("pac_asset_browser")
 
+		end},
+		{"Convert", function()
+			Derma_StringRequest(
+				"Convert Outdated Blueprint",
+				"What filename though?",
+				"",
+				function( text )
+
+					self:RunCommand( function()
+					if file.Exists("blueprints/bpm_" .. text .. ".txt", "DATA") then
+						LastSavedFile = text
+						self.module:Load("blueprints/bpm_" .. text .. ".txt", true)
+					end
+					end)
+
+				end,
+				function( text ) end
+			)
 		end},
 	}
 
@@ -135,14 +164,7 @@ function PANEL:Init()
 		opt:SetWide( opt:GetWide() + 10 )
 		opt:SetTall( 25 )
 		opt.DoClick = function(btn)
-			self.StatusText:SetTextColor( Color(255,255,255) )
-			self.StatusText:SetText("")
-
-			local b = xpcall( v[2], function( err )
-				self.StatusText:SetTextColor( Color(255,100,100) )
-				self.StatusText:SetText( err )
-				print( debug.traceback() )
-			end, self )
+			self:RunCommand( v[2] )
 		end
 		optX = optX + opt:GetWide() + 2
 	end

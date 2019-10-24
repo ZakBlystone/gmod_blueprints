@@ -172,3 +172,64 @@ function MakeObservable(obj, cblist)
 		end
 	end
 end
+
+--[[
+	day/mo = 5bits-> 6bits
+	hour = 5bits  -> 6bits
+	minute = 6bits
+	month = 4bits -> 6bits
+	second = 6bits
+	year = 12bits -> 12bits
+	rand = 32bits -> 24bits
+	salt = 32bits -> 24bits
+	uptime = 24bits
+]]
+
+function GUIDToString( guid )
+
+	return string.format("{%0.2X%0.2X%0.2X%0.2X-%0.2X%0.2X%0.2X%0.2X-%0.2X%0.2X%0.2X%0.2X-%0.2X%0.2X%0.2X%0.2X}",
+		guid[1]:byte(),
+		guid[2]:byte(),
+		guid[3]:byte(),
+		guid[4]:byte(),
+		guid[5]:byte(),
+		guid[6]:byte(),
+		guid[7]:byte(),
+		guid[8]:byte(),
+		guid[9]:byte(),
+		guid[10]:byte(),
+		guid[11]:byte(),
+		guid[12]:byte(),
+		guid[13]:byte(),
+		guid[14]:byte(),
+		guid[15]:byte(),
+		guid[16]:byte())
+
+end
+
+_G.__guidsalt = _G.__guidsalt or 0
+function GUID()
+
+	_G.__guidsalt = _G.__guidsalt + 1
+	local dd = os.date("*t")
+	local rand = math.random(0, 2^32-1)
+	local salt = _G.__guidsalt
+	local uptime = os.clock() * 1000
+
+	local out = bpdata.OutStream(true)
+	out:WriteBits(dd.day, 5)
+	out:WriteBits(dd.hour, 5)
+	out:WriteBits(dd.min, 6)
+	out:WriteBits(dd.month, 4)
+	out:WriteBits(dd.sec, 6)
+	out:WriteBits(dd.year, 12)
+	out:WriteBits(rand, 32)
+	out:WriteBits(salt, 32)
+	out:WriteBits(uptime, 24)
+	out:WriteBits(system.IsWindows() and 1 or 0, 1)
+	out:WriteBits(system.IsLinux() and 1 or 0, 1)
+
+	local str, len = out:GetString(false, false)
+	return str
+
+end

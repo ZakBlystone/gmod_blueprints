@@ -18,6 +18,9 @@ bpcommon.CallbackList({
 	"VARIABLE_REMOVE",
 })
 
+STREAM_FILE = 1
+STREAM_NET = 2
+
 GRAPH_MODIFY_RENAME = 1
 GRAPH_MODIFY_SIGNATURE = 2
 GRAPH_NODETYPE_ACTIONS = {
@@ -27,7 +30,7 @@ GRAPH_NODETYPE_ACTIONS = {
 
 
 fmtMagic = 0x42504D58
-fmtVersion = 4
+fmtVersion = 5
 
 local meta = {}
 meta.__index = meta
@@ -45,6 +48,8 @@ function meta:Init(type)
 	self.variables = bplist.New():NamedItems("Var")
 	self.id = nextModuleID
 	self.type = self.type or MT_Game
+	self.revision = 1
+	self.uniqueID = bpcommon.GUID()
 
 	self.graphs:AddListener(function(cb, id)
 
@@ -205,13 +210,49 @@ function meta:CopyGraph( graphID )
 
 end
 
-function meta:WriteToStream(stream)
+function meta:NetSend()
+
+	local outStream = bpdata.OutStream()
+	self:WriteToStream( outStream, STREAM_NET )
+	outStream:WriteToNet(true)
+
+end
+
+function meta:NetRecv()
+
+	local inStream = bpdata.InStream()
+	inStream:ReadFromNet(true)
+	self:ReadFromStream( inStream, STREAM_NET )
+
+end
+
+function meta:Load(filename, oldFormat)
+
+	local inStream = bpdata.InStream(false, not oldFormat)
+	if not inStream:LoadFile(filename, true, true) then
+		error("Failed to load blueprint, try using 'Convert'")
+	end
+	self:ReadFromStream( inStream, STREAM_FILE )
+
+end
+
+function meta:Save(filename)
+
+	local outStream = bpdata.OutStream(false, true)
+	self:WriteToStream( outStream, STREAM_FILE )
+	outStream:WriteToFile(filename, true, true)
+
+end
+
+function meta:WriteToStream(stream, mode)
 
 	print("--WRITE MODULE TYPE: " .. self.type .. " [" .. self.version .. "]")
 
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
 	stream:WriteInt( self.type, false )
+	stream:WriteInt( self.revision + 1, false ) -- each save is a revision off of the original
+	stream:WriteStr( self.uniqueID )
 
 	bpdata.WriteValue( self.variables:GetTable(), stream )
 
@@ -220,12 +261,12 @@ function meta:WriteToStream(stream)
 		local name = graph:GetName()
 		stream:WriteInt( name:len(), false )
 		stream:WriteStr( name )
-		graph:WriteToStream(stream, fmtVersion)
+		graph:WriteToStream(stream, mode, fmtVersion)
 	end
 
 end
 
-function meta:ReadFromStream(stream)
+function meta:ReadFromStream(stream, mode)
 
 	self:Clear()
 
@@ -244,6 +285,13 @@ function meta:ReadFromStream(stream)
 		print("MODULE TYPE: " .. self.type)
 	end
 
+	if version >= 5 then
+		self.revision = stream:ReadInt( false )
+		self.uniqueID = stream:ReadStr( 16 )
+
+		print( bpcommon.GUIDToString( self.uniqueID ) )
+	end
+
 	if version >= 2 then
 		local vars = bpdata.ReadValue( stream )
 		for _, v in pairs(vars) do
@@ -255,7 +303,7 @@ function meta:ReadFromStream(stream)
 	for i=1, count do
 		local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )
 		local graph = self:GetGraph(id)
-		graph:ReadFromStream(stream, version)
+		graph:ReadFromStream(stream, mode, version)
 	end
 
 	if version < 4 then

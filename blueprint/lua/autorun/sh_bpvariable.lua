@@ -76,7 +76,7 @@ function meta:SetterNodeType()
 
 end
 
-function meta:WriteToStream(stream, version)
+function meta:WriteToStream(stream, mode, version)
 
 	stream:WriteInt( self.type )
 	stream:WriteInt( self.flags )
@@ -85,7 +85,7 @@ function meta:WriteToStream(stream, version)
 
 end
 
-function meta:ReadFromStream(stream, version)
+function meta:ReadFromStream(stream, mode, version)
 
 	self.type = stream:ReadInt( false )
 	self.flags = stream:ReadInt( false )

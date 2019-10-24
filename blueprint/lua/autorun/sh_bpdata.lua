@@ -215,31 +215,37 @@ end
 local OUT = {} OUT.__index = OUT
 local IN = {} IN.__index = IN
 
-function OUT:Init(bitstream)
+function OUT:Init(bitstream, crc)
 	if bitstream then
 		self.bit = 0
 		self.buffer = {}
 	else
 		self.buffer = ""
 	end
+	self.signedCRC = crc
 	self.bitstream = bitstream
 	return self
 end
 
 function OUT:GetString(compressed, base64encoded)
+	local str = nil
 	if self.bitstream then
-		local str = ""
+		str = ""
 		for i=1, #self.buffer do
 			str = str .. string.char(self.buffer[i])
 		end
-		local buf = compressed and util.Compress(str) or str
-		if base64encoded then buf = base64_encode(buf) end
-		return buf, string.len(buf)
 	else
-		local buf = compressed and util.Compress(self.buffer) or self.buffer
-		if base64encoded then buf = base64_encode(buf) end
-		return buf, string.len(buf)
+		str = self.buffer
 	end
+
+	if self.signedCRC then
+		local crc = util.CRC(str)
+		str = Int2Str( crc, false ) .. str
+	end
+
+	local buf = compressed and util.Compress(str) or str
+	if base64encoded then buf = base64_encode(buf) end
+	return buf, string.len(buf)
 end
 
 function OUT:WriteToFile(name, compressed, base64encoded)
@@ -301,20 +307,35 @@ function OUT:WriteFloat(v) self:WriteStr(Float2Str(v)) end
 OUT.Write = OUT.WriteStr
 OUT.WriteLong = OUT.WriteInt
 
-function IN:Init(bitstream)
+function IN:Init(bitstream, crc)
 	if bitstream then
 		self.bit = 0
 		self.buffer = {}
 	else
 		self.buffer = ""
+		self.byte = 1
 	end
+	self.signedCRC = crc
 	self.bitstream = bitstream
 	return self
+end
+
+function IN:Reset()
+	self.byte = 1
 end
 
 function IN:LoadString(str, compressed, base64encoded)
 	if base64encoded then str = base64_decode(str) end
 	if compressed then str = util.Decompress(str, 0x4000000) end --64 megs max
+
+	if self.signedCRC then
+		local remain = str:sub(5,-1)
+		local signed = Str2Int( str:sub(1,4), false )
+		local test = math.floor( util.CRC( remain ) ) --weird bug where not exactly equal
+		if test ~= signed then return false end
+		str = remain
+	end
+
 	if self.bitstream then
 		self.buffer = {}
 		self.bit = 0
@@ -322,13 +343,14 @@ function IN:LoadString(str, compressed, base64encoded)
 	else
 		self.buffer = str
 	end
+	return true
 end
 
 function IN:LoadFile(name, compressed, base64encoded)
 	if type(name) == "string" then
-		self:LoadString( file.Read(name), compressed, base64encoded )
+		return self:LoadString( file.Read(name), compressed, base64encoded )
 	else
-		self:LoadString( name:Read(name:Size()), compressed, base64encoded )
+		return self:LoadString( name:Read(name:Size()), compressed, base64encoded )
 	end
 end
 
@@ -380,8 +402,8 @@ function IN:ReadStr(n)
 		for i=1, n do s = s .. string.char(self:ReadBits(8)) end
 		return s
 	else
-		local r = string.sub(self.buffer, 1, n)
-		self.buffer = string.sub(self.buffer, n+1)
+		local r = string.sub(self.buffer, self.byte, self.byte+(n-1))
+		self.byte = self.byte + n
 		return r
 	end
 end
@@ -394,8 +416,8 @@ function IN:ReadFloat() return Str2Float(self:ReadStr(4)) end
 IN.Read = IN.ReadStr
 IN.ReadLong = IN.ReadInt
 
-function InStream(bitstream) return setmetatable({}, IN):Init(bitstream) end
-function OutStream(bitstream) return setmetatable({}, OUT):Init(bitstream) end
+function InStream(bitstream, crc) return setmetatable({}, IN):Init(bitstream, crc) end
+function OutStream(bitstream, crc) return setmetatable({}, OUT):Init(bitstream, crc) end
 
 
 
