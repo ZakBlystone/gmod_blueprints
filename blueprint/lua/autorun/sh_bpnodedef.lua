@@ -1635,3 +1635,7 @@ end
 for k,v in pairs(bpdefs.GetLibs()) do
 	bpdefs.CreateLibNodes(v, NodeTypes)
 end
+
+for k,v in pairs(bpdefs.GetStructs()) do
+	bpdefs.CreateStructNodes(v, NodeTypes)
+end

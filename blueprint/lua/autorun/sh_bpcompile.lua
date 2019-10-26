@@ -257,11 +257,13 @@ function FindVarForPin(cs, nodeID, pinID, noLiteral)
 end
 
 -- basically just adds a self prefix for global variables to scope them into the module
-function GetVarCode(cs, var)
+function GetVarCode(cs, var, jump)
 
-	if var.literal then return var.var end
+	local s = ""
+	if jump and var.jump then s = "goto jmp_" end
+	if var.literal then return s .. var.var end
 	if var.global or var.isFunc then return "__self." .. var.var end
-	return var.var
+	return s .. var.var
 
 end
 
@@ -312,29 +314,25 @@ function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 	str = string.Replace( str, "!graph", tostring(cs.graph.id))
 
 	-- replace input pin codes
-	for k,v in pairs(inVars) do
-		str = string.Replace( str, "$" .. k, GetVarCode(cs, v) )
-	end
+	str = str:gsub("$(%d+)", function(x) return GetVarCode(cs, inVars[tonumber(x)]) end)
 
 	-- replace output pin codes
-	for k,v in pairs(outVars) do
-		str = string.Replace( str, "#" .. k, v.jump and "goto jmp_" .. GetVarCode(cs, v) or GetVarCode(cs, v) )
-		str = string.Replace( str, "#_" .. k, GetVarCode(cs, v) )
-	end
+	str = str:gsub("#_(%d+)", function(x) return GetVarCode(cs, outVars[tonumber(x)]) end)
+	str = str:gsub("#(%d+)", function(x) return GetVarCode(cs, outVars[tonumber(x)], true) end)
 
-	-- replace node-local variables
+	local lmap = {}
 	for k,v in pairs(ntype.locals or {}) do
 		local var = FindLocalVarForNode(cs, nodeID, v)
 		if var == nil then error("Failed to find internal variable: " .. tostring(v)) end
-		str = string.Replace( str, "%" .. v, GetVarCode(cs, var) )
+		lmap[v] = var
 	end
 
+	str = str:gsub("%%([%w_]+)", function(x) return GetVarCode(cs, lmap[x]) end)
+
 	-- replace jumps
-	local jumpTable = GetGraphJumpTable(cs)[nodeID]
-	for k,v in pairs(jumpTable or {}) do
-		str = string.Replace( str, "^" .. k, "jmp_" .. v )
-		str = string.Replace( str, "^_" .. k, tostring(v) )
-	end
+	local jumpTable = GetGraphJumpTable(cs)[nodeID] or {}
+	str = str:gsub("%^_([%w_]+)", function(x) return tostring(jumpTable[x]) end)
+	str = str:gsub("%^([%w_]+)", function(x) return "jmp_" .. jumpTable[x] end)
 
 	return str
 

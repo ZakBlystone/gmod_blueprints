@@ -1,0 +1,135 @@
+STRUCT AmmoData, Table structure that describes a Source Engine ammo type.
+{
+	NAME dmgtype, damageType
+	NAME maxsplash, maxSplash
+	NAME minsplash, minSplash
+	NAME npcdmg, npcDamage
+	NAME plydmg, playerDamage
+	NAME maxcarry, maxCarry
+	PIN dmgtype=DMG_BULLET, PN_Enum, PNF_None, DMG, #Damage type using DMG_ Enums.
+	PIN force=1000, PN_Number, #The force of the ammo.
+	PIN maxsplash=0, PN_Number, #The maximum water splash size
+	PIN minsplash=0, PN_Number, #The minimum water splash size
+	PIN name, PN_String, #Name of the ammo
+	PIN npcdmg=10, PN_Number, #The damage dealt to NPCs
+	PIN plydmg=10, PN_Number, #The damage dealt to players
+	PIN tracer=TRACER_NONE, PN_Enum, PNF_None, TRACER, #Tracer type
+	PIN maxcarry=9999, PN_Number, #Maximum amount of ammo of this type the player should be able to carry in reserve.
+	PIN flags=0, PN_Enum, PNF_Bitfield, AMMO, #Flags for the ammo type
+}
+STRUCT AngPos, Table used by various functions, such as Entity:GetAttachment.
+{
+	NAME Ang, angle
+	NAME Pos, pos
+	PIN Ang, PN_Angles, #Angle
+	PIN Pos, PN_Vector, #Position
+}
+STRUCT AnimationData
+{
+	
+}
+STRUCT AttachmentData, Table returned by Entity:GetAttachments.
+{
+	PIN id, PN_Number, #Index of the attachment
+	PIN name, PN_String, #Name of the attachment
+}
+STRUCT BodyGroupData, Table returned by Entity:GetBodyGroups.
+{
+	PIN id, PN_Number, #Index of the body group
+	PIN name, PN_String, #Name of the body group
+	PIN num, PN_Number, #Amount of subgroups
+}
+STRUCT BoneManipulationData, Structure used for storing/restoring bone manipulations.
+{
+	NAME s, scale
+	NAME a, angles
+	NAME p, pos
+	PIN s, PN_Vector, PNF_Nullable, #The entity's scale manipulation of the bone
+	PIN a, PN_Angles, PNF_Nullable, #The entity's angle manipulation of the bone
+	PIN p, PN_Vector, PNF_Nullable, #The entity's position manipulation of the given bone
+}
+CALLBACK FuncBulletCallback
+{
+	IN attacker, PN_Ref, PNF_None, Entity
+	IN trace, PN_Struct, PNF_None, TraceResult
+	IN damageInfo, PN_Ref, PNF_None, CTakeDamageInfo
+}
+STRUCT Bullet
+{
+	PIN Attacker, PN_Ref, PNF_Nullable, Entity, #The entity that should be reported as attacker eg. a player
+	PIN Callback, PN_Func, PNF_Nullable, FuncBulletCallback, #Function to be called after the bullet was fired.
+	PIN Damage=1, PN_Number, #The damage dealt by the bullet
+	PIN Force=1, PN_Number, #The force of the bullets
+	PIN Distance=56756, PN_Number, #Maximum distance the bullet can travel
+	PIN HullSize=0, PN_Number, #The hull size of the bullet
+	PIN Num=1, PN_Number, #The amount of bullets to fire
+	PIN Tracer=1, PN_Number, #Show tracer for every x bullets
+	PIN AmmoType, PN_String, #The ammunition name
+	PIN TracerName, PN_String, #The tracer name.
+	PIN Dir, PN_Vector, PNF_Nullable, #The fire direction
+	PIN Spread, PN_Vector, PNF_Nullable, #The spread, only x and y are needed
+	PIN Src, PN_Vector, PNF_Nullable, #The position to fire the bullets from
+	PIN IgnoreEntity, PN_Ref, PNF_Nullable, Entity, #The entity that the bullet will ignore when it will be shot.
+}
+STRUCT CamDataOrtho, For use with CamData
+{
+	PIN left, PN_Number
+	PIN right, PN_Number
+	PIN top, PN_Number
+	PIN bottom, PN_Number
+}
+STRUCT CamData, Table structure used GM:CalcView and GM:CalcVehicleView hook.
+{
+	NAME znear, zNear
+	NAME zfar, zFar
+	NAME drawviewer, drawViewer
+	PIN origin, PN_Vector, #The camera's position
+	PIN angles, PN_Angles, #The camera's angles
+	PIN fov, PN_Number, #The camera's FOV
+	PIN znear, PN_Number, #Distance to near clipping plane
+	PIN zfar, PN_Number, #Distance to far clipping plane
+	PIN drawviewer=false, PN_Bool, #Set true to draw local players player model.
+	PIN ortho, PN_Struct, PNF_Nullable, CamDataOrtho
+}
+STRUCT CollisionData, Passed as argument of ENTITY:PhysicsCollide.
+{
+	PIN HitPos, PN_Vector, #The collision position
+	PIN HitEntity, PN_Ref, PNF_None, Entity, #The other collision entity
+	PIN OurOldVelocity, PN_Vector, #The entity's velocity before the collision
+	PIN HitObject, PN_Ref, PNF_None, PhysObj, #Other entity's physics object
+	PIN DeltaTime, PN_Number, #Time since the last collision with this HitEntity
+	PIN TheirOldVelocity, PN_Vector, #Speed of the other entity before the collision
+	PIN Speed, PN_Number, #The speed of the entity before the collision
+	PIN HitNormal, PN_Vector, #Normal of the surface that hit the other entity
+	PIN PhysObject, PN_Ref, PNF_None, PhysObj, #Entity's physics object
+}
+STRUCT DateData, Table returned by os.date and used by os.time.
+{
+	PIN day, PN_Number, #Day of the month
+	PIN hour, PN_Number, #Hour
+	PIN isdst, PN_Bool, #Daylight saving enabled
+	PIN min, PN_Number, #Minute
+	PIN month, PN_Number, #Month January: 1, December: 12
+	PIN sec, PN_Number, #Second
+	PIN wday, PN_Number, #Day of the week Sunday: 1, Saturday: 7
+	PIN yday, PN_Number, #Day of the year
+	PIN year, PN_Number, #Year
+}
+STRUCT EmitSoundInfo, Passed as argument of GM:EntityEmitSound.
+{
+	NAME SoundName, name
+	NAME OriginalSoundName, original
+	NAME SoundTime, time
+	NAME SoundLevel, level
+	PIN SoundName, PN_String, #The file path of the played sound.
+	PIN OriginalSoundName, PN_String, #The original file path or soundscript name.
+	PIN SoundTime=0, PN_Number, #The time at which the sound should be played.
+	PIN DSP=0, PN_Number, #The DSP (digital signal processing) preset applied to the sound.
+	PIN SoundLevel=SNDLVL_NORM, PN_Enum, PNF_None, SNDLVL, #The sound's attenuation
+	PIN Pitch=100, PN_Number, #The pitch of the played sound
+	PIN Flags=0, PN_Enum, PNF_Bitfield, SND, #The bit flags of the played sound
+	PIN Channel=CHAN_AUTO, PN_Enum, PNF_None, CHAN, #The sound's channel.
+	PIN Volume=1, PN_Number, #The volume of the played sound
+	PIN Entity, PN_Ref, PNF_Nullable, Entity, #The entity that played the sound.
+	PIN Pos, PN_Vector, PNF_Nullable, #The origin of the played sound.
+}

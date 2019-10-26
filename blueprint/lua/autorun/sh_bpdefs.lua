@@ -2,12 +2,21 @@ AddCSLuaFile()
 
 include("sh_bpcommon.lua")
 
+-- since this is included in multiple places, debounce
+_G.LastDefReload = _G.LastDefReload or SysTime()
+if (SysTime() - _G.LastDefReload) < 0.2 then
+	return
+end
+_G.LastDefReload = SysTime()
+
 module("bpdefs", package.seeall, bpcommon.rescope(bpschema))
 
 local defs = {}
 local enums = {}
 local classes = {}
 local libs = {}
+local callbacks = {}
+local structs = {}
 
 local roleLookup = {
 	["SERVER"] = ROLE_Server,
@@ -33,6 +42,7 @@ end
 DEFTYPE_ENUM = 0
 DEFTYPE_CLASS = 1
 DEFTYPE_LIB = 2
+DEFTYPE_STRUCT = 3
 
 local function EnumerateDefs( base, output, search )
 
@@ -54,6 +64,12 @@ function GetClass( name )
 
 end
 
+function GetStruct( name )
+
+	return structs[name]
+
+end
+
 function GetClasses()
 
 	return classes
@@ -63,6 +79,12 @@ end
 function GetLibs()
 
 	return libs
+
+end
+
+function GetStructs()
+
+	return structs
 
 end
 
@@ -82,7 +104,27 @@ local function ParseDef( filePath, search )
 		local args = string.Explode(",", tr)
 		local isClass = tr:sub(0, 5) == "CLASS"
 		local isLib = tr:sub(0,3) == "LIB"
-		if tr:sub(0, 4) == "ENUM" and lv == 0 then
+		local isEnum = tr:sub(0,4) == "ENUM"
+		local isCallback = tr:sub(0,8) == "CALLBACK"
+		local isStruct = tr:sub(0,6) == "STRUCT"
+		if isStruct and lv == 0 then
+			d = {
+				type = DEFTYPE_STRUCT,
+				name = args[1]:sub(8,-1),
+				desc = table.concat(args, ",", 2):Trim(),
+				pins = {},
+				nameMap = {},
+				invNameMap = {},
+			}
+			d2 = d
+		elseif isCallback and lv == 0 then
+			d = {
+				type = DEFTYPE_CALLBACK,
+				name = args[1]:sub(10,-1),
+				pins = {},
+			}
+			d2 = d
+		elseif isEnum and lv == 0 then
 			d = {
 				type = DEFTYPE_ENUM,
 				enum = args[1]:sub(6,-1),
@@ -103,6 +145,49 @@ local function ParseDef( filePath, search )
 			lv = lv - 1
 			if lv == 1 then table.insert(d.entries, d2) d2 = nil end
 			if lv == 0 then table.insert(def, d) d = nil end
+		elseif (lv == 2 and d2) or (lv == 1 and (d.type == DEFTYPE_CALLBACK or d.type == DEFTYPE_STRUCT)) then
+			if args[1]:sub(1,4) == "DESC" then
+				d2.desc = args[1]:sub(6,-1)
+			elseif args[1]:sub(1,4) == "NAME" then
+				local a = args[1]:sub(6,-1)
+				local b = args[2]:Trim()
+				d2.nameMap[a] = b
+				d2.invNameMap[b] = a
+			elseif args[1]:sub(1,2) == "IN" or args[1]:sub(1,3) == "OUT" or args[1]:sub(1,3) == "PIN" then
+
+				local params = {"type", "flags", "ex"}
+				local pin = {}
+
+				if d.type == DEFTYPE_STRUCT then
+					pin.name = args[1]:sub(4,-1):Trim()
+				else
+					pin.dir = args[1]:sub(1,2) == "IN" and PD_In or PD_Out
+					pin.name = args[1]:sub(4,-1):Trim()
+				end
+
+				if string.find(pin.name, "=") then
+					local t = string.Explode("=", pin.name)
+					pin.name = t[1]:Trim()
+					pin.default = t[2]:Trim()
+				end
+				for i=2, #args do
+					local c = args[i]:Trim()
+					if c:sub(1,1) == "#" then pin.desc = c:sub(2,-1) break else pin[params[i-1]] = c end
+				end
+
+				if pin.flags ~= nil and string.find(pin.flags, "|") then
+					local t = string.Explode("|", pin.flags)
+					pin.flags = 0
+					for _, fl in pairs(t) do
+						pin.flags = bit.bor(pin.flags, pinFlagLookup[fl])
+					end
+				else
+					pin.flags = pinFlagLookup[pin.flags] or PNF_None
+				end
+
+				pin.type = pinTypeLookup[pin.type]
+				table.insert(d2.pins, pin)
+			end
 		elseif lv == 1 and d then
 			if d.type == DEFTYPE_ENUM then
 				local k = {
@@ -134,38 +219,6 @@ local function ParseDef( filePath, search )
 					pins = {},
 					desc = "",
 				}
-			end
-		elseif lv == 2 and d2 then
-			if args[1]:sub(1,4) == "DESC" then
-				d2.desc = args[1]:sub(6,-1)
-			elseif args[1]:sub(1,2) == "IN" or args[1]:sub(1,3) == "OUT" then
-				local params = {"type", "flags", "ex"}
-				local pin = {
-					dir = args[1]:sub(1,2) == "IN" and PD_In or PD_Out,
-					name = args[1]:sub(4,-1):Trim(),
-				}
-				if string.find(pin.name, "=") then
-					local t = string.Explode("=", pin.name)
-					pin.name = t[1]:Trim()
-					pin.default = t[2]:Trim()
-				end
-				for i=2, #args do
-					local c = args[i]:Trim()
-					if c:sub(1,1) == "#" then pin.desc = c:sub(2,-1) break else pin[params[i-1]] = c end
-				end
-
-				if pin.flags ~= nil and string.find(pin.flags, "|") then
-					local t = string.Explode("|", pin.flags)
-					pin.flags = 0
-					for _, fl in pairs(t) do
-						pin.flags = bit.bor(pin.flags, pinFlagLookup[fl])
-					end
-				else
-					pin.flags = pinFlagLookup[pin.flags] or PNF_None
-				end
-
-				pin.type = pinTypeLookup[pin.type]
-				table.insert(d2.pins, pin)
 			end
 		end
 
@@ -203,6 +256,139 @@ local function CreateReducedEnumKeys( enum )
 
 end
 
+local function FixupStructNames( struct )
+
+	for k,v in pairs(struct.pins) do
+
+		local nm = struct.nameMap[v.name]
+		if nm then v.name = nm end
+
+	end
+
+end
+
+local function PinRetArg( nodeType, infmt, outfmt, concat )
+
+	concat = concat or ","
+	--print(nodeType.name)
+	local base = nodeType.type == NT_Function and 2 or 1
+	local pins = {[PD_In] = {}, [PD_Out] = {}}
+	for k,v in pairs(nodeType.pins) do
+		local s = (v[1] == PD_In and "$" or "#") .. (base+#pins[v[1]])
+		if infmt and v[1] == PD_In then s = infmt(s, v) end
+		if outfmt and v[1] == PD_Out then s = outfmt(s, v) end
+		table.insert(pins[v[1]], s)
+	end
+
+	local ret = table.concat(pins[PD_Out], concat)
+	local arg = table.concat(pins[PD_In], concat)
+	return ret, arg, pins
+
+end
+
+local function StructBreakNode( struct )
+
+	local ntype = { pins = {} }
+	ntype.name = "Break" .. struct.name
+	ntype.type = NT_Pure
+	ntype.desc = struct.desc
+	ntype.code = ""
+	ntype.defaults = {}
+	ntype.isStruct = true
+
+	table.insert(ntype.pins, {
+		PD_In,
+		PN_Struct,
+		struct.name,
+		PNF_None,
+		struct.name,
+	})
+
+	for _, pin in pairs(struct.pins) do
+
+		table.insert(ntype.pins, {
+			PD_Out,
+			pin.type,
+			bpcommon.Camelize(pin.name),
+			pin.flags,
+			pin.ex,
+		})
+
+		if pin.default then
+			ntype.defaults[#ntype.pins - 1] = pin.default
+		end
+
+	end
+
+	local ret, arg = PinRetArg( ntype, nil, function(s,pin)
+		return "\n" .. s .. " = $1." .. (struct.invNameMap[pin[3]] or pin[3]) .. ""
+	end, "")
+	if ret[1] == '\n' then ret = ret:sub(2,-1) end
+	ntype.code = ret
+	ConfigureNodeType(ntype)
+
+	--print(ntype.code)
+
+	return ntype
+
+end
+
+local function StructMakeNode( struct )
+
+	local ntype = { pins = {} }
+	ntype.name = "Make" .. struct.name
+	ntype.type = NT_Pure
+	ntype.desc = struct.desc
+	ntype.code = ""
+	ntype.defaults = {}
+	ntype.isStruct = true
+
+	table.insert(ntype.pins, {
+		PD_Out,
+		PN_Struct,
+		struct.name,
+		PNF_None,
+		struct.name,
+	})
+
+	for _, pin in pairs(struct.pins) do
+
+		table.insert(ntype.pins, {
+			PD_In,
+			pin.type,
+			bpcommon.Camelize(pin.name),
+			pin.flags,
+			pin.ex,
+		})
+
+		if pin.default then
+			ntype.defaults[#ntype.pins - 1] = pin.default
+		end
+
+	end
+
+	local ret, arg = PinRetArg( ntype, function(s,pin)
+		return "\n " .. (struct.invNameMap[pin[3]] or pin[3]) .. " = " .. s
+	end)
+	ntype.code = ret .. " = { " .. arg .. "\n}"
+	ConfigureNodeType(ntype)
+
+	--print(ntype.code)
+
+	return ntype
+
+end
+
+function CreateStructNodes( struct, output )
+
+	local breaker = StructBreakNode( struct )
+	local maker = StructMakeNode( struct )
+
+	bpnodedef.NodeTypes[maker.name] = maker
+	bpnodedef.NodeTypes[breaker.name] = breaker
+
+end
+
 function CreateLibNodes( lib, output )
 
 	for k,v in pairs(lib.entries) do
@@ -230,7 +416,7 @@ function CreateLibNodes( lib, output )
 			table.insert(ntype.pins, {
 				PD_In,
 				PN_Ref,
-				lib.typeName or lib.name,
+				bpcommon.Camelize(lib.typeName or lib.name),
 				PNF_None,
 				lib.name,
 			})
@@ -241,7 +427,7 @@ function CreateLibNodes( lib, output )
 			table.insert(ntype.pins, {
 				pin.dir,
 				pin.type,
-				pin.name,
+				bpcommon.Camelize(pin.name),
 				pin.flags,
 				pin.ex,
 			})
@@ -249,19 +435,12 @@ function CreateLibNodes( lib, output )
 			local base = ntype.type == NT_Function and 1 or 0
 			if pin.default then
 				ntype.defaults[#ntype.pins + base] = pin.default
-				print("DEFAULT[" .. (#ntype.pins + base) .. "]: " .. pin.default)
+				--print("DEFAULT[" .. (#ntype.pins + base) .. "]: " .. pin.default)
 			end
 
 		end
 
-		local base = ntype.type == NT_Function and 2 or 1
-		local pins = {[PD_In] = {}, [PD_Out] = {}}
-		for k,v in pairs(ntype.pins) do
-			table.insert(pins[v[1]], (v[1] == PD_In and "$" or "#") .. (base+#pins[v[1]]))
-		end
-
-		local ret = table.concat(pins[PD_Out], ",")
-		local arg = table.concat(pins[PD_In], ",")
+		local ret, arg, pins = PinRetArg( ntype )
 		local call = lib.name .. "_." .. v.func
 
 		if lib.type == DEFTYPE_LIB then 
@@ -289,8 +468,10 @@ for k,v in pairs(foundDefs) do
 end
 
 for k,v in pairs(defs) do
+	if v.type == DEFTYPE_STRUCT then FixupStructNames(v) structs[v.name] = v end
+	if v.type == DEFTYPE_CALLBACK then callbacks[v.name] = v end
 	if v.type == DEFTYPE_ENUM then CreateReducedEnumKeys(v) enums[v.enum] = v end
-	if v.type == DEFTYPE_CLASS then classes[v.name] = v print(v.name) end
+	if v.type == DEFTYPE_CLASS then classes[v.name] = v end
 	if v.type == DEFTYPE_LIB then
 		if libs[v.name] then
 			table.Add(libs[v.name], v)
@@ -300,4 +481,16 @@ for k,v in pairs(defs) do
 	end
 end
 
+--CreateStructNodes(structs["EmitSoundInfo"], {})
+
+--PrintTable(callbacks)
 --PrintTable( foundDefs )
+
+if SERVER then
+local str = "%check, %check_2 % %morevar"
+local s = str:gsub("%%([%w_]+)", function(x)
+	return "code_'" .. x .. "'"
+end)
+
+print(s)
+end

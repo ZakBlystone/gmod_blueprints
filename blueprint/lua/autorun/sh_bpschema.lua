@@ -24,7 +24,8 @@ PN_Angles = 13
 PN_Enum = 14
 PN_Ref = 15
 PN_Struct = 16
-PN_Max = 16
+PN_Func = 17
+PN_Max = 17
 
 NT_Pure = 0
 NT_Function = 1
@@ -83,6 +84,7 @@ PinTypeNames = {
 	[PN_Enum] = "Enum",
 	[PN_Ref] = "Ref",
 	[PN_Struct] = "Struct",
+	[PN_Func] = "Function",
 }
 
 GraphTypeColors = {
@@ -108,6 +110,7 @@ NodePinColors = {
 	[PN_Enum] = Color(0,100,80),
 	[PN_Ref] = Color(0,180,255),
 	[PN_Struct] = Color(40,80,255),
+	[PN_Func] = Color(127,127,127),
 }
 
 NodePinImplicitConversions = {
