@@ -133,3 +133,44 @@ STRUCT EmitSoundInfo, Passed as argument of GM:EntityEmitSound.
 	PIN Entity, PN_Ref, PNF_Nullable, Entity, #The entity that played the sound.
 	PIN Pos, PN_Vector, PNF_Nullable, #The origin of the played sound.
 }
+STRUCT ToScreenData, Table returned by Vector:ToScreen.
+{
+	PIN x, PN_Number, #The x coordinate on the players screen
+	PIN y, PN_Number, #The y coordinate on the players screen
+	PIN visible, PN_Bool, #The coordinate is not behind the player
+}
+STRUCT Trace, Table structure used for util.TraceLine.
+{
+	PIN start, PN_Vector, #The start position of the trace
+	PIN endpos, PN_Vector, #The end position of the trace
+	PIN filter, PN_Ref, PNF_Table|PNF_Nullable, Entity, #Things the trace should not hit.
+	PIN mask=MASK_SOLID, PN_Enum, PNF_None, MASK, #This determines what the trace should hit and what it shouldn't hit.
+	PIN collisiongroup=COLLISION_GROUP_NONE, PN_Enum, PNF_None, COLLISION_GROUP, #This determines what the trace should hit in regards to the entity's collision group.
+	PIN ignoreworld=false, PN_Bool, #Should the trace ignore world or not
+}
+STRUCT TraceResult, Table structure used as trace result.
+{
+	PIN Entity, PN_Ref, PNF_Nullable, Entity, #The entity hit by the trace.
+	PIN Fraction=1, PN_Number, #This indicates the how much of your trace length was used from 0-1
+	PIN FractionLeftSolid=0, PN_Number, #Given the trace started in a solid enviroment, this will return at what distance the trace left the solid from 0-1. Doesn't work if the trace hit a non-worldspawn entity.
+	PIN Hit, PN_Bool, #Indicates whether the trace hit something.
+	PIN HitBox, PN_Number, #The ID of the hitbox hit by the trace.
+	PIN HitGroup, PN_Enum, PNF_None, HITGROUP, #What hitgroup the trace hit (not the same as HitBox).
+	PIN HitNoDraw, PN_Bool, #Indicates whenever the trace hit a no-draw brush.
+	PIN HitNonWorld, PN_Bool, #Indicates whenever the trace did not hit the world.
+	PIN HitNormal, PN_Vector, PNF_Nullable, #The direction of the surface that was hit as a normal vector
+	PIN HitPos, PN_Vector, PNF_Nullable, #The position the trace stopped. This will be the provided endpos if the trace hit nothing.
+	PIN HitSky, PN_Bool, #Indicates whenever the trace hit the sky.
+	PIN HitTexture, PN_String, #The surface material (not texture) of whatever the trace hit.
+	PIN HitWorld, PN_Bool, #Indicates whenever the trace hit the world.
+	PIN MatType, PN_Enum, PNF_None, MAT, #the material hit by the trace.
+	PIN Normal, PN_Vector, PNF_Nullable, #The direction of the trace as a normal vector.
+	PIN PhysicsBone, PN_Number, #The PhysObj ID that was hit.
+	PIN StartPos, PN_Vector, PNF_Nullable, #The origin of the trace. Will match the provided startpos.
+	PIN SurfaceProps, PN_Number, #ID of hit surface property from scripts/surfaceproperties.txt.
+	PIN StartSolid, PN_Bool, #Indicates whenever the trace started in a solid enviroment.
+	PIN AllSolid, PN_Bool, #True if the entire trace is inside a solid.
+	PIN SurfaceFlags, PN_Enum, PNF_Bitfield, SURF, #The surface flags of the hit surface.
+	PIN DispFlags, PN_Enum, PNF_Bitfield, DISPSURF, #The displacement flags of the hit surface.
+	PIN Contents, PN_Enum, PNF_Bitfield, CONTENTS, #The contents of the hit surface.
+}

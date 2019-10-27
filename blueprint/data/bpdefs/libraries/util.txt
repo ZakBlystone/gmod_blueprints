@@ -22,4 +22,10 @@ LIB util
 		IN end, PN_Vector, #The end of the trace.
 		IN entity, PN_Ref, PNF_Nullable, Entity, #If set, the decal will not be able to be placed on given entity. Can also be a table of entities.
 	}
+	FUNC SHARED TraceLine
+	{
+		DESC Performs a trace with the given trace data.
+		IN trace, PN_Struct, PNF_None, Trace, #The trace data to use.
+		OUT result, PN_Struct, PNF_None, TraceResult, #Trace result.
+	}
 }

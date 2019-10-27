@@ -12,6 +12,13 @@ local function DisplayName(nodeType)
 	return nodeType.displayName or nodeType.name
 end
 
+local function NodeIcon(nodeType)
+	if nodeType.role == ROLE_Server then return "icon16/bullet_blue.png" end
+	if nodeType.role == ROLE_Client then return "icon16/bullet_orange.png" end
+	if nodeType.role == ROLE_Shared then return "icon16/bullet_purple.png" end
+	return "icon16/bullet_white.png"
+end
+
 local function SortedFilteredNodeList( graph, filter, res )
 	local options = {}
 	local types = graph:GetNodeTypes()
@@ -24,6 +31,10 @@ local function SortedFilteredNodeList( graph, filter, res )
 	end
 end
 
+local refMaps = {
+	["Entity"] = PN_Entity,
+	["Player"] = PN_Player,
+}
 local function FilterByType( filterType ) return function(n) 
 		return n.type == filterType 
 	end 
@@ -31,7 +42,7 @@ end
 
 local function FilterByPinType( pinType ) return function(n) 
 		for _, pin in pairs(n.pins) do 
-			if pin[2] == pinType then return true end 
+			if pin[2] == pinType or pin[2] == PN_Ref and refMaps[pin[5]] == pinType then return true end 
 		end 
 		return false 
 	end 
@@ -43,6 +54,14 @@ local function FilterBySubstring( str ) return function(n)
 end
 
 local function CombineFilter(a,b) return function(n) return a(n) or b(n) end end
+
+local function NodeNoAnim(node, expanded)
+
+	if expanded then node:SetExpanded( expanded, true ) end
+	node.Expander.DoClick = function() node:SetExpanded( !node.m_bExpanded, true ) end
+	return node
+
+end
 
 function PANEL:OnNodeTypeSelected( nodeType )
 
@@ -72,7 +91,48 @@ function PANEL:Init()
 		end
 	end
 
+	local function treeItemClick( nodeType )
+		self:OnNodeTypeSelected( nodeType )
+		self:Remove()
+	end
+
+	local function addTreeNode( p, name, icon, expanded )
+		local node = NodeNoAnim(p:AddNode(name, icon), expanded)
+		node.Label:SetTextColor(color_white)
+		return node
+	end
+
+	local function addTreeBPNode( p, nodeType, expanded )
+		local node = addTreeNode(p, DisplayName(nodeType), NodeIcon(nodeType), expanded)
+		node.InternalDoClick = function() treeItemClick(nodeType) end
+	end
+
+	local function treeInserter( tree, tc, expanded )
+		local function makeCat(p, x, y, z) tc[p] = tc[p] or {} if tc[p][x] then return tc[p][x] end local c = addTreeNode(p, x, y, z or expanded) tc[p][x] = c return c end
+		return function( name, nodeType )
+			local p = tree
+			if nodeType.isClass then
+				p = makeCat(p, "Classes", "icon16/bricks.png")
+				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png") end
+				addTreeBPNode(p, nodeType, expanded)
+			elseif nodeType.isLib then
+				p = makeCat(p, "Libs", "icon16/brick.png")
+				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png") end
+				addTreeBPNode(p, nodeType, expanded)
+			elseif nodeType.isStruct then
+				p = makeCat(p, "Structs", "icon16/table.png")
+				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png", true) end
+				addTreeBPNode(p, nodeType, expanded)
+			else
+				p = makeCat(p, "Other")
+				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png") end
+				addTreeBPNode(p, nodeType, expanded)
+			end
+		end
+	end
+
 	self.inserter = inserter
+	self.treeInserter = treeInserter
 
 	self.search = vgui.Create("DTextEntry", self)
 	self.search:DockMargin(5, 5, 5, 5)
@@ -86,10 +146,11 @@ function PANEL:Init()
 	self.tabs:DockMargin(5, 0, 5, 5)
 	self.tabs:Dock( FILL )
 
-	self.resultList = vgui.Create("DListBox", self )
+	self.resultList = vgui.Create("DTree", self )
 	self.resultList:DockMargin(5, 0, 5, 5)
 	self.resultList:Dock( FILL )
 	self.resultList:SetVisible(false)
+	self.resultList:SetBackgroundColor(Color(50,50,50))
 
 	self:SetWide(400)
 	self:SetTall(300)
@@ -102,29 +163,19 @@ function PANEL:Setup( graph )
 
 	self.graph = graph
 
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "All", list, "icon16/book.png", false, false, "All nodes" )
-	SortedFilteredNodeList( self.graph, function() return true end, self.inserter(list) )
+	local function makeSearchPage( name, desc, icon, func, autoExpand )
+		local tree = vgui.Create("DTree")
+		tree:SetBackgroundColor(Color(50,50,50))
+		self.tabs:AddSheet( name, tree, icon, false, false, "All nodes" )
+		SortedFilteredNodeList( self.graph, func, self.treeInserter(tree, {}, autoExpand) )
+	end
 
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "Hooks", list, "icon16/connect.png", false, false, "Hook nodes" )
-	SortedFilteredNodeList( self.graph, FilterByType(NT_Event), self.inserter(list) )
-
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "Entity", list, "icon16/bricks.png", false, false, "Entity nodes" )
-	SortedFilteredNodeList( self.graph, FilterByPinType(PN_Entity), self.inserter(list) )
-
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "Player", list, "icon16/user.png", false, false, "Player nodes" )
-	SortedFilteredNodeList( self.graph, FilterByPinType(PN_Player), self.inserter(list) )
-
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "Special", list, "icon16/plugin.png", false, false, "Special nodes" )
-	SortedFilteredNodeList( self.graph, CombineFilter( FilterByType(NT_Special), FilterByPinType(PN_Any) ), self.inserter(list) )
-
-	local list = vgui.Create("DListBox" )
-	self.tabs:AddSheet( "Custom", list, "icon16/wrench.png", false, false, "User created nodes" )
-	SortedFilteredNodeList( self.graph, function(n) return n.custom == true end, self.inserter(list) )	
+	makeSearchPage("All", "All nodes", "icon16/book.png", function() return true end)
+	makeSearchPage("Hooks", "Hook nodes", "icon16/connect.png", FilterByType(NT_Event), true)
+	makeSearchPage("Entity", "Entity nodes", "icon16/bricks.png", FilterByPinType(PN_Entity), true)
+	makeSearchPage("Player", "Player nodes", "icon16/user.png", FilterByPinType(PN_Player), true)
+	makeSearchPage("Special", "Special nodes", "icon16/plugin.png", CombineFilter( FilterByType(NT_Special), FilterByPinType(PN_Any) ), true)
+	makeSearchPage("Custom", "User created nodes", "icon16/wrench.png", function(n) return n.custom == true end, true)
 
 end
 
@@ -135,7 +186,7 @@ function PANEL:OnSearchTerm( text )
 		self.tabs:SetVisible(false)
 
 		self.resultList:Clear()
-		SortedFilteredNodeList( self.graph, FilterBySubstring( text:lower() ), self.inserter(self.resultList) )
+		SortedFilteredNodeList( self.graph, FilterBySubstring( text:lower() ), self.treeInserter(self.resultList, {}, true) )
 	else
 		self.resultList:SetVisible(false)
 		self.tabs:SetVisible(true)

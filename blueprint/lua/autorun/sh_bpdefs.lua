@@ -3,8 +3,7 @@ AddCSLuaFile()
 include("sh_bpcommon.lua")
 
 -- since this is included in multiple places, debounce
-_G.LastDefReload = _G.LastDefReload or SysTime()
-if (SysTime() - _G.LastDefReload) < 0.2 then
+if _G.LastDefReload ~= nil and (SysTime() - _G.LastDefReload) < 0.2 then
 	return
 end
 _G.LastDefReload = SysTime()
@@ -294,6 +293,7 @@ local function StructBreakNode( struct )
 	ntype.desc = struct.desc
 	ntype.code = ""
 	ntype.defaults = {}
+	ntype.category = struct.name
 	ntype.isStruct = true
 
 	table.insert(ntype.pins, {
@@ -309,7 +309,7 @@ local function StructBreakNode( struct )
 		table.insert(ntype.pins, {
 			PD_Out,
 			pin.type,
-			bpcommon.Camelize(pin.name),
+			pin.name,
 			pin.flags,
 			pin.ex,
 		})
@@ -325,6 +325,9 @@ local function StructBreakNode( struct )
 	end, "")
 	if ret[1] == '\n' then ret = ret:sub(2,-1) end
 	ntype.code = ret
+
+	for _, pin in pairs(ntype.pins) do pin[3] = bpcommon.Camelize(pin[3]) end
+
 	ConfigureNodeType(ntype)
 
 	--print(ntype.code)
@@ -341,6 +344,7 @@ local function StructMakeNode( struct )
 	ntype.desc = struct.desc
 	ntype.code = ""
 	ntype.defaults = {}
+	ntype.category = struct.name
 	ntype.isStruct = true
 
 	table.insert(ntype.pins, {
@@ -356,7 +360,7 @@ local function StructMakeNode( struct )
 		table.insert(ntype.pins, {
 			PD_In,
 			pin.type,
-			bpcommon.Camelize(pin.name),
+			pin.name,
 			pin.flags,
 			pin.ex,
 		})
@@ -371,6 +375,9 @@ local function StructMakeNode( struct )
 		return "\n " .. (struct.invNameMap[pin[3]] or pin[3]) .. " = " .. s
 	end)
 	ntype.code = ret .. " = { " .. arg .. "\n}"
+
+	for _, pin in pairs(ntype.pins) do pin[3] = bpcommon.Camelize(pin[3]) end
+
 	ConfigureNodeType(ntype)
 
 	--print(ntype.code)
