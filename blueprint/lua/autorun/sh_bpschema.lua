@@ -115,7 +115,7 @@ NodePinColors = {
 
 NodePinImplicitConversions = {
 	[PN_Entity] = { PN_Player, { PN_Ref, "Entity" } },
-	[PN_Player] = { PN_Entity, { PN_Ref, "Player" } },
+	[PN_Player] = { PN_Entity, { PN_Ref, "Player" }, { PN_Ref, "Entity" } },
 	[PN_Weapon] = { PN_Entity },
 	[PN_Npc] = { PN_Entity },
 	[PN_Vehicle] = { PN_Entity },

@@ -437,6 +437,24 @@ function meta:CheckConversion(pin0, pin1)
 
 end
 
+function meta:NodeToString(nodeID)
+
+	local node = self:GetNodeType(self:GetNode(nodeID))
+	if not node then return self:GetName() .. ":" .. "<unknown>" end
+	return self:GetName() .. "." .. node.name
+
+end
+
+function meta:NodePinToString(nodeID, pinID)
+
+	local node = self:GetNodeType(self:GetNode(nodeID))
+	if not node then return self:GetName() .. ":" .. "<unknown>" end
+	local p = node.pins[pinID]
+	if not p then return self:GetName() .. ":" .. node.name .. ".<unknown>" end
+	return self:GetName() .. "." .. node.name .. "." .. p[3]
+
+end
+
 function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
 	if self:FindConnection(nodeID0, pinID0, nodeID1, pinID1) ~= nil then return false, "Already connected" end
@@ -462,12 +480,12 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 		if self:CheckConversion(p0, p1) or self:CheckConversion(p1, p0) then
 			return true
 		else
-			return false, "No explicit conversion between " .. p0Type .. " and " .. p1Type
+			return false, "No explicit conversion between " .. self:NodePinToString(nodeID0, pinID0) .. " and " .. self:NodePinToString(nodeID1, pinID1)
 		end
 
 	end
 
-	if p0[5] ~= p1[5] then return false, "Can't connect " .. tostring(p0[5]) .. " to " .. tostring(p1[5]) end
+	if p0[5] ~= p1[5] then return false, "Can't connect " .. self:NodePinToString(nodeID0, pinID0) .. " to " .. self:NodePinToString(nodeID1, pinID1) end
 
 	return true
 
@@ -645,7 +663,11 @@ function meta:CollapseSingleRerouteNode(nodeID)
 	if input == nil then print("Reroute node did not have input connection") return end
 
 	for _, c in pairs(insert) do
-		if not self:ConnectNodes(input[1], input[2], c[1], c[2]) then error("Unable to reconnect re-route nodes") end
+		if not self:ConnectNodes(input[1], input[2], c[1], c[2]) then 
+			error("Unable to reconnect re-route nodes: " .. 
+				self:NodePinToString(input[1], input[2]) .. " -> " .. 
+				self:NodePinToString(c[1], c[2])) 
+		end
 	end
 
 	self:RemoveNode( nodeID )

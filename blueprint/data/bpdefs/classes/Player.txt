@@ -55,7 +55,7 @@ CLASS Player, player
 		IN hidePopup=false, PN_Bool, PNF_Nullable, #Hide display popup when giving the ammo
 		OUT ammo, PN_Number, #Ammo given.
 	}
-	FUNC SHARED KeyDown
+	PURE SHARED KeyDown
 	{
 		DESC Gets whether a key is down. This is not networked to other players, meaning only the local client can see the keys they are pressing.
 		IN key, PN_Enum, PNF_None, IN, #The key, see IN_ Enums
@@ -117,7 +117,7 @@ CLASS Player, player
 	FUNC SERVER Spectate
 	{
 		DESC Starts spectate mode for given player. This will also affect the players movetype in some cases.
-		IN mode=OBS_MODE_CHASE, PN_Enum, PNF_None, OBS, #Spectate mode, see OBS_MODE_ Enums.
+		IN mode=OBS_MODE_CHASE, PN_Enum, PNF_None, OBS_MODE, #Spectate mode, see OBS_MODE_ Enums.
 	}
 	FUNC SERVER SpectateEntity
 	{
