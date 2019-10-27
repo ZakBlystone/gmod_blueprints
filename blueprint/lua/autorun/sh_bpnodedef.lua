@@ -27,6 +27,8 @@ module("bpnodedef", package.seeall, bpcommon.rescope(bpschema))
 -- jumpSymbols = {} are jump vectors to generate for use in code
 -- locals = {} are node-local variables to use in code
 
+NodePinRedirectors = {}
+NodeRedirectors = {}
 NodeTypes = {
 	["Init"] = EVENT {
 		pins = {},
@@ -60,6 +62,7 @@ NodeTypes = {
 		]],
 	},
 	["EntityFireBullets"] = EVENT {
+		deprecated = true,
 		pins = {
 			{ PD_Out, PN_Entity, "entity" },
 			{ PD_Out, PN_Entity, "attacker" },
@@ -91,51 +94,12 @@ NodeTypes = {
 			#4 = arg[1].OriginalSoundName
 		]],
 	},
-	["Spectate"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Enum, "mode", PNF_None, "OBS_MODE" },
-		},
-		code = "$2:Spectate( $3 )",
-		defaults = {
-			[3] = "OBS_MODE_CHASE",
-		},
-	},
-	["SpectateEntity"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Entity, "entity", PNF_Nullable },
-		},
-		code = "$2:SpectateEntity( $3 )",
-	},
-	["UnSpectate"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-		},
-		code = "$2:UnSpectate()",
-	},
-	["Alive"] = PURE {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_Out, PN_Bool, "isAlive" },
-		},
-		code = "#1 = Player_.Alive($1)",
-	},
-	["PlayerGetWeapon"] = PURE {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_String, "classname"},
-			{ PD_Out, PN_Weapon, "weapon" },
-		},
-		code = "#1 = Player_.GetWeapon($1, $2)",		
-	},
-	["PlayerGetActiveWeapon"] = PURE {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_Out, PN_Weapon, "weapon" },
-		},
-		code = "#1 = Player_.GetActiveWeapon($1)",
-	},
+	["Spectate"] = "Player:Spectate",
+	["SpectateEntity"] = "Player:SpectateEntity",
+	["UnSpectate"] = "Player:UnSpectate",
+	["Alive"] = "Player:Alive, isAlive=alive",
+	["PlayerGetWeapon"] = "Player:GetWeapon, classname=class",
+	["PlayerGetActiveWeapon"] = "Player:GetActiveWeapon",
 	["Clip1"] = PURE {
 		pins = {
 			{ PD_In, PN_Weapon, "weapon" },
@@ -150,21 +114,10 @@ NodeTypes = {
 		},
 		code = "Weapon_.SetClip1($2, $3)",
 	},
-	["PlayerName"] = PURE {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_Out, PN_String, "name" },
-		},
-		code = "#1 = Player_.Nick($1)",
-	},
-	["Use"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Player, "activator" },
-		},
-		code = "Entity_.Use($2, $3, $3, USE_TOGGLE, 1)",
-	},
+	["PlayerName"] = "Player:Name",
+	["Use"] = "Entity:Use",
 	["FireBullets"] = FUNCTION {
+		deprecated = true,
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
 			{ PD_In, PN_Vector, "spread", PNF_Nullable },
@@ -175,183 +128,36 @@ NodeTypes = {
 		},
 		code = "Entity_.FireBullets($2, { Spread = $3, Src = $4, Dir = $5, Num = $6, Damage = $7 })",
 	},
-	["GetModelScale"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Number, "scale" },
-		},
-		code = "#1 = Entity_.GetModelScale($1)",
-	},
-	["SetModelScale"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Number, "scale" },
-			{ PD_In, PN_Number, "deltaTime" },
-		},
-		code = "Entity_.SetModelScale($2, $3, $4)",
-		defaults = {
-			[4] = 0,
-		},
-	},
-	["SetVelocity"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Vector, "velocity" },
-		},
-		code = "Entity_.SetVelocity($2, $3)",
-	},
-	["GetVelocity"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Vector, "velocity" },
-		},
-		code = "#1 = Entity_.GetVelocity($1)",
-	},
-	["SetGroundEntity"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Entity, "groundEntity", PNF_Nullable },
-		},
-		code = "Entity_.SetGroundEntity($2, $3)",
-	},
-	["GetGroundEntity"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Entity, "groundEntity" },
-		},
-		code = "#1 = Entity_.GetGroundEntity($1)",
-	},
-	["Crouching"] = PURE {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_Out, PN_Bool, "crouching" },
-		},
-		code = "#1 = Player_.Crouching($1)",
-	},
+	["GetModelScale"] = "Entity:GetModelScale",
+	["SetModelScale"] = "Entity:SetModelScale",
+	["SetVelocity"] = "Entity:SetVelocity",
+	["GetVelocity"] = "Entity:GetVelocity",
+	["SetGroundEntity"] = "Entity:SetGroundEntity, groundEntity=entity",
+	["GetGroundEntity"] = "Entity:GetGroundEntity, groundEntity=entity",
+	["Crouching"] = "Player:Crouching",
 	["Kill"] = FUNCTION {
+		deprecated = true,
 		pins = {
 			{ PD_In, PN_Player, "player" },
 			{ PD_In, PN_Bool, "silent" },
 		},
 		code = "if $3 then Player_.KillSilent($2) else Player_.Kill($2) end",
 	},
-	["EmitSound"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "target" },
-			{ PD_In, PN_String, "sound" },
-			{ PD_In, PN_Enum, "soundLevel", PNF_None, "SNDLVL" },
-			{ PD_In, PN_Number, "pitch" },
-			{ PD_In, PN_Number, "volume" },
-			{ PD_In, PN_Enum, "channel", PNF_None, "CHAN" },
-		},
-		defaults = {
-			[4] = "SNDLVL_NORM",
-			[5] = 100,
-			[6] = 1,
-			[7] = "CHAN_AUTO",
-		},
-		code = "Entity_.EmitSound( $2, $3, $4, $5, $6, $7 )",
-	},
-	["TakeDamage"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "target" },
-			{ PD_In, PN_Number, "damage" },
-			{ PD_In, PN_Entity, "attacker", PNF_Nullable },
-			{ PD_In, PN_Entity, "inflictor", PNF_Nullable },
-		},
-		code = "Entity_.TakeDamage($2, $3, $4, $5)",
-	},
-	["SetHealth"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Number, "health" },
-		},
-		code = "Entity_.SetHealth($2, $3)",
-	},
-	["SetArmor"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Number, "armor" },
-		},
-		code = "Player_.SetArmor($2, $3)",
-	},
-	["ViewPunch"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Angles, "angles" },
-		},
-		code = "Player_.ViewPunch($2, $3)"
-	},
-	["Give"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_String, "classname" },
-		},
-		code = "Player_.Give($2, $3)",
-	},
-	["GiveAmmo"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Number, "amount" },
-			{ PD_In, PN_String, "type" },
-			{ PD_In, PN_Bool, "hidePopup" },
-		},
-		code = "Player_.GiveAmmo($2, $3, $4, $5)",
-	},
-	["SetAmmo"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Number, "amount" },
-			{ PD_In, PN_String, "type" },
-		},
-		code = "Player_.SetAmmo($2, $3, $4)",
-	},
-	["StripWeapon"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_String, "weapon" },
-		},
-		code = "Player_.StripWeapon($2, $3)",
-	},
-	["RemoveAllItems"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-		},
-		code = "Player_.RemoveAllItems($2)",
-	},
-	["RemoveAllAmmo"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-		},
-		code = "Player_.RemoveAllAmmo($2)",
-	},
-	["SetNoTarget"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Bool, "visible" },
-		},
-		code = "Player_.SetNoTarget($2, $3)",
-	},
-	["Remove"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },		
-		},
-		code = "if not $2:IsPlayer($2) then Entity_.Remove($2) end", -- safe check here
-	},
-	["GetClass"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_String, "classname" },
-		},
-		code = "#1 = Entity_.GetClass($1)",
-	},
-	["ChatPrint"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_String, "message" },
-		},
-		code = "Player_.ChatPrint($2, $3)",		
-	},
+	["EmitSound"] = "Entity:EmitSound, target=entity",
+	["TakeDamage"] = "Entity:TakeDamage, target=entity",
+	["SetHealth"] = "Entity:SetHealth",
+	["SetArmor"] = "Player:SetArmor",
+	["ViewPunch"] = "Player:ViewPunch",
+	["Give"] = "Player:Give, classname=class",
+	["GiveAmmo"] = "Player:GiveAmmo",
+	["SetAmmo"] = "Player:SetAmmo",
+	["StripWeapon"] = "Player:StripWeapon, weapon=class",
+	["RemoveAllItems"] = "Player:RemoveAllItems",
+	["RemoveAllAmmo"] = "Player:RemoveAllAmmo",
+	["SetNoTarget"] = "Player:SetNoTarget",
+	["Remove"] = "Entity:Remove",
+	["GetClass"] = "Entity:GetClass",
+	["ChatPrint"] = "Player:ChatPrint",
 	["ChatPrintAll"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_String, "message" },
@@ -414,57 +220,13 @@ NodeTypes = {
 		},
 		code = "#1 = Entity_.GetPhysicsObject($1)",
 	},
-	["EyePos"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Vector, "pos" },
-		},
-		code = "#1 = Entity_.EyePos($1)",
-	},
-	["EyeAngles"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Angles, "angles" },
-		},
-		code = "#1 = Entity_.EyeAngles($1)",
-	},
-	["GetAimVector"] = PURE {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_Out, PN_Vector, "aimvector" },
-		},
-		code = "#1 = Player_.GetAimVector($1)",
-	},
-	["GetShootPos"] = PURE {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_Out, PN_Vector, "pos" },
-		},
-		code = "#1 = Player_.GetShootPos($1)",
-	},
-	["CreateRagdoll"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-		},
-		code = "Player_.CreateRagdoll($2)",
-	},
-	["KeyDown"] = PURE {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Enum, "key", PNF_None, "IN" },
-			{ PD_Out, PN_Bool, "isDown" },
-		},
-		code = "#1 = $1:KeyDown($2)",
-		compact = true,	
-	},
-	["Say"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_String, "text" },
-			{ PD_In, PN_Bool, "teamOnly" },
-		},
-		code = "Player_.Say($2, $3, $4)",
-	},
+	["EyePos"] = "Entity:EyePos",
+	["EyeAngles"] = "Entity:EyeAngles",
+	["GetAimVector"] = "Player:GetAimVector, aimvector=dir",
+	["GetShootPos"] = "Player:GetShootPos",
+	["CreateRagdoll"] = "Player:CreateRagdoll",
+	["KeyDown"] = "Player:KeyDown, isDown=down",
+	["Say"] = "Player:Say",
 	["If"] = SPECIAL {
 		pins = {
 			{ PD_In, PN_Exec, "Exec" },
@@ -690,13 +452,7 @@ NodeTypes = {
 		},
 		code = "#1 = Entity($1)",
 	},
-	["EntIndex"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },	
-			{ PD_Out, PN_Number, "id" },
-		},
-		code = "#1 = Entity_.EntIndex($1)",
-	},
+	["EntIndex"] = "Entity:EntIndex, id=index",
 	["ToNumber"] = PURE {
 		pins = {
 			{ PD_In, PN_String, "value" },	
@@ -805,20 +561,8 @@ NodeTypes = {
 		},
 		code = "if __bpm.genericIsValid($2) then #1 else #2 end",
 	},
-	["IsNPC"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Bool, "isNPC" },
-		},
-		code = "#1 = $1:IsNPC()", -- not great
-	},
-	["IsPlayer"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Bool, "isPlayer" },
-		},
-		code = "#1 = $1:IsPlayer()", -- not great
-	},
+	["IsNPC"] = "Entity:IsNPC",
+	["IsPlayer"] = "Entity:IsPlayer",
 	["CurTime"] = PURE {
 		pins = {
 			{ PD_Out, PN_Number, "curtime" },
@@ -947,83 +691,17 @@ NodeTypes = {
 		code = "#1 = $1 ~= $2",
 		compact = true,		
 	},
-	["WaterLevel"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Number, "level" },
-		},
-		code = "#1 = Entity_.WaterLevel($1)",
-	},
-	["GetAngles"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Angles, "angles" },
-		},
-		code = "#1 = Entity_.GetAngles($1)",
-	},
-	["SetAngles"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Angles, "angles" },	
-		},
-		code = "Entity_.SetAngles($2, $3)",
-	},
-	["GetPos"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Vector, "position" },
-		},
-		code = "#1 = Entity_.GetPos($1)",
-	},
-	["SetPos"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Vector, "position" },	
-		},
-		code = "Entity_.SetPos($2, $3)",
-	},
-	["SetOwner"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Entity, "owner", PNF_Nullable },
-		},
-		code = "Entity_.SetOwner($2, $3)",
-	},
-	["GetOwner"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Entity, "owner" },	
-		},
-		code = "#1 = Entity_.GetOwner($1)",
-	},
-	["EntityCreate"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_String, "classname" },
-			{ PD_Out, PN_Entity, "entity" },
-		},
-		code = "#2 = ents.Create($2)",
-	},
-	["Spawn"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-		},
-		code = "Entity_.Spawn($2)",
-	},
-	["Activate"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-		},
-		code = "Entity_.Activate($2)",
-	},
-	["Fire"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_String, "input" },
-			{ PD_In, PN_String, "param" },
-			{ PD_In, PN_Number, "delay" },
-		},
-		code = "Entity_.Fire($2, $3, $4, $5)",
-	},
+	["WaterLevel"] = "Entity:WaterLevel",
+	["GetAngles"] = "Entity:GetAngles",
+	["SetAngles"] = "Entity:SetAngles",
+	["GetPos"] = "Entity:GetPos, position=pos",
+	["SetPos"] = "Entity:SetPos, position=pos",
+	["SetOwner"] = "Entity:SetOwner",
+	["GetOwner"] = "Entity:GetOwner",
+	["EntityCreate"] = "ents.Create, classname=class",
+	["Spawn"] = "Entity:Spawn",
+	["Activate"] = "Entity:Activate",
+	["Fire"] = "Entity:Fire",
 	["SetEntityValue"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
@@ -1048,14 +726,7 @@ NodeTypes = {
 		},
 		code = "if IsValid($2) then $2[\"bp_!graph_\" .. $3] = nil end",
 	},
-	["SetKeyValue"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_String, "key" },
-			{ PD_In, PN_String, "value" },
-		},
-		code = "Entity_.SetKeyValue($2, $3, $4)",
-	},
+	["SetKeyValue"] = "Entity:SetKeyValue",
 	["GetKeyValue"] = PURE {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
@@ -1064,55 +735,13 @@ NodeTypes = {
 		},
 		code = "#1 = Entity_.GetKeyValues($1)[$2] or \"\"",
 	},
-	["SetParent"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Entity, "parent" },
-		},
-		code = "Entity_.SetParent($2, $3)",
-	},
-	["SetModel"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_String, "model" },
-		},
-		code = "Entity_.SetModel($2, Model($3))",
-	},
-	["GetModel"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_String, "model" },
-		},
-		code = "#1 = Entity_.GetModel($1)",
-	},
-	["SetColor"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Color, "color" },
-		},
-		code = "Entity_.SetColor($2, $3)",
-	},
-	["GetColor"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_Color, "color" },
-		},
-		code = "#1 = Entity_.GetColor($1)",		
-	},
-	["SetName"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_String, "name" },
-		},
-		code = "Entity_.SetName($2, $3)",
-	},
-	["GetName"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_String, "name" },
-		},
-		code = "#1 = Entity_.GetName($1)",		
-	},
+	["SetParent"] = "Entity:SetParent",
+	["SetModel"] = "Entity:SetModel",
+	["GetModel"] = "Entity:GetModel",
+	["SetColor"] = "Entity:SetColor",
+	["GetColor"] = "Entity:GetColor",
+	["SetName"] = "Entity:SetName",
+	["GetName"] = "Entity:GetName",
 	["ForEach"] = SPECIAL {
 		pins = {
 			{ PD_In, PN_Exec, "Exec" },
@@ -1222,42 +851,11 @@ NodeTypes = {
 		},
 		code = "#2 = false for _, pl in pairs(player.GetAll()) do if pl:Nick():find( $1 ) ~= nil then #1 = pl #2 = true end end"
 	},
-	["AllPlayers"] = PURE {
-		pins = {
-			{ PD_Out, PN_Player, "players", PNF_Table },
-		},
-		code = "#1 = player.GetAll()"
-	},
-	["AllEntities"] = PURE {
-		pins = {
-			{ PD_Out, PN_Entity, "entities", PNF_Table },
-		},
-		code = "#1 = ents.GetAll()"
-	},
-	["AllEntitiesByClass"] = PURE {
-		pins = {
-			{ PD_In, PN_String, "classname" },
-			{ PD_Out, PN_Entity, "entities", PNF_Table },
-		},
-		code = "#1 = ents.FindByClass( $1 )"
-	},
-	["AllEntitiesByName"] = PURE {
-		pins = {
-			{ PD_In, PN_String, "name" },
-			{ PD_Out, PN_Entity, "entities", PNF_Table },
-		},
-		code = "#1 = ents.FindByName( $1 )"
-	},
-	["ScreenShake"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Vector, "pos" },
-			{ PD_In, PN_Number, "amplitude" },
-			{ PD_In, PN_Number, "frequency" },
-			{ PD_In, PN_Number, "duration" },
-			{ PD_In, PN_Number, "radius" },
-		},
-		code = "util.ScreenShake( $2, $3, $4, $5, $6 )"
-	},
+	["AllPlayers"] = "player.GetAll",
+	["AllEntities"] = "ents.GetAll",
+	["AllEntitiesByClass"] = "ents.FindByClass, classname=class",
+	["AllEntitiesByName"] = "ents.FindByName",
+	["ScreenShake"] = "util.ScreenShake",
 	["MakeExplosion"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Entity, "owner", PNF_Nullable },
@@ -1496,6 +1094,7 @@ NodeTypes = {
 			{ PD_Out, PN_Vector, "normal" },
 			{ PD_Out, PN_Number, "fraction" },
 		},
+		deprecated = true,
 		locals = {"tr"},
 		defaults = {
 			[5] = "MASK_SOLID",
@@ -1541,6 +1140,25 @@ NodeTypes = {
 		code = [[NPC_.AddEntityRelationship($2, $3, $4, $5)]],
 	},
 }
+
+for k,v in pairs(NodeTypes) do
+	if type(v) == "string" then
+		local nodeRedirect = nil
+		local pinRedirects = {}
+		local args = string.Explode(",", v)
+		for _, arg in pairs(args) do
+			nodeRedirect = nodeRedirect or arg
+			for a,b in arg:gmatch("([%w_]+)=([%w_]+)") do
+				pinRedirects[a] = b
+			end
+		end
+
+		NodeRedirectors[k] = nodeRedirect:gsub("[:.]", "_")
+		NodePinRedirectors[k] = pinRedirects
+		NodePinRedirectors[NodeRedirectors[k]] = pinRedirects
+		NodeTypes[k] = nil
+	end
+end
 
 local allpins = {}
 for i=1, PN_Max do

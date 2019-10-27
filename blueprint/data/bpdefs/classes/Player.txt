@@ -1,8 +1,141 @@
 CLASS Player, player
 {
+	PURE SHARED Alive
+	{
+		DESC Checks if the player is alive.
+		OUT alive, PN_Bool, #Whether the player is alive
+	}
+	FUNC SHARED ChatPrint
+	{
+		DESC Prints a string to the chatbox of the client.
+		IN message, PN_String, #String to be printed
+	}
+	FUNC SERVER CreateRagdoll
+	{
+		DESC Creates the player's ragdoll entity. This is normally used when a player dies, to create their death ragdoll. The ragdoll will be created with the player's properties such as Position, Angles, PlayerColor, Velocity and Model. You can retrieve the entity this creates with Player:GetRagdollEntity. 
+	}
+	PURE SHARED Crouching
+	{
+		DESC Returns whether the player is crouching or not
+		OUT crouching PN_Bool, #Whether the player is crouching
+	}
+	PURE SHARED GetActiveWeapon
+	{
+		DESC Returns the player's active weapon.
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon the player is currently has equipped.
+	}
+	PURE SHARED GetAimVector
+	{
+		DESC Returns the direction that the player is aiming.
+		OUT dir, PN_Vector, #The direction vector of players aim
+	}
+	PURE SHARED GetShootPos
+	{
+		DESC Returns the position of a Player's view
+		OUT pos, PN_Vector, #aim pos
+	}
+	PURE SHARED GetWeapon
+	{
+		DESC Returns the weapon for the specified class
+		IN class, PN_String, #Class name of weapon
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon for the specified class.
+	}
+	FUNC SERVER Give
+	{
+		DESC Gives the player a weapon.
+		IN class, PN_String, #Class name of weapon to give the player
+		IN bNoAmmo=false, PN_Bool, PNF_Nullable, #Set to true to not give any ammo on weapon spawn. (Reserve ammo set by DefaultClip)
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon given to the player, if one was given. It will return NULL if the player already has the weapon, or the weapon entity (entity with given classname) doesn't exist.
+	}
+	FUNC SERVER GiveAmmo
+	{
+		DESC Gives ammo to a player
+		IN amount, PN_Number, #Amount of ammo
+		IN type, PN_String, #Type of ammo.
+		IN hidePopup=false, PN_Bool, PNF_Nullable, #Hide display popup when giving the ammo
+		OUT ammo, PN_Number, #Ammo given.
+	}
+	FUNC SHARED KeyDown
+	{
+		DESC Gets whether a key is down. This is not networked to other players, meaning only the local client can see the keys they are pressing.
+		IN key, PN_Enum, PNF_None, IN, #The key, see IN_ Enums
+		OUT down, PN_Bool, #isDown
+	}
 	FUNC SERVER Kick
 	{
 		DESC Kicks the player from the server.
 		IN reason=No reason, PN_String, #Reason to show for disconnection.
+	}
+	FUNC SERVER Kill
+	{
+		DESC Kills a player and calls GM:PlayerDeath.
+	}
+	FUNC SERVER KillSilent
+	{
+		DESC Kills a player without notifying the rest of the server.
+	}
+	PURE SHARED Name
+	{
+		DESC Returns the players name. Identical to Player:Nick and Player:GetName.
+		OUT name, PN_String, #Player's Steam name.
+	}
+	PURE SHARED Nick
+	{
+		DESC Returns the player's nickname.
+		OUT name, PN_String, #Player's Steam name
+	}
+	FUNC SERVER RemoveAllAmmo
+	{
+		DESC Removes all ammo from a certain player
+	}
+	FUNC SERVER RemoveAllItems
+	{
+		DESC Removes all weapons and ammo from the player.
+	}
+	FUNC SERVER Say
+	{
+		DESC Forces the player to say whatever the first argument is. Works on bots too.
+		IN text, PN_String, #The text to force the player to say.
+		IN teamOnly=false, PN_Bool, PNF_Nullable, #Whether to send this message to our own team only.
+	}
+	FUNC SHARED SetAmmo
+	{
+		DESC Sets the amount of the specified ammo for the player.
+		IN amount, PN_Number, #The amount of ammunition to set.
+		IN type, PN_Any, #The ammunition type. Can be either number ammo ID or string ammo name.
+	}
+	FUNC SERVER SetArmor
+	{
+		DESC Sets the player armor to the argument.
+		IN Amount, PN_Number, #The amount that the player armor is going to be set to.
+	}
+	FUNC SERVER SetNoTarget
+	{
+		DESC Sets the players visibility towards NPCs.
+		IN visible, PN_Bool, #The visibility.
+	}
+	FUNC SERVER Spectate
+	{
+		DESC Starts spectate mode for given player. This will also affect the players movetype in some cases.
+		IN mode=OBS_MODE_CHASE, PN_Enum, PNF_None, OBS, #Spectate mode, see OBS_MODE_ Enums.
+	}
+	FUNC SERVER SpectateEntity
+	{
+		DESC Makes the player spectate the entity
+		IN entity, PN_Ref, PNF_None, Entity, #Entity to spectate.
+	}
+	FUNC SERVER StripWeapon
+	{
+		DESC Removes the specified weapon class from a certain player
+		IN class, PN_String, #The weapon class to remove
+	}
+	FUNC SERVER UnSpectate
+	{
+		DESC Stops the player from spectating another entity.
+	}
+	FUNC SHARED ViewPunch
+	{
+		DESC Simulates a push on the client's screen.
+		IN angles, PN_Angles, #The angle in which to push the player's screen.
 	}
 }

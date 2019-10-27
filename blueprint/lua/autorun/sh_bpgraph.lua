@@ -780,6 +780,8 @@ function meta:ReadFromStream(stream, mode, version)
 		local nodeX = stream:ReadFloat()
 		local nodeY = stream:ReadFloat()
 		local literals = bpdata.ReadValue( stream )
+		local redirect = NodeRedirectors[ nodeTypeName ]
+		if redirect then nodeTypeName = redirect end
 
 		table.insert(self.deferred, {
 			nodeType = nodeTypeName,
@@ -823,6 +825,14 @@ end
 function meta:ResolveConnectionMeta()
 
 	if self.connectionMeta ~= nil then
+
+		for _, c in pairs(self.connectionMeta) do
+			local rdir = NodePinRedirectors[c[1]]
+			if rdir then c[2] = rdir[c[2]] or c[2] end
+			local rdir = NodePinRedirectors[c[3]]
+			if rdir then c[4] = rdir[c[4]] or c[4] end
+		end
+
 		print("Resolving connection meta...")
 		for i, c in self:Connections(true) do
 			local meta = self.connectionMeta[i]
@@ -832,7 +842,7 @@ function meta:ResolveConnectionMeta()
 			local pin1 = nt1.pins[c[4]]
 
 			if meta == nil then continue end
-			if pin0 == nil or pin0[3] ~= meta[2] then
+			if pin0 == nil or pin0[3]:lower() ~= meta[2]:lower() then
 				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")
 				c[2] = nil
 				for k, p in pairs(nt0.pins) do
@@ -841,7 +851,7 @@ function meta:ResolveConnectionMeta()
 				MsgC( c[2] ~= nil and Color(100,255,100) or Color(255,100,100), c[2] ~= nil and " Resolved\n" or " Not resolved\n" )
 			end
 
-			if pin1 == nil or pin1[3] ~= meta[4] then
+			if pin1 == nil or pin1[3]:lower() ~= meta[4]:lower() then
 				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
 				c[4] = nil
 				for k, p in pairs(nt0.pins) do

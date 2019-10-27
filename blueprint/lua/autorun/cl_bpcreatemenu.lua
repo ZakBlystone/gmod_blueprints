@@ -96,6 +96,9 @@ function PANEL:Init()
 		self:Remove()
 	end
 
+	self.timers = {}
+	self.nextTimer = 0
+
 	local function addTreeNode( p, name, icon, expanded )
 		local node = NodeNoAnim(p:AddNode(name, icon), expanded)
 		node.Label:SetTextColor(color_white)
@@ -103,8 +106,11 @@ function PANEL:Init()
 	end
 
 	local function addTreeBPNode( p, nodeType, expanded )
-		local node = addTreeNode(p, DisplayName(nodeType), NodeIcon(nodeType), expanded)
-		node.InternalDoClick = function() treeItemClick(nodeType) end
+		table.insert(self.timers, { t = self.nextTimer, f = function()
+			local node = addTreeNode(p, DisplayName(nodeType), NodeIcon(nodeType), expanded)
+			node.InternalDoClick = function() treeItemClick(nodeType) end
+		end })
+		self.nextTimer = self.nextTimer + 0.001
 	end
 
 	local function treeInserter( tree, tc, expanded )
@@ -159,6 +165,26 @@ function PANEL:Init()
 
 end
 
+function PANEL:RunTimers()
+
+	local ft = FrameTime()
+	for i=#self.timers, 1, -1 do
+		local t = self.timers[i]
+		t.t = t.t - ft
+		if t.t <= 0 then
+			t.f()
+			table.remove(self.timers, i)
+		end
+	end
+
+end
+
+function PANEL:Think()
+
+	self:RunTimers()
+
+end
+
 function PANEL:Setup( graph )
 
 	self.graph = graph
@@ -184,6 +210,9 @@ function PANEL:OnSearchTerm( text )
 	if text:len() > 0 then
 		self.resultList:SetVisible(true)
 		self.tabs:SetVisible(false)
+
+		self.timers = {}
+		self.nextTimer = 0
 
 		self.resultList:Clear()
 		SortedFilteredNodeList( self.graph, FilterBySubstring( text:lower() ), self.treeInserter(self.resultList, {}, true) )

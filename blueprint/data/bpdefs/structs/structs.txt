@@ -1,3 +1,25 @@
+STRUCT ParticleAttachment, For use with Entity:CreateParticleSystem
+{
+	PIN attachtype=PATTACH_ABSORIGIN, PN_Enum, PNF_Nullable, PATTACH, #The particle attach type
+	PIN entity, PN_Ref, PNF_Nullable, Entity, #The parent entity
+	PIN position, PN_Vector, PNF_Nullable, #The offset position
+}
+STRUCT AnimInfo, For use with Entity:GetAnimInfo
+{
+	PIN flags=0, PN_Number, #Animation flags
+	PIN fps=0, PN_Number, #Frame rate
+	PIN label, PN_String, #Name of animation
+	PIN numframes=0, PN_Number, #Number of frames in the animation
+}
+STRUCT SubModel, For use with Entity:GetSubModels
+{
+	PIN name, PN_String, #Name of submodel
+	PIN id, PN_Number, #ID of submodel
+}
+STRUCT Convex, For use with Entity:PhysicsInitConvex and Entity:PhysicsInitMultiConvex
+{
+	PIN vertices, PN_Vector, PNF_Table, #Vertices for convex mesh
+}
 STRUCT AmmoData, Table structure that describes a Source Engine ammo type.
 {
 	NAME dmgtype, damageType
