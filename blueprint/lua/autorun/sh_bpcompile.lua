@@ -651,6 +651,12 @@ function CompileMetaTableLookup(cs)
 		table.insert(tables, v.name)
 	end
 
+	for k, v in pairs( bpdefs.GetStructs() ) do
+		if v.metatable then
+			table.insert(tables, v.metatable)
+		end
+	end
+
 	for k, v in pairs(tables) do
 		cs.emit("local " .. v ..  "_ = FindMetaTable(\"" .. v .. "\")")
 	end

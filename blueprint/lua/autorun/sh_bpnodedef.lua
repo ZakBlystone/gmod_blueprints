@@ -341,35 +341,9 @@ NodeTypes = {
 		},
 		code = "print($2)",
 	},
-	["Color"] = PURE {
-		pins = {
-			{ PD_In, PN_Number, "r" },
-			{ PD_In, PN_Number, "g" },
-			{ PD_In, PN_Number, "b" },
-			{ PD_In, PN_Number, "a" },
-			{ PD_Out, PN_Color, "color" },
-		},
-		code = "#1 = Color($1, $2, $3, $4)",
-	},
-	["BreakColor"] = PURE {
-		pins = {
-			{ PD_In, PN_Color, "color" },
-			{ PD_Out, PN_Number, "r" },
-			{ PD_Out, PN_Number, "g" },
-			{ PD_Out, PN_Number, "b" },
-			{ PD_Out, PN_Number, "a" },
-		},
-		code = "#1, #2, #3, #4 = $1.r, $1.g, $1.b, $1.a",
-	},
-	["Angles"] = PURE {
-		pins = {
-			{ PD_In, PN_Number, "p" },
-			{ PD_In, PN_Number, "y" },
-			{ PD_In, PN_Number, "r" },
-			{ PD_Out, PN_Angles, "angles" },			
-		},
-		code = "#1 = Angle($1, $2, $3)",
-	},
+	["Color"] = "MakeColor",
+	["BreakColor"] = "BreakColor",
+	["Angles"] = "Angle, p=pitch, y=yaw, r=roll",
 	["RotateAroundAxis"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Angles, "angles" },
@@ -406,15 +380,7 @@ NodeTypes = {
 		},
 		code = "#1, #2, #3 = $1.p, $1.y, $1.r",
 	},
-	["Vector"] = PURE {
-		pins = {
-			{ PD_In, PN_Number, "x" },
-			{ PD_In, PN_Number, "y" },
-			{ PD_In, PN_Number, "z" },
-			{ PD_Out, PN_Vector, "vector" },
-		},
-		code = "#1 = Vector($1, $2, $3)",
-	},
+	["Vector"] = "Vector",
 	["VectorNormalize"] = PURE {
 		pins = {
 			{ PD_In, PN_Vector, "vector" },
@@ -445,13 +411,7 @@ NodeTypes = {
 		},
 		code = "#1 = player.GetAll()[$1]",
 	},
-	["Entity"] = PURE {
-		pins = {
-			{ PD_In, PN_Number, "id" },	
-			{ PD_Out, PN_Entity, "entity" },
-		},
-		code = "#1 = Entity($1)",
-	},
+	["Entity"] = "Entity, id=index",
 	["EntIndex"] = "Entity:EntIndex, id=index",
 	["ToNumber"] = PURE {
 		pins = {
@@ -583,6 +543,7 @@ NodeTypes = {
 			{ PD_In, PN_Number, "B" },
 			{ PD_Out, PN_Number, "result" },
 		},
+		displayName = "/",
 		code = "#1 = $1 / $2",
 		compact = true,
 	},
@@ -642,13 +603,7 @@ NodeTypes = {
 		code = "#1 = $1:Length()",
 		compact = true,
 	},
-	["VectorRand"] = PURE {
-		pins = {
-			{ PD_Out, PN_Vector, "result" },
-		},
-		code = "#1 = VectorRand()",
-		compact = true,
-	},
+	["VectorRand"] = "VectorRand, result=vector",
 	["VectorMA"] = PURE {
 		pins = {
 			{ PD_In, PN_Vector, "base" },

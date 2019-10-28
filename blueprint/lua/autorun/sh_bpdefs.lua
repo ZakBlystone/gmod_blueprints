@@ -152,6 +152,8 @@ local function ParseDef( filePath, search )
 				local b = args[2]:Trim()
 				d2.nameMap[a] = b
 				d2.invNameMap[b] = a
+			elseif args[1]:sub(1,9) == "METATABLE" then
+				d2.metatable = args[1]:sub(11,-1)
 			elseif args[1]:sub(1,2) == "IN" or args[1]:sub(1,3) == "OUT" or args[1]:sub(1,3) == "PIN" then
 
 				local params = {"type", "flags", "ex"}
@@ -374,7 +376,11 @@ local function StructMakeNode( struct )
 	local ret, arg = PinRetArg( ntype, function(s,pin)
 		return "\n " .. (struct.invNameMap[pin[3]] or pin[3]) .. " = " .. s
 	end)
-	ntype.code = ret .. " = { " .. arg .. "\n}"
+	local argt = "{ " .. arg .. "\n}"
+	ntype.code = ret .. " = "
+	if struct.metatable then ntype.code = ntype.code .. "setmetatable(" end
+	ntype.code = ntype.code .. argt
+	if struct.metatable then ntype.code = ntype.code .. ", " .. struct.metatable .. "_)" end
 
 	for _, pin in pairs(ntype.pins) do pin[3] = bpcommon.Camelize(pin[3]) end
 

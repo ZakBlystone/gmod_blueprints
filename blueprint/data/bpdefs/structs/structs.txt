@@ -125,6 +125,14 @@ STRUCT CollisionData, Passed as argument of ENTITY:PhysicsCollide.
 	PIN HitNormal, PN_Vector, #Normal of the surface that hit the other entity
 	PIN PhysObject, PN_Ref, PNF_None, PhysObj, #Entity's physics object
 }
+STRUCT Color
+{
+	METATABLE Color
+	PIN r=255, PN_Number, #An integer from 0-255 describing the red value of the color.
+	PIN g=255, PN_Number, #An integer from 0-255 describing the green value of the color.
+	PIN b=255, PN_Number, #An integer from 0-255 describing the blue value of the color.
+	PIN a=255, PN_Number, PNF_Nullable, #An integer from 0-255 describing the alpha (transparency) of the color.
+}
 STRUCT DateData, Table returned by os.date and used by os.time.
 {
 	PIN day, PN_Number, #Day of the month
@@ -154,6 +162,27 @@ STRUCT EmitSoundInfo, Passed as argument of GM:EntityEmitSound.
 	PIN Volume=1, PN_Number, #The volume of the played sound
 	PIN Entity, PN_Ref, PNF_Nullable, Entity, #The entity that played the sound.
 	PIN Pos, PN_Vector, PNF_Nullable, #The origin of the played sound.
+}
+CALLBACK FuncHTTPFailed
+{
+	IN reason, PN_String
+}
+CALLBACK FuncHTTPSuccess
+{
+	IN code, PN_Number
+	IN body, PN_String
+	IN headers, PN_Any, PNF_Table
+}
+STRUCT HTTPRequest
+{
+	PIN failed, PN_Func, PNF_None, FuncHTTPFailed, #Function to be called on failure.
+	PIN success, PN_Func, PNF_None, FuncHTTPSuccess, #Function to be called on success.
+	PIN method, PN_String, #Request method, case insensitive.
+	PIN url, PN_String, #The target url
+	PIN parameters, PN_String, PNF_Table, #KeyValue table for parameters
+	PIN headers, PN_String, PNF_Table, #KeyValue table for headers
+	PIN body, PN_String, PNF_Nullable, #Body string for POST data.
+	PIN type, PN_String, PNF_Nullable, #Content type for body.
 }
 STRUCT ToScreenData, Table returned by Vector:ToScreen.
 {
