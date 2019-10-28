@@ -132,8 +132,8 @@ NodeTypes = {
 	["SetModelScale"] = "Entity:SetModelScale",
 	["SetVelocity"] = "Entity:SetVelocity",
 	["GetVelocity"] = "Entity:GetVelocity",
-	["SetGroundEntity"] = "Entity:SetGroundEntity, groundEntity=entity",
-	["GetGroundEntity"] = "Entity:GetGroundEntity, groundEntity=entity",
+	["SetGroundEntity"] = "Entity:SetGroundEntity",
+	["GetGroundEntity"] = "Entity:GetGroundEntity",
 	["Crouching"] = "Player:Crouching",
 	["Kill"] = FUNCTION {
 		deprecated = true,

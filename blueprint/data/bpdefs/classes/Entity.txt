@@ -170,7 +170,7 @@ CLASS Entity, entity
 	{
 		DESC Plays a sound on an entity. If run clientside, the sound will only be heard locally.
 		IN sound, PN_String, #The name of the sound to be played.
-		IN soundLevel=SNDLVL_NORM, PN_Enum, PNF_Nullable, SNDLVL, #A modifier for the distance this sound will reach, acceptable range is 0 to 511. 100 means no adjustment to the level. See SNDLVL_ Enums
+		IN soundLevel=75, PN_Number, PNF_Nullable, #A modifier for the distance this sound will reach, acceptable range is 0 to 511. 100 means no adjustment to the level. See SNDLVL_ Enums
 		IN pitch=100, PN_Number, PNF_Nullable, #The pitch applied to the sound. The acceptable range is from 0 to 255. 100 means the pitch is not changed.
 		IN volume=1, PN_Number, PNF_Nullable, #The volume, from 0 to 1.
 		IN channel=CHAN_AUTO, PN_Enum, PNF_Nullable, CHAN, #The sound channel, see CHAN_ Enums.
@@ -508,7 +508,7 @@ CLASS Entity, entity
 	PURE SHARED GetGroundEntity
 	{
 		DESC Returns the object the entity is standing on.
-		OUT entity, PN_Ref, PNF_None, Entity, #The ground entity.
+		OUT groundEntity, PN_Ref, PNF_None, Entity, #The ground entity.
 	}
 	PURE SERVER GetGroundSpeedVelocity
 	{
@@ -1623,7 +1623,7 @@ CLASS Entity, entity
 	FUNC SHARED SetGroundEntity
 	{
 		DESC Sets the ground the entity is standing on.
-		IN entity, PN_Ref, PNF_None, Entity, #The ground entity.
+		IN groundEntity, PN_Ref, PNF_Nullable, Entity, #The ground entity.
 	}
 	FUNC SHARED SetHealth
 	{
