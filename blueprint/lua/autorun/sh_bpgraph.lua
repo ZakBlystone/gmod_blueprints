@@ -110,6 +110,8 @@ function meta:PostInit()
 
 	end
 
+	self:CacheNodeTypes()
+
 	return self
 
 end
@@ -181,6 +183,8 @@ function meta:PostModifyNodeType( nodeType, action, subaction )
 
 	end
 
+	self:CacheNodeTypes()
+
 end
 
 function meta:PreModify(action, subaction)
@@ -249,13 +253,33 @@ function meta:GetFunctionType()
 
 end
 
-function meta:EnableNodeTypeCache( cached )
+function meta:CacheNodeTypes()
 
-	if cached then
-		self.__cachedTypes = self:GetNodeTypes()
-	else
-		self.__cachedTypes = nil
-	end
+	self.__cachedTypes = nil
+	self.__cachedTypes = self:GetNodeTypes()
+
+end
+
+function meta:CreateFunctionNodeTypes( output )
+
+	local inPins = { { PD_Out, PN_Exec, "Exec" } }
+	local outPins = { { PD_In, PN_Exec, "Exec" } }
+
+	for id, var in self.inputs:Items() do table.insert(inPins, var:CreatePin( PD_Out )) end
+	for id, var in self.outputs:Items() do table.insert(outPins, var:CreatePin( PD_In )) end
+
+	output["__Entry"] = FUNC_INPUT {
+		pins = inPins,
+		displayName = self:GetName(),
+		name = "__Entry",
+		noDelete = true,
+	}
+
+	output["__Exit"] = FUNC_OUTPUT {
+		pins = outPins,
+		displayName = "Return",
+		name = "__Exit",
+	}
 
 end
 
@@ -266,32 +290,8 @@ function meta:GetNodeTypes()
 	local types = {}
 	local base = self:GetModule():GetNodeTypes( self.id )
 
-	if self.type == GT_Function then
-
-		local inPins = { { PD_Out, PN_Exec, "Exec" } }
-		local outPins = { { PD_In, PN_Exec, "Exec" } }
-
-		for id, var in self.inputs:Items() do table.insert(inPins, var:CreatePin( PD_Out )) end
-		for id, var in self.outputs:Items() do table.insert(outPins, var:CreatePin( PD_In )) end
-
-		types["__Entry"] = FUNC_INPUT {
-			pins = inPins,
-			displayName = self:GetName(),
-			name = "__Entry",
-			noDelete = true,
-		}
-
-		types["__Exit"] = FUNC_OUTPUT {
-			pins = outPins,
-			displayName = "Return",
-			name = "__Exit",
-		}
-
-	end
-
-	for k,v in pairs(base) do
-		if not types[k] then types[k] = v end
-	end
+	table.Merge(types, base)
+	self:CreateFunctionNodeTypes(types)
 
 	-- blacklist invalid types in function graphs
 	if self.type == GT_Function then
@@ -891,7 +891,7 @@ function meta:CreateDeferredData()
 
 	--print("CREATE DEFERRED NODES: " .. #self.deferred)
 
-	self:EnableNodeTypeCache( true )
+	self:CacheNodeTypes()
 	self:SuppressEvents( true )
 
 	for _, v in pairs(self.deferred) do
@@ -921,8 +921,6 @@ function meta:CreateDeferredData()
 	for i, connection in self:Connections() do
 		self:FireListeners(CB_CONNECTION_ADD, connection, i)
 	end
-
-	self:EnableNodeTypeCache( false )
 
 	self.deferred = nil
 

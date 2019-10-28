@@ -882,7 +882,7 @@ end
 function PreCompileGraph(cs, graph, uniqueKeys)
 
 	cs.graph = graph
-	cs.graph:EnableNodeTypeCache( true )
+	cs.graph:CacheNodeTypes()
 
 	Profile(cs, "collapse-reroutes", function()
 		cs.graph:CollapseRerouteNodes()

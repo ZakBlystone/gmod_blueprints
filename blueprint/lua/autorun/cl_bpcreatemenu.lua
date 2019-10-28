@@ -188,6 +188,7 @@ end
 function PANEL:Setup( graph )
 
 	self.graph = graph
+	self.graph:CacheNodeTypes() -- ensure we have the latest types
 
 	local function makeSearchPage( name, desc, icon, func, autoExpand )
 		local tree = vgui.Create("DTree")

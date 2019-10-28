@@ -383,8 +383,6 @@ local function OpenEditor()
 
 	end
 
-	local graph = bpgraph.New()
-
 	--for i=1, 2 do
 	local editor = vgui.Create( "BPEditor" )
 	editor:SetVisible(true)
