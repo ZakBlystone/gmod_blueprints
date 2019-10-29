@@ -117,6 +117,9 @@ function PANEL:Init()
 		local function makeCat(p, x, y, z) tc[p] = tc[p] or {} if tc[p][x] then return tc[p][x] end local c = addTreeNode(p, x, y, z or expanded) tc[p][x] = c return c end
 		return function( name, nodeType )
 			local p = tree
+			makeCat(p, "Libs", "icon16/brick.png")
+			makeCat(p, "Classes", "icon16/bricks.png")
+			makeCat(p, "Structs", "icon16/table.png")
 			if nodeType.isClass then
 				p = makeCat(p, "Classes", "icon16/bricks.png")
 				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png") end

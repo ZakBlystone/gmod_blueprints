@@ -1,0 +1,125 @@
+LIB input
+{
+	PURE CLIENT CheckKeyTrapping
+	{
+		DESC Returns the last key captured by key trapping.
+		OUT key, PN_Enum, PNF_None, KEY, #The key, see KEY_ Enums
+	}
+	PURE CLIENT GetCursorPos
+	{
+		DESC Returns the cursor's position on the screen
+		OUT x, PN_Number, #The cursors position on the X axis
+		OUT y, PN_Number, #The cursors position on the Y axis
+	}
+	PURE CLIENT GetKeyCode
+	{
+		DESC Gets the button code from a button name. This is opposite of input.GetKeyName.
+		IN button, PN_String, #The internal button name, such as "e" or "shift".
+		OUT code, PN_Enum, PNF_None, BUTTON, #The button code, see BUTTON_CODE_ Enums.
+	}
+	PURE CLIENT GetKeyName
+	{
+		DESC Gets the button name from a numeric button code. The name needs to be translated with language.GetPhrase before being displayed.
+		IN button, PN_Enum, PNF_None, BUTTON, #The button, see BUTTON_CODE_ Enums.
+		OUT name, PN_String, #Button name.
+	}
+	PURE CLIENT IsButtonDown
+	{
+		DESC Gets whether the specified button code is down.
+		IN button, PN_Enum, PNF_None, BUTTON, #The button, valid values are in the range of BUTTON_CODE_ Enums.
+		OUT down, PN_Bool, #Is the button down
+	}
+	PURE CLIENT IsControlDown
+	{
+		DESC Returns whether a control key is being pressed
+		OUT down, PN_Bool, #Is Ctrl key down or not
+	}
+	PURE CLIENT IsKeyDown
+	{
+		DESC Gets whether a key is down
+		IN key, PN_Enum, PNF_None, KEY, #The key, see KEY_ Enums.
+		OUT down, PN_Bool, #Is the key down
+	}
+	PURE CLIENT IsKeyTrapping
+	{
+		DESC Returns whether key trapping is activate and the next key press will be captured.
+		OUT trapped, PN_Bool, #Whether key trapping active or not
+	}
+	PURE CLIENT IsMouseDown
+	{
+		DESC Gets whether a mouse button is down
+		IN mouse, PN_Enum, PNF_None, MOUSE, #The key, see MOUSE_ Enums
+		OUT down, PN_Bool, #Is the key down
+	}
+	PURE CLIENT IsShiftDown
+	{
+		DESC Gets whether a shift key is being pressed
+		OUT down, PN_Bool, #isDown
+	}
+	PURE CLIENT LookupBinding
+	{
+		DESC Gets the match uppercase key for the specified binding.
+		IN binding, PN_String, #The binding name
+		IN exact, PN_Bool, PNF_Nullable, #True if the binding should match exactly
+		OUT key, PN_String, #The first key found with that binding or no value if no key with given binding was found. See also input.GetKeyCode.
+	}
+	PURE CLIENT LookupKeyBinding
+	{
+		DESC Returns the bind string that the given key is bound to.
+		IN key, PN_Enum, PNF_None, BUTTON, #Key from BUTTON_CODE_ Enums
+		OUT binding, PN_String, #The bind string of the given key.
+	}
+	FUNC CLIENT SelectWeapon
+	{
+		DESC Switches to the provided weapon on the next CUserCmd generation/CreateMove call. Direct binding to CInput::MakeWeaponSelection.
+		IN weapon, PN_Ref, PNF_None, Weapon, #The weapon entity to switch to.
+	}
+	FUNC CLIENT SetCursorPos
+	{
+		PROTECTED
+		DESC Sets the cursor's position on the screen, relative to the topleft corner of the window
+		IN mouseX, PN_Number, #X coordinate for mouse position
+		IN mouseY, PN_Number, #Y coordinate for mouse position
+	}
+	FUNC CLIENT StartKeyTrapping
+	{
+		PROTECTED
+		DESC Begins waiting for a key to be pressed so we can save it for input.CheckKeyTrapping. Used by the DBinder.
+	}
+	FUNC CLIENT WasKeyPressed
+	{
+		DESC Returns whether a key was initially pressed in the same frame this function was called.
+		IN key, PN_Enum, PNF_None, KEY, #The key, see KEY_ Enums.
+		OUT pressed, PN_Bool, #True if the key was initially pressed the same frame that this function was called, false otherwise.
+	}
+	FUNC CLIENT WasKeyReleased
+	{
+		DESC Returns whether a key was released in the same frame this function was called.
+		IN key, PN_Enum, PNF_None, KEY, #The key, see KEY_ Enums.
+		OUT released, PN_Bool, #True if the key was released the same frame that this function was called, false otherwise.
+	}
+	FUNC CLIENT WasKeyTyped
+	{
+		DESC Returns whether the key is being held down or not.
+		IN key, PN_Enum, PNF_None, KEY, #The key to test, see KEY_ Enums
+		OUT typed, PN_Bool, #Whether the key is being held down or not.
+	}
+	FUNC CLIENT WasMouseDoublePressed
+	{
+		DESC Returns whether a mouse key was double pressed in the same frame this function was called. If this function returns true, input.WasMousePressed will return false.
+		IN button, PN_Enum, PNF_None, MOUSE, #The mouse button to test, see MOUSE_ Enums
+		OUT doublePressed, PN_Bool, #Whether the mouse key was double pressed or not.
+	}
+	FUNC CLIENT WasMousePressed
+	{
+		DESC Returns whether a mouse key was initially pressed in the same frame this function was called. If input.WasMouseDoublePressed returns true, this function will return false.
+		IN key, PN_Enum, PNF_None, MOUSE, #The key, see MOUSE_ Enums
+		OUT pressed, PN_Bool, #True if the mouse key was initially pressed the same frame that this function was called, false otherwise.
+	}
+	FUNC CLIENT WasMouseReleased
+	{
+		DESC Returns whether a mouse key was released in the same frame this function was called.
+		IN key, PN_Enum, PNF_None, MOUSE, #The key to test, see MOUSE_ Enums
+		OUT released, PN_Bool, #True if the mouse key was released the same frame that this function was called, false otherwise.
+	}
+}

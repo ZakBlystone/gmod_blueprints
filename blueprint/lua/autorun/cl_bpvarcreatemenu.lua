@@ -54,12 +54,14 @@ function RequestVarSpec( callback, parent )
 	Button.DoClick = function()
 
 		local name = NameEntry:GetText()
-		local text, type = Combo:GetSelected()
+		local text, data = Combo:GetSelected()
 		local flags = 0
+		local type = data[1]
+		local ex = data[2]
 
 		if TableOption:GetChecked() then flags = bit.bor( flags, PNF_Table ) end
 
-		callback( name, type, flags )
+		callback( name, type, flags, ex )
 
 		DoClose()
 	end
@@ -80,12 +82,37 @@ function RequestVarSpec( callback, parent )
 		return self:HasFocus() or NameEntry:HasFocus() or Button:HasFocus() or ButtonCancel:HasFocus()
 	end
 
+	local blackList = {
+		[PN_Exec] = true,
+		[PN_Bool] = false,
+		[PN_Vector] = false,
+		[PN_Number] = false,
+		[PN_PhysObj] = true,
+		[PN_Player] = true,
+		[PN_Entity] = true,
+		[PN_Npc] = true,
+		[PN_Vehicle] = true,
+		[PN_Any] = true,
+		[PN_String] = false,
+		[PN_Color] = true,
+		[PN_Weapon] = true,
+		[PN_Angles] = false,
+		[PN_Enum] = true,
+		[PN_Ref] = true,
+		[PN_Struct] = true,
+		[PN_Func] = true,
+	}
+
 	for i=0, PN_Max do
-		if i == PN_Any or i == PN_Exec then continue end
-		Combo:AddChoice( PinTypeNames[i], i, i == 1 )
+		if blackList[i] then continue end
+		Combo:AddChoice( PinTypeNames[i], {i}, i == 1 )
 		--Combo:AddChoice( "Another Choice", "myData" )
 		--Combo:AddChoice( "Default Choice", "myData2", true )
 		--Combo:AddChoice( "Icon Choice", "myData3", false, "icon16/star.png" )
+	end
+
+	for k, v in pairs(bpdefs.GetClasses()) do
+		Combo:AddChoice( v.name, {PN_Ref, v.name}, i == 1 )
 	end
 
 	Combo:SetWide( 150 )

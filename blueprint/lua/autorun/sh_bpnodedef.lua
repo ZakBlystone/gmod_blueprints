@@ -2,7 +2,6 @@ AddCSLuaFile()
 
 include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
-include("sh_bpdefs.lua")
 
 module("bpnodedef", package.seeall, bpcommon.rescope(bpschema))
 
@@ -154,7 +153,7 @@ NodeTypes = {
 	},
 	["Wake"] = "PhysObj:Wake",
 	["ApplyForceCenter"] = "PhysObj:ApplyForceCenter",
-	["ApplyTorqueCenter"] = "PhysObj:ApplyTorqueCenter",
+	["ApplyTorqueCenter"] = "PhysObj:ApplyTorqueCenter, force=torque",
 	["SetMass"] = "PhysObj:SetMass",
 	["EnableMotion"] = "PhysObj:EnableMotion",
 	["GetRagdollEntity"] = "Player:GetRagdollEntity",
@@ -1140,12 +1139,14 @@ for k,v in pairs(NodeTypes) do
 end
 
 function InstallDefs()
+	if bpdefs == nil then return end
+
 	print("Installing defs")
-	for k,v in pairs(bpdefs.GetClasses()) do
+	for k,v in pairs(bpdefs.GetLibs()) do
 		bpdefs.CreateLibNodes(v, NodeTypes)
 	end
 
-	for k,v in pairs(bpdefs.GetLibs()) do
+	for k,v in pairs(bpdefs.GetClasses()) do
 		bpdefs.CreateLibNodes(v, NodeTypes)
 	end
 

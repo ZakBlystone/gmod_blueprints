@@ -1,0 +1,62 @@
+LIB gui
+{
+	FUNC CLIENT ActivateGameUI
+	{
+		DESC Opens the game menu overlay.
+	}
+	FUNC CLIENT EnableScreenClicker
+	{
+		DESC Enables the mouse cursor without restricting player movement, like using Sandbox's context menu.
+		IN enabled, PN_Bool, #Whether the cursor should be enabled or not. (true = enable, false = disable)
+	}
+	FUNC CLIENT HideGameUI
+	{
+		DESC Hides the game menu overlay.
+	}
+	PURE CLIENT IsConsoleVisible
+	{
+		DESC Returns whether the console is visible or not.
+		OUT visible, PN_Bool, #Whether the console is visible or not.
+	}
+	PURE CLIENT IsGameUIVisible
+	{
+		DESC Returns whenever the game menu overlay ( main menu ) is open or not.
+		OUT visible, PN_Bool, #Whenever the game menu overlay ( main menu ) is open or not
+	}
+	PURE CLIENT MousePos
+	{
+		DESC Returns the cursor's position on the screen, or 0, 0 if cursor is not visible.
+		OUT x, PN_Number, #mouseX
+		OUT y, PN_Number, #mouseY
+	}
+	PURE CLIENT MouseX
+	{
+		DESC Returns x component of the mouse position.
+		OUT out_0, PN_Number, #mouseX
+	}
+	PURE CLIENT MouseY
+	{
+		DESC Returns y component of the mouse position.
+		OUT out_0, PN_Number, #mouseY
+	}
+	FUNC CLIENT OpenURL
+	{
+		PROTECTED
+		DESC Opens specified URL in the steam overlay browser. The URL has to start with either http:// or https://
+		IN url, PN_String, #URL to open
+	}
+	PURE CLIENT ScreenToVector
+	{
+		DESC Converts the specified screen position to a direction vector local to the player's view. A related function is Vector:ToScreen, which translates a 3D position to a screen coordinate.
+		IN x, PN_Number, #X coordinate on the screen.
+		IN y, PN_Number, #Y coordinate on the screen.
+		OUT vector, PN_Vector, #Direction
+	}
+	FUNC CLIENT SetMousePos
+	{
+		PROTECTED
+		DESC Sets the cursor's position on the screen, relative to the topleft corner of the window
+		IN mouseX, PN_Number, #The X coordinate to move the cursor to.
+		IN mouseY, PN_Number, #The Y coordinate to move the cursor to.
+	}
+}

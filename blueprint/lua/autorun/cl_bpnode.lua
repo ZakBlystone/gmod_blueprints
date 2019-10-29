@@ -42,7 +42,7 @@ local function calculateNodeSize(nodeType)
 
 	local expand = false
 	for k,v in pairs(nodeType.pins) do
-		if v[2] == PN_String or v[2] == PN_Enum then
+		if (v[2] == PN_String or v[2] == PN_Enum) and v[1] == PD_In then
 			expand = true
 		end
 	end

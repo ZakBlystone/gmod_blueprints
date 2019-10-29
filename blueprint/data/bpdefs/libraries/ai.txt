@@ -1,0 +1,15 @@
+LIB ai
+{
+	PURE SERVER GetScheduleID
+	{
+		DESC Translates a schedule name to its corresponding ID.
+		IN sched, PN_String, #Then schedule name. In most cases, this will be the same as the SCHED_ Enums name.
+		OUT schedule, PN_Enum, PNF_None, SCHED, #The schedule ID, see SCHED_ Enums. Returns -1 if the schedule name isn't valid.
+	}
+	PURE SERVER GetTaskID
+	{
+		DESC Translates a task name to its corresponding ID.
+		IN task, PN_String, #The task name.
+		OUT task, PN_Number, #The task ID, see ai_task.h. Returns -1 if the schedule name isn't valid.
+	}
+}

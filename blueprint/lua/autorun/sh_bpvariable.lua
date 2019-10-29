@@ -8,11 +8,12 @@ module("bpvariable", package.seeall, bpcommon.rescope(bpschema))
 local meta = {}
 meta.__index = meta
 
-function meta:Init(type, default, flags)
+function meta:Init(type, default, flags, ex)
 
 	self.type = type or PN_Number
 	self.default = bit.band(flags or 0, PNF_Table) and "{}" or (default or Defaults[self.type])
 	self.flags = flags or 0
+	self.ex = ex
 	return self
 
 end
@@ -41,9 +42,15 @@ function meta:GetDefaultValue()
 
 end
 
+function meta:GetExtended()
+
+	return self.ex
+
+end
+
 function meta:CreatePin( dir )
 
-	return {dir, self:GetType(), self:GetName(), self:GetFlags()}
+	return {dir, self:GetType(), self:GetName(), self:GetFlags(), self:GetExtended()}
 
 end
 
@@ -51,7 +58,7 @@ function meta:GetterNodeType()
 
 	return PURE {
 		pins = {
-			{PD_Out, self:GetType(), "value", self:GetFlags()},
+			{PD_Out, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
 		},
 		code = "#1 = __self.__" .. self:GetName(),
 		compact = true,
@@ -65,8 +72,8 @@ function meta:SetterNodeType()
 
 	return FUNCTION {
 		pins = {
-			{PD_In, self:GetType(), "value", self:GetFlags()},
-			{PD_Out, self:GetType(), "value", self:GetFlags()},
+			{PD_In, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
+			{PD_Out, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
 		},
 		code = "__self.__" .. self:GetName() .. " = $2 #2 = $2",
 		compact = true,
@@ -82,6 +89,7 @@ function meta:WriteToStream(stream, mode, version)
 	stream:WriteInt( self.flags )
 	bpdata.WriteValue( self.default, stream )
 	bpdata.WriteValue( self.name, stream )
+	bpdata.WriteValue( self.ex, stream )
 
 end
 
@@ -91,6 +99,9 @@ function meta:ReadFromStream(stream, mode, version)
 	self.flags = stream:ReadInt( false )
 	self.default = bpdata.ReadValue( stream )
 	self.name = bpdata.ReadValue( stream )
+	if version >= 6 then
+		self.ex = bpdata.ReadValue( stream )
+	end
 
 end
 

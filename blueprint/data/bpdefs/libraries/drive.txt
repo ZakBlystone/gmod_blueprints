@@ -1,0 +1,34 @@
+LIB drive
+{
+	FUNC SHARED End
+	{
+		DESC Player has stopped driving the entity.
+		IN ply, PN_Ref, PNF_None, Player, #The player
+		IN ent, PN_Ref, PNF_None, Entity, #The entity
+	}
+	FUNC SHARED PlayerStartDriving
+	{
+		DESC Starts driving for the player.
+		IN ply, PN_Ref, PNF_None, Player, #The player to affect
+		IN ent, PN_Ref, PNF_None, Entity, #The entity to drive
+		IN mode, PN_String, #The driving mode
+	}
+	FUNC SHARED PlayerStopDriving
+	{
+		DESC Stops the player from driving anything. ( For example a prop in sandbox )
+		IN ply, PN_Ref, PNF_None, Player, #The player to affect
+	}
+	FUNC SHARED Register
+	{
+		DESC Registers a new entity drive.
+		IN name, PN_String, #The name of the drive.
+		IN data, PN_Any, PNF_Table, #The data required to create the drive. This includes the functions used by the drive.
+		IN base, PN_String, #The base of the drive.
+	}
+	FUNC SHARED Start
+	{
+		DESC Called when the player first starts driving this entity
+		IN ply, PN_Ref, PNF_None, Player, #The player
+		IN ent, PN_Ref, PNF_None, Entity, #The entity
+	}
+}

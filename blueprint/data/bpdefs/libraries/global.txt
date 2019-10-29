@@ -133,7 +133,7 @@ LIB GLOBAL
 		IN filter, PN_Ref, PNF_Nullable, CRecipientFilter, #A CRecipientFilter of the players that will have this sound networked to them. NOTE	 This argument only works serverside.
 		OUT soundPatch, PN_Ref, PNF_None, CSoundPatch, #The sound object
 	}
-	FUNC SHARED CurTime
+	PURE SHARED CurTime
 	{
 		DESC Returns the uptime of the server in seconds (to at least 4 decimal places)
 		OUT curTime, PN_Number, #Time synced with the game server.
@@ -350,6 +350,7 @@ LIB GLOBAL
 	}
 	FUNC SHARED HTTP
 	{
+		PROTECTED
 		DESC Launches an asynchronous http request with the given parameters.
 		IN parameters, PN_Struct, PNF_None, HTTPRequest, #The request parameters. See HTTPRequest structure.
 		OUT success, PN_Bool, #true if we made a request, nil if we failed.

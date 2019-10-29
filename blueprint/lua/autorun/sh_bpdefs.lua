@@ -1,12 +1,8 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
+print("LOADED BPDEFS")
 
--- since this is included in multiple places, debounce
-if _G.LastDefReload ~= nil and (SysTime() - _G.LastDefReload) < 0.2 then
-	return
-end
-_G.LastDefReload = SysTime()
+include("sh_bpcommon.lua")
 
 module("bpdefs", package.seeall, bpcommon.rescope(bpschema))
 
@@ -145,7 +141,7 @@ local function ParseDef( filePath, search )
 			lv = lv + 1
 		elseif tr:sub(0,1) == "}" then
 			lv = lv - 1
-			if lv == 1 then table.insert(d.entries, d2) d2 = nil end
+			if lv == 1 then if not d2.protected then table.insert(d.entries, d2) end d2 = nil end
 			if lv == 0 then table.insert(def, d) d = nil end
 		elseif (lv == 2 and d2) or (lv == 1 and (d.type == DEFTYPE_CALLBACK or d.type == DEFTYPE_STRUCT)) then
 			if args[1]:sub(1,4) == "DESC" then
@@ -155,6 +151,8 @@ local function ParseDef( filePath, search )
 				local b = args[2]:Trim()
 				d2.nameMap[a] = b
 				d2.invNameMap[b] = a
+			elseif args[1]:sub(1,9) == "PROTECTED" then
+				d2.protected = true
 			elseif args[1]:sub(1,9) == "METATABLE" then
 				d2.metatable = args[1]:sub(11,-1)
 			elseif args[1]:sub(1,2) == "IN" or args[1]:sub(1,3) == "OUT" or args[1]:sub(1,3) == "PIN" then
@@ -546,6 +544,7 @@ function RebuildDefinitionPack( callback )
 		WriteTable("Callbacks", callbacks, stream)
 		WriteTable("Classes", classes, stream)
 		WriteTable("Libraries", libs, stream)
+		WriteTable("Enums", enums, stream)
 		MsgC(Color(100,255,100), "\n Writing to file")
 		stream:WriteToFile(DEFPACK_LOCATION, true, true)
 		MsgC(Color(100,255,100), " Done\n")
@@ -569,8 +568,8 @@ function LoadDefinitionPack()
 	local filename = DEFPACK_LOCATION
 	local filehandle = nil
 	if file.Exists(filename, "DATA") then filehandle = file.Open(filename, "r", "DATA") end
-	if file.Exists(filename, "THIRDPARTY") then filehandle = file.Open(filename, "r", "THIRDPARTY") end
-	if file.Exists(filename, "DOWNLOAD") then filehandle = file.Open(filename, "r", "DOWNLOAD") end
+	if file.Exists("data/" .. filename, "THIRDPARTY") then filehandle = file.Open("data/" .. filename, "r", "THIRDPARTY") end
+	if file.Exists("data/" .. filename, "DOWNLOAD") then filehandle = file.Open("data/" .. filename, "r", "DOWNLOAD") end
 
 	if filehandle == nil then error("Failed to load definitions, file not found") end
 
@@ -584,6 +583,7 @@ function LoadDefinitionPack()
 		ReadTable("Callbacks", callbacks, stream)
 		ReadTable("Classes", classes, stream)
 		ReadTable("Libraries", libs, stream)
+		ReadTable("Enums", enums, stream)
 		MsgC(Color(100,255,100), " Done\n")
 	end)
 
@@ -624,4 +624,10 @@ else
 
 end
 
-concommand.Add("bp_reloadDefinitions", LoadDefinitionPack )
+if CLIENT then concommand.Add("bp_reloadDefinitions", LoadDefinitionPack ) end
+if SERVER then 
+	LoadAndParseDefs()
+	timer.Simple(.1, function() 
+		bpnodedef.InstallDefs()
+	end )
+end

@@ -1,0 +1,10 @@
+LIB markup
+{
+	FUNC CLIENT Parse
+	{
+		DESC Parses markup into a MarkupObject. Currently, this only supports fonts and colors as demonstrated in the example.
+		IN markup, PN_String, #The markup to be parsed.
+		IN maxwidth, PN_Number, #The max width of the output
+		OUT markup, PN_Ref, PNF_None, MarkupObject, #The parsed markup object ready to be drawn.
+	}
+}

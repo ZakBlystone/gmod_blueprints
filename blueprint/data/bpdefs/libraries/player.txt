@@ -2,6 +2,7 @@ LIB player
 {
 	FUNC SERVER CreateNextBot
 	{
+		PROTECTED
 		DESC Similar to the serverside command "bot", this function creates a new Player bot with the given name. This bot will not obey to the usual "bot_*" commands, and it's the same bot base used in TF2 and CS:S.
 		IN botName, PN_String, #The name of the bot, using an already existing name will append brackets at the end of it with a number pertaining it.
 		OUT player, PN_Ref, PNF_None, Player, #The newly created Player bot. Returns NULL if there's no Player slots available to host it.

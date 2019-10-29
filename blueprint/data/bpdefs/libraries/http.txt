@@ -1,0 +1,29 @@
+CALLBACK FuncHTTPLibSuccess
+{
+	IN responseText, PN_String
+	IN contentLength, PN_Number
+	IN responseHeaders, PN_Any, PNF_Table
+	IN statusCode, PN_Number
+}
+LIB http
+{
+	FUNC SHARED Fetch
+	{
+		PROTECTED
+		DESC Launches a GET request.
+		IN url, PN_String, #The URL of the website to fetch.
+		IN onSuccess, PN_Func, PNF_Nullable, FuncHTTPLibSuccess, #Function to be called on success. Arguments are string body string size - equal to string.len(body) table headers number code - The HTTP success code
+		IN onFailure, PN_Func, PNF_Nullable, FuncHTTPFailed, #Function to be called on failure. Arguments are string error - The error message
+		IN headers, PN_Any, PNF_Nullable|PNF_Table, #KeyValue table for headers
+	}
+	FUNC SHARED Post
+	{
+		PROTECTED
+		DESC Sends an asynchronous POST request to a HTTP server.
+		IN url, PN_String, #The url to of the website to fetch.
+		IN parameters, PN_Any, PNF_Table, #The post parameters to be send to the server. Keys and values must be strings.
+		IN onSuccess, PN_Func, PNF_Nullable, FuncHTTPLibSuccess, #The function called on success: function( string responseText, number contentLength, table responseHeaders, number statusCode )
+		IN onFailure, PN_Func, PNF_Nullable, FuncHTTPFailed, #The function called on failure: function( string errorMessage )
+		IN headers, PN_Any, PNF_Nullable|PNF_Table, #KeyValue table for headers
+	}
+}

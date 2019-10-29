@@ -99,6 +99,7 @@ CLASS Player
 	}
 	FUNC SERVER Ban
 	{
+		PROTECTED
 		DESC Bans the player from the server for a certain amount of minutes.
 		IN minutes, PN_Number, #Duration of the ban in minutes (0 is permanent)
 		IN kick, PN_Bool, PNF_Nullable, #Whether to kick the player after banning then or not
@@ -713,6 +714,7 @@ CLASS Player
 	}
 	FUNC SERVER Kick
 	{
+		PROTECTED
 		DESC Kicks the player from the server.
 		IN reason, PN_String, PNF_Nullable, #Reason to show for disconnection. WARNING	 This will be shortened to ~512 chars, though this includes the command itself and the player index so will realistically be more around ~498. It is recommended to avoid going near the limit to avoid truncation.
 	}
@@ -1137,12 +1139,12 @@ CLASS Player
 	{
 		DESC When used in a GM:SetupMove hook, this function will force the player to walk, as well as preventing the player from sprinting.
 	}
-	FUNC SHARED SteamID
+	PURE SHARED SteamID
 	{
 		DESC Returns the player's SteamID. In singleplayer, this will be STEAM_ID_PENDING serverside.
 		OUT steamID, PN_String, #SteamID
 	}
-	FUNC SHARED SteamID64
+	PURE SHARED SteamID64
 	{
 		DESC Returns the player's 64bit SteamID aka CommunityID.
 		OUT steamID, PN_String, #Player's 64bit SteamID aka CommunityID.

@@ -30,7 +30,7 @@ GRAPH_NODETYPE_ACTIONS = {
 
 
 fmtMagic = 0x42504D58
-fmtVersion = 5
+fmtVersion = 6
 
 local meta = {}
 meta.__index = meta
@@ -184,9 +184,9 @@ function meta:Clear()
 
 end
 
-function meta:NewVariable(name, type, default, flags)
+function meta:NewVariable(name, type, default, flags, ex)
 
-	return self.variables:Add( bpvariable.New(type, default, flags), name )
+	return self.variables:Add( bpvariable.New(type, default, flags, ex), name )
 
 end
 
@@ -295,7 +295,12 @@ function meta:ReadFromStream(stream, mode)
 	if version >= 2 then
 		local vars = bpdata.ReadValue( stream )
 		for _, v in pairs(vars) do
-			self:NewVariable(v.name, v.type, v.default, v.flags)
+			local varID = self:NewVariable(v.name, v.type, v.default, v.flags, v.ex)
+			if v.id then 
+				print("REMAP VAR ID: " .. v.id)
+				self:GetVariable(varID).id = v.id
+				self.variables.nextID = v.id + 1
+			end
 		end
 	end
 

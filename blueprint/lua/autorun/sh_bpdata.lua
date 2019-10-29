@@ -555,7 +555,7 @@ function ReadValue(buf, thread)
 	if thread then
 		buf.__counter = buf.__counter or 0
 		buf.__counter = buf.__counter + 1
-		if (buf.__counter % 100) == 0 then
+		if (buf.__counter % 1500) == 0 then
 			coroutine.yield() 
 		end
 	end

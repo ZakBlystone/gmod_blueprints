@@ -1,0 +1,32 @@
+LIB construct
+{
+	FUNC SERVER Magnet
+	{
+		DESC Creates a magnet.
+		IN ply, PN_Ref, PNF_None, Player, #Player that will have the numpad control over the magnet
+		IN pos, PN_Vector, #The position of the magnet
+		IN ang, PN_Angles, #The angles of the magnet
+		IN model, PN_String, #The model of the maget
+		IN material, PN_String, #Material of the magnet ( texture )
+		IN key, PN_Enum, PNF_None, KEY, #The key to toggle the magnet, see KEY_ Enums
+		IN maxObjects, PN_Number, #Maximum amount of objects the magnet can hold
+		IN strength, PN_Number, #Strength of the magnet
+		IN nopull, PN_Number, PNF_Nullable, #If > 0, disallows the magnet to pull objects towards it
+		IN allowrot, PN_Number, PNF_Nullable, #If > 0, allows rotation of the objects attached
+		IN startOn, PN_Number, PNF_Nullable, #If > 0, enabled from spawn
+		IN toggle, PN_Number, #If != 0, pressing the key toggles the magnet, otherwise you'll have to hold the key to keep it enabled
+		IN vel, PN_Vector, PNF_Nullable, #Velocity to set on spawn
+		IN aVel, PN_Angles, PNF_Nullable, #Angular velocity to set on spawn
+		IN frozen, PN_Bool, PNF_Nullable, #Freeze the magnet on start
+		OUT magnet, PN_Ref, PNF_None, Entity, #The magnet
+	}
+	FUNC SERVER SetPhysProp
+	{
+		DESC Sets props physical properties.
+		IN ply, PN_Ref, PNF_None, Player, #The player. This variable is not used and can be left out.
+		IN ent, PN_Ref, PNF_None, Entity, #The entity to apply properties to
+		IN physObjID, PN_Number, #You can use this or the argument below. This will be used in case you don't provide argument below.
+		IN physObj, PN_Ref, PNF_None, PhysObj, #The physics object to apply the properties to
+		IN data, PN_Struct, PNF_None, PhysProperties, #The table containing properties to apply. See PhysProperties structure
+	}
+}

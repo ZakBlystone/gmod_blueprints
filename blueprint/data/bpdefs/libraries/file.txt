@@ -1,0 +1,95 @@
+LIB file
+{
+	FUNC SHARED Append
+	{
+		PROTECTED
+		DESC Appends a file relative to the data folder.
+		IN name, PN_String, #The file's name.
+		IN content, PN_String, #The content which should be appended to the file.
+	}
+	FUNC SHARED CreateDir
+	{
+		PROTECTED
+		DESC Creates a directory that is relative to the data folder.
+		IN name, PN_String, #The directory's name.
+	}
+	FUNC SHARED Delete
+	{
+		PROTECTED
+		DESC Deletes a file or empty folder that is relative to the data folder. You can't remove any files outside of data folder.
+		IN name, PN_String, #The file name
+	}
+	PURE SHARED Exists
+	{
+		PROTECTED
+		DESC Returns a boolean of whether the file or directory exists or not.
+		IN name, PN_String, #The file or directory's name.
+		IN path, PN_String, #The path of where to look for the file. "GAME" Structured like base folder (garrysmod/), searches all the mounted content (main folder, addons, mounted games etc) "LUA" or "lsv" - All Lua folders (lua/) including gamesmodes and addons "DATA" Data folder (garrysmod/data) "MOD" Strictly the game folder (garrysmod/), ignores mounting.
+		OUT exists, PN_Bool, #Returns true if the file exists and false if it is not.
+	}
+	FUNC SHARED Find
+	{
+		PROTECTED
+		DESC Returns a list of files and directories inside a single folder.
+		IN name, PN_String, #The wildcard to search for. "models/*.mdl" will list .mdl files in the models/ folder.
+		IN path, PN_String, #The path to look for the files and directories in. See this list for a list of valid paths.
+		IN sorting, PN_String, PNF_Nullable, #The sorting to be used, optional. "nameasc" sort the files ascending by name "namedesc" sort the files descending by name "dateasc" sort the files ascending by date "datedesc" sort the files descending by date
+		OUT files, PN_String, PNF_Table, #A table of found files, or nil if the path is invalid
+		OUT directories, PN_String, PNF_Table, #A table of found directories, or nil if the path is invalid
+	}
+	PURE SHARED IsDir
+	{
+		PROTECTED
+		DESC Returns whether the given file is a directory or not.
+		IN fileName, PN_String, #The file or directory's name.
+		IN path, PN_String, #The path type.
+		OUT isDir, PN_Bool, #True if the given path is a directory or false if it is a file.
+	}
+	FUNC SHARED Open
+	{
+		PROTECTED
+		DESC Attempts to open a file with the given mode.
+		IN fileName, PN_String, #The files name. See file.Write for details on filename restrictions when writing to files.
+		IN fileMode, PN_String, #The mode to open the file in. Possible values are: r - read mode w - write mode a - append mode rb - binary read mode wb - binary write mode ab - binary append mode
+		IN path, PN_String, #The path type. See File Search Paths Common paths are: "GAME" - Structured like base folder (garrysmod/), searches all the mounted content (main folder, addons, mounted games etc) "LUA" or "lsv" - All Lua folders (lua/) including gamesmodes and addons "DATA" - Local to Data folder, has write access (garrysmod/data) "MOD" - Strictly the game folder (garrysmod/), ignores mounting.
+		OUT file, PN_Ref, PNF_None, File, #The opened file object, or nil if it failed to open due to it not existing or being used by another process.
+	}
+	FUNC SHARED Read
+	{
+		PROTECTED
+		DESC Returns the content of a file.
+		IN fileName, PN_String, #The name of the file.
+		IN path, PN_String, PNF_Nullable, #The path used to look up the file. "GAME" Structured like base folder (garrysmod/), searches all the mounted content (main folder, addons, mounted games etc) "LUA" or "lsv" - All Lua folders (lua/) including gamesmodes and addons "DATA" Data folder (garrysmod/data) "MOD" Strictly the game folder (garrysmod/), ignores mounting. It can also be a boolean: true = "GAME" false = "DATA"
+		OUT data, PN_String, #The data from the file as a string, or nil if the file isn't found
+	}
+	FUNC SHARED Rename
+	{
+		PROTECTED
+		DESC Attempts to rename a file with the given name to another given name.
+		IN orignalFileName, PN_String, #The original file or folder name. See file.Write for details on filename restrictions when writing to files. This argument will be forced lowercase.
+		IN targetFileName, PN_String, #The target file or folder name. See file.Write for details on filename restrictions when writing to files. This argument will be forced lowercase.
+		OUT success, PN_Bool, #True on success, false otherwise.
+	}
+	PURE SHARED Size
+	{
+		PROTECTED
+		DESC Returns the file's size in bytes. If the file is not found, returns -1.
+		IN fileName, PN_String, #The file's name.
+		IN path, PN_String, #The path type. "GAME" Structured like base folder (garrysmod/), searches all the mounted content (main folder, addons, mounted games etc) "LUA" or "lsv" - All Lua folders (lua/) including gamesmodes and addons "DATA" Data folder (garrysmod/data) "MOD" Strictly the game folder (garrysmod/), ignores mounting.
+	}
+	PURE SHARED Time
+	{
+		PROTECTED
+		DESC Returns when the file or folder was lasted modified in Unix time.
+		IN path, PN_String, #The file or folder path.
+		IN gamePath, PN_String, #The game path to be used. "GAME" Structured like base folder (garrysmod/), searches all the mounted content (main folder, addons, mounted games etc) "LUA" or "lsv" - All Lua folders (lua/) including gamesmodes and addons "DATA" Data folder (garrysmod/data) "MOD" Strictly the game folder (garrysmod/), ignores mounting.
+		OUT out_0, PN_Number, #Seconds passed since Unix epoch.
+	}
+	FUNC SHARED Write
+	{
+		PROTECTED
+		DESC Writes the given string to a file. Erases all previous data in the file. To add data without deleting previous data, use file.Append.
+		IN fileName, PN_String, #The name of the file being written into. The path is relative to the data/ folder. This argument will be forced lowercase. The filename must end with one of the following: .txt .jpg .png .vtf .dat .json Restricted symbols are: " :
+		IN content, PN_String, #The content that will be written into the file.
+	}
+}

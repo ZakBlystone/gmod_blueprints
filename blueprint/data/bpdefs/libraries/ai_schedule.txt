@@ -1,0 +1,9 @@
+LIB ai_schedule
+{
+	FUNC SERVER New
+	{
+		DESC Creates a schedule for scripted NPC.
+		IN name, PN_String, #Name of the schedule.
+		OUT schedule, PN_Ref, PNF_None, Schedule, #A table containing schedule information to be used with ENTITY:StartSchedule.
+	}
+}

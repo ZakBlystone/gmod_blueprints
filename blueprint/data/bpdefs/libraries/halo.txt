@@ -1,0 +1,19 @@
+LIB halo
+{
+	FUNC CLIENT Add
+	{
+		DESC Applies a "halo" glow effect to one or multiple entities.
+		IN entities, PN_Ref, PNF_Table, Entity, #A table of entities to add the halo effect to
+		IN color, PN_Struct, PNF_None, Color, #The desired color of the halo. See Color structure
+		IN blurX, PN_Number, PNF_Nullable, #The strength of the halo's blur on the x axis.
+		IN blurY, PN_Number, PNF_Nullable, #The strength of the halo's blur on the y axis.
+		IN passes, PN_Number, PNF_Nullable, #The number of times the halo should be drawn per frame. Increasing this may hinder player FPS.
+		IN additive, PN_Bool, PNF_Nullable, #Sets the render mode of the halo to additive.
+		IN ignoreZ, PN_Bool, PNF_Nullable, #Renders the halo through anything when set to true.
+	}
+	PURE CLIENT RenderedEntity
+	{
+		DESC Returns the entity the halo library is currently rendering the halo for.
+		OUT entity, PN_Ref, PNF_None, Entity, #If set, the currently rendered entity by the halo library.
+	}
+}

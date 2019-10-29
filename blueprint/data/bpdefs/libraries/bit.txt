@@ -1,0 +1,84 @@
+LIB bit
+{
+	PURE SHARED arshift
+	{
+		DESC Returns the arithmetically shifted value.
+		IN value, PN_Number, #The value to be manipulated.
+		IN shiftCount, PN_Number, #Amounts of bits to shift.
+		OUT result, PN_Number, #shiftedValue
+	}
+	PURE SHARED band
+	{
+		DESC Performs the bitwise "and" for all values specified.
+		IN value1, PN_Number, #The first value.
+		IN value2, PN_Number, #The second value.
+		OUT result, PN_Number, #Result of bitwise "and" operation.
+	}
+	PURE SHARED bnot
+	{
+		DESC Returns the bitwise not of the value.
+		IN value, PN_Number, #The value to be inverted.
+		OUT result, PN_Number, #bitwiseNot
+	}
+	PURE SHARED bor
+	{
+		DESC Returns the bitwise OR of all values specified.
+		IN value1, PN_Number, #The first value.
+		IN value2, PN_Number, #The second value.
+		OUT result, PN_Number, #The bitwise OR result between all numbers.
+	}
+	PURE SHARED bswap
+	{
+		DESC Swaps the byte order.
+		IN value, PN_Number, #The value to be byte swapped.
+		OUT result, PN_Number, #swapped
+	}
+	PURE SHARED bxor
+	{
+		DESC Returns the bitwise xor of all values specified.
+		IN value1, PN_Number, #The first value.
+		IN value2, PN_Number, #The second value.
+		OUT result, PN_Number, #bitwiseXOr
+	}
+	PURE SHARED lshift
+	{
+		DESC Returns the left shifted value.
+		IN value, PN_Number, #The value to be manipulated.
+		IN shiftCount, PN_Number, #Amounts of bits to shift left by.
+		OUT result, PN_Number, #shiftedValue
+	}
+	PURE SHARED rol
+	{
+		DESC Returns the left rotated value.
+		IN value, PN_Number, #The value to be manipulated.
+		IN shiftCount, PN_Number, #Amounts of bits to rotate left by.
+		OUT result, PN_Number, #shiftedValue
+	}
+	PURE SHARED ror
+	{
+		DESC Returns the right rotated value.
+		IN value, PN_Number, #The value to be manipulated.
+		IN shiftCount, PN_Number, #Amounts of bits to rotate right by.
+		OUT result, PN_Number, #shiftedValue
+	}
+	PURE SHARED rshift
+	{
+		DESC Returns the right shifted value.
+		IN value, PN_Number, #The value to be manipulated.
+		IN shiftCount, PN_Number, #Amounts of bits to shift right by.
+		OUT result, PN_Number, #shiftedValue
+	}
+	PURE SHARED tobit
+	{
+		DESC Normalizes the specified value and clamps it in the range of a signed 32bit integer.
+		IN value, PN_Number, #The value to be normalized.
+		OUT result, PN_Number, #swapped
+	}
+	PURE SHARED tohex
+	{
+		DESC Returns the hexadecimal representation of the number with the specified digits.
+		IN value, PN_Number, #The value to be normalized.
+		IN digits, PN_Number, PNF_Nullable, #The number of digits. Optional
+		OUT result, PN_String, #hexString
+	}
+}

@@ -1,0 +1,107 @@
+LIB draw
+{
+	FUNC CLIENT DrawText
+	{
+		DESC Simple draw text at position, but this will expand newlines and tabs.
+		IN text, PN_String, #Text to be drawn.
+		IN font, PN_String, PNF_Nullable, #Name of font to draw the text in. See surface.CreateFont to create your own, or Default Fonts for a list of default fonts.
+		IN x, PN_Number, PNF_Nullable, #The X Coordinate.
+		IN y, PN_Number, PNF_Nullable, #The Y Coordinate.
+		IN color, PN_Struct, PNF_Nullable, Color, #Color to draw the text in. Uses the Color structure.
+		IN xAlign, PN_Enum, PNF_Nullable, TEXT_ALIGN, #Where to align the text horizontally. Uses the TEXT_ALIGN_ Enums.
+	}
+	PURE CLIENT GetFontHeight
+	{
+		DESC Returns the height of the specified font in pixels.
+		IN font, PN_String, #Name of the font to get the height of.
+		OUT height, PN_Number, #The font height
+	}
+	FUNC CLIENT NoTexture
+	{
+		DESC Sets drawing texture to a default white texture (vgui/white) via surface.SetMaterial. Useful for resetting the drawing texture.
+	}
+	FUNC CLIENT RoundedBox
+	{
+		DESC Draws a rounded rectangle.
+		IN cornerRadius, PN_Number, #Radius of the rounded corners, works best with a multiple of 2.
+		IN x, PN_Number, #The x coordinate of the top left of the rectangle.
+		IN y, PN_Number, #The y coordinate of the top left of the rectangle.
+		IN width, PN_Number, #The width of the rectangle.
+		IN height, PN_Number, #The height of the rectangle.
+		IN color, PN_Struct, PNF_None, Color, #The color to fill the rectangle with. Uses the Color structure.
+	}
+	FUNC CLIENT RoundedBoxEx
+	{
+		DESC Draws a rounded rectangle. This function also lets you specify which corners are drawn rounded.
+		IN cornerRadius, PN_Number, #Radius of the rounded corners, works best with a power of 2 number.
+		IN x, PN_Number, #The x coordinate of the top left of the rectangle.
+		IN y, PN_Number, #The y coordinate of the top left of the rectangle.
+		IN width, PN_Number, #The width of the rectangle.
+		IN height, PN_Number, #The height of the rectangle.
+		IN color, PN_Struct, PNF_None, Color, #The color to fill the rectangle with. Uses the Color structure.
+		IN roundTopLeft, PN_Bool, PNF_Nullable, #Whether the top left corner should be rounded.
+		IN roundTopRight, PN_Bool, PNF_Nullable, #Whether the top right corner should be rounded.
+		IN roundBottomLeft, PN_Bool, PNF_Nullable, #Whether the bottom left corner should be rounded.
+		IN roundBottomRight, PN_Bool, PNF_Nullable, #Whether the bottom right corner should be rounded.
+	}
+	FUNC CLIENT SimpleText
+	{
+		DESC Draws text on the screen.
+		IN text, PN_String, #The text to be drawn.
+		IN font, PN_String, PNF_Nullable, #The font. See surface.CreateFont to create your own, or see Default Fonts for a list of default fonts.
+		IN x, PN_Number, PNF_Nullable, #The X Coordinate.
+		IN y, PN_Number, PNF_Nullable, #The Y Coordinate.
+		IN color, PN_Struct, PNF_Nullable, Color, #The color of the text. Uses the Color structure.
+		IN xAlign, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the X coordinate using TEXT_ALIGN_ Enums.
+		IN yAlign, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the Y coordinate using TEXT_ALIGN_ Enums.
+		OUT width, PN_Number, #The width of the text. Same value as if you were calling surface.GetTextSize.
+		OUT height, PN_Number, #The height of the text. Same value as if you were calling surface.GetTextSize.
+	}
+	FUNC CLIENT SimpleTextOutlined
+	{
+		DESC Creates a simple line of text that is outlined.
+		IN Text, PN_String, #The text to draw.
+		IN font, PN_String, PNF_Nullable, #The font name to draw with. See surface.CreateFont to create your own, or here for a list of default fonts.
+		IN x, PN_Number, PNF_Nullable, #The X Coordinate.
+		IN y, PN_Number, PNF_Nullable, #The Y Coordinate.
+		IN color, PN_Struct, PNF_Nullable, Color, #The color of the text. Uses the Color structure.
+		IN xAlign, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the X Coordinate using TEXT_ALIGN_ Enums.
+		IN yAlign, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the Y Coordinate using TEXT_ALIGN_ Enums.
+		IN outlinewidth, PN_Number, #Width of the outline.
+		IN outlinecolor, PN_Struct, PNF_Nullable, Color, #Color of the outline. Uses the Color structure.
+		OUT width, PN_Number, #The width of the text. Same value as if you were calling surface.GetTextSize.
+		OUT height, PN_Number, #The height of the text. Same value as if you were calling surface.GetTextSize.
+	}
+	FUNC CLIENT Text
+	{
+		DESC Works like draw.SimpleText but uses a table structure instead.
+		IN textdata, PN_Struct, PNF_None, TextData, #The text properties. See the TextData structure
+		OUT width, PN_Number, #Width of drawn text
+		OUT height, PN_Number, #Height of drawn text
+	}
+	FUNC CLIENT TextShadow
+	{
+		DESC Works like draw.Text, but draws the text as a shadow.
+		IN textdata, PN_Struct, PNF_None, TextData, #The text properties. See TextData structure
+		IN distance, PN_Number, #How far away the shadow appears.
+		IN alpha, PN_Number, PNF_Nullable, #How visible the shadow is (0-255).
+	}
+	FUNC CLIENT TexturedQuad
+	{
+		DESC Draws a texture with a table structure.
+		IN texturedata, PN_Struct, PNF_None, TextureData, #The texture properties. See TextureData structure
+	}
+	FUNC CLIENT WordBox
+	{
+		DESC Draws a rounded box with text in it.
+		IN bordersize, PN_Number, #Size of border, should be multiple of 2. Ideally this will be 8 or 16.
+		IN x, PN_Number, #The X Coordinate.
+		IN y, PN_Number, #The Y Coordinate.
+		IN text, PN_String, #Text to draw.
+		IN font, PN_String, #Font to draw in. See surface.CreateFont to create your own, or here for a list of default fonts.
+		IN boxcolor, PN_Struct, PNF_None, Color, #The box color. Uses the Color structure.
+		IN textcolor, PN_Struct, PNF_None, Color, #The text color. Uses the Color structure.
+		OUT width, PN_Number, #The width of the word box.
+		OUT height, PN_Number, #The height of the word box.
+	}
+}

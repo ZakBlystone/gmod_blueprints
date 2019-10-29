@@ -1,0 +1,8 @@
+LIB ai_task
+{
+	FUNC SERVER New
+	{
+		DESC Create a new empty task. Used by Schedule:AddTask and Schedule:EngTask.
+		OUT task, PN_Ref, PNF_None, Task, #The new task object.
+	}
+}

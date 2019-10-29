@@ -62,6 +62,41 @@ STRUCT ShadowParams, For use with PhysObj:ComputeShadowControl
 	PIN teleportdistance=200, PN_Number, #If it's further away than this it'll teleport ( Set to 0 to not teleport )
 	PIN deltatime, PN_Number, #The deltatime it should use
 }
+STRUCT DuplicatorData, For use with duplicator.Copy
+{
+	PIN Entities, PN_Ref, PNF_Table, Entity
+	PIN Constraints, PN_Ref, PNF_Table, Entity
+	PIN Mins, PN_Vector
+	PIN Maxs, PN_Vector
+}
+STRUCT AddonInfo, For use with engine.GetAddons
+{
+	PIN downloaded, PN_Bool
+	PIN models, PN_Number
+	PIN title, PN_String
+	PIN file, PN_String
+	PIN mounted, PN_Bool
+	PIN wsid, PN_Number
+}
+STRUCT GamemodeInfo, For use with engine.GetGamemodes
+{
+	NAME workshopid, workshopID
+	NAME menusystem, menuSystem
+	PIN title, PN_String
+	PIN workshopid, PN_Number
+	PIN menusystem, PN_Bool
+	PIN maps, PN_String
+	PIN name, PN_String
+}
+STRUCT GameInfo, For use with engine.GetGames
+{
+	PIN depot, PN_Number
+	PIN title, PN_String
+	PIN owned, PN_Bool
+	PIN folder, PN_String
+	PIN mounted, PN_Bool
+	PIN installed, PN_Bool
+}
 STRUCT AmmoData, Table structure that describes a Source Engine ammo type.
 {
 	NAME dmgtype, damageType
