@@ -1,0 +1,182 @@
+CLASS CMoveData
+{
+	FUNC SHARED AddKey
+	{
+		DESC Adds keys to the move data, as if player pressed them.
+		IN keys, PN_Enum, PNF_None, IN, #Keys to add, see IN_ Enums
+	}
+	PURE SHARED GetAbsMoveAngles
+	{
+		DESC Gets the aim angle. Seems to be same as CMoveData:GetAngles.
+		OUT angles, PN_Angles, #Aiming angle
+	}
+	PURE SHARED GetAngles
+	{
+		DESC Gets the aim angle. On client is the same as Entity:GetAngles.
+		OUT angles, PN_Angles, #Aiming angle
+	}
+	PURE SHARED GetButtons
+	{
+		DESC Gets which buttons are down
+		OUT button, PN_Enum, PNF_Bitfield, IN, #An integer representing which buttons are down, see IN_ Enums
+	}
+	PURE SHARED GetConstraintRadius
+	{
+		DESC Returns the radius that constrains the players movement.
+		OUT radius, PN_Number, #The constraint radius
+	}
+	PURE SHARED GetForwardSpeed
+	{
+		DESC Returns the players forward speed.
+		OUT forward, PN_Number, #speed
+	}
+	PURE SHARED GetImpulseCommand
+	{
+		DESC Gets the number passed to "impulse" console command
+		OUT cmd, PN_Number, #The impulse
+	}
+	PURE SHARED GetMaxClientSpeed
+	{
+		DESC Returns the maximum client speed of the player
+		OUT speed, PN_Number, #The maximum client speed
+	}
+	PURE SHARED GetMaxSpeed
+	{
+		DESC Returns the maximum speed of the player.
+		OUT maxSpeed, PN_Number, #The maximum speed
+	}
+	PURE SHARED GetMoveAngles
+	{
+		DESC Returns the angle the player is moving at. For more info, see CMoveData:SetMoveAngles.
+		OUT angles, PN_Angles, #The move direction
+	}
+	PURE SHARED GetOldAngles
+	{
+		DESC Gets the aim angle. Only works clientside, server returns same as CMoveData:GetAngles.
+		OUT angles, PN_Angles, #The aim angle
+	}
+	PURE SHARED GetOldButtons
+	{
+		DESC Get which buttons were down last frame
+		OUT buttons, PN_Enum, PNF_Bitfield, IN, #An integer representing which buttons were down, see IN_ Enums
+	}
+	PURE SHARED GetOrigin
+	{
+		DESC Gets the player's position.
+		OUT origin, PN_Vector, #The player's position.
+	}
+	PURE SHARED GetSideSpeed
+	{
+		DESC Returns the strafe speed of the player.
+		OUT sideSpeed, PN_Number, #speed
+	}
+	PURE SHARED GetUpSpeed
+	{
+		DESC Returns the vertical speed of the player. ( Z axis of CMoveData:GetVelocity )
+		OUT upSpeed, PN_Number, #Vertical speed
+	}
+	PURE SHARED GetVelocity
+	{
+		DESC Gets the players velocity.
+		OUT velocity, PN_Vector, #The players velocity
+	}
+	PURE SHARED KeyDown
+	{
+		DESC Returns whether the key is down or not
+		IN key, PN_Enum, PNF_None, IN, #The key to test, see IN_ Enums
+		OUT isDown, PN_Bool, #Is the key down or not
+	}
+	PURE SHARED KeyPressed
+	{
+		DESC Returns whether the key was pressed. If you want to check if the key is held down, try CMoveData:KeyDown
+		IN key, PN_Enum, PNF_None, IN, #The key to test, see IN_ Enums
+		OUT isPressed, PN_Bool, #Was the key pressed or not.
+	}
+	PURE SHARED KeyReleased
+	{
+		DESC Returns whether the key was released
+		IN key, PN_Enum, PNF_None, IN, #A key to test, see IN_ Enums
+		OUT isReleased, PN_Bool, #Was the key released or not.
+	}
+	PURE SHARED KeyWasDown
+	{
+		DESC Returns whether the key was down or not. Unlike CMoveData:KeyDown, it will return false if CMoveData:KeyPressed is true and it will return true if CMoveData:KeyReleased is true.
+		IN key, PN_Enum, PNF_None, IN, #The key to test, seee IN_ Enums
+		OUT wasDown, PN_Bool, #Was the key down or not
+	}
+	FUNC SHARED SetAbsMoveAngles
+	{
+		DESC Sets absolute move angles.( ? ) Doesn't seem to do anything.
+		IN ang, PN_Angles, #New absolute move angles
+	}
+	FUNC SHARED SetAngles
+	{
+		DESC Sets angles.
+		IN ang, PN_Angles, #The angles.
+	}
+	FUNC SHARED SetButtons
+	{
+		DESC Sets the pressed buttons on the move data
+		IN buttons, PN_Enum, PNF_None, IN, #A number representing which buttons are down, see IN_ Enums
+	}
+	FUNC SHARED SetConstraintRadius
+	{
+		DESC Sets the radius that constrains the players movement. It is unknown what this function does as changing its values doesn't affect player movement.
+		IN radius, PN_Number, #The new constraint radius
+	}
+	FUNC SHARED SetForwardSpeed
+	{
+		DESC Sets players forward speed.
+		IN speed, PN_Number, #New forward speed
+	}
+	FUNC SHARED SetImpulseCommand
+	{
+		DESC Sets the impulse command. This isn't actually utilised in the engine anywhere.
+		IN impulse, PN_Number, #The impulse to set
+	}
+	FUNC SHARED SetMaxClientSpeed
+	{
+		DESC Sets the maximum player speed. Player won't be able to run or sprint faster then this value. This also automatically sets CMoveData:SetMaxSpeed when used in the GM:SetupMove hook. You must set it manually in the GM:Move hook. This must be called on both client and server to avoid prediction errors. This will not reduce speed in air.
+		IN maxSpeed, PN_Number, #The new maximum speed
+	}
+	FUNC SHARED SetMaxSpeed
+	{
+		DESC Sets the maximum speed of the player. This must match with CMoveData:SetMaxClientSpeed both, on server and client. Doesn't seem to be doing anything on it's own, use CMoveData:SetMaxClientSpeed instead.
+		IN maxSpeed, PN_Number, #The new maximum speed
+	}
+	FUNC SHARED SetMoveAngles
+	{
+		DESC Sets the serverside move angles, making the movement keys act as if player was facing that direction.
+		IN dir, PN_Angles, #The aim direction.
+	}
+	FUNC SHARED SetOldAngles
+	{
+		DESC Sets old aim angles. ( ? ) Doesn't seem to be doing anything.
+		IN aimAng, PN_Angles, #The old angles
+	}
+	FUNC SHARED SetOldButtons
+	{
+		DESC Sets the 'old' pressed buttons on the move data. These buttons are used to work out which buttons have been released, which have just been pressed and which are being held down.
+		IN buttons, PN_Enum, PNF_None, IN, #A number representing which buttons were down, see IN_ Enums
+	}
+	FUNC SHARED SetOrigin
+	{
+		DESC Sets the players position.
+		IN pos, PN_Vector, #The position
+	}
+	FUNC SHARED SetSideSpeed
+	{
+		DESC Sets players strafe speed.
+		IN speed, PN_Number, #Strafe speed
+	}
+	FUNC SHARED SetUpSpeed
+	{
+		DESC Sets vertical speed of the player. ( Z axis of CMoveData:SetVelocity )
+		IN speed, PN_Number, #Vertical speed to set
+	}
+	FUNC SHARED SetVelocity
+	{
+		DESC Sets the player's velocity
+		IN velocity, PN_Vector, #The velocity to set
+	}
+}

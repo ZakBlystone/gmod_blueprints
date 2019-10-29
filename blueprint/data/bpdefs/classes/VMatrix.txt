@@ -1,0 +1,184 @@
+CLASS VMatrix
+{
+	PURE SHARED GetAngles
+	{
+		DESC Returns the absolute rotation of the matrix.
+		OUT angles, PN_Angles, #Absolute rotation of the matrix
+	}
+	PURE SHARED GetField
+	{
+		DESC Returns a specific field in the matrix.
+		IN row, PN_Number, #Row of the field whose value is to be retrieved, from 1 to 4
+		IN column, PN_Number, #Column of the field whose value is to be retrieved, from 1 to 4
+		OUT value, PN_Number, #The value of the specified field
+	}
+	PURE SHARED GetForward
+	{
+		DESC Gets the forward direction of the matrix.
+		OUT forward, PN_Vector, #The forward direction of the matrix.
+	}
+	PURE SHARED GetInverse
+	{
+		DESC Returns an inverted matrix without modifying the original matrix.
+		OUT inverse, PN_Ref, PNF_None, VMatrix, #The inverted matrix if possible, nil otherwise
+	}
+	PURE SHARED GetInverseTR
+	{
+		DESC Returns an inverted matrix without modifying the original matrix. This function will not fail, but only works correctly on matrices that contain only translation and/or rotation.
+		OUT inverse, PN_Ref, PNF_None, VMatrix, #The inverted matrix.
+	}
+	PURE SHARED GetRight
+	{
+		DESC Gets the right direction of the matrix.
+		OUT right, PN_Vector, #The right direction of the matrix.
+	}
+	PURE SHARED GetScale
+	{
+		DESC Returns the absolute scale of the matrix.
+		OUT scale, PN_Vector, #Absolute scale of the matrix
+	}
+	PURE SHARED GetTranslation
+	{
+		DESC Returns the absolute translation of the matrix.
+		OUT translation, PN_Vector, #Absolute translation of the matrix
+	}
+	PURE SHARED GetUp
+	{
+		DESC Gets the up direction of the matrix.
+		OUT up, PN_Vector, #The up direction of the matrix.
+	}
+	FUNC SHARED Identity
+	{
+		DESC Initializes the matrix as Identity matrix.
+	}
+	FUNC SHARED Invert
+	{
+		DESC Inverts the matrix.
+		OUT success, PN_Bool, #Whether the matrix was inverted or not
+	}
+	FUNC SHARED InvertTR
+	{
+		DESC Inverts the matrix. This function will not fail, but only works correctly on matrices that contain only translation and/or rotation.
+	}
+	PURE SHARED IsIdentity
+	{
+		DESC Returns whether the matrix is equal to Identity matrix or not.
+		OUT identity, PN_Bool, #Is the matrix an Identity matrix or not
+	}
+	PURE SHARED IsRotationMatrix
+	{
+		DESC Returns whether the matrix is a rotation matrix or not.
+		OUT rotation, PN_Bool, #Is the matrix a rotation matrix or not
+	}
+	PURE SHARED IsZero
+	{
+		DESC Checks whenever all fields of the matrix are 0, aka if this is a null matrix.
+		OUT zero, PN_Bool, #If the matrix is a null matrix.
+	}
+	FUNC SHARED Rotate
+	{
+		DESC Rotates the matrix by the given angle.
+		IN rotation, PN_Angles, #Rotation.
+	}
+	FUNC SHARED Scale
+	{
+		DESC Scales the matrix by the given vector.
+		IN scale, PN_Vector, #Vector to scale with matrix with.
+	}
+	FUNC SHARED ScaleTranslation
+	{
+		DESC Scales the absolute translation with the given value.
+		IN scale, PN_Number, #Value to scale the translation with.
+	}
+	FUNC SHARED Set
+	{
+		DESC Copies values from the given matrix object.
+		IN src, PN_Ref, PNF_None, VMatrix, #The matrix to copy values from.
+	}
+	FUNC SHARED SetAngles
+	{
+		DESC Sets the absolute rotation of the matrix.
+		IN angle, PN_Angles, #New angles.
+	}
+	FUNC SHARED SetField
+	{
+		DESC Sets a specific field in the matrix.
+		IN row, PN_Number, #Row of the field to be set, from 1 to 4
+		IN column, PN_Number, #Column of the field to be set, from 1 to 4
+		IN value, PN_Number, #The value to set in that field
+	}
+	FUNC SHARED SetForward
+	{
+		DESC Sets the forward direction of the matrix.
+		IN forward, PN_Vector, #The forward direction of the matrix.
+	}
+	FUNC SHARED SetRight
+	{
+		DESC Sets the right direction of the matrix.
+		IN forward, PN_Vector, #The right direction of the matrix.
+	}
+	FUNC SHARED SetScale
+	{
+		DESC Modifies the scale of the matrix while preserving the rotation and translation.
+		IN scale, PN_Vector, #The scale to set.
+	}
+	FUNC SHARED SetTranslation
+	{
+		DESC Sets the absolute translation of the matrix.
+		IN translation, PN_Vector, #New translation.
+	}
+	FUNC SHARED SetUnpacked
+	{
+		DESC Sets each component of the matrix.
+		IN e11, PN_Number
+		IN e12, PN_Number
+		IN e13, PN_Number
+		IN e14, PN_Number
+		IN e21, PN_Number
+		IN e22, PN_Number
+		IN e23, PN_Number
+		IN e24, PN_Number
+		IN e31, PN_Number
+		IN e32, PN_Number
+		IN e33, PN_Number
+		IN e34, PN_Number
+		IN e41, PN_Number
+		IN e42, PN_Number
+		IN e43, PN_Number
+		IN e44, PN_Number
+	}
+	FUNC SHARED SetUp
+	{
+		DESC Sets the up direction of the matrix.
+		IN forward, PN_Vector, #The up direction of the matrix.
+	}
+	FUNC SHARED Translate
+	{
+		DESC Translates the matrix by the given vector aka. adds the vector to the translation.
+		IN translation, PN_Vector, #Vector to translate the matrix by.
+	}
+	PURE SHARED Unpack
+	{
+		DESC Returns each component of the matrix, expanding rows before columns.
+		OUT e11, PN_Number, #VMatrix:GetField(1, 1)
+		OUT e12, PN_Number, #VMatrix:GetField(1, 2)
+		OUT e13, PN_Number, #VMatrix:GetField(1, 3)
+		OUT e14, PN_Number, #VMatrix:GetField(1, 4)
+		OUT e21, PN_Number, #VMatrix:GetField(2, 1)
+		OUT e22, PN_Number, #VMatrix:GetField(2, 2)
+		OUT e23, PN_Number, #VMatrix:GetField(2, 3)
+		OUT e24, PN_Number, #VMatrix:GetField(2, 4)
+		OUT e31, PN_Number, #VMatrix:GetField(3, 1)
+		OUT e32, PN_Number, #VMatrix:GetField(3, 2)
+		OUT e33, PN_Number, #VMatrix:GetField(3, 3)
+		OUT e34, PN_Number, #VMatrix:GetField(3, 4)
+		OUT e41, PN_Number, #VMatrix:GetField(4, 1)
+		OUT e42, PN_Number, #VMatrix:GetField(4, 2)
+		OUT e43, PN_Number, #VMatrix:GetField(4, 3)
+		OUT e44, PN_Number, #VMatrix:GetField(4, 4)
+	}
+	FUNC SHARED Zero
+	{
+		DESC Sets all components of the matrix to 0, also known as a null matrix.
+	}
+}

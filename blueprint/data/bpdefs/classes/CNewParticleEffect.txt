@@ -1,0 +1,130 @@
+CLASS CNewParticleEffect
+{
+	FUNC CLIENT AddControlPoint
+	{
+		DESC Adds a control point to the particle system.
+		IN cpID, PN_Number, #The control point ID, 0 to 63.
+		IN ent, PN_Ref, PNF_None, Entity, #The entity to attach the control point to.
+		IN partAttachment, PN_Enum, PNF_None, PATTACH, #See PATTACH_ Enums.
+		IN entAttachment, PN_Number, PNF_Nullable, #The attachment ID on the entity to attach the particle system to
+		IN offset, PN_Vector, PNF_Nullable, #The offset from the Entity:GetPos of the entity we are attaching this CP to.
+	}
+	PURE CLIENT GetAutoUpdateBBox
+	{
+		DESC  boolean
+		OUT autoUpdate, PN_Bool
+	}
+	PURE CLIENT GetEffectName
+	{
+		DESC Returns the name of the particle effect this system is set to emit.
+		OUT name, PN_String, #The name of the particle effect.
+	}
+	PURE CLIENT GetHighestControlPoint
+	{
+		DESC Returns the highest control point number for given particle system.
+		OUT index, PN_Number, #The highest control point number for given particle system, 0 to 63.
+	}
+	PURE CLIENT GetOwner
+	{
+		DESC Returns the owner of the particle system, the entity the particle system is attached to.
+		OUT owner, PN_Ref, PNF_None, Entity, #The owner of the particle system.
+	}
+	PURE CLIENT IsFinished
+	{
+		DESC Returns whether the particle system has finished emitting particles or not.
+		OUT finished, PN_Bool, #Whether the particle system has finished emitting particles or not.
+	}
+	PURE CLIENT IsValid
+	{
+		DESC Returns whether the particle system is valid or not.
+		OUT valid, PN_Bool, #Whether the particle system is valid or not.
+	}
+	PURE CLIENT IsViewModelEffect
+	{
+		DESC Returns whether the particle system is intended to be used on a view model?
+		OUT offset, PN_Bool
+	}
+	FUNC CLIENT Render
+	{
+		DESC Forces the particle system to render using current rendering context.
+	}
+	FUNC CLIENT Restart
+	{
+		DESC Forces the particle system to restart emitting particles.
+	}
+	FUNC CLIENT SetControlPoint
+	{
+		DESC Sets a value for given control point.
+		IN cpID, PN_Number, #The control point ID, 0 to 63.
+		IN value, PN_Vector, #The value to set for given control point.
+	}
+	FUNC CLIENT SetControlPointEntity
+	{
+		DESC Essentially makes child control point follow the parent entity.
+		IN child, PN_Number, #The child control point ID, 0 to 63.
+		IN parent, PN_Ref, PNF_None, Entity, #The parent entity to follow.
+	}
+	FUNC CLIENT SetControlPointForwardVector
+	{
+		DESC Sets the forward direction for given control point.
+		IN cpID, PN_Number, #The control point ID, 0 to 63.
+		IN forward, PN_Vector, #The forward direction for given control point
+	}
+	FUNC CLIENT SetControlPointOrientation
+	{
+		DESC Sets the orientation for given control point.
+		IN cpID, PN_Number, #The control point ID, 0 to 63.
+		IN forward, PN_Vector, #The forward direction for given control point
+		IN right, PN_Vector, #The right direction for given control point
+		IN up, PN_Vector, #The up direction for given control point
+	}
+	FUNC CLIENT SetControlPointParent
+	{
+		DESC Essentially makes child control point follow the parent control point.
+		IN child, PN_Number, #The child control point ID, 0 to 63.
+		IN parent, PN_Number, #The parent control point ID, 0 to 63.
+	}
+	FUNC CLIENT SetControlPointRightVector
+	{
+		DESC Sets the right direction for given control point.
+		IN cpID, PN_Number, #The control point ID, 0 to 63.
+		IN right, PN_Vector, #The right direction for given control point.
+	}
+	FUNC CLIENT SetControlPointUpVector
+	{
+		DESC Sets the upward direction for given control point.
+		IN cpID, PN_Number, #The control point ID, 0 to 63.
+		IN upward, PN_Vector, #The upward direction for given control point
+	}
+	FUNC CLIENT SetIsViewModelEffect
+	{
+		DESC  boolean isViewModel
+		IN isViewModel, PN_Bool
+	}
+	FUNC CLIENT SetShouldDraw
+	{
+		DESC Forces the particle system to stop automatically rendering.
+		IN should, PN_Bool, #Whether to automatically draw the particle effect or not.
+	}
+	FUNC CLIENT SetSortOrigin
+	{
+		DESC Sets the sort origin for given particle system. This is used as a helper to determine which particles are in front of which.
+		IN origin, PN_Vector, #The new sort origin.
+	}
+	FUNC CLIENT StartEmission
+	{
+		DESC Starts the particle emission.
+		IN infiniteOnly, PN_Bool, PNF_Nullable
+	}
+	FUNC CLIENT StopEmission
+	{
+		DESC Stops the particle emission.
+		IN infiniteOnly, PN_Bool, PNF_Nullable
+		IN removeAllParticles, PN_Bool, PNF_Nullable
+		IN wakeOnStop, PN_Bool, PNF_Nullable
+	}
+	FUNC CLIENT StopEmissionAndDestroyImmediately
+	{
+		DESC Stops particle emission and destroys all particles instantly. Also detaches the particle effect from the entity it was attached to.
+	}
+}

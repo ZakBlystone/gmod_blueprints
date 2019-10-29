@@ -100,20 +100,8 @@ NodeTypes = {
 	["Alive"] = "Player:Alive, isAlive=alive",
 	["PlayerGetWeapon"] = "Player:GetWeapon, classname=class",
 	["PlayerGetActiveWeapon"] = "Player:GetActiveWeapon",
-	["Clip1"] = PURE {
-		pins = {
-			{ PD_In, PN_Weapon, "weapon" },
-			{ PD_Out, PN_Number, "clip" },
-		},
-		code = "#1 = Weapon_.Clip1($1)",
-	},
-	["SetClip1"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Weapon, "weapon" },
-			{ PD_In, PN_Number, "clip" },
-		},
-		code = "Weapon_.SetClip1($2, $3)",
-	},
+	["Clip1"] = "Weapon:Clip1",
+	["SetClip1"] = "Weapon:SetClip1",
 	["PlayerName"] = "Player:Name",
 	["Use"] = "Entity:Use",
 	["FireBullets"] = FUNCTION {
@@ -164,62 +152,14 @@ NodeTypes = {
 		},
 		code = "for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $2) end",
 	},
-	["Wake"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_PhysObj, "physObj" },
-		},
-		code = "PhysObj_.Wake($2)",
-	},
-	["ApplyForceCenter"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_PhysObj, "physObj" },
-			{ PD_In, PN_Vector, "force" },
-		},
-		code = "PhysObj_.ApplyForceCenter($2, $3)",
-	},
-	["ApplyTorqueCenter"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_PhysObj, "physObj" },
-			{ PD_In, PN_Vector, "force" },
-		},
-		code = "PhysObj_.ApplyTorqueCenter($2, $3)",
-	},
-	["SetMass"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_PhysObj, "physObj" },
-			{ PD_In, PN_Number, "mass" },
-		},
-		code = "PhysObj_.SetMass($2, $3)",
-	},
-	["EnableMotion"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_PhysObj, "physObj" },
-			{ PD_In, PN_Bool, "enabled" },
-		},
-		code = "PhysObj_.EnableMotion($2, $3)",
-	},
-	["GetRagdollEntity"] = PURE {
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_Out, PN_Entity, "ragdoll" },
-		},
-		code = "#1 = Player_.GetRagdollEntity($1)",
-	},
-	["GetPhysicsObjectNum"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Number, "id" },
-			{ PD_Out, PN_PhysObj, "physObj" },
-		},
-		code = "#1 = Entity_.GetPhysicsObjectNum($1, $2)",
-	},
-	["GetPhysicsObject"] = PURE {
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_Out, PN_PhysObj, "physObj" },
-		},
-		code = "#1 = Entity_.GetPhysicsObject($1)",
-	},
+	["Wake"] = "PhysObj:Wake",
+	["ApplyForceCenter"] = "PhysObj:ApplyForceCenter",
+	["ApplyTorqueCenter"] = "PhysObj:ApplyTorqueCenter",
+	["SetMass"] = "PhysObj:SetMass",
+	["EnableMotion"] = "PhysObj:EnableMotion",
+	["GetRagdollEntity"] = "Player:GetRagdollEntity",
+	["GetPhysicsObjectNum"] = "Entity:GetPhysicsObjectNum",
+	["GetPhysicsObject"] = "Entity:GetPhysicsObject",
 	["EyePos"] = "Entity:EyePos",
 	["EyeAngles"] = "Entity:EyeAngles",
 	["GetAimVector"] = "Player:GetAimVector, aimvector=dir",
@@ -497,6 +437,15 @@ NodeTypes = {
 			{ PD_Out, PN_Number, "sine" },
 		},
 		code = "#1 = math.sin($1)",
+	},
+	["Clamp"] = PURE {
+		pins = {
+			{ PD_In, PN_Number, "value" },
+			{ PD_In, PN_Number, "min" },
+			{ PD_In, PN_Number, "max" },
+			{ PD_Out, PN_Number, "result" },
+		},
+		code = "#1 = math.Clamp($1, $2, $3)",
 	},
 	["Cos"] = PURE {
 		pins = {
@@ -1082,18 +1031,7 @@ NodeTypes = {
 		},
 		code = [[#1 = (type($1) == type($2)) and $1 or $2]],
 	},
-	["AddEntityRelationship"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Npc, "npc" },
-			{ PD_In, PN_Entity, "target" },
-			{ PD_In, PN_Enum, "relationship", PNF_None, "D" },
-			{ PD_In, PN_Number, "priority"},
-		},
-		defaults = {
-			[4] = "D_HT",
-		},
-		code = [[NPC_.AddEntityRelationship($2, $3, $4, $5)]],
-	},
+	["AddEntityRelationship"] = "NPC:AddEntityRelationship, relationship=disposition",
 }
 
 for k,v in pairs(NodeTypes) do
@@ -1167,7 +1105,7 @@ AddHook("PlayerLeaveVehicle", { {"player", PN_Player}, {"vehicle", PN_Vehicle} }
 AddHook("PlayerFrozeObject", { {"player", PN_Player}, {"entity", PN_Entity}, {"physobj", PN_PhysObj} })
 AddHook("PlayerUnfrozeObject", { {"player", PN_Player}, {"entity", PN_Entity}, {"physobj", PN_PhysObj} })
 AddHook("PlayerHurt", { {"victim", PN_Player}, {"attacker", PN_Entity}, {"health", PN_Number}, {"damage", PN_Number} })
-AddHook("PlayerTick", { {"player", PN_Player}, {"moveData", PN_Any} })
+AddHook("PlayerTick", { {"player", PN_Player}, {"moveData", PN_Ref, PNF_None, "CMoveData"} })
 AddHook("GravGunOnDropped", { {"player", PN_Player}, {"entity", PN_Entity} })
 AddHook("GravGunOnPickedUp", { {"player", PN_Player}, {"entity", PN_Entity} })
 AddHook("PlayerButtonDown", { {"player", PN_Player}, {"button", PN_Enum, PNF_None, "BUTTON_CODE"} })
@@ -1201,14 +1139,20 @@ for k,v in pairs(NodeTypes) do
 	v.name = k
 end
 
-for k,v in pairs(bpdefs.GetClasses()) do
-	bpdefs.CreateLibNodes(v, NodeTypes)
+function InstallDefs()
+	print("Installing defs")
+	for k,v in pairs(bpdefs.GetClasses()) do
+		bpdefs.CreateLibNodes(v, NodeTypes)
+	end
+
+	for k,v in pairs(bpdefs.GetLibs()) do
+		bpdefs.CreateLibNodes(v, NodeTypes)
+	end
+
+	for k,v in pairs(bpdefs.GetStructs()) do
+		bpdefs.CreateStructNodes(v, NodeTypes)
+	end
+	print("Done.")
 end
 
-for k,v in pairs(bpdefs.GetLibs()) do
-	bpdefs.CreateLibNodes(v, NodeTypes)
-end
-
-for k,v in pairs(bpdefs.GetStructs()) do
-	bpdefs.CreateStructNodes(v, NodeTypes)
-end
+InstallDefs()

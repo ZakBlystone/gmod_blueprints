@@ -1,0 +1,49 @@
+CLASS ITexture
+{
+	FUNC SHARED Download
+	{
+		DESC Invokes the generator of the texture. Reloads file based textures from disk and clears render target textures.
+	}
+	PURE SHARED GetColor
+	{
+		DESC Returns the color of the specified pixel, only works for textures created from PNG files.
+		IN x, PN_Number, #The X coordinate.
+		IN y, PN_Number, #The Y coordinate.
+		OUT color, PN_Struct, PNF_None, Color, #The color of the pixel as a Color structure.
+	}
+	PURE SHARED GetMappingHeight
+	{
+		DESC Returns the true unmodified height of the texture.
+		OUT height, PN_Number, #height
+	}
+	PURE SHARED GetMappingWidth
+	{
+		DESC Returns the true unmodified width of the texture.
+		OUT width, PN_Number, #width
+	}
+	PURE SHARED GetName
+	{
+		DESC Returns the name of the texture, in most cases the path.
+		OUT name, PN_String, #name
+	}
+	PURE SHARED Height
+	{
+		DESC Returns the modified height of the texture, this value may be affected by mipmapping and other factors.
+		OUT height, PN_Number, #height
+	}
+	FUNC SHARED IsError
+	{
+		DESC Returns whenever the texture is valid. (i.e. was loaded successfully or not)
+		OUT error, PN_Bool, #Whether the texture was loaded successfully or not.
+	}
+	FUNC SHARED IsErrorTexture
+	{
+		DESC Returns whenever the texture is the error texture (pink and black checkers).
+		OUT error, PN_Bool, #Whether the texture is the error texture or not.
+	}
+	PURE SHARED Width
+	{
+		DESC Returns the modified width of the texture, this value may be affected by mipmapping and other factors.
+		OUT width, PN_Number, #width
+	}
+}

@@ -1,0 +1,47 @@
+CLASS IRestore
+{
+	FUNC SHARED EndBlock
+	{
+		DESC Ends current data block started with IRestore:StartBlock and returns to the parent block.
+	}
+	FUNC SHARED ReadAngle
+	{
+		DESC Reads next bytes from the restore object as an Angle.
+		OUT angles, PN_Angles, #The angle that has been read
+	}
+	FUNC SHARED ReadBool
+	{
+		DESC Reads next bytes from the restore object as a boolean.
+		OUT bool, PN_Bool, #The boolean that has been read
+	}
+	FUNC SHARED ReadEntity
+	{
+		DESC Reads next bytes from the restore object as an Entity.
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that has been read.
+	}
+	FUNC SHARED ReadFloat
+	{
+		DESC Reads next bytes from the restore object as a floating point number.
+		OUT float, PN_Number, #The read floating point number.
+	}
+	FUNC SHARED ReadInt
+	{
+		DESC Reads next bytes from the restore object as an integer number.
+		OUT int, PN_Number, #The read integer number.
+	}
+	FUNC SHARED ReadString
+	{
+		DESC Reads next bytes from the restore object as a string.
+		OUT string, PN_String, #The read string. Maximum length is 1024.
+	}
+	FUNC SHARED ReadVector
+	{
+		DESC Reads next bytes from the restore object as a Vector.
+		OUT vector, PN_Vector, #The read vector.
+	}
+	FUNC SHARED StartBlock
+	{
+		DESC Loads next block of data to be read inside current block. Blocks must be ended with IRestore:EndBlock.
+		OUT block, PN_String, #The name of the next data block to be read.
+	}
+}

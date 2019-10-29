@@ -1,0 +1,143 @@
+CLASS Vector
+{
+	FUNC SHARED Add
+	{
+		DESC Adds the values of the argument vector to the orignal vector. This functions the same as vector1 + vector2 without creating a new vector object, skipping object construction and garbage collection.
+		IN vector, PN_Vector, #The vector to add.
+	}
+	PURE SHARED Angle
+	{
+		DESC Returns an angle representing the normal of the vector.
+		OUT angles, PN_Angles, #The angle/direction of the vector.
+	}
+	PURE SHARED AngleEx
+	{
+		DESC Returns the angle of the vector, but instead of assuming that up is Vector( 0, 0, 1 ) (Like Vector:Angle does) you can specify which direction is 'up' for the angle.
+		IN up, PN_Vector, #The up direction vector
+		OUT angles, PN_Angles, #The angle
+	}
+	PURE SHARED Cross
+	{
+		DESC Calculates the cross product of this vector and the passed one.
+		IN otherVector, PN_Vector, #Vector to calculate the cross product with.
+		OUT vector, PN_Vector, #The cross product of the two vectors.
+	}
+	PURE SHARED Distance
+	{
+		DESC Returns the pythagorean distance between the vector and the other vector.
+		IN otherVector, PN_Vector, #The vector to get the distance to.
+		OUT distance, PN_Number, #Distance between the vectors.
+	}
+	PURE SHARED DistToSqr
+	{
+		DESC Returns the squared distance of 2 vectors, this is faster than Vector:Distance as calculating the square root is an expensive process.
+		IN otherVec, PN_Vector, #The vector to calculate the distance to.
+		OUT squareDistance, PN_Number, #Squared distance to the vector
+	}
+	FUNC SHARED Div
+	{
+		DESC Divide the vector by the given number, that means x, y and z are divided by that value. This will change the value of the original vector, see example 2 for division without changing the value.
+		IN divisor, PN_Number, #The value to divide the vector with.
+	}
+	PURE SHARED Dot
+	{
+		DESC Returns the dot product of this vector and the passed one.
+		IN otherVector, PN_Vector, #The vector to calculate the dot product with
+		OUT dot, PN_Number, #The dot product between the two vectors
+	}
+	PURE SHARED DotProduct
+	{
+		DESC  Vector Vector
+		IN Vector, PN_Vector, #The other vector.
+		OUT dot, PN_Number, #Dot Product
+	}
+	PURE SHARED GetNormal
+	{
+		DESC Returns a normalized version of the vector. This is a alias of Vector:GetNormalized.
+		OUT normal, PN_Vector, #Normalized version of the vector.
+	}
+	PURE SHARED IsEqualTol
+	{
+		DESC Returns if the vector is equal to another vector with the given tolerance.
+		IN compare, PN_Vector, #The vector to compare to.
+		IN tolerance, PN_Number, #The tolerance range.
+		OUT equal, PN_Bool, #Are the vectors equal or not.
+	}
+	PURE SHARED IsZero
+	{
+		DESC Checks whenever all fields of the vector are 0.
+		OUT zero, PN_Bool, #Do all fields of the vector equal 0 or not
+	}
+	PURE SHARED Length
+	{
+		DESC Returns the Euclidean length of the vector: √ x² + y² + z² 
+		OUT length, PN_Number, #Length of the vector.
+	}
+	PURE SHARED Length2D
+	{
+		DESC Returns the length of the vector in two dimensions, without the Z axis.
+		OUT length, PN_Number, #Length of the vector in two dimensions, √ x² + y² 
+	}
+	PURE SHARED Length2DSqr
+	{
+		DESC Returns the squared length of the vectors x and y value, x² + y².
+		OUT lengthSquared, PN_Number, #Squared length of the vector in two dimensions
+	}
+	PURE SHARED LengthSqr
+	{
+		DESC Returns the squared length of the vector, x² + y² + z².
+		OUT lengthSquared, PN_Number, #Squared length of the vector
+	}
+	FUNC SHARED Mul
+	{
+		DESC Scales the vector by the given number, that means x, y and z are multiplied by that value.
+		IN multiplier, PN_Number, #The value to scale the vector with.
+	}
+	FUNC SHARED Normalize
+	{
+		DESC Normalizes the given vector. This changes the vector you call it on, if you want to return a normalized copy without affecting the original, use Vector:GetNormalized.
+	}
+	FUNC SHARED Rotate
+	{
+		DESC Rotates a vector by the given angle. Doesn't return anything, but rather changes the original vector.
+		IN rotation, PN_Angles, #The angle to rotate the vector by.
+	}
+	FUNC SHARED Set
+	{
+		DESC Copies the values from the second vector to the first vector.
+		IN vector, PN_Vector, #The vector to copy from.
+	}
+	FUNC SHARED SetUnpacked
+	{
+		DESC Sets the x, y, and z of the vector.
+		IN x, PN_Number
+		IN y, PN_Number
+		IN z, PN_Number
+	}
+	FUNC SHARED Sub
+	{
+		DESC Substracts the values of the second vector from the orignal vector, this function can be used to avoid garbage collection.
+		IN vector, PN_Vector, #The other vector.
+	}
+	FUNC SHARED ToColor
+	{
+		DESC Translates the Vector (values ranging from 0 to 1) into a Color structure. This will also range the values from 0 - 1 to 0 - 255.
+		OUT color, PN_Struct, PNF_None, Color, #The created Color structure.
+	}
+	FUNC CLIENT ToScreen
+	{
+		DESC Returns where on the screen the specified position vector would appear. A related function is gui.ScreenToVector, which converts a 2D coordinate to a 3D direction.
+		OUT screen, PN_Struct, PNF_None, ToScreenData, #The created ToScreenData structure.
+	}
+	FUNC SHARED WithinAABox
+	{
+		DESC Returns whenever the given vector is in a box created by the 2 other vectors.
+		IN boxStart, PN_Vector, #The first vector.
+		IN boxEnd, PN_Vector, #The second vector.
+		OUT inBox, PN_Bool, #Is the vector in the box or not
+	}
+	FUNC SHARED Zero
+	{
+		DESC Sets x, y and z to 0.
+	}
+}

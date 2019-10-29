@@ -1,0 +1,69 @@
+CLASS CSoundPatch
+{
+	FUNC SHARED ChangePitch
+	{
+		DESC Adjust the pitch, alias the speed at which the sound is being played.
+		IN pitch, PN_Number, #The pitch can range from 0-255.
+		IN deltaTime, PN_Number, PNF_Nullable, #The time to fade from previous to the new pitch.
+	}
+	FUNC SHARED ChangeVolume
+	{
+		DESC Adjusts the volume of the sound played. Appears to only work while the sound is being played.
+		IN volume, PN_Number, #The volume ranges from 0 to 1.
+		IN deltaTime, PN_Number, PNF_Nullable, #Time to fade the volume from previous to new value from.
+	}
+	FUNC SHARED FadeOut
+	{
+		DESC Fades out the volume of the sound from the current volume to 0 in the given amount of seconds.
+		IN seconds, PN_Number, #Fade time.
+	}
+	PURE SHARED GetDSP
+	{
+		DESC Returns the DSP ( Digital Signal Processor ) effect for the sound.
+		OUT DSP, PN_Number, #The DSP effects of the sound List of DSP's are Pick from the here.
+	}
+	PURE SHARED GetPitch
+	{
+		DESC Returns the current pitch.
+		OUT pitch, PN_Number, #The current pitch, can range from 0-255.
+	}
+	PURE SHARED GetSoundLevel
+	{
+		DESC Returns the current sound level.
+		OUT soundLevel, PN_Number, #The current sound level, see SNDLVL_ Enums.
+	}
+	PURE SHARED GetVolume
+	{
+		DESC Returns the current volume.
+		OUT volume, PN_Number, #The current volume, ranging from 0 to 1.
+	}
+	FUNC SHARED IsPlaying
+	{
+		DESC Returns whenever the sound is being played.
+		OUT playing, PN_Bool, #Is playing or not
+	}
+	FUNC SHARED Play
+	{
+		DESC Starts to play the sound.
+	}
+	FUNC SHARED PlayEx
+	{
+		DESC Same as CSoundPatch:Play but with 2 extra arguments allowing to set volume and pitch directly.
+		IN volume, PN_Number, #The volume ranges from 0 to 1.
+		IN pitch, PN_Number, #The pitch can range from 0-255.
+	}
+	FUNC SHARED SetDSP
+	{
+		DESC Sets the DSP ( Digital Signal Processor ) effect for the sound. Similar to Player:SetDSP
+		IN dsp, PN_Number, #The DSP effect to set. Pick from the list of DSP's
+	}
+	FUNC SHARED SetSoundLevel
+	{
+		DESC Sets the sound level in decibel.
+		IN level, PN_Number, #The sound level in decibel. See SNDLVL_ Enums
+	}
+	FUNC SHARED Stop
+	{
+		DESC Stops the sound from being played.
+	}
+}

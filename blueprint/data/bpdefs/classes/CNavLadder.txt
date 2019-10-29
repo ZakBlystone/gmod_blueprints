@@ -1,0 +1,115 @@
+CLASS CNavLadder
+{
+	FUNC SERVER ConnectTo
+	{
+		DESC Connects this ladder to a CNavArea with a one way connection. ( From this ladder to the target area ).
+		IN area, PN_Ref, PNF_None, CNavArea, #The area this ladder leads to.
+	}
+	FUNC SERVER Disconnect
+	{
+		DESC Disconnects this ladder from given area in a single direction.
+		IN area, PN_Ref, PNF_None, CNavArea, #The CNavArea this to disconnect from.
+	}
+	PURE SERVER GetBottom
+	{
+		DESC Returns the bottom most position of the ladder.
+		OUT bottom, PN_Vector, #The bottom most position of the ladder.
+	}
+	PURE SERVER GetBottomArea
+	{
+		DESC Returns the bottom area of the CNavLadder.
+		OUT area, PN_Ref, PNF_None, CNavArea
+	}
+	PURE SERVER GetID
+	{
+		DESC Returns this CNavLadders unique ID.
+		OUT id, PN_Number, #The unique ID.
+	}
+	PURE SERVER GetLength
+	{
+		DESC Returns the length of the ladder.
+		OUT length, PN_Number, #The length of the ladder.
+	}
+	PURE SERVER GetNormal
+	{
+		DESC Returns the direction of this CNavLadder. ( The direction in which players back will be facing if they are looking directly at the ladder )
+		OUT normal, PN_Vector, #The direction of this CNavLadder.
+	}
+	PURE SERVER GetPosAtHeight
+	{
+		DESC Returns the world position based on given height relative to the ladder.
+		IN height, PN_Number, #The Z position in world space coordinates.
+		OUT pos, PN_Vector, #The closest point on the ladder to that height.
+	}
+	PURE SERVER GetTop
+	{
+		DESC Returns the topmost position of the ladder.
+		OUT top, PN_Vector, #The topmost position of the ladder.
+	}
+	PURE SERVER GetTopBehindArea
+	{
+		DESC Returns the top behind CNavArea of the CNavLadder.
+		OUT area, PN_Ref, PNF_None, CNavArea, #The top behind CNavArea of the CNavLadder.
+	}
+	PURE SERVER GetTopForwardArea
+	{
+		DESC Returns the top forward CNavArea of the CNavLadder.
+		OUT area, PN_Ref, PNF_None, CNavArea, #The top forward CNavArea of the CNavLadder.
+	}
+	PURE SERVER GetTopLeftArea
+	{
+		DESC Returns the top left CNavArea of the CNavLadder.
+		OUT area, PN_Ref, PNF_None, CNavArea, #The top left CNavArea of the CNavLadder.
+	}
+	PURE SERVER GetTopRightArea
+	{
+		DESC Returns the top right CNavArea of the CNavLadder.
+		OUT area, PN_Ref, PNF_None, CNavArea, #The top right CNavArea of the CNavLadder.
+	}
+	PURE SERVER GetWidth
+	{
+		DESC Returns the width of the ladder in Hammer Units.
+		OUT width, PN_Number, #The width of the ladder in Hammer Units.
+	}
+	FUNC SERVER IsConnectedAtSide
+	{
+		DESC Returns whether this CNavLadder has an outgoing ( one or two way ) connection to given CNavArea in given direction.
+		IN navArea, PN_Ref, PNF_None, CNavArea, #The CNavArea to test against.
+		IN navDirType, PN_Enum, PNF_None, NavDir, #The direction, in which to look for the connection. See NavDir_ Enums
+		OUT connected, PN_Bool, #Whether this CNavLadder has an outgoing ( one or two way ) connection to given CNavArea in given direction.
+	}
+	FUNC SERVER IsValid
+	{
+		DESC Returns whether this CNavLadder is valid or not.
+		OUT valid, PN_Bool, #Whether this CNavLadder is valid or not.
+	}
+	FUNC SERVER Remove
+	{
+		DESC Removes the given nav ladder.
+	}
+	FUNC SERVER SetBottomArea
+	{
+		DESC Sets the bottom area of the CNavLadder.
+		IN area, PN_Ref, PNF_None, CNavArea
+	}
+	FUNC SERVER SetTopBehindArea
+	{
+		DESC Sets the top behind area of the CNavLadder.
+		IN area, PN_Ref, PNF_None, CNavArea
+	}
+	FUNC SERVER SetTopForwardArea
+	{
+		DESC Sets the top forward area of the CNavLadder.
+		IN area, PN_Ref, PNF_None, CNavArea
+	}
+	FUNC SERVER SetTopLeftArea
+	{
+		DESC Sets the top left area of the CNavLadder.
+		IN area, PN_Ref, PNF_None, CNavArea
+	}
+	FUNC SERVER SetTopRightArea
+	{
+		DESC Sets the top right area of the CNavLadder.
+		IN area, PN_Ref, PNF_None, CNavArea
+	}
+}
