@@ -1,23 +1,243 @@
-CLASS Player, player
+CLASS Player
 {
+	FUNC SHARED AccountID
+	{
+		DESC Returns the player's AccountID aka SteamID3.
+		OUT steamID, PN_Number, #Player's SteamID3 aka AccountID.
+	}
+	FUNC SHARED AddCleanup
+	{
+		DESC  string type
+		IN type, PN_String, #Cleanup type
+		IN ent, PN_Ref, PNF_None, Entity, #Entity to add
+	}
+	FUNC SHARED AddCount
+	{
+		DESC Adds an entity to the total count of entities of same class. 
+		IN str, PN_String, #Entity type
+		IN ent, PN_Ref, PNF_None, Entity, #Entity
+	}
+	FUNC SERVER AddDeaths
+	{
+		DESC Add a certain amount to the player's death count
+		IN count, PN_Number, #number of deaths to add
+	}
+	FUNC SERVER AddFrags
+	{
+		DESC Add a certain amount to the player's frag count (or kills count)
+		IN count, PN_Number, #number of frags to add
+	}
+	FUNC SERVER AddFrozenPhysicsObject
+	{
+		DESC Adds a entity to the players list of frozen objects.
+		IN ent, PN_Ref, PNF_None, Entity, #Entity
+		IN physobj, PN_Ref, PNF_None, PhysObj, #Physics object belonging to ent
+	}
+	FUNC CLIENT AddPlayerOption
+	{
+		DESC Sets up the voting system for the player. This is a really barebone system. By calling this a vote gets started, when the player presses 0-9 the callback function gets called along with the key the player pressed. Use the draw callback to draw the vote panel.
+		IN name, PN_String, #Name of the vote
+		IN timeout, PN_Number, #Time until the vote expires
+		IN vote_callback, PN_Ref, PNF_None, function, #The function to be run when the player presses 0-9 while a vote is active.
+		IN draw_callback, PN_Ref, PNF_None, function, #Used to draw the vote panel.
+	}
+	FUNC SHARED AddVCDSequenceToGestureSlot
+	{
+		DESC Plays a sequence directly from a sequence number, similar to Player:AnimRestartGesture. This function has the advantage to play sequences that haven't been bound to an existing ACT_ Enums
+		IN slot, PN_Enum, PNF_None, GESTURE, #Gesture slot using GESTURE_SLOT_ Enums
+		IN sequenceId, PN_Number, #The sequence ID to play, can be retrieved with Entity:LookupSequence.
+		IN cycle, PN_Number, #The cycle to start the animation at, ranges from 0 to 1.
+		IN autokill, PN_Bool, PNF_Nullable, #If the animation should not loop. true = stops the animation, false = the animation keeps playing.
+	}
 	PURE SHARED Alive
 	{
 		DESC Checks if the player is alive.
 		OUT alive, PN_Bool, #Whether the player is alive
+	}
+	FUNC SHARED AllowFlashlight
+	{
+		DESC Sets if the player can toggle his flashlight. Function exists on both the server and client but has no effect when ran on the client.
+		IN canFlashlight, PN_Bool, #True allows flashlight toggling
+	}
+	FUNC SERVER AllowImmediateDecalPainting
+	{
+		DESC Lets the player spray his decal without delay
+		IN allow, PN_Bool, #Allow or disallow
+	}
+	FUNC SHARED AnimResetGestureSlot
+	{
+		DESC Resets player gesture in selected slot.
+		IN slot, PN_Enum, PNF_None, GESTURE, #Slot to reset. See the GESTURE_SLOT_ Enums.
+	}
+	FUNC SHARED AnimRestartGesture
+	{
+		DESC Restart a gesture on a player, within a gesture slot.
+		IN slot, PN_Enum, PNF_None, GESTURE, #Gesture slot using GESTURE_SLOT_ Enums
+		IN activity, PN_Enum, PNF_None, ACT, #The activity ( see ACT_ Enums ) or sequence that should be played
+		IN autokill, PN_Bool, PNF_Nullable, #Whether the animation should be automatically stopped. true = stops the animation, false = the animation keeps playing/looping
+	}
+	FUNC SHARED AnimRestartMainSequence
+	{
+		DESC Restarts the main animation on the player, has the same effect as calling Entity:SetCycle( 0 ).
+	}
+	FUNC SHARED AnimSetGestureSequence
+	{
+		DESC Sets the sequence of the animation playing in the given gesture slot.
+		IN slot, PN_Enum, PNF_None, GESTURE, #The gesture slot. See GESTURE_SLOT_ Enums
+		IN sequenceID, PN_Number, #Sequence ID to set.
+	}
+	FUNC SHARED AnimSetGestureWeight
+	{
+		DESC Sets the weight of the animation playing in the given gesture slot.
+		IN slot, PN_Enum, PNF_None, GESTURE, #The gesture slot. See GESTURE_SLOT_ Enums
+		IN weight, PN_Number, #The weight this slot should be set to. Value must be ranging from 0 to 1.
+	}
+	FUNC SHARED Armor
+	{
+		DESC Returns the player's armor.
+		OUT armor, PN_Number, #The player's armor.
+	}
+	FUNC SERVER Ban
+	{
+		DESC Bans the player from the server for a certain amount of minutes.
+		IN minutes, PN_Number, #Duration of the ban in minutes (0 is permanent)
+		IN kick, PN_Bool, PNF_Nullable, #Whether to kick the player after banning then or not
+	}
+	PURE SHARED CanUseFlashlight
+	{
+		DESC Returns true if the player's flashlight hasn't been disabled by Player:AllowFlashlight.
+		OUT canUse, PN_Bool, #Whether the player can use flashlight.
 	}
 	FUNC SHARED ChatPrint
 	{
 		DESC Prints a string to the chatbox of the client.
 		IN message, PN_String, #String to be printed
 	}
+	PURE SHARED CheckLimit
+	{
+		DESC Checks if the limit is hit or not. If it is, it will throw a notification saying so.
+		IN limitType, PN_String, #Limit type. In unmodified Sandbox possible values are: "props" "ragdolls" "vehicles" "effects" "balloons" "cameras" "npcs" "sents" "dynamite" "lamps" "lights" "wheels" "thrusters" "hoverballs" "buttons" "emitters"
+		OUT hitLimit, PN_Bool, #Returns true if limit is not hit, false if it is hit
+	}
+	FUNC SHARED ConCommand
+	{
+		DESC Runs the concommand on the player. This does not work on bots.
+		IN command, PN_String, #command to run
+	}
 	FUNC SERVER CreateRagdoll
 	{
 		DESC Creates the player's ragdoll entity. This is normally used when a player dies, to create their death ragdoll. The ragdoll will be created with the player's properties such as Position, Angles, PlayerColor, Velocity and Model. You can retrieve the entity this creates with Player:GetRagdollEntity. 
 	}
+	FUNC SERVER CrosshairDisable
+	{
+		DESC Disables the default player's crosshair. Can be reenabled with Player:CrosshairEnable. This will affect WEAPON:DoDrawCrosshair.
+	}
+	FUNC SERVER CrosshairEnable
+	{
+		DESC Enables the player's crosshair, if it was previously disabled via Player:CrosshairDisable.
+	}
 	PURE SHARED Crouching
 	{
 		DESC Returns whether the player is crouching or not
-		OUT crouching PN_Bool, #Whether the player is crouching
+		OUT crouching, PN_Bool, #Whether the player is crouching
+	}
+	PURE SHARED Deaths
+	{
+		DESC Returns the player's death count
+		OUT deaths, PN_Number, #The number of deaths the player has had.
+	}
+	FUNC SERVER DebugInfo
+	{
+		DESC Prints the players' name and position to the console.
+	}
+	FUNC SERVER DetonateTripmines
+	{
+		DESC Detonates all tripmines belonging to the player.
+	}
+	FUNC SHARED DoAnimationEvent
+	{
+		DESC Sends a third person animation event to the player.
+		IN data, PN_Number, #The data to send.
+	}
+	FUNC SHARED DoAttackEvent
+	{
+		DESC Starts the player's attack animation. The attack animation is determined by the weapon's HoldType.
+	}
+	FUNC SHARED DoCustomAnimEvent
+	{
+		DESC Sends a specified third person animation event to the player.
+		IN event, PN_Enum, PNF_None, PLAYERANIMEVENT, #The event to send. See PLAYERANIMEVENT_ Enums.
+		IN data, PN_Number, #The data to send alongside the event.
+	}
+	FUNC SHARED DoReloadEvent
+	{
+		DESC Sends a third person reload animation event to the player.
+	}
+	FUNC SHARED DoSecondaryAttack
+	{
+		DESC Sends a third person secondary fire animation event to the player.
+	}
+	FUNC SHARED DrawViewModel
+	{
+		DESC Show/Hide the player's weapon's viewmodel.
+		IN draw, PN_Bool, #Should draw
+		IN vm, PN_Number, PNF_Nullable, #Which view model to show/hide, 0-2.
+	}
+	FUNC SERVER DrawWorldModel
+	{
+		DESC Show/Hide the player's weapon's worldmodel.
+		IN draw, PN_Bool, #Should draw
+	}
+	FUNC SERVER DropNamedWeapon
+	{
+		DESC Drops the players' weapon of a specific class.
+		IN class, PN_String, #The class to drop.
+		IN target, PN_Vector, PNF_Nullable, #If set, launches the weapon at given position. There is a limit to how far it is willing to throw the weapon. Overrides velocity argument.
+		IN velocity, PN_Vector, PNF_Nullable, #If set and previous argument is unset, launches the weapon with given velocity. If the velocity is higher than 400, it will be clamped to 400.
+	}
+	FUNC SERVER DropObject
+	{
+		DESC Drops any object the player is currently holding with either gravitygun or +Use (E key)
+	}
+	FUNC SERVER DropWeapon
+	{
+		DESC Forces the player to drop the specified weapon
+		IN weapon, PN_Ref, PNF_Nullable, Weapon, #Weapon to be dropped. If unset, will default to the currently equipped weapon.
+		IN target, PN_Vector, PNF_Nullable, #If set, launches the weapon at given position. There is a limit to how far it is willing to throw the weapon. Overrides velocity argument.
+		IN velocity, PN_Vector, PNF_Nullable, #If set and previous argument is unset, launches the weapon with given velocity. If the velocity is higher than 400, it will be clamped to 400.
+	}
+	FUNC SERVER EnterVehicle
+	{
+		DESC Enters the player into specified vehicle
+		IN vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player will enter
+	}
+	FUNC SERVER EquipSuit
+	{
+		DESC Equips the player with the HEV suit.
+	}
+	FUNC SERVER ExitVehicle
+	{
+		DESC Makes the player exit the vehicle if they're in one.
+	}
+	FUNC SERVER Flashlight
+	{
+		DESC Enables/Disables the player's flashlight
+		IN isOn, PN_Bool, #Turns the flashlight on/off
+	}
+	PURE SHARED FlashlightIsOn
+	{
+		DESC Returns true if the player's flashlight is on.
+		OUT on, PN_Bool, #Whether the player's flashlight is on.
+	}
+	PURE SHARED Frags
+	{
+		DESC Returns the amount of kills a player has.
+		OUT out_0, PN_Number, #kills
+	}
+	FUNC SERVER Freeze
+	{
+		DESC Freeze the player. Frozen players cannot move, look around, or attack. Key bindings are still called. Similar to Player:Lock but the player can still take damage.
+		IN frozen, PN_Bool, PNF_Nullable, #Whether the player should be frozen.
 	}
 	PURE SHARED GetActiveWeapon
 	{
@@ -27,33 +247,445 @@ CLASS Player, player
 	PURE SHARED GetAimVector
 	{
 		DESC Returns the direction that the player is aiming.
-		OUT dir, PN_Vector, #The direction vector of players aim
+		OUT vector, PN_Vector, #The direction vector of players aim
+	}
+	PURE SHARED GetAllowFullRotation
+	{
+		DESC Returns true if the players' model is allowed to rotate around the pitch and roll axis.
+		OUT allowed, PN_Bool, #Allowed
+	}
+	PURE SHARED GetAllowWeaponsInVehicle
+	{
+		DESC Returns whether the player is allowed to use his weapons in a vehicle or not.
+		OUT allowed, PN_Bool, #Whether the player is allowed to use his weapons in a vehicle or not.
+	}
+	PURE SHARED GetAmmo
+	{
+		DESC Returns a table of all ammo the player has.
+		OUT ammo, PN_Number, PNF_Table, #number Key: AmmoID to be used with functions like game.GetAmmoName. number Value: Amount of ammo the player has of this kind.
+	}
+	PURE SHARED GetAmmoCount
+	{
+		DESC Gets the amount of ammo the player has.
+		IN ammotype, PN_Any, #The ammunition type. Can be either number ammo ID or string ammo name.
+		OUT count, PN_Number, #The amount of ammo player has in reserve.
+	}
+	PURE SHARED GetAvoidPlayers
+	{
+		DESC Gets if the player will be pushed out of nocollided players.
+		OUT pushed, PN_Bool, #pushed
+	}
+	PURE SHARED GetCanWalk
+	{
+		DESC Returns true if the player is able to walk using the (default) alt key.
+		OUT canWalk, PN_Bool, #AbleToWalk
+	}
+	PURE SHARED GetCanZoom
+	{
+		DESC Determines whenever the player is allowed to use the zoom functionality.
+		OUT canZoom, PN_Bool, #canZoom
+	}
+	PURE SHARED GetClassID
+	{
+		DESC Returns the player's class id.
+		OUT classID, PN_Number, #The player's class id.
+	}
+	PURE SHARED GetCount
+	{
+		DESC Gets total count of entities of same class.
+		IN type, PN_String, #Entity type to get count of.
+		IN minus, PN_Number, PNF_Nullable, #If specified, it will reduce the counter by this value. Works only serverside.
+	}
+	PURE SHARED GetCrouchedWalkSpeed
+	{
+		DESC Returns the crouched walk speed multiplier.
+		OUT speed, PN_Number, #The crouched walk speed multiplier.
+	}
+	PURE SHARED GetCurrentCommand
+	{
+		DESC Returns the last command which was sent by the specified player. Can only be used in a Predicted Hook.
+		OUT command, PN_Ref, PNF_None, CUserCmd, #Last user commands
+	}
+	PURE SHARED GetCurrentViewOffset
+	{
+		DESC Gets the actual view offset which equals the difference between the players actual position and their view when standing.
+		OUT offset, PN_Vector, #The actual view offset.
+	}
+	PURE SHARED GetDrivingEntity
+	{
+		DESC Gets the entity the player is currently driving.
+		OUT entity, PN_Ref, PNF_None, Entity, #DriveEntity
+	}
+	PURE SHARED GetDrivingMode
+	{
+		DESC Returns driving mode of the player. See Entity Driving.
+		OUT mode, PN_Number, #The drive mode ID or 0 if player doesn't use the drive system.
+	}
+	PURE SHARED GetDuckSpeed
+	{
+		DESC Returns a player's duck speed (in seconds)
+		OUT speed, PN_Number, #duckspeed
+	}
+	PURE SHARED GetEntityInUse
+	{
+		DESC Returns the entity the player is currently using, like func_tank mounted turrets or +use prop pickups.
+		OUT entity, PN_Ref, PNF_None, Entity, #Entity in use, or NULL entity otherwise. For +use prop pickups, this will be NULL clientside.
+	}
+	PURE SHARED GetEyeTrace
+	{
+		DESC Returns a table with information of what the player is looking at.
+		OUT trace, PN_Struct, PNF_None, TraceResult, #Trace information, see TraceResult structure
+	}
+	PURE SHARED GetEyeTraceNoCursor
+	{
+		DESC Returns the trace according to the players view direction, ignoring their mouse ( Holding C and moving the mouse in Sandbox ).
+		OUT trace, PN_Struct, PNF_None, TraceResult, #Trace result. See TraceResult structure
+	}
+	PURE SHARED GetFOV
+	{
+		DESC Returns the FOV of the player.
+		OUT FOV, PN_Number, #Field of view as a float
+	}
+	PURE CLIENT GetFriendStatus
+	{
+		DESC Returns the steam "relationship" towards the player.
+		OUT status, PN_String, #Should return one of four different things depending on their status on your friends list: "friend", "blocked", "none" or "requested".
+	}
+	PURE SHARED GetHands
+	{
+		DESC Gets the hands entity of a player
+		OUT hands, PN_Ref, PNF_None, Entity, #The hands entity if players has one
+	}
+	PURE SHARED GetHoveredWidget
+	{
+		DESC Returns the widget the player is hovering with his mouse.
+		OUT widget, PN_Ref, PNF_None, Entity, #The hovered widget.
+	}
+	PURE SHARED GetHull
+	{
+		DESC Gets the bottom base and the top base size of the player's hull.
+		OUT mins, PN_Vector, #Player's hull bottom base size
+		OUT maxs, PN_Vector, #Player's hull top base size
+	}
+	PURE SHARED GetHullDuck
+	{
+		DESC Gets the bottom base and the top base size of the player's crouch hull.
+		OUT mins, PN_Vector, #Player's crouch hull bottom base size
+		OUT maxs, PN_Vector, #Player's crouch hull top base size
+	}
+	PURE SERVER GetInfo
+	{
+		DESC Retrieves the value of a client-side ConVar. The ConVar must have a FCVAR_USERINFO flag for this to work.
+		IN cVarName, PN_String, #The name of the client-side ConVar
+		OUT value, PN_String, #The value of the ConVar
+	}
+	PURE SERVER GetInfoNum
+	{
+		DESC Retrieves the numeric value of a client-side convar, returns nil if value is not convertible to a number. The ConVar must have a FCVAR_USERINFO flag for this to work.
+		IN cVarName, PN_String, #The name of the ConVar to query the value of
+		IN default, PN_Number, #Default value if we failed to retrieve the number.
+		OUT value, PN_Number, #The value of the ConVar or the default value
+	}
+	PURE SHARED GetJumpPower
+	{
+		DESC Returns the jump power of the player
+		OUT power, PN_Number, #Jump power
+	}
+	PURE SHARED GetLaggedMovementValue
+	{
+		DESC Returns the timescale multiplier of the player movement.
+		OUT value, PN_Number, #The timescale multiplier, defaults to 1.
+	}
+	PURE SHARED GetMaxSpeed
+	{
+		DESC Returns the player's maximum movement speed.
+		OUT maxSpeed, PN_Number, #The maximum movement speed the player can go at.
+	}
+	PURE SHARED GetName
+	{
+		DESC Returns the player's name, this is an alias of Player:Nick.
+		OUT name, PN_String, #The player's name. BUG	 This is limited to 31 characters even though Steam names can have 32. Issue Tracker: #3178
+	}
+	PURE SHARED GetNoCollideWithTeammates
+	{
+		DESC Returns whenever the player is set not to collide with their teammates.
+		OUT noCollide, PN_Bool, #noCollideWithTeammates
+	}
+	PURE SHARED GetObserverMode
+	{
+		DESC Returns the the observer mode of the player
+		OUT mode, PN_Enum, PNF_None, OBS, #Observe mode of that player, see OBS_MODE_ Enums.
+	}
+	PURE SHARED GetObserverTarget
+	{
+		DESC Returns the entity the player is currently observing.
+		OUT target, PN_Ref, PNF_None, Entity, #The entity the player is currently spectating, or NULL if the player has no target.
+	}
+	PURE SHARED GetPData
+	{
+		DESC Returns a Player Data key-value pair from the SQL database. (sv.db when called on server, cl.db when called on client)
+		IN key, PN_String, #Name of the PData key
+		IN default, PN_Any, PNF_Nullable, #Default value if PData key doesn't exist.
+		OUT data, PN_String, #The data in the SQL database or the default value given.
+	}
+	PURE SHARED GetPlayerColor
+	{
+		DESC Returns a player model's color. The part of the model that is colored is determined by the model itself, and is different for each model. The format is Vector(r,g,b), and each color should be between 0 and 1.
+		OUT color, PN_Vector, #color
+	}
+	PURE CLIENT GetPlayerInfo
+	{
+		DESC Returns a table containing player information.
+		OUT info, PN_Any, PNF_Table, #A table containing player information.
+	}
+	PURE SERVER GetPreferredCarryAngles
+	{
+		DESC Returns the preferred carry angles of an object, if any are set.
+		IN carryEnt, PN_Ref, PNF_None, Entity, #Entity to retrieve the carry angles of.
+		OUT angles, PN_Angles, #Carry angles or nil if the entity has no preferred carry angles.
+	}
+	PURE SHARED GetPressedWidget
+	{
+		DESC Returns the widget entity the player is using.
+		OUT widget, PN_Ref, PNF_None, Entity, #The pressed widget.
+	}
+	PURE SHARED GetPunchAngle
+	{
+		DESC Returns players screen punch effect angle.
+		OUT angles, PN_Angles, #The punch angle
+	}
+	PURE SHARED GetRagdollEntity
+	{
+		DESC Returns players death ragdoll. The ragdoll is created by Player:CreateRagdoll.
+		OUT ragdoll, PN_Ref, PNF_None, Entity, #The ragdoll. Unlike normal clientside ragdolls (C_ClientRagdoll), this will be a C_HL2MPRagdoll on the client, and hl2mp_ragdoll on the server.
+	}
+	PURE SHARED GetRenderAngles
+	{
+		DESC Returns the render angles for the player.
+		OUT angles, PN_Angles, #The render angles of the player. Only yaw part of the angle seems to be present.
+	}
+	PURE SHARED GetRunSpeed
+	{
+		DESC Returns the player's sprint speed.
+		OUT speed, PN_Number, #The sprint speed
 	}
 	PURE SHARED GetShootPos
 	{
 		DESC Returns the position of a Player's view
 		OUT pos, PN_Vector, #aim pos
 	}
+	PURE SHARED GetStepSize
+	{
+		DESC Returns the maximum height player can step onto.
+		OUT size, PN_Number, #The maximum height player can get up onto without jumping, in hammer units.
+	}
+	PURE SERVER GetTimeoutSeconds
+	{
+		DESC Returns the number of seconds that the player has been timing out for. You can check if a player is timing out with Player:IsTimingOut.
+		OUT seconds, PN_Number, #Timeout seconds.
+	}
+	PURE SHARED GetTool
+	{
+		DESC Returns TOOL table of players current tool, or of the one specified.
+		IN mode, PN_String, PNF_Nullable, #Classname of the tool to retrieve. ( Filename of the tool in gmod_tool/stools/ )
+		OUT tool, PN_Ref, PNF_None, Tool, #TOOL table, or nil if the table wasn't found or the player doesn't have a tool gun.
+	}
+	PURE SHARED GetUnDuckSpeed
+	{
+		DESC Returns a player's unduck speed (in seconds)
+		OUT speed, PN_Number, #unduck speed
+	}
+	PURE SHARED GetUserGroup
+	{
+		DESC Returns the player's user group.
+		OUT group, PN_String, #The user group of the player. This will return "user" if player has no user group.
+	}
+	PURE SHARED GetVehicle
+	{
+		DESC Gets the vehicle the player is driving, returns NULL ENTITY if the player is not driving.
+		OUT vehicle, PN_Ref, PNF_None, Vehicle, #vehicle
+	}
+	PURE SHARED GetViewEntity
+	{
+		DESC Returns the entity the player is using to see from (such as the player itself, the camera, or another entity).
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity the player is using to see from
+	}
+	PURE SHARED GetViewModel
+	{
+		DESC Returns the player's view model entity by the index. Each player has 3 view models by default, but only the first one is used.
+		IN index, PN_Number, PNF_Nullable, #optional index of the view model to return, can range from 0 to 2
+		OUT viewModel, PN_Ref, PNF_None, Entity, #The view model entity
+	}
+	PURE SHARED GetViewOffset
+	{
+		DESC Returns the view offset of the player which equals the difference between the players actual position and their view.
+		OUT offset, PN_Vector, #New view offset, must be local vector to players Entity:GetPos
+	}
+	PURE SHARED GetViewOffsetDucked
+	{
+		DESC Returns the view offset of the player which equals the difference between the players actual position and their view when ducked.
+		OUT offset, PN_Vector, #New crouching view offset, must be local vector to players Entity:GetPos
+	}
+	PURE SHARED GetViewPunchAngles
+	{
+		DESC Returns players screen punch effect angle.
+		OUT angles, PN_Angles, #The punch angle
+	}
+	PURE SHARED GetWalkSpeed
+	{
+		DESC Returns the player's normal walking speed. Not sprinting, not slow walking. (+walk)
+		OUT speed, PN_Number, #The normal walking speed.
+	}
 	PURE SHARED GetWeapon
 	{
 		DESC Returns the weapon for the specified class
-		IN class, PN_String, #Class name of weapon
+		IN className, PN_String, #Class name of weapon
 		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon for the specified class.
+	}
+	PURE SHARED GetWeaponColor
+	{
+		DESC Returns a player's weapon color. The part of the model that is colored is determined by the model itself, and is different for each model. The format is Vector(r,g,b), and each color should be between 0 and 1.
+		OUT color, PN_Vector, #color
+	}
+	PURE SHARED GetWeapons
+	{
+		DESC Returns a table of the player's weapons.
+		OUT weapons, PN_Ref, PNF_Table, Weapon, #All the weapons the player currently has.
 	}
 	FUNC SERVER Give
 	{
 		DESC Gives the player a weapon.
-		IN class, PN_String, #Class name of weapon to give the player
-		IN bNoAmmo=false, PN_Bool, PNF_Nullable, #Set to true to not give any ammo on weapon spawn. (Reserve ammo set by DefaultClip)
+		IN weaponClassName, PN_String, #Class name of weapon to give the player
+		IN bNoAmmo, PN_Bool, PNF_Nullable, #Set to true to not give any ammo on weapon spawn. (Reserve ammo set by DefaultClip)
 		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon given to the player, if one was given. It will return NULL if the player already has the weapon, or the weapon entity (entity with given classname) doesn't exist.
 	}
 	FUNC SERVER GiveAmmo
 	{
 		DESC Gives ammo to a player
 		IN amount, PN_Number, #Amount of ammo
-		IN type, PN_String, #Type of ammo.
-		IN hidePopup=false, PN_Bool, PNF_Nullable, #Hide display popup when giving the ammo
-		OUT ammo, PN_Number, #Ammo given.
+		IN type, PN_String, #Type of ammo. This can also be a number for ammo ID, useful for custom ammo types. You can find a list of default ammo types here.
+		IN hidePopup, PN_Bool, PNF_Nullable, #Hide display popup when giving the ammo
+		OUT ammoID, PN_Number, #Ammo given.
+	}
+	FUNC SERVER GodDisable
+	{
+		DESC Disables god mode on the player.
+	}
+	FUNC SERVER GodEnable
+	{
+		DESC Enables god mode on the player.
+	}
+	PURE SHARED HasGodMode
+	{
+		DESC Returns whether the player has god mode or not, contolled by Player:GodEnable and Player:GodDisable.
+		OUT godMode, PN_Bool, #Whether the player has god mode or not.
+	}
+	PURE SHARED HasWeapon
+	{
+		DESC Returns if the player has the specified weapon
+		IN className, PN_String, #Class name of the weapon
+		OUT hasWeapon, PN_Bool, #True if the player has the weapon
+	}
+	PURE SHARED InVehicle
+	{
+		DESC Returns if the player is in a vehicle
+		OUT inVehicle, PN_Bool, #Whether the player is in a vehicle.
+	}
+	PURE SERVER IPAddress
+	{
+		DESC Returns the player's IP address and connection port in ip:port form
+		OUT address, PN_String, #The player's IP address and connection port
+	}
+	PURE SHARED IsAdmin
+	{
+		DESC Returns whether the player is an admin or not
+		OUT admin, PN_Bool, #True if the player is an admin
+	}
+	PURE SHARED IsBot
+	{
+		DESC Returns if the player is an bot or not
+		OUT bot, PN_Bool, #True if the player is a bot.
+	}
+	PURE SERVER IsConnected
+	{
+		DESC Returns true from the point when the player is sending client info but not fully in the game until they disconnect.
+		OUT connected, PN_Bool, #isConnected
+	}
+	PURE SHARED IsDrivingEntity
+	{
+		DESC Used to find out if a player is currently 'driving' an entity (by which we mean 'right click > drive' ).
+		OUT driving, PN_Bool, #A value representing whether or not the player is 'driving' an entity.
+	}
+	PURE SHARED IsFrozen
+	{
+		DESC Returns whether the players movement is currently frozen, contolled by Player:Freeze.
+		OUT frozen, PN_Bool, #Whether the players movement is currently frozen or not.
+	}
+	PURE SERVER IsFullyAuthenticated
+	{
+		DESC Returns whether the player identity was confirmed by the steam network.
+		OUT authenticated, PN_Bool, #Whether the player has been fully authenticated or not. This will always be true for singleplayer and the listen server host. This will always be false for bots.
+	}
+	PURE SERVER IsListenServerHost
+	{
+		DESC Returns if a player is the host of the current session.
+		OUT host, PN_Bool, #True if the player is the listen server host, false otherwise. This will always be true in single player, and false on a dedicated server.
+	}
+	PURE CLIENT IsMuted
+	{
+		DESC Returns whether or not the player is muted locally.
+		OUT muted, PN_Bool, #whether or not the player is muted locally.
+	}
+	PURE SHARED IsPlayingTaunt
+	{
+		DESC Returns true if the player is playing a taunt.
+		OUT taunting, PN_Bool, #Whether the player is playing a taunt.
+	}
+	PURE CLIENT IsSpeaking
+	{
+		DESC Returns whenever the player is heard by the local player.
+		OUT speaking, PN_Bool, #isSpeaking
+	}
+	PURE SHARED IsSprinting
+	{
+		DESC Returns whether the player is currently sprinting or not.
+		OUT sprinting, PN_Bool, #Is the player sprinting or not
+	}
+	PURE SHARED IsSuitEquipped
+	{
+		DESC Returns whenever the player is equipped with the suit item.
+		OUT suit, PN_Bool, #Is the suit equipped or not.
+	}
+	PURE SHARED IsSuperAdmin
+	{
+		DESC Returns whether the player is a superadmin.
+		OUT superAdmin, PN_Bool, #True if the player is a superadmin.
+	}
+	PURE SERVER IsTimingOut
+	{
+		DESC Returns true if the player is timing out (i.e. is losing connection), false otherwise.
+		OUT timingOut, PN_Bool, #isTimingOut
+	}
+	PURE SHARED IsTyping
+	{
+		DESC Returns whether the player is typing in their chat.
+		OUT typing, PN_Bool, #Whether the player is typing in their chat or not.
+	}
+	PURE SHARED IsUserGroup
+	{
+		DESC Returns true/false if the player is in specified group or not.
+		IN groupname, PN_String, #Group to check the player for.
+		OUT inGroup, PN_Bool, #isInUserGroup
+	}
+	PURE CLIENT IsVoiceAudible
+	{
+		DESC Returns if the player can be heard by the local player.
+		OUT audible, PN_Bool, #isAudible
+	}
+	PURE SHARED IsWorldClicking
+	{
+		DESC Returns if the player is in the context menu.
+		OUT clicking, PN_Bool, #Is the player world clicking or not.
 	}
 	PURE SHARED KeyDown
 	{
@@ -61,10 +693,28 @@ CLASS Player, player
 		IN key, PN_Enum, PNF_None, IN, #The key, see IN_ Enums
 		OUT down, PN_Bool, #isDown
 	}
+	PURE SHARED KeyDownLast
+	{
+		DESC Gets whether a key was down one tick ago.
+		IN key, PN_Enum, PNF_None, IN, #The key, see IN_ Enums
+		OUT down, PN_Bool, #Is key down
+	}
+	PURE SHARED KeyPressed
+	{
+		DESC Gets whether a key was just pressed this tick
+		IN key, PN_Enum, PNF_None, IN, #Corresponds to an IN_ Enums
+		OUT pressed, PN_Bool, #Was pressed or not
+	}
+	PURE SHARED KeyReleased
+	{
+		DESC Gets whether a key was just released this tick
+		IN key, PN_Enum, PNF_None, IN, #The key, see IN_ Enums
+		OUT released, PN_Bool, #Was released or not
+	}
 	FUNC SERVER Kick
 	{
 		DESC Kicks the player from the server.
-		IN reason=No reason, PN_String, #Reason to show for disconnection.
+		IN reason, PN_String, PNF_Nullable, #Reason to show for disconnection. WARNING	 This will be shortened to ~512 chars, though this includes the command itself and the player index so will realistically be more around ~498. It is recommended to avoid going near the limit to avoid truncation.
 	}
 	FUNC SERVER Kill
 	{
@@ -74,15 +724,71 @@ CLASS Player, player
 	{
 		DESC Kills a player without notifying the rest of the server.
 	}
+	FUNC SHARED LagCompensation
+	{
+		DESC This allows the server to mitigate the lag of the player by moving back all the entities that can be lag compensated to the time the player attacked with his weapon.
+		IN lagCompensation, PN_Bool, #The state of the lag compensation, true to enable and false to disable.
+	}
+	PURE SERVER LastHitGroup
+	{
+		DESC Returns the hitgroup where the player was last hit.
+		OUT hitGroup, PN_Enum, PNF_None, HITGROUP, #Hitgroup, see HITGROUP_ Enums
+	}
+	PURE SHARED LimitHit
+	{
+		DESC Shows "limit hit" notification in sandbox. 
+		IN type, PN_String, #Type of hit limit
+	}
+	FUNC SERVER Lock
+	{
+		DESC Stops a player from using any inputs, such as moving, turning, or attacking. Key binds are still called. Similar to Player:Freeze but the player takes no damage.
+	}
+	PURE SHARED MotionSensorPos
+	{
+		DESC Returns the position of a Kinect bone.
+		IN bone, PN_Number, #Bone to get the position of. Must be from 0 to 19.
+		OUT pos, PN_Vector, #Position of the bone.
+	}
 	PURE SHARED Name
 	{
 		DESC Returns the players name. Identical to Player:Nick and Player:GetName.
-		OUT name, PN_String, #Player's Steam name.
+		OUT name, PN_String, #Player's Steam name. BUG	 This is limited to 31 characters even though Steam names can have 32. Issue Tracker: #3178
 	}
 	PURE SHARED Nick
 	{
 		DESC Returns the player's nickname.
-		OUT name, PN_String, #Player's Steam name
+		OUT name, PN_String, #Player's Steam name BUG	 This is limited to 31 characters even though Steam names can have 32. Issue Tracker: #3178
+	}
+	PURE SHARED PacketLoss
+	{
+		DESC Returns the packet loss of the client. It is not networked so it only returns 0 when run clientside.
+		OUT packetLoss, PN_Number, #Packets lost
+	}
+	FUNC SHARED PhysgunUnfreeze
+	{
+		DESC Unfreezes the props player is looking at. This is essentially the same as pressing reload with the physics gun, including double press for unfreeze all.
+		OUT count, PN_Number, #Number of props unfrozen.
+	}
+	FUNC SERVER PickupObject
+	{
+		DESC This makes the player hold ( same as pressing E on a small prop ) the provided entity.
+		IN entity, PN_Ref, PNF_None, Entity, #Entity to pick up.
+	}
+	PURE SHARED Ping
+	{
+		DESC Returns the player's ping to server.
+		OUT ping, PN_Number, #The player's ping.
+	}
+	FUNC SERVER PlayStepSound
+	{
+		DESC Plays the correct step sound according to what the player is staying on.
+		IN volume, PN_Number, #Volume for the sound, in range from 0 to 1
+	}
+	FUNC SHARED PrintMessage
+	{
+		DESC Displays a message either in their chat, console, or center of the screen. See also PrintMessage.
+		IN type, PN_Number, #Which type of message should be sent to the player (HUD_ Enums)
+		IN message, PN_String, #Message to be sent to the player
 	}
 	FUNC SERVER RemoveAllAmmo
 	{
@@ -92,50 +798,459 @@ CLASS Player, player
 	{
 		DESC Removes all weapons and ammo from the player.
 	}
+	FUNC SHARED RemoveAmmo
+	{
+		DESC Removes the amount of the specified ammo from the player.
+		IN ammoCount, PN_Number, #The amount of ammunition to remove.
+		IN ammoName, PN_String, #The name of the ammunition to remove from. This can also be a number ammoID.
+	}
+	FUNC SHARED RemovePData
+	{
+		DESC Removes a Player Data key-value pair from the SQL database. (sv.db when called on server, cl.db when called on client)
+		IN key, PN_String, #Key to remove
+		OUT success, PN_Bool, #true is succeeded, false otherwise
+	}
+	FUNC SERVER RemoveSuit
+	{
+		DESC Strips the player's suit item.
+	}
+	FUNC SHARED ResetHull
+	{
+		DESC Resets both normal and duck hulls to their default values.
+	}
 	FUNC SERVER Say
 	{
 		DESC Forces the player to say whatever the first argument is. Works on bots too.
 		IN text, PN_String, #The text to force the player to say.
-		IN teamOnly=false, PN_Bool, PNF_Nullable, #Whether to send this message to our own team only.
+		IN teamOnly, PN_Bool, PNF_Nullable, #Whether to send this message to our own team only.
+	}
+	FUNC SHARED ScreenFade
+	{
+		DESC Fades the screen
+		IN flags, PN_Enum, PNF_None, SCREENFADE, #Fade flags defined with SCREENFADE_ Enums.
+		IN clr, PN_Number, PNF_Nullable, #The color of the screenfade
+		IN fadeTime, PN_Number, #Fade(in/out) effect transition time ( From no fade to full fade and vice versa )
+		IN fadeHold, PN_Number, #Fade effect hold time
+	}
+	FUNC SERVER SelectWeapon
+	{
+		DESC Sets the active weapon of the player by its class name.
+		IN className, PN_String, #The class name of the weapon to switch to. If the player doesn't have the specified weapon, nothing will happen. You can use Player:Give to give the weapon first.
+	}
+	FUNC SERVER SendHint
+	{
+		DESC Sends a hint to a player.
+		IN name, PN_String, #Name/class/index of the hint. The text of the hint will contain this value. ( "#Hint_" .. name ) An example is PhysgunFreeze.
+		IN delay, PN_Number, #Delay in seconds before showing the hint
+	}
+	FUNC SERVER SetActiveWeapon
+	{
+		DESC Sets the player's active weapon. You should use CUserCmd:SelectWeapon or Player:SelectWeapon, instead in most cases.
+		IN weapon, PN_Ref, PNF_None, Weapon, #The weapon to equip.
+	}
+	FUNC SHARED SetAllowFullRotation
+	{
+		DESC Set if the players' model is allowed to rotate around the pitch and roll axis.
+		IN Allowed, PN_Bool, #Allowed to rotate
+	}
+	FUNC SERVER SetAllowWeaponsInVehicle
+	{
+		DESC Allows player to use his weapons in a vehicle. You need to call this before entering a vehicle.
+		IN allow, PN_Bool, #Show we allow player to use his weapons in a vehicle or not.
 	}
 	FUNC SHARED SetAmmo
 	{
 		DESC Sets the amount of the specified ammo for the player.
-		IN amount, PN_Number, #The amount of ammunition to set.
-		IN type, PN_Any, #The ammunition type. Can be either number ammo ID or string ammo name.
+		IN ammoCount, PN_Number, #The amount of ammunition to set.
+		IN ammoType, PN_Any, #The ammunition type. Can be either number ammo ID or string ammo name.
 	}
 	FUNC SERVER SetArmor
 	{
 		DESC Sets the player armor to the argument.
 		IN Amount, PN_Number, #The amount that the player armor is going to be set to.
 	}
+	FUNC SHARED SetAvoidPlayers
+	{
+		DESC Pushes the player away from another player whenever it's inside the other players bounding box.
+		IN avoidPlayers, PN_Bool, #Avoid or not avoid.
+	}
+	FUNC SHARED SetCanWalk
+	{
+		DESC Set if the player should be allowed to walk using the (default) alt key.
+		IN abletowalk, PN_Bool, #True allows the player to walk.
+	}
+	FUNC SERVER SetCanZoom
+	{
+		DESC Sets whether the player can use the HL2 suit zoom ("+zoom" bind) or not.
+		IN canZoom, PN_Bool, #Whether to make the player able or unable to zoom.
+	}
+	FUNC SHARED SetClassID
+	{
+		DESC Sets the player's class id.
+		IN classID, PN_Number, #The class id the player is being set with.
+	}
+	FUNC SHARED SetCrouchedWalkSpeed
+	{
+		DESC Sets the crouched walk speed multiplier.
+		IN speed, PN_Number, #The walk speed multiplier that crouch speed should be.
+	}
+	FUNC SHARED SetCurrentViewOffset
+	{
+		DESC Sets the actual view offset which equals the difference between the players actual position and their view when standing.
+		IN viewOffset, PN_Vector, #The new view offset.
+	}
+	FUNC SERVER SetDeaths
+	{
+		DESC Sets a player's death count
+		IN deathcount, PN_Number, #Number of deaths (positive or negative)
+	}
+	FUNC SHARED SetDrivingEntity
+	{
+		DESC Sets the driving entity and driving mode.
+		IN drivingEntity, PN_Ref, PNF_Nullable, Entity, #The entity the player should drive.
+		IN drivingMode, PN_Number, #The driving mode index.
+	}
+	FUNC SHARED SetDSP
+	{
+		DESC Applies the specified sound filter to the player.
+		IN soundFilter, PN_Number, #The index of the sound filter to apply. Pick from the list of DSP's.
+		IN fastReset, PN_Bool, #If set to true the sound filter will be removed faster.
+	}
+	FUNC SHARED SetDuckSpeed
+	{
+		DESC Sets how quickly a player ducks.
+		IN duckSpeed, PN_Number, #How quickly the player will duck.
+	}
+	FUNC SHARED SetEyeAngles
+	{
+		DESC Sets the angle of the player's view (may rotate body too if angular difference is large)
+		IN angle, PN_Angles, #Angle to set the view to
+	}
+	FUNC SHARED SetFOV
+	{
+		DESC Set a player's FOV (Field Of View) over a certain amount of time.
+		IN fov, PN_Number, #the angle of perception (FOV). Set to 0 to return to default user FOV. ( Which is ranging from 75 to 90, depending on user settings )
+		IN time, PN_Number, PNF_Nullable, #the time it takes to transition to the FOV expressed in a floating point.
+	}
+	FUNC SERVER SetFrags
+	{
+		DESC Sets a player's frags (kills)
+		IN fragcount, PN_Number, #Number of frags (positive or negative)
+	}
+	FUNC SHARED SetHands
+	{
+		DESC Sets the hands entity of a player.
+		IN hands, PN_Ref, PNF_None, Entity, #The hands entity to set
+	}
+	FUNC SHARED SetHoveredWidget
+	{
+		DESC Sets the widget that is currently hovered by the player's mouse.
+		IN widget, PN_Ref, PNF_Nullable, Entity, #The widget entity that the player is hovering.
+	}
+	FUNC SHARED SetHull
+	{
+		DESC Sets the mins and maxs of the AABB of the players collision.
+		IN mins, PN_Vector, #The min coordinates of the hull.
+		IN maxs, PN_Vector, #The max coordinates of the hull.
+	}
+	FUNC SHARED SetHullDuck
+	{
+		DESC Sets the mins and maxs of the AABB of the players collision when ducked.
+		IN mins, PN_Vector, #The min coordinates of the hull.
+		IN maxs, PN_Vector, #The max coordinates of the hull.
+	}
+	FUNC SHARED SetJumpPower
+	{
+		DESC Sets the jump power, eg. the velocity the player will applied to when he jumps.
+		IN jumpPower, PN_Number, #The new jump velocity.
+	}
+	FUNC SERVER SetLaggedMovementValue
+	{
+		DESC Slows down the player movement simulation by the timescale, this is used internally in the HL2 weapon stripping sequence.
+		IN timescale, PN_Number, #The timescale multiplier.
+	}
+	FUNC SHARED SetMaxSpeed
+	{
+		DESC Sets the maximum speed which the player can move at.
+		IN walkSpeed, PN_Number, #The maximum speed.
+	}
+	FUNC CLIENT SetMuted
+	{
+		DESC Sets if the player should be muted locally.
+		IN mute, PN_Bool, #Mute or unmute.
+	}
+	FUNC SERVER SetNoCollideWithTeammates
+	{
+		DESC Sets whenever the player should not collide with their teammates.
+		IN shouldNotCollide, PN_Bool, #True to disable, false to enable collision.
+	}
 	FUNC SERVER SetNoTarget
 	{
 		DESC Sets the players visibility towards NPCs.
-		IN visible, PN_Bool, #The visibility.
+		IN visibility, PN_Bool, #The visibility.
+	}
+	FUNC SHARED SetObserverMode
+	{
+		DESC Sets the players observer mode. You must start the spectating first with Player:Spectate.
+		IN mode, PN_Enum, PNF_None, OBS, #Spectator mode using OBS_MODE_ Enums.
+	}
+	FUNC SHARED SetPData
+	{
+		DESC Writes a Player Data key-value pair to the SQL database. (sv.db when called on server, cl.db when called on client)
+		IN key, PN_String, #Name of the PData key
+		IN value, PN_Any, #Value to write to the key (must be an SQL valid data type, such as a string or integer)
+		OUT success, PN_Bool, #Whether the operation was successful or not
+	}
+	FUNC SHARED SetPlayerColor
+	{
+		DESC Sets the player model's color. The part of the model that is colored is determined by the model itself, and is different for each model.
+		IN Color, PN_Vector, #This is the color to be set. The format is Vector(r,g,b), and each color should be between 0 and 1.
+	}
+	FUNC SHARED SetPressedWidget
+	{
+		DESC Sets the widget that is currently in use by the player's mouse.
+		IN pressedWidget, PN_Ref, PNF_Nullable, Entity, #The widget the player is currently using.
+	}
+	FUNC SHARED SetRenderAngles
+	{
+		DESC Sets the render angles of a player.
+		IN ang, PN_Angles, #The new render angles to set
+	}
+	FUNC SHARED SetRunSpeed
+	{
+		DESC Sets the player's sprint speed.
+		IN runSpeed, PN_Number, #The new sprint speed when sv_friction is below 10. Higher sv_friction values will result in slower speed. Has to be 7 or above or the player won't be able to move.
+	}
+	FUNC SHARED SetStepSize
+	{
+		DESC Sets the maximum height a player can step onto without jumping.
+		IN stepHeight, PN_Number, #The new maximum height the player can step onto without jumping
+	}
+	FUNC SHARED SetSuppressPickupNotices
+	{
+		DESC Sets whenever to suppress the pickup notification for the player.
+		IN doSuppress, PN_Bool, #Whenever to suppress the notice or not.
+	}
+	FUNC SERVER SetTeam
+	{
+		DESC Sets the player to the chosen team.
+		IN Team, PN_Number, #The team that the player is being set to.
+	}
+	FUNC SHARED SetUnDuckSpeed
+	{
+		DESC Sets how quickly a player un-ducks
+		IN UnDuckSpeed, PN_Number, #How quickly the player will un-duck
+	}
+	FUNC SERVER SetupHands
+	{
+		DESC Sets up the players view model hands. Calls GM:PlayerSetHandsModel to set the model of the hands.
+		IN ent, PN_Ref, PNF_None, Entity, #If the player is spectating an entity, this should be the entity the player is spectating, so we can use its hands model instead.
+	}
+	FUNC SERVER SetUserGroup
+	{
+		DESC Sets the usergroup of the player.
+		IN groupName, PN_String, #The user group of the player.
+	}
+	FUNC SERVER SetViewEntity
+	{
+		DESC Attaches the players view to the position and angles of the specified entity.
+		IN viewEntity, PN_Ref, PNF_None, Entity, #The entity to attach the player view to.
+	}
+	FUNC SHARED SetViewOffset
+	{
+		DESC Sets the desired view offset which equals the difference between the players actual position and their view when standing.
+		IN viewOffset, PN_Vector, #The new desired view offset when standing.
+	}
+	FUNC SHARED SetViewOffsetDucked
+	{
+		DESC Sets the desired view offset which equals the difference between the players actual position and their view when crouching.
+		IN viewOffset, PN_Vector, #The new desired view offset when crouching.
+	}
+	FUNC SHARED SetViewPunchAngles
+	{
+		DESC Sets client's view punch. See Player:ViewPunch
+		IN punchAngle, PN_Angles, #The angle to set.
+	}
+	FUNC SHARED SetWalkSpeed
+	{
+		DESC Sets the player's normal walking speed. Not sprinting, not slow walking +walk.
+		IN walkSpeed, PN_Number, #The new walk speed when sv_friction is below 10. Higher sv_friction values will result in slower speed. Has to be 7 or above or the player won't be able to move.
+	}
+	FUNC SHARED SetWeaponColor
+	{
+		DESC Sets the player weapon's color. The part of the model that is colored is determined by the model itself, and is different for each model.
+		IN Color, PN_Vector, #This is the color to be set. The format is Vector(r,g,b), and each color should be between 0 and 1.
+	}
+	PURE CLIENT ShouldDrawLocalPlayer
+	{
+		DESC Polls the engine to request if the player should be drawn at the time the function is called.
+		OUT shouldDraw, PN_Bool, #shouldDraw
+	}
+	FUNC SERVER ShouldDropWeapon
+	{
+		DESC Sets whether the player's current weapon should drop on death.
+		IN drop, PN_Bool, #Whether to drop the player's current weapon or not
+	}
+	FUNC CLIENT ShowProfile
+	{
+		DESC Opens the player steam profile page in the steam overlay browser.
+	}
+	FUNC SERVER SimulateGravGunDrop
+	{
+		DESC Signals the entity that it was dropped by the gravity gun.
+		IN ent, PN_Ref, PNF_None, Entity, #Entity that was dropped.
+	}
+	FUNC SERVER SimulateGravGunPickup
+	{
+		DESC Signals the entity that it was picked up by the gravity gun. This call is only required if you want to simulate the situation of picking up objects.
+		IN ent, PN_Ref, PNF_None, Entity, #The entity picked up
 	}
 	FUNC SERVER Spectate
 	{
 		DESC Starts spectate mode for given player. This will also affect the players movetype in some cases.
-		IN mode=OBS_MODE_CHASE, PN_Enum, PNF_None, OBS_MODE, #Spectate mode, see OBS_MODE_ Enums.
+		IN mode, PN_Enum, PNF_None, OBS, #Spectate mode, see OBS_MODE_ Enums.
 	}
 	FUNC SERVER SpectateEntity
 	{
 		DESC Makes the player spectate the entity
 		IN entity, PN_Ref, PNF_None, Entity, #Entity to spectate.
 	}
+	FUNC SERVER SprayDecal
+	{
+		DESC Makes a player spray their decal.
+		IN sprayOrigin, PN_Vector, #The location to spray from
+		IN sprayEndPos, PN_Vector, #The location to spray to
+	}
+	FUNC SERVER SprintDisable
+	{
+		DESC Disables the sprint on the player.
+	}
+	FUNC SERVER SprintEnable
+	{
+		DESC Enables the sprint on the player.
+	}
+	FUNC SHARED StartSprinting
+	{
+		DESC Doesn't appear to do anything.
+	}
+	FUNC SHARED StartWalking
+	{
+		DESC When used in a GM:SetupMove hook, this function will force the player to walk, as well as preventing the player from sprinting.
+	}
+	FUNC SHARED SteamID
+	{
+		DESC Returns the player's SteamID. In singleplayer, this will be STEAM_ID_PENDING serverside.
+		OUT steamID, PN_String, #SteamID
+	}
+	FUNC SHARED SteamID64
+	{
+		DESC Returns the player's 64bit SteamID aka CommunityID.
+		OUT steamID, PN_String, #Player's 64bit SteamID aka CommunityID.
+	}
+	FUNC SHARED StopSprinting
+	{
+		DESC When used in a GM:SetupMove hook, this function will prevent the player from sprinting.
+	}
+	FUNC SHARED StopWalking
+	{
+		DESC When used in a GM:SetupMove hook, this function behaves unexpectedly by preventing the player from sprinting similar to Player:StopSprinting.
+	}
+	FUNC SERVER StopZooming
+	{
+		DESC Turns off the zoom mode of the player. (+zoom console command)
+	}
+	FUNC SERVER StripAmmo
+	{
+		DESC Removes all ammo from the player.
+	}
 	FUNC SERVER StripWeapon
 	{
 		DESC Removes the specified weapon class from a certain player
-		IN class, PN_String, #The weapon class to remove
+		IN weapon, PN_String, #The weapon class to remove
+	}
+	FUNC SERVER StripWeapons
+	{
+		DESC Removes all weapons from a certain player
+	}
+	FUNC SERVER SuppressHint
+	{
+		DESC Prevents a hint from showing up. 
+		IN name, PN_String, #Hint name/class/index to prevent from showing up
+	}
+	FUNC SERVER SwitchToDefaultWeapon
+	{
+		DESC Attempts to switch the player weapon to the one specified in the "cl_defaultweapon" convar, if the player does not own the specified weapon nothing will happen.
+	}
+	PURE SHARED Team
+	{
+		DESC Returns the player's team ID.
+		OUT team, PN_Enum, PNF_None, TEAM, #The player's team's index number, as in the TEAM_ Enums or a custom team defined in team.SetUp.
+	}
+	PURE SERVER TimeConnected
+	{
+		DESC Returns the time in seconds since the player connected.
+		OUT time, PN_Number, #connectTime
+	}
+	FUNC SERVER TraceHullAttack
+	{
+		DESC Performs a trace hull and applies damage to the entities hit, returns the first entity hit.
+		IN startPos, PN_Vector, #The start position of the hull trace.
+		IN endPos, PN_Vector, #The end position of the hull trace.
+		IN mins, PN_Vector, #The minimum coordinates of the hull.
+		IN maxs, PN_Vector, #The maximum coordinates of the hull.
+		IN damage=10, PN_Number, #The damage to be applied.
+		IN damageFlags=DMG_GENERIC, PN_Enum, PNF_Bitfield, DMG, #Bitflag specifying the damage type, see DMG_ Enums.
+		IN damageForce=10, PN_Number, #The force to be applied to the hit object.
+		IN damageAllNPCs=true, PN_Bool, #Whether to apply damage to all hit NPCs or not.
+		OUT entity, PN_Ref, PNF_None, Entity, #The hit entity
+	}
+	FUNC SHARED TranslateWeaponActivity
+	{
+		DESC Translates ACT_ Enums according to the holdtype of players currently held weapon.
+		IN act, PN_Enum, PNF_None, ACT, #The initial ACT_ Enums
+		OUT translated, PN_Enum, PNF_None, ACT, #Translated ACT_ Enums
+	}
+	FUNC SHARED UnfreezePhysicsObjects
+	{
+		DESC Unfreezes all objects the player has frozen with their Physics Gun. Same as double pressing R while holding Physics Gun.
+	}
+	FUNC SHARED UniqueID
+	{
+		DESC This function has collisions, where more than one player has the same UniqueID. It is highly recommended to use Player:AccountID, Player:SteamID or Player:SteamID64 instead, which are guaranteed to be unique to each player.
+		OUT uniqueID, PN_Number, #The player's Unique ID
+	}
+	FUNC SHARED UniqueIDTable
+	{
+		DESC Returns a table that will stay allocated for the specific player between connects until the server shuts down. Note, that this table is not synchronized between client and server.
+		IN key, PN_Any, #Unique table key.
+		OUT table, PN_Any, PNF_Table, #The table that contains any info you have put in it.
+	}
+	FUNC SERVER UnLock
+	{
+		DESC Unlocks the player movement if locked previously. Will disable godmode for the player if locked previously.
 	}
 	FUNC SERVER UnSpectate
 	{
 		DESC Stops the player from spectating another entity.
 	}
+	FUNC SHARED UserID
+	{
+		DESC Returns the player's ID. You can use Player() to get the player by their ID.
+		OUT id, PN_Number, #The player's user ID
+	}
 	FUNC SHARED ViewPunch
 	{
 		DESC Simulates a push on the client's screen.
-		IN angles, PN_Angles, #The angle in which to push the player's screen.
+		IN PunchAngle, PN_Angles, #The angle in which to push the player's screen.
+	}
+	FUNC SHARED ViewPunchReset
+	{
+		DESC Resets the player's view punch ( Player:ViewPunch ) effect back to normal.
+		IN tolerance, PN_Number, PNF_Nullable, #Reset all ViewPunch below this threshold.
+	}
+	FUNC CLIENT VoiceVolume
+	{
+		DESC Returns the players voice volume, how loud the player's voice communication currently is, as a normal number. Doesn't work on local player unless the voice_loopback convar is set to 1.
+		OUT volume, PN_Number, #The voice volume.
 	}
 }

@@ -1,0 +1,266 @@
+CLASS Vehicle
+{
+	FUNC SERVER BoostTimeLeft
+	{
+		DESC Returns the remaining boosting time left.
+		OUT time, PN_Number, #The remaining boosting time left
+	}
+	FUNC SERVER CheckExitPoint
+	{
+		DESC Tries to find an Exit Point for leaving vehicle, if one is unobstructed in the direction given.
+		IN yaw, PN_Number, #Yaw/roll from vehicle angle to check for exit
+		IN distance, PN_Number, #Distance from origin to drop player
+		OUT exit, PN_Vector, #Returns the vector for exit position or nil if cannot exit that way.
+	}
+	FUNC SERVER EnableEngine
+	{
+		DESC Sets whether the engine is enabled or disabled, i.e. can be started or not.
+		IN enable, PN_Bool, #Enable or disable the engine
+	}
+	PURE CLIENT GetAmmo
+	{
+		DESC Returns information about the ammo of the vehicle
+		OUT ammoID, PN_Number, #Ammo type of the vehicle ammo
+		OUT clip, PN_Number, #Clip size
+		OUT count, PN_Number, #Count
+	}
+	PURE SHARED GetCameraDistance
+	{
+		DESC Returns third person camera distance.
+		OUT distance, PN_Number, #Camera distance
+	}
+	PURE SERVER GetDriver
+	{
+		DESC Gets the driver of the vehicle, returns NULL if no driver is present.
+		OUT driver, PN_Ref, PNF_None, Entity, #The driver of the vehicle
+	}
+	PURE SERVER GetHLSpeed
+	{
+		DESC Returns the current speed of the vehicle in Half-Life Hammer Units (in/s). Same as Entity:GetVelocity + Vector:Length.
+		OUT speed, PN_Number, #The speed of the vehicle
+	}
+	PURE SERVER GetMaxSpeed
+	{
+		DESC Returns the max speed of the vehicle in MPH.
+		OUT maxSpeed, PN_Number, #The max speed of the vehicle in MPH
+	}
+	PURE SERVER GetOperatingParams
+	{
+		DESC Returns some info about the vehicle.
+		OUT params, PN_Struct, PNF_None, OperatingParams, #The operating params. See OperatingParams structure.
+	}
+	PURE SERVER GetPassenger
+	{
+		DESC Gets the passenger of the vehicle, returns NULL if no drivers is present.
+		IN role, PN_Number, #The index of the passenger
+		OUT entity, PN_Ref, PNF_None, Entity, #The passenger
+	}
+	PURE SERVER GetPassengerSeatPoint
+	{
+		DESC Returns the seat position and angle of a given passenger seat.
+		IN role, PN_Number, #The passenger role. ( 1 is the driver )
+		OUT pos, PN_Vector, #The seat position
+		OUT angles, PN_Angles, #The seat angle
+	}
+	PURE SERVER GetRPM
+	{
+		DESC Returns the current RPM of the vehicle. This value is fake and doesn't actually affect the vehicle movement.
+		OUT RPM, PN_Number, #The RPM.
+	}
+	PURE SERVER GetSpeed
+	{
+		DESC Returns the current speed of the vehicle in MPH.
+		OUT speed, PN_Number, #The speed of the vehicle in MPH
+	}
+	PURE SERVER GetSteering
+	{
+		DESC Returns the current steering of the vehicle.
+		OUT steering, PN_Number, #The current steering of the vehicle.
+	}
+	PURE SERVER GetSteeringDegrees
+	{
+		DESC Returns the maximum steering degree of the vehicle
+		OUT steering, PN_Number, #The maximum steering degree of the vehicle
+	}
+	PURE SHARED GetThirdPersonMode
+	{
+		DESC Returns if vehicle has thirdperson mode enabled or not.
+		OUT thirdPerson, PN_Bool, #Returns true if third person mode enabled, false otherwise
+	}
+	PURE SERVER GetThrottle
+	{
+		DESC Returns the current throttle of the vehicle.
+		OUT throttle, PN_Number, #The current throttle of the vehicle
+	}
+	PURE SHARED GetVehicleClass
+	{
+		DESC Returns the vehicle class name. This is only useful for Sandbox spawned vehicles or any vehicle that properly sets the vehicle class with Vehicle:SetVehicleClass.
+		OUT class, PN_String, #The class name of the vehicle.
+	}
+	PURE SERVER GetVehicleParams
+	{
+		DESC Returns the vehicle parameters of given vehicle.
+		OUT params, PN_Struct, PNF_None, VehicleParams, #The vehicle parameters. See VehicleParams structure
+	}
+	PURE SERVER GetVehicleViewPosition
+	{
+		DESC Returns the view position and forward angle of a given passenger seat.
+		IN role, PN_Number, PNF_Nullable, #The passenger role. 0 is the driver. This parameter seems to be ignored by the game engine and is therefore optional.
+		OUT pos, PN_Vector, #The view position, will be 0, 0, 0 on failure
+		OUT angles, PN_Angles, #The view angles, will be 0, 0, 0 on failure
+		OUT FOV, PN_Number, #The field of view, will be 0 on failure
+	}
+	PURE SERVER GetWheel
+	{
+		DESC Returns the PhysObj of given wheel.
+		IN wheelIndex, PN_Number, #The wheel to retrieve
+		OUT wheel, PN_Ref, PNF_None, PhysObj, #The wheel
+	}
+	PURE SERVER GetWheelBaseHeight
+	{
+		DESC Returns the base wheel height.
+		IN wheel, PN_Number, #The wheel to get the base wheel height of.
+		OUT height, PN_Number, #The base wheel height.
+	}
+	PURE SERVER GetWheelContactPoint
+	{
+		DESC Returns the wheel contact point.
+		IN wheel, PN_Number, #The wheel to check
+		OUT pos, PN_Vector, #The contact position
+		OUT surfaceID, PN_Number, #The Surface Properties ID of hit surface.
+		OUT onGround, PN_Bool, #Whether the wheel is on ground or not
+	}
+	PURE SERVER GetWheelCount
+	{
+		DESC Returns the wheel count of the vehicle
+		OUT count, PN_Number, #The amount of wheels
+	}
+	PURE SERVER GetWheelTotalHeight
+	{
+		DESC Returns the total wheel height.
+		IN wheel, PN_Number, #The wheel to get the base wheel height of.
+		OUT height, PN_Number, #The total wheel height.
+	}
+	PURE SERVER HasBoost
+	{
+		DESC Returns whether this vehicle has boost at all.
+		OUT hasBoost, PN_Bool, #Whether this vehicle has boost at all.
+	}
+	PURE SERVER HasBrakePedal
+	{
+		DESC Returns whether this vehicle has a brake pedal. See Vehicle:SetHasBrakePedal.
+		OUT hasBrake, PN_Bool, #Whether this vehicle has a brake pedal or not.
+	}
+	PURE SERVER IsBoosting
+	{
+		DESC Returns whether this vehicle is currently boosting or not.
+		OUT boosting, PN_Bool, #Whether this vehicle is currently boosting or not.
+	}
+	PURE SERVER IsEngineEnabled
+	{
+		DESC Returns whether the engine is enabled or not, i.e. whether it can be started.
+		OUT enabled, PN_Bool, #Whether the engine is enabled
+	}
+	PURE SERVER IsEngineStarted
+	{
+		DESC Returns whether the engine is started or not.
+		OUT started, PN_Bool, #Whether the engine is started or not.
+	}
+	PURE SHARED IsValidVehicle
+	{
+		DESC Returns true if the vehicle object is a valid or not. This will return false when Vehicle functions are not usable on the vehicle.
+		OUT valid, PN_Bool, #Is the vehicle a valid vehicle or not
+	}
+	PURE SERVER IsVehicleBodyInWater
+	{
+		DESC Returns whether this vehicle's engine is underwater or not. ( Internally the attachment point "engine" or "vehicle_engine" is checked )
+		OUT inWater, PN_Bool, #Whether this vehicle's engine is underwater or not.
+	}
+	FUNC SERVER ReleaseHandbrake
+	{
+		DESC Releases the vehicle's handbrake (Jeep) so it can roll without any passengers.
+	}
+	FUNC SERVER SetBoost
+	{
+		DESC Sets the boost. It is possible that this function does not work while the vehicle has a valid driver in it.
+		IN boost, PN_Number, #The new boost value
+	}
+	FUNC SHARED SetCameraDistance
+	{
+		DESC Sets the third person camera distance of the vehicle.
+		IN distance, PN_Number, #Camera distance to set to
+	}
+	FUNC SERVER SetHandbrake
+	{
+		DESC Turns on or off the Jeep handbrake so it can roll without a driver inside.
+		IN handbrake, PN_Bool, #true to turn on, false to turn off.
+	}
+	FUNC SERVER SetHasBrakePedal
+	{
+		DESC Sets whether this vehicle has a brake pedal.
+		IN brakePedal, PN_Bool, #Whether this vehicle has a brake pedal
+	}
+	FUNC SERVER SetMaxReverseThrottle
+	{
+		DESC Sets maximum reverse throttle
+		IN maxRevThrottle, PN_Number, #The new maximum throttle. This number must be negative.
+	}
+	FUNC SERVER SetMaxThrottle
+	{
+		DESC Sets maximum forward throttle
+		IN maxThrottle, PN_Number, #The new maximum throttle.
+	}
+	FUNC SERVER SetSpringLength
+	{
+		DESC Sets spring length of given wheel
+		IN wheel, PN_Number, #The wheel to change spring length of
+		IN length, PN_Number, #The new spring length
+	}
+	FUNC SERVER SetSteering
+	{
+		DESC Sets the steering of the vehicle.
+		IN front, PN_Number, #Angle of the front wheels (-1 to 1)
+		IN rear, PN_Number, #Angle of the rear wheels (-1 to 1)
+	}
+	FUNC SERVER SetSteeringDegrees
+	{
+		DESC Sets the maximum steering degrees of the vehicle
+		IN steeringDegrees, PN_Number, #The new maximum steering degree
+	}
+	FUNC SHARED SetThirdPersonMode
+	{
+		DESC Sets the third person mode state.
+		IN enable, PN_Bool, #Enable or disable the third person mode for this vehicle
+	}
+	FUNC SERVER SetThrottle
+	{
+		DESC Sets the throttle of the vehicle. It is possible that this function does not work with a valid driver in it.
+		IN throttle, PN_Number, #The new throttle.
+	}
+	FUNC SHARED SetVehicleClass
+	{
+		DESC  string class
+		IN class, PN_String, #The vehicle class name to set
+	}
+	FUNC SERVER SetVehicleEntryAnim
+	{
+		DESC Sets whether the entry or exit camera animation should be played or not.
+		IN bOn, PN_Bool, #Whether the entry or exit camera animation should be played or not.
+	}
+	FUNC SERVER SetVehicleParams
+	{
+		DESC Sets the vehicle parameters for given vehicle.
+		IN params, PN_Struct, PNF_None, VehicleParams, #The new new vehicle parameters. See VehicleParams structure
+	}
+	FUNC SERVER SetWheelFriction
+	{
+		DESC  number wheel
+		IN wheel, PN_Number, #The wheel to change the friction of
+		IN friction, PN_Number, #The new friction to set
+	}
+	FUNC SERVER StartEngine
+	{
+		DESC Starts or stops the engine.
+		IN start, PN_Bool, #True to start, false to stop.
+	}
+}

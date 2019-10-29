@@ -1,0 +1,58 @@
+CLASS ConVar
+{
+	PURE SHARED GetBool
+	{
+		DESC Tries to convert the current string value of a ConVar to a boolean.
+		OUT value, PN_Bool, #The boolean value of the console variable. If the variable is numeric and not 0, the result will be true. Otherwise the result will be false.
+	}
+	PURE SHARED GetDefault
+	{
+		DESC Returns the default value of the ConVar
+		OUT value, PN_String, #The default value of the console variable.
+	}
+	PURE SHARED GetFloat
+	{
+		DESC Attempts to convert the ConVar value to a float
+		OUT value, PN_Number, #The float value of the console variable. If the value cannot be converted to a float, it will return 0.
+	}
+	PURE SHARED GetHelpText
+	{
+		DESC Returns the help text assigned to that convar.
+		OUT text, PN_String, #The help text
+	}
+	PURE SHARED GetInt
+	{
+		DESC Attempts to convert the ConVar value to a integer.
+		OUT value, PN_Number, #The integer value of the console variable. If it fails to convert to an integer, it will return 0. All float/decimal values will be rounded down. ( With math.floor )
+	}
+	PURE SHARED GetName
+	{
+		DESC Returns the name of the ConVar.
+		OUT name, PN_String, #The name of the console variable.
+	}
+	PURE SHARED GetString
+	{
+		DESC Returns the current ConVar value as a string.
+		OUT value, PN_String, #The current console variable value as a string.
+	}
+	FUNC SHARED SetBool
+	{
+		DESC Sets a ConVar's value to 1 or 0 based on the input boolean. This can only be ran on ConVars created from within Lua.
+		IN value, PN_Bool, #Value to set the ConVar to.
+	}
+	FUNC SHARED SetFloat
+	{
+		DESC Sets a ConVar's value to to the input number. This can only be ran on ConVars created from within Lua.
+		IN value, PN_Number, #Value to set the ConVar to.
+	}
+	FUNC SHARED SetInt
+	{
+		DESC Sets a ConVar's value to the input number after converting it to an integer. This can only be ran on ConVars created from within Lua.
+		IN value, PN_Number, #Value to set the ConVar to.
+	}
+	FUNC SHARED SetString
+	{
+		DESC Sets a ConVar's value to the input string. This can only be ran on ConVars created from within Lua.
+		IN value, PN_String, #Value to set the ConVar to.
+	}
+}

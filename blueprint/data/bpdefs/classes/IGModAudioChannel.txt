@@ -1,0 +1,155 @@
+CLASS IGModAudioChannel
+{
+	FUNC CLIENT EnableLooping
+	{
+		DESC Enables or disables looping of audio channel, requires noblock flag.
+		IN enable, PN_Bool, #Enable or disable looping of this audio channel.
+	}
+	FUNC CLIENT FFT
+	{
+		DESC Computes the DFT (discrete Fourier transform) of the sound channel.
+		IN tbl, PN_Number, PNF_Table, #The table to output the DFT magnitudes (numbers between 0 and 1) into. Indices start from 1.
+		IN size, PN_Enum, PNF_None, FFT, #The number of samples to use. See FFT_ Enums
+		OUT filled, PN_Number, #The number of frequency bins that have been filled in the output table.
+	}
+	PURE CLIENT Get3DCone
+	{
+		DESC Returns 3D cone of the sound channel. See IGModAudioChannel:Set3DCone.
+		OUT innerAngle, PN_Number, #The angle of the inside projection cone in degrees.
+		OUT outerAngle, PN_Number, #The angle of the outside projection cone in degrees.
+		OUT deltaVolume, PN_Number, #The delta-volume outside the outer projection cone.
+	}
+	PURE CLIENT Get3DFadeDistance
+	{
+		DESC Returns 3D fade distances of a sound channel.
+		OUT minDistance, PN_Number, #The minimum distance. The channel's volume is at maximum when the listener is within this distance
+		OUT maxDistance, PN_Number, #The maximum distance. The channel's volume stops decreasing when the listener is beyond this distance
+	}
+	PURE CLIENT GetAverageBitRate
+	{
+		DESC Returns the average bit rate of the sound channel.
+		OUT bitRate, PN_Number, #The average bit rate of the sound channel.
+	}
+	PURE CLIENT GetBitsPerSample
+	{
+		DESC Retrieves the number of bits per sample of the sound channel.
+		OUT bits, PN_Number, #Number of bits per sample, or 0 if unknown.
+	}
+	PURE CLIENT GetFileName
+	{
+		DESC Returns the filename for the sound channel.
+		OUT fileName, PN_String, #The file name. This will not be always what you have put into the sound.PlayURL as first argument.
+	}
+	PURE CLIENT GetLength
+	{
+		DESC Returns the length of sound played by the sound channel.
+		OUT length, PN_Number, #The length of the sound. This value seems to be less then 0 for continuous radio streams.
+	}
+	PURE CLIENT GetLevel
+	{
+		DESC Returns the right and left levels of sound played by the sound channel.
+		OUT left, PN_Number, #The left sound level. The value is between 0 and 1.
+		OUT right, PN_Number, #The right sound level. The value is between 0 and 1.
+	}
+	PURE CLIENT GetPlaybackRate
+	{
+		DESC Returns the playback rate of the sound channel.
+		OUT rate, PN_Number, #The current playback rate of the sound channel
+	}
+	PURE CLIENT GetPos
+	{
+		DESC Returns position of the sound channel
+		OUT pos, PN_Vector, #The position of the sound channel, previously set by IGModAudioChannel:SetPos
+	}
+	PURE CLIENT GetSamplingRate
+	{
+		DESC Returns the sample rate for currently playing sound.
+		OUT rate, PN_Number, #The sample rate in Hz. This should always be 44100.
+	}
+	PURE CLIENT GetState
+	{
+		DESC Returns the state of a sound channel
+		OUT state, PN_Enum, PNF_None, GMOD, #The state of the sound channel, see GMOD_CHANNEL_ Enums
+	}
+	PURE CLIENT GetTime
+	{
+		DESC Returns the current time of the sound channel
+		OUT time, PN_Number, #The current time of the stream
+	}
+	PURE CLIENT GetVolume
+	{
+		DESC Returns volume of a sound channel
+		OUT volume, PN_Number, #The volume of the sound channel
+	}
+	PURE CLIENT Is3D
+	{
+		DESC Returns if the sound channel is in 3D mode or not.
+		OUT is3D, PN_Bool, #Is 3D or not.
+	}
+	PURE CLIENT IsBlockStreamed
+	{
+		DESC Returns whether the audio stream is block streamed or not.
+		OUT blockStreamed, PN_Bool, #Is the audio stream block streamed or not.
+	}
+	PURE CLIENT IsLooping
+	{
+		DESC Returns if the sound channel is looping or not.
+		OUT looping, PN_Bool, #Is looping or not.
+	}
+	PURE CLIENT IsOnline
+	{
+		DESC Returns if the sound channel is streamed from the Internet or not.
+		OUT online, PN_Bool, #Is online or not.
+	}
+	PURE CLIENT IsValid
+	{
+		DESC Returns if the sound channel is valid or not.
+		OUT valid, PN_Bool, #Is the sound channel valid or not
+	}
+	FUNC CLIENT Pause
+	{
+		DESC Pauses the stream. It can be started again using IGModAudioChannel:Play
+	}
+	FUNC CLIENT Play
+	{
+		DESC Starts playing the stream.
+	}
+	FUNC CLIENT Set3DCone
+	{
+		DESC Sets 3D cone of the sound channel.
+		IN innerAngle, PN_Number, #The angle of the inside projection cone in degrees. Range is from 0 (no cone) to 360 (sphere), -1 = leave current.
+		IN outerAngle, PN_Number, #The angle of the outside projection cone in degrees. Range is from 0 (no cone) to 360 (sphere), -1 = leave current.
+		IN outerVolume, PN_Number, #The delta-volume outside the outer projection cone. Range is from 0 (silent) to 1 (same as inside the cone), less than 0 = leave current.
+	}
+	FUNC CLIENT Set3DFadeDistance
+	{
+		DESC Sets 3D fade distances of a sound channel.
+		IN min, PN_Number, #The minimum distance. The channel's volume is at maximum when the listener is within this distance. 0 or less = leave current.
+		IN max, PN_Number, #The maximum distance. The channel's volume stops decreasing when the listener is beyond this distance. 0 or less = leave current.
+	}
+	FUNC CLIENT SetPlaybackRate
+	{
+		DESC Sets the playback rate of the sound channel. May not work with high values for radio streams.
+		IN rate, PN_Number, #Playback rate to set to. 1 is normal speed, 0.5 is half the normal speed, etc.
+	}
+	FUNC CLIENT SetPos
+	{
+		DESC Sets position of sound channel in case the sound channel has a 3d option set.
+		IN pos, PN_Vector, #The position to put the sound into
+		IN dir, PN_Vector, PNF_Nullable, #The direction of the sound
+	}
+	FUNC CLIENT SetTime
+	{
+		DESC Sets the sound channel to specified time ( Rewind to that position of the song ). Does not work on online radio streams.
+		IN secs, PN_Number, #The time to set the stream to, in seconds.
+	}
+	FUNC CLIENT SetVolume
+	{
+		DESC Sets the volume of a sound channel
+		IN volume, PN_Number, #Volume to set. 1 meaning 100% volume, 0.5 is 50% and 3 is 300%, etc.
+	}
+	FUNC CLIENT Stop
+	{
+		DESC Stop the stream. It can be started again using IGModAudioChannel:Play.
+	}
+}

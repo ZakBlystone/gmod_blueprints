@@ -1,0 +1,217 @@
+CLASS CLuaParticle
+{
+	PURE CLIENT GetAirResistance
+	{
+		DESC Returns the air resistance of the particle.
+		OUT airResistance, PN_Number, #The air resistance of the particle
+	}
+	PURE CLIENT GetAngles
+	{
+		DESC Returns the current orientation of the particle.
+		OUT angles, PN_Angles, #The angles of the particle
+	}
+	PURE CLIENT GetAngleVelocity
+	{
+		DESC Returns the angular velocity of the particle
+		OUT angleVelocity, PN_Angles, #The angular velocity of the particle
+	}
+	PURE CLIENT GetBounce
+	{
+		DESC Returns the 'bounciness' of the particle.
+		OUT bounce, PN_Number, #The 'bounciness' of the particle 2 means it will gain 100% of its previous velocity, 1 means it will not lose velocity, 0.5 means it will lose half of its velocity with each bounce. 
+	}
+	PURE CLIENT GetColor
+	{
+		DESC Returns the color of the particle.
+		OUT r, PN_Number, #Red part of the color
+		OUT g, PN_Number, #Green part of the color
+		OUT b, PN_Number, #Blue part of the color
+	}
+	PURE CLIENT GetDieTime
+	{
+		DESC Returns the amount of time in seconds after which the particle will be destroyed.
+		OUT dieTime, PN_Number, #The amount of time in seconds after which the particle will be destroyed
+	}
+	PURE CLIENT GetEndAlpha
+	{
+		DESC Returns the alpha value that the particle will reach on its death.
+		OUT endAlpha, PN_Number, #The alpha value the particle will fade to
+	}
+	PURE CLIENT GetEndLength
+	{
+		DESC Returns the length that the particle will reach on its death.
+		OUT endLength, PN_Number, #The length the particle will reach
+	}
+	PURE CLIENT GetEndSize
+	{
+		DESC Returns the size that the particle will reach on its death.
+		OUT endSize, PN_Number, #The size the particle will reach
+	}
+	PURE CLIENT GetGravity
+	{
+		DESC Returns the gravity of the particle.
+		OUT gravity, PN_Vector, #The gravity of the particle.
+	}
+	PURE CLIENT GetLifeTime
+	{
+		DESC Returns the 'life time' of the particle, how long the particle existed since its creation.
+		OUT lifeTime, PN_Number, #How long the particle existed, in seconds.
+	}
+	PURE CLIENT GetPos
+	{
+		DESC Returns the absolute position of the particle.
+		OUT pos, PN_Vector, #The absolute position of the particle.
+	}
+	PURE CLIENT GetRoll
+	{
+		DESC Returns the current rotation of the particle in radians, this should only be used for 2D particles.
+		OUT role, PN_Number, #The current rotation of the particle in radians
+	}
+	PURE CLIENT GetRollDelta
+	{
+		DESC Returns the current rotation speed of the particle in radians, this should only be used for 2D particles.
+		OUT delta, PN_Number, #The current rotation speed of the particle in radians
+	}
+	PURE CLIENT GetStartAlpha
+	{
+		DESC Returns the alpha value which the particle has when it's created.
+		OUT startAlpha, PN_Number, #The alpha value which the particle has when it's created.
+	}
+	PURE CLIENT GetStartLength
+	{
+		DESC Returns the length which the particle has when it's created.
+		OUT startLength, PN_Number, #The length which the particle has when it's created.
+	}
+	PURE CLIENT GetStartSize
+	{
+		DESC Returns the size which the particle has when it's created.
+		OUT startSize, PN_Number, #The size which the particle has when it's created.
+	}
+	PURE CLIENT GetVelocity
+	{
+		DESC Returns the current velocity of the particle.
+		OUT velocity, PN_Vector, #The current velocity of the particle.
+	}
+	FUNC CLIENT SetAirResistance
+	{
+		DESC Sets the air resistance of the the particle.
+		IN airResistance, PN_Number, #New air resistance.
+	}
+	FUNC CLIENT SetAngles
+	{
+		DESC Sets the angles of the particle.
+		IN ang, PN_Angles, #New angle.
+	}
+	FUNC CLIENT SetAngleVelocity
+	{
+		DESC Sets the angular velocity of the the particle.
+		IN angVel, PN_Angles, #New angular velocity.
+	}
+	FUNC CLIENT SetBounce
+	{
+		DESC Sets the 'bounciness' of the the particle.
+		IN bounce, PN_Number, #New 'bounciness' of the particle 2 means it will gain 100% of its previous velocity, 1 means it will not lose velocity, 0.5 means it will lose half of its velocity with each bounce. 
+	}
+	FUNC CLIENT SetCollide
+	{
+		DESC Sets the whether the particle should collide with the world or not.
+		IN shouldCollide, PN_Bool, #Whether the particle should collide with the world or not
+	}
+	FUNC CLIENT SetCollideCallback
+	{
+		DESC Sets the function that gets called whenever the particle collides with the world.
+		IN collideFunc, PN_Ref, PNF_None, function, #Collide callback, the arguments are: CLuaParticle particle - The particle itself Vector hitPos - Position of the collision Vector hitNormal - Direction of the collision, perpendicular to the hit surface
+	}
+	FUNC CLIENT SetColor
+	{
+		DESC Sets the color of the particle.
+		IN r, PN_Number, #The red component.
+		IN g, PN_Number, #The green component.
+		IN b, PN_Number, #The blue component.
+	}
+	FUNC CLIENT SetDieTime
+	{
+		DESC Sets the time where the particle will be removed.
+		IN dieTime, PN_Number, #The new die time.
+	}
+	FUNC CLIENT SetEndAlpha
+	{
+		DESC Sets the alpha value of the particle that it will reach when it dies.
+		IN endAlpha, PN_Number, #The new alpha value of the particle that it will reach when it dies.
+	}
+	FUNC CLIENT SetEndLength
+	{
+		DESC Sets the length of the particle that it will reach when it dies.
+		IN endLength, PN_Number, #The new length of the particle that it will reach when it dies.
+	}
+	FUNC CLIENT SetEndSize
+	{
+		DESC Sets the size of the particle that it will reach when it dies.
+		IN endSize, PN_Number, #The new size of the particle that it will reach when it dies.
+	}
+	FUNC CLIENT SetGravity
+	{
+		DESC Sets the directional gravity aka. acceleration of the particle.
+		IN gravity, PN_Vector, #The directional gravity.
+	}
+	FUNC CLIENT SetLifeTime
+	{
+		DESC Sets the 'life time' of the particle, how long the particle existed since its creation.
+		IN lifeTime, PN_Number, #The new life time of the particle.
+	}
+	FUNC CLIENT SetLighting
+	{
+		DESC Sets whether the particle should be lighted.
+		IN useLighting, PN_Bool, #Whether the particle should be lighted.
+	}
+	FUNC CLIENT SetNextThink
+	{
+		DESC Sets when the particles think function should be called next, this uses the synchronized server time returned by CurTime.
+		IN nextThink, PN_Number, #Next think time.
+	}
+	FUNC CLIENT SetPos
+	{
+		DESC Sets the absolute position of the particle.
+		IN pos, PN_Vector, #The new particle position.
+	}
+	FUNC CLIENT SetRoll
+	{
+		DESC Sets the roll of the particle in radians. This should only be used for 2D particles.
+		IN roll, PN_Number, #The new rotation of the particle in radians.
+	}
+	FUNC CLIENT SetRollDelta
+	{
+		DESC Sets the rotation speed of the particle in radians. This should only be used for 2D particles.
+		IN rollDelta, PN_Number, #The new rotation speed of the particle in radians.
+	}
+	FUNC CLIENT SetStartAlpha
+	{
+		DESC Sets the initial alpha value of the particle.
+		IN startAlpha, PN_Number, #Initial alpha.
+	}
+	FUNC CLIENT SetStartLength
+	{
+		DESC Sets the initial length value of the particle.
+		IN startLength, PN_Number, #Initial length.
+	}
+	FUNC CLIENT SetStartSize
+	{
+		DESC Sets the initial size value of the particle.
+		IN startSize, PN_Number, #Initial size.
+	}
+	FUNC CLIENT SetThinkFunction
+	{
+		DESC Sets the think function of the particle.
+		IN thinkFunc, PN_Ref, PNF_None, function, #Think function. It has only one argument: CLuaParticle particle - The particle the think hook is set on
+	}
+	FUNC CLIENT SetVelocity
+	{
+		DESC Sets the velocity of the particle.
+		IN vel, PN_Vector, #The new velocity of the particle.
+	}
+	FUNC CLIENT SetVelocityScale
+	{
+		DESC Scales the velocity based on the particle speed.
+		IN doScale, PN_Bool, PNF_Nullable, #Use velocity scaling.
+	}
+}

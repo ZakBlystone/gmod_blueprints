@@ -43,6 +43,8 @@ DEFTYPE_CLASS = 1
 DEFTYPE_LIB = 2
 DEFTYPE_STRUCT = 3
 
+DEFPACK_LOCATION = "blueprints/bp_definitionpack.txt"
+
 local function EnumerateDefs( base, output, search )
 
 	local files, folders = file.Find(base, search)
@@ -131,6 +133,7 @@ local function ParseDef( filePath, search )
 				entries = {},
 				lookup = {},
 			}
+			d.name = d.enum
 		elseif (isClass or isLib) and lv == 0 then
 			d = {
 				type = isClass and DEFTYPE_CLASS or DEFTYPE_LIB,
@@ -470,40 +473,155 @@ function CreateLibNodes( lib, output )
 
 end
 
-local foundDefs = {}
-EnumerateDefs( "data/bpdefs/*", foundDefs, "THIRDPARTY" )
-EnumerateDefs( "data/bpdefs/*", foundDefs, "DOWNLOAD" )
+function Init()
 
-for k,v in pairs(foundDefs) do
-	if SERVER then resource.AddFile( v[1] ) end
-	local parsed = ParseDef(v[1], v[2])
-	table.Add(defs, parsed)
+	defs = {}
+	enums = {}
+	classes = {}
+	libs = {}
+	callbacks = {}
+	structs = {}
+
 end
 
-for k,v in pairs(defs) do
-	if v.type == DEFTYPE_STRUCT then FixupStructNames(v) structs[v.name] = v end
-	if v.type == DEFTYPE_CALLBACK then callbacks[v.name] = v end
-	if v.type == DEFTYPE_ENUM then CreateReducedEnumKeys(v) enums[v.enum] = v end
-	if v.type == DEFTYPE_CLASS then classes[v.name] = v end
-	if v.type == DEFTYPE_LIB then
-		if libs[v.name] then
-			table.Add(libs[v.name], v)
-		else
-			libs[v.name] = v
+function LoadAndParseDefs()
+
+	Init()
+	local foundDefs = {}
+	EnumerateDefs( "data/bpdefs/*", foundDefs, "THIRDPARTY" )
+
+	for k,v in pairs(foundDefs) do
+		local parsed = ParseDef(v[1], v[2])
+		table.Add(defs, parsed)
+	end
+
+	for k,v in pairs(defs) do
+		if v.type == DEFTYPE_STRUCT then FixupStructNames(v) structs[v.name] = v end
+		if v.type == DEFTYPE_CALLBACK then callbacks[v.name] = v end
+		if v.type == DEFTYPE_ENUM then CreateReducedEnumKeys(v) enums[v.enum] = v end
+		if v.type == DEFTYPE_CLASS then classes[v.name] = v end
+		if v.type == DEFTYPE_LIB then
+			if libs[v.name] then
+				table.Add(libs[v.name], v)
+			else
+				libs[v.name] = v
+			end
 		end
+	end
+
+end
+
+local function WriteTable(name, t, stream)
+	local count = 0
+	for k,v in pairs(t) do count = count + 1 end
+	stream:WriteInt(count, false)
+	MsgC(Color(100,255,100), "\n Writing " .. name .. "[" .. count .. "]")
+	for k,v in pairs(t) do
+		MsgC(Color(255,155,100), "\n  - " .. k)
+		bpdata.WriteValue(k, stream, true)
+		bpdata.WriteValue(v, stream, true)
 	end
 end
 
---CreateStructNodes(structs["EmitSoundInfo"], {})
+local function ReadTable(name, t, stream)
+	local count = stream:ReadInt(false)
+	MsgC(Color(100,255,100), "\n Reading " .. name .. "[" .. count .. "]")
+	for i=1, count do
+		local k = bpdata.ReadValue(stream, true)
+		local v = bpdata.ReadValue(stream, true)
+		MsgC(Color(255,155,100), "\n  - " .. k)
+		t[k] = v
+	end
+end
 
---PrintTable(callbacks)
---PrintTable( foundDefs )
+function RebuildDefinitionPack( callback )
+
+	LoadAndParseDefs()
+
+	local start = os.clock()
+	local co = coroutine.create( function()
+		MsgC(Color(100,255,100), "Writing Blueprint Definitions")
+		local stream = bpdata.OutStream(false, true)
+		WriteTable("Structs", structs, stream)
+		WriteTable("Callbacks", callbacks, stream)
+		WriteTable("Classes", classes, stream)
+		WriteTable("Libraries", libs, stream)
+		MsgC(Color(100,255,100), "\n Writing to file")
+		stream:WriteToFile(DEFPACK_LOCATION, true, true)
+		MsgC(Color(100,255,100), " Done\n")
+		if callback then callback() end
+	end)
+
+	local iter = 0
+	timer.Create("DefWriter", 0, 0, function()
+		coroutine.resume(co)
+		iter = iter + 1
+		if iter % 5 == 0 then MsgC(Color(100,255,100), ".") end
+		if coroutine.status(co) == "dead" then
+			timer.Remove("DefWriter")
+		end
+	end)
+
+end
+
+function LoadDefinitionPack()
+
+	local filename = DEFPACK_LOCATION
+	local filehandle = nil
+	if file.Exists(filename, "DATA") then filehandle = file.Open(filename, "r", "DATA") end
+	if file.Exists(filename, "THIRDPARTY") then filehandle = file.Open(filename, "r", "THIRDPARTY") end
+	if file.Exists(filename, "DOWNLOAD") then filehandle = file.Open(filename, "r", "DOWNLOAD") end
+
+	if filehandle == nil then error("Failed to load definitions, file not found") end
+
+	Init()
+
+	local co = coroutine.create( function()
+		local stream = bpdata.InStream(false, true)
+		stream:LoadFile(filehandle, true, true)
+		MsgC(Color(100,255,100), "Reading Blueprint Definitions")
+		ReadTable("Structs", structs, stream)
+		ReadTable("Callbacks", callbacks, stream)
+		ReadTable("Classes", classes, stream)
+		ReadTable("Libraries", libs, stream)
+		MsgC(Color(100,255,100), " Done\n")
+	end)
+
+	local iter = 0
+	timer.Create("DefLoader", 0, 0, function()
+		coroutine.resume(co)
+		iter = iter + 1
+		if iter % 5 == 0 then MsgC(Color(100,255,100), ".") end
+		if coroutine.status(co) == "dead" then
+			bpnodedef.InstallDefs()
+			timer.Remove("DefLoader")
+		end
+	end)
+
+end
 
 if SERVER then
-local str = "%check, %check_2 % %morevar"
-local s = str:gsub("%%([%w_]+)", function(x)
-	return "code_'" .. x .. "'"
-end)
 
-print(s)
+	if not file.Exists(DEFPACK_LOCATION, "DATA") then
+		print("Definition pack missing, generating now...")
+		RebuildDefinitionPack( function()
+			resource.AddFile(DEFPACK_LOCATION)
+			LoadDefinitionPack()
+		end )
+	else
+		resource.AddFile("data/" .. DEFPACK_LOCATION)
+	end
+
+	concommand.Add("bp_rebuildDefinitions", function() RebuildDefinitionPack(
+		function() timer.Simple(.1, LoadDefinitionPack) end
+	) end)
+
+else
+
+	hook.Add("Initialize", "bpdef_init", function()
+		LoadDefinitionPack()
+	end)
+
 end
+
+concommand.Add("bp_reloadDefinitions", LoadDefinitionPack )

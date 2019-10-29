@@ -20,6 +20,48 @@ STRUCT Convex, For use with Entity:PhysicsInitConvex and Entity:PhysicsInitMulti
 {
 	PIN vertices, PN_Vector, PNF_Table, #Vertices for convex mesh
 }
+STRUCT NavExtent, For use with CNavArea:GetExtentInfo
+{
+	Vector hi Vector lo number SizeX number SizeY number SizeZ
+	PIN hi, PN_Vector
+	PIN lo, PN_Vector
+	PIN SizeX, PN_Number
+	PIN SizeY, PN_Number
+	PIN SizeZ, PN_Number
+}
+STRUCT VectorDist, For use with NextBot:FindSpots
+{
+	PIN vector, PN_Vector
+	PIN distance, PN_Number	
+}
+STRUCT CursorData, For use with PathFollower:GetCursorData
+{
+	PIN curvature, PN_Number
+	PIN forward, PN_Vector
+	PIN pos, PN_Vector
+}
+STRUCT ShadowParams, For use with PhysObj:ComputeShadowControl
+{
+	NAME secondstoarrive, secondsToArrive
+	NAME angle, angles
+	NAME maxangular, maxAngular
+	NAME maxangulardamp, maxAngularDamp
+	NAME maxspeed, maxSpeed
+	NAME maxspeeddamp, maxSpeedDamp
+	NAME dampfactor, dampFactor
+	NAME teleportdistance, teleportDistance
+	NAME deltatime, deltaTime
+	PIN secondstoarrive=1, PN_Number, #How long it takes to move to pos and rotate accordingly
+	PIN pos, PN_Vector, #Where you want to move to
+	PIN angle, PN_Angles, #Angle you want to move to
+	PIN maxangular=5000, PN_Number, #What should be the maximal angular force applied
+	PIN maxangulardamp=10000, PN_Number, #At which force/speed should it start damping the rotation
+	PIN maxspeed=1000000, PN_Number, #Maximal linear force applied
+	PIN maxspeeddamp=10000, PN_Number, #Maximal linear force/speed before damping
+	PIN dampfactor=0.8, PN_Number, #The percentage it should damp the linear/angular force if it reaches it's max amount
+	PIN teleportdistance=200, PN_Number, #If it's further away than this it'll teleport ( Set to 0 to not teleport )
+	PIN deltatime, PN_Number, #The deltatime it should use
+}
 STRUCT AmmoData, Table structure that describes a Source Engine ammo type.
 {
 	NAME dmgtype, damageType

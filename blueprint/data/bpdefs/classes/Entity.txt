@@ -777,7 +777,7 @@ CLASS Entity, entity
 	PURE SHARED GetPhysicsObjectNum
 	{
 		DESC Returns a specific physics object from an entity with multiple PhysObjects (like ragdolls)
-		IN physNum, PN_Number, #The number corresponding to the PhysObj to grab. Starts at 0.
+		IN id, PN_Number, #The number corresponding to the PhysObj to grab. Starts at 0.
 		OUT physObj, PN_Ref, PNF_None, PhysObj, #The physics object
 	}
 	PURE SHARED GetPlaybackRate

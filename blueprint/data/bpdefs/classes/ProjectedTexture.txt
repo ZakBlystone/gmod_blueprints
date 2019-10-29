@@ -1,0 +1,179 @@
+CLASS ProjectedTexture
+{
+	PURE CLIENT GetAngles
+	{
+		DESC Returns the angle of the ProjectedTexture, which were previously set by ProjectedTexture:SetAngles
+		OUT angles, PN_Angles, #The angles of the ProjectedTexture.
+	}
+	PURE CLIENT GetBrightness
+	{
+		DESC Returns the brightness of the ProjectedTexture, which was previously set by ProjectedTexture:SetBrightness
+		OUT brightness, PN_Number, #The brightness of the ProjectedTexture.
+	}
+	PURE CLIENT GetColor
+	{
+		DESC Returns the color of the ProjectedTexture, which was previously set by ProjectedTexture:SetColor.
+		OUT color, PN_Struct, PNF_None, Color, #Color structure, the color of the ProjectedTexture.
+	}
+	PURE CLIENT GetConstantAttenuation
+	{
+		DESC Returns the constant attenuation of the projected texture, which can also be set by ProjectedTexture:SetConstantAttenuation.
+		OUT constant, PN_Number, #The constant attenuation
+	}
+	PURE CLIENT GetEnableShadows
+	{
+		DESC Returns whether shadows are enabled for this ProjectedTexture, which was previously set by ProjectedTexture:SetEnableShadows
+		OUT shadows, PN_Bool, #Whether shadows are enabled.
+	}
+	PURE CLIENT GetFarZ
+	{
+		DESC Returns the projection distance of the ProjectedTexture, which was previously set by ProjectedTexture:SetFarZ
+		OUT farZ, PN_Number, #The projection distance of the ProjectedTexture.
+	}
+	PURE CLIENT GetHorizontalFOV
+	{
+		DESC Returns the horizontal FOV of the ProjectedTexture, which was previously set by ProjectedTexture:SetHorizontalFOV or ProjectedTexture:SetFOV
+		OUT FOV, PN_Number, #The horizontal FOV of the ProjectedTexture.
+	}
+	PURE CLIENT GetLinearAttenuation
+	{
+		DESC Returns the linear attenuation of the projected texture, which can also be set by ProjectedTexture:SetLinearAttenuation.
+		OUT linear, PN_Number, #The linear attenuation.
+	}
+	PURE CLIENT GetNearZ
+	{
+		DESC Returns the NearZ value of the ProjectedTexture, which was previously set by ProjectedTexture:SetNearZ
+		OUT nearZ, PN_Number, #NearZ of the ProjectedTexture.
+	}
+	PURE CLIENT GetOrthographic
+	{
+		DESC Returns the current orthographic settings of the Projected Texture. To set these values, use ProjectedTexture:SetOrthographic.
+		OUT ortho, PN_Bool, #Whether or not this projected texture is orthographic. When false, nothing else is returned.
+		OUT left, PN_Number, #left
+		OUT top, PN_Number, #top
+		OUT right, PN_Number, #right
+		OUT bottom, PN_Number, #bottom
+	}
+	PURE CLIENT GetPos
+	{
+		DESC Returns the position of the ProjectedTexture, which was previously set by ProjectedTexture:SetPos
+		OUT pos, PN_Vector, #The position of the ProjectedTexture.
+	}
+	PURE CLIENT GetQuadraticAttenuation
+	{
+		DESC Returns the quadratic attenuation of the projected texture, which can also be set by ProjectedTexture:SetQuadraticAttenuation.
+		OUT quadratic, PN_Number, #The quadratic attenuation
+	}
+	PURE CLIENT GetTexture
+	{
+		DESC Returns the texture of the ProjectedTexture, which was previously set by ProjectedTexture:SetTexture
+		OUT texture, PN_Ref, PNF_None, ITexture, #The texture of the ProjectedTexture.
+	}
+	PURE CLIENT GetTextureFrame
+	{
+		DESC Returns the texture frame of the ProjectedTexture, which was previously set by ProjectedTexture:SetTextureFrame
+		OUT frame, PN_Number, #The texture frame.
+	}
+	PURE CLIENT GetVerticalFOV
+	{
+		DESC Returns the vertical FOV of the ProjectedTexture, which was previously set by ProjectedTexture:SetVerticalFOV or ProjectedTexture:SetFOV
+		OUT FOV, PN_Number, #The vertical FOV of the ProjectedTexture.
+	}
+	FUNC CLIENT IsValid
+	{
+		DESC Returns true if the projected texture is valid (i.e. has not been removed), false otherwise.
+		OUT valid, PN_Bool, #Whether the projected texture is valid.
+	}
+	FUNC CLIENT Remove
+	{
+		DESC Removes the projected texture. After calling this, ProjectedTexture:IsValid will return false, and any hooks with the projected texture as the identifier will be automatically deleted.
+	}
+	FUNC CLIENT SetAngles
+	{
+		DESC Sets the angles (direction) of the projected texture.
+		IN angles, PN_Angles
+	}
+	FUNC CLIENT SetBrightness
+	{
+		DESC Sets the brightness of the projected texture.
+		IN brightness, PN_Number, #The brightness to give the projected texture.
+	}
+	FUNC CLIENT SetColor
+	{
+		DESC Sets the color of the projected texture.
+		IN color, PN_Struct, PNF_None, Color, #Must be a Color structure. Unlike other projected textures, this color can only go up to 255.
+	}
+	FUNC CLIENT SetConstantAttenuation
+	{
+		DESC Sets the constant attenuation of the projected texture.
+		IN constant, PN_Number
+	}
+	FUNC CLIENT SetEnableShadows
+	{
+		DESC Enable or disable shadows cast from the projected texture.
+		IN enabled, PN_Bool
+	}
+	FUNC CLIENT SetFarZ
+	{
+		DESC Sets the distance at which the projected texture ends.
+		IN farZ, PN_Number
+	}
+	FUNC CLIENT SetFOV
+	{
+		DESC Sets the angle of projection.
+		IN FOV, PN_Number, #Must be higher than 0 and lower than 180
+	}
+	FUNC CLIENT SetHorizontalFOV
+	{
+		DESC Sets the horizontal angle of projection without affecting the vertical angle.
+		IN FOV, PN_Number, #The new horizontal Field Of View for the projected texture. Must be in range between 0 and 180.
+	}
+	FUNC CLIENT SetLinearAttenuation
+	{
+		DESC Sets the linear attenuation of the projected texture.
+		IN linear, PN_Number
+	}
+	FUNC CLIENT SetNearZ
+	{
+		DESC Sets the distance at which the projected texture begins its projection.
+		IN nearZ, PN_Number
+	}
+	FUNC CLIENT SetOrthographic
+	{
+		DESC Changes the current projected texture between orthographic and perspective projection.
+		IN ortho, PN_Bool, #When false, all other arguments are ignored and the texture is reset to perspective projection.
+		IN left, PN_Number, #The amount of units left from the projected texture's origin to project.
+		IN top, PN_Number, #The amount of units upwards from the projected texture's origin to project.
+		IN right, PN_Number, #The amount of units right from the projected texture's origin to project.
+		IN bottom, PN_Number, #The amount of units downwards from the projected texture's origin to project.
+	}
+	FUNC CLIENT SetPos
+	{
+		DESC Move the Projected Texture to the specified position.
+		IN pos, PN_Vector
+	}
+	FUNC CLIENT SetQuadraticAttenuation
+	{
+		DESC Sets the quadratic attenuation of the projected texture.
+		IN quadratic, PN_Number
+	}
+	FUNC CLIENT SetTexture
+	{
+		DESC Sets the texture to be projected.
+		IN texture, PN_String, #The name of the texture. Can also be an ITexture.
+	}
+	FUNC CLIENT SetTextureFrame
+	{
+		DESC For animated textures, this will choose which frame in the animation will be projected.
+		IN frame, PN_Number, #The frame index to use.
+	}
+	FUNC CLIENT SetVerticalFOV
+	{
+		DESC Sets the vertical angle of projection without affecting the horizontal angle.
+		IN FOV, PN_Number, #The new vertical Field Of View for the projected texture. Must be in range between 0 and 180.
+	}
+	FUNC CLIENT Update
+	{
+		DESC Updates the Projected Light and applies all previously set parameters.
+	}
+}

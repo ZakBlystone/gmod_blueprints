@@ -1,0 +1,432 @@
+CLASS NPC
+{
+	FUNC SERVER AddEntityRelationship
+	{
+		DESC Makes the NPC like, hate, feel neutral towards, or fear the entity in question. If you want to setup relationship towards a certain entity class, use NPC:AddRelationship.
+		IN target, PN_Ref, PNF_None, Entity, #The entity for the relationship to be applied to.
+		IN disposition, PN_Enum, PNF_None, D, #A D_ Enums representing the relationship type.
+		IN priority, PN_Number, #How strong the relationship is.
+	}
+	FUNC SERVER AddRelationship
+	{
+		DESC Changes how an NPC feels towards another NPC. If you want to setup relationship towards a certain entity, use NPC:AddEntityRelationship.
+		IN relationstring, PN_String, #A string representing how the relationship should be set up. Should be formatted as "npc_class D_ Enums numberPriority".
+	}
+	FUNC SERVER AlertSound
+	{
+		DESC Force an NPC to play his Alert sound.
+	}
+	FUNC SERVER CapabilitiesAdd
+	{
+		DESC Adds a capability to the NPC.
+		IN capabilities, PN_Enum, PNF_Bitfield, CAP, #Capabilities to add, see CAP_ Enums
+	}
+	FUNC SERVER CapabilitiesClear
+	{
+		DESC Removes all of Capabilities the NPC has.
+	}
+	PURE SERVER CapabilitiesGet
+	{
+		DESC Returns the NPC's capabilities along the ones defined on its weapon.
+		OUT capabilities, PN_Enum, PNF_Bitfield, CAP, #The capabilities as a bitflag. See CAP_ Enums
+	}
+	FUNC SERVER CapabilitiesRemove
+	{
+		DESC Remove a certain capability.
+		IN capabilities, PN_Enum, PNF_None, CAP, #Capabilities to remove, see CAP_ Enums
+	}
+	FUNC SERVER Classify
+	{
+		DESC Returns the NPC class. Do not confuse with Entity:GetClass!
+		OUT class, PN_Enum, PNF_None, CLASS, #See CLASS_ Enums
+	}
+	FUNC SERVER ClearCondition
+	{
+		DESC Clears out the specified COND_ Enums on this NPC.
+		IN condition, PN_Enum, PNF_None, COND, #The COND_ Enums to clear out.
+	}
+	FUNC SERVER ClearEnemyMemory
+	{
+		DESC Clears the Enemy from the NPC's memory, effectively forgetting it until met again with either the NPC vision or with NPC:UpdateEnemyMemory.
+	}
+	FUNC SERVER ClearExpression
+	{
+		DESC Clears the NPC's current expression which can be set with NPC:SetExpression.
+	}
+	FUNC SERVER ClearGoal
+	{
+		DESC Clears the current NPC goal or target.
+	}
+	FUNC SERVER ClearSchedule
+	{
+		DESC Stops the current schedule that the NPC is doing.
+	}
+	FUNC SERVER ConditionName
+	{
+		DESC Translates condition ID to a string.
+		IN cond, PN_Enum, PNF_None, COND, #The NPCs condition ID, see COND_ Enums
+		OUT string, PN_String, #A human understandable string equivalent of that condition.
+	}
+	FUNC SERVER Disposition
+	{
+		DESC Returns the way the NPC "feels" about the entity.
+		IN ent, PN_Ref, PNF_None, Entity, #The entity to get the disposition from.
+		OUT disposition, PN_Enum, PNF_None, D, #The NPCs disposition, see D_ Enums.
+	}
+	FUNC SERVER DropWeapon
+	{
+		DESC Forces the NPC to drop the specified weapon.
+		IN weapon, PN_Ref, PNF_Nullable, Weapon, #Weapon to be dropped. If unset, will default to the currently equipped weapon.
+		IN target, PN_Vector, PNF_Nullable, #If set, launches the weapon at given position. There is a limit to how far it is willing to throw the weapon. Overrides velocity argument.
+		IN velocity, PN_Vector, PNF_Nullable, #If set and previous argument is unset, launches the weapon with given velocity. If the velocity is higher than 400, it will be clamped to 400.
+	}
+	FUNC SERVER ExitScriptedSequence
+	{
+		DESC Makes an NPC exit a scripted sequence, if one is playing.
+	}
+	FUNC SERVER FearSound
+	{
+		DESC Force an NPC to play his Fear sound.
+	}
+	FUNC SERVER FoundEnemySound
+	{
+		DESC Force an NPC to play its FoundEnemy sound.
+	}
+	PURE SHARED GetActiveWeapon
+	{
+		DESC Returns the weapon the NPC is currently carrying, or NULL.
+		OUT weapon, PN_Ref, PNF_None, Entity, #The NPCs current weapon
+	}
+	PURE SERVER GetActivity
+	{
+		DESC Returns the NPC's current activity.
+		OUT activity, PN_Enum, PNF_None, ACT, #Current activity, see ACT_ Enums.
+	}
+	PURE SERVER GetAimVector
+	{
+		DESC Returns the aim vector of the NPC. NPC alternative of Player:GetAimVector.
+		OUT vector, PN_Vector, #The aim direction of the NPC.
+	}
+	PURE SERVER GetArrivalActivity
+	{
+		DESC Returns the activity to be played when the NPC arrives at its goal
+		OUT activity, PN_Number
+	}
+	PURE SERVER GetArrivalSequence
+	{
+		DESC Returns the sequence to be played when the NPC arrives at its goal.
+		OUT sequence, PN_Number, #Sequence ID to be played, or -1 if there's no sequence.
+	}
+	PURE SERVER GetBlockingEntity
+	{
+		DESC Returns the entity blocking the NPC along its path.
+		OUT blocker, PN_Ref, PNF_None, Entity, #Blocking entity
+	}
+	PURE SERVER GetCurrentSchedule
+	{
+		DESC Returns the NPC's current schedule.
+		OUT schedule, PN_Enum, PNF_None, SCHED, #The NPCs schedule, see SCHED_ Enums or -1 if we failed for some reason
+	}
+	PURE SERVER GetCurrentWeaponProficiency
+	{
+		DESC Returns how proficient (skilled) an NPC is with its current weapon.
+		OUT proficiency, PN_Enum, PNF_None, WEAPON, #NPC's proficiency for current weapon. See WEAPON_PROFICIENCY_ Enums.
+	}
+	PURE SERVER GetEnemy
+	{
+		DESC Returns the entity that this NPC is trying to fight.
+		OUT enemy, PN_Ref, PNF_None, Entity, #Enemy Entity
+	}
+	PURE SERVER GetExpression
+	{
+		DESC Returns the expression file the NPC is currently playing.
+		OUT expression, PN_String, #The file path of the expression.
+	}
+	PURE SERVER GetHullType
+	{
+		DESC Returns NPCs hull type set by NPC:SetHullType.
+		OUT hullType, PN_Enum, PNF_None, HULL, #Hull type, see HULL_ Enums
+	}
+	PURE SERVER GetMovementActivity
+	{
+		DESC Returns the NPC's current movement activity.
+		OUT activity, PN_Enum, PNF_None, ACT, #Current NPC movement activity, see ACT_ Enums.
+	}
+	PURE SERVER GetMovementSequence
+	{
+		DESC Returns the index of the sequence the NPC uses to move.
+		OUT sequence, PN_Number, #The movement sequence index
+	}
+	PURE SERVER GetNPCState
+	{
+		DESC Returns the NPC's state.
+		OUT state, PN_Enum, PNF_None, NPC, #The NPC's current state, see NPC_STATE_ Enums.
+	}
+	PURE SERVER GetPathDistanceToGoal
+	{
+		DESC Returns the distance the NPC is from Target Goal.
+		OUT distance, PN_Number, #The number of hammer units the NPC is away from the Goal.
+	}
+	PURE SERVER GetPathTimeToGoal
+	{
+		DESC Returns the amount of time it will take for the NPC to get to its Target Goal.
+		OUT time, PN_Number, #The amount of time to get to the target goal.
+	}
+	PURE SERVER GetShootPos
+	{
+		DESC Returns the shooting position of the NPC.
+		OUT pos, PN_Vector, #The NPC's shooting position.
+	}
+	PURE SERVER GetTarget
+	{
+		DESC Returns the NPC's current target set by NPC:SetTarget.
+		OUT target, PN_Ref, PNF_None, Entity, #Target entity
+	}
+	FUNC SERVER Give
+	{
+		DESC Used to give a weapon to an already spawned NPC.
+		IN class, PN_String, #Class name of the weapon to equip to the NPC.
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon entity given to the NPC.
+	}
+	PURE SERVER HasCondition
+	{
+		DESC Returns whether or not the NPC has the given condition.
+		IN condition, PN_Enum, PNF_None, COND, #The condition index, see COND_ Enums.
+		OUT hasCondition, PN_Bool, #True if the NPC has the given condition, false otherwise.
+	}
+	FUNC SERVER IdleSound
+	{
+		DESC Force an NPC to play his Idle sound.
+	}
+	PURE SERVER IsCurrentSchedule
+	{
+		DESC Returns whether or not the NPC is performing the given schedule.
+		IN schedule, PN_Enum, PNF_None, SCHED, #The schedule number, see SCHED_ Enums.
+		OUT result, PN_Bool, #True if the NPC is performing the given schedule, false otherwise.
+	}
+	PURE SERVER IsMoving
+	{
+		DESC Returns whether the NPC is moving or not.
+		OUT moving, PN_Bool, #Whether the NPC is moving or not.
+	}
+	PURE SERVER IsRunningBehavior
+	{
+		DESC Checks if the NPC is running an ai_goal. ( e.g. An npc_citizen NPC following the Player. )
+		OUT running, PN_Bool, #Returns true if running an ai_goal, otherwise returns false.
+	}
+	PURE SERVER IsUnreachable
+	{
+		DESC Returns whether the entity given can be reached by this NPC.
+		IN testEntity, PN_Ref, PNF_None, Entity, #The entity to test.
+		OUT reachable, PN_Bool, #If the entity is reachable or not.
+	}
+	FUNC SERVER LostEnemySound
+	{
+		DESC Force an NPC to play his LostEnemy sound.
+	}
+	FUNC SERVER MaintainActivity
+	{
+		DESC Tries to achieve our ideal animation state, playing any transition sequences that we need to play to get there.
+	}
+	FUNC SERVER MarkEnemyAsEluded
+	{
+		DESC Causes the NPC to temporarily forget the current enemy and switch on to a better one.
+	}
+	FUNC SERVER MoveOrder
+	{
+		DESC Makes the NPC walk toward the given position. The NPC will return to the player after amount of time set by player_squad_autosummon_time ConVar.
+		IN position, PN_Vector, #The target position for the NPC to walk to.
+	}
+	FUNC SERVER NavSetGoal
+	{
+		DESC Sets the goal position for the NPC.
+		IN position, PN_Vector, #The position to set as the goal
+	}
+	FUNC SERVER NavSetGoalTarget
+	{
+		DESC Set the goal target for an NPC.
+		IN target, PN_Ref, PNF_None, Entity, #The targeted entity to set the goal to.
+		IN offset, PN_Vector, #The offset to apply to the targeted entity's position.
+	}
+	FUNC SERVER NavSetRandomGoal
+	{
+		DESC Creates a random path of specified minimum length between a closest start node and random node in the specified direction.
+		IN minPathLength, PN_Number, #Minimum length of path in units
+		IN dir, PN_Vector, #Unit vector pointing in the direction of the target random node
+	}
+	FUNC SERVER NavSetWanderGoal
+	{
+		DESC Sets a goal in x, y offsets for the npc to wander to
+		IN xoffset, PN_Number, #X offset
+		IN yoffset, PN_Number, #Y offset
+	}
+	FUNC SERVER PlaySentence
+	{
+		DESC Forces the NPC to play a sentence from scripts/sentences.txt
+		IN sentence, PN_String, #The sentence string to speak.
+		IN delay, PN_Number, #Delay in seconds until the sentence starts playing.
+		IN volume, PN_Number, #The volume of the sentence, from 0 to 1.
+		OUT index, PN_Number, #Returns the sentence index, -1 if the sentence couldn't be played.
+	}
+	FUNC SERVER RemoveMemory
+	{
+		DESC This function crashes the game no matter how it is used and will be removed in a future update.
+	}
+	FUNC SERVER RunEngineTask
+	{
+		DESC Starts an engine task.
+		IN taskID, PN_Number, #The task ID, see ai_task.h
+		IN taskData, PN_Number, #The task data.
+	}
+	FUNC SERVER SentenceStop
+	{
+		DESC Stops any sounds (speech) the NPC is currently palying.
+	}
+	FUNC SERVER SetArrivalActivity
+	{
+		DESC  number act
+		IN act, PN_Number
+	}
+	FUNC SERVER SetArrivalDirection
+	{
+		DESC  
+	}
+	FUNC SERVER SetArrivalDistance
+	{
+		DESC Sets the distance to goal at which the NPC should stop moving and continue to other business such as doing the rest of their tasks in a schedule.
+		IN dist, PN_Number, #The distance to goal that is close enough for the NPC
+	}
+	FUNC SERVER SetArrivalSequence
+	{
+		DESC  
+	}
+	FUNC SERVER SetArrivalSpeed
+	{
+		DESC  
+	}
+	FUNC SERVER SetCondition
+	{
+		DESC Sets an NPC condition.
+		IN condition, PN_Enum, PNF_None, COND, #The condition index, see COND_ Enums.
+	}
+	FUNC SERVER SetCurrentWeaponProficiency
+	{
+		DESC Sets the weapon proficiency of an NPC (how skilled an NPC is with its current weapon).
+		IN proficiency, PN_Enum, PNF_None, WEAPON, #The proficiency for the NPC's current weapon. See WEAPON_PROFICIENCY_ Enums.
+	}
+	FUNC SERVER SetEnemy
+	{
+		DESC Sets the target for an NPC.
+		IN enemy, PN_Ref, PNF_None, Entity, #The enemy that the NPC should target
+		IN newenemy, PN_Bool, PNF_Nullable, #Calls NPC:SetCondition(COND_NEW_ENEMY) if the new enemy is valid and not equal to the last enemy.
+	}
+	FUNC SERVER SetExpression
+	{
+		DESC Sets the NPC's .vcd expression. Similar to Entity:PlayScene except the scene is looped until it's interrupted by default NPC behavior or NPC:ClearExpression.
+		IN expression, PN_String, #The expression filepath.
+		OUT index, PN_Number
+	}
+	FUNC SERVER SetHullSizeNormal
+	{
+		DESC Updates the NPC's hull and physics hull in order to match its model scale. Entity:SetModelScale seems to take care of this regardless.
+	}
+	FUNC SERVER SetHullType
+	{
+		DESC Sets the hull type for the NPC.
+		IN hullType, PN_Enum, PNF_None, HULL, #Hull type. See HULL_ Enums
+	}
+	FUNC SERVER SetLastPosition
+	{
+		DESC Sets the last registered or memorized position for an npc. When using scheduling, the NPC will focus on navigating to the last position via nodes.
+		IN Position, PN_Vector, #Where the NPC's last position will be set.
+	}
+	FUNC SERVER SetMaxRouteRebuildTime
+	{
+		DESC Sets how how long to try rebuilding path before failing task.
+		IN time, PN_Number, #How long to try rebuilding path before failing task
+	}
+	FUNC SERVER SetMovementActivity
+	{
+		DESC Sets the activity the NPC uses when it moves.
+		IN activity, PN_Enum, PNF_None, ACT, #The movement activity, see ACT_ Enums.
+	}
+	FUNC SERVER SetMovementSequence
+	{
+		DESC Sets the sequence the NPC navigation path uses for speed calculation. Doesn't seem to have any visible effect on NPC movement.
+		IN sequenceId, PN_Number, #The movement sequence index
+	}
+	FUNC SERVER SetNPCState
+	{
+		DESC Sets the state the NPC is in to help it decide on a ideal schedule.
+		IN state, PN_Enum, PNF_None, NPC, #New NPC state, see NPC_STATE_ Enums
+	}
+	FUNC SERVER SetSchedule
+	{
+		DESC Sets the NPC's current schedule.
+		IN schedule, PN_Enum, PNF_None, SCHED, #The NPC schedule, see SCHED_ Enums.
+	}
+	FUNC SERVER SetTarget
+	{
+		DESC Sets the NPC's target. This is used in some engine schedules.
+		IN entity, PN_Ref, PNF_None, Entity, #The target of the NPC.
+	}
+	FUNC SERVER StartEngineTask
+	{
+		DESC Forces the NPC to start an engine task, this has different results for every NPC.
+		IN task, PN_Number, #The id of the task to start, see ai_task.h
+		IN taskData, PN_Number, #The task data as a float, not all tasks make use of it.
+	}
+	FUNC SERVER StopMoving
+	{
+		DESC Resets the NPC's movement animation and velocity. Does not actually stop the NPC from moving.
+	}
+	FUNC SERVER TargetOrder
+	{
+		DESC Cancels NPC:MoveOrder basically.
+		IN target, PN_Ref, PNF_None, Entity, #Must be a player, does nothing otherwise.
+	}
+	FUNC SERVER TaskComplete
+	{
+		DESC Marks the current NPC task as completed.
+	}
+	FUNC SERVER TaskFail
+	{
+		DESC Marks the current NPC task as failed.
+		IN task, PN_String, #A string most likely defined as a Source Task, for more information on Tasks go to https://developer.valvesoftware.com/wiki/Task
+	}
+	FUNC SERVER UpdateEnemyMemory
+	{
+		DESC Force the NPC to update information on the supplied enemy, as if it had line of sight to it.
+		IN enemy, PN_Ref, PNF_None, Entity, #The enemy to update.
+		IN pos, PN_Vector, #The last known position of the enemy.
+	}
+	FUNC SERVER UseActBusyBehavior
+	{
+		DESC Only usable on "ai" base entities.
+		OUT success, PN_Bool, #If we succeeded setting the behavior.
+	}
+	FUNC SERVER UseAssaultBehavior
+	{
+		DESC  boolean
+		OUT success, PN_Bool
+	}
+	FUNC SERVER UseFollowBehavior
+	{
+		DESC Only usable on "ai" base entities.
+		OUT success, PN_Bool, #If we succeeded setting the behavior.
+	}
+	FUNC SERVER UseFuncTankBehavior
+	{
+		DESC  boolean
+		OUT success, PN_Bool
+	}
+	FUNC SERVER UseLeadBehavior
+	{
+		DESC  boolean
+		OUT success, PN_Bool
+	}
+	FUNC SERVER UseNoBehavior
+	{
+		DESC Undoes the other Use*Behavior functions.
+	}
+}

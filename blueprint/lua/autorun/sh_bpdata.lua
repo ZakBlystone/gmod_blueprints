@@ -462,8 +462,16 @@ local function TestAll()
 	TestFloats()
 end
 
-function WriteValue(t, buf)
+function WriteValue(t, buf, thread)
 	local ttype = type(t)
+
+	if thread then
+		buf.__counter = buf.__counter or 0
+		buf.__counter = buf.__counter + 1
+		if (buf.__counter % 20) == 0 then
+			coroutine.yield() 
+		end
+	end
 
 	local function numtype(t, v)
 		buf:WriteBits(t, DT_STATUSBITS)
@@ -487,17 +495,17 @@ function WriteValue(t, buf)
 		buf:WriteBits(DT_TABLE, DT_STATUSBITS)
 		local keys = false
 		local n = 0 for k,v in pairs(t) do n = n + 1 end
-		WriteValue(n, buf)
+		WriteValue(n, buf, thread)
 
 		local mrk = {}
 		for k,v in ipairs(t) do
-			WriteValue(v, buf)
+			WriteValue(v, buf, thread)
 			mrk[k] = true
 		end
 		
 		for k,v in pairs(t) do
 			if not mrk[k] and not keys then buf:WriteBits(DT_KEYS, DT_STATUSBITS) keys = true end
-			if not mrk[k] then WriteValue(k, buf) WriteValue(v, buf) end
+			if not mrk[k] then WriteValue(k, buf, thread) WriteValue(v, buf, thread) end
 		end
 	elseif ttype == "number" then
 		local int = math.floor(t) == t
@@ -515,14 +523,14 @@ function WriteValue(t, buf)
 		end
 	elseif ttype == "Vector" then
 			buf:WriteBits(DT_CVECTOR, DT_STATUSBITS)
-			WriteValue(t.x, buf)
-			WriteValue(t.y, buf)
-			WriteValue(t.z, buf)
+			WriteValue(t.x, buf, thread)
+			WriteValue(t.y, buf, thread)
+			WriteValue(t.z, buf, thread)
 	elseif ttype == "Angle" then
 			buf:WriteBits(DT_ANGLE, DT_STATUSBITS)
-			WriteValue(t.p, buf)
-			WriteValue(t.y, buf)
-			WriteValue(t.r, buf)
+			WriteValue(t.p, buf, thread)
+			WriteValue(t.y, buf, thread)
+			WriteValue(t.r, buf, thread)
 	elseif ttype == "Entity" then
 		if IsValid(t) and t:EntIndex() >= 0 then
 			buf:WriteBits(DT_ENTITY, DT_STATUSBITS)
@@ -539,10 +547,18 @@ function WriteValue(t, buf)
 	end
 end
 
-function ReadValue(buf)
+function ReadValue(buf, thread)
 	local ttype = buf:ReadBits(DT_STATUSBITS)
 
 	--print("TYPE: " .. DTName(ttype))
+
+	if thread then
+		buf.__counter = buf.__counter or 0
+		buf.__counter = buf.__counter + 1
+		if (buf.__counter % 100) == 0 then
+			coroutine.yield() 
+		end
+	end
 
 	local function numtype(t)
 		if t == DT_BYTE then return buf:ReadByte(true) end
@@ -556,17 +572,17 @@ function ReadValue(buf)
 
 	if ttype == DT_TABLE then
 		local t = {}
-		local n = ReadValue(buf)
+		local n = ReadValue(buf, thread)
 		local keys = false
 		for i=1, n do
 			if not keys then
-				local v,f = ReadValue(buf)
+				local v,f = ReadValue(buf, thread)
 				if f == 'K' then keys = true
 				else table.insert(t, v) end
 			end
 			if keys then
-				local key = ReadValue(buf)
-				t[key] = ReadValue(buf)
+				local key = ReadValue(buf, thread)
+				t[key] = ReadValue(buf, thread)
 			end
 		end
 		return t, data
@@ -574,14 +590,14 @@ function ReadValue(buf)
 	elseif ttype == DT_NULL then return nil
 	elseif ttype >= DT_BYTE and ttype <= DT_FLOAT then return numtype(ttype)
 	elseif ttype == DT_CVECTOR then
-		local x = ReadValue(buf)
-		local y = ReadValue(buf)
-		local z = ReadValue(buf)
+		local x = ReadValue(buf, thread)
+		local y = ReadValue(buf, thread)
+		local z = ReadValue(buf, thread)
 		return Vector(x,y,z)
 	elseif ttype == DT_ANGLE then
-		local p = ReadValue(buf)
-		local y = ReadValue(buf)
-		local r = ReadValue(buf)
+		local p = ReadValue(buf, thread)
+		local y = ReadValue(buf, thread)
+		local r = ReadValue(buf, thread)
 		return Angle(p,y,r)
 	elseif ttype == DT_COLOR then
 		return Color( buf:ReadByte(), buf:ReadByte(), buf:ReadByte(), buf:ReadByte() )

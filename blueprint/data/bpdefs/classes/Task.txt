@@ -1,0 +1,48 @@
+CLASS Task
+{
+	FUNC SERVER Init
+	{
+		DESC  Initialises the AI task. Called by 
+	}
+	FUNC SERVER InitEngine
+	{
+		DESC Initialises the AI task as an engine task.
+		IN taskname, PN_String, #The name of the task.
+		IN taskdata, PN_Number
+	}
+	FUNC SERVER InitFunctionName
+	{
+		DESC Initialises the AI task as NPC method-based.
+		IN startname, PN_String, #The name of the NPC method to call on task start.
+		IN runname, PN_String, #The name of the NPC method to call on task run.
+		IN taskdata, PN_Number
+	}
+	FUNC SERVER IsEngineType
+	{
+		DESC Determines if the task is an engine task (TYPE_ENGINE, 1).
+	}
+	FUNC SERVER IsFNameType
+	{
+		DESC Determines if the task is an NPC method-based task (TYPE_FNAME, 2).
+	}
+	FUNC SERVER Run
+	{
+		DESC Runs the AI task.
+		IN target, PN_Ref, PNF_None, NPC, #The NPC to run the task on.
+	}
+	FUNC SERVER Run_FName
+	{
+		DESC  NPC target
+		IN target, PN_Ref, PNF_None, NPC, #The NPC to run the task on.
+	}
+	FUNC SERVER Start
+	{
+		DESC Starts the AI task.
+		IN target, PN_Ref, PNF_None, NPC, #The NPC to start the task on.
+	}
+	FUNC SERVER Start_FName
+	{
+		DESC  NPC target
+		IN target, PN_Ref, PNF_None, NPC, #The NPC to start the task on.
+	}
+}

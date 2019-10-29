@@ -1,0 +1,7 @@
+CLASS CSEnt
+{
+	FUNC CLIENT Remove
+	{
+		DESC Removes the clientside entity
+	}
+}

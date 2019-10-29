@@ -1,0 +1,25 @@
+CLASS PhysCollide
+{
+	FUNC SHARED Destroy
+	{
+		DESC Destroys the PhysCollide object.
+	}
+	PURE SHARED IsValid
+	{
+		DESC Checks whether this PhysCollide object is valid or not.
+		OUT valid, PN_Bool, #Is valid or not.
+	}
+	FUNC SHARED TraceBox
+	{
+		DESC Performs a trace against this PhysCollide with the given parameters. This can be used for both line traces and box traces.
+		IN origin, PN_Vector, #The origin for the PhysCollide during the trace
+		IN angles, PN_Angles, #The angles for the PhysCollide during the trace
+		IN rayStart, PN_Vector, #The start position of the trace
+		IN rayEnd, PN_Vector, #The end position of the trace
+		IN rayMins, PN_Vector, #The mins of the trace's bounds
+		IN rayMaxs, PN_Vector, #The maxs of the trace's bounds
+		OUT position, PN_Vector, #Hit position of the trace. This is false if the trace did not hit.
+		OUT normal, PN_Vector, #Hit normal of the trace
+		OUT fraction, PN_Number, #Fraction of the trace. This is calculated from the distance between startPos, hitPos, and endPos.
+	}
+}

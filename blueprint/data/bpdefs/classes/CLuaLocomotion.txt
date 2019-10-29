@@ -1,0 +1,164 @@
+CLASS CLuaLocomotion
+{
+	FUNC SERVER Approach
+	{
+		DESC Sets the location we want to get to
+		IN goal, PN_Vector, #The vector we want to get to
+		IN goalweight, PN_Number, #If unsure then set this to 1
+	}
+	FUNC SERVER ClearStuck
+	{
+		DESC Removes the stuck status from the bot
+	}
+	FUNC SERVER FaceTowards
+	{
+		DESC Sets the direction we want to face
+		IN goal, PN_Vector, #The vector we want to face
+	}
+	PURE SERVER GetAcceleration
+	{
+		DESC Returns the acceleration speed
+		OUT speed, PN_Number, #Current acceleration speed
+	}
+	PURE SERVER GetCurrentAcceleration
+	{
+		DESC Returns the current acceleration as a vector
+		OUT acceleration, PN_Vector, #Current acceleration
+	}
+	PURE SERVER GetDeathDropHeight
+	{
+		DESC Gets the height the bot is scared to fall from
+		OUT height, PN_Number, #Current death drop height
+	}
+	PURE SERVER GetDeceleration
+	{
+		DESC Gets the deceleration speed
+		OUT deceleration, PN_Number, #Current deceleration speed
+	}
+	PURE SERVER GetGravity
+	{
+		DESC  number
+		OUT gravity, PN_Number, #The gravity.
+	}
+	PURE SERVER GetGroundMotionVector
+	{
+		DESC Return unit vector in XY plane describing our direction of motion - even if we are currently not moving
+		OUT vector, PN_Vector, #A vector representing the X and Y movement
+	}
+	PURE SERVER GetJumpHeight
+	{
+		DESC Gets the height of the bot's jump
+		OUT height, PN_Number, #Current jump height
+	}
+	PURE SERVER GetMaxJumpHeight
+	{
+		DESC Returns maximum jump height of this CLuaLocomotion.
+		OUT maxHeight, PN_Number, #The maximum jump height.
+	}
+	PURE SERVER GetMaxYawRate
+	{
+		DESC Returns the max rate at which the NextBot can visually rotate.
+		OUT rate, PN_Number, #Maximum yaw rate
+	}
+	PURE SERVER GetNextBot
+	{
+		DESC Returns the NextBot this locomotion is associated with.
+		OUT bot, PN_Ref, PNF_None, NextBot, #The nextbot
+	}
+	PURE SERVER GetStepHeight
+	{
+		DESC Gets the max height the bot can step up
+		OUT height, PN_Number, #Current step height
+	}
+	PURE SERVER GetVelocity
+	{
+		DESC Returns the current movement velocity as a vector
+		OUT velocity, PN_Vector, #Current velocity
+	}
+	PURE SERVER IsAreaTraversable
+	{
+		DESC Returns whether this CLuaLocomotion can reach and/or traverse/move in given CNavArea.
+		IN area, PN_Ref, PNF_None, CNavArea, #The area to test
+		OUT traversable, PN_Bool, #Whether this CLuaLocomotion can traverse given CNavArea.
+	}
+	PURE SERVER IsAttemptingToMove
+	{
+		DESC Returns true if we're trying to move.
+		OUT trying, PN_Bool, #Whether we're trying to move or not.
+	}
+	PURE SERVER IsClimbingOrJumping
+	{
+		DESC Returns true of the locomotion engine is jumping or climbing
+		OUT result, PN_Bool, #Whether we're climbing or jumping or not
+	}
+	PURE SERVER IsOnGround
+	{
+		DESC Returns whether the nextbot this locomotion is attached to is on ground or not.
+		OUT onGround, PN_Bool, #Whether the nextbot is on ground or not.
+	}
+	PURE SERVER IsStuck
+	{
+		DESC Returns true if we're stuck
+		OUT stuck, PN_Bool, #Whether we're stuck or not
+	}
+	PURE SERVER IsUsingLadder
+	{
+		DESC Returns whether or not the target in question is on a ladder or not.
+		OUT usingLadder, PN_Bool, #If the target is on a ladder or not.
+	}
+	FUNC SERVER Jump
+	{
+		DESC Makes the bot jump
+	}
+	FUNC SERVER JumpAcrossGap
+	{
+		DESC  Vector landingGoal
+		IN landingGoal, PN_Vector
+		IN landingForward, PN_Vector
+	}
+	FUNC SERVER SetAcceleration
+	{
+		DESC Sets the acceleration speed
+		IN speed, PN_Number, #Speed acceleration (default is 400)
+	}
+	FUNC SERVER SetDeathDropHeight
+	{
+		DESC Sets the height the bot is scared to fall from.
+		IN height, PN_Number, #Height (default is 200)
+	}
+	FUNC SERVER SetDeceleration
+	{
+		DESC Sets the deceleration speed.
+		IN deceleration, PN_Number, #New deceleration speed (default is 400)
+	}
+	FUNC SERVER SetDesiredSpeed
+	{
+		DESC Sets movement speed.
+		IN speed, PN_Number, #The new desired speed
+	}
+	FUNC SERVER SetGravity
+	{
+		DESC With values 0 or below, or even lower positive values, the nextbot will start to drift sideways, use CLuaLocomotion:SetVelocity to counteract this.
+		IN gravity, PN_Number, #New gravity to set. Default is 1000.
+	}
+	FUNC SERVER SetJumpHeight
+	{
+		DESC Sets the height of the bot's jump
+		IN height, PN_Number, #Height (default is 58)
+	}
+	FUNC SERVER SetMaxYawRate
+	{
+		DESC Sets the max rate at which the NextBot can visually rotate. This will not affect moving or pathing.
+		IN yawRate, PN_Number, #Desired new maximum yaw rate
+	}
+	FUNC SERVER SetStepHeight
+	{
+		DESC Sets the max height the bot can step up
+		IN height, PN_Number, #Height (default is 18)
+	}
+	FUNC SERVER SetVelocity
+	{
+		DESC Sets the current movement velocity
+		IN velocity, PN_Vector
+	}
+}

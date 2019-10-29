@@ -1,0 +1,75 @@
+CLASS NextBot
+{
+	FUNC SERVER BecomeRagdoll
+	{
+		DESC Become a ragdoll and remove the entity.
+		IN info, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info passed from an onkilled event
+		OUT ragdoll, PN_Ref, PNF_None, Entity, #The created ragdoll, if any.
+	}
+	FUNC SERVER BodyMoveXY
+	{
+		DESC Should only be called in BodyUpdate. This sets the move_x and move_y pose parameters of the bot to fit how they're currently moving, sets the animation speed to suit the ground speed, and calls FrameAdvance.
+	}
+	FUNC SERVER FindSpot
+	{
+		DESC Like NextBot:FindSpots but only returns a vector.
+		IN type, PN_String, #Either "random", "near", "far"
+		IN options, PN_Any, PNF_Table, #This table should contain the search info. string type - The type (Only'hiding' for now) Vector pos - the position to search. number radius - the radius to search. number stepup - the highest step to step up. number stepdown - the highest we can step down without being hurt.
+		OUT spot, PN_Vector, #If it finds a spot it will return a vector. If not it will return nil.
+	}
+	FUNC SERVER FindSpots
+	{
+		DESC Returns a table of hiding spots.
+		IN specs, PN_Any, PNF_Table, #This table should contain the search info. string type - The type (optional, only 'hiding' supported) Vector pos - the position to search. number radius - the radius to search. number stepup - the highest step to step up. number stepdown - the highest we can step down without being hurt.
+		OUT spots, PN_Struct, PNF_Table, VectorDist, #An unsorted table of tables containing: Vector vector - The position of the hiding spot number distance - the distance to that position
+	}
+	PURE SERVER GetActivity
+	{
+		DESC Returns the currently running activity
+		OUT activity, PN_Number, #The current activity
+	}
+	PURE SERVER GetRangeSquaredTo
+	{
+		DESC Returns squared distance to an entity or a position.
+		IN to, PN_Vector, #The position to measure distance to. Can be an entity.
+		OUT squareDistance, PN_Number, #The squared distance
+	}
+	PURE SERVER GetRangeTo
+	{
+		DESC Returns the distance to an entity or position.
+		IN to, PN_Vector, #The position to measure distance to. Can be an entity.
+		OUT distance, PN_Number, #The distance
+	}
+	PURE SERVER GetSolidMask
+	{
+		DESC Returns the solid mask for given NextBot.
+		OUT mask, PN_Enum, PNF_Bitfield, CONTENTS, #The solid mask, see CONTENTS_ Enums and MASK_ Enums
+	}
+	FUNC SERVER HandleStuck
+	{
+		DESC Called from Lua when the NPC is stuck. This should only be called from the behaviour coroutine - so if you want to override this function and do something special that yields - then go for it.
+	}
+	FUNC SERVER MoveToPos
+	{
+		DESC To be called in the behaviour coroutine only! Will yield until the bot has reached the goal or is stuck
+		IN pos, PN_Vector, #The position we want to get to
+		IN options, PN_Any, PNF_Table, #A table containing a bunch of tweakable options. number lookahead - Minimum look ahead distance. number tolerance - How close we must be to the goal before it can be considered complete. boolean draw - Draw the path. Only visible on listen servers and single player. number maxage - Maximum age of the path before it times out. number repath - Rebuilds the path after this number of seconds.
+		OUT result, PN_String, #Either "failed", "stuck", "timeout" or "ok" - depending on how the NPC got on
+	}
+	FUNC SERVER PlaySequenceAndWait
+	{
+		DESC To be called in the behaviour coroutine only! Plays an animation sequence and waits for it to end before returning.
+		IN name, PN_String, #The sequence name
+		IN speed, PN_Number, PNF_Nullable, #Playback Rate of that sequence
+	}
+	FUNC SERVER SetSolidMask
+	{
+		DESC Sets the solid mask for given NextBot.
+		IN mask, PN_Enum, PNF_None, CONTENTS, #The new mask, see CONTENTS_ Enums and MASK_ Enums
+	}
+	FUNC SERVER StartActivity
+	{
+		DESC Start doing an activity (animation)
+		IN activity, PN_Enum, PNF_None, ACT, #One of the ACT_ Enums
+	}
+}

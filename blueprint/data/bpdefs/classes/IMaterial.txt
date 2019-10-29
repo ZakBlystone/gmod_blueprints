@@ -1,0 +1,132 @@
+CLASS IMaterial
+{
+	PURE SHARED GetColor
+	{
+		DESC Returns the color of the specified pixel of the $basetexture, only works for materials created from PNG files.
+		IN x, PN_Number, #The X coordinate.
+		IN y, PN_Number, #The Y coordinate.
+		OUT color, PN_Struct, PNF_None, Color, #The color of the pixel as a Color structure.
+	}
+	PURE SHARED GetFloat
+	{
+		DESC Returns the specified material value as a float, or nil if the value is not set.
+		IN materialFloat, PN_String, #The name of the material value.
+		OUT float, PN_Number, #float
+	}
+	PURE SHARED GetInt
+	{
+		DESC Returns the specified material value as a int, rounds the value if its a float, or nil if the value is not set.
+		IN materialInt, PN_String, #The name of the material integer.
+		OUT int, PN_Number, #int
+	}
+	PURE SHARED GetKeyValues
+	{
+		DESC Gets all the key values defined for the material.
+		OUT values, PN_Any, PNF_Table, #The material's key values.
+	}
+	PURE SHARED GetMatrix
+	{
+		DESC Returns the specified material matrix as a int, or nil if the value is not set or is not a matrix.
+		IN materialMatrix, PN_String, #The name of the material matrix.
+		OUT matrix, PN_Ref, PNF_None, VMatrix, #matrix
+	}
+	PURE SHARED GetName
+	{
+		DESC Returns the name of the material, in most cases the path.
+		OUT name, PN_String, #Material name/path
+	}
+	PURE SHARED GetShader
+	{
+		DESC Returns the name of the materials shader.
+		OUT shader, PN_String, #shaderName
+	}
+	PURE SHARED GetString
+	{
+		DESC Returns the specified material string, or nil if the value is not set or if the value can not be converted to a string.
+		IN materialString, PN_String, #The name of the material string.
+		OUT string, PN_String, #The value as a string
+	}
+	PURE SHARED GetTexture
+	{
+		DESC Returns an ITexture based on the passed shader parameter.
+		IN param, PN_String, #The shader parameter to retrieve. This should normally be $basetexture.
+		OUT texture, PN_Ref, PNF_None, ITexture, #The value of the shader parameter. Returns nothing if the param doesn't exist.
+	}
+	PURE SHARED GetVector
+	{
+		DESC Returns the specified material vector, or nil if the value is not set.
+		IN materialVector, PN_String, #The name of the material vector.
+		OUT vector, PN_Vector, #The color vector
+	}
+	PURE SHARED GetVectorLinear
+	{
+		DESC Returns the specified material linear color vector, or nil if the value is not set.
+		IN materialVector, PN_String, #The name of the material vector.
+		OUT vector, PN_Vector, #The linear color vector
+	}
+	PURE SHARED Height
+	{
+		DESC Returns the height of the member texture set for $basetexture.
+		OUT height, PN_Number, #height
+	}
+	PURE SHARED IsError
+	{
+		DESC Returns whenever the material is valid, i.e. whether it was not loaded successfully from disk or not.
+		OUT error, PN_Bool, #Is this material the error material? (___error)
+	}
+	FUNC SHARED Recompute
+	{
+		DESC Recomputes the material's snapshot. This needs to be called if you have changed variables on your material and it isn't changing.
+	}
+	FUNC SHARED SetFloat
+	{
+		DESC Sets the specified material float to the specified float, does nothing on a type mismatch.
+		IN materialFloat, PN_String, #The name of the material float.
+		IN float, PN_Number, #The new float value.
+	}
+	FUNC SHARED SetInt
+	{
+		DESC Sets the specified material value to the specified int, does nothing on a type mismatch.
+		IN materialInt, PN_String, #The name of the material int.
+		IN int, PN_Number, #The new int value.
+	}
+	FUNC SHARED SetMatrix
+	{
+		DESC Sets the specified material value to the specified matrix, does nothing on a type mismatch.
+		IN materialMatrix, PN_String, #The name of the material int.
+		IN matrix, PN_Ref, PNF_None, VMatrix, #The new matrix.
+	}
+	FUNC SHARED SetShader
+	{
+		DESC  string shaderName
+		IN shaderName, PN_String, #Name of the shader
+	}
+	FUNC SHARED SetString
+	{
+		DESC Sets the specified material value to the specified string, does nothing on a type mismatch.
+		IN materialString, PN_String, #The name of the material string.
+		IN string, PN_String, #The new string.
+	}
+	FUNC SHARED SetTexture
+	{
+		DESC Sets the specified material texture to the specified texture, does nothing on a type mismatch.
+		IN materialTexture, PN_String, #The name of the keyvalue on the material to store the texture on.
+		IN texture, PN_Ref, PNF_None, ITexture, #The new texture. This can also be a string, the name of the new texture.
+	}
+	FUNC SHARED SetUndefined
+	{
+		DESC Unsets the value for the specified material value.
+		IN materialValueName, PN_String, #The name of the material value to be unset.
+	}
+	FUNC SHARED SetVector
+	{
+		DESC Sets the specified material vector to the specified vector, does nothing on a type mismatch.
+		IN MaterialVector, PN_String, #The name of the material vector.
+		IN vec, PN_Vector, #The new vector.
+	}
+	PURE SHARED Width
+	{
+		DESC Returns the width of the member texture set for $basetexture.
+		OUT width, PN_Number, #width
+	}
+}

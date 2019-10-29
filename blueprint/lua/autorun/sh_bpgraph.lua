@@ -153,6 +153,7 @@ end
 function meta:PostModifyNodeType( nodeType, action, subaction )
 
 	self:FireListeners(CB_POSTMODIFY_NODETYPE, nodeType, action)
+	self:CacheNodeTypes()
 
 	if action == NODETYPE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
 
@@ -182,8 +183,6 @@ function meta:PostModifyNodeType( nodeType, action, subaction )
 		self.heldConnections[nodeType] = nil
 
 	end
-
-	self:CacheNodeTypes()
 
 end
 
@@ -423,6 +422,15 @@ end
 
 function meta:CheckConversion(pin0, pin1)
 
+	if pin0[2] == PN_Ref and pin1[2] == PN_Ref then
+		if pin0[5] == "Player" and pin1[5] == "Entity" then
+			return true
+		end
+		if pin0[5] == "Entity" and pin1[5] == "Player" then
+			return true
+		end
+	end
+
 	local cv = NodePinImplicitConversions[pin0[2]]
 	if cv then
 		for k,v in pairs(cv) do
@@ -470,7 +478,7 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
 	local p0Type = p0[2]
 	local p1Type = p1[2]
-	if p0Type ~= p1Type then
+	if (p0Type ~= p1Type) or (p0Type == PN_Ref and p0[5] ~= p1[5]) then
 
 		if p0Type == PN_Any and p1Type ~= PN_Exec then return true end
 		if p1Type == PN_Any and p0Type ~= PN_Exec then return true end

@@ -88,7 +88,7 @@ LIB GLOBAL
 		DESC Creates a console variable (ConVar), in general these are for things like gamemode/server settings.
 		IN name, PN_String, #Name of the convar. This cannot be a name of an engine console command or console variable. It will silently fail if it is. If it is the same name as another lua ConVar, it will return that ConVar object.
 		IN value, PN_String, #Default value of the convar. Can also be a number.
-		IN flags, PN_Number, PNF_Nullable, #Flags of the convar, see FCVAR_ Enums, either as bitflag or as table.
+		IN flags, PN_Enum, PNF_Bitfield, FCVAR, #Flags of the convar, see FCVAR_ Enums, either as bitflag or as table.
 		IN helptext, PN_String, PNF_Nullable, #The help text to show in the console.
 		IN min, PN_Number, PNF_Nullable, #If set, the convar cannot be changed to a number lower than this value. Next Update Change This feature is only available in the next update.
 		IN max, PN_Number, PNF_Nullable, #If set, the convar cannot be changed to a number higher than this value. Next Update Change This feature is only available in the next update.

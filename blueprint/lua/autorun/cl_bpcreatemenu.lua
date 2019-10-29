@@ -159,7 +159,7 @@ function PANEL:Init()
 	self.resultList:SetBackgroundColor(Color(50,50,50))
 
 	self:SetWide(400)
-	self:SetTall(300)
+	self:SetTall(500)
 
 	self:SizeToContents( true, false )
 

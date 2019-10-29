@@ -1,0 +1,343 @@
+CLASS CNavArea
+{
+	FUNC SERVER AddHidingSpot
+	{
+		DESC Adds a hiding spot onto this nav area.
+		IN pos, PN_Vector, #The position on the nav area
+		IN flags, PN_Number, PNF_Nullable, #Flags describing what kind of hiding spot this is. 0 = None (Not recommended) 1 = In Cover/basically a hiding spot, in a corner with good hard cover nearby 2 = good sniper spot, had at least one decent sniping corridor 4 = perfect sniper spot, can see either very far, or a large area, or both 8 = exposed, spot in the open, usually on a ledge or cliff Values over 255 will be clamped.
+	}
+	FUNC SERVER AddToClosedList
+	{
+		DESC Adds this CNavArea to the closed list, a list of areas that have been checked by A* pathfinding algorithm.
+	}
+	FUNC SERVER AddToOpenList
+	{
+		DESC Adds this CNavArea to the Open List.
+	}
+	FUNC SERVER ClearSearchLists
+	{
+		DESC Clears the open and closed lists for a new search.
+	}
+	FUNC SERVER ComputeAdjacentConnectionHeightChange
+	{
+		DESC Returns the height difference between the edges of two connected navareas.
+		IN navarea, PN_Ref, PNF_None, CNavArea
+		OUT height, PN_Number, #The height change
+	}
+	FUNC SERVER ComputeDirection
+	{
+		DESC Returns the NavDir_ Enums direction that the given vector faces on this CNavArea.
+		IN pos, PN_Vector, #The position to compute direction towards.
+		OUT dir, PN_Enum, PNF_None, NavDir, #The direction the vector is in relation to this CNavArea. See NavDir_ Enums.
+	}
+	FUNC SERVER ComputeGroundHeightChange
+	{
+		DESC Returns the height difference on the Z axis of the two CNavAreas. This is calculated from the center most point on both CNavAreas.
+		IN navArea, PN_Ref, PNF_None, CNavArea, #The nav area to test against.
+		OUT height, PN_Number, #The ground height change.
+	}
+	FUNC SERVER ConnectTo
+	{
+		DESC Connects this CNavArea to another CNavArea or CNavLadder with a one way connection. ( From this area to the target )
+		IN area, PN_Ref, PNF_None, CNavArea, #The CNavArea or CNavLadder this area leads to.
+	}
+	FUNC SERVER Contains
+	{
+		DESC Returns true if this CNavArea contains the given vector.
+		IN pos, PN_Vector, #The position to test.
+		OUT result, PN_Bool, #True if the vector was inside and false otherwise.
+	}
+	FUNC SERVER Disconnect
+	{
+		DESC Disconnects this nav area from given area or ladder. (Only disconnects one way)
+		IN area, PN_Ref, PNF_None, CNavArea, #The CNavArea or CNavLadder this to disconnect from.
+	}
+	FUNC SERVER Draw
+	{
+		DESC Draws this navarea on debug overlay.
+	}
+	FUNC SERVER DrawSpots
+	{
+		DESC Draws the hiding spots on debug overlay. This includes sniper/exposed spots too!
+	}
+	PURE SERVER GetAdjacentAreas
+	{
+		DESC Returns a table of all the CNavAreas that have a ( one and two way ) connection from this CNavArea.
+		OUT adjacent, PN_Ref, PNF_Table, CNavArea, #A table of all CNavArea that have a ( one and two way ) connection from this CNavArea. Returns an empty table if this area has no outgoing connections to any other areas.
+	}
+	PURE SERVER GetAdjacentAreasAtSide
+	{
+		DESC Returns a table of all the CNavAreas that have a ( one and two way ) connection from this CNavArea in given direction.
+		IN navDir, PN_Enum, PNF_None, NavDir, #The direction, in which to look for CNavAreas, see NavDir_ Enums.
+		OUT adjacent, PN_Ref, PNF_Table, CNavArea, #A table of all CNavArea that have a ( one and two way ) connection from this CNavArea in given direction. Returns an empty table if this area has no outgoing connections to any other areas in given direction.
+	}
+	PURE SERVER GetAdjacentCount
+	{
+		DESC Returns the amount of CNavAreas that have a connection ( one and two way ) from this CNavArea.
+		OUT count, PN_Number, #The amount of CNavAreas that have a connection ( one and two way ) from this CNavArea.
+	}
+	PURE SERVER GetAdjacentCountAtSide
+	{
+		DESC Returns the amount of CNavAreas that have a connection ( one or two way ) from this CNavArea in given direction.
+		IN navDir, PN_Enum, PNF_None, NavDir, #The direction, in which to look for CNavAreas, see NavDir_ Enums.
+		OUT count, PN_Number, #The amount of CNavAreas that have a connection ( one or two way ) from this CNavArea in given direction.
+	}
+	PURE SERVER GetAttributes
+	{
+		DESC Returns the attribute mask for the given CNavArea.
+		OUT attributes, PN_Enum, PNF_Bitfield, NAV_MESH, #Attribute mask for this CNavArea, see NAV_MESH_ Enums for the specific flags. NOTE	 A navmesh that was generated with nav_quicksave set to 1 will have all CNavAreas attribute masks set to 0
+	}
+	PURE SERVER GetCenter
+	{
+		DESC Returns the center most vector point for the given CNavArea.
+		OUT center, PN_Vector, #The center vector.
+	}
+	PURE SERVER GetClosestPointOnArea
+	{
+		DESC Returns the closest point of this Nav Area from the given position.
+		IN pos, PN_Vector, #The given position, can be outside of the Nav Area bounds.
+		OUT closest, PN_Vector, #The closest position on this Nav Area.
+	}
+	PURE SERVER GetCorner
+	{
+		DESC Returns the vector position of the corner for the given CNavArea.
+		IN cornerid, PN_Enum, PNF_None, NavCorner, #The target corner to get the position of, takes NavCorner_ Enums.
+		OUT corner, PN_Vector, #The corner position.
+	}
+	PURE SERVER GetCostSoFar
+	{
+		DESC Returns the cost from starting area this area when pathfinding. Set by CNavArea:SetCostSoFar.
+		OUT cost, PN_Number, #The cost so far.
+	}
+	PURE SERVER GetExposedSpots
+	{
+		DESC Returns a table of very bad hiding spots in this area.
+		OUT exposed, PN_Vector, PNF_Table, #A table of Vectors
+	}
+	PURE SERVER GetExtentInfo
+	{
+		DESC Returns size info about the nav area.
+		OUT extents, PN_Struct, PNF_Table, NavExtent, #Returns a table containing the following keys: Vector hi Vector lo number SizeX number SizeY number SizeZ
+	}
+	PURE SERVER GetHidingSpots
+	{
+		DESC Returns a table of good hiding spots in this area.
+		IN type, PN_Number, PNF_Nullable, #The type of spots to include. 0 = None (Not recommended) 1 = In Cover/basically a hiding spot, in a corner with good hard cover nearby 2 = good sniper spot, had at least one decent sniping corridor 4 = perfect sniper spot, can see either very far, or a large area, or both 8 = exposed, spot in the open, usually on a ledge or cliff, same as GetExposedSpots Values over 255 and below 0 will be clamped.
+		OUT spots, PN_Vector, PNF_Table, #A table of Vectors
+	}
+	PURE SERVER GetID
+	{
+		DESC Returns this CNavAreas unique ID.
+		OUT id, PN_Number, #The unique ID.
+	}
+	PURE SERVER GetIncomingConnections
+	{
+		DESC Returns a table of all the CNavAreas that have a one-way connection to this CNavArea.
+		OUT connections, PN_Ref, PNF_Table, CNavArea, #A table of all CNavAreas with one-way connection to this CNavArea. Returns an empty table if there are no one-way incoming connections to this CNavArea.
+	}
+	PURE SERVER GetIncomingConnectionsAtSide
+	{
+		DESC Returns a table of all the CNavAreas that have a one-way connection to this CNavArea from given direction.
+		IN navDir, PN_Enum, PNF_None, NavDir, #The direction, from which to look for CNavAreas, see NavDir_ Enums.
+		OUT connections, PN_Ref, PNF_Table, CNavArea, #A table of all CNavAreas with one-way connection to this CNavArea from given direction. Returns an empty table if there are no one-way incoming connections to this CNavArea from given direction.
+	}
+	PURE SERVER GetLadders
+	{
+		DESC Returns all CNavLadders that have a ( one or two way ) connection from this CNavArea.
+		OUT ladders, PN_Ref, PNF_Table, CNavLadder, #The CNavLadders that have a ( one or two way ) connection from this CNavArea.
+	}
+	PURE SERVER GetLaddersAtSide
+	{
+		DESC Returns all CNavLadders that have a ( one or two way ) connection from ( one and two way ) this CNavArea in given direction.
+		IN navDir, PN_Number, #The direction, in which to look for CNavLadders. 0 = Up ( LadderDirectionType::LADDER_UP ) 1 = Down ( LadderDirectionType::LADDER_DOWN )
+		OUT ladders, PN_Ref, PNF_Table, CNavLadder, #The CNavLadders that have a ( one or two way ) connection from this CNavArea in given direction.
+	}
+	PURE SERVER GetParent
+	{
+		DESC Returns the parent CNavArea
+		OUT parent, PN_Ref, PNF_None, CNavArea, #The parent CNavArea
+	}
+	PURE SERVER GetParentHow
+	{
+		DESC Returns how this CNavArea is connected to its parent.
+		OUT how, PN_Enum, PNF_None, NavTraverseType, #See NavTraverseType_ Enums
+	}
+	PURE SERVER GetPlace
+	{
+		DESC Returns the Place of the nav area.
+		OUT place, PN_String, #The place of the nav area, or no value if it doesn't have a place set.
+	}
+	PURE SERVER GetRandomAdjacentAreaAtSide
+	{
+		DESC Returns a random CNavArea that has an outgoing ( one or two way ) connection from this CNavArea in given direction.
+		IN navDir, PN_Enum, PNF_None, NavDir, #The direction, in which to look for CNavAreas, see NavDir_ Enums.
+		OUT area, PN_Ref, PNF_None, CNavArea, #The random CNavArea that has an outgoing ( one or two way ) connection from this CNavArea in given direction, if any.
+	}
+	PURE SERVER GetRandomPoint
+	{
+		DESC Returns a random point on the nav area.
+		OUT point, PN_Vector, #The random point on the nav area.
+	}
+	PURE SERVER GetSizeX
+	{
+		DESC Returns the width this Nav Area.
+		OUT size, PN_Number
+	}
+	PURE SERVER GetSizeY
+	{
+		DESC Returns the height of this Nav Area.
+		OUT size, PN_Number
+	}
+	PURE SERVER GetTotalCost
+	{
+		DESC Returns the total cost when passing from starting area to the goal area through this node. Set by CNavArea:SetTotalCost.
+		OUT totalCost, PN_Number, #The total cost
+	}
+	PURE SERVER GetZ
+	{
+		DESC Returns the elevation of this Nav Area at the given position.
+		IN pos, PN_Vector, #The position to get the elevation from, the z value from this position is ignored and only the X and Y values are used to this task.
+		OUT elevation, PN_Number, #The elevation.
+	}
+	PURE SERVER HasAttributes
+	{
+		DESC Returns true if the given CNavArea has this attribute flag set.
+		IN attribs, PN_Enum, PNF_None, NAV, #Attribute mask to check for, see NAV_MESH_ Enums
+		OUT result, PN_Bool, #True if the CNavArea matches the given mask. False otherwise.
+	}
+	PURE SERVER IsBlocked
+	{
+		DESC Returns whether the nav area is blocked or not, i.e. whether it can be walked through or not.
+		IN teamID, PN_Number, PNF_Nullable, #The team ID to test, -2 = any team. Only 2 actual teams are available, 0 and 1.
+		IN ignoreNavBlockers, PN_Bool, PNF_Nullable, #Whether to ignore func_nav_blocker entities.
+		OUT blocked, PN_Bool, #Whether the area is blocked or not
+	}
+	PURE SERVER IsClosed
+	{
+		DESC Returns whether this node is in the Closed List.
+		OUT closed, PN_Bool, #Whether this node is in the Closed List.
+	}
+	PURE SERVER IsConnected
+	{
+		DESC Returns whether this CNavArea has an outgoing ( one or two way ) connection to given CNavArea.
+		IN navArea, PN_Ref, PNF_None, CNavArea, #The CNavArea to test against.
+		OUT connected, PN_Bool, #Whether this CNavArea has an outgoing ( one or two way ) connection to given CNavArea.
+	}
+	PURE SERVER IsConnectedAtSide
+	{
+		DESC Returns whether this CNavArea has an outgoing ( one or two way ) connection to given CNavArea in given direction.
+		IN navArea, PN_Ref, PNF_None, CNavArea, #The CNavArea to test against.
+		IN navDirType, PN_Enum, PNF_None, NavDir, #The direction, in which to look for the connection. See NavDir_ Enums
+		OUT connected, PN_Bool, #Whether this CNavArea has an outgoing ( one or two way ) connection to given CNavArea in given direction.
+	}
+	PURE SERVER IsCoplanar
+	{
+		DESC Returns whether this Nav Area is in the same plane as the given one.
+		IN navArea, PN_Ref, PNF_None, CNavArea, #The Nav Area to test.
+		OUT coplanar, PN_Bool, #Whether we're coplanar or not.
+	}
+	PURE SERVER IsFlat
+	{
+		DESC Returns whether this Nav Area is flat within the tolerance of the nav_coplanar_slope_limit_displacement and nav_coplanar_slope_limit convars.
+		OUT flat, PN_Bool, #Whether this CNavArea is mostly flat.
+	}
+	PURE SERVER IsOpen
+	{
+		DESC Returns whether this area is in the Open List.
+		OUT open, PN_Bool, #Whether this area is in the Open List.
+	}
+	PURE SERVER IsOpenListEmpty
+	{
+		DESC Returns whether the Open List is empty or not.
+		OUT empty, PN_Bool, #Whether the Open List is empty or not.
+	}
+	PURE SERVER IsOverlapping
+	{
+		DESC Returns if this position overlaps the Nav Area within the given tolerance.
+		IN pos, PN_Vector, #The overlapping position to test.
+		IN tolerance, PN_Number, PNF_Nullable, #The tolerance of the overlapping, set to 0 for no tolerance.
+		OUT overlapping, PN_Bool, #Whether the given position overlaps the Nav Area or not.
+	}
+	PURE SERVER IsOverlappingArea
+	{
+		DESC Returns true if this CNavArea is overlapping the given CNavArea.
+		IN navArea, PN_Ref, PNF_None, CNavArea, #The CNavArea to test against.
+		OUT overlapping, PN_Bool, #True if the given CNavArea overlaps this CNavArea at any point.
+	}
+	PURE SERVER IsRoughlySquare
+	{
+		DESC Returns if we're shaped like a square.
+		OUT square, PN_Bool, #If we're a square or not.
+	}
+	PURE SERVER IsUnderwater
+	{
+		DESC Whether this Nav Area is placed underwater.
+		OUT underwater, PN_Bool, #Whether we're underwater or not.
+	}
+	PURE SERVER IsValid
+	{
+		DESC Returns whether this CNavArea is valid or not.
+		OUT valid, PN_Bool, #Whether this CNavArea is valid or not.
+	}
+	PURE SERVER IsVisible
+	{
+		DESC Returns whether we can be seen from the given position.
+		IN pos, PN_Vector, #The position to check.
+		OUT visible, PN_Bool, #Whether we can be seen or not.
+		OUT center, PN_Vector, #If we can be seen, this is returned with either the center or one of the corners of the Nav Area.
+	}
+	FUNC SERVER PlaceOnGround
+	{
+		DESC Drops a corner or all corners of a CNavArea to the ground below it.
+		IN corner, PN_Enum, PNF_None, NavCorner, #The corner(s) to drop, uses NavCorner_ Enums
+	}
+	FUNC SERVER PopOpenList
+	{
+		DESC Removes a CNavArea from the Open List with the lowest cost to traverse to from the starting node, and returns it.
+		OUT area, PN_Ref, PNF_None, CNavArea, #The CNavArea from the Open List with the lowest cost to traverse to from the starting node.
+	}
+	FUNC SERVER Remove
+	{
+		DESC Removes the given nav area.
+	}
+	FUNC SERVER RemoveFromClosedList
+	{
+		DESC Removes this node from the Closed List.
+	}
+	FUNC SERVER SetAttributes
+	{
+		DESC Sets the attributes for given CNavArea.
+		IN attribs, PN_Enum, PNF_None, NAV, #The attribute bitflag. See NAV_MESH_ Enums
+	}
+	FUNC SERVER SetCorner
+	{
+		DESC Sets the position of a corner of a nav area.
+		IN corner, PN_Enum, PNF_None, NavCorner, #The corner to set, uses NavCorner_ Enums
+		IN position, PN_Vector, #The new position to set.
+	}
+	FUNC SERVER SetCostSoFar
+	{
+		DESC Sets the cost from starting area this area when pathfinding.
+		IN cost, PN_Number, #The cost so far
+	}
+	FUNC SERVER SetParent
+	{
+		DESC Sets the new parent of this CNavArea.
+		IN parent, PN_Ref, PNF_None, CNavArea, #The new parent to set
+	}
+	FUNC SERVER SetPlace
+	{
+		DESC Sets the Place of the nav area.
+		IN place, PN_String, #Set to "" to remove place from the nav area.
+		OUT success, PN_Bool, #Returns true of operation succeeded, false otherwise.
+	}
+	FUNC SERVER SetTotalCost
+	{
+		DESC Sets the total cost when passing from starting area to the goal area through this node.
+		IN cost, PN_Number, #The total cost of the path to set. Must be above or equal 0.
+	}
+	FUNC SERVER UpdateOnOpenList
+	{
+		DESC Moves this open list to appropriate position based on its CNavArea:GetTotalCost compared to the total cost of other areas in the open list.
+	}
+}
