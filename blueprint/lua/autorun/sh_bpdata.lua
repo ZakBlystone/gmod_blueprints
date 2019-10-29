@@ -260,9 +260,7 @@ function OUT:WriteToNet(compressed)
 
 	local str, len = self:GetString(compressed, false)
 	net.WriteUInt(len, 32)
-	for i=1, len do
-		net.WriteUInt(string.byte(str[i]), 8)
-	end
+	net.WriteData(str, len)
 
 end
 
@@ -364,11 +362,8 @@ end
 
 function IN:ReadFromNet(compressed)
 
-	local str = ""
 	local len = net.ReadUInt(32)
-	for i=1, len do
-		str = str .. string.char(net.ReadUInt(8))
-	end
+	local str = net.ReadData(len)
 	self:LoadString(str, compressed, false)
 
 end

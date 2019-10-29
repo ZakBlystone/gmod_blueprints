@@ -733,8 +733,6 @@ function meta:ReadFromStream(stream, mode, version)
 		if mode == bpmodule.STREAM_FILE then
 
 			self.connectionMeta = bpdata.ReadValue( stream )
-			self.loadedFromFile = true
-			PrintTable( self.connectionMeta )
 
 		end
 

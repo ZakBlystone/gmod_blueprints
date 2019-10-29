@@ -204,7 +204,7 @@ function meta:WriteToStream(stream, mode, version)
 		stream:WriteInt(v.id, false)
 		if self.namedItems then bpdata.WriteValue( v.name, stream ) end
 		if not v.WriteToStream then error("Need stream implementation for list item") end
-		v:WriteToStream(stream, node, version)
+		v:WriteToStream(stream, mode, version)
 	end
 
 end
