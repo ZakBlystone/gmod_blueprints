@@ -30,7 +30,7 @@ GRAPH_NODETYPE_ACTIONS = {
 
 
 fmtMagic = 0x42504D58
-fmtVersion = 6
+fmtVersion = 7
 
 local meta = {}
 meta.__index = meta
@@ -43,9 +43,14 @@ bpcommon.CreateIndexableListIterators(meta, "variables")
 
 function meta:Init(type)
 
+	self.graphConstructor = function()
+		local graph = bpgraph.New(self)
+		return graph
+	end
+
 	self.version = fmtVersion
-	self.graphs = bplist.New():NamedItems("Graph")
-	self.variables = bplist.New():NamedItems("Var")
+	self.graphs = bplist.New():NamedItems("Graph"):Constructor(self.graphConstructor)
+	self.variables = bplist.New():NamedItems("Var"):Constructor(bpvariable.New)
 	self.id = nextModuleID
 	self.type = self.type or MT_Game
 	self.revision = 1
@@ -193,7 +198,6 @@ end
 function meta:NewGraph(name, type)
 
 	local id, graph = self.graphs:Add( bpgraph.New(self, type), name )
-	graph:PostInit()
 	return id, graph
 
 end
@@ -254,7 +258,8 @@ function meta:WriteToStream(stream, mode)
 	stream:WriteInt( self.revision + 1, false ) -- each save is a revision off of the original
 	stream:WriteStr( self.uniqueID )
 
-	bpdata.WriteValue( self.variables:GetTable(), stream )
+	self.variables:WriteToStream(stream, mode, fmtVersion)
+	self.graphs:WriteToStream(stream, mode, fmtVersion)
 
 	stream:WriteInt( self.graphs:Size(), false )
 	for id, graph in self:Graphs() do
@@ -292,7 +297,9 @@ function meta:ReadFromStream(stream, mode)
 		print( bpcommon.GUIDToString( self.uniqueID ) )
 	end
 
-	if version >= 2 then
+	if version >= 7 then
+		self.variables:ReadFromStream(stream, mode, version)
+	elseif version >= 2 then
 		local vars = bpdata.ReadValue( stream )
 		for _, v in pairs(vars) do
 			local varID = self:NewVariable(v.name, v.type, v.default, v.flags, v.ex)
@@ -304,11 +311,15 @@ function meta:ReadFromStream(stream, mode)
 		end
 	end
 
-	local count = stream:ReadInt( false )
-	for i=1, count do
-		local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )
-		local graph = self:GetGraph(id)
-		graph:ReadFromStream(stream, mode, version)
+	if version >= 7 then
+		self.graphs:ReadFromStream(stream, mode, version)
+	else
+		local count = stream:ReadInt( false )
+		for i=1, count do
+			local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )
+			local graph = self:GetGraph(id)
+			graph:ReadFromStream(stream, mode, version)
+		end
 	end
 
 	if version < 4 then

@@ -1166,12 +1166,7 @@ if SERVER then
 	graph.inputs:Add( bpvariable.New(), "testVar" )
 
 	local graphid, graph = mod:NewGraph("Events", GT_Event)
-	graph:AddNode({
-		nodeType = "__Call" .. funcid,
-		x = 0,
-		y = 0,
-	})
-
+	graph:AddNode("__Call" .. funcid)
 
 	mod:Compile()
 	--local mod = bpmodule.CreateTestModule()

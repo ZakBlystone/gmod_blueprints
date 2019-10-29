@@ -33,6 +33,13 @@ function meta:NamedItems( prefix )
 
 end
 
+function meta:Constructor( func )
+
+	self.constructor = func
+	return self
+
+end
+
 function meta:Clear()
 
 	self.items = {}
@@ -131,6 +138,8 @@ function meta:Add( item, optName )
 	self.itemLookup[item.id] = item
 	self:Advance()
 
+	if item.PostInit then item:PostInit() end
+
 	self:FireListeners(CB_ADD, item.id, item)
 	self:FireListeners(CB_POSTMODIFY, MODIFY_ADD, item.id, item)
 
@@ -181,6 +190,46 @@ function meta:Rename( id, newName )
 	item.name = self:GetNameForItem( newName, item )
 	self:FireListeners(CB_RENAME, item.id, prev, item.name)
 	self:FireListeners(CB_POSTMODIFY, MODIFY_RENAME, item.id, item)
+
+end
+
+function meta:WriteToStream(stream, mode, version)
+
+	if not self.constructor then error("No constructor for list items") end
+
+	stream:WriteBool(self.namedItems)
+	stream:WriteInt(self.nextID, false)
+	stream:WriteInt(self:Size(), false)
+	for k,v in pairs(self.items) do
+		stream:WriteInt(v.id, false)
+		if self.namedItems then bpdata.WriteValue( v.name, stream ) end
+		if not v.WriteToStream then error("Need stream implementation for list item") end
+		v:WriteToStream(stream, node, version)
+	end
+
+end
+
+function meta:ReadFromStream(stream, mode, version)
+
+	if not self.constructor then error("No constructor for list items") end
+
+	self:Clear()
+	self.namedItems = stream:ReadBool()
+	self.nextID = stream:ReadInt(false)
+	local count = stream:ReadInt(false)
+	for i=1, count do
+		local item = self.constructor()
+		item.id = stream:ReadInt(false)
+		if item.PostInit then item:PostInit() end
+		self.itemLookup[item.id] = item
+		if self.namedItems then item.name = bpdata.ReadValue( stream ) end
+		if not item.ReadFromStream then error("Need stream implementation for list item") end
+		item:ReadFromStream(stream, mode, version)
+		self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
+		table.insert(self.items, item)
+		self:FireListeners(CB_ADD, item.id, item)
+		self:FireListeners(CB_POSTMODIFY, MODIFY_ADD, item.id, item)
+	end
 
 end
 

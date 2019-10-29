@@ -291,6 +291,14 @@ function OUT:WriteBits(v, bits)
 	end
 end
 
+function OUT:WriteBool(b)
+	if self.bitstream then
+		self:WriteBit(b == true and 1 or 0)
+	else
+		self:WriteByte(b == true and 1 or 0, false)
+	end
+end
+
 function OUT:WriteStr(str) 
 	if self.bitstream then
 		for i=1, string.len(str) do self:WriteBits(str:byte(i), 8) end
@@ -394,6 +402,14 @@ function IN:ReadBits(bits)
 	end
 
 	return value
+end
+
+function IN:ReadBool()
+	if self.bitstream then
+		return self:ReadBit() ~= 0
+	else
+		return self:ReadByte(false) ~= 0
+	end
 end
 
 function IN:ReadStr(n)
@@ -555,7 +571,7 @@ function ReadValue(buf, thread)
 	if thread then
 		buf.__counter = buf.__counter or 0
 		buf.__counter = buf.__counter + 1
-		if (buf.__counter % 1500) == 0 then
+		if (buf.__counter % 2500) == 0 then
 			coroutine.yield() 
 		end
 	end

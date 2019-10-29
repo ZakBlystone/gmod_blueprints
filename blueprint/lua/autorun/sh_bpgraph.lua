@@ -5,6 +5,7 @@ include("sh_bpschema.lua")
 include("sh_bpnodedef.lua")
 include("sh_bpdata.lua")
 include("sh_bplist.lua")
+include("sh_bpnode.lua")
 
 module("bpgraph", package.seeall, bpcommon.rescope(bpschema, bpnodedef)) --bpnodedef is temporary
 
@@ -34,12 +35,18 @@ bpcommon.CreateIndexableListIterators(meta, "outputs")
 
 function meta:Init(module, type)
 
+	self.nodeConstructor = function(...)
+		local node = bpnode.New(...)
+		node.graph = self
+		return node
+	end
+
 	self.type = type or GT_Event
 	self.module = module
-	self.nodes = bplist.New()
+	self.nodes = bplist.New():Constructor(self.nodeConstructor)
 	self.connections = {}
-	self.inputs = bplist.New():NamedItems("Inputs")
-	self.outputs = bplist.New():NamedItems("Outputs")
+	self.inputs = bplist.New():NamedItems("Inputs"):Constructor(bpvariable.New)
+	self.outputs = bplist.New():NamedItems("Outputs"):Constructor(bpvariable.New)
 	self.heldConnections = {}
 
 	self.inputs:AddListener(function(cb, action, id, var)
@@ -96,17 +103,8 @@ function meta:PostInit()
 
 	if self.type == GT_Function then
 
-		self:AddNode({
-			nodeType = "__Entry",
-			x = 0,
-			y = 200,
-		})
-
-		self:AddNode({
-			nodeType = "__Exit",
-			x = 400,
-			y = 200,
-		})
+		self:AddNode("__Entry", 0, 200)
+		self:AddNode("__Exit", 400, 200)
 
 	end
 
@@ -331,26 +329,15 @@ function meta:Connections(forward)
 
 end
 
-function meta:NodeIDToIndex( nodeID )
-
-	local n = 1
-	for id in self:NodeIDs() do
-		if id == nodeID then return n end
-		n = n + 1
-	end
-
-end
-
 function meta:GetNodePin(nodeID, pinID)
 
-	return self:GetNodeType(self:GetNode(nodeID)).pins[pinID]
+	return self:GetNode(nodeID):GetPin(pinID)
 
 end
 
 function meta:GetPinType(nodeID, pinID)
 
-	local node = self:GetNode(nodeID)
-	local ntype = self:GetNodeType(node)
+	local ntype = self:GetNode(nodeID):GetType()
 
 	if ntype.meta and ntype.meta.informs then
 
@@ -445,21 +432,9 @@ function meta:CheckConversion(pin0, pin1)
 
 end
 
-function meta:NodeToString(nodeID)
-
-	local node = self:GetNodeType(self:GetNode(nodeID))
-	if not node then return self:GetName() .. ":" .. "<unknown>" end
-	return self:GetName() .. "." .. node.name
-
-end
-
 function meta:NodePinToString(nodeID, pinID)
 
-	local node = self:GetNodeType(self:GetNode(nodeID))
-	if not node then return self:GetName() .. ":" .. "<unknown>" end
-	local p = node.pins[pinID]
-	if not p then return self:GetName() .. ":" .. node.name .. ".<unknown>" end
-	return self:GetName() .. "." .. node.name .. "." .. p[3]
+	return self:GetNode(nodeID):ToString(pinID)
 
 end
 
@@ -535,7 +510,7 @@ end
 function meta:GetPinLiteral(nodeID, pinID)
 
 	local node = self:GetNode(nodeID)
-	return node.literals[pinID]
+	return node:GetLiteral(pinID)
 
 end
 
@@ -544,65 +519,20 @@ function meta:SetPinLiteral(nodeID, pinID, value)
 	local node = self:GetNode(nodeID)
 	if node == nil then error("Tried to set literal on null node") end
 
-	value = tostring(value)
-
-	node.literals[pinID] = value
-	self:FireListeners(CB_PIN_EDITLITERAL, nodeID, pinID, value)
+	node:SetLiteral(pinID, value)
 
 end
 
-function meta:AddNode(node)
+function meta:AddNode(...)
 
-	local ntype = self:GetNodeType(node)
-	if ntype == nil then
-		ErrorNoHalt("Failed to create node type: " .. tostring(node.nodeType) .. "\n")
-		self.nodes:Advance()
-		return
-	end
-
-	node.graphID = self.id
-	node.literals = node.literals or {}
-
-	node.x = math.Round(node.x / 15) * 15
-	node.y = math.Round(node.y / 15) * 15
-
-	local id = self.nodes:Add( node )
-	local defaults = ntype.defaults or {}
-
-	for pinID, pin in pairs(ntype.pins) do
-
-		local default = defaults[ntype.pinlookup[pinID][2]]
-
-		if pin[1] == PD_In then
-
-			local literal = NodeLiteralTypes[pin[2]]
-			if literal then
-
-				if self:GetPinLiteral(id, pinID) == nil then
-					self:SetPinLiteral(id, pinID, default or Defaults[pin[2]])
-				end
-
-			end
-
-		end
-
-	end
-
-	return id
+	local node = self.nodeConstructor(...)
+	return self.nodes:Add( node )
 
 end
 
 function meta:MoveNode(nodeID, x, y)
 
-	local node = self:GetNode(nodeID)
-
-	x = math.Round(x / 15) * 15
-	y = math.Round(y / 15) * 15
-
-	node.x = x
-	node.y = y
-
-	self:FireListeners(CB_NODE_MOVE, nodeID, x, y)
+	self:GetNode(nodeID):Move(x,y)
 
 end
 
@@ -703,50 +633,13 @@ function meta:WriteToStream(stream, mode, version)
 	end
 
 	if self.type == GT_Function then
-
-		stream:WriteInt( self.inputs:Size(), false )
-		stream:WriteInt( self.outputs:Size(), false )
-		for id, input in self:Inputs() do
-			input:WriteToStream( stream, mode, version )
-		end
-
-		for id, output in self:Outputs() do
-			output:WriteToStream( stream, mode, version )
-		end
-
+		self.inputs:WriteToStream(stream, mode, version)
+		self.outputs:WriteToStream(stream, mode, version)
 	end
 
-	for id, node in self:Nodes() do
-		local name = self:GetNodeType(node).name
-		if not namelookup[name] then 
-			table.insert(nametable, name)
-			namelookup[name] = #nametable
-		end
-	end
+	self.nodes:WriteToStream(stream, mode, version)
 
-	stream:WriteInt( #nametable, false )
-	for _, str in pairs(nametable) do stream:WriteByte( str:len(), false ) stream:WriteStr(str) end
-
-	stream:WriteInt( self.nodes:Size(), false )
-	for id, node in self:Nodes() do
-		local name = self:GetNodeType(node).name
-		stream:WriteInt( namelookup[name], false )
-		stream:WriteFloat( node.x or 0 )
-		stream:WriteFloat( node.y or 0 )
-		bpdata.WriteValue( node.literals or {}, stream )
-	end
-
-	local remappedConnections = {}
-	for id, connection in self:Connections( version >= 5 ) do --as of version 5, fix connection order being flipped
-		table.insert(remappedConnections, {
-			self:NodeIDToIndex(connection[1]),
-			connection[2],
-			self:NodeIDToIndex(connection[3]),
-			connection[4],
-		})
-	end
-
-	bpdata.WriteValue( remappedConnections, stream )
+	bpdata.WriteValue( self.connections, stream )
 
 	if version >= 5 then
 
@@ -780,46 +673,57 @@ function meta:ReadFromStream(stream, mode, version)
 	end
 
 	if self.type == GT_Function then
-		local numInputs = stream:ReadInt( false )
-		local numOutputs = stream:ReadInt( false )
-		for i=1, numInputs do
-			local v = bpvariable.New()
-			v:ReadFromStream( stream, mode, version )
-			self.inputs:Add(v)
-		end
-		for i=1, numOutputs do
-			local v = bpvariable.New()
-			v:ReadFromStream( stream, mode, version )
-			self.outputs:Add(v)
+		if version >= 7 then
+			self.inputs:ReadFromStream(stream, mode, version)
+			self.outputs:ReadFromStream(stream, mode, version)
+		else
+			local numInputs = stream:ReadInt( false )
+			local numOutputs = stream:ReadInt( false )
+			for i=1, numInputs do
+				local v = bpvariable.New()
+				v:ReadFromStream( stream, mode, version )
+				self.inputs:Add(v)
+			end
+			for i=1, numOutputs do
+				local v = bpvariable.New()
+				v:ReadFromStream( stream, mode, version )
+				self.outputs:Add(v)
+			end
 		end
 	end
 
-	local nametable = {}
-	local count = stream:ReadInt( false )
-	for i=1, count do 
-		local size = stream:ReadByte( false ) 
-		table.insert(nametable, stream:ReadStr( size ) )
-	end
+	if version >= 7 then
+		self:SuppressEvents( true )
+		self.nodes:ReadFromStream(stream, mode, version)
+		self:SuppressEvents( false )
+	else
+		local nametable = {}
+		local count = stream:ReadInt( false )
+		for i=1, count do 
+			local size = stream:ReadByte( false ) 
+			table.insert(nametable, stream:ReadStr( size ) )
+		end
 
-	self.deferred = {}
+		self.deferred = {}
 
-	local count = stream:ReadInt( false )
-	for i=1, count do
+		local count = stream:ReadInt( false )
+		for i=1, count do
 
-		local nodeTypeName = nametable[stream:ReadInt( false )]
-		local nodeX = stream:ReadFloat()
-		local nodeY = stream:ReadFloat()
-		local literals = bpdata.ReadValue( stream )
-		local redirect = NodeRedirectors[ nodeTypeName ]
-		if redirect then nodeTypeName = redirect end
+			local nodeTypeName = nametable[stream:ReadInt( false )]
+			local nodeX = stream:ReadFloat()
+			local nodeY = stream:ReadFloat()
+			local literals = bpdata.ReadValue( stream )
+			local redirect = NodeRedirectors[ nodeTypeName ]
+			if redirect then nodeTypeName = redirect end
 
-		table.insert(self.deferred, {
-			nodeType = nodeTypeName,
-			x = nodeX,
-			y = nodeY,
-			literals = literals,
-		})
+			table.insert(self.deferred, {
+				nodeType = nodeTypeName,
+				x = nodeX,
+				y = nodeY,
+				literals = literals,
+			})
 
+		end
 	end
 
 	self.connections = bpdata.ReadValue( stream )
@@ -900,37 +804,49 @@ function meta:CreateDeferredData()
 	--print("CREATE DEFERRED NODES: " .. #self.deferred)
 
 	self:CacheNodeTypes()
-	self:SuppressEvents( true )
 
-	for _, v in pairs(self.deferred) do
+	if self.deferred then
 
-		local id = self:AddNode(v)
-		if id ~= nil then
-			for k, v in pairs(v.literals) do
-				--print("LOAD LITERAL[" .. id .. "|" .. nodeTypeName .. "]: " .. tostring(k) .. " = " .. tostring(v))
-				self:SetPinLiteral( id, k, v )
+		self:SuppressEvents( true )
+
+		for _, v in pairs(self.deferred) do
+
+			local id = self:AddNode( v.nodeType, v.x, v.y )
+			if id ~= nil then
+				for k, v in pairs(v.literals) do
+					--print("LOAD LITERAL[" .. id .. "|" .. nodeTypeName .. "]: " .. tostring(k) .. " = " .. tostring(v))
+					self:SetPinLiteral( id, k, v )
+				end
+			end
+
+		end
+
+		self:SuppressEvents( false )
+
+		for id, node in self:Nodes() do
+			local nodeType = self:GetNodeType(node) --TODO create impromptu nodetypes for missing nodes to satisfy connections
+			if nodeType ~= nil then
+				self:FireListeners(CB_NODE_ADD, id)
 			end
 		end
 
-	end
+		self.deferred = nil
 
-	self:SuppressEvents( false )
+	else
 
-	for id, node in self:Nodes() do
-		local nodeType = self:GetNodeType(node) --TODO create impromptu nodetypes for missing nodes to satisfy connections
-		if nodeType ~= nil then
-			self:FireListeners(CB_NODE_ADD, id)
+		for id, node in self:Nodes() do
+			if node:PostInit() then self:FireListeners(CB_NODE_ADD, id) end
 		end
+
+		self:RemoveNodeIf( function(node) return node:GetType() == nil end )
+
 	end
 
 	self:ResolveConnectionMeta()
-
 	self:RemoveInvalidConnections()
 	for i, connection in self:Connections() do
 		self:FireListeners(CB_CONNECTION_ADD, connection, i)
 	end
-
-	self.deferred = nil
 
 end
 
@@ -958,76 +874,19 @@ end
 function meta:CreateTestGraph()
 
 	local graph = self
-	local n1 = graph:AddNode({
-		nodeType = "If",
-		x = 700,
-		y = 10,
-	})
-
-	local n2 = graph:AddNode({
-		nodeType = "Crouching",
-		x = 350,
-		y = 150,
-	})
-
-	local n4 = graph:AddNode({
-		nodeType = "SetVelocity",
-		x = 1000,
-		y = 100,
-	})
-
-	local n5 = graph:AddNode({
-		nodeType = "Vector",
-		x = 750,
-		y = 200,
-		literals = {0,0,800}
-	})
-
-	local n6 = graph:AddNode({
-		nodeType = "Alive",
-		x = 350,
-		y = 350,
-	})
-
-	local n7 = graph:AddNode({
-		nodeType = "And",
-		x = 600,
-		y = 300,
-	})
-
-	local n8 = graph:AddNode({
-		nodeType = "ToString",
-		x = 650,
-		y = 500,
-	})
-
-	local n9 = graph:AddNode({
-		nodeType = "Print",
-		x = 1000,
-		y = 500,
-	})
-
-	local n10 = graph:AddNode({
-		nodeType = "PlayerTick",
-		x = 10,
-		y = 10,
-	})
-
-	local n11 = graph:AddNode({
-		nodeType = "GetVelocity",
-		x = 350,
-		y = 500,
-	})
-
-	--[[local n6 = graph:AddNode({
-		nodeType = NodeTypes["Crouching"],
-		x = 250,
-		y = 350,
-	})]]
+	local n1 = graph:AddNode("If", 700, 10)
+	local n2 = graph:AddNode("Crouching", 350, 150 )
+	local n4 = graph:AddNode("SetVelocity", 1000, 100)
+	local n5 = graph:AddNode("Vector", 750, 200, {0,0,800})
+	local n6 = graph:AddNode("Alive", 350, 350)
+	local n7 = graph:AddNode("And", 600, 300)
+	local n8 = graph:AddNode("ToString", 650, 500)
+	local n9 = graph:AddNode("Print", 1000, 500)
+	local n10 = graph:AddNode("PlayerTick", 10, 10)
+	local n11 = graph:AddNode("GetVelocity", 350, 500)
 
 	graph:ConnectNodes(n10, 1, n1, 1)
 	graph:ConnectNodes(n10, 2, n2, 1)
-	--graph:ConnectNodes(n2, 2, n1, 2)
 	graph:ConnectNodes(n1, 3, n4, 1)
 	graph:ConnectNodes(n10, 2, n4, 3)
 	graph:ConnectNodes(n5, 4, n4, 4)

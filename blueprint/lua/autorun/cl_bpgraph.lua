@@ -460,12 +460,7 @@ function PANEL:OpenContext()
 
 		x, y = self.canvas:ScreenToLocal(x, y)
 
-		self.graph:AddNode({
-			nodeType = nodeType.name,
-			x = x - canvasFix,
-			y = y - canvasFix,
-		})
-
+		self.graph:AddNode(nodeType.name, x - canvasFix, y - canvasFix)
 	end
 	--createMenu:SetKeyboardInputEnabled(true)
 	--createMenu:SetMouseInputEnabled(true)
