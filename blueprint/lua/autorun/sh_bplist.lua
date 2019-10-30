@@ -109,6 +109,8 @@ end
 function meta:GetNameForItem( optName, item )
 
 	optName = optName or item.name
+
+	if self.preserveNames then return optName end
 	local name = bpcommon.Sanitize(optName) 
 	if name == nil then name = self.namePrefix .. item.id end
 	return bpcommon.Camelize(name)
@@ -120,6 +122,12 @@ function meta:CopyInto( other )
 	other.items = table.Copy( self.items )
 	other.itemLookup = table.Copy( self.itemLookup )
 	other.nextID = self.nextID
+
+end
+
+function meta:PreserveNames(preserve)
+
+	self.preserveNames = preserve
 
 end
 

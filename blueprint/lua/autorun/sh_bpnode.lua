@@ -108,7 +108,7 @@ function meta:Move(x, y)
 	self.x = x
 	self.y = y
 
-	self.graph:FireListeners(CB_NODE_MOVE, nodeID, x, y)
+	self.graph:FireListeners(bpgraph.CB_NODE_MOVE, self.id, x, y)
 
 end
 

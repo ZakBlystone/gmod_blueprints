@@ -3,6 +3,7 @@ AddCSLuaFile()
 print("LOADED BPDEFS")
 
 include("sh_bpcommon.lua")
+include("sh_bpstruct.lua")
 
 module("bpdefs", package.seeall, bpcommon.rescope(bpschema))
 
@@ -12,6 +13,7 @@ local classes = {}
 local libs = {}
 local callbacks = {}
 local structs = {}
+local ready = true
 
 local roleLookup = {
 	["SERVER"] = ROLE_Server,
@@ -269,134 +271,19 @@ local function FixupStructNames( struct )
 
 end
 
-local function PinRetArg( nodeType, infmt, outfmt, concat )
-
-	concat = concat or ","
-	--print(nodeType.name)
-	local base = nodeType.type == NT_Function and 2 or 1
-	local pins = {[PD_In] = {}, [PD_Out] = {}}
-	for k,v in pairs(nodeType.pins) do
-		local s = (v[1] == PD_In and "$" or "#") .. (base+#pins[v[1]])
-		if infmt and v[1] == PD_In then s = infmt(s, v) end
-		if outfmt and v[1] == PD_Out then s = outfmt(s, v) end
-		table.insert(pins[v[1]], s)
-	end
-
-	local ret = table.concat(pins[PD_Out], concat)
-	local arg = table.concat(pins[PD_In], concat)
-	return ret, arg, pins
-
-end
-
-local function StructBreakNode( struct )
-
-	local ntype = { pins = {} }
-	ntype.name = "Break" .. struct.name
-	ntype.type = NT_Pure
-	ntype.desc = struct.desc
-	ntype.code = ""
-	ntype.defaults = {}
-	ntype.category = struct.name
-	ntype.isStruct = true
-
-	table.insert(ntype.pins, {
-		PD_In,
-		PN_Struct,
-		struct.name,
-		PNF_None,
-		struct.name,
-	})
-
-	for _, pin in pairs(struct.pins) do
-
-		table.insert(ntype.pins, {
-			PD_Out,
-			pin.type,
-			pin.name,
-			pin.flags,
-			pin.ex,
-		})
-
-		if pin.default then
-			ntype.defaults[#ntype.pins - 1] = pin.default
-		end
-
-	end
-
-	local ret, arg = PinRetArg( ntype, nil, function(s,pin)
-		return "\n" .. s .. " = $1." .. (struct.invNameMap[pin[3]] or pin[3]) .. ""
-	end, "")
-	if ret[1] == '\n' then ret = ret:sub(2,-1) end
-	ntype.code = ret
-
-	for _, pin in pairs(ntype.pins) do pin[3] = bpcommon.Camelize(pin[3]) end
-
-	ConfigureNodeType(ntype)
-
-	--print(ntype.code)
-
-	return ntype
-
-end
-
-local function StructMakeNode( struct )
-
-	local ntype = { pins = {} }
-	ntype.name = "Make" .. struct.name
-	ntype.type = NT_Pure
-	ntype.desc = struct.desc
-	ntype.code = ""
-	ntype.defaults = {}
-	ntype.category = struct.name
-	ntype.isStruct = true
-
-	table.insert(ntype.pins, {
-		PD_Out,
-		PN_Struct,
-		struct.name,
-		PNF_None,
-		struct.name,
-	})
-
-	for _, pin in pairs(struct.pins) do
-
-		table.insert(ntype.pins, {
-			PD_In,
-			pin.type,
-			pin.name,
-			pin.flags,
-			pin.ex,
-		})
-
-		if pin.default then
-			ntype.defaults[#ntype.pins - 1] = pin.default
-		end
-
-	end
-
-	local ret, arg = PinRetArg( ntype, function(s,pin)
-		return "\n " .. (struct.invNameMap[pin[3]] or pin[3]) .. " = " .. s
-	end)
-	local argt = "{ " .. arg .. "\n}"
-	ntype.code = ret .. " = "
-	if struct.metatable then ntype.code = ntype.code .. "setmetatable(" end
-	ntype.code = ntype.code .. argt
-	if struct.metatable then ntype.code = ntype.code .. ", " .. struct.metatable .. "_)" end
-
-	for _, pin in pairs(ntype.pins) do pin[3] = bpcommon.Camelize(pin[3]) end
-
-	ConfigureNodeType(ntype)
-
-	--print(ntype.code)
-
-	return ntype
-
-end
+local PinRetArg = bpschema.PinRetArg
 
 function CreateStructNodes( struct, output )
 
-	local breaker = StructBreakNode( struct )
-	local maker = StructMakeNode( struct )
+	local obj = bpstruct.New()
+	obj.name = struct.name
+	obj.pins:PreserveNames( true )
+	for k, v in pairs(struct.nameMap) do obj:RemapName(k, v) end
+	for _, pin in pairs(struct.pins) do obj:NewPin(pin.name, pin.type, pin.default, pin.flags, pin.ex) end
+	obj.pins:PreserveNames( false )
+
+	local breaker = obj:BreakerNodeType()
+	local maker = obj:MakerNodeType()
 
 	bpnodedef.NodeTypes[maker.name] = maker
 	bpnodedef.NodeTypes[breaker.name] = breaker
@@ -565,6 +452,8 @@ end
 
 function LoadDefinitionPack()
 
+	ready = false
+
 	local filename = DEFPACK_LOCATION
 	local filehandle = nil
 	if file.Exists(filename, "DATA") then filehandle = file.Open(filename, "r", "DATA") end
@@ -585,6 +474,7 @@ function LoadDefinitionPack()
 		ReadTable("Libraries", libs, stream)
 		ReadTable("Enums", enums, stream)
 		MsgC(Color(100,255,100), " Done\n")
+		ready = true
 	end)
 
 	local iter = 0
@@ -630,4 +520,8 @@ if SERVER then
 	timer.Simple(.1, function() 
 		bpnodedef.InstallDefs()
 	end )
+end
+
+function Ready()
+	return ready
 end

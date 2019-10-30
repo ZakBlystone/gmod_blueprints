@@ -6,6 +6,7 @@ include("sh_bpnodedef.lua")
 include("sh_bpdata.lua")
 include("sh_bpgraph.lua")
 include("sh_bpvariable.lua")
+include("sh_bpstruct.lua")
 include("sh_bplist.lua")
 
 module("bpmodule", package.seeall, bpcommon.rescope(bpschema, bpnodedef)) --bpnodedef is temporary
@@ -30,7 +31,7 @@ GRAPH_NODETYPE_ACTIONS = {
 
 
 fmtMagic = 0x42504D58
-fmtVersion = 7
+fmtVersion = 9
 
 local meta = {}
 meta.__index = meta
@@ -40,6 +41,7 @@ activeModules = activeModules or {}
 
 bpcommon.CreateIndexableListIterators(meta, "graphs")
 bpcommon.CreateIndexableListIterators(meta, "variables")
+bpcommon.CreateIndexableListIterators(meta, "structs")
 
 function meta:Init(type)
 
@@ -48,8 +50,15 @@ function meta:Init(type)
 		return graph
 	end
 
+	self.structConstructor = function()
+		local struct = bpstruct.New():MarkAsCustom()
+		struct.module = self
+		return struct
+	end
+
 	self.version = fmtVersion
 	self.graphs = bplist.New():NamedItems("Graph"):Constructor(self.graphConstructor)
+	self.structs = bplist.New():NamedItems("Struct"):Constructor(self.structConstructor)
 	self.variables = bplist.New():NamedItems("Var"):Constructor(bpvariable.New)
 	self.id = nextModuleID
 	self.type = self.type or MT_Game
@@ -171,6 +180,13 @@ function meta:GetNodeTypes( graphID )
 
 	end
 
+	for id, v in self:Structs() do
+
+		types["__Make" .. id] = v:MakerNodeType()
+		types["__Break" .. id] = v:BreakerNodeType()
+
+	end
+
 	for k,v in pairs(types) do v.name = k end
 	for k,v in pairs(base) do
 		if not types[k] then types[k] = v end
@@ -260,6 +276,7 @@ function meta:WriteToStream(stream, mode)
 
 	self.variables:WriteToStream(stream, mode, fmtVersion)
 	self.graphs:WriteToStream(stream, mode, fmtVersion)
+	self.structs:WriteToStream(stream, mode, fmtVersion)
 
 	stream:WriteInt( self.graphs:Size(), false )
 	for id, graph in self:Graphs() do
@@ -320,6 +337,10 @@ function meta:ReadFromStream(stream, mode)
 			local graph = self:GetGraph(id)
 			graph:ReadFromStream(stream, mode, version)
 		end
+	end
+
+	if version >= 8 then
+		self.structs:ReadFromStream(stream, mode, version)
 	end
 
 	if version < 4 then

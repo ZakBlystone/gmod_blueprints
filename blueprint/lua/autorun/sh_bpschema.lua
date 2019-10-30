@@ -48,6 +48,10 @@ MT_Entity = 2
 MT_Weapon = 3
 MT_NPC = 4
 
+RM_None = 0
+RM_Replicated = 1
+RM_RepNotify = 2
+
 ROLE_Server = 0
 ROLE_Client = 1
 ROLE_Shared = 2
@@ -114,7 +118,7 @@ NodePinColors = {
 }
 
 NodePinImplicitConversions = {
-	[PN_Entity] = { PN_Player, { PN_Ref, "Entity" } },
+	[PN_Entity] = { PN_Player, { PN_Ref, "Entity" }, { PN_Ref, "Player" } },
 	[PN_Player] = { PN_Entity, { PN_Ref, "Player" }, { PN_Ref, "Entity" } },
 	[PN_Weapon] = { PN_Entity },
 	[PN_Npc] = { PN_Entity },
@@ -167,6 +171,25 @@ function ConfigureNodeType(t)
 	if t.type == NT_Function and t.code then
 		t.code = t.code .. " #1"
 	end
+end
+
+function PinRetArg( nodeType, infmt, outfmt, concat )
+
+	concat = concat or ","
+	--print(nodeType.name)
+	local base = nodeType.type == NT_Function and 2 or 1
+	local pins = {[PD_In] = {}, [PD_Out] = {}}
+	for k,v in pairs(nodeType.pins) do
+		local s = (v[1] == PD_In and "$" or "#") .. (base+#pins[v[1]])
+		if infmt and v[1] == PD_In then s = infmt(s, v) end
+		if outfmt and v[1] == PD_Out then s = outfmt(s, v) end
+		table.insert(pins[v[1]], s)
+	end
+
+	local ret = table.concat(pins[PD_Out], concat)
+	local arg = table.concat(pins[PD_In], concat)
+	return ret, arg, pins
+
 end
 
 function PURE(t) 

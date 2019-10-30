@@ -8,12 +8,13 @@ module("bpvariable", package.seeall, bpcommon.rescope(bpschema))
 local meta = {}
 meta.__index = meta
 
-function meta:Init(type, default, flags, ex)
+function meta:Init(type, default, flags, ex, repmode)
 
 	self.type = type or PN_Number
-	self.default = bit.band(flags or 0, PNF_Table) and "{}" or (default or Defaults[self.type])
+	self.default = bit.band(flags or 0, PNF_Table) ~= 0 and "{}" or (default or Defaults[self.type])
 	self.flags = flags or 0
 	self.ex = ex
+	self.repmode = repmode
 	return self
 
 end
@@ -48,7 +49,7 @@ function meta:GetExtended()
 
 end
 
-function meta:CreatePin( dir )
+function meta:CreatePin( dir, nameOverride )
 
 	return {dir, self:GetType(), self:GetName(), self:GetFlags(), self:GetExtended()}
 
@@ -90,6 +91,7 @@ function meta:WriteToStream(stream, mode, version)
 	bpdata.WriteValue( self.default, stream )
 	bpdata.WriteValue( self.name, stream )
 	bpdata.WriteValue( self.ex, stream )
+	bpdata.WriteValue( self.repmode, stream )
 
 end
 
@@ -101,6 +103,9 @@ function meta:ReadFromStream(stream, mode, version)
 	self.name = bpdata.ReadValue( stream )
 	if version >= 6 then
 		self.ex = bpdata.ReadValue( stream )
+	end
+	if version >= 9 then
+		self.repmode = bpdata.ReadValue( stream )
 	end
 
 end

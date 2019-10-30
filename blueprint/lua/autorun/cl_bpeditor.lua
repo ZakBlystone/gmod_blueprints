@@ -375,6 +375,10 @@ vgui.Register( "BPEditor", PANEL, "DFrame" )
 
 local function OpenEditor()
 
+	if not bpdefs.Ready() then
+		print("Wait for definitions to load")
+		return
+	end
 
 	if G_BPEditorInstance then
 
@@ -402,6 +406,8 @@ local function OpenEditor()
 end
 
 concommand.Add("open_blueprint", function()
+
+	OpenEditor()
 
 end)
 
