@@ -90,7 +90,8 @@ function PANEL:Setup(graph, node, pin, pinID)
 	if not self.nodeType.compact then
 
 		self.label = vgui.Create("DLabel", self)
-		self.label:SetFont("DermaDefaultBold")
+		--self.label:SetFont("DermaDefaultBold")
+		self.label:SetFont("Default")
 		self.label:SetText(pin[3])
 		self.label:SizeToContents()
 

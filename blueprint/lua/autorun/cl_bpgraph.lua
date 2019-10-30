@@ -92,6 +92,8 @@ end
 
 function PANEL:NodeAdded( id )
 
+	--if self.nodes[id] then error("Duplicate node added") return end
+
 	local node = vgui.Create("BPNode", self.canvas)
 	node:Setup( self.graph, self.graph:GetNode(id) )
 	node.canvasFix = canvasFix
@@ -495,6 +497,8 @@ function PANEL:OnMousePressed( mouse )
 	self:CloseContext()
 
 	if mouse ~= MOUSE_RIGHT then return end
+
+	print("RIGHT PRESS: " .. RealTime())
 
 	local screenX, screenY = self:LocalToScreen( 0, 0 )
 

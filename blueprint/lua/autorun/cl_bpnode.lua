@@ -23,40 +23,55 @@ local function getLayoutPin(nodeType, dir, id)
 
 end
 
-local function calculateNodeSize(nodeType)
+local function calculateNodeSize(vnode, nodeType)
+
+	local name = vnode:GetDisplayName()
+
+	surface.SetFont( "Default" )
+	local inPinWidth = 0
+	local outPinWidth = 0
+	local padPin = 50
 
 	local maxVertical = math.max(#nodeType.pinlayout.inputs, #nodeType.pinlayout.outputs)
-	local width = 180
+	local width = 0
 	local headHeight = 30
-	local name = nodeType.displayName or nodeType.name
-
-	if nodeType.compact then
-		width = 40 + string.len(name) * 8
-		width = math.max(width, 80)
-		headHeight = 15
-
-		if nodeType.name == "Pin" then
-			width = 40
-		end
-	end
+	
 
 	local expand = false
 	for k,v in pairs(nodeType.pins) do
 		if (v[2] == PN_String or v[2] == PN_Enum) and v[1] == PD_In then
 			expand = true
 		end
+		if v[1] == PD_In then inPinWidth = math.max(surface.GetTextSize( v[3] ) + padPin, inPinWidth) end
+		if v[1] == PD_Out then outPinWidth = math.max(surface.GetTextSize( v[3] ) + padPin, outPinWidth) end
 	end
+
+	if nodeType.compact then
+		surface.SetFont("HudHintTextLarge")
+		local titleWidth = surface.GetTextSize( name )
+		width = math.max(titleWidth+60, 0)
+		headHeight = 15
+
+		if nodeType.name == "Pin" then
+			width = 40
+		end
+	else
+		surface.SetFont( "Trebuchet18" )
+		local titleWidth = surface.GetTextSize( name )
+		width = math.max(inPinWidth + outPinWidth, math.max(100, titleWidth+20))
+	end
+
 	if expand then width = width + 50 end
 
 	return width, headHeight + maxVertical * 15 + PANEL_INSET * 2
 
 end
 
-local function pinLocation(nodeType, dir, id)
+local function pinLocation(vnode, nodeType, dir, id)
 
 	local x = 0
 	local y = 15
-	local w, h = calculateNodeSize(nodeType)
+	local w, h = calculateNodeSize(vnode, nodeType)
 	local p = getLayoutPin(nodeType, dir, id)
 	if nodeType.compact then y = -4 end
 	if dir == PD_In then
@@ -98,7 +113,7 @@ function PANEL:Setup( graph, node )
 	self.vgraph = self:GetParent():GetParent()
 	self.nodeType = self.graph:GetNodeType( self.node )
 
-	local w,h = calculateNodeSize( self.nodeType )
+	local w,h = calculateNodeSize( self, self.nodeType )
 	self:SetSize( w, h )
 	self:SetPos( node.x, node.y )
 	self:BuildPins()
@@ -125,7 +140,7 @@ function PANEL:PostNodeTypeChanged( nodeType, action )
 
 	if nodeType == self.nodeType.name then
 		self.nodeType = self.graph:GetNodeType( self.node )
-		local w,h = calculateNodeSize( self.nodeType )
+		local w,h = calculateNodeSize( self, self.nodeType )
 		self:SetSize( w, h )
 
 		if action == bpgraph.NODETYPE_MODIFY_SIGNATURE then
@@ -152,7 +167,7 @@ function PANEL:BuildPins()
 		local pinID = getLayoutPin(nodeType, PD_In, i)
 		local pin = nodeType.pins[pinID]
 		local lit = node.literals and node.literals[pinID]
-		local x,y = pinLocation(nodeType, PD_In, i)
+		local x,y = pinLocation(self, nodeType, PD_In, i)
 
 		local vpin = vgui.Create("BPPin", self)
 		vpin:SetPos(x,y)
@@ -167,7 +182,7 @@ function PANEL:BuildPins()
 
 		local pinID = getLayoutPin(nodeType, PD_Out, i)
 		local pin = nodeType.pins[pinID]
-		local x,y = pinLocation(nodeType, PD_Out, i)
+		local x,y = pinLocation(self, nodeType, PD_Out, i)
 
 		local vpin = vgui.Create("BPPin", self)
 		vpin:SetPos(x,y)
@@ -199,7 +214,7 @@ function PANEL:PerformLayout(pw, ph)
 	for i=1, pinCount(ntype, PD_In) do
 
 		local pinID = getLayoutPin(ntype, PD_In, i)
-		local x,y = pinLocation(ntype, PD_In, i)
+		local x,y = pinLocation(self, ntype, PD_In, i)
 		local w,h = self.pins[pinID]:GetSize()
 		self.pins[pinID]:SetPos(x + inset, y + inset)
 
@@ -208,7 +223,7 @@ function PANEL:PerformLayout(pw, ph)
 	for i=1, pinCount(ntype, PD_Out) do
 
 		local pinID = getLayoutPin(ntype, PD_Out, i)
-		local x,y = pinLocation(ntype, PD_Out, i)
+		local x,y = pinLocation(self, ntype, PD_Out, i)
 		local w,h = self.pins[pinID]:GetSize()
 		self.pins[pinID]:SetPos(x - w - inset, y + inset)
 
@@ -238,20 +253,20 @@ function PANEL:Paint(w, h)
 	draw.RoundedBox(6, inset, inset, w - inset*2, h - inset*2, Color(20,20,20,255))
 
 
-	if not ntype.compact then draw.RoundedBox(6, inset, inset, w - inset * 2, 20, Color(ntc.r,ntc.g,ntc.b,180)) end
+	if not ntype.compact then draw.RoundedBox(6, inset, inset, w - inset * 2, 18, Color(ntc.r,ntc.g,ntc.b,180)) end
 	if ntype.role then
 		if ntype.role == ROLE_Shared then
-			draw.RoundedBox(2, inset + w - 30, inset, 10, 20, Color(20,160,255,255))
-			draw.RoundedBox(2, inset + w - 30, inset + 10, 10, 10, Color(255,160,20,255))
+			draw.RoundedBox(2, inset + w - 30, inset, 9, 18, Color(20,160,255,255))
+			draw.RoundedBox(2, inset + w - 30, inset + 9, 10, 9, Color(255,160,20,255))
 		elseif ntype.role == ROLE_Server then
-			draw.RoundedBox(2, inset + w - 30, inset, 10, 20, Color(20,160,255,255))
+			draw.RoundedBox(2, inset + w - 30, inset, 10, 18, Color(20,160,255,255))
 		elseif ntype.role == ROLE_Client then
-			draw.RoundedBox(2, inset + w - 30, inset, 10, 20, Color(255,160,20,255))
+			draw.RoundedBox(2, inset + w - 30, inset, 10, 18, Color(255,160,20,255))
 		end
 	end
 
 	if not ntype.compact then
-		draw.SimpleText(self:GetDisplayName(), "HudHintTextLarge", inset + 2, inset + 2)
+		draw.SimpleText(self:GetDisplayName(), "Trebuchet18", inset + 4, inset)
 	else
 		-- HACK
 		if ntype.name ~= "Pin" then

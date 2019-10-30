@@ -1,4 +1,4 @@
-CLASS Angle
+CLASS Angles, angles, PN_Angles
 {
 	FUNC SHARED Add
 	{

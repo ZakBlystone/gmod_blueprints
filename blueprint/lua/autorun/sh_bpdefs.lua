@@ -137,6 +137,7 @@ local function ParseDef( filePath, search )
 				type = isClass and DEFTYPE_CLASS or DEFTYPE_LIB,
 				name = isClass and args[1]:sub(7,-1) or args[1]:sub(5,-1),
 				typeName = args[2] and args[2]:Trim() or nil,
+				pinTypeOverride = args[3] and args[3]:Trim() or nil,
 				entries = {},
 			}
 		elseif tr:sub(0,1) == "{" then
@@ -314,13 +315,26 @@ function CreateLibNodes( lib, output )
 		ntype.isLib = lib.type == DEFTYPE_LIB
 
 		if lib.type == DEFTYPE_CLASS then
-			table.insert(ntype.pins, {
-				PD_In,
-				PN_Ref,
-				bpcommon.Camelize(lib.typeName or lib.name),
-				PNF_None,
-				lib.name,
-			})
+
+			if lib.pinTypeOverride then
+				local type = pinTypeLookup[lib.pinTypeOverride]
+				table.insert(ntype.pins, {
+					PD_In,
+					type,
+					bpcommon.Camelize(lib.typeName or lib.name),
+					PNF_None,
+					nil,
+				})
+			else
+				table.insert(ntype.pins, {
+					PD_In,
+					PN_Ref,
+					bpcommon.Camelize(lib.typeName or lib.name),
+					PNF_None,
+					lib.name,
+				})
+			end
+
 		end
 
 		for _, pin in pairs(v.pins) do
@@ -346,6 +360,10 @@ function CreateLibNodes( lib, output )
 
 		if lib.type == DEFTYPE_LIB then 
 			call = lib.name == "GLOBAL" and v.func or lib.name .. "." .. v.func
+		end
+
+		if #pins[PD_In] == 1 and ntype.type == NT_Pure then
+			ntype.compact = true
 		end
 
 		ntype.code = ret .. (#pins[PD_Out] ~= 0 and " = " or "") .. call .. "(" .. arg .. ")"

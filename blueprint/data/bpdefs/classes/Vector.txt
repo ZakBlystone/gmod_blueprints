@@ -1,4 +1,4 @@
-CLASS Vector
+CLASS Vector, vector, PN_Vector
 {
 	FUNC SHARED Add
 	{

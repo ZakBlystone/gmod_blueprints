@@ -43,6 +43,7 @@ function meta:Init(module, type)
 
 	self.type = type or GT_Event
 	self.module = module
+	self.deferredNodes = bplist.New():Constructor(self.nodeConstructor)
 	self.nodes = bplist.New():Constructor(self.nodeConstructor)
 	self.connections = {}
 	self.inputs = bplist.New():NamedItems("Inputs"):Constructor(bpvariable.New)
@@ -693,9 +694,7 @@ function meta:ReadFromStream(stream, mode, version)
 	end
 
 	if version >= 7 then
-		self:SuppressEvents( true )
-		self.nodes:ReadFromStream(stream, mode, version)
-		self:SuppressEvents( false )
+		self.deferredNodes:ReadFromStream(stream, mode, version)
 	else
 		local nametable = {}
 		local count = stream:ReadInt( false )
@@ -800,6 +799,9 @@ end
 function meta:CreateDeferredData()
 
 	--print("CREATE DEFERRED NODES: " .. #self.deferred)
+
+	self.deferredNodes:CopyInto(self.nodes)
+	self.deferredNodes:Clear()
 
 	self:CacheNodeTypes()
 
