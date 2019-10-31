@@ -266,6 +266,7 @@ end
 
 function PANEL:PinPos(pin)
 
+	if pin == nil then return 0,0 end
 	local x, y = pin:GetHotSpot()
 	return self:ScreenToLocal(x, y)
 
@@ -519,6 +520,8 @@ function PANEL:OnMouseReleased( mouse )
 
 	if mouse ~= MOUSE_RIGHT then return end
 
+	if RealTime() - (self.LastRelease or 0) < 0.2 then print("DEBOUNCED") return end
+
 	self.Dragging = nil
 	self.Sizing = nil
 	self:MouseCapture( false )
@@ -526,6 +529,8 @@ function PANEL:OnMouseReleased( mouse )
 	if RealTime() - self.PressTimeout < 0.2 then
 		self:OpenContext()
 	end
+
+	self.LastRelease = RealTime()
 
 end
 

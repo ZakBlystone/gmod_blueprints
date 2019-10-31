@@ -100,6 +100,12 @@ function meta:GetName()
 
 end
 
+function meta:GetPos()
+
+	return self.x, self.y
+
+end
+
 function meta:Move(x, y)
 
 	x = math.Round(x / 15) * 15

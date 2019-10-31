@@ -478,13 +478,7 @@ NodeTypes = {
 		code = "#1 = CurTime()",
 		compact = true,
 	},
-	["FrameTime"] = PURE {
-		pins = {
-			{ PD_Out, PN_Number, "frametime" },
-		},
-		code = "#1 = FrameTime()",
-		compact = true,
-	},
+	["FrameTime"] = "FrameTime, frametime=time",
 	["DivideNumber"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "A" },

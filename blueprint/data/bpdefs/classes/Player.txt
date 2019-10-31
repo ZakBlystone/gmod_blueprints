@@ -1110,7 +1110,7 @@ CLASS Player
 	FUNC SERVER Spectate
 	{
 		DESC Starts spectate mode for given player. This will also affect the players movetype in some cases.
-		IN mode, PN_Enum, PNF_None, OBS, #Spectate mode, see OBS_MODE_ Enums.
+		IN mode, PN_Enum, PNF_None, OBS_MODE, #Spectate mode, see OBS_MODE_ Enums.
 	}
 	FUNC SERVER SpectateEntity
 	{
