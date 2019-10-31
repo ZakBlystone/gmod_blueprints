@@ -580,13 +580,16 @@ NodeTypes = {
 	},
 	["NotEqual"] = PURE {
 		pins = {
-			{ PD_In, PN_Any, "vector" },
-			{ PD_In, PN_Any, "scalar" },
+			{ PD_In, PN_Any, "a" },
+			{ PD_In, PN_Any, "b" },
 			{ PD_Out, PN_Bool, "result" },
+		},
+		meta = {
+			informs = {1, 2}
 		},
 		displayName = "!=",
 		code = "#1 = $1 ~= $2",
-		compact = true,		
+		compact = true,
 	},
 	["WaterLevel"] = "Entity:WaterLevel",
 	["GetAngles"] = "Entity:GetAngles",

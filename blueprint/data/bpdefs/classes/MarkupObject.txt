@@ -5,8 +5,8 @@ CLASS MarkupObject
 		DESC Draws the computed markupobject to the screen.
 		IN xOffset, PN_Number, #The X coordinate on the screen.
 		IN yOffset, PN_Number, #The Y coordinate on the screen.
-		IN xAlign, PN_Enum, PNF_None, TEXT, #The alignment of the x coordinate using TEXT_ALIGN_ Enums
-		IN yAlign, PN_Enum, PNF_None, TEXT, #The alignment of the y coordinate using TEXT_ALIGN_ Enums
+		IN xAlign, PN_Enum, PNF_None, TEXT_ALIGN, #The alignment of the x coordinate using TEXT_ALIGN_ Enums
+		IN yAlign, PN_Enum, PNF_None, TEXT_ALIGN, #The alignment of the y coordinate using TEXT_ALIGN_ Enums
 		IN alphaoverride, PN_Number, PNF_Nullable, #Sets the alpha of all drawn objects to this.
 	}
 	PURE CLIENT GetHeight

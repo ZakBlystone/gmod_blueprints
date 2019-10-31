@@ -1,31 +1,465 @@
 LIB util
 {
+	FUNC SERVER AddNetworkString
+	{
+		TBD
+		DESC Adds the specified string to a string table, which will cache it and network it to all clients automatically. Whenever you want to create a net message with net.Start, you must add the name of that message as a networked string via this function.
+		IN str, PN_String, #Adds the specified string to the string table.
+		OUT out_0, PN_Number, #The id of the string that was added to the string table. Same as calling util.NetworkStringToID.
+	}
+	PURE CLIENT AimVector
+	{
+		DESC Function used to calculate aim vector from 2D screen position. It is used in SuperDOF calculate Distance.
+		IN ViewAngles, PN_Angles, #View angles
+		IN ViewFOV, PN_Number, #View Field of View
+		IN x, PN_Number, #Mouse X position
+		IN y, PN_Number, #Mouse Y position
+		IN scrWidth, PN_Number, #Screen width
+		IN scrHeight, PN_Number, #Screen height
+		OUT vector, PN_Vector, #Calculated aim vector
+	}
+	FUNC SHARED Base64Encode
+	{
+		DESC Encodes the specified string to base64.
+		IN string, PN_String, #String to encode.
+		OUT encoded, PN_String, #Base 64 encoded string.
+	}
+	FUNC SERVER BlastDamage
+	{
+		DESC Applies explosion damage to all entities in the specified radius.
+		IN inflictor, PN_Ref, PNF_None, Entity, #The entity that caused the damage.
+		IN attacker, PN_Ref, PNF_None, Entity, #The entity that attacked.
+		IN damageOrigin, PN_Vector, #The center of the explosion
+		IN damageRadius, PN_Number, #The radius in which entities will be damaged.
+		IN damage, PN_Number, #The amount of damage to be applied.
+	}
+	FUNC SERVER BlastDamageInfo
+	{
+		DESC Applies spherical damage based on damage info to all entities in the specified radius.
+		IN dmg, PN_Ref, PNF_None, CTakeDamageInfo, #The information about the damage
+		IN damageOrigin, PN_Vector, #Center of the spherical damage
+		IN damageRadius, PN_Number, #The radius in which entities will be damaged.
+	}
+	FUNC SHARED Compress
+	{
+		DESC Compresses the given string using the LZMA algorithm.
+		IN string, PN_String, #String to compress.
+		OUT compressed, PN_String, #The compressed string, or nil if the input string was zero length ("").
+	}
+	FUNC SHARED CRC
+	{
+		DESC Generates the CRC checksum of the specified string.
+		IN stringToHash, PN_String, #The string to calculate the checksum of.
+		OUT hash, PN_String, #The unsigned 32 bit checksum.
+	}
+	PURE SHARED DateStamp
+	{
+		DESC Returns the current date formatted like '2012-10-31 18-00-00'
+		OUT date, PN_String, #date
+	}
+	FUNC SHARED Decal
+	{
+		DESC Performs a trace and paints a decal to the surface hit.
+		IN name, PN_String, #The name of the decal to paint.
+		IN start, PN_Vector, #The start of the trace.
+		IN end, PN_Vector, #The end of the trace.
+		IN filter, PN_Ref, PNF_Nullable, Entity, #If set, the decal will not be able to be placed on given entity. Can also be a table of entities.
+	}
+	FUNC CLIENT DecalEx
+	{
+		DESC Performs a trace and paints a decal to the surface hit.
+		IN material, PN_Ref, PNF_None, IMaterial, #The name of the decal to paint. Can be retrieved with util.DecalMaterial.
+		IN ent, PN_Ref, PNF_None, Entity, #The entity to apply the decal to
+		IN position, PN_Vector, #The position of the decal.
+		IN normal, PN_Vector, #The direction of the decal.
+		IN color, PN_Struct, PNF_None, Color, #The color of the decal. Uses the Color structure. This only works when used on a brush model and only if the decal material has set $vertexcolor to 1.
+		IN w, PN_Number, #The width scale of the decal.
+		IN h, PN_Number, #The height scale of the decal.
+	}
+	PURE SHARED DecalMaterial
+	{
+		DESC Gets the full material path by the decal name. Used with util.DecalEx.
+		IN decalName, PN_String, #Name of the decal.
+		OUT material, PN_String, #Material path of the decal.
+	}
+	FUNC SHARED Decompress
+	{
+		DESC Decompresses the given string using LZMA algorithm. Used to decompress strings previously compressed with util.Compress.
+		IN compressedString, PN_String, #The compressed string to decompress.
+		IN maxSize, PN_Number, PNF_Nullable, #The maximal size in bytes it will decompress.
+		OUT decompressed, PN_String, #The original, decompressed string or an empty string on failure or invalid input.
+	}
+	PURE SHARED DistanceToLine
+	{
+		DESC Gets the distance between a line and a point in 3d space.
+		IN lineStart, PN_Vector, #Start of the line.
+		IN lineEnd, PN_Vector, #End of the line.
+		IN pointPos, PN_Vector, #The position of the point.
+		OUT distance, PN_Number, #Distance from line.
+		OUT point, PN_Vector, #Nearest point on line.
+		OUT along, PN_Number, #Distance along line from start.
+	}
 	FUNC SHARED Effect
 	{
 		DESC Creates an effect with the specified data.
 		IN effectName, PN_String, #The name of the effect to create.
 		IN effectData, PN_Ref, PNF_None, CEffectData, #The effect data describing the effect.
-		IN allowOverride=true, PN_Bool, #Whether Lua-defined effects should override engine-defined effects with the same name for this/single function call.
-		IN recipientFilter, PN_Any, PNF_Nullable
+		IN allowOverride, PN_Bool, PNF_Nullable, #Whether Lua-defined effects should override engine-defined effects with the same name for this/single function call.
+		IN ignorePredictionOrRecipientFilter, PN_Any, PNF_Nullable, #Can either be a boolean to ignore the prediction filter or a CRecipientFilter. Set this to true if you wish to call this function in multiplayer from server.
 	}
-	PURE SHARED PointContents
+	PURE SHARED GetModelInfo
+	{
+		TBD
+		DESC Returns a table containing the info about the model. It seems to be not working serverside, but still exists serverside.
+		IN mdl, PN_String, #Model path
+		OUT out_0, PN_Any, PNF_Table, #The model info as a table with the following keys: number SkinCount - Identical to Entity:SkinCount. string KeyValues - Valve key-value formatted info about the model's physics (Constraint Info, etc). This is limited to 4096 characters. string ModelKeyValues - Valve key-value formatted info about the model ($keyvalues command in the .qc of the model), if present
+	}
+	PURE CLIENT GetModelMeshes
+	{
+		TBD
+		DESC Returns a table of visual meshes of given model.
+		IN model, PN_String, #The full path to a model to get the visual meshes of.
+		IN lod, PN_Number, PNF_Nullable
+		IN bodygroupMask, PN_Number, PNF_Nullable
+		OUT out_0, PN_Struct, PNF_None, MeshVertex, #A table of tables with the following format: string material - The material of the specific mesh table triangles - A table of MeshVertex structures ready to be fed into IMesh:BuildFromTriangles table verticies - A table of MeshVertex structures representing all the vertexes of the mesh. This table is used internally to generate the "triangles" table. Each MeshVertex structure returned also has an extra table of tables field called "weights" with the following data: number boneID - The bone this vertex is attached to number weight - How "strong" this vertex is attached to the bone. A vertex can be attached to multiple bones at once.
+	}
+	PURE SHARED GetPData
+	{
+		DESC Gets PData of an offline player using their SteamID
+		IN steamID, PN_String, #SteamID of the player
+		IN name, PN_String, #Variable name to get the value of
+		IN default, PN_String, #The default value, in case there's nothing stored
+		OUT data, PN_String, #The stored value
+	}
+	FUNC CLIENT GetPixelVisibleHandle
+	{
+		DESC Creates a new PixVis handle. See util.PixelVisible.
+		OUT vis, PN_Ref, PNF_None, pixelvis handle t, #PixVis
+	}
+	PURE SHARED GetPlayerTrace
+	{
+		DESC Utility function to quickly generate a trace table that starts at the players view position, and ends 16384 units along a specified direction.
+		IN ply, PN_Ref, PNF_None, Player, #The player the trace should be based on
+		IN dir, PN_Vector, PNF_Nullable, #The direction of the trace
+		OUT trace, PN_Struct, PNF_None, Trace, #The trace data. See Trace structure
+	}
+	PURE CLIENT GetSunInfo
+	{
+		DESC Gets information about the sun position and obstruction or nil if there is no sun.
+		OUT info, PN_Struct, PNF_None, SunInfo, #The sun info. See SunInfo structure
+	}
+	PURE SHARED GetSurfaceData
+	{
+		DESC Returns data of a surface property at given ID.
+		IN id, PN_Number, #Surface property ID. You can get it from TraceResult structure.
+		OUT data, PN_Struct, PNF_None, SurfacePropertyData, #The data or no value if there is no valid surface property at given index. See SurfacePropertyData structure
+	}
+	PURE SHARED GetSurfaceIndex
+	{
+		DESC Returns the matching surface property index for the given surface property name.
+		IN surfaceName, PN_String, #The name of the surface.
+		OUT index, PN_Number, #The surface property index, or -1 if name doesn't correspond to a valid surface property.
+	}
+	PURE SHARED GetSurfacePropName
+	{
+		DESC Returns the name of a surface property at given ID.
+		IN id, PN_Number, #Surface property ID. You can get it from TraceResult structure.
+		OUT name, PN_String, #The name or an empty string if there is no valid surface property at given index.
+	}
+	PURE SERVER GetUserGroups
+	{
+		TBD
+		DESC Returns a table of all SteamIDs that have a usergroup.
+		OUT out_0, PN_Any, PNF_Table, #The table of users. The table consists of SteamID-Table pairs, where the table has 2 fields: string name - Players name string group - The players user group
+	}
+	PURE SHARED IntersectRayWithOBB
+	{
+		DESC Performs a "ray" box intersection and returns position, normal and the fraction.
+		WARN Outputs are nil if intersection did not hit (this will be fixed soon)
+		IN rayStart, PN_Vector, #Origin/start position of the ray.
+		IN rayDelta, PN_Vector, #The ray vector itself. This can be thought of as: the ray end point relative to the start point. Note that in this implementation, the ray is not infinite - it's only a segment.
+		IN boxOrigin, PN_Vector, #The center of the box.
+		IN boxAngles, PN_Angles, #The angles of the box.
+		IN boxMins, PN_Vector, #The min position of the box.
+		IN boxMaxs, PN_Vector, #The max position of the box.
+		OUT pos, PN_Vector, #Hit position, nil if not hit.
+		OUT normal, PN_Vector, #Normal/direction vector, nil if not hit.
+		OUT fraction, PN_Number, #Fraction of trace used, nil if not hit.
+	}
+	PURE SHARED IntersectRayWithPlane
+	{
+		DESC Performs a ray-plane intersection and returns the hit position or nil.
+		WARN Outputs are nil if intersection did not hit (this will be fixed soon)
+		IN rayOrigin, PN_Vector, #Origin/start position of the ray.
+		IN rayDirection, PN_Vector, #The direction of the ray.
+		IN planePosition, PN_Vector, #Any position of the plane.
+		IN planeNormal, PN_Vector, #The normal vector of the plane.
+		OUT position, PN_Vector, #The position of intersection, nil if not hit.
+	}
+	PURE SERVER IsInWorld
+	{
+		DESC Checks if a certain position in within the world bounds.
+		IN position, PN_Vector, #Position to check.
+		OUT inWorld, PN_Bool, #Whether the vector is in world.
+	}
+	PURE SHARED IsModelLoaded
+	{
+		DESC Checks if the model is loaded in the game.
+		IN modelName, PN_String, #Name/Path of the model to check.
+		OUT loaded, PN_Bool, #Returns true if the model is loaded in the game; otherwise false.
+	}
+	PURE CLIENT IsSkyboxVisibleFromPoint
+	{
+		DESC Check whether the skybox is visibile from the point specified.
+		IN position, PN_Vector, #The position to check the skybox visibility from.
+		OUT visible, PN_Bool, #Whether the skybox is visible from the position.
+	}
+	PURE SHARED IsValidModel
+	{
+		DESC Checks if the specified model is valid.
+		IN modelName, PN_String, #Name/Path of the model to check.
+		OUT valid, PN_Bool, #Whether the model is valid or not. Returns false clientside if the model is not precached by the server.
+	}
+	PURE SHARED IsValidPhysicsObject
+	{
+		DESC Checks if given numbered physics object of given entity is valid or not. Most useful for ragdolls.
+		IN entity, PN_Ref, PNF_None, Entity, #The entity
+		IN physobj, PN_Number, #Number of the physics object to test
+		OUT valid, PN_Bool, #true is valid, false otherwise
+	}
+	PURE SHARED IsValidProp
+	{
+		DESC Checks if the specified prop is valid.
+		IN modelName, PN_String, #Name/Path of the model to check.
+		OUT valid, PN_Bool, #Returns true if the specified prop is valid; otherwise false.
+	}
+	PURE SHARED IsValidRagdoll
+	{
+		DESC Checks if the specified model name points to a valid ragdoll.
+		IN ragdollName, PN_String, #Name/Path of the ragdoll model to check.
+		OUT valid, PN_Bool, #Returns true if the specified model name points to a valid ragdoll; otherwise false.
+	}
+	FUNC SHARED JSONToTable
+	{
+		DESC Converts a JSON string to a Lua table.
+		IN JSON, PN_String, #The JSON string to convert.
+		OUT table, PN_Any, PNF_Table, #The table containing converted information. Returns nothing on failure.
+	}
+	FUNC SHARED KeyValuesToTable
+	{
+		DESC Converts a KeyValue string to a Lua table.
+		IN keyValues, PN_String, #The KeyValue string to convert.
+		IN usesEscapeSequences, PN_Bool, PNF_Nullable, #If set to true, will replace \t, \n, \" and \\ in the input text with their escaped variants
+		IN preserveKeyCase, PN_Bool, PNF_Nullable, #Whether we should preserve key case or not.
+		OUT table, PN_Any, PNF_Table, #The converted table
+	}
+	FUNC SHARED KeyValuesToTablePreserveOrder
+	{
+		DESC Similar to util.KeyValuesToTable but it also preserves order of keys.
+		IN keyvals, PN_String, #The key value string
+		IN usesEscapeSequences, PN_Bool, PNF_Nullable, #If set to true, will replace \t, \n, \" and \\ in the input text with their escaped variants
+		IN preserveKeyCase, PN_Bool, PNF_Nullable, #Whether we should preserve key case or not.
+		OUT table, PN_Any, PNF_Table, #The output table
+	}
+	PURE SHARED LocalToWorld
+	{
+		DESC Returns a vector in world coordinates based on an entity and local coordinates
+		IN entity, PN_Ref, PNF_None, Entity, #The entity lpos is local to
+		IN localPos, PN_Vector, #Coordinates local to the ent
+		IN bonenum, PN_Number, #The bonenumber of the ent lpos is local to
+		OUT worldPos, PN_Vector, #wpos
+	}
+	PURE SHARED NetworkIDToString
+	{
+		DESC Returns the networked string associated with the given ID from the string table.
+		IN stringTableID, PN_Number, #ID to get the associated string from.
+		OUT string, PN_String, #The networked string, or nil if it wasn't found.
+	}
+	PURE SHARED NetworkStringToID
+	{
+		DESC Returns the networked ID associated with the given string from the string table.
+		IN networkString, PN_String, #String to get the associated networked ID from.
+		OUT id, PN_Number, #The networked ID of the string, or 0 if it hasn't been networked with util.AddNetworkString.
+	}
+	PURE SHARED NiceFloat
+	{
+		DESC Formats a float by stripping off extra 0's and .'s
+		IN float, PN_Number, #The float to format
+		OUT formatted, PN_String, #Formatted float
+	}
+	FUNC SHARED ParticleTracer
+	{
+		DESC Creates a tracer effect with the given parameters.
+		IN name, PN_String, #The name of the tracer effect.
+		IN startPos, PN_Vector, #The start position of the tracer.
+		IN endPos, PN_Vector, #The end position of the tracer.
+		IN doWhiz, PN_Bool, #Play the hit miss(whiz) sound.
+	}
+	FUNC SHARED ParticleTracerEx
+	{
+		DESC Creates a tracer effect with the given parameters.
+		IN name, PN_String, #The name of the tracer effect.
+		IN startPos, PN_Vector, #The start position of the tracer.
+		IN endPos, PN_Vector, #The end position of the tracer.
+		IN doWhiz, PN_Bool, #Play the hit miss(whiz) sound.
+		IN entityIndex, PN_Number, #Entity index of the emitting entity.
+		IN attachmentIndex, PN_Number, #Attachment index to be used as origin.
+	}
+	FUNC CLIENT PixelVisible
+	{
+		DESC Returns the visibility of a sphere in the world.
+		IN position, PN_Vector, #The center of the visibility test.
+		IN radius, PN_Number, #The radius of the sphere to check for visibility.
+		IN handle, PN_Ref, PNF_None, pixelvis, #The PixVis handle created with util.GetPixelVisibleHandle. WARNING	 Don't use the same handle twice per tick or it will give unpredictable results.
+		OUT visibility, PN_Number, #Visibility, ranges from 0-1. 0 when none of the area is visible, 1 when all of it is visible.
+	}
+	FUNC SHARED PointContents
 	{
 		DESC Returns the contents of the position specified.
 		IN position, PN_Vector, #Position to get the contents sample from.
-		OUT contents, PN_Enum, PNF_Bitfield, CONTENTS, #Contents bitflag
+		OUT contents, PN_Enum, PNF_Bitfield, CONTENTS, #Contents bitflag, see CONTENTS_ Enums
 	}
-	FUNC SHARED Decal
+	FUNC SHARED PrecacheModel
 	{
-		DESC Performs a trace and paints a decal to the surface hit.
-		IN name, PN_String, #The name of decal to paint
-		IN start, PN_Vector, #The start of the trace.
-		IN end, PN_Vector, #The end of the trace.
-		IN entity, PN_Ref, PNF_Nullable, Entity, #If set, the decal will not be able to be placed on given entity. Can also be a table of entities.
+		DESC Precaches a model for later use. Model is cached after being loaded once.
+		IN modelName, PN_String, #The model to precache.
+	}
+	FUNC SHARED PrecacheSound
+	{
+		DESC Precaches a sound for later use. Sound is cached after being loaded once.
+		IN soundName, PN_String, #The sound to precache.
+	}
+	FUNC SHARED QuickTrace
+	{
+		DESC Performs a trace with the given origin, direction and filter.
+		IN origin, PN_Vector, #The origin of the trace.
+		IN endpos, PN_Vector, #The end point of the trace, relative to the start. This is the direction of the trace times the distance of the trace.
+		IN filter, PN_Struct, PNF_Nullable, Trace, #Entity which should be ignored by the trace. Can also be a table of entities or a function - see Trace structure.
+		OUT result, PN_Struct, PNF_None, TraceResult, #Trace result. See TraceResult structure.
+	}
+	FUNC SHARED RelativePathToFull
+	{
+		DESC Returns the absolute system path the file relative to /garrysmod/.
+		IN file, PN_String, #The file to get the absolute path of.
+		OUT absolute, PN_String, #absolutePath
+	}
+	FUNC SHARED RemovePData
+	{
+		DESC Removes PData of offline player using his SteamID
+		IN steamID, PN_String, #SteamID of the player
+		IN name, PN_String, #Variable name to remove
+	}
+	FUNC SHARED ScreenShake
+	{
+		DESC Makes the screen shake
+		IN pos, PN_Vector, #The origin of the effect. NOTE	 Does nothing on client.
+		IN amplitude, PN_Number, #The strength of the effect
+		IN frequency, PN_Number, #The frequency of the effect in hz
+		IN duration, PN_Number, #The duration of the effect in seconds
+		IN radius, PN_Number, #The range from the origin within which views will be affected, in Hammer Units NOTE	 Does nothing on client.
+	}
+	FUNC SHARED SetPData
+	{
+		DESC Sets PData for offline player using his SteamID
+		IN steamID, PN_String, #SteamID of the player
+		IN name, PN_String, #Variable name to store the value in
+		IN value, PN_Any, #The value to store
+	}
+	FUNC SHARED SharedRandom
+	{
+		DESC Generates a random float value that should be the same on client and server.
+		IN uniqueName, PN_String, #The seed for the random value
+		IN min, PN_Number, #The minimum value of the random range
+		IN max, PN_Number, #The maximum value of the random range
+		IN additionalSeed, PN_Number, PNF_Nullable, #The additional seed
+		OUT value, PN_Number, #The random float value
+	}
+	FUNC SERVER SpriteTrail
+	{
+		DESC Adds a trail to the specified entity.
+		IN ent, PN_Ref, PNF_None, Entity, #Entity to attach trail to
+		IN attachmentID, PN_Number, #Attachment ID of the entitiys model to attach trail to. If you are not sure, set this to 0
+		IN color, PN_Any, PNF_Table, #Color of the trail, use Color
+		IN additive, PN_Bool, #Should the trail be additive or not
+		IN startWidth, PN_Number, #Start width of the trail
+		IN endWidth, PN_Number, #End width of the trail
+		IN lifetime, PN_Number, #How long it takes to transition from startWidth to endWidth
+		IN textureRes, PN_Number, #The resolution of trails texture. A good value can be calculated using this formula: 1 / ( startWidth + endWidth ) * 0.5
+		IN texture, PN_String, #Path to the texture to use as a trail.
+		OUT trail, PN_Ref, PNF_None, Entity, #Entity of created trail (env_spritetrail)
+	}
+	FUNC SHARED Stack
+	{
+		DESC Returns a new Stack object
+		OUT stack, PN_Ref, PNF_None, Stack, #A brand new stack object
+	}
+	FUNC SHARED SteamIDFrom64
+	{
+		DESC Given a 64bit SteamID will return a STEAM_0: style Steam ID
+		IN steamID64, PN_String, #The 64 bit Steam ID
+		OUT steamID, PN_String, #STEAM_0 style Steam ID
+	}
+	FUNC SHARED SteamIDTo64
+	{
+		DESC Given a STEAM_0 style Steam ID will return a 64bit Steam ID
+		IN steamID, PN_String, #The STEAM_0 style id
+		OUT steamID64, PN_String, #64bit Steam ID
+	}
+	FUNC SHARED StringToType
+	{
+		DESC Converts a string to the specified type.
+		IN str, PN_String, #The string to convert
+		IN typename, PN_String, #The type to attempt to convert the string to. This can be vector, angle, float, int, bool, or string (case insensitive).
+		OUT result, PN_Any, #The result of the conversion, or nil if a bad type is specified.
+	}
+	FUNC SHARED TableToJSON
+	{
+		DESC Converts a table to a JSON string.
+		IN table, PN_Any, PNF_Table, #Table to convert.
+		IN prettyPrint, PN_Bool, PNF_Nullable, #Format and indent the JSON.
+		OUT JSON, PN_String, #A JSON formatted string containing the serialized data
+	}
+	FUNC SHARED TableToKeyValues
+	{
+		DESC Converts the given table into a key value string.
+		IN table, PN_Any, PNF_Table, #The table to convert.
+		OUT keyValues, PN_String, #KeyValueString
+	}
+	FUNC SHARED TimerCycle
+	{
+		DESC Returns the time since this function has been last called
+		OUT time, PN_Number, #Time since this function has been last called in ms
+	}
+	FUNC SHARED TraceEntity
+	{
+		DESC Runs a trace using the entity's collisionmodel between two points. This does not take the entity's angles into account and will trace its unrotated collisionmodel.
+		IN tracedata, PN_Struct, PNF_None, Trace, #Trace data. See Trace structure
+		IN entity, PN_Ref, PNF_None, Entity, #The entity to use
+		OUT result, PN_Struct, PNF_None, TraceResult, #Trace result. See TraceResult structure
+	}
+	FUNC SHARED TraceEntityHull
+	{
+		DESC Traces from one entity to another.
+		IN ent1, PN_Ref, PNF_None, Entity, #The first entity to trace from
+		IN ent2, PN_Ref, PNF_None, Entity, #The second entity to trace to
+		OUT result, PN_Struct, PNF_None, TraceResult, #Trace result. See TraceResult structure
+	}
+	FUNC SHARED TraceHull
+	{
+		DESC Performs an AABB hull (axis-aligned bounding box, aka not rotated) trace with the given trace data.
+		IN TraceData, PN_Struct, PNF_None, HullTrace, #The trace data to use. See HullTrace structure
+		OUT result, PN_Struct, PNF_None, TraceResult, #Trace result. See TraceResult structure
 	}
 	FUNC SHARED TraceLine
 	{
 		DESC Performs a trace with the given trace data.
-		IN trace, PN_Struct, PNF_None, Trace, #The trace data to use.
-		OUT result, PN_Struct, PNF_None, TraceResult, #Trace result.
+		IN TraceData, PN_Struct, PNF_None, Trace, #The trace data to use. See Trace structure
+		OUT result, PN_Struct, PNF_None, TraceResult, #Trace result. See TraceResult structure. Can return nil if game.GetWorld or its physics object is invalid. This will be the case for any traces done before GM:InitPostEntity is called.
+	}
+	FUNC SHARED TypeToString
+	{
+		DESC Converts a type to a (nice, but still parsable) string
+		IN input, PN_Any, #What to convert
+		OUT string, PN_String, #Converted string
 	}
 }

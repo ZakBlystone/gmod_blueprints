@@ -260,7 +260,7 @@ CLASS Entity, entity
 	{
 		DESC Returns a table containing the number of frames, flags, name, and FPS of an entity's animation ID.
 		IN animIndex, PN_Number, #The animation ID to look up
-		OUT info, PN_Struct, PNF_Nullable, AnimInfo, #Information about the animation, or nil if the index is out of bounds
+		OUT info, PN_Struct, PNF_None, AnimInfo, #Information about the animation, or nil if the index is out of bounds
 	}
 	PURE CLIENT GetAnimTime
 	{
@@ -276,7 +276,8 @@ CLASS Entity, entity
 	PURE SHARED GetAttachments
 	{
 		DESC Returns a table containing all attachments of the given entitys model. Returns an empty table or nil in case it's model has no attachments.
-		OUT attachment, PN_Struct, PNF_Table|PNF_Nullable, AttachmentData, #Attachment data. See AttachmentData structure.
+		OUT attachment, PN_Struct, PNF_Table, AttachmentData, #Attachment data. See AttachmentData structure.
+		CODE #1 = Entity_.GetAttachments($1)\n#1 = #1 or {}
 	}
 	PURE SHARED GetBaseVelocity
 	{
@@ -286,7 +287,7 @@ CLASS Entity, entity
 	PURE SERVER GetBloodColor
 	{
 		DESC Returns the blood color of this entity. This can be set with Entity:SetBloodColor.
-		OUT bloodColor, PN_Enum, PNF_None, BLOOD, #Color from BLOOD_COLOR_ Enums
+		OUT bloodColor, PN_Enum, PNF_None, BLOOD_COLOR, #Color from BLOOD_COLOR_ Enums
 	}
 	PURE SHARED GetBodygroup
 	{
@@ -391,7 +392,7 @@ CLASS Entity, entity
 	PURE SHARED GetCollisionGroup
 	{
 		DESC Returns the entity's collision group
-		OUT group, PN_Enum, PNF_None, COLLISION, #The collision group. See COLLISION_GROUP_ Enums
+		OUT group, PN_Enum, PNF_None, COLLISION_GROUP, #The collision group. See COLLISION_GROUP_ Enums
 	}
 	PURE SHARED GetColor
 	{
@@ -467,6 +468,7 @@ CLASS Entity, entity
 		DESC Returns the ID of the flex based on given name.
 		IN name, PN_String, #The name of the flex to get the ID of. Case sensitive.
 		OUT id, PN_Number, #The ID of flex nil if no flex with given name was found
+		CODE #1 = Entity_.GetFlexIDByName($1, $2) #1 = #1 or -1
 	}
 	PURE SHARED GetFlexName
 	{
@@ -649,6 +651,7 @@ CLASS Entity, entity
 	{
 		DESC Gets the model of given entity.
 		OUT model, PN_String, #The entity's model. Will be a filesystem path for most models. This will be nil for entities which cannot have models, such as point entities.
+		CODE #1 = Entity_.GetModel($1)\n#1 = #1 or ""
 	}
 	PURE SHARED GetModelBounds
 	{
@@ -1111,6 +1114,7 @@ CLASS Entity, entity
 	{
 		DESC Checks if the entity is an NPC or not.
 		OUT isNPC, PN_Bool, #Whether the entity is an NPC.
+		CODE #1 = getmetatable($1) == NPC_
 	}
 	PURE SHARED IsOnFire
 	{
@@ -1126,6 +1130,7 @@ CLASS Entity, entity
 	{
 		DESC Checks if the entity is a player or not.
 		OUT isPlayer, PN_Bool, #Whether the entity is a player.
+		CODE #1 = getmetatable($1) == Player_
 	}
 	PURE SERVER IsPlayerHolding
 	{
@@ -1168,11 +1173,13 @@ CLASS Entity, entity
 	{
 		DESC Checks if the entity is a vehicle or not.
 		OUT vehicle, PN_Bool, #Whether the entity is a vehicle.
+		CODE #1 = getmetatable($1) == Vehicle_
 	}
 	PURE SHARED IsWeapon
 	{
 		DESC Checks if the entity is a weapon or not.
 		OUT weapon, PN_Bool, #Whether the entity is a weapon
+		CODE #1 = getmetatable($1) == Weapon_
 	}
 	PURE SHARED IsWidget
 	{
@@ -1514,7 +1521,7 @@ CLASS Entity, entity
 	FUNC SERVER SetBloodColor
 	{
 		DESC Sets the blood color this entity uses.
-		IN bloodColor, PN_Enum, PNF_None, BLOOD, #An integer corresponding to BLOOD_COLOR_ Enums.
+		IN bloodColor, PN_Enum, PNF_None, BLOOD_COLOR, #An integer corresponding to BLOOD_COLOR_ Enums.
 	}
 	FUNC SHARED SetBodygroup
 	{
@@ -1561,7 +1568,7 @@ CLASS Entity, entity
 	FUNC SHARED SetCollisionGroup
 	{
 		DESC Sets the entity's collision group.
-		IN group, PN_Enum, PNF_None, COLLISION, #Collision group of the entity, see COLLISION_GROUP_ Enums
+		IN group, PN_Enum, PNF_None, COLLISION_GROUP, #Collision group of the entity, see COLLISION_GROUP_ Enums
 	}
 	FUNC SHARED SetColor
 	{

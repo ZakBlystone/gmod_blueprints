@@ -1,0 +1,57 @@
+LIB system
+{
+	PURE SHARED AppTime
+	{
+		DESC Returns the total uptime of the current application as reported by Steam.
+		OUT time, PN_Number, #Seconds of game uptime as an integer.
+	}
+	PURE SHARED BatteryPower
+	{
+		DESC Returns the current battery power.
+		OUT battery, PN_Number, #0-100 if on battery power. If plugged in, the value will be 255 regardless of charging state.
+	}
+	FUNC CLIENT FlashWindow
+	{
+		DESC Flashes the window. Currently works only on Windows.
+	}
+	PURE SHARED GetCountry
+	{
+		DESC Returns the country code of this computer, determined by the localisation settings of the OS.
+		OUT country, PN_String, #Two-letter country code, using ISO 3166-1 standard.
+	}
+	PURE SHARED HasFocus
+	{
+		DESC Returns whether or not the game window has focus.
+		OUT focus, PN_Bool, #Whether or not the game window has focus.
+	}
+	PURE SHARED IsLinux
+	{
+		DESC Returns whether the current OS is Linux.
+		OUT linux, PN_Bool, #Whether or not the game is running on Linux.
+	}
+	PURE SHARED IsOSX
+	{
+		DESC Returns whether the current OS is OSX.
+		OUT osx, PN_Bool, #Whether or not the game is running on OSX.
+	}
+	PURE CLIENT IsWindowed
+	{
+		DESC Returns whether the game is being run in a window or in fullscreen (you can change this by opening the menu, clicking 'Options', then clicking the 'Video' tab, and changing the Display Mode using the dropdown menu):
+		OUT windowed, PN_Bool, #Is the game running in a window?
+	}
+	PURE SHARED IsWindows
+	{
+		DESC Returns whether the current OS is Windows.
+		OUT windows, PN_Bool, #Whether the system the game runs on is Windows or not.
+	}
+	PURE SHARED SteamTime
+	{
+		DESC Returns the synchronized Steam time. This is the number of seconds since the Unix epoch.
+		OUT time, PN_Number, #Current Steam-synchronized Unix time.
+	}
+	PURE SHARED UpTime
+	{
+		DESC Returns the amount of seconds since the Steam user last moved their mouse.
+		OUT time, PN_Number, #The amount of seconds since the Steam user last moved their mouse.
+	}
+}

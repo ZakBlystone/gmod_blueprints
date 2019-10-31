@@ -1,0 +1,50 @@
+LIB utf8
+{
+	FUNC SHARED char
+	{
+		DESC Receives zero or more integers, converts each one to its corresponding UTF-8 byte sequence and returns a string with the concatenation of all these sequences.
+		IN codepoints, PN_Ref, PNF_None, vararg, #Unicode code points to be converted in to a UTF-8 string.
+		OUT string, PN_String, #UTF-8 string generated from given arguments.
+	}
+	FUNC SHARED codepoint
+	{
+		TBD
+		DESC Returns the codepoints (as numbers) from all characters in the given string that start between byte position startPos and endPos. It raises an error if it meets any invalid byte sequence. This functions similarly to string.byte.
+		IN string, PN_String, #The string that you will get the code(s) from.
+		IN startPos, PN_Number, PNF_Nullable, #The starting byte of the string to get the codepoint of.
+		IN endPos, PN_Number, PNF_Nullable, #The ending byte of the string to get the codepoint of.
+		OUT codepoint, PN_Ref, PNF_None, vararg, #The codepoint number(s).
+	}
+	FUNC SHARED codes
+	{
+		TBD
+		DESC Returns an iterator (like string.gmatch) which returns both the position and codepoint of each utf8 character in the string. It raises an error if it meets any invalid byte sequence.
+		IN string, PN_String, #The string that you will get the codes from.
+		OUT out_0, PN_Ref, PNF_None, function, #The iterator (to be used in a for loop).
+	}
+	FUNC SHARED force
+	{
+		DESC Forces a string to contain only valid UTF-8 data. Invalid sequences are replaced with U+FFFD (the Unicode replacement character).
+		IN string, PN_String, #The string that will become a valid UTF-8 string.
+		OUT string, PN_String, #The UTF-8 string.
+	}
+	FUNC SHARED len
+	{
+		TBD
+		DESC Returns the number of UTF-8 sequences in the given string between positions startPos and endPos (both inclusive). If it finds any invalid UTF-8 byte sequence, returns false as well as the position of the first invalid byte.
+		IN string, PN_String, #The string to calculate the length of.
+		IN startPos, PN_Number, PNF_Nullable, #The starting position to get the length from.
+		IN endPos, PN_Number, PNF_Nullable, #The ending position to get the length from.
+		OUT out_0, PN_Number, #The number of UTF-8 characters in the string. If there are invalid bytes, this will be false.
+		OUT out_1, PN_Number, #The position of the first invalid byte. If there were no invalid bytes, this will be nil.
+	}
+	FUNC SHARED offset
+	{
+		TBD
+		DESC Returns the byte-index of the n'th UTF-8-character after the given startPos (nil if none). startPos defaults to 1 when n is positive and -1 when n is negative. If n is zero, this function instead returns the byte-index of the UTF-8-character startPos lies within.
+		IN string, PN_String, #The string that you will get the byte position from.
+		IN n, PN_Number, #The position to get the beginning byte position from.
+		IN startPos, PN_Number, PNF_Nullable, #The offset for n.
+		OUT out_0, PN_Number, #Starting byte-index of the given position.
+	}
+}

@@ -1,0 +1,37 @@
+LIB weapons
+{
+	PURE SHARED Get
+	{
+		TBD
+		DESC Get a copy of weapon table by name. This function also inherits fields from the weapon's base class, unlike weapons.GetStored.
+		IN classname, PN_String, #Class name of weapon to retrieve
+		OUT swep, PN_Any, PNF_Table, #The retrieved table or nil
+	}
+	PURE SHARED GetList
+	{
+		TBD
+		DESC Get a list of all the registered SWEPs. This does not include weapons added to spawnmenu manually.
+		OUT sweps, PN_Any, PNF_Table, #List of all the registered SWEPs
+	}
+	PURE SHARED GetStored
+	{
+		TBD
+		DESC Gets the REAL weapon table, not a copy. The produced table does not inherit fields from the weapon's base class, unlike weapons.Get.
+		IN weapon_class, PN_String, #Weapon class to retrieve weapon table of
+		OUT out_0, PN_Any, PNF_Table, #The weapon table
+	}
+	FUNC SHARED IsBasedOn
+	{
+		DESC Checks if name is based on base
+		IN name, PN_String, #Entity's class name to be checked
+		IN base, PN_String, #Base class name to be checked
+		OUT result, PN_Bool, #Returns true if class name is based on base, else false.
+	}
+	FUNC SHARED Register
+	{
+		TBD
+		DESC Used to register your SWEP with the engine.
+		IN swep_table, PN_Any, PNF_Table, #The SWEP table
+		IN classname, PN_String, #Classname to assign to that swep
+	}
+}

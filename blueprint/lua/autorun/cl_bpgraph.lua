@@ -520,7 +520,7 @@ function PANEL:OnMouseReleased( mouse )
 
 	if mouse ~= MOUSE_RIGHT then return end
 
-	if RealTime() - (self.LastRelease or 0) < 0.2 then print("DEBOUNCED") return end
+	if RealTime() - (self.LastRelease or 0) < 0.2 then print("DEBOUNCED") self.Dragging = nil return end
 
 	self.Dragging = nil
 	self.Sizing = nil

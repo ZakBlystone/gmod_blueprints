@@ -1,0 +1,38 @@
+LIB physenv
+{
+	FUNC SHARED AddSurfaceData
+	{
+		DESC Adds surface properties to the game's physics environment.
+		IN properties, PN_String, #The properties to add. Each one should include "base" or the game will crash due to some values being missing.
+	}
+	PURE SHARED GetAirDensity
+	{
+		DESC Returns the air density.
+		OUT density, PN_Number, #airDensity
+	}
+	PURE SHARED GetGravity
+	{
+		DESC Gets the global gravity.
+		OUT gravity, PN_Vector, #gravity
+	}
+	PURE SHARED GetPerformanceSettings
+	{
+		DESC Gets the current performance settings in table form.
+		OUT settings, PN_Struct, PNF_None, PhysEnvPerformanceSettings, #Performance settings. See PhysEnvPerformanceSettings structure
+	}
+	FUNC SHARED SetAirDensity
+	{
+		DESC Sets the air density.
+		IN airDensity, PN_Number, #The new air density.
+	}
+	FUNC SHARED SetGravity
+	{
+		DESC Sets the directional gravity, does not work on players.
+		IN gravity, PN_Vector, #The new gravity.
+	}
+	FUNC SHARED SetPerformanceSettings
+	{
+		DESC Sets the performance settings.
+		IN settings, PN_Struct, PNF_None, PhysEnvPerformanceSettings, #The new performance settings. See PhysEnvPerformanceSettings structure
+	}
+}

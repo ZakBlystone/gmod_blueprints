@@ -144,7 +144,7 @@ local function ParseDef( filePath, search )
 			lv = lv + 1
 		elseif tr:sub(0,1) == "}" then
 			lv = lv - 1
-			if lv == 1 then if not d2.protected then table.insert(d.entries, d2) end d2 = nil end
+			if lv == 1 then if not d2.protected and not d2.tbd then table.insert(d.entries, d2) end d2 = nil end
 			if lv == 0 then table.insert(def, d) d = nil end
 		elseif (lv == 2 and d2) or (lv == 1 and (d.type == DEFTYPE_CALLBACK or d.type == DEFTYPE_STRUCT)) then
 			if args[1]:sub(1,4) == "DESC" then
@@ -154,12 +154,24 @@ local function ParseDef( filePath, search )
 				local b = args[2]:Trim()
 				d2.nameMap[a] = b
 				d2.invNameMap[b] = a
+			elseif args[1]:sub(1,4) == "CODE" then
+				d2.code = table.concat(args, ","):sub(6,-1):gsub("\\n", "\n")
+			elseif args[1]:sub(1,4) == "WARN" then
+				d2.warn = table.concat(args, ","):sub(6,-1):gsub("\\n", "\n")
 			elseif args[1]:sub(1,9) == "PROTECTED" then
 				d2.protected = true
+			elseif args[1]:sub(1,3) == "TBD" then
+				d2.tbd = true
+			elseif args[1]:sub(1,7) == "COMPACT" then
+				d2.compact = true
+			elseif args[1]:sub(1,6) == "INFORM" then
+				d2.informs = d2.informs or {}
+				for x in string.gmatch(tr, "%d+") do table.insert(d2.informs, tonumber(x)) end 
 			elseif args[1]:sub(1,9) == "METATABLE" then
 				d2.metatable = args[1]:sub(11,-1)
 			elseif args[1]:sub(1,2) == "IN" or args[1]:sub(1,3) == "OUT" or args[1]:sub(1,3) == "PIN" then
 
+				if d2.tbd then continue end
 				local params = {"type", "flags", "ex"}
 				local pin = {}
 
@@ -313,6 +325,10 @@ function CreateLibNodes( lib, output )
 		ntype.category = lib.name
 		ntype.isClass = lib.type == DEFTYPE_CLASS
 		ntype.isLib = lib.type == DEFTYPE_LIB
+		ntype.compact = v.compact or false
+		ntype.meta = {
+			informs = v.informs or {}
+		}
 
 		if lib.type == DEFTYPE_CLASS then
 
@@ -366,7 +382,7 @@ function CreateLibNodes( lib, output )
 			ntype.compact = true
 		end
 
-		ntype.code = ret .. (#pins[PD_Out] ~= 0 and " = " or "") .. call .. "(" .. arg .. ")"
+		ntype.code = v.code or (ret .. (#pins[PD_Out] ~= 0 and " = " or "") .. call .. "(" .. arg .. ")")
 
 		ConfigureNodeType(ntype)
 
@@ -408,6 +424,27 @@ function LoadAndParseDefs()
 				table.Add(libs[v.name], v)
 			else
 				libs[v.name] = v
+			end
+		end
+	end
+
+	--[[for k,v in pairs(enums) do
+		MsgC(Color(100,255,80), k .. "\n")
+	end]]
+
+	for k,v in pairs(classes) do
+		for _,func in pairs(v.entries) do
+			for _,pin in pairs(func.pins) do
+				if pin.type == PN_Enum then 
+					if enums[pin.ex] == nil then
+						print("INVALID ENUM: " .. v.name .. ":" .. func.func .. "." .. pin.name .. "[" .. pin.ex .. "]")
+					end
+				end
+				if pin.type == PN_Struct then
+					if structs[pin.ex] == nil then
+						print("INVALID STRUCT: " .. v.name .. ":" .. func.func .. "." .. pin.name .. "[" .. pin.ex .. "]")
+					end
+				end
 			end
 		end
 	end

@@ -1,0 +1,281 @@
+LIB string
+{
+	PURE SHARED byte
+	{
+		TBD
+		DESC Returns the given string's characters in their numeric ASCII representation.
+		IN string, PN_String, #The string to get the chars from.
+		IN startPos, PN_Number, PNF_Nullable, #The first character of the string to get the byte of.
+		IN endPos, PN_Number, PNF_Nullable, #The last character of the string to get the byte of.
+		OUT out_0, PN_Ref, PNF_None, vararg, #Numerical bytes
+	}
+	PURE SHARED char
+	{
+		TBD
+		DESC Takes the given numerical bytes and converts them to a string.
+		IN bytes, PN_Ref, PNF_None, vararg, #The bytes to create the string from.
+		OUT out_0, PN_String, #String built from given bytes
+	}
+	PURE SHARED Comma
+	{
+		DESC Inserts commas for every third digit.
+		IN InputNumber, PN_Number, #The input number to commafy
+		OUT string, PN_String, #Prettystring
+	}
+	PURE SHARED dump
+	{
+		TBD
+		DESC Returns the binary bytecode of the given function.
+		IN func, PN_Ref, PNF_None, function, #The function to get the bytecode of
+		IN stripDebugInfo, PN_Bool, PNF_Nullable, #True to strip the debug data, false to keep it
+		OUT out_0, PN_String, #Bytecode
+	}
+	PURE SHARED EndsWith
+	{
+		DESC Returns whether or not the second passed string matches the end of the first.
+		IN str, PN_String, #The string whose end is to be checked.
+		IN end, PN_String, #The string to be matched with the end of the first.
+		OUT result, PN_Bool, #true if the first string ends with the second, or the second is empty, otherwise false.
+	}
+	PURE SHARED Explode
+	{
+		DESC Splits a string up wherever it finds the given separator.
+		IN separator, PN_String, #The string will be separated wherever this sequence is found.
+		IN str, PN_String, #The string to split up.
+		IN use_patterns, PN_Bool, PNF_Nullable, #Set this to true if your separator is a pattern.
+		OUT strings, PN_String, PNF_Table, #Exploded string as a numerical sequential table.
+	}
+	PURE SHARED find
+	{
+		DESC Attempts to find the specified substring in a string, uses Patterns by default.
+		IN haystack, PN_String, #The string to search in.
+		IN needle, PN_String, #The string to find, can contain patterns if enabled.
+		IN startPos=1, PN_Number, PNF_Nullable, #The position to start the search from, can be negative start position will be relative to the end position.
+		IN noPatterns=false, PN_Bool, PNF_Nullable, #Disable patterns.
+		OUT found, PN_Bool, #Was the string found
+		OUT start, PN_Number, #Starting position of the found text, or nil if the text wasn't found
+		OUT end, PN_Number, #Ending position of found text, or nil if the text wasn't found
+		OUT matched, PN_String, #Matched text for each group if patterns are enabled and used, or nil if the text wasn't found
+		CODE #2, #3, #4 = string.find($1, $2, $3, $4)\n#1 = #2 ~= nil\n#2 = #2 or 0\n#3 = #3 or 0\n#4 = #4 or ""
+	}
+	PURE SHARED format
+	{
+		TBD
+		DESC Formats the specified values into the string given.
+		IN format, PN_String, #The string to be formatted. Follows this format: http://www.cplusplus.com/reference/cstdio/printf/
+		IN formatParameters, PN_Ref, PNF_None, vararg, #Values to be formatted into the string.
+		OUT out_0, PN_String, #The formatted string
+	}
+	PURE SHARED FormattedTime
+	{
+		DESC Returns the time as a formatted string or as a table if no format is given.
+		IN float, PN_Number, #The time in seconds to format.
+		IN format, PN_String, #An optional formatting to use. If no format it specified, a table will be returned instead.
+		OUT result, PN_String, #Returns the time as a formatted string only if a format was specified. Returns a table only if no format was specified. The table will contain these fields: number ms - milliseconds number s - seconds number m - minutes number h - hours 
+	}
+	FUNC SHARED FromColor
+	{
+		DESC Creates a string from a Color variable.
+		IN color, PN_Struct, PNF_None, Color, #The color to put in the string.
+		OUT string, PN_String, #Output
+	}
+	PURE SHARED GetExtensionFromFilename
+	{
+		DESC Returns extension of the file.
+		IN filepath, PN_String, #String eg. file-path to get the file extensions from.
+		OUT extension, PN_String, #fileExtension
+	}
+	PURE SHARED GetFileFromFilename
+	{
+		DESC Returns file name and extension.
+		IN filepath, PN_String, #The string eg. file-path to get the file-name from.
+		OUT filename, PN_String, #The file name
+	}
+	PURE SHARED GetPathFromFilename
+	{
+		DESC Returns the path only from a file's path.
+		IN filepath, PN_String, #String to get path from.
+		OUT path, PN_String, #Path
+	}
+	PURE SHARED gmatch
+	{
+		DESC Using Patterns, returns an iterator which will return either one value if no capture groups are defined, or any capture group matches.
+		IN string, PN_String, #The string to search in
+		IN pattern, PN_String, #The pattern to search for
+		OUT matched, PN_String, PNF_Table, #Matched strings
+		CODE #1 = {} for x in string.gmatch($1, $2) do table.insert(#1, x) end
+	}
+	PURE SHARED gsub
+	{
+		TBD
+		DESC This functions main purpose is to replace certain character sequences in a string using Patterns.
+		IN string, PN_String, #String which should be modified.
+		IN pattern, PN_String, #The pattern that defines what should be matched and eventually be replaced.
+		IN replacement, PN_String, #In case of a string the matches sequence will be replaced with it. In case of a table, the matched sequence will be used as key and the table will tested for the key, if a value exists it will be used as replacement. In case of a function all matches will be passed as parameters to the function, the return value(s) of the function will then be used as replacement.
+		IN maxReplaces, PN_Number, PNF_Nullable, #Maximum number of replacements to be made.
+		OUT out_0, PN_String, #replaceResult
+		OUT out_1, PN_Number, #replaceCount
+	}
+	PURE SHARED Left
+	{
+		DESC Returns everything left of supplied place of that string.
+		IN string, PN_String, #The string to extract from.
+		IN num, PN_Number, #Amount of chars relative to the beginning (starting from 1).
+		OUT string, PN_String, #Returns a string containing a specified number of characters from the left side of a string.
+	}
+	PURE SHARED len
+	{
+		DESC Counts the number of characters in the string (length). This is equivalent to using the length operator (#).
+		IN string, PN_String, #The string to find the length of.
+		OUT length, PN_Number, #Length of the string
+	}
+	PURE SHARED lower
+	{
+		DESC Changes any upper-case letters in a string to lower-case letters.
+		IN string, PN_String, #The string to convert.
+		OUT lower, PN_String, #The original string, with all uppercase letters replaced with their lowercase variants.
+	}
+	PURE SHARED match
+	{
+		DESC Finds a Pattern in a string.
+		IN string, PN_String, #String which should be searched in for matches.
+		IN pattern, PN_String, #The pattern that defines what should be matched.
+		IN startPosition=1, PN_Number, #The start index to start the matching from, can be negative to start the match from a position relative to the end.
+		OUT matched, PN_String, PNF_Table, #Matched text(s)
+		CODE #1 = {string.match($1, $2, $3)}
+	}
+	PURE SHARED NiceSize
+	{
+		DESC Converts a digital filesize to human-readable text.
+		IN bytes, PN_Number, #The filesize in bytes.
+		OUT string, PN_String, #The human-readable filesize, in Bytes/KB/MB/GB (whichever is appropriate).
+	}
+	PURE SHARED NiceTime
+	{
+		DESC Formats the supplied number (in seconds) to the highest possible time unit.
+		IN num, PN_Number, #The number to format, in seconds.
+		OUT string, PN_String, #A nicely formatted time string.
+	}
+	PURE SHARED PatternSafe
+	{
+		DESC Escapes all special characters within a string, making the string safe for inclusion in a Lua pattern.
+		IN string, PN_String, #The string to be sanitized
+		OUT safe, PN_String, #The string that has been sanitized for inclusion in Lua patterns
+	}
+	PURE SHARED rep
+	{
+		DESC Repeats a string by the provided number, with an optional separator.
+		IN string, PN_String, #The string to convert.
+		IN repetitions, PN_Number, #Timer to repeat, this values gets rounded internally.
+		IN separator, PN_String, PNF_Nullable, #String that will separate the repeated piece. Notice that it doesn't add this string to the start or the end of the result, only between the repeated parts.
+		OUT string, PN_String, #Repeated string.
+	}
+	PURE SHARED Replace
+	{
+		DESC Replaces all occurrences of the supplied second string.
+		IN string, PN_String, #The string we are seeking to replace an occurrence(s).
+		IN find, PN_String, #What we are seeking to replace.
+		IN replace, PN_String, #What to replace find with.
+		OUT string, PN_String, #string
+	}
+	PURE SHARED reverse
+	{
+		DESC Reverses a string.
+		IN string, PN_String, #The string to be reversed.
+		OUT reverse, PN_String, #reversed string
+	}
+	PURE SHARED Right
+	{
+		DESC Returns the last n-th characters of the string.
+		IN string, PN_String, #The string to extract from.
+		IN num, PN_Number, #Amount of chars relative to the end (starting from 1).
+		OUT string, PN_String, #Returns a string containing a specified number of characters from the right side of a string.
+	}
+	PURE SHARED SetChar
+	{
+		DESC Sets the character at the specific index of the string.
+		IN string, PN_String, #The input string
+		IN Index, PN_Number, #The character index, 1 is the first from left.
+		IN ReplaceWith, PN_String, #String to replace with.
+		OUT string, PN_String, #ModifiedString
+	}
+	PURE SHARED Split
+	{
+		DESC Splits the string into a table of strings, separated by the second argument.
+		IN Inputstring, PN_String, #String to split
+		IN Separator, PN_String, #Character(s) to split with.
+		OUT strings, PN_String, PNF_Table, #Split table
+	}
+	PURE SHARED StartWith
+	{
+		DESC Returns whether or not the first string starts with the second.
+		IN string, PN_String, #String to check.
+		IN start, PN_String, #String to check with.
+		OUT result, PN_Bool, #Whether the first string starts with the second.
+	}
+	PURE SHARED StripExtension
+	{
+		DESC Removes the extension of a path.
+		IN filepath, PN_String, #The path to change.
+		OUT stripped, PN_String, #Modifiedstring
+	}
+	PURE SHARED sub
+	{
+		DESC Returns a sub-string, starting from the character at position StartPos of the string (inclusive), and optionally ending at the character at position EndPos of the string (also inclusive). If EndPos is not given, the rest of the string is returned.
+		IN string, PN_String, #The string you'll take a sub-string out of.
+		IN start, PN_Number, #The position of the first character that will be included in the sub-string.
+		IN end, PN_Number, PNF_Nullable, #The position of the last character to be included in the sub-string. It can be negative to count from the end.
+		OUT string, PN_String, #The substring.
+	}
+	PURE SHARED ToColor
+	{
+		DESC Fetches a Color type from a string.
+		IN Inputstring, PN_String, #The string to convert from.
+		OUT color, PN_Struct, PNF_None, Color, #The output Color structure
+	}
+	PURE SHARED ToMinutesSeconds
+	{
+		DESC Returns given time in "MM:SS" format.
+		IN time, PN_Number, #Time in seconds
+		OUT string, PN_String, #Formatted time
+	}
+	PURE SHARED ToMinutesSecondsMilliseconds
+	{
+		DESC Returns given time in "MM:SS:MS" format.
+		IN time, PN_Number, #Time in seconds
+		OUT string, PN_String, #Formatted time
+	}
+	PURE SHARED ToTable
+	{
+		DESC Splits the string into characters and creates a sequential table of characters.
+		IN string, PN_String, #The string you'll turn into a table.
+		OUT table, PN_String, PNF_Table, #A sequential table where each value is a character from the given string
+	}
+	PURE SHARED Trim
+	{
+		DESC Removes leading and trailing matches of a string.
+		IN string, PN_String, #The string to trim.
+		IN match, PN_String, PNF_Nullable, #String to match.
+		OUT trimmed, PN_String, #Modified string
+	}
+	FUNC SHARED TrimLeft
+	{
+		DESC Removes leading spaces/characters from a string.
+		IN string, PN_String, #String to trim
+		IN match, PN_String, PNF_Nullable, #Custom character to remove
+		OUT trimmed, PN_String, #Trimmed string
+	}
+	FUNC SHARED TrimRight
+	{
+		DESC Removes trailing spaces/passed character from a string.
+		IN string, PN_String, #String to remove from
+		IN match, PN_String, PNF_Nullable, #Custom character to remove, default is a space
+		OUT trimmed, PN_String, #Trimmed string
+	}
+	FUNC SHARED upper
+	{
+		DESC Changes any lower-case letters in a string to upper-case letters.
+		IN string, PN_String, #The string to convert.
+		OUT upper, PN_String, #A string representing the value of a string converted to upper-case.
+	}
+}

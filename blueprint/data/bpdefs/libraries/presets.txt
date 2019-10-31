@@ -1,0 +1,38 @@
+LIB presets
+{
+	FUNC CLIENT Add
+	{
+		DESC Adds preset to a preset group.
+		IN groupname, PN_String, #The preset group name, usually it's tool class name.
+		IN name, PN_String, #Preset name, must be unique.
+		IN values, PN_Any, PNF_Table, #A table of preset console commands.
+	}
+	FUNC CLIENT Exists
+	{
+		DESC Returns whether a preset with given name exists or not
+		IN type, PN_String, #The preset group name, usually it's tool class name.
+		IN name, PN_String, #Name of the preset to test
+		OUT exists, PN_Bool, #true if the preset does exist
+	}
+	PURE CLIENT GetTable
+	{
+		DESC Returns a table with preset names and values from a single preset group.
+		IN groupname, PN_String, #Preset group name.
+		OUT table, PN_String, PNF_Table, #All presets in specified group.
+	}
+	FUNC CLIENT Remove
+	{
+		PROTECTED
+		DESC Removes a preset entry from a preset group.
+		IN groupname, PN_String, #Preset group to remove from
+		IN name, PN_String, #Name of preset to remove
+	}
+	FUNC CLIENT Rename
+	{
+		PROTECTED
+		DESC Renames preset.
+		IN groupname, PN_String, #Preset group name
+		IN oldname, PN_String, #Old preset name
+		IN newname, PN_String, #New preset name
+	}
+}

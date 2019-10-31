@@ -1,0 +1,66 @@
+CALLBACK SoundGenerateCallback
+{
+	IN sample, PN_Number
+	OUT value, PN_Number
+}
+CALLBACK SoundPlayCallback
+{
+	IN channel, PN_Ref, PNF_None, IGModAudioChannel, #The sound channel. Will be nil if an error occured.
+	IN errorID, PN_Number, #ID of an error if an error has occured. Will be nil, otherwise.
+	IN errorName, PN_String, #Name of an error if an error has occured. Will be nil, otherwise.
+}
+LIB sound
+{
+	FUNC SHARED Add
+	{
+		DESC Creates a sound script. It can also override sounds, which seems to only work when set on the server.
+		IN soundData, PN_Struct, PNF_None, SoundData, #The sounds properties. See SoundData structure
+	}
+	FUNC SHARED AddSoundOverrides
+	{
+		DESC Overrides sounds defined inside of a txt file; typically used for adding map-specific sounds.
+		IN filepath, PN_String, #Path to the script file to load.
+	}
+	FUNC CLIENT Generate
+	{
+		DESC Creates a sound from a function.
+		IN indentifier, PN_String, #An unique identified for the sound. You cannot override already existing ones.
+		IN samplerate, PN_Number, #The sample rate of the sound. Must be 11025, 22050 or 44100.
+		IN length, PN_Number, #The length in seconds of the sound to generate.
+		IN callback, PN_Func, PNF_None, SoundGenerateCallback, #A function which will be called to generate every sample on the sound. This function gets the current sample number passed as the first argument. The return value must be between -1.0 and 1.0. Other values will wrap back to the -1 to 1 range and basically clip. There are 65535 possible quantifiable values between -1 and 1.
+	}
+	PURE SHARED GetProperties
+	{
+		DESC Returns properties of the soundscript.
+		IN name, PN_String, #The name of the sound script
+		OUT properties, PN_Struct, PNF_None, SoundData, #The properties of the soundscript. See SoundData structure
+	}
+	PURE SHARED GetTable
+	{
+		DESC Returns a list of all registered sound scripts.
+		OUT sounds, PN_String, PNF_Table, #The list/array of all registered sound scripts ( No other information is provided )
+	}
+	FUNC SHARED Play
+	{
+		DESC Plays a sound from the specified position in the world. If you want to play a sound without a position, such as a UI sound, use surface.PlaySound instead.
+		IN Name, PN_String, #A string path to the sound.
+		IN Pos, PN_Vector, #A vector describing where the sound should play.
+		IN Level=75, PN_Number, #Sound level in decibels. 75 is normal. Ranges from 20 to 180, where 180 is super loud. This affects how far away the sound will be heard.
+		IN Pitch=100, PN_Number, #An integer describing the sound pitch. Range is from 0 to 255. 100 is normal pitch.
+		IN Volume=1, PN_Number, #A float ranging from 0-1 describing the output volume of the sound.
+	}
+	FUNC CLIENT PlayFile
+	{
+		DESC Plays a file from GMod directory. You can find a list of all error codes here
+		IN path, PN_String, #The path to the file to play. Unlike other sound functions and structures, the path is relative to garrysmod/ instead of garrysmod/sound/
+		IN flags, PN_String, #Flags for the sound. Can be one or more of following, separated by a space (" "): 3d - Makes the sound 3D, so you can set its position mono - Forces the sound to have only one channel noplay - Forces the sound not to play as soon as this function is called noblock - Disables streaming in blocks. It is more resource-intensive, but it is required for IGModAudioChannel:SetTime. If you don't want to use any of the above, you can just leave it as "".
+		IN callback, PN_Func, PNF_None, SoundPlayCallback, #Callback function that is called as soon as the the stream is loaded. It has next arguments: IGModAudioChannel soundchannel - The sound channel. Will be nil if an error occured. number errorID - ID of an error if an error has occured. Will be nil, otherwise. string errorName - Name of an error if an error has occured. Will be nil, otherwise. 
+	}
+	FUNC CLIENT PlayURL
+	{
+		DESC Allows you to play external sound files, as well as online radio streams. You can find a list of all error codes here
+		IN url, PN_String, #The URL of the sound to play
+		IN flags, PN_String, #Flags for the sound. Can be one or more of following, separated by a space (" "): 3d - Makes the sound 3D, so you can set its position mono - Forces the sound to have only one channel noplay - Forces the sound not to play as soon as this function is called noblock - Disables streaming in blocks. It is more resource-intensive, but it is required for IGModAudioChannel:SetTime. If you don't want to use any of the above, you can just leave it as "".
+		IN callback, PN_Func, PNF_None, SoundPlayCallback, #Callback function that is called as soon as the the stream is loaded. It has next arguments: IGModAudioChannel soundchannel - The sound channel number errorID - ID of an error, if an error has occured string errorName - Name of an error, if an error has occured 
+	}
+}

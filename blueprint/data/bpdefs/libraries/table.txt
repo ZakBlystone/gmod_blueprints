@@ -1,0 +1,229 @@
+LIB table
+{
+	FUNC SHARED Add
+	{
+		DESC Adds the contents from one table into another. The target table will be modified.
+		IN target, PN_Any, PNF_Table, #The table to insert the new values into.
+		IN source, PN_Any, PNF_Table, #The table to retrieve the values from.
+		OUT target, PN_Any, PNF_Table, #The target table.
+		INFORM 3,4,5
+	}
+	FUNC SHARED ClearKeys
+	{
+		DESC Changes all keys to sequential integers. This creates a new table object and does not affect the original.
+		IN table, PN_Any, PNF_Table, #The original table to modify.
+		IN saveKeys, PN_Bool, PNF_Nullable, #Save the keys within each member table. This will insert a new field __key into each value, and should not be used if the table contains non-table values.
+		OUT result, PN_Any, PNF_Table, #Table with integer keys.
+		INFORM 3,5
+	}
+	FUNC SHARED CollapseKeyValue
+	{
+		DESC Collapses a table with keyvalue structure
+		IN input, PN_Any, PNF_Table, #Input table
+		OUT output, PN_Any, PNF_Table, #Output table
+		INFORM 3,4
+	}
+	FUNC SHARED concat
+	{
+		DESC Concatenates the contents of a table to a string.
+		IN table, PN_String, PNF_Table, #The table to concatenate.
+		IN concatenator, PN_String, PNF_Nullable, #A seperator to insert between strings
+		IN startPos=1, PN_Number, PNF_Nullable, #The key to start at
+		IN endPos=-1, PN_Number, PNF_Nullable, #The key to end at
+		OUT string, PN_String, #Concatenated values
+		CODE #2 = table.concat($2, $3, $4, $5 < 0 and nil or $5)
+	}
+	FUNC SHARED Copy
+	{
+		DESC Creates a deep copy and returns that copy.
+		IN originalTable, PN_Any, PNF_Table, #The table to be copied.
+		OUT copy, PN_Any, PNF_Table, #A deep copy of the original table
+		INFORM 3,4
+	}
+	FUNC SHARED CopyFromTo
+	{
+		DESC Empties the target table, and merges all values from the source table into it.
+		IN source, PN_Any, PNF_Table, #The table to copy from.
+		IN target, PN_Any, PNF_Table, #The table to write to.
+		INFORM 3,4
+	}
+	PURE SHARED Count
+	{
+		DESC Counts the amount of keys in a table. This should only be used when a table is not numerically and sequentially indexed. For those tables, consider the length (#) operator.
+		IN table, PN_Any, PNF_Table, #The table to count the keys of.
+		OUT count, PN_Number, #The number of keyvalue pairs. This includes non-numeric and non-sequential keys, unlike the length (#) operator.
+	}
+	FUNC SHARED DeSanitise
+	{
+		DESC Converts a table that has been sanitised with table.Sanitise back to its original form
+		IN table, PN_Any, PNF_Table, #Table to be de-sanitised
+		OUT deSanitized, PN_Any, PNF_Table, #De-sanitised table
+		INFORM 3,4
+	}
+	FUNC SHARED Empty
+	{
+		DESC Removes all values from a table.
+		IN table, PN_Any, PNF_Table, #The table to empty.
+	}
+	FUNC SHARED ForceInsert
+	{
+		DESC Inserts a value in to the given table even if the table is non-existent
+		IN table, PN_Any, PNF_Nullable|PNF_Table, #Table to insert value in to
+		IN value, PN_Any, #Value to insert
+		OUT table, PN_Any, PNF_Table, #The supplied or created table
+	}
+	PURE SHARED GetKeys
+	{
+		DESC Returns all keys of a table.
+		IN table, PN_Any, PNF_Table, #The table to get keys of
+		OUT keys, PN_Any, PNF_Table, #Table of keys
+	}
+	PURE SHARED HasValue
+	{
+		DESC Checks if a table has a value.
+		IN table, PN_Any, PNF_Table, #Table to check
+		IN value, PN_Any, #Value to search for
+		OUT exists, PN_Bool, #Returns true if the table has that value, false otherwise
+		INFORM 1,2
+	}
+	FUNC SHARED Inherit
+	{
+		DESC Copies any missing data from base to target, and sets the target's BaseClass member to the base table's pointer.
+		IN target, PN_Any, PNF_Table, #Table to copy data to
+		IN base, PN_Any, PNF_Table, #Table to copy data from
+		OUT result, PN_Any, PNF_Table, #Target
+		INFORM 3,4,5
+	}
+	FUNC SHARED insert
+	{
+		DESC Inserts a value into a table at the end of the table or at the given position.
+		IN tbl, PN_Any, PNF_Table, #The table to insert the variable into.
+		IN position=-1, PN_Number, #The position in the table to insert the variable. If the third argument is nil this argument becomes the value to insert at the end of given table.
+		IN value, PN_Any, #The variable to insert into the table.
+		OUT index, PN_Number, #The index the object was placed at.
+		CODE #2 = table.insert($2, $3 < 0 and nil or $3, $4)
+		INFORM 3,5
+	}
+	PURE SHARED IsEmpty
+	{
+		DESC Returns whether or not the given table is empty.
+		IN table, PN_Any, PNF_Table, #Table to check
+		OUT empty, PN_Bool, #Is empty
+	}
+	PURE SHARED IsSequential
+	{
+		DESC Returns whether or not the table's keys are sequential
+		IN table, PN_Any, PNF_Table, #Table to check
+		OUT sequential, PN_Bool, #Is sequential
+	}
+	FUNC SHARED KeyFromValue
+	{
+		DESC Returns the first key found to be containing the supplied value
+		IN table, PN_Any, PNF_Table, #Table to search
+		IN value, PN_Any, #Value to search for
+		OUT key, PN_Any, #Key
+		INFORM 3,4
+	}
+	FUNC SHARED KeysFromValue
+	{
+		DESC Returns a table of keys containing the supplied value
+		IN table, PN_Any, PNF_Table, #Table to search
+		IN value, PN_Any, #Value to search for
+		OUT keys, PN_Any, PNF_Table, #Keys
+		INFORM 3,4
+	}
+	FUNC SHARED LowerKeyNames
+	{
+		DESC Returns a copy of the input table with all string keys converted to be lowercase recursively
+		IN table, PN_Any, PNF_Table, #Table to convert
+		OUT names, PN_Any, PNF_Table, #New table
+		INFORM 3,4
+	}
+	FUNC SHARED maxn
+	{
+		DESC Returns the highest numerical key.
+		IN table, PN_Any, PNF_Table, #The table to search.
+		OUT max, PN_Number, #The highest numerical key.
+	}
+	FUNC SHARED Merge
+	{
+		DESC Merges the contents of the second table with the content in the first one.
+		IN destination, PN_Any, PNF_Table, #The table you want the source table to merge with
+		IN source, PN_Any, PNF_Table, #The table you want to merge with the destination table
+		OUT result, PN_Any, PNF_Table, #Destination table
+		INFORM 3,4,5
+	}
+	PURE SHARED Random
+	{
+		DESC Returns a random value from the supplied table.
+		IN table, PN_Any, PNF_Table, #The table to choose from.
+		OUT value, PN_Any, #A random value from the table.
+		OUT key, PN_Any, #The key associated with the random value.
+		INFORM 1,2
+	}
+	FUNC SHARED remove
+	{
+		DESC Removes a value from a table and shifts any other values down to fill the gap.
+		IN table, PN_Any, PNF_Table, #The table to remove the value from.
+		IN index, PN_Number, PNF_Nullable, #The index of the value to remove.
+		OUT key, PN_Any, #The value that was removed.
+	}
+	FUNC SHARED RemoveByValue
+	{
+		DESC Removes the first instance of a given value from the specified table with table.remove, then returns the key that the value was found at.
+		IN table, PN_Any, PNF_Table, #The table that will be searched.
+		IN value, PN_Any, #The value to find within the table.
+		OUT key, PN_Any, #The key at which the value was found, or false if the value was not found.
+		INFORM 3,4
+	}
+	FUNC SHARED Reverse
+	{
+		DESC Returns a reversed copy of a sequential table. Any non-sequential and non-numeric keyvalue pairs will not be copied.
+		IN table, PN_Any, PNF_Table, #Table to reverse.
+		OUT reversed, PN_Any, PNF_Table, #A reversed copy of the table.
+		INFORM 3,4
+	}
+	FUNC SHARED Sanitise
+	{
+		DESC Converts Vectors, Angles and booleans to be able to be converted to and from key-values. table.DeSanitise does the opposite
+		IN table, PN_Any, PNF_Table, #Table to sanitise
+		OUT sanitized, PN_Any, PNF_Table, #Sanitised table
+		INFORM 3,4
+	}
+	FUNC SHARED sort
+	{
+		TBD
+		DESC Sorts a table either ascending or by the given sort function.
+		IN tbl, PN_Any, PNF_Table, #The table to sort.
+		IN sorter, PN_Ref, PNF_None, function, #If specified, the function will be called with 2 parameters each. Return true in this function if you want the first parameter to come first in the sorted array.
+	}
+	FUNC SHARED SortByKey
+	{
+		DESC Returns a list of keys sorted based on values of those keys.
+		IN table, PN_Any, PNF_Table, #Table to sort. All values of this table must be of same type.
+		IN descending, PN_Bool, PNF_Nullable, #Should the order be descending?
+		OUT sorted, PN_Any, PNF_Table, #A table of keys sorted by values from supplied table.
+		INFORM 3,5
+	}
+	FUNC SHARED SortByMember
+	{
+		DESC Sorts a table by a named member
+		IN table, PN_Any, PNF_Table, #Table to sort
+		IN memberKey, PN_Any, #The key used to identify the member
+		IN ascending, PN_Bool, PNF_Nullable, #Whether or not the order should be ascending
+	}
+	FUNC SHARED SortDesc
+	{
+		DESC Sorts a table in reverse order from table.sort
+		IN table, PN_Any, PNF_Table, #The table to sort in descending order.
+		OUT sorted, PN_Any, PNF_Table, #sorted
+	}
+	FUNC SHARED ToString
+	{
+		DESC Converts a table into a string
+		IN table, PN_Any, PNF_Table, #The table to iterate over.
+		IN displayName, PN_String, #Optional. A name for the table.
+		IN niceFormatting, PN_Bool, #Adds new lines and tabs to the string.
+		OUT string, PN_String, #The table formatted as a string.
+	}
+}

@@ -1,0 +1,21 @@
+LIB notification
+{
+	FUNC CLIENT AddLegacy
+	{
+		DESC Adds a standard notification to your screen.
+		IN text, PN_String, #The text to display.
+		IN type, PN_Enum, PNF_None, NOTIFY, #Determines the notification method (e.g. icon) for displaying the notification. See the NOTIFY_ Enums.
+		IN length, PN_Number, #The number of seconds to display the notification for.
+	}
+	FUNC CLIENT AddProgress
+	{
+		DESC Adds a notification with an animated progress bar.
+		IN id, PN_Any, #Can be any type. It's used as an index.
+		IN strText, PN_String, #The text to show
+	}
+	FUNC CLIENT Kill
+	{
+		DESC Removes the notification after 0.8 seconds.
+		IN uid, PN_Any, #The unique ID of the notification
+	}
+}

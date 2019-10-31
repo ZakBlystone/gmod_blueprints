@@ -1,0 +1,37 @@
+LIB properties
+{
+	FUNC SHARED Add
+	{
+		WARN Doesn't do anything yet
+		DESC Add properties to the properties module
+		IN name, PN_String, #A unique name used to identify the property
+		IN propertyData, PN_Struct, PNF_None, PropertyAdd, #A table that defines the property. Uses the PropertyAdd structure.
+		CODE
+	}
+	FUNC SHARED CanBeTargeted
+	{
+		DESC Returns true if given entity can be targeted by the player via the properties system.
+		IN ent, PN_Ref, PNF_None, Entity, #The entity to test
+		IN ply, PN_Ref, PNF_None, Player, #If given, will also perform a distance check based on the entity's Orientated Bounding Box.
+		OUT targetable, PN_Bool, #True if entity can be targeted, false otherwise
+	}
+	PURE CLIENT GetHovered
+	{
+		DESC Returns an entity player is hovering over with his cursor.
+		IN pos, PN_Vector, #Eye position of local player, Entity:EyePos
+		IN aimVec, PN_Vector, #Aim vector of local player, Player:GetAimVector
+		OUT entity, PN_Ref, PNF_None, Entity, #The hovered entity
+	}
+	FUNC SHARED OnScreenClick
+	{
+		DESC Checks if player hovers over any entities and open a properties menu for it.
+		IN eyePos, PN_Vector, #The eye pos of a player
+		IN eyeVec, PN_Vector, #The aim vector of a player
+	}
+	FUNC SHARED OpenEntityMenu
+	{
+		DESC Opens properties menu for given entity.
+		IN entity, PN_Ref, PNF_None, Entity, #The entity to open menu for
+		IN traceResult, PN_Struct, PNF_None, TraceResult, #The trace that is passed as second argument to Action callback of a property
+	}
+}

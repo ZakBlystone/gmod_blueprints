@@ -1,0 +1,66 @@
+LIB steamworks
+{
+	FUNC CLIENT Download
+	{
+		DESC Downloads a file from the supplied addon and saves it as a .cache file in garrysmod/cache folder.
+		IN workshopPreviewID, PN_String, #The Preview ID of workshop item.
+		IN uncompress, PN_Bool, #Whether to uncompress the file or not, assuming it was compressed with LZMA. You will usually want to set this to true.
+		IN resultCallback, PN_Ref, PNF_None, function, #The function to process retrieved data. The first and only argument is a string, containing path to the saved file.
+	}
+	FUNC CLIENT FileInfo
+	{
+		DESC Retrieves info about supplied Steam Workshop addon.
+		IN workshopItemID, PN_String, #The ID of Steam Workshop item.
+		IN resultCallback, PN_Struct, PNF_None, UGCFileInfo, #The function to process retrieved data, with the following arguments: table data - The data about the item, if the request succeeded, nil otherwise. See UGCFileInfo structure.
+	}
+	PURE CLIENT GetList
+	{
+		DESC Retrieves a customized list of Steam Workshop addons.
+		IN type, PN_String, #The type of items to retrieve.
+		IN tags, PN_Any, PNF_Table, #A table of tags to match.
+		IN offset, PN_Number, #How much of results to skip from first one. Mainly used for pages.
+		IN numRetrieve, PN_Number, #How much addons to retrieve.
+		IN days, PN_Number, #When getting Most Popular content from Steam, this determines a time period. ( 7 = most popular addons in last 7 days, 1 = most popular addons today, etc )
+		IN userID, PN_String, #"0" to retrieve all addons, "1" to retrieve addons only published by you.
+		IN resultCallback, PN_Ref, PNF_None, function, #The function to process retrieved data. The first and only argument is a table, containing all the info.
+	}
+	PURE CLIENT GetPlayerName
+	{
+		DESC Retrieves players name by his 64bit SteamID.
+		IN steamID64, PN_String, #The 64bit Steam ID ( aka Community ID ) of the player
+		OUT name, PN_String, #The name of that player
+	}
+	FUNC CLIENT IsSubscribed
+	{
+		DESC Returns whenever the client is subscribed to the specified Steam Workshop item.
+		IN workshopItemID, PN_String, #The ID of the Steam Workshop item.
+		OUT subscribed, PN_Bool, #Is the client subscribed to the addon or not.
+	}
+	FUNC CLIENT OpenWorkshop
+	{
+		DESC Opens the workshop website in the steam overlay browser.
+	}
+	FUNC CLIENT RequestPlayerInfo
+	{
+		DESC Requests information of the player with SteamID64 for later use with steamworks.GetPlayerName.
+		IN steamID64, PN_String, #The 64bit Steam ID of player.
+		IN callback, PN_Ref, PNF_None, function, #A callback function with only 1 argument - string name.
+	}
+	FUNC CLIENT ShouldMountAddon
+	{
+		DESC Returns whenever the specified Steam Workshop addon will be mounted or not.
+		IN workshopItemID, PN_String, #The ID of the Steam Workshop
+		OUT shouldMount, PN_Bool, #Will the workshop item be mounted or not
+	}
+	FUNC CLIENT ViewFile
+	{
+		DESC Opens the workshop website for specified Steam Workshop item in the Steam overlay browser.
+		IN workshopItemID, PN_String, #The ID of workshop item.
+	}
+	FUNC CLIENT VoteInfo
+	{
+		DESC Retrieves vote info of supplied addon.
+		IN workshopItemID, PN_String, #The ID of workshop item.
+		IN resultCallback, PN_Ref, PNF_None, function, #The function to process retrieved data. The first and only argument is a table, containing all the info.
+	}
+}

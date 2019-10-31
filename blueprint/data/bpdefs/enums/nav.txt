@@ -1,0 +1,27 @@
+ENUM NavDir, Enumerations used by CNavArea methods.
+{
+	NORTH, North from given CNavArea
+	EAST, East from given CNavArea
+	SOUTH, South from given CNavArea
+	WEST, West from given CNavArea
+}
+ENUM NavCorner, Enumerations used by CNavArea methods.
+{
+	NORTH_WEST, North West Corner
+	NORTH_EAST, North East Corner
+	SOUTH_EAST, South East Corner
+	SOUTH_WEST, South West Corner
+	NUM_CORNERS, 4
+}
+ENUM NavTraverseType, Enumerations used by CNavArea:GetParentHow.
+{
+	GO_NORTH,
+	GO_EAST,
+	GO_SOUTH,
+	GO_WEST,
+	GO_LADDER_UP,
+	GO_LADDER_DOWN,
+	GO_JUMP,
+	GO_ELEVATOR_UP,
+	GO_ELEVATOR_DOWN,
+}

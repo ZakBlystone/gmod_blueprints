@@ -1,0 +1,777 @@
+LIB render
+{
+	FUNC CLIENT AddBeam
+	{
+		DESC Adds a beam segment to the beam started by render.StartBeam.
+		IN startPos, PN_Vector, #Beam start position.
+		IN width, PN_Number, #The width of the beam.
+		IN textureEnd, PN_Number, #The end coordinate of the texture used.
+		IN color, PN_Struct, PNF_None, Color, #The color to be used. Uses the Color structure.
+	}
+	FUNC CLIENT BlurRenderTarget
+	{
+		DESC Blurs the render target ( or a given texture )
+		IN rendertarget, PN_Ref, PNF_None, ITexture, #The texture to blur
+		IN blurx, PN_Number, #Horizontal amount of blur
+		IN blury, PN_Number, #Vertical amount of blur
+		IN passes, PN_Number, #Amount of passes to go through
+	}
+	FUNC CLIENT BrushMaterialOverride
+	{
+		DESC This function is broken and does absolutely nothing
+		IN mat, PN_Ref, PNF_Nullable, IMaterial, # 
+	}
+	FUNC CLIENT Capture
+	{
+		DESC Captures a part of the current render target and returns the data as a binary string in the given format.
+		IN captureData, PN_Struct, PNF_None, RenderCaptureData, #Parameters of the capture. See RenderCaptureData structure.
+		OUT data, PN_String, #binaryData
+	}
+	FUNC CLIENT CapturePixels
+	{
+		DESC Dumps the current render target and allows the pixels to be accessed by render.ReadPixel.
+	}
+	FUNC CLIENT Clear
+	{
+		DESC Clears the current render target and the specified buffers.
+		IN r, PN_Number, #Red component to clear to.
+		IN g, PN_Number, #Green component to clear to.
+		IN b, PN_Number, #Blue component to clear to.
+		IN a, PN_Number, #Alpha component to clear to.
+		IN clearDepth, PN_Bool, PNF_Nullable, #Clear the depth.
+		IN clearStencil, PN_Bool, PNF_Nullable, #Clear the stencil.
+	}
+	FUNC CLIENT ClearBuffersObeyStencil
+	{
+		DESC Clears the current rendertarget for obeying the current stencil buffer conditions.
+		IN r, PN_Number, #Value of the red channel to clear the current rt with.
+		IN g, PN_Number, #Value of the green channel to clear the current rt with.
+		IN b, PN_Number, #Value of the blue channel to clear the current rt with.
+		IN a, PN_Number, #Value of the alpha channel to clear the current rt with.
+		IN depth, PN_Bool, #Clear the depth buffer.
+	}
+	FUNC CLIENT ClearDepth
+	{
+		DESC Resets the depth buffer.
+	}
+	FUNC CLIENT ClearRenderTarget
+	{
+		DESC Clears a render target
+		IN texture, PN_Ref, PNF_None, ITexture
+		IN color, PN_Struct, PNF_None, Color, #The color, see Color structure
+	}
+	FUNC CLIENT ClearStencil
+	{
+		DESC Resets all values in the stencil buffer to zero.
+	}
+	FUNC CLIENT ClearStencilBufferRectangle
+	{
+		DESC Sets the stencil value in a specified rect.
+		IN originX, PN_Number, #X origin of the rectangle.
+		IN originY, PN_Number, #Y origin of the rectangle.
+		IN endX, PN_Number, #The end X coordinate of the rectangle.
+		IN endY, PN_Number, #The end Y coordinate of the rectangle.
+		IN stencilValue, PN_Number, #Value to set cleared stencil buffer to.
+	}
+	FUNC CLIENT ComputeDynamicLighting
+	{
+		DESC Calculates the lighting caused by dynamic lights for the specified surface.
+		IN position, PN_Vector, #The position to sample from.
+		IN normal, PN_Vector, #The normal of the surface.
+		OUT light, PN_Vector, #A vector representing the light at that point.
+	}
+	FUNC CLIENT ComputeLighting
+	{
+		DESC Calculates the light color of a certain surface.
+		IN position, PN_Vector, #The position of the surface to get the light from.
+		IN normal, PN_Vector, #The normal of the surface to get the light from.
+		OUT light, PN_Vector, #A vector representing the light at that point.
+	}
+	FUNC CLIENT CopyRenderTargetToTexture
+	{
+		DESC Copies the currently active Render Target to the specified texture.
+		IN Target, PN_Ref, PNF_None, ITexture, #The texture to copy to
+	}
+	FUNC CLIENT CopyTexture
+	{
+		DESC Copies the contents of one texture to another. Only works with rendertargets.
+		IN texture_from, PN_Ref, PNF_None, ITexture
+		IN texture_to, PN_Ref, PNF_None, ITexture
+	}
+	FUNC CLIENT CullMode
+	{
+		DESC Changes the cull mode.
+		IN cullMode, PN_Enum, PNF_None, MATERIAL_CULLMODE, #Cullmode, see MATERIAL_CULLMODE_ Enums
+	}
+	FUNC CLIENT DepthRange
+	{
+		DESC Set's the depth range of the upcoming render.
+		IN depthmin, PN_Number, #The minimum depth of the upcoming render. 0.0 = render normally; 1.0 = render nothing
+		IN depthmax, PN_Number, #The maximum depth of the upcoming render. 0.0 = render everything (through walls); 1.0 = render normally
+	}
+	FUNC CLIENT DrawBeam
+	{
+		DESC Draws textured beam.
+		IN startPos, PN_Vector, #Beam start position.
+		IN endPos, PN_Vector, #Beam end position.
+		IN width, PN_Number, #The width of the beam.
+		IN textureStart, PN_Number, #The start coordinate of the texture used.
+		IN textureEnd, PN_Number, #The end coordinate of the texture used.
+		IN color, PN_Struct, PNF_Nullable, Color, #The color to be used. Uses the Color structure.
+	}
+	FUNC CLIENT DrawBox
+	{
+		DESC Draws a box in 3D space.
+		IN position, PN_Vector, #Origin of the box.
+		IN angles, PN_Angles, #Orientation of the box.
+		IN mins, PN_Vector, #Start position of the box, relative to origin.
+		IN maxs, PN_Vector, #End position of the box, relative to origin.
+		IN color, PN_Struct, PNF_Nullable, Color, #The color of the box. Uses the Color structure.
+	}
+	FUNC CLIENT DrawLine
+	{
+		DESC Draws a line in 3D space.
+		IN startPos, PN_Vector, #Line start position in world coordinates.
+		IN endPos, PN_Vector, #Line end position in world coordinates.
+		IN color, PN_Struct, PNF_Nullable, Color, #The color to be used. Uses the Color structure.
+		IN writeZ, PN_Bool, PNF_Nullable, #Whether or not to consider the Z buffer. If false, the line will be drawn over everything currently drawn, if true, the line will be drawn with depth considered, as if it were a regular object in 3D space. BUG	 Enabling this option will cause the line to ignore the color's alpha. Issue Tracker: #1086
+	}
+	FUNC CLIENT DrawQuad
+	{
+		DESC Draws 2 connected triangles. Expects material to be set by render.SetMaterial.
+		IN vert1, PN_Vector, #First vertex.
+		IN vert2, PN_Vector, #The second vertex.
+		IN vert3, PN_Vector, #The third vertex.
+		IN vert4, PN_Vector, #The fourth vertex.
+		IN color, PN_Struct, PNF_Nullable, Color, #The color of the quad. See Color
+	}
+	FUNC CLIENT DrawQuadEasy
+	{
+		DESC Draws a quad.
+		IN position, PN_Vector, #Origin of the sprite.
+		IN normal, PN_Vector, #The face direction of the quad.
+		IN width, PN_Number, #The width of the quad.
+		IN height, PN_Number, #The height of the quad.
+		IN color, PN_Struct, PNF_None, Color, #The color of the quad. Uses the Color structure.
+		IN rotation, PN_Number, PNF_Nullable, #The rotation of the quad counter-clockwise in degrees around the normal axis. In other words, the quad will always face the same way but this will rotate its corners.
+	}
+	FUNC CLIENT DrawScreenQuad
+	{
+		DESC Draws the the current material set by render.SetMaterial to the whole screen. The color cannot be customized.
+	}
+	FUNC CLIENT DrawScreenQuadEx
+	{
+		DESC Draws the the current material set by render.SetMaterial to the area specified. Color cannot be customized.
+		IN startX, PN_Number, #X start position of the rect.
+		IN startY, PN_Number, #Y start position of the rect.
+		IN width, PN_Number, #Width of the rect.
+		IN height, PN_Number, #Height of the rect.
+	}
+	FUNC CLIENT DrawSphere
+	{
+		DESC Draws a sphere in 3D space. The material previously set with render.SetMaterial will be applied the sphere's surface.
+		IN position, PN_Vector, #Position of the sphere.
+		IN radius, PN_Number, #Radius of the sphere. Negative radius will make the sphere render inwards rather than outwards.
+		IN longitudeSteps, PN_Number, #The number of longitude steps. This controls the quality of the sphere. Higher quality will lower performance significantly. 50 is a good number to start with.
+		IN latitudeSteps, PN_Number, #The number of latitude steps. This controls the quality of the sphere. Higher quality will lower performance significantly. 50 is a good number to start with.
+		IN color, PN_Struct, PNF_Nullable, Color, #The color of the sphere. Uses the Color structure.
+	}
+	FUNC CLIENT DrawSprite
+	{
+		DESC Draws a sprite in 3D space.
+		IN position, PN_Vector, #Position of the sprite.
+		IN width, PN_Number, #Width of the sprite.
+		IN height, PN_Number, #Height of the sprite.
+		IN color, PN_Struct, PNF_Nullable, Color, #Color of the sprite. Uses the Color structure.
+	}
+	FUNC CLIENT DrawTextureToScreen
+	{
+		DESC Draws a texture over the whole screen.
+		IN tex, PN_Ref, PNF_None, ITexture, #The texture to draw
+	}
+	FUNC CLIENT DrawTextureToScreenRect
+	{
+		DESC Draws a textured rectangle.
+		IN tex, PN_Ref, PNF_None, ITexture, #The texture to draw
+		IN x, PN_Number, #The x coordinate of the rectangle to draw.
+		IN y, PN_Number, #The y coordinate of the rectangle to draw.
+		IN width, PN_Number, #The width of the rectangle to draw.
+		IN height, PN_Number, #The height of the rectangle to draw.
+	}
+	FUNC CLIENT DrawWireframeBox
+	{
+		DESC Draws a wireframe box in 3D space.
+		IN position, PN_Vector, #Position of the box.
+		IN angle, PN_Angles, #Angles of the box.
+		IN mins, PN_Vector, #The lowest corner of the box.
+		IN maxs, PN_Vector, #The highest corner of the box.
+		IN color, PN_Struct, PNF_Nullable, Color, #The color of the box. Uses the Color structure.
+		IN writeZ, PN_Bool, PNF_Nullable, #Sets whenever to write to the zBuffer.
+	}
+	FUNC CLIENT DrawWireframeSphere
+	{
+		DESC Draws a wireframe sphere in 3d space.
+		IN position, PN_Vector, #Position of the sphere.
+		IN radius, PN_Number, #The size of the sphere.
+		IN longitudeSteps, PN_Number, #The amount of longitude steps. The larger this number is, the smoother the sphere is.
+		IN latitudeSteps, PN_Number, #The amount of latitude steps. The larger this number is, the smoother the sphere is.
+		IN color, PN_Struct, PNF_Nullable, Color, #The color of the wireframe. Uses the Color structure.
+		IN writeZ, PN_Bool, PNF_Nullable, #Whether or not to consider the Z buffer. If false, the wireframe will be drawn over everything currently drawn. If true, it will be drawn with depth considered, as if it were a regular object in 3D space.
+	}
+	FUNC CLIENT EnableClipping
+	{
+		DESC Sets the status of the clip renderer, returning previous state.
+		IN state, PN_Bool, #New clipping state.
+		OUT previous, PN_Bool, #Previous clipping state.
+	}
+	FUNC CLIENT EndBeam
+	{
+		DESC Ends the beam mesh of a beam started with render.StartBeam.
+	}
+	FUNC CLIENT FogColor
+	{
+		DESC Sets the color of the fog.
+		IN red, PN_Number, #Red channel of the fog color, 0 - 255.
+		IN green, PN_Number, #Green channel of the fog color, 0 - 255.
+		IN blue, PN_Number, #Blue channel of the fog color, 0 - 255.
+	}
+	FUNC CLIENT FogEnd
+	{
+		DESC Sets the at which the fog reaches its max density.
+		IN distance, PN_Number, #The distance at which the fog reaches its max density. NOTE	 If used in GM:SetupSkyboxFog, this value must be scaled by the first argument of the hook
+	}
+	FUNC CLIENT FogMaxDensity
+	{
+		DESC Sets the maximum density of the fog.
+		IN maxDensity, PN_Number, #The maximum density of the fog, 0-1.
+	}
+	FUNC CLIENT FogMode
+	{
+		DESC Sets the mode of fog.
+		IN fogMode, PN_Enum, PNF_None, MATERIAL, #Fog mode, see MATERIAL_FOG_ Enums.
+	}
+	FUNC CLIENT FogStart
+	{
+		DESC Sets the distance at which the fog starts showing up.
+		IN fogStart, PN_Number, #The distance at which the fog starts showing up. NOTE	 If used in GM:SetupSkyboxFog, this value must be scaled by the first argument of the hook
+	}
+	PURE CLIENT GetAmbientLightColor
+	{
+		DESC Returns the ambient color of the map.
+		OUT color, PN_Vector, #color
+	}
+	PURE CLIENT GetBlend
+	{
+		DESC Returns the current alpha blending.
+		OUT blend, PN_Number, #blend
+	}
+	PURE CLIENT GetBloomTex0
+	{
+		DESC  ITexture
+		OUT texture, PN_Ref, PNF_None, ITexture, #The bloom texture
+	}
+	PURE CLIENT GetBloomTex1
+	{
+		DESC  ITexture
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetColorModulation
+	{
+		DESC Returns the current color modulation values as normals.
+		OUT r, PN_Number, #r
+		OUT g, PN_Number, #g
+		OUT b, PN_Number, #b
+	}
+	PURE CLIENT GetDXLevel
+	{
+		DESC Returns the maximum available directX version.
+		OUT dxLevel, PN_Number, #dxLevel
+	}
+	PURE CLIENT GetFogColor
+	{
+		DESC Returns the current fog color.
+		OUT r, PN_Number, #Red part of the color.
+		OUT g, PN_Number, #Green part of the color
+		OUT b, PN_Number, #Blue part of the color
+	}
+	PURE CLIENT GetFogDistances
+	{
+		DESC Returns the fog start and end distance.
+		OUT start, PN_Number, #Fog start distance set by render.FogStart
+		OUT end, PN_Number, #For end distance set by render.FogEnd
+		OUT zDistance, PN_Number, #Fog Z distance set by render.SetFogZ
+	}
+	PURE CLIENT GetFogMode
+	{
+		DESC Returns the fog mode.
+		OUT mode, PN_Enum, PNF_None, MATERIAL_FOG, #Fog mode, see MATERIAL_FOG_ Enums
+	}
+	PURE CLIENT GetFullScreenDepthTexture
+	{
+		DESC Returns the _rt_FullFrameDepth texture. Alias of _rt_PowerOfTwoFB
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetLightColor
+	{
+		DESC Gets the light exposure on the specified position.
+		IN position, PN_Vector, #The position of the surface to get the light from.
+		OUT color, PN_Vector, #lightColor
+	}
+	PURE CLIENT GetMoBlurTex0
+	{
+		DESC  ITexture
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetMoBlurTex1
+	{
+		DESC  ITexture
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetMorphTex0
+	{
+		DESC  ITexture
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetMorphTex1
+	{
+		DESC  ITexture
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetPowerOfTwoTexture
+	{
+		DESC Returns the render target's power of two texture.
+		OUT texture, PN_Ref, PNF_None, ITexture, #The power of two texture, which is _rt_poweroftwofb by default.
+	}
+	PURE CLIENT GetRefractTexture
+	{
+		DESC Alias of render.GetPowerOfTwoTexture.
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetRenderTarget
+	{
+		DESC Returns the currently active render target.
+		OUT texture, PN_Ref, PNF_None, ITexture, #The currently active Render Target
+	}
+	PURE CLIENT GetResolvedFullFrameDepth
+	{
+		DESC Returns the _rt_ResolvedFullFrameDepth texture for SSAO depth.
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetScreenEffectTexture
+	{
+		DESC Obtain an ITexture of the screen. You must call render.UpdateScreenEffectTexture in order to update this texture with the currently rendered scene.
+		IN textureIndex, PN_Number, PNF_Nullable, #Max index is 3, but engine only creates the first two for you.
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetSmallTex0
+	{
+		DESC  ITexture
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetSmallTex1
+	{
+		DESC  ITexture
+		OUT texture, PN_Ref, PNF_None, ITexture
+	}
+	PURE CLIENT GetSuperFPTex
+	{
+		DESC Returns a floating point texture the same resolution as the screen.
+		OUT texture, PN_Ref, PNF_None, ITexture, #Render target named "__rt_supertexture1"
+	}
+	PURE CLIENT GetSuperFPTex2
+	{
+		DESC Returns a floating point texture the same resolution as the screen.
+		OUT texture, PN_Ref, PNF_None, ITexture, #Render target named "__rt_supertexture2"
+	}
+	PURE CLIENT GetSurfaceColor
+	{
+		DESC Performs a render trace and returns the color of the surface hit, this uses a low res version of the texture.
+		IN startPos, PN_Vector, #The start position to trace from.
+		IN endPos, PN_Vector, #The end position of the trace.
+		OUT color, PN_Vector, #color
+	}
+	PURE CLIENT GetToneMappingScaleLinear
+	{
+		DESC Returns a vector representing linear tone mapping scale.
+		OUT color, PN_Vector, #The vector representing linear tone mapping scale.
+	}
+	FUNC CLIENT MaterialOverride
+	{
+		DESC Sets the render material override for all next calls of Entity:DrawModel. Also overrides render.MaterialOverrideByIndex.
+		IN material, PN_Ref, PNF_None|PNF_Nullable, IMaterial, #The material to use as override, use nil to disable.
+	}
+	FUNC CLIENT MaterialOverrideByIndex
+	{
+		DESC Similar to render.MaterialOverride, but overrides the materials per index.
+		IN index, PN_Number, #Starts with 0, the index of the material to override
+		IN material, PN_Ref, PNF_None|PNF_Nullable, IMaterial, #The material to override with
+	}
+	FUNC CLIENT MaxTextureHeight
+	{
+		DESC Returns the maximum texture height the renderer can handle.
+		OUT height, PN_Number, #maxTextureHeight
+	}
+	FUNC CLIENT MaxTextureWidth
+	{
+		DESC Returns the maximum texture width the renderer can handle.
+		OUT width, PN_Number, #maxTextureWidth
+	}
+	FUNC CLIENT Model
+	{
+		DESC Creates a new ClientsideModel, renders it at the specified pos/ang, and removes it. Can also be given an existing CSEnt to reuse instead.
+		IN settings, PN_Struct, PNF_None, RenderModelSettings
+		IN ent, PN_Ref, PNF_Nullable, CSEnt, #If provided, this entity will be reused instead of creating a new one with ClientsideModel. Note that the ent's model, position and angles will be changed, and Entity:SetNoDraw will be set to true.
+	}
+	FUNC CLIENT ModelMaterialOverride
+	{
+		DESC Sets a material to override a model's default material. Similar to Entity:SetMaterial except it uses an IMaterial argument and it can be used to change materials on models which are part of the world geometry.
+		IN material, PN_Ref, PNF_Nullable, IMaterial, #The material override.
+	}
+	FUNC CLIENT OverrideAlphaWriteEnable
+	{
+		DESC Overrides the write behaviour of all next rendering operations towards the alpha channel of the current render target.
+		IN enable, PN_Bool, #Enable or disable the override.
+		IN shouldWrite, PN_Bool, #If the previous argument is true, sets whether the next rendering operations should write to the alpha channel or not. Has no effect if the previous argument is false.
+	}
+	FUNC CLIENT OverrideBlend
+	{
+		DESC Overrides the internal graphical functions used to determine the final color and alpha of a rendered texture.
+		IN enabled, PN_Bool, #true to enable, false to disable. No other arguments are required when disabling.
+		IN srcBlend, PN_Enum, PNF_None, BLEND, #The source color blend function BLEND_ Enums. Determines how a rendered texture's final color should be calculated.
+		IN destBlend, PN_Enum, PNF_None, BLEND, #The destination color blend function BLEND_ Enums.
+		IN blendFunc, PN_Enum, PNF_None, BLENDFUNC, #The blend mode used for drawing the color layer BLENDFUNC_ Enums.
+		IN srcBlendAlpha, PN_Enum, PNF_Nullable, BLEND, #The source alpha blend function BLEND_ Enums. Determines how a rendered texture's final alpha should be calculated.
+		IN destBlendAlpha, PN_Enum, PNF_Nullable, BLEND, #The destination alpha blend function BLEND_ Enums.
+		IN blendFuncAlpha, PN_Enum, PNF_Nullable, BLENDFUNC, #The blend mode used for drawing the alpha layer BLENDFUNC_ Enums.
+	}
+	FUNC CLIENT OverrideColorWriteEnable
+	{
+		DESC Overrides the write behaviour of all next rendering operations towards the color channel of the current render target.
+		IN enable, PN_Bool, #Enable or disable the override.
+		IN shouldWrite, PN_Bool, #If the previous argument is true, sets whether the next rendering operations should write to the color channel or not. Has no effect if the previous argument is false.
+	}
+	FUNC CLIENT OverrideDepthEnable
+	{
+		DESC Overrides the write behaviour of all next rendering operations towards the depth buffer.
+		IN enable, PN_Bool, #Enable or disable the override.
+		IN shouldWrite, PN_Bool, #If the previous argument is true, sets whether the next rendering operations should write to the depth buffer or not. Has no effect if the previous argument is false.
+	}
+	FUNC CLIENT PerformFullScreenStencilOperation
+	{
+		DESC  
+	}
+	FUNC CLIENT PopCustomClipPlane
+	{
+		DESC Removes the current active clipping plane from the clip plane stack.
+	}
+	FUNC CLIENT PopFilterMag
+	{
+		DESC Pops the current texture magnification filter from the filter stack.
+	}
+	FUNC CLIENT PopFilterMin
+	{
+		DESC Pops the current texture minification filter from the filter stack.
+	}
+	FUNC CLIENT PopFlashlightMode
+	{
+		DESC Pops the current flashlight mode from the flashlight mode stack.
+	}
+	FUNC CLIENT PopRenderTarget
+	{
+		DESC Pops the last render target and viewport from the RT stack and sets them as the current render target and viewport.
+	}
+	FUNC CLIENT PushCustomClipPlane
+	{
+		DESC Pushes a new clipping plane of the clip plane stack and sets it as active.
+		IN normal, PN_Vector, #The normal of the clipping plane.
+		IN distance, PN_Number, #The distance of the plane from the world origin. You can use Vector:Dot between the normal and any point on the plane to find this, see Example 1.
+	}
+	FUNC CLIENT PushFilterMag
+	{
+		DESC Pushes a texture filter onto the magnification texture filter stack.
+		IN texFilterType, PN_Enum, PNF_None, TEXFILTER, #The texture filter type, see TEXFILTER_ Enums
+	}
+	FUNC CLIENT PushFilterMin
+	{
+		DESC Pushes a texture filter onto the minification texture filter stack.
+		IN texFilterType, PN_Enum, PNF_None, TEXFILTER, #The texture filter type, see TEXFILTER_ Enums
+	}
+	FUNC CLIENT PushFlashlightMode
+	{
+		DESC Enables the flashlight projection for the upcoming rendering.
+		IN enable, PN_Bool, PNF_Nullable, #Whether the flashlight mode should be enabled or disabled.
+	}
+	FUNC CLIENT PushRenderTarget
+	{
+		DESC Pushes the current render target and viewport to the RT stack then sets a new current render target and viewport. If the viewport is not specified, the dimensions of the render target are used instead.
+		IN texture, PN_Ref, PNF_None, ITexture, #The new render target to be used.
+		IN x, PN_Number, PNF_Nullable, #X origin of the viewport.
+		IN y, PN_Number, PNF_Nullable, #Y origin of the viewport.
+		IN w, PN_Number, PNF_Nullable, #Width of the viewport.
+		IN h, PN_Number, PNF_Nullable, #Height of the viewport
+	}
+	FUNC CLIENT ReadPixel
+	{
+		DESC Reads the color of the specified pixel from the RenderTarget sent by render.CapturePixels
+		IN x, PN_Number, #The x coordinate.
+		IN y, PN_Number, #The y coordinate.
+		OUT r, PN_Number, #r
+		OUT g, PN_Number, #g
+		OUT b, PN_Number, #b
+	}
+	FUNC CLIENT RedownloadAllLightmaps
+	{
+		DESC This applies the changes made to map lighting using engine.LightStyle.
+		IN DoStaticProps=false, PN_Bool, PNF_Nullable, #When true, this will also apply lighting changes to static props. This is really slow on large maps.
+	}
+	FUNC CLIENT RenderHUD
+	{
+		DESC Renders the HUD on the screen.
+		IN x, PN_Number, #X position for the HUD draw origin.
+		IN y, PN_Number, #Y position for the HUD draw origin.
+		IN w, PN_Number, #Width of the HUD draw.
+		IN h, PN_Number, #Height of the HUD draw.
+	}
+	FUNC CLIENT RenderView
+	{
+		DESC Renders the scene with the specified viewData to the current active render target.
+		IN view, PN_Struct, PNF_Nullable, ViewData, #The view data to be used in the rendering. See ViewData structure. Any missing value is assumed to be that of the current view. Similarly, you can make a normal render by simply not passing this table at all.
+	}
+	FUNC CLIENT ResetModelLighting
+	{
+		DESC Resets the model lighting to the specified color.
+		IN r=1, PN_Number, #The red part of the color, 0-1
+		IN g=1, PN_Number, #The green part of the color, 0-1
+		IN b=1, PN_Number, #The blue part of the color, 0-1
+	}
+	FUNC CLIENT ResetToneMappingScale
+	{
+		DESC Resets the HDR tone multiplier to the specified value.
+		IN scale, PN_Number, #The value which should be used as multiplier.
+	}
+	FUNC CLIENT SetAmbientLight
+	{
+		DESC Sets the ambient lighting for any upcoming render operation.
+		IN r, PN_Number, #The red part of the color, 0-1.
+		IN g, PN_Number, #The green part of the color, 0-1.
+		IN b, PN_Number, #The blue part of the color, 0-1.
+	}
+	FUNC CLIENT SetBlend
+	{
+		DESC Sets the alpha blending for every upcoming render operation.
+		IN blending, PN_Number, #Blending value from 0-1.
+	}
+	FUNC CLIENT SetColorMaterial
+	{
+		DESC Sets the current drawing material to "color".
+	}
+	FUNC CLIENT SetColorMaterialIgnoreZ
+	{
+		DESC Sets the current drawing material to "color_ignorez".
+	}
+	FUNC CLIENT SetColorModulation
+	{
+		DESC Sets the color modulation.
+		IN r=1, PN_Number, #The red channel multiplier normal ranging from 0-1.
+		IN g=1, PN_Number, #The green channel multiplier normal ranging from 0-1.
+		IN b=1, PN_Number, #The blue channel multiplier normal ranging from 0-1.
+	}
+	FUNC CLIENT SetFogZ
+	{
+		DESC If the fog mode is set to MATERIAL_FOG_LINEAR_BELOW_FOG_Z, the fog will only be rendered below the specified height.
+		IN fogZ, PN_Number, #The fog Z.
+	}
+	FUNC CLIENT SetGoalToneMappingScale
+	{
+		DESC Sets the goal HDR tone mapping scale.
+		IN scale, PN_Number, #The target scale.
+	}
+	FUNC CLIENT SetLightingMode
+	{
+		DESC Sets lighting mode when rendering something.
+		IN Mode=0, PN_Number, #Lighting render mode Possible values are: 0 - Default 1 - Total fullbright, similar to mat_fullbright 1 but excluding some weapon view models 2 - Increased brightness(?), models look fullbright
+	}
+	FUNC CLIENT SetLightingOrigin
+	{
+		DESC Sets the lighting origin.
+		IN lightingOrigin, PN_Vector, #The position from which the light should be "emitted".
+	}
+	FUNC CLIENT SetLightmapTexture
+	{
+		DESC Sets the texture to be used as the lightmap in upcoming rendering operations. This is required when rendering meshes using a material with a lightmapped shader such as LightmappedGeneric.
+		IN texture, PN_Ref, PNF_None, ITexture, #The texture to be used as the lightmap.
+	}
+	FUNC CLIENT SetLocalModelLights
+	{
+		DESC Sets up the local lighting for any upcoming render operation. Up to 4 local lights can be defined, with one of three different types (point, directional, spot).
+		IN lights, PN_Struct, PNF_Table, LocalLight, #A table containing up to 4 tables for each light source that should be set up. Each of these tables should contain the properties of its associated light source, see LocalLight structure.
+	}
+	FUNC CLIENT SetMaterial
+	{
+		DESC Sets the material to be used in any upcoming render operation using the render library.
+		IN material, PN_Ref, PNF_None, IMaterial, #The material to be used.
+	}
+	FUNC CLIENT SetModelLighting
+	{
+		DESC Sets up the ambient lighting for any upcoming render operation. Ambient lighting can be seen as a cube enclosing the object to be drawn, each of its faces representing a directional light source that shines towards the object. Thus, there is a total of six different light sources that can be configured separately.
+		IN lightDirection, PN_Enum, PNF_None, BOX, #The light source to edit, see BOX_ Enums.
+		IN red, PN_Number, #The red component of the light color.
+		IN green, PN_Number, #The green component of the light color.
+		IN blue, PN_Number, #The blue component of the light color.
+	}
+	FUNC CLIENT SetRenderTarget
+	{
+		DESC Sets the render target to the specified rt.
+		IN texture, PN_Ref, PNF_None, ITexture, #The new render target to be used.
+	}
+	FUNC CLIENT SetRenderTargetEx
+	{
+		DESC Sets the render target with the specified index to the specified rt.
+		IN rtIndex, PN_Number, #The index of the rt to set.
+		IN texture, PN_Ref, PNF_None, ITexture, #The new render target to be used.
+	}
+	FUNC CLIENT SetScissorRect
+	{
+		DESC Sets a scissoring rect which limits the drawing area.
+		IN startX, PN_Number, #X start coordinate of the scissor rect.
+		IN startY, PN_Number, #Y start coordinate of the scissor rect.
+		IN endX, PN_Number, #X end coordinate of the scissor rect.
+		IN endY, PN_Number, #Y end coordinate of the scissor rect.
+		IN enable, PN_Bool, #Enable or disable the scissor rect.
+	}
+	FUNC CLIENT SetShadowColor
+	{
+		DESC Sets the shadow color.
+		IN red, PN_Number, #The red channel of the shadow color.
+		IN green, PN_Number, #The green channel of the shadow color.
+		IN blue, PN_Number, #The blue channel of the shadow color.
+	}
+	FUNC CLIENT SetShadowDirection
+	{
+		DESC Sets the shadow projection direction.
+		IN shadowDirections, PN_Vector, #The new shadow direction.
+	}
+	FUNC CLIENT SetShadowDistance
+	{
+		DESC Sets the maximum shadow projection range.
+		IN shadowDistance, PN_Number, #The new maximum shadow distance.
+	}
+	FUNC CLIENT SetShadowsDisabled
+	{
+		DESC Sets whether any future render operations will ignore shadow drawing.
+		IN newState, PN_Bool
+	}
+	FUNC CLIENT SetStencilCompareFunction
+	{
+		DESC Sets the compare function of the stencil.
+		IN compareFunction, PN_Enum, PNF_None, STENCILCOMPARISONFUNCTION, #Compare function, see STENCILCOMPARISONFUNCTION_ Enums, and STENCIL_ Enums for short.
+	}
+	FUNC CLIENT SetStencilEnable
+	{
+		DESC Sets whether stencil tests are carried out for each rendered pixel.
+		IN newState, PN_Bool, #The new state.
+	}
+	FUNC CLIENT SetStencilFailOperation
+	{
+		DESC Sets the operation to be performed on the stencil buffer values if the compare function was not successful. Note that this takes place before depth testing.
+		IN failOperation, PN_Enum, PNF_None, STENCILOPERATION, #Fail operation function, see STENCILOPERATION_ Enums
+	}
+	FUNC CLIENT SetStencilPassOperation
+	{
+		DESC Sets the operation to be performed on the stencil buffer values if the compare function was successful.
+		IN passOperation, PN_Enum, PNF_None, STENCILOPERATION, #Pass operation function, see STENCILOPERATION_ Enums
+	}
+	FUNC CLIENT SetStencilReferenceValue
+	{
+		DESC Sets the reference value which will be used for all stencil operations. This is an unsigned integer.
+		IN referenceValue, PN_Number, #Reference value.
+	}
+	FUNC CLIENT SetStencilTestMask
+	{
+		DESC Sets the unsigned 8-bit test bitflag mask to be used for any stencil testing.
+		IN mask, PN_Number, #The mask bitflag.
+	}
+	FUNC CLIENT SetStencilWriteMask
+	{
+		DESC Sets the unsigned 8-bit write bitflag mask to be used for any writes to the stencil buffer.
+		IN mask, PN_Number, #The mask bitflag.
+	}
+	FUNC CLIENT SetStencilZFailOperation
+	{
+		DESC Sets the operation to be performed on the stencil buffer values if the stencil test is passed but the depth buffer test fails.
+		IN zFailOperation, PN_Enum, PNF_None, STENCILOPERATION, #Z fail operation function, see STENCILOPERATION_ Enums
+	}
+	FUNC CLIENT SetToneMappingScaleLinear
+	{
+		DESC  Vector vec
+		IN vec, PN_Vector
+	}
+	FUNC CLIENT SetViewPort
+	{
+		DESC Changes the view port position and size. The values will be clamped to the game's screen resolution.
+		IN x, PN_Number, #X origin of the view port.
+		IN y, PN_Number, #Y origin of the view port.
+		IN w, PN_Number, #Width of the view port.
+		IN h, PN_Number, #Height of the view port.
+	}
+	FUNC CLIENT SetWriteDepthToDestAlpha
+	{
+		DESC  boolean enable
+		IN enable, PN_Bool
+	}
+	FUNC CLIENT Spin
+	{
+		DESC Swaps the frame buffers/cycles the frame. In other words, this updates the screen.
+	}
+	FUNC CLIENT StartBeam
+	{
+		DESC Start a new beam draw operation.
+		IN segmentCount, PN_Number, #Amount of beam segments that are about to be drawn.
+	}
+	FUNC CLIENT SupportsHDR
+	{
+		DESC Returns whether the game supports HDR, i.e. if the DirectX level is higher than or equal to 8.
+		OUT supportsHDR, PN_Bool, #supportsHDR
+	}
+	FUNC CLIENT SupportsPixelShaders_1_4
+	{
+		DESC Returns if the current settings and the system allow the usage of pixel shaders 1.4.
+		OUT supported, PN_Bool, #Whether Pixel Shaders 1.4 are supported or not.
+	}
+	FUNC CLIENT SupportsPixelShaders_2_0
+	{
+		DESC Returns if the current settings and the system allow the usage of pixel shaders 2.0.
+		OUT supported, PN_Bool, #Whether Pixel Shaders 2.0 are supported or not.
+	}
+	FUNC CLIENT SupportsVertexShaders_2_0
+	{
+		DESC Returns if the current settings and the system allow the usage of vertex shaders 2.0.
+		OUT supported, PN_Bool, #Whether Vertex Shaders 2.0 are supported or not.
+	}
+	FUNC CLIENT SuppressEngineLighting
+	{
+		DESC Suppresses or enables any engine lighting for any upcoming render operation.
+		IN suppressLighting, PN_Bool, #True to suppress false to enable.
+	}
+	FUNC CLIENT TurnOnToneMapping
+	{
+		DESC Enables HDR tone mapping which influences the brightness.
+	}
+	FUNC CLIENT UpdateFullScreenDepthTexture
+	{
+		DESC Updates the texture returned by render.GetFullScreenDepthTexture.
+	}
+	FUNC CLIENT UpdatePowerOfTwoTexture
+	{
+		DESC Updates the power of two texture.
+		OUT texture, PN_Ref, PNF_None, ITexture, #Returns render.GetPowerOfTwoTexture.
+	}
+	FUNC CLIENT UpdateRefractTexture
+	{
+		DESC Pretty much alias of render.UpdatePowerOfTwoTexture but does not return the texture.
+	}
+	FUNC CLIENT UpdateScreenEffectTexture
+	{
+		DESC Copies the entire screen to the screen effect texture, which can be acquired via render.GetScreenEffectTexture. This function is mainly intended to be used in GM:RenderScreenspaceEffects
+	}
+}

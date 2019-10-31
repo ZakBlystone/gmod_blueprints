@@ -1,0 +1,48 @@
+LIB sql
+{
+	FUNC SHARED Begin
+	{
+		DESC Tells the engine a set of queries is coming. Will wait until sql.Commit is called to run them. This is most useful when you run more than 100+ queries. 
+	}
+	FUNC SHARED Commit
+	{
+		DESC Tells the engine to execute a series of queries queued for execution, must be preceded by sql.Begin 
+	}
+	FUNC SHARED LastError
+	{
+		DESC Returns the last error from a SQLite query.
+		OUT error, PN_String, #error
+	}
+	FUNC SHARED Query
+	{
+		DESC Performs a query on the local SQLite database, returns a table as result set, nil if result is empty and false on error.
+		IN query, PN_String, #The query to execute.
+		OUT results, PN_Any, PNF_Table, #false is returned if there is an error, nil if the query returned no data.
+	}
+	FUNC SHARED QueryRow
+	{
+		DESC Performs the query like sql.Query, but returns the first row found. 
+		IN query, PN_String, #The input query
+		IN row, PN_Number, PNF_Nullable, #The row number. Say we receive back 5 rows, putting 3 as this argument will give us row #3.
+		OUT results, PN_Any, PNF_Table, #The returned row.
+	}
+	FUNC SHARED QueryValue
+	{
+		DESC Performs the query like sql.QueryRow, but returns the first value found.
+		IN query, PN_String, #The input query.
+		OUT results, PN_Any, #The returned value; the engine automatically converts numerical output to Lua numbers.
+	}
+	FUNC SHARED SQLStr
+	{
+		DESC Escapes dangerous characters and symbols from user input used in an SQLite SQL Query.
+		IN string, PN_String, #The string to be escaped.
+		IN bNoQuotes, PN_Bool, PNF_Nullable, #Set this as true, and the function will not wrap the input string in apostrophes.
+		OUT escaped, PN_String, #The escaped input.
+	}
+	FUNC SHARED TableExists
+	{
+		DESC Returns if the table with the specified name exists.
+		IN tableName, PN_String, #The name of the table to check.
+		OUT exists, PN_Bool, #exists
+	}
+}

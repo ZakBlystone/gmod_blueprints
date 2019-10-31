@@ -1,0 +1,18 @@
+LIB resource
+{
+	FUNC SERVER AddFile
+	{
+		DESC Adds the specified and all related files to the files the client should download.
+		IN path, PN_String, #Virtual path of the file to be added, relative to garrysmod/. Do not add .bz2 to the filepath. Do not put gamemodes/<gamemodename>/content/ or addons/<addonname>/ into the path.
+	}
+	FUNC SERVER AddSingleFile
+	{
+		DESC Adds the specified file to the files the client should download.
+		IN path, PN_String, #Path of the file to be added, relative to garrysmod/
+	}
+	FUNC SERVER AddWorkshop
+	{
+		DESC Adds a workshop addon for the client to download before entering the server.
+		IN workshopid, PN_String, #The workshop id of the file. This cannot be a collection.
+	}
+}

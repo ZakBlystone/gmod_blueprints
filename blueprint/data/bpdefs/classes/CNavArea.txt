@@ -202,7 +202,7 @@ CLASS CNavArea
 	PURE SERVER HasAttributes
 	{
 		DESC Returns true if the given CNavArea has this attribute flag set.
-		IN attribs, PN_Enum, PNF_None, NAV, #Attribute mask to check for, see NAV_MESH_ Enums
+		IN attribs, PN_Enum, PNF_None, NAV_MESH, #Attribute mask to check for, see NAV_MESH_ Enums
 		OUT result, PN_Bool, #True if the CNavArea matches the given mask. False otherwise.
 	}
 	PURE SERVER IsBlocked
@@ -307,7 +307,7 @@ CLASS CNavArea
 	FUNC SERVER SetAttributes
 	{
 		DESC Sets the attributes for given CNavArea.
-		IN attribs, PN_Enum, PNF_None, NAV, #The attribute bitflag. See NAV_MESH_ Enums
+		IN attribs, PN_Enum, PNF_None, NAV_MESH, #The attribute bitflag. See NAV_MESH_ Enums
 	}
 	FUNC SERVER SetCorner
 	{

@@ -130,7 +130,7 @@ CLASS NPC
 	PURE SERVER GetCurrentWeaponProficiency
 	{
 		DESC Returns how proficient (skilled) an NPC is with its current weapon.
-		OUT proficiency, PN_Enum, PNF_None, WEAPON, #NPC's proficiency for current weapon. See WEAPON_PROFICIENCY_ Enums.
+		OUT proficiency, PN_Enum, PNF_None, WEAPON_PROFICIENCY, #NPC's proficiency for current weapon. See WEAPON_PROFICIENCY_ Enums.
 	}
 	PURE SERVER GetEnemy
 	{
@@ -160,7 +160,7 @@ CLASS NPC
 	PURE SERVER GetNPCState
 	{
 		DESC Returns the NPC's state.
-		OUT state, PN_Enum, PNF_None, NPC, #The NPC's current state, see NPC_STATE_ Enums.
+		OUT state, PN_Enum, PNF_None, NPC_STATE, #The NPC's current state, see NPC_STATE_ Enums.
 	}
 	PURE SERVER GetPathDistanceToGoal
 	{
@@ -312,7 +312,7 @@ CLASS NPC
 	FUNC SERVER SetCurrentWeaponProficiency
 	{
 		DESC Sets the weapon proficiency of an NPC (how skilled an NPC is with its current weapon).
-		IN proficiency, PN_Enum, PNF_None, WEAPON, #The proficiency for the NPC's current weapon. See WEAPON_PROFICIENCY_ Enums.
+		IN proficiency, PN_Enum, PNF_None, WEAPON_PROFICIENCY, #The proficiency for the NPC's current weapon. See WEAPON_PROFICIENCY_ Enums.
 	}
 	FUNC SERVER SetEnemy
 	{
@@ -358,7 +358,7 @@ CLASS NPC
 	FUNC SERVER SetNPCState
 	{
 		DESC Sets the state the NPC is in to help it decide on a ideal schedule.
-		IN state, PN_Enum, PNF_None, NPC, #New NPC state, see NPC_STATE_ Enums
+		IN state, PN_Enum, PNF_None, NPC_STATE, #New NPC state, see NPC_STATE_ Enums
 	}
 	FUNC SERVER SetSchedule
 	{

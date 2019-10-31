@@ -1,0 +1,11 @@
+LIB video
+{
+	FUNC CLIENT Record
+	{
+		DESC Attempts to create an IVideoWriter.
+		WARN Writer can be null if record fails
+		IN config, PN_Struct, PNF_None, VideoData, #The video config. See VideoData structure.
+		OUT writer, PN_Ref, PNF_None, IVideoWriter, #The video object (returns false if there is an error)
+		OUT error, PN_String, PNF_Nullable, #The error string, if there is an error
+	}
+}

@@ -44,7 +44,7 @@ CLASS Player
 	FUNC SHARED AddVCDSequenceToGestureSlot
 	{
 		DESC Plays a sequence directly from a sequence number, similar to Player:AnimRestartGesture. This function has the advantage to play sequences that haven't been bound to an existing ACT_ Enums
-		IN slot, PN_Enum, PNF_None, GESTURE, #Gesture slot using GESTURE_SLOT_ Enums
+		IN slot, PN_Enum, PNF_None, GESTURE_SLOT, #Gesture slot using GESTURE_SLOT_ Enums
 		IN sequenceId, PN_Number, #The sequence ID to play, can be retrieved with Entity:LookupSequence.
 		IN cycle, PN_Number, #The cycle to start the animation at, ranges from 0 to 1.
 		IN autokill, PN_Bool, PNF_Nullable, #If the animation should not loop. true = stops the animation, false = the animation keeps playing.
@@ -67,12 +67,12 @@ CLASS Player
 	FUNC SHARED AnimResetGestureSlot
 	{
 		DESC Resets player gesture in selected slot.
-		IN slot, PN_Enum, PNF_None, GESTURE, #Slot to reset. See the GESTURE_SLOT_ Enums.
+		IN slot, PN_Enum, PNF_None, GESTURE_SLOT, #Slot to reset. See the GESTURE_SLOT_ Enums.
 	}
 	FUNC SHARED AnimRestartGesture
 	{
 		DESC Restart a gesture on a player, within a gesture slot.
-		IN slot, PN_Enum, PNF_None, GESTURE, #Gesture slot using GESTURE_SLOT_ Enums
+		IN slot, PN_Enum, PNF_None, GESTURE_SLOT, #Gesture slot using GESTURE_SLOT_ Enums
 		IN activity, PN_Enum, PNF_None, ACT, #The activity ( see ACT_ Enums ) or sequence that should be played
 		IN autokill, PN_Bool, PNF_Nullable, #Whether the animation should be automatically stopped. true = stops the animation, false = the animation keeps playing/looping
 	}
@@ -83,13 +83,13 @@ CLASS Player
 	FUNC SHARED AnimSetGestureSequence
 	{
 		DESC Sets the sequence of the animation playing in the given gesture slot.
-		IN slot, PN_Enum, PNF_None, GESTURE, #The gesture slot. See GESTURE_SLOT_ Enums
+		IN slot, PN_Enum, PNF_None, GESTURE_SLOT, #The gesture slot. See GESTURE_SLOT_ Enums
 		IN sequenceID, PN_Number, #Sequence ID to set.
 	}
 	FUNC SHARED AnimSetGestureWeight
 	{
 		DESC Sets the weight of the animation playing in the given gesture slot.
-		IN slot, PN_Enum, PNF_None, GESTURE, #The gesture slot. See GESTURE_SLOT_ Enums
+		IN slot, PN_Enum, PNF_None, GESTURE_SLOT, #The gesture slot. See GESTURE_SLOT_ Enums
 		IN weight, PN_Number, #The weight this slot should be set to. Value must be ranging from 0 to 1.
 	}
 	FUNC SHARED Armor
@@ -415,7 +415,7 @@ CLASS Player
 	PURE SHARED GetObserverMode
 	{
 		DESC Returns the the observer mode of the player
-		OUT mode, PN_Enum, PNF_None, OBS, #Observe mode of that player, see OBS_MODE_ Enums.
+		OUT mode, PN_Enum, PNF_None, OBS_MODE, #Observe mode of that player, see OBS_MODE_ Enums.
 	}
 	PURE SHARED GetObserverTarget
 	{
@@ -994,7 +994,7 @@ CLASS Player
 	FUNC SHARED SetObserverMode
 	{
 		DESC Sets the players observer mode. You must start the spectating first with Player:Spectate.
-		IN mode, PN_Enum, PNF_None, OBS, #Spectator mode using OBS_MODE_ Enums.
+		IN mode, PN_Enum, PNF_None, OBS_MODE, #Spectator mode using OBS_MODE_ Enums.
 	}
 	FUNC SHARED SetPData
 	{

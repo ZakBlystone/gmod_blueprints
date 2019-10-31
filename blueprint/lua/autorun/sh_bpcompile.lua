@@ -47,6 +47,35 @@ function Profile( cs, key, func, ... )
 
 end
 
+local codenames = {
+	["!"] = "__CH~EX__",
+	["@"] = "__CH~AT__",
+	["%"] = "__CH~PE__",
+	["$"] = "__CH~DO__",
+	["^"] = "__CH~CA__",
+	["#"] = "__CH~HA__",
+}
+
+local function SanitizeString(str)
+
+	local r = str:gsub("\\", "\\\\")
+	r = r:gsub("\"", "\\\"")
+	r = r:gsub("[%%!@%^#]", function(x)
+		return codenames[x] or "INVALID"
+	end)
+	return r
+
+end
+
+local function DesanitizeCodedString(str)
+
+	for k,v in pairs(codenames) do
+		str = str:gsub(v, k == "%" and "%%" or k)
+	end
+	return str
+
+end
+
 --[[
 This function goes through all nodes of a certain type in the current graph and creates variable entries for them.
 These variables are used to connect node outputs to inputs among other things
@@ -116,7 +145,7 @@ function CreateFunctionGraphVars(cs, uniqueKeys)
 
 					-- string literals need to be surrounded by quotes
 					-- TODO: Sanitize these
-					if pinType == PN_String then l = "\"" .. l .. "\"" end
+					if pinType == PN_String then l = "\"" .. SanitizeString(l) .. "\"" end
 
 					table.insert(cs.vars, {
 						var = l,
@@ -190,7 +219,7 @@ function EnumerateGraphVars(cs, uniqueKeys)
 
 				-- string literals need to be surrounded by quotes
 				-- TODO: Sanitize these
-				if pinType == PN_String then l = "\"" .. l .. "\"" end
+				if pinType == PN_String then l = "\"" .. SanitizeString(l) .. "\"" end
 
 				table.insert(cs.vars, {
 					var = l,
@@ -333,6 +362,7 @@ function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 	local jumpTable = GetGraphJumpTable(cs)[nodeID] or {}
 	str = str:gsub("%^_([%w_]+)", function(x) return tostring(jumpTable[x]) end)
 	str = str:gsub("%^([%w_]+)", function(x) return "jmp_" .. jumpTable[x] end)
+	str = DesanitizeCodedString(str)
 
 	return str
 
@@ -447,6 +477,7 @@ function CompileNodeSingle(cs, nodeID)
 
 			local literalVar = FindVarForPin(cs, nodeID, pinID)
 			if literalVar ~= nil then
+				print("LITERAL: '" .. literalVar.var .. "'")
 				inVars[lookupID] = literalVar
 			else
 				-- unconnected nullable pins just have their value set to nil

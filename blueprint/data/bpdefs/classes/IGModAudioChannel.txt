@@ -69,7 +69,7 @@ CLASS IGModAudioChannel
 	PURE CLIENT GetState
 	{
 		DESC Returns the state of a sound channel
-		OUT state, PN_Enum, PNF_None, GMOD, #The state of the sound channel, see GMOD_CHANNEL_ Enums
+		OUT state, PN_Enum, PNF_None, GMOD_CHANNEL, #The state of the sound channel, see GMOD_CHANNEL_ Enums
 	}
 	PURE CLIENT GetTime
 	{
