@@ -11,7 +11,7 @@ function meta:Init(parent)
 	self.scrollX = 0
 	self.scrollY = 0
 	self.zoom = 0
-	self.fov = 90
+	self.fov = 40
 	self.angle = Angle(-90,0,90)
 	self.mtx = {1,0,0,0,0,1,0,0,0,0,1,0}
 	self.offset = Vector(0,0,0)
@@ -119,9 +119,12 @@ function meta:Calculate()
 	local sy = -self.scrollY
 	local z = -self.zoom * 100
 	local fov = self.fov
+
+	sx = sx + self.clipX/2
+	sy = sy + self.clipY/2
 	
 	self.invHalfFOVTan = 1/math.tan(math.rad(fov/2))
-	self.angle = Angle(-120,0,90)
+	self.angle = Angle(-90,0,90)
 	self.offset.x = sx
 	self.offset.y = sy
 	self.offset.z = z - (self.viewport[3] * self.invHalfFOVTan) / 2
@@ -139,8 +142,8 @@ function meta:ViewCalculate(x,y,w,h)
 
 	self.clipX = 0
 	self.clipY = 0
-	if x < 0 then w = w + x sx = sx - x/2 self.clipX = -x x = 0 end
-	if y < 0 then h = h + y sy = sx - y/2 self.clipY = -y y = 0 end
+	if x < 0 then w = w + x self.clipX = -x x = 0 end
+	if y < 0 then h = h + y self.clipY = -y y = 0 end
 
 	self.viewport = {x,y,w,h}
 	self.ratio = w/h

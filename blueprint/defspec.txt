@@ -1,0 +1,48 @@
+-- Each class or library is defined with in a CLASS / LIB block
+-- each block contains functions defined within that class or library
+
+-- a function block defines a function's name, type, role, description, and pins
+-- FUNC / PURE: PURE is a function that doesn't modify state, i.e. a 'Get' function, FUNC is a function that DOES modify state, i.e. a 'Set' function.
+-- SHARED / SERVER / CLIENT: all functions in gmod have specific realms they work in, SHARED works on server and client.
+-- IN: defines an input pin for the function (argument).
+-- OUT: defines an output pin for the function (return value).
+-- DESC is some text describing what the function does
+
+-- Pin Types:
+--  Basic Pin Types:
+--   PN_Bool [a boolean value (true / false)]
+--   PN_Vector [a 3D vector]
+--   PN_Angles [a set of 3D angles]
+--   PN_Number [a number of any kind (integer / float / double)]
+--   PN_String [a string of text]
+--   PN_Color [a color structure]
+--   PN_Any [return value could be anything]
+
+--  Extended Pin Types:
+--   PN_Enum [an enumeration], the pin-class argument defines which enum to use, i.e. DMG (MUST BE EXACT)
+--   PN_Ref [a class object reference], the pin-class argument defines which class this maps to, i.e. Entity, or CTakeDamageInfo (MUST BE EXACT)
+--   PN_Struct [a structure reference], the pin-class argument defines which struct this uses, works the same was as PN_Ref, but maps to gmod's structures
+
+--  Pin Flags: (Flags can be combined with the '|' operator)
+--   PNF_None: pin has no special flags and operates normally
+--   PNF_Table: pin is a table of values
+--   PNF_Nullable: pin can be compiled if disconnected (optional arguments)
+
+-- Pin definition examples:
+--   A return value that is a table of vectors:
+      OUT vectorTable, PN_Vector, PNF_Table, #Here are the vectors
+
+--   An optional argument boolean that defaults to true:
+      IN alwaysEnabled=true, PN_Bool, #Optional override
+
+--   A table of entities that is optional (filters work like this)
+      IN filter, PN_Ref, PNF_Table|PNF_Nullable, Entity, #Optional filter list
+
+[LIB / CLASS] [name]
+{
+	[FUNC / PURE] [SHARED / SERVER / CLIENT] [functionName]
+	{
+		DESC [single-line description of function]
+		[IN / OUT] [pin name] [pin type] [pin flags (opt)] [pin class (opt)], #[pin description]
+	}
+}

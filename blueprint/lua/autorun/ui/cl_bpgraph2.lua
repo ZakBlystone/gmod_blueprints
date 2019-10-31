@@ -335,24 +335,6 @@ function PANEL:Paint(w, h)
 
 	draw.SimpleText( self.graph:GetTitle(), "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 
-	--[[draw.RoundedBox(0, 0, 0, w, h, Color(40,40,40))
-
-	self:DrawGrid(15, Color(255,255,255,2))
-	self:DrawGrid(90, Color(255,255,255,5))
-
-	draw.SimpleText( self.graph:GetTitle(), "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-
-	local b,e = pcall( function()
-		self:DrawConnections()
-	end )
-
-	if e and not self.errored then
-		self.errored = true
-		ErrorNoHalt( e )
-	end]]
-
-	--cam.EndOrthoView()
-
 	return true
 
 end

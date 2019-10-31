@@ -80,14 +80,16 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,samples)
 
 	end
 
+	--render.SetMaterial(Material("cable/smoke.vmt"))
 	render.SetColorMaterial()
 	render.StartBeam(#positions)
+	local t = CurTime()
 	local dist = 0
 	local prev = positions[1][1]
 	for i=1, #positions do
 		local curr = positions[i][1]
 		dist = dist + curr:Distance(prev)
-		render.AddBeam(curr, 2, dist/100, positions[i][2])
+		render.AddBeam(curr, 2, dist/30 - t, positions[i][2])
 		prev = curr
 	end
 	render.EndBeam()
