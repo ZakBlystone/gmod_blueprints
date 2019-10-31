@@ -117,10 +117,25 @@ function meta:GetNameForItem( optName, item )
 
 end
 
-function meta:CopyInto( other )
+function meta:CopyInto( other, deep )
 
-	other.items = table.Copy( self.items )
-	other.itemLookup = table.Copy( self.itemLookup )
+	other.items = {}
+	other.itemLookup = {}
+
+	if deep then
+
+		other.items = table.Copy( self.items )
+		other.itemLookup = table.Copy( self.itemLookup )
+
+	else
+
+		for id, item in self:Items() do
+			table.insert( other.items, item )
+			other.itemLookup[id] = item
+		end
+
+	end
+
 	other.nextID = self.nextID
 
 end
@@ -225,6 +240,7 @@ function meta:ReadFromStream(stream, mode, version)
 	self.namedItems = stream:ReadBool()
 	self.nextID = stream:ReadInt(false)
 	local count = stream:ReadInt(false)
+	if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
 	for i=1, count do
 		local item = self.constructor()
 		item.id = stream:ReadInt(false)

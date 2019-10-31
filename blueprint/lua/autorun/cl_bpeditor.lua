@@ -21,6 +21,7 @@ function PANEL:RunCommand( func, ... )
 	local b = xpcall( func, function( err )
 		self.StatusText:SetTextColor( Color(255,100,100) )
 		self.StatusText:SetText( err )
+		print( err )
 		print( debug.traceback() )
 	end, self, ... )
 end

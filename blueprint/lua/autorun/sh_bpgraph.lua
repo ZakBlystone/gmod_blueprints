@@ -859,9 +859,9 @@ function meta:CopyInto(other)
 	other.name = self.name
 	other.type = self.type
 
-	self.nodes:CopyInto( other.nodes )
-	self.inputs:CopyInto( other.inputs )
-	self.outputs:CopyInto( other.outputs )
+	self.nodes:CopyInto( other.nodes, true )
+	self.inputs:CopyInto( other.inputs, true )
+	self.outputs:CopyInto( other.outputs, true )
 
 	for _, c in self:Connections() do
 		table.insert(other.connections, {c[1], c[2], c[3], c[4]})
