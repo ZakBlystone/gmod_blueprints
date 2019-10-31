@@ -45,9 +45,9 @@ function meta:Init(module, type)
 	self.module = module
 	self.deferredNodes = bplist.New():Constructor(self.nodeConstructor)
 	self.nodes = bplist.New():Constructor(self.nodeConstructor)
-	self.connections = {}
 	self.inputs = bplist.New():NamedItems("Inputs"):Constructor(bpvariable.New)
 	self.outputs = bplist.New():NamedItems("Outputs"):Constructor(bpvariable.New)
+	self.connections = {}
 	self.heldConnections = {}
 
 	self.inputs:AddListener(function(cb, action, id, var)
@@ -151,8 +151,8 @@ end
 
 function meta:PostModifyNodeType( nodeType, action, subaction )
 
-	self:FireListeners(CB_POSTMODIFY_NODETYPE, nodeType, action)
 	self:CacheNodeTypes()
+	self:FireListeners(CB_POSTMODIFY_NODETYPE, nodeType, action)
 
 	if action == NODETYPE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
 

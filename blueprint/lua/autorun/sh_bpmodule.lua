@@ -15,8 +15,6 @@ bpcommon.CallbackList({
 	"MODULE_CLEAR",
 	"GRAPH_ADD",
 	"GRAPH_REMOVE",
-	"VARIABLE_ADD",
-	"VARIABLE_REMOVE",
 })
 
 STREAM_FILE = 1
@@ -70,6 +68,7 @@ function meta:Init(type)
 		if cb == bplist.CB_ADD then
 			self:FireListeners(CB_GRAPH_ADD, id)
 		elseif cb == bplist.CB_REMOVE then
+			self:RemoveNodeTypes({"__Call" .. id})
 			self:FireListeners(CB_GRAPH_REMOVE, id)
 		end
 
@@ -86,22 +85,13 @@ function meta:Init(type)
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
+	self.structs:AddListener(function(cb, id)
+		self:RemoveNodeTypes({"__Make" .. id, "__Break" .. id})
+	end, bplist.CB_REMOVE)
+
 	self.variables:AddListener(function(cb, id, var)
-
-		if cb == bplist.CB_ADD then
-			self:FireListeners(CB_VARIABLE_ADD, id)
-		elseif cb == bplist.CB_REMOVE then
-			local match = {["__VSet" .. id] = 1, ["__VGet" .. id] = 1}
-			for _, graph in self:Graphs() do
-				graph:RemoveNodeIf( function( node )
-					return match[node.nodeType]
-				end )
-			end
-
-			self:FireListeners(CB_VARIABLE_REMOVE, id)
-		end
-
-	end, bplist.CB_ALL)
+		self:RemoveNodeTypes({"__VSet" .. id, "__VGet" .. id})
+	end, bplist.CB_REMOVE)
 
 	self.variables:AddListener(function(cb, action, id, graph)
 
@@ -154,6 +144,14 @@ function meta:PostModifyGraph( action, id, graph )
 
 	graph:PostModify(action, subaction)
 	self:PostModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action], subaction )
+
+end
+
+function meta:RemoveNodeTypes( nodeTypes )
+
+	for _, graph in self:Graphs() do
+		graph.nodes:RemoveIf( function(node) return table.HasValue( nodeTypes, node:GetTypeName() ) end )
+	end
 
 end
 

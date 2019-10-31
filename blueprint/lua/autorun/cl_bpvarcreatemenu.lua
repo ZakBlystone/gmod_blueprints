@@ -119,7 +119,7 @@ function RequestVarSpec( callback, parent )
 
 	for k, v in pairs(bpdefs.GetClasses()) do
 		if blackList2[v.name] then continue end
-		Combo:AddChoice( v.name, {PN_Ref, v.name}, i == 1 )
+		Combo:AddChoice( v.name, {PN_Ref, v.name} )
 	end
 
 	Combo:SetWide( 150 )

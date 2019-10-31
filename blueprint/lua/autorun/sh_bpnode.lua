@@ -61,7 +61,7 @@ function meta:ToString(pinID)
 	local str = self.graph:GetName() .. "." .. ntype.name
 	if pinID then
 		local p = self:GetPin(pinID)
-		if p then str = str .. "." .. p[3] end
+		if p then str = str .. "." .. p[3] .. " : " .. p[2] .. "[" .. tostring(p[5]) .. "]" end
 	end
 	return str
 
@@ -91,6 +91,12 @@ function meta:GetType()
 
 	local nodeTypes = self.graph:GetNodeTypes()
 	return nodeTypes[ self.nodeType ]
+
+end
+
+function meta:GetTypeName()
+
+	return self.nodeType
 
 end
 
