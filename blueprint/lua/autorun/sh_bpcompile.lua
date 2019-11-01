@@ -53,11 +53,13 @@ local codenames = {
 	["$"] = "__CH~DO__",
 	["^"] = "__CH~CA__",
 	["#"] = "__CH~HA__",
+	["\\n"] = "__CH~NL__",
 }
 
 local function SanitizeString(str)
 
-	local r = str:gsub("\\", "\\\\")
+	local r = str:gsub("\\n", "__CH~NL__")
+	r = r:gsub("\\", "\\\\")
 	r = r:gsub("\"", "\\\"")
 	r = r:gsub("[%%!@%^#]", function(x)
 		return codenames[x] or "INVALID"
