@@ -120,6 +120,7 @@ function PANEL:Init()
 			makeCat(p, "Libs", "icon16/brick.png")
 			makeCat(p, "Classes", "icon16/bricks.png")
 			makeCat(p, "Structs", "icon16/table.png")
+			if nodeType.deprecated then return end
 			if nodeType.isClass then
 				p = makeCat(p, "Classes", "icon16/bricks.png")
 				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png") end

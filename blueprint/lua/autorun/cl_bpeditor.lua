@@ -252,10 +252,14 @@ function PANEL:Init()
 		end
 	end
 
-	self.VarList = vgui.Create("BPListView", menu)
+	local submenu = vgui.Create("DVerticalDivider", menu)
+	submenu:SetTopHeight(200)
+
+	self.VarList = vgui.Create("BPListView", submenu)
 	self.VarList:SetText("Variables")
 	self.VarList.HandleAddItem = function(list)
-		bpuivarcreatemenu.RequestVarSpec( function(name, type, flags, ex) 
+		print("TYPE: " .. type(self.module))
+		bpuivarcreatemenu.RequestVarSpec( self.module, function(name, type, flags, ex) 
 			self.module:NewVariable( name, type, nil, flags, ex )
 		end)
 	end
@@ -268,8 +272,30 @@ function PANEL:Init()
 		end
 	end
 
+	self.StructList = vgui.Create("BPListView", submenu)
+	self.StructList:SetText("Structs")
+	self.StructList.HandleAddItem = function(pnl, list)
+		Derma_StringRequest(
+			"Add Struct",
+			"Give it a name",
+			"",
+			function( text ) list:ConstructNamed( text ) end,
+			function( text ) end
+		)
+	end
+	local prev = self.StructList.PopulateMenuItems
+	self.StructList.PopulateMenuItems = function(pnl, items, id)
+		prev(pnl, items, id)
+		table.insert(items, {
+			name = "Edit Pins",
+			func = function() self:EditStructPins(id) end,
+		})
+	end
+
 	menu:SetTop(self.GraphList)
-	menu:SetBottom(self.VarList)
+	menu:SetBottom(submenu)
+	submenu:SetTop(self.VarList)
+	submenu:SetBottom(self.StructList)
 
 	self.vvars = {}
 	self.vgraphs = {}
@@ -279,6 +305,12 @@ end
 function PANEL:EditGraphPins( id )
 
 	bpuigrapheditmenu.EditGraphParams( self.module:GetGraph(id) )
+
+end
+
+function PANEL:EditStructPins( id )
+
+	bpuistructeditmenu.EditStructParams( self.module:GetStruct(id) )
 
 end
 
@@ -359,6 +391,7 @@ function PANEL:SetModule( mod )
 	if mod == nil then return end
 	self.VarList:SetList( self.module.variables )
 	self.GraphList:SetList( self.module.graphs )
+	self.StructList:SetList( self.module.structs )
 	self.module:AddListener(self.callback, bpmodule.CB_ALL)
 
 end

@@ -3,10 +3,11 @@ if SERVER then AddCSLuaFile() return end
 include("sh_bpschema.lua")
 include("sh_bpnodedef.lua")
 include("sh_bpgraph.lua")
+include("sh_bpstruct.lua")
 
-module("bpuigrapheditmenu", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
+module("bpuistructeditmenu", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
 
-local function GraphVarList( module, window, list, name )
+local function StructVarList( module, window, list, name )
 
 	local vlist = vgui.Create( "BPListView", window )
 	vlist:SetList( list )
@@ -30,23 +31,17 @@ local function GraphVarList( module, window, list, name )
 
 end
 
-function EditGraphParams( graph )
+function EditStructParams( struct )
 
 	local width = 500
 
 	local window = vgui.Create( "DFrame" )
-	window:SetTitle( "Edit Graph Parameters" )
+	window:SetTitle( "Edit Struct Pins" )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
 
-	local inputs = GraphVarList( graph.module, window, graph.inputs, "Inputs" )
-	local outputs = GraphVarList( graph.module, window, graph.outputs, "Outputs" )
-
-	inputs:SetWide( width / 2 - 10 )
-	outputs:SetWide( width / 2 - 10 )
-
-	inputs:Dock( LEFT )
-	outputs:Dock( RIGHT )
+	local pins = StructVarList( struct.module, window, struct.pins, "Pins" )
+	pins:Dock( FILL )
 
 	window.OnFocusChanged = function(self, gained)
 		timer.Simple(.1, function()

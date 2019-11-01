@@ -334,7 +334,7 @@ LIB util
 		DESC Performs a trace with the given origin, direction and filter.
 		IN origin, PN_Vector, #The origin of the trace.
 		IN endpos, PN_Vector, #The end point of the trace, relative to the start. This is the direction of the trace times the distance of the trace.
-		IN filter, PN_Struct, PNF_Nullable, Trace, #Entity which should be ignored by the trace. Can also be a table of entities or a function - see Trace structure.
+		IN filter, PN_Ref, PNF_Nullable, Entity, #Entity which should be ignored by the trace. Can also be a table of entities or a function - see Trace structure.
 		OUT result, PN_Struct, PNF_None, TraceResult, #Trace result. See TraceResult structure.
 	}
 	FUNC SHARED RelativePathToFull

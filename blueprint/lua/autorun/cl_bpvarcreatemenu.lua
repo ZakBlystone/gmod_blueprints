@@ -14,7 +14,7 @@ end
 
 vgui.Register( "BPVarCreateMenu", PANEL, "EditablePanel" )
 
-function RequestVarSpec( callback, parent )
+function RequestVarSpec( module, callback, parent )
 
 	local Window = vgui.Create( "DFrame" )
 	Window:SetTitle( "Create Variable" )
@@ -28,21 +28,21 @@ function RequestVarSpec( callback, parent )
 	local TableOption = vgui.Create("DCheckBoxLabel", Window)
 	local NameEntry = vgui.Create("DTextEntry", Window )
 
-	local ftime = .1
-	local wthink = Window.Think
-	Window.Think = function(self)
-		wthink(self)
-		ftime = ftime - FrameTime()
-		if ftime <= 0 and not self:HasAnyFocus() then self:Close() end
-	end
-
 	local ButtonPanel = vgui.Create( "DPanel", Window )
 	ButtonPanel:SetTall( 30 )
 	ButtonPanel:SetPaintBackground( true )
 
 	local function DoClose()
-		if IsValid(parent) then parent:Hold() end -- dumb hack
-		Window:Close() 
+		if IsValid(parent) then parent:MoveToFront() end
+		Window:Close()
+	end
+
+	Window.OnFocusChanged = function(self, gained)
+		timer.Simple(.1, function()
+			if not (gained or vgui.FocusedHasParent(Window)) then
+				if IsValid(Window) then DoClose() end
+			end
+		end)
 	end
 
 	local Button = vgui.Create( "DButton", ButtonPanel )
@@ -76,11 +76,6 @@ function RequestVarSpec( callback, parent )
 	ButtonCancel:MoveRightOf( Button, 5 )
 
 	ButtonPanel:SetWide( Button:GetWide() + 5 + ButtonCancel:GetWide() + 10 )
-
-
-	Window.HasAnyFocus = function(self)
-		return self:HasFocus() or NameEntry:HasFocus() or Button:HasFocus() or ButtonCancel:HasFocus()
-	end
 
 	local blackList = {
 		[PN_Exec] = true,
@@ -122,6 +117,15 @@ function RequestVarSpec( callback, parent )
 		Combo:AddChoice( v.name, {PN_Ref, v.name} )
 	end
 
+	for k, v in pairs(bpdefs.GetStructs()) do
+		if blackList2[v.name] then continue end
+		Combo:AddChoice( v.name, {PN_Struct, v.name} )
+	end
+
+	for id, struct in module:Structs() do
+		Combo:AddChoice( struct:GetName(), {PN_Struct, struct:GetName()} )
+	end
+
 	Combo:SetWide( 150 )
 
 	TableOption:SetText("As Table")
@@ -129,6 +133,7 @@ function RequestVarSpec( callback, parent )
 
 	Window:SetSize( 300, 200 )
 	Window:Center()
+	Window:SetParent(parent)
 
 	NameEntry:SetWide(150)
 	NameEntry:CenterHorizontal()

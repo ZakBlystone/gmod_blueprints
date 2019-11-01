@@ -48,8 +48,8 @@ function meta:Init(type)
 		return graph
 	end
 
-	self.structConstructor = function()
-		local struct = bpstruct.New():MarkAsCustom()
+	self.structConstructor = function(...)
+		local struct = bpstruct.New(...):MarkAsCustom()
 		struct.module = self
 		return struct
 	end
@@ -70,6 +70,7 @@ function meta:Init(type)
 		elseif cb == bplist.CB_REMOVE then
 			self:RemoveNodeTypes({"__Call" .. id})
 			self:FireListeners(CB_GRAPH_REMOVE, id)
+			self:RecacheNodeTypes()
 		end
 
 	end, bplist.CB_ALL)
@@ -86,12 +87,31 @@ function meta:Init(type)
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	self.structs:AddListener(function(cb, id)
-		self:RemoveNodeTypes({"__Make" .. id, "__Break" .. id})
-	end, bplist.CB_REMOVE)
+		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__Make" .. id, "__Break" .. id}) end
+		self:RecacheNodeTypes()
+	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
+
+	self.structs:AddListener(function(cb, action, id, graph)
+
+		if action ~= bplist.MODIFY_RENAME then return end
+		if cb == bplist.CB_PREMODIFY then
+			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+		elseif cb == bplist.CB_POSTMODIFY then
+			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+		end
+
+	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	self.variables:AddListener(function(cb, id, var)
-		self:RemoveNodeTypes({"__VSet" .. id, "__VGet" .. id})
-	end, bplist.CB_REMOVE)
+		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__VSet" .. id, "__VGet" .. id}) end
+		self:RecacheNodeTypes()
+	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
 	self.variables:AddListener(function(cb, action, id, graph)
 
@@ -151,6 +171,14 @@ function meta:RemoveNodeTypes( nodeTypes )
 
 	for _, graph in self:Graphs() do
 		graph.nodes:RemoveIf( function(node) return table.HasValue( nodeTypes, node:GetTypeName() ) end )
+	end
+
+end
+
+function meta:RecacheNodeTypes()
+
+	for _, graph in self:Graphs() do
+		graph:CacheNodeTypes()
 	end
 
 end

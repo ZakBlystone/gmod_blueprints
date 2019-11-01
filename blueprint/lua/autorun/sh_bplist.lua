@@ -146,6 +146,20 @@ function meta:PreserveNames(preserve)
 
 end
 
+function meta:Construct( ... )
+
+	return self:ConstructNamed(nil, ...)
+
+end
+
+function meta:ConstructNamed( name, ... )
+
+	if not self.constructor then error("Item type does not have constructor") end
+	local item = self.constructor(...)
+	return self:Add(item, name)
+
+end
+
 function meta:Add( item, optName )
 
 	if item.id ~= nil then error("Cannot add uniquely indexed items to multiple lists") end

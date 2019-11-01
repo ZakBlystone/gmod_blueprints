@@ -55,6 +55,8 @@ function PANEL:CreateItemPanel( id, item )
 	rmv:SetPaintBackground(false)
 	rmv:Dock( RIGHT )
 
+	panel.btn = btn
+	panel.id = id
 	panel:SetTall(20)
 
 	panel.OnKeyCodePressed = function( pnl, code )
@@ -148,7 +150,7 @@ function PANEL:PopulateMenuItems( items, id )
 
 end
 
-function PANEL:HandleAddItem()
+function PANEL:HandleAddItem( list )
 
 end
 
@@ -156,13 +158,27 @@ function PANEL:Rename( id )
 
 	local item = self.list:Get(id)
 
-	Derma_StringRequest(
-		"Add Graph",
-		"Rename " .. item:GetName(),
-		item:GetName(),
-		function( text ) self.list:Rename( id, text ) end,
-		function( text ) end
-	)
+	for k,v in pairs(self.listview:GetItems()) do
+		if v.id == id then
+			v.btn:SetVisible(false)
+			v.edit = vgui.Create("DTextEntry", v)
+			v.edit:SetText(item:GetName())
+			v.edit:RequestFocus()
+			v.edit:SelectAllOnFocus()
+			v.edit.OnFocusChanged = function(te, gained)
+				if not gained then 
+					self.list:Rename( id, te:GetText() )
+					v.btn:SetVisible(true)
+					te:Remove()
+				end
+			end
+			v.edit.OnEnter = function(te)
+				self.list:Rename( id, te:GetText() )
+				v.btn:SetVisible(true)
+				te:Remove()
+			end
+		end
+	end
 
 end
 
@@ -290,7 +306,7 @@ function PANEL:Init()
 	self.controls:SetTall(20)
 
 	self.btnAdd.DoClick = function()
-		self:HandleAddItem()
+		self:HandleAddItem(self.list)
 	end
 
 	self.selectedID = nil

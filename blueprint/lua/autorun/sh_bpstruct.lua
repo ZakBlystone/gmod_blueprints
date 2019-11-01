@@ -18,11 +18,11 @@ function meta:Init()
 
 		if self.module then
 			if cb == bplist.CB_PREMODIFY then
-				self.module:PreModifyNodeType( "__Make" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
-				self.module:PreModifyNodeType( "__Break" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
+				self.module:PreModifyNodeType( "__Make" .. self.id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+				self.module:PreModifyNodeType( "__Break" .. self.id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
 			elseif cb == bplist.CB_POSTMODIFY then
-				self.module:PostModifyNodeType( "__Make" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
-				self.module:PostModifyNodeType( "__Break" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
+				self.module:PostModifyNodeType( "__Make" .. self.id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+				self.module:PostModifyNodeType( "__Break" .. self.id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
 			end
 		end
 
@@ -69,6 +69,7 @@ function meta:MakerNodeType()
 
 	local ntype = { pins = {} }
 	ntype.name = "Make" .. self:GetName()
+	ntype.displayName = ntype.name
 	ntype.type = NT_Pure
 	ntype.desc = self.desc or "Makes a " .. self:GetName() .. " structure"
 	ntype.code = ""
@@ -112,6 +113,7 @@ function meta:BreakerNodeType()
 
 	local ntype = { pins = {} }
 	ntype.name = "Break" .. self:GetName()
+	ntype.displayName = ntype.name
 	ntype.type = NT_Pure
 	ntype.desc = self.desc or "Returns components of a " .. self:GetName() .. " structure"
 	ntype.code = ""
