@@ -28,6 +28,8 @@ FL_NONE = 0
 FL_LOCK_PINS = 1
 FL_LOCK_NAME = 2
 FL_HOOK = 4
+FL_ROLE_SERVER = 8
+FL_ROLE_CLIENT = 16
 
 local meta = {}
 meta.__index = meta
@@ -278,10 +280,16 @@ function meta:CreateFunctionNodeTypes( output )
 	for id, var in self.inputs:Items() do table.insert(inPins, var:CreatePin( PD_Out )) end
 	for id, var in self.outputs:Items() do table.insert(outPins, var:CreatePin( PD_In )) end
 
+	local role = nil
+	if self:HasFlag(FL_ROLE_CLIENT) and self:HasFlag(FL_ROLE_SERVER) then role = ROLE_Shared
+	elseif self:HasFlag(FL_ROLE_SERVER) then role = ROLE_Server
+	elseif self:HasFlag(FL_ROLE_CLIENT) then role = ROLE_Client end
+
 	output["__Entry"] = FUNC_INPUT {
 		pins = inPins,
 		displayName = self:GetName(),
 		name = "__Entry",
+		role = role,
 		noDelete = true,
 	}
 
@@ -351,6 +359,8 @@ end
 function meta:GetPinType(nodeID, pinID)
 
 	local ntype = self:GetNode(nodeID):GetType()
+
+	if not ntype.pins[pinID] then return nil, nil end
 
 	if ntype.meta and ntype.meta.informs then
 
@@ -586,6 +596,9 @@ function meta:RemoveInvalidConnections()
 
 		local c = connections[i]
 		if not self:GetNode(c[1]) or not self:GetNode(c[3]) then
+			print("Removed invalid connection: " .. i)
+			table.remove(connections, i)
+		elseif not self:GetNode(c[1]):GetPin(c[2]) or not self:GetNode(c[3]):GetPin(c[4]) then
 			print("Removed invalid connection: " .. i)
 			table.remove(connections, i)
 		end
@@ -879,9 +892,16 @@ function meta:CopyInto(other)
 	other.type = self.type
 	other.flags = self.flags
 
+	-- Deep copy will copy all members including graph which includes module etc...
+	-- So clear graph variable and set it on the other side of the deep copy
+	for _, node in self:Nodes() do node.graph = nil end
+
 	self.nodes:CopyInto( other.nodes, true )
 	self.inputs:CopyInto( other.inputs, true )
 	self.outputs:CopyInto( other.outputs, true )
+
+	for _, node in other:Nodes() do node.graph = other tostring(other) end
+	for _, node in self:Nodes() do node.graph = self end
 
 	for _, c in self:Connections() do
 		table.insert(other.connections, {c[1], c[2], c[3], c[4]})

@@ -567,8 +567,8 @@ NodeTypes = {
 	},
 	["Equal"] = PURE {
 		pins = {
-			{ PD_In, PN_Any, "a" },
-			{ PD_In, PN_Any, "b" },
+			{ PD_In, PN_Any, "a", PNF_Nullable },
+			{ PD_In, PN_Any, "b", PNF_Nullable },
 			{ PD_Out, PN_Bool, "result" },
 		},
 		meta = {
@@ -580,8 +580,8 @@ NodeTypes = {
 	},
 	["NotEqual"] = PURE {
 		pins = {
-			{ PD_In, PN_Any, "a" },
-			{ PD_In, PN_Any, "b" },
+			{ PD_In, PN_Any, "a", PNF_Nullable },
+			{ PD_In, PN_Any, "b", PNF_Nullable },
 			{ PD_Out, PN_Bool, "result" },
 		},
 		meta = {
@@ -1084,10 +1084,10 @@ local function AddHook(name, args)
 		pins = pins,
 		hook = name,
 		code = code,
+		deprecated = true,
 	}
 
 end
-
 
 AddHook("OnNPCKilled", { {"npc", PN_Npc}, {"attacker", PN_Entity}, {"inflictor", PN_Entity} })
 AddHook("PlayerSpawn", { {"player", PN_Player}, {"transition", PN_Bool} })

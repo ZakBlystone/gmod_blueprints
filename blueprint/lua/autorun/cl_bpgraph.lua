@@ -289,6 +289,8 @@ function PANEL:DrawConnection(connection)
 	local apintype = graph:GetPinType( connection[1], connection[2] )
 	local bpintype = graph:GetPinType( connection[3], connection[4] )
 
+	if apintype == nil or bpintype == nil then return end
+
 	self:DrawHermite( ax, ay, bx, by, 
 		NodePinColors[ apintype ], 
 		NodePinColors[ bpintype ] 

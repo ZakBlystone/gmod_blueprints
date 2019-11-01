@@ -124,8 +124,11 @@ function meta:CopyInto( other, deep )
 
 	if deep then
 
-		other.items = table.Copy( self.items )
-		other.itemLookup = table.Copy( self.itemLookup )
+		for id, item in self:Items() do
+			local copy = table.Copy( item )
+			table.insert( other.items, copy )
+			other.itemLookup[id] = copy
+		end
 
 	else
 

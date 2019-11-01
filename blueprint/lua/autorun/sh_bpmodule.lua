@@ -266,6 +266,14 @@ function meta:RequestGraphForEvent( nodeType )
 	graph:SetFlag(bpgraph.FL_LOCK_PINS)
 	graph:SetFlag(bpgraph.FL_LOCK_NAME)
 	graph:SetFlag(bpgraph.FL_HOOK)
+
+	if nodeType.role == ROLE_Server or nodeType.role == ROLE_Shared then
+		graph:SetFlag(bpgraph.FL_ROLE_SERVER)
+	end
+	if nodeType.role == ROLE_Client or nodeType.role == ROLE_Shared then
+		graph:SetFlag(bpgraph.FL_ROLE_CLIENT)
+	end
+
 	for k,v in pairs(nodeType.pins) do
 
 		if v[2] == PN_Exec then continue end
@@ -475,16 +483,18 @@ function meta:SetEnabled( enable )
 
 	if not self:IsValid() then return end
 
-	local isEnabled = activeModules[self.id] ~= nil
+	local isEnabled = activeModules[self.uniqueID] ~= nil
 	if isEnabled == false and enable == true then
+		print("BINDING GAMEMODE HOOKS")
 		self:BindGamemodeHooks()
-		activeModules[self.id] = self
+		activeModules[self.uniqueID] = self
 		return
 	end
 
 	if isEnabled == true and enable == false then
+		print("UN-BINDING GAMEMODE HOOKS")
 		self:UnbindGamemodeHooks()
-		activeModules[self.id] = nil
+		activeModules[self.uniqueID] = nil
 		return
 	end
 

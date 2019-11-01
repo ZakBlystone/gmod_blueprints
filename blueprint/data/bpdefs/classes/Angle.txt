@@ -1,4 +1,4 @@
-CLASS Angles, angles, PN_Angles
+CLASS Angle, angle, PN_Angles
 {
 	FUNC SHARED Add
 	{
@@ -64,7 +64,7 @@ CLASS Angles, angles, PN_Angles
 		DESC Subtracts the values of the argument angle to the orignal angle. This functions the same as angle1 - angle2 without creating a new angle object, skipping object construction and garbage collection.
 		IN angle, PN_Angles, #The angle to subtract.
 	}
-	FUNC SHARED Up
+	PURE SHARED Up
 	{
 		DESC Returns a normal vector facing in the direction that points up relative to the angle's direction.
 		OUT up, PN_Vector, #The up direction of the angle.

@@ -40,9 +40,56 @@ HOOKS GM
 		OUT newPos, PN_Vector, #New position
 		OUT newAngle, PN_Angles, #New position
 	}
+	SHARED EntityEmitSound
+	{
+		IN data, PN_Struct, PNF_None, EmitSoundInfo, #Information about the played sound. Changes done to this table can be applied by returning true from this hook.
+		OUT playSound=true, PN_Bool
+	}
+	SHARED EntityFireBullets
+	{
+		IN entity, PN_Ref, PNF_None, Entity, #The entity that fired the bullet
+		IN data, PN_Struct, PNF_None, Bullet, #The bullet data
+		OUT fireBullet=true, PN_Bool
+	}
+	SHARED EntityRemoved
+	{
+		IN entity, PN_Ref, PNF_None, Entity, #Entity being removed
+	}
+	SERVER EntityTakeDamage
+	{
+		IN target, PN_Ref, PNF_None, Entity, #The entity taking damage
+		IN damage, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info
+		OUT blockDamage=false, PN_Bool, #Block damage
+	}
+	SERVER GravGunDropped
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
+		IN entity, PN_Ref, PNF_None, Entity, #The entity that has been dropped
+	}
+	SERVER GravGunOnPickedUp
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
+		IN entity, PN_Ref, PNF_None, Entity, #The entity that has been picked up by the gravity gun
+	}
+	SERVER GravGunPickupAllowed
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
+		IN entity, PN_Ref, PNF_None, Entity, #The entity the player is attempting to pick up
+		OUT allow=true, PN_Bool, #Return true to allow entity pick up
+	}
 	CLIENT HUDPaint
 	{
 		DESC Called whenever the HUD should be drawn. Called right before GM:HUDDrawScoreBoard and after GM:HUDPaintBackground.
+	}
+	SHARED KeyPress
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player pressing the key. If running client-side, this will always be LocalPlayer
+		IN key, PN_Enum, PNF_None, IN, #The key that the player pressed using IN_ Enums.
+	}
+	SHARED KeyRelease
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player releasing the key. If running client-side, this will always be LocalPlayer
+		IN key, PN_Enum, PNF_None, IN, #The key that the player released using IN_ Enums.
 	}
 	SHARED Move
 	{
@@ -50,6 +97,123 @@ HOOKS GM
 		IN player, PN_Ref, PNF_None, Player, #Player
 		IN move, PN_Ref, PNF_None, CMoveData, #Movement information
 		OUT override, PN_Bool, #Return true to suppress default engine action
+	}
+	SHARED PlayerButtonDown
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who pressed the button
+		IN button, PN_Enum, PNF_None, BUTTON_CODE, #The button
+	}
+	SHARED PlayerButtonUp
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who released the button
+		IN button, PN_Enum, PNF_None, BUTTON_CODE, #The button
+	}
+	SERVER PlayerDeath
+	{
+		IN victim, PN_Ref, PNF_None, Player, #The player who died
+		IN inflictor, PN_Ref, PNF_None, Entity, #Item used to kill victim
+		IN attacker, PN_Ref, PNF_None, Entity, #Player or entity that killed the victim
+	}
+	SERVER PlayerDeathSound
+	{
+		OUT mute=false, PN_Bool, #Mute death sound
+	}
+	SERVER PlayerDeathThink
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player affected in the hook.
+		OUT allowSpawn=true, PN_Bool, #Allow spawn
+	}
+	SERVER PlayerDisconnected
+	{
+		IN player, PN_Ref, PNF_None, Player
+	}
+	SERVER PlayerEnteredVehicle
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who entered vehicle
+		IN vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player entered
+		IN role, PN_Number
+	}
+	SERVER PlayerLeaveVehicle
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who left a vehicle
+		IN vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player left
+	}
+	SHARED PlayerFootstep
+	{
+		IN player, PN_Ref, PNF_None, Player, #The stepping player
+		IN pos, PN_Vector, #The position of the step
+		IN foot, PN_Number, #Foot that is stepped. 0 for left, 1 for right
+		IN sound, PN_String, #Sound that is going to play
+		IN volume, PN_Number, #Volume of the footstep
+		IN filter, PN_Ref, PNF_None, CRecipientFilter, #The Recipient filter of players who can hear the footstep
+		OUT muteSound=false, PN_Bool, #Prevent default step sound
+	}
+	SERVER PlayerSay
+	{
+		DESC Called when a player dispatched a chat message.
+		IN sender, PN_Ref, PNF_None, Player, #The player which sent the message.
+		IN text, PN_String, #The message's content
+		IN teamChat, PN_Bool, #Is team chat?
+		OUT replace, PN_String, #What to show instead of original text.
+	}
+	SERVER PlayerSetModel
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player being chosen.
+	}
+	SERVER PlayerSpawn
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player who spawned.
+		IN transition, PN_Bool, #If true, the player just spawned from a map transition. You probably want to not touch player's weapons if this is set to true from this hook.
+	}
+	SERVER PlayerFrozeObject
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who has frozen an object
+		IN entity, PN_Ref, PNF_None, Entity, #The frozen object
+		IN physObj, PN_Ref, PNF_None, PhysObj, #The frozen physics object of the frozen entity ( For ragdolls )
+	}
+	SERVER PlayerHurt
+	{
+		IN victim, PN_Ref, PNF_None, Player, #Victim
+		IN attacker, PN_Ref, PNF_None, Entity, #Attacker Entity
+		IN healthRemaining, PN_Number, #Remaining Health
+		IN damageTaken, PN_Number, #Damage Taken
+	}
+	SERVER PlayerInitialSpawn
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player who spawned.
+		IN transition, PN_Bool, #If true, the player just spawned from a map transition.
+	}
+	SERVER PlayerSwitchFlashlight
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player who attempts to change their flashlight state.
+		IN enabled, PN_Bool, #The new state the player requested, true for on, false for off.
+		OUT allow=true, PN_Bool, #Can toggle the flashlight or not
+	}
+	SHARED PlayerSwitchWeapon
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player switching weapons.
+		IN oldWeapon, PN_Ref, PNF_None, Weapon, #The previous weapon. Will be NULL if the previous weapon was removed or the player is switching from nothing.
+		IN newWeapon, PN_Ref, PNF_None, Weapon, #The weapon the player switched to. Will be NULL if the player is switching to nothing.
+		OUT suppress=false, PN_Bool, #Return true to prevent weapon switch
+	}
+	SHARED PlayerTick
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player
+		IN moveData, PN_Ref, PNF_None, CMoveData, #The current movedata for the player.
+	}
+	SHARED PlayerTraceAttack
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player that has been hit
+		IN damage, PN_Ref, PNF_None, CTakeDamageInfo, #The damage info of the bullet
+		IN dir, PN_Vector, #Normalized vector direction of the bullet's path
+		IN trace, PN_Struct, PNF_None, TraceResult, #The trace of the bullet's path
+		OUT override=false, PN_Bool, #Override engine handling
+	}
+	SERVER PlayerUse
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player pressing the "use" key.
+		IN entity, PN_Ref, PNF_None, Entity, #The entity which the player is looking at / activating USE on.
+		OUT allowUse=true, PN_Bool, #Return false if the player is not allowed to USE the entity.
 	}
 	SERVER OnNPCKilled
 	{

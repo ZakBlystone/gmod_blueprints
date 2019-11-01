@@ -7,20 +7,20 @@ module("bpnet", package.seeall)
 local CMD_Upload = 1
 local CMD_Download = 2
 local CMD_Error = 3
+local CMD_Install = 4
+local CMD_Uninstall = 5
+ClientModules = ClientModules or {}
 
 local function PlayerKey(ply)
 	return ply:AccountID() or "singleplayer"
 end
 
-if SERVER then
+local function ErrorHandler( bp, msg, graphID, nodeID )
 
-	local ServerGraph = bpgraph.New()
-	PlayerModules = PlayerModules or {}
+	bp:SetEnabled(false)
+	print("BLUEPRINT ERROR: " .. tostring(msg) .. " at " .. tostring(graphID) .. "[" .. tostring(nodeID) .. "]")
 
-	local function ErrorHandler( bp, msg, graphID, nodeID )
-
-		bp:SetEnabled(false)
-		print("BLUEPRINT ERROR: " .. tostring(msg) .. " at " .. tostring(graphID) .. "[" .. tostring(nodeID) .. "]")
+	if SERVER then
 
 		net.Start("bpclientcmd")
 		net.WriteUInt(CMD_Error, 4)
@@ -30,18 +30,39 @@ if SERVER then
 		net.WriteString(msg)
 		net.Send( bp.owner )
 
+	else
+
+		print("ERROR MSG: " .. msg)
+
 	end
+
+end
+
+if SERVER then
+
+	local ServerGraph = bpgraph.New()
+	PlayerModules = PlayerModules or {}
 
 	local function GetPlayerModule( ply ) return PlayerModules[PlayerKey(ply)] end
 	local function SetPlayerModule( ply, bp )
 
 		local prev = GetPlayerModule( ply )
-		if prev ~= nil then prev:SetEnabled(false) end
+		if prev ~= nil then 
+			prev:SetEnabled(false)
+			net.Start("bpclientcmd")
+			net.WriteUInt(CMD_Uninstall, 4)
+			net.WriteString(bpcommon.GUIDToString( prev.uniqueID ) )
+			net.Broadcast()
+		end
 		PlayerModules[PlayerKey(ply)] = bp
 
 		bp.owner = ply
 		bp:SetErrorHandler( ErrorHandler )
 		bp:SetEnabled(true)
+		net.Start("bpclientcmd")
+		net.WriteUInt(CMD_Install, 4)
+		bp:NetSend()
+		net.Broadcast()
 
 	end
 
@@ -72,7 +93,13 @@ if SERVER then
 	hook.Add("PlayerDisconnected", "bphandledisconnect", function(ply)
 
 		local m = GetPlayerModule(ply)
-		if m ~= nil then m:SetEnabled(false) end
+		if m ~= nil then 
+			m:SetEnabled(false)
+			net.Start("bpclientcmd")
+			net.WriteUInt(CMD_Uninstall, 4)
+			net.WriteString(bpcommon.GUIDToString( m.uniqueID ))
+			net.Broadcast()
+		end
 
 	end)
 
@@ -130,6 +157,35 @@ else
 				nodeID = net.ReadUInt(32),
 				msg = net.ReadString(),
 			}
+
+		elseif cmd == CMD_Install then
+
+			local mod = bpmodule.New()
+			mod:NetRecv()
+			mod:Compile()
+
+			local uid = bpcommon.GUIDToString( mod.uniqueID )
+			if ClientModules[uid] ~= nil then
+				print("DISABLE PREVIOUS MODULE: " .. uid)
+				ClientModules[uid]:SetEnabled(false)
+			end
+			ClientModules[uid] = mod
+			mod:SetErrorHandler( ErrorHandler )
+			mod:SetEnabled(true)
+
+			print("INSTALL MODULE: " .. uid)
+
+		elseif cmd == CMD_Uninstall then
+
+			local uid = net.ReadString()
+			print("UN-INSTALL MODULE: " .. uid)
+
+			if ClientModules[uid] ~= nil then
+				ClientModules[uid]:SetEnabled(false)
+				ClientModules[uid] = nil
+			else
+				print("No module found")
+			end
 
 		end
 

@@ -476,7 +476,6 @@ function CompileNodeSingle(cs, nodeID)
 
 			local literalVar = FindVarForPin(cs, nodeID, pinID)
 			if literalVar ~= nil then
-				print("LITERAL: '" .. literalVar.var .. "'")
 				inVars[lookupID] = literalVar
 			else
 				-- unconnected nullable pins just have their value set to nil
@@ -745,7 +744,9 @@ function CompileGlobalVarListing(cs)
 	end
 
 	for id, var in cs.module:Variables() do
-		cs.emit("instance.__" .. var.name .. " = " .. var.default)
+		local def = var.default
+		if var:GetType() == PN_String and bit.band(var:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+		cs.emit("instance.__" .. var.name .. " = " .. tostring(def))
 	end
 
 	cs.finish()
@@ -918,7 +919,10 @@ end
 function PreCompileGraph(cs, graph, uniqueKeys)
 
 	cs.graph = graph
-	cs.graph:CacheNodeTypes()
+
+	Profile(cs, "cache-node-types", function()
+		cs.graph:CacheNodeTypes()
+	end)
 
 	Profile(cs, "collapse-reroutes", function()
 		cs.graph:CollapseRerouteNodes()
