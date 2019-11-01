@@ -21,6 +21,7 @@ DT_STRING = 11
 DT_KEYS = 12
 DT_TABLE = 13
 DT_ANGLE = 14
+DT_BOOL = 15
 
 local typenames = {
 	"DT_NULL",
@@ -38,6 +39,7 @@ local typenames = {
 	"DT_KEYS",
 	"DT_TABLE",
 	"DT_ANGLE",
+	"DT_BOOL",
 }
 
 local function DTName(d)
@@ -553,6 +555,9 @@ function WriteValue(t, buf, thread)
 		buf:WriteBits(DT_STRING, DT_STATUSBITS)
 		buf:WriteInt( t:len(), false )
 		buf:WriteStr( t )
+	elseif ttype == "boolean" then
+		buf:WriteBits(DT_BOOL, DT_STATUSBITS)
+		buf:WriteBits( t == true and 1 or 0, 1 )
 	else
 		buf:WriteBits(DT_NULL, DT_STATUSBITS)
 	end
@@ -620,6 +625,8 @@ function ReadValue(buf, thread)
 	elseif ttype == DT_STRING then
 		local len = buf:ReadInt(false)
 		return buf:ReadStr( len )
+	elseif ttype == DT_BOOL then
+		return buf:ReadBits( 1 ) == 1
 	end
 end
 

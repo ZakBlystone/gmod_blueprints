@@ -29,7 +29,7 @@ GRAPH_NODETYPE_ACTIONS = {
 
 
 fmtMagic = 0x42504D58
-fmtVersion = 9
+fmtVersion = 10
 
 local meta = {}
 meta.__index = meta
@@ -253,6 +253,29 @@ function meta:CopyGraph( graphID )
 	graph:CopyInto(copy)
 
 	return copy
+
+end
+
+function meta:RequestGraphForEvent( nodeType )
+
+	for _, graph in self:Graphs() do
+		if graph:GetName() == nodeType.hook then return end
+	end
+
+	local id, graph = self:NewGraph(nodeType.hook, NT_Function)
+	graph:SetFlag(bpgraph.FL_LOCK_PINS)
+	graph:SetFlag(bpgraph.FL_LOCK_NAME)
+	graph:SetFlag(bpgraph.FL_HOOK)
+	for k,v in pairs(nodeType.pins) do
+
+		if v[2] == PN_Exec then continue end
+		if v[1] == PD_Out then
+			graph.outputs:Add(bpvariable.New( v[2], nil, v[4], v[5] ), v[3])
+		else
+			graph.inputs:Add(bpvariable.New( v[2], nil, v[4], v[5] ), v[3])
+		end
+
+	end
 
 end
 

@@ -3,7 +3,6 @@ AddCSLuaFile()
 include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
 include("sh_bpgraph.lua")
-include("sh_bpdefs.lua")
 include("sh_bpnodedef.lua")
 include("sh_bpmodule.lua")
 
@@ -1037,6 +1036,8 @@ function CompileGraph(cs, graph)
 	-- compile graph's entry function
 	Profile(cs, "graph-entries", CompileGraphEntry, cs)
 
+	print("COMPILING GRAPH: " .. graph:GetName() .. " [" .. graph:GetFlags() .. "]")
+
 	-- compile hook listing for each event (only events that have hook designations)
 	cs.begin(CTX_Hooks .. cs.graph.id)
 
@@ -1056,6 +1057,19 @@ function CompileGraph(cs, graph)
 			cs.emit("},")
 
 		end
+	end
+
+	if graph:HasFlag(bpgraph.FL_HOOK) then
+		cs.emit("[\"" .. graph:GetName() .. "\"] = {")
+
+		cs.emit("\thook = \"" .. graph:GetName() .. "\",")
+		cs.emit("\tgraphID = " .. graph.id .. ",")
+		cs.emit("\tnodeID = -1,")
+		cs.emit("\tmoduleID = " .. cs.module.id .. ",")
+		cs.emit("\tkey = \"__bphook_" .. cs.module.id .. "\"")
+		--cs.emit("\t\tfunc = nil,")
+
+		cs.emit("},")
 	end
 
 	cs.finish()
@@ -1185,7 +1199,7 @@ function Compile(mod)
 
 end
 
-if SERVER then
+if SERVER and bpdefs ~= nil then
 	local mod = bpmodule.New()
 	local funcid, graph = mod:NewGraph("MyFunction", GT_Function)
 	--graph:ConnectNodes(1,1,2,1)

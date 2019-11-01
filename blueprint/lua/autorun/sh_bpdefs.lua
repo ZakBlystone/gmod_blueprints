@@ -13,6 +13,8 @@ local classes = {}
 local libs = {}
 local callbacks = {}
 local structs = {}
+local hooksets = {}
+local hooks = {}
 local ready = true
 
 local roleLookup = {
@@ -40,6 +42,7 @@ DEFTYPE_ENUM = 0
 DEFTYPE_CLASS = 1
 DEFTYPE_LIB = 2
 DEFTYPE_STRUCT = 3
+DEFTYPE_HOOKS = 4
 
 DEFPACK_LOCATION = "blueprints/bp_definitionpack.txt"
 
@@ -87,6 +90,18 @@ function GetStructs()
 
 end
 
+function GetHookSets()
+
+	return hooksets
+
+end
+
+function GetHooks()
+
+	return hooks
+
+end
+
 local function ParseDef( filePath, search )
 
 	local str = file.Read( filePath, search )
@@ -106,6 +121,7 @@ local function ParseDef( filePath, search )
 		local isEnum = tr:sub(0,4) == "ENUM"
 		local isCallback = tr:sub(0,8) == "CALLBACK"
 		local isStruct = tr:sub(0,6) == "STRUCT"
+		local isHooks = tr:sub(0,5) == "HOOKS"
 		if isStruct and lv == 0 then
 			d = {
 				type = DEFTYPE_STRUCT,
@@ -132,10 +148,10 @@ local function ParseDef( filePath, search )
 				lookup = {},
 			}
 			d.name = d.enum
-		elseif (isClass or isLib) and lv == 0 then
+		elseif (isClass or isLib or isHooks) and lv == 0 then
 			d = {
-				type = isClass and DEFTYPE_CLASS or DEFTYPE_LIB,
-				name = isClass and args[1]:sub(7,-1) or args[1]:sub(5,-1),
+				type = isHooks and DEFTYPE_HOOKS or (isClass and DEFTYPE_CLASS or DEFTYPE_LIB),
+				name = isHooks and args[1]:sub(7,-1) or (isClass and args[1]:sub(7,-1) or args[1]:sub(5,-1)),
 				typeName = args[2] and args[2]:Trim() or nil,
 				pinTypeOverride = args[3] and args[3]:Trim() or nil,
 				entries = {},
@@ -180,6 +196,10 @@ local function ParseDef( filePath, search )
 				else
 					pin.dir = args[1]:sub(1,2) == "IN" and PD_In or PD_Out
 					pin.name = args[1]:sub(4,-1):Trim()
+				end
+
+				if pin.dir == PD_Out and d.type == DEFTYPE_HOOKS then
+					d2.returnsValues = true
 				end
 
 				if string.find(pin.name, "=") then
@@ -235,6 +255,15 @@ local function ParseDef( filePath, search )
 					func = params[3],
 					pins = {},
 					desc = "",
+				}
+			elseif d.type == DEFTYPE_HOOKS then
+				local params = string.Explode(" ", args[1])
+				d2 = {
+					role = roleLookup[params[1]],
+					hook = params[2],
+					pins = {},
+					desc = "",
+					returnsValues = false,
 				}
 			end
 		end
@@ -298,8 +327,8 @@ function CreateStructNodes( struct, output )
 	local breaker = obj:BreakerNodeType()
 	local maker = obj:MakerNodeType()
 
-	bpnodedef.NodeTypes[maker.name] = maker
-	bpnodedef.NodeTypes[breaker.name] = breaker
+	output[maker.name] = maker
+	output[breaker.name] = breaker
 
 end
 
@@ -386,7 +415,49 @@ function CreateLibNodes( lib, output )
 
 		ConfigureNodeType(ntype)
 
-		bpnodedef.NodeTypes[ntype.name] = ntype
+		output[ntype.name] = ntype
+
+	end
+
+end
+
+function CreateHooksetNodes( hookset, output )
+	--returnsValues
+
+	for k,v in pairs(hookset.entries) do
+
+		local ntype = {}
+		ntype.pins = {}
+		ntype.name = hookset.name .. "_" .. v.hook
+		ntype.displayName = hookset.name .. ":" .. v.hook
+		ntype.hook = v.hook
+		ntype.isHook = true
+		ntype.role = v.role
+		ntype.type = NT_Event
+		ntype.desc = v.desc
+		ntype.category = hookset.name
+		ntype.returns = v.returnsValues
+
+		for _, pin in pairs(v.pins) do
+
+			table.insert(ntype.pins, {
+				ntype.returns and pin.dir or PD_Out,
+				pin.type,
+				bpcommon.Camelize(pin.name),
+				pin.flags,
+				pin.ex,
+			})
+
+		end
+
+		local ret, arg, pins = PinRetArg( ntype, nil, function(s,v,k)
+			return s.. " = " .. "arg[" .. (k-1) .. "]"
+		end, "\n" )
+		ConfigureNodeType(ntype)
+
+		ntype.code = ret
+
+		output[ntype.name] = ntype
 
 	end
 
@@ -400,6 +471,8 @@ function Init()
 	libs = {}
 	callbacks = {}
 	structs = {}
+	hooksets = {}
+	hooks = {}
 
 end
 
@@ -415,6 +488,7 @@ function LoadAndParseDefs()
 	end
 
 	for k,v in pairs(defs) do
+		if v.type == DEFTYPE_HOOKS then hooksets[v.name] = v end
 		if v.type == DEFTYPE_STRUCT then FixupStructNames(v) structs[v.name] = v end
 		if v.type == DEFTYPE_CALLBACK then callbacks[v.name] = v end
 		if v.type == DEFTYPE_ENUM then CreateReducedEnumKeys(v) enums[v.enum] = v end
@@ -427,6 +501,13 @@ function LoadAndParseDefs()
 			end
 		end
 	end
+
+	for _,set in pairs(hooksets) do
+		for k,v in pairs(set.entries) do
+			hooks[set.name .. "_" .. v.hook] = v
+		end
+	end
+
 
 	--[[for k,v in pairs(enums) do
 		MsgC(Color(100,255,80), k .. "\n")
@@ -482,6 +563,7 @@ function RebuildDefinitionPack( callback )
 	local co = coroutine.create( function()
 		MsgC(Color(100,255,100), "Writing Blueprint Definitions")
 		local stream = bpdata.OutStream(false, true)
+		WriteTable("Hooks", hooksets, stream)
 		WriteTable("Structs", structs, stream)
 		WriteTable("Callbacks", callbacks, stream)
 		WriteTable("Classes", classes, stream)
@@ -523,6 +605,7 @@ function LoadDefinitionPack()
 		local stream = bpdata.InStream(false, true)
 		stream:LoadFile(filehandle, true, true)
 		MsgC(Color(100,255,100), "Reading Blueprint Definitions")
+		ReadTable("Hooks", hooksets, stream)
 		ReadTable("Structs", structs, stream)
 		ReadTable("Callbacks", callbacks, stream)
 		ReadTable("Classes", classes, stream)

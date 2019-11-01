@@ -1150,6 +1150,10 @@ function InstallDefs()
 	for k,v in pairs(bpdefs.GetStructs()) do
 		bpdefs.CreateStructNodes(v, NodeTypes)
 	end
+
+	for k,v in pairs(bpdefs.GetHookSets()) do
+		bpdefs.CreateHooksetNodes(v, NodeTypes)
+	end
 	print("Done.")
 end
 

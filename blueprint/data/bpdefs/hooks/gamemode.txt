@@ -1,0 +1,61 @@
+HOOKS GM
+{
+	SERVER AcceptInput
+	{
+		DESC Called when a map I/O event occurs.
+		IN ent, PN_Ref, PNF_None, Entity, #Entity that receives the input
+		IN input, PN_String, #The input name. Not guaranteed to be a valid input on the entity.
+		IN activator, PN_Ref, PNF_None, Entity, #Activator of the input
+		IN caller, PN_Ref, PNF_None, Entity, #Caller of the input
+		IN value, PN_Any, PNF_None, #Data provided with the input
+		OUT override, PN_Bool, #Return true to prevent this input from being processed.
+	}
+	SERVER AllowPlayerPickup
+	{
+		DESC Called when a player tries to pick up something using the "use" key, return to override.
+		IN player, PN_Ref, PNF_None, Player, #The player trying to pick up something.
+		IN entity, PN_Ref, PNF_None, Entity, #The Entity the player attempted to pick up.
+		OUT allow=true, PN_Bool, #Allow the player to pick up the entity or not.
+	}
+	CLIENT CalcView
+	{
+		DESC Allows override of the default view.
+		IN player, PN_Ref, PNF_None, Player, #The local player.
+		IN origin, PN_Vector, #The player's view position.
+		IN angles, PN_Angles, #The player's view angles.
+		IN fov, PN_Number, #Field of view.
+		IN znear, PN_Number, #Distance to near clipping plane.
+		IN zfar, PN_Number, #Distance to far clipping plane.
+		OUT result, PN_Struct, PNF_None, CamData, #View data table.
+	}
+	CLIENT CalcViewModelView
+	{
+		DESC Allows overriding the position and angle of the viewmodel.
+		IN weapon, PN_Ref, PNF_None, Weapon, #The weapon entity.
+		IN viewModel, PN_Ref, PNF_None, Entity, #The weapon entity.
+		IN oldPos, PN_Vector, #Original position (before viewmodel bobbing and swaying)
+		IN oldAngle, PN_Angles, #Original angle (before viewmodel bobbing and swaying)
+		IN pos, PN_Vector, #Current position
+		IN angle, PN_Angles, #Current angle
+		OUT newPos, PN_Vector, #New position
+		OUT newAngle, PN_Angles, #New position
+	}
+	CLIENT HUDPaint
+	{
+		DESC Called whenever the HUD should be drawn. Called right before GM:HUDDrawScoreBoard and after GM:HUDPaintBackground.
+	}
+	SHARED Move
+	{
+		DESC The Move hook is called for you to manipulate the player's MoveData. You shouldn't adjust the player's position in any way in the move hook. This is because due to prediction errors, the netcode might run the move hook multiple times as packets arrive late. Therefore you should only adjust the movedata construct in this hook.
+		IN player, PN_Ref, PNF_None, Player, #Player
+		IN move, PN_Ref, PNF_None, CMoveData, #Movement information
+		OUT override, PN_Bool, #Return true to suppress default engine action
+	}
+	SERVER OnNPCKilled
+	{
+		DESC Called whenever an NPC is killed.
+		IN npc, PN_Ref, PNF_None, NPC, #The killed NPC
+		IN attacker, PN_Ref, PNF_None, Entity, #The NPCs attacker, the entity that gets the kill credit, for example a player or an NPC.
+		IN inflictor, PN_Ref, PNF_None, Entity, #Death inflictor. The entity that did the killing. Not necessarily a weapon.
+	}
+}

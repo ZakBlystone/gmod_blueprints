@@ -177,12 +177,13 @@ function PinRetArg( nodeType, infmt, outfmt, concat )
 
 	concat = concat or ","
 	--print(nodeType.name)
-	local base = nodeType.type == NT_Function and 2 or 1
+	local base = (nodeType.type == NT_Function or nodeType.type == NT_Event) and 2 or 1
 	local pins = {[PD_In] = {}, [PD_Out] = {}}
 	for k,v in pairs(nodeType.pins) do
-		local s = (v[1] == PD_In and "$" or "#") .. (base+#pins[v[1]])
-		if infmt and v[1] == PD_In then s = infmt(s, v) end
-		if outfmt and v[1] == PD_Out then s = outfmt(s, v) end
+		local num = (base+#pins[v[1]])
+		local s = (v[1] == PD_In and "$" or "#") .. num
+		if infmt and v[1] == PD_In then s = infmt(s, v, num) end
+		if outfmt and v[1] == PD_Out then s = outfmt(s, v, num) end
 		table.insert(pins[v[1]], s)
 	end
 

@@ -24,6 +24,11 @@ bpcommon.CallbackList({
 NODETYPE_MODIFY_RENAME = 1
 NODETYPE_MODIFY_SIGNATURE = 2
 
+FL_NONE = 0
+FL_LOCK_PINS = 1
+FL_LOCK_NAME = 2
+FL_HOOK = 4
+
 local meta = {}
 meta.__index = meta
 
@@ -41,6 +46,7 @@ function meta:Init(module, type)
 		return node
 	end
 
+	self.flags = FL_NONE
 	self.type = type or GT_Event
 	self.module = module
 	self.deferredNodes = bplist.New():Constructor(self.nodeConstructor)
@@ -114,6 +120,12 @@ function meta:PostInit()
 	return self
 
 end
+
+function meta:SetFlag(fl) self.flags = bit.bor(self.flags, fl) end
+function meta:HasFlag(fl) return bit.band(self.flags, fl) ~= 0 end
+function meta:ClearFlag(fl) self.flags = bit.band(self.flags, bit.bnot(fl)) end
+function meta:GetFlags() return self.flags end
+function meta:CanRename() return not self:HasFlag(FL_LOCK_NAME) end
 
 function meta:PreModifyNodeType( nodeType, action, subaction )
 
@@ -524,9 +536,15 @@ function meta:SetPinLiteral(nodeID, pinID, value)
 
 end
 
-function meta:AddNode(...)
+function meta:AddNode(nodeTypeName, ...)
 
-	local node = self.nodeConstructor(...)
+	local nodeType = self:GetNodeTypes()[nodeTypeName]
+	if nodeType.type == NT_Event and nodeType.returns then
+		self.module:RequestGraphForEvent(nodeType)
+		return
+	end
+
+	local node = self.nodeConstructor(nodeTypeName, ...)
 	return self.nodes:Add( node )
 
 end
@@ -629,9 +647,8 @@ function meta:WriteToStream(stream, mode, version)
 	local nametable = {}
 	local nodeentries = {}
 
-	if version >= 3 then
-		stream:WriteInt( self.type, false )
-	end
+	stream:WriteInt( self.type, false )
+	stream:WriteInt( self.flags, false )
 
 	if self.type == GT_Function then
 		self.inputs:WriteToStream(stream, mode, version)
@@ -672,6 +689,8 @@ function meta:ReadFromStream(stream, mode, version)
 	else
 		self.type = GT_Event
 	end
+
+	if version >= 10 then self.flags = stream:ReadInt( false ) end
 
 	if self.type == GT_Function then
 		if version >= 7 then
@@ -858,6 +877,7 @@ function meta:CopyInto(other)
 	other.id = self.id
 	other.name = self.name
 	other.type = self.type
+	other.flags = self.flags
 
 	self.nodes:CopyInto( other.nodes, true )
 	self.inputs:CopyInto( other.inputs, true )

@@ -244,7 +244,8 @@ function PANEL:Init()
 	local prev = self.GraphList.PopulateMenuItems
 	self.GraphList.PopulateMenuItems = function(pnl, items, id)
 		prev(pnl, items, id)
-		if self.module:GetGraph(id).type == bpschema.GT_Function then
+		local graph = self.module:GetGraph(id)
+		if graph.type == bpschema.GT_Function and not graph:HasFlag(bpgraph.FL_LOCK_PINS) then
 			table.insert(items, {
 				name = "Edit Pins",
 				func = function() self:EditGraphPins(id) end,
