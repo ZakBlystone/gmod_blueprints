@@ -7,49 +7,6 @@ LIB cam
 		IN angles, PN_Angles, #Angles of the shake.
 		IN factor, PN_Number, #The shake factor.
 	}
-	FUNC CLIENT End
-	{
-		DESC Switches the renderer back to the previous drawing mode from a 3D context.
-	}
-	FUNC CLIENT End2D
-	{
-		DESC Switches the renderer back to the previous drawing mode from a 2D context.
-	}
-	FUNC CLIENT End3D
-	{
-		DESC Switches the renderer back to the previous drawing mode from a 3D context.
-	}
-	FUNC CLIENT End3D2D
-	{
-		DESC Switches the renderer back to the previous drawing mode from a 3D2D context.
-	}
-	FUNC CLIENT EndOrthoView
-	{
-		DESC Switches the renderer back to the previous drawing mode from a 3D orthographic rendering context.
-	}
-	FUNC CLIENT IgnoreZ
-	{
-		DESC Tells the renderer to ignore the depth buffer and draw any upcoming operation "ontop" of everything that was drawn yet.
-		IN ignoreZ, PN_Bool, #Determines whenever to ignore the depth buffer or not.
-	}
-	FUNC CLIENT PopModelMatrix
-	{
-		DESC Pops the current active rendering matrix from the stack and reinstates the previous one.
-	}
-	FUNC CLIENT PushModelMatrix
-	{
-		DESC Pushes the specified matrix onto the render matrix stack. Unlike opengl, this will replace the current model matrix.
-		IN matrix, PN_Ref, PNF_None, VMatrix, #The matrix to push.
-	}
-	FUNC CLIENT Start
-	{
-		DESC Sets up a new rendering context. This is an extended version of cam.Start3D and cam.Start2D. Must be finished by cam.End3D or cam.End2D.
-		IN dataTbl, PN_Struct, PNF_None, RenderCamData, #Render context config. See RenderCamData structure
-	}
-	FUNC CLIENT Start2D
-	{
-		DESC Sets up a new 2D rendering context. Must be finished by cam.End2D.
-	}
 	FUNC CLIENT Start3D
 	{
 		DESC Sets up a new 3D rendering context. Must be finished by cam.End3D.
@@ -62,6 +19,7 @@ LIB cam
 		IN h, PN_Number, PNF_Nullable, #Height of the new viewport.
 		IN zNear, PN_Number, PNF_Nullable, #Distance to near clipping plane.
 		IN zFar, PN_Number, PNF_Nullable, #Distance to far clipping plane.
+		DEPRECATED
 	}
 	FUNC CLIENT Start3D2D
 	{
@@ -69,6 +27,7 @@ LIB cam
 		IN pos, PN_Vector, #Origin of the 3D2D context, ie. the top left corner, (0, 0).
 		IN angles, PN_Angles, #Angles of the 3D2D context. +x in the 2d context corresponds to +x of the angle (its forward direction). +y in the 2d context corresponds to -y of the angle (its right direction). If (dx, dy) are your desired (+x, +y) unit vectors, the angle you want is dx:AngleEx(dx:Cross(-dy)).
 		IN scale, PN_Number, #The scale of the render context. If scale is 1 then 1 pixel in 2D context will equal to 1 unit in 3D context.
+		DEPRECATED
 	}
 	FUNC CLIENT StartOrthoView
 	{
@@ -77,5 +36,87 @@ LIB cam
 		IN topOffset, PN_Number, #The top plane offset.
 		IN rightOffset, PN_Number, #The right plane offset.
 		IN bottomOffset, PN_Number, #The bottom plane offset.
+		DEPRECATED
+	}
+	SPECIAL CLIENT IgnoreZ
+	{
+		DESC Tells the renderer to ignore the depth buffer and draw any upcoming operation "ontop" of everything that was drawn yet.
+		IN Exec, PN_Exec
+		OUT Thru, PN_Exec
+		OUT Draw, PN_Exec
+		JUMP finish
+		CODE cam.IgnoreZ(true) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.IgnoreZ(false) #1
+	}
+	SPECIAL CLIENT Advanced
+	{
+		DESC Sets up a new rendering context. This is an extended version of cam.Start3D and cam.Start2D.
+		IN Exec, PN_Exec
+		IN data, PN_Struct, PNF_None, RenderCamData, #Render context config. See RenderCamData structure.
+		OUT Thru, PN_Exec
+		OUT Draw, PN_Exec
+		JUMP finish
+		CODE cam.Start($2) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.End() #1
+	}
+	SPECIAL CLIENT 2D
+	{
+		DESC Sets up a new 2D rendering context.
+		IN Exec, PN_Exec
+		OUT Thru, PN_Exec
+		OUT Draw, PN_Exec
+		JUMP finish
+		CODE cam.Start2D() pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.End2D() #1
+	}
+	SPECIAL CLIENT 3D2D
+	{
+		DESC Sets up a new 2D rendering context.
+		IN Exec, PN_Exec
+		IN pos, PN_Vector, #Origin of the 3D2D context, ie. the top left corner, (0, 0).
+		IN angles, PN_Angles, #Angles of the 3D2D context. +x in the 2d context corresponds to +x of the angle (its forward direction). +y in the 2d context corresponds to -y of the angle (its right direction). If (dx, dy) are your desired (+x, +y) unit vectors, the angle you want is dx:AngleEx(dx:Cross(-dy)).
+		IN scale, PN_Number, #The scale of the render context. If scale is 1 then 1 pixel in 2D context will equal to 1 unit in 3D context.
+		OUT Thru, PN_Exec
+		OUT Draw, PN_Exec
+		JUMP finish
+		CODE cam.Start3D2D($2, $3, $4) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.End3D2D() #1
+	}
+	SPECIAL CLIENT 3D
+	{
+		DESC Sets up a new 3D rendering context.
+		IN Exec, PN_Exec
+		IN pos, PN_Vector, PNF_Nullable, #Render cam position.
+		IN angles, PN_Angles, PNF_Nullable, #Render cam angles.
+		IN fov, PN_Number, PNF_Nullable, #Field of view.
+		IN x, PN_Number, PNF_Nullable, #X coordinate of where to start the new view port.
+		IN y, PN_Number, PNF_Nullable, #Y coordinate of where to start the new view port.
+		IN w, PN_Number, PNF_Nullable, #Width of the new viewport.
+		IN h, PN_Number, PNF_Nullable, #Height of the new viewport.
+		IN zNear, PN_Number, PNF_Nullable, #Distance to near clipping plane.
+		IN zFar, PN_Number, PNF_Nullable, #Distance to far clipping plane.
+		OUT Thru, PN_Exec
+		OUT Draw, PN_Exec
+		JUMP finish
+		CODE cam.Start3D($2, $3, $4, $5, $6, $7, $8, $9, $10) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.End3D() #1
+	}
+	SPECIAL CLIENT OrthoView
+	{
+		DESC Sets up a new 3d context using orthographic projection.
+		IN Exec, PN_Exec
+		IN leftOffset, PN_Number, #The left plane offset.
+		IN topOffset, PN_Number, #The top plane offset.
+		IN rightOffset, PN_Number, #The right plane offset.
+		IN bottomOffset, PN_Number, #The bottom plane offset.
+		OUT Thru, PN_Exec
+		OUT Draw, PN_Exec
+		JUMP finish
+		CODE cam.StartOrthoView($2, $3, $4, $5) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.EndOrthoView() #1
+	}
+	SPECIAL CLIENT Matrix
+	{
+		DESC Sets up a new 3d context using orthographic projection.
+		IN Exec, PN_Exec
+		IN matrix, PN_Ref, PNF_None, VMatrix, #The matrix to push.
+		OUT Thru, PN_Exec
+		OUT Draw, PN_Exec
+		JUMP finish
+		CODE cam.PushModelMatrix($2) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.PopModelMatrix() #1
 	}
 }

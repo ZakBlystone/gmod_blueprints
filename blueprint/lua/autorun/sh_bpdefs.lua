@@ -44,7 +44,7 @@ DEFTYPE_LIB = 2
 DEFTYPE_STRUCT = 3
 DEFTYPE_HOOKS = 4
 
-DEFPACK_LOCATION = "blueprints/bp_definitionpack.txt"
+DEFPACK_LOCATION = "blueprints/bp_definitionpack2.txt"
 
 local function EnumerateDefs( base, output, search )
 
@@ -172,10 +172,15 @@ local function ParseDef( filePath, search )
 				d2.invNameMap[b] = a
 			elseif args[1]:sub(1,4) == "CODE" then
 				d2.code = table.concat(args, ","):sub(6,-1):gsub("\\n", "\n")
+			elseif args[1]:sub(1,4) == "JUMP" then
+				d2.jumpSymbols = d2.jumpSymbols or {}
+				table.insert(d2.jumpSymbols, table.concat(args, ","):sub(6,-1):Trim())
 			elseif args[1]:sub(1,4) == "WARN" then
 				d2.warn = table.concat(args, ","):sub(6,-1):gsub("\\n", "\n")
 			elseif args[1]:sub(1,9) == "PROTECTED" then
 				d2.protected = true
+			elseif args[1]:sub(1,10) == "DEPRECATED" then
+				d2.deprecated = true
 			elseif args[1]:sub(1,3) == "TBD" then
 				d2.tbd = true
 			elseif args[1]:sub(1,7) == "COMPACT" then
@@ -355,6 +360,8 @@ function CreateLibNodes( lib, output )
 		ntype.isClass = lib.type == DEFTYPE_CLASS
 		ntype.isLib = lib.type == DEFTYPE_LIB
 		ntype.compact = v.compact or false
+		ntype.jumpSymbols = v.jumpSymbols
+		ntype.deprecated = v.deprecated
 		ntype.meta = {
 			informs = v.informs or {}
 		}

@@ -17,6 +17,22 @@ HOOKS GM
 		IN entity, PN_Ref, PNF_None, Entity, #The Entity the player attempted to pick up.
 		OUT allow=true, PN_Bool, #Allow the player to pick up the entity or not.
 	}
+	SHARED CalcMainActivity
+	{
+		DESC This hook is used to calculate animations for a player.
+		IN player, PN_Ref, PNF_None, Player, #The player to apply the animation.
+		IN velocity, PN_Vector, #The velocity of the player.
+		OUT act, PN_Enum, PNF_None, ACT, #The activity the player should use.
+		OUT sequence, PN_Number, PNF_Nullable, #Sequence for the player to use. This takes precedence over the activity
+	}
+	CLIENT CalcVehicleView
+	{
+		DESC Called from GM:CalcView when player is in driving a vehicle.
+		IN vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle the player is driving
+		IN player, PN_Ref, PNF_None, Player, #The vehicle driver
+		IN view, PN_Struct, PNF_None, CamData, #The view data containing players FOV, view position and angles
+		OUT view, PN_Struct, PNF_None, CamData, #The modified view table containing new values
+	}
 	CLIENT CalcView
 	{
 		DESC Allows override of the default view.
@@ -61,6 +77,32 @@ HOOKS GM
 		IN damage, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info
 		OUT blockDamage=false, PN_Bool, #Block damage
 	}
+	SHARED FinishMove
+	{
+		DESC Called after GM:Move, applies all the changes from the CMoveData to the player.
+		IN player, PN_Ref, PNF_None, Player, #Player
+		IN move, PN_Ref, PNF_None, CMoveData, #Movement data
+		OUT override, PN_Bool, #Return true to suppress default engine action
+	}
+	SERVER GetFallDamage
+	{
+		DESC Called when a player takes damage from falling, allows to override the damage.
+		IN player, PN_Ref, PNF_None, Player, #The player
+		IN speed, PN_Number, #The fall speed
+		OUT damage, PN_Number, #New fall damage
+	}
+	CLIENT GetTeamColor
+	{
+		DESC Returns the color for the given entity's team. This is used in chat and deathnotice text.
+		IN entity, PN_Ref, PNF_None, Entity, #Entity
+		OUT color, PN_Struct, PNF_None, Color, #Team Color
+	}
+	CLIENT GetNumTeamColor
+	{
+		DESC Returns the team color for the given team index.
+		IN team, PN_Number, #Team index
+		OUT color, PN_Struct, PNF_None, Color, #Team Color
+	}
 	SERVER GravGunDropped
 	{
 		IN player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
@@ -76,6 +118,12 @@ HOOKS GM
 		IN player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
 		IN entity, PN_Ref, PNF_None, Entity, #The entity the player is attempting to pick up
 		OUT allow=true, PN_Bool, #Return true to allow entity pick up
+	}
+	SHARED GravGunPunt
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player wielding the gravity gun
+		IN entity, PN_Ref, PNF_None, Entity, #The entity the player is attempting to punt
+		OUT allow=true, PN_Bool, #Return true to allow and false to disallow.
 	}
 	CLIENT HUDPaint
 	{
@@ -97,6 +145,46 @@ HOOKS GM
 		IN player, PN_Ref, PNF_None, Player, #Player
 		IN move, PN_Ref, PNF_None, CMoveData, #Movement information
 		OUT override, PN_Bool, #Return true to suppress default engine action
+	}
+	SERVER OnDamagedByExplosion
+	{
+		DESC Called when a player has been hurt by an explosion. Override to disable default sound effect.
+		IN player, PN_Ref, PNF_None, Player, #Player who has been hurt
+		IN damage, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info from explsion
+	}
+	SHARED OnEntityCreated
+	{
+		DESC Called when the entity is created.
+		IN entity, PN_Ref, PNF_None, Entity, #The entity
+	}
+	SERVER OnNPCKilled
+	{
+		DESC Called whenever an NPC is killed.
+		IN npc, PN_Ref, PNF_None, NPC, #The killed NPC
+		IN attacker, PN_Ref, PNF_None, Entity, #The NPCs attacker, the entity that gets the kill credit, for example a player or an NPC.
+		IN inflictor, PN_Ref, PNF_None, Entity, #Death inflictor. The entity that did the killing. Not necessarily a weapon.
+	}
+	SHARED OnPlayerHitGround
+	{
+		DESC Called when a player makes contact with the ground.
+		IN player, PN_Ref, PNF_None, Player, #Player
+		IN inWater, PN_Bool, #Did the player land in water?
+		IN onFloater, PN_Bool, #Did the player land on an object floating in the water?
+		IN speed, PN_Number, #The speed at which the player hit the ground
+		OUT suppress=false, PN_Bool, #Return true to suppress default action
+	}
+	SHARED PhysgunDrop
+	{
+		DESC Called when a player drops an entity with the Physgun.
+		IN player, PN_Ref, PNF_None, Player, #The player who dropped an entitiy
+		IN entity, PN_Ref, PNF_None, Entity, #The dropped entity
+	}
+	SHARED PhysgunPickup
+	{
+		DESC Called when a player drops an entity with the Physgun.
+		IN player, PN_Ref, PNF_None, Player, #The player that is picking up using the Physics Gun.
+		IN entity, PN_Ref, PNF_None, Entity, #The entity that is being picked up.
+		OUT allow=true, PN_Bool, #Returns whether the player can pick up the entity or not.
 	}
 	SHARED PlayerButtonDown
 	{
@@ -133,11 +221,6 @@ HOOKS GM
 		IN vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player entered
 		IN role, PN_Number
 	}
-	SERVER PlayerLeaveVehicle
-	{
-		IN player, PN_Ref, PNF_None, Player, #Player who left a vehicle
-		IN vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player left
-	}
 	SHARED PlayerFootstep
 	{
 		IN player, PN_Ref, PNF_None, Player, #The stepping player
@@ -147,23 +230,6 @@ HOOKS GM
 		IN volume, PN_Number, #Volume of the footstep
 		IN filter, PN_Ref, PNF_None, CRecipientFilter, #The Recipient filter of players who can hear the footstep
 		OUT muteSound=false, PN_Bool, #Prevent default step sound
-	}
-	SERVER PlayerSay
-	{
-		DESC Called when a player dispatched a chat message.
-		IN sender, PN_Ref, PNF_None, Player, #The player which sent the message.
-		IN text, PN_String, #The message's content
-		IN teamChat, PN_Bool, #Is team chat?
-		OUT replace, PN_String, #What to show instead of original text.
-	}
-	SERVER PlayerSetModel
-	{
-		IN player, PN_Ref, PNF_None, Player, #The player being chosen.
-	}
-	SERVER PlayerSpawn
-	{
-		IN player, PN_Ref, PNF_None, Player, #The player who spawned.
-		IN transition, PN_Bool, #If true, the player just spawned from a map transition. You probably want to not touch player's weapons if this is set to true from this hook.
 	}
 	SERVER PlayerFrozeObject
 	{
@@ -182,6 +248,54 @@ HOOKS GM
 	{
 		IN player, PN_Ref, PNF_None, Player, #The player who spawned.
 		IN transition, PN_Bool, #If true, the player just spawned from a map transition.
+	}
+	SERVER PlayerLeaveVehicle
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who left a vehicle
+		IN vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player left
+	}
+	SERVER PlayerLoadout
+	{
+		DESC Called to give players the default set of weapons.
+		IN player, PN_Ref, PNF_None, Player, #Player to give weapons to.
+	}
+	SHARED PlayerPostThink
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player
+	}
+	SERVER PlayerSay
+	{
+		DESC Called when a player dispatched a chat message.
+		IN sender, PN_Ref, PNF_None, Player, #The player which sent the message.
+		IN text, PN_String, #The message's content
+		IN teamChat, PN_Bool, #Is team chat?
+		OUT replace, PN_String, #What to show instead of original text.
+	}
+	SERVER PlayerSelectSpawn
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player who needs a spawn point
+		IN transition, PN_Bool, #If true, the player just spawned from a map transition. You probably want to not return an entity for that case to not override player's position.
+		OUT spawnpoint, PN_Ref, PNF_None, Entity, #The spawnpoint entity to spawn the player at
+	}
+	SERVER PlayerSelectTeamSpawn
+	{
+		IN team, PN_Number, #Players team
+		IN player, PN_Ref, PNF_None, Player, #The player
+		OUT spawnpoint, PN_Ref, PNF_None, Entity, #The entity to use as a spawn point.
+	}
+	SERVER PlayerSetHandsModel
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player whose hands needs a model set
+		IN hands, PN_Ref, PNF_None, Entity, #The hands to set model of
+	}
+	SERVER PlayerSetModel
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player being chosen.
+	}
+	SERVER PlayerSpawn
+	{
+		IN player, PN_Ref, PNF_None, Player, #The player who spawned.
+		IN transition, PN_Bool, #If true, the player just spawned from a map transition. You probably want to not touch player's weapons if this is set to true from this hook.
 	}
 	SERVER PlayerSwitchFlashlight
 	{
@@ -215,11 +329,103 @@ HOOKS GM
 		IN entity, PN_Ref, PNF_None, Entity, #The entity which the player is looking at / activating USE on.
 		OUT allowUse=true, PN_Bool, #Return false if the player is not allowed to USE the entity.
 	}
-	SERVER OnNPCKilled
+	CLIENT PostDraw2DSkyBox
 	{
-		DESC Called whenever an NPC is killed.
-		IN npc, PN_Ref, PNF_None, NPC, #The killed NPC
-		IN attacker, PN_Ref, PNF_None, Entity, #The NPCs attacker, the entity that gets the kill credit, for example a player or an NPC.
-		IN inflictor, PN_Ref, PNF_None, Entity, #Death inflictor. The entity that did the killing. Not necessarily a weapon.
+		DESC Called right after the 2D skybox has been drawn - allowing you to draw over it.
+	}
+	CLIENT PostDrawEffects
+	{
+		DESC Called after rendering effects. This is where halos are drawn. Called just before GM:PreDrawHUD.
+	}
+	CLIENT PostDrawHUD
+	{
+		DESC Called after GM:PreDrawHUD, GM:HUDPaintBackground and GM:HUDPaint but before GM:DrawOverlay.
+	}
+	CLIENT PostDrawOpaqueRenderables
+	{
+		DESC Called after drawing opaque entities.
+		IN drawingDepth, PN_Bool, #Whether the current draw is writing depth.
+		IN drawingSkybox, PN_Bool, #Whether the current draw is drawing the skybox.
+	}
+	CLIENT PostDrawPlayerHands
+	{
+		DESC Called after the player hands are drawn.
+		IN hands, PN_Ref, PNF_None, Entity, #This is the gmod_hands entity.
+		IN viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity.
+		IN player, PN_Ref, PNF_None, Player, #The the owner of the view model.
+		IN weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
+	}
+	CLIENT PostDrawSkyBox
+	{
+		DESC Called after drawing the skybox.
+	}
+	CLIENT PostDrawTranslucentRenderables
+	{
+		DESC Called after all translucent entities are drawn.
+		IN drawingDepth, PN_Bool, #Whether the current draw is writing depth.
+		IN drawingSkybox, PN_Bool, #Whether the current draw is drawing the skybox.		
+	}
+	CLIENT PostDrawViewModel
+	{
+		DESC Called after view model is drawn.
+		IN viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity.
+		IN player, PN_Ref, PNF_None, Player, #The the owner of the view model.
+		IN weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
+	}
+	CLIENT PostPlayerDraw
+	{
+		DESC Called after the player was drawn.
+		IN player, PN_Ref, PNF_None, Player, #The player that was drawn.
+	}
+	SHARED PropBreak
+	{
+		DESC Called when a prop has been destroyed.
+		IN attacker, PN_Ref, PNF_None, Player, #The person who broke the prop.
+		IN prop, PN_Ref, PNF_None, Entity, #The entity that has been broken by the attacker.
+	}
+	SHARED SetupMove
+	{
+		DESC SetupMove is called before the engine process movements. This allows us to override the players movement.
+		IN player, PN_Ref, PNF_None, Player, #The player whose movement we are about to process
+		IN move, PN_Ref, PNF_None, CMoveData, #The move data to override/use
+		IN command, PN_Ref, PNF_None, CUserCmd, #The command data
+	}
+	SERVER SetupPlayerVisibility
+	{
+		DESC Allows you to add extra positions to the player's PVS. This is the place to call AddOriginToPVS.
+		IN player, PN_Ref, PNF_None, Player, #The player
+		IN viewEntity, PN_Ref, PNF_None, Entity, #Players Player:GetViewEntity
+	}
+	SHARED StartCommand
+	{
+		DESC Allows you to change the players inputs before they are processed by the server.
+		IN player, PN_Ref, PNF_None, Player, #The player
+		IN command, PN_Ref, PNF_None, CUserCmd, #The player
+	}
+	SHARED Think
+	{
+		DESC Called every frame on client and every tick on server.
+	}
+	SHARED Tick
+	{
+		DESC Called every server tick. Serverside, this is similar to GM:Think.
+	}
+	SHARED UpdateAnimation
+	{
+		DESC Animation updates (pose params etc) should be done here.
+		IN player, PN_Ref, PNF_None, Player, #The player to update the animation info for.
+		IN velocity, PN_Vector, #The player's velocity.
+		IN maxSeqGroundSpeed, PN_Number, #Speed of the animation - used for playback rate scaling.
+	}
+	SHARED VehicleMove
+	{
+		IN player, PN_Ref, PNF_None, Player, #Player who is driving the vehicle
+		IN vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle being driven
+		IN moveData, PN_Ref, PNF_None, CMoveData, #Move data
+	}
+	SERVER WeaponEquip
+	{
+		IN weapon, PN_Ref, PNF_None, Weapon, #The equipped weapon.
+		IN owner, PN_Ref, PNF_None, Player, #The player that is picking up the weapon.
 	}
 }

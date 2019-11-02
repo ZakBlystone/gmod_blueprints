@@ -89,7 +89,7 @@ function RequestVarSpec( module, callback, parent )
 		[PN_Vehicle] = true,
 		[PN_Any] = true,
 		[PN_String] = false,
-		[PN_Color] = false,
+		[PN_Color] = true,
 		[PN_Weapon] = true,
 		[PN_Angles] = false,
 		[PN_Enum] = true,
@@ -100,6 +100,12 @@ function RequestVarSpec( module, callback, parent )
 
 	local blackList2 = {
 		["Color"] = true,
+		["Vector"] = true,
+		["Angles"] = true,
+	}
+
+	local blackList3 = {
+		["Color"] = false,
 		["Vector"] = true,
 		["Angles"] = true,
 	}
@@ -118,7 +124,7 @@ function RequestVarSpec( module, callback, parent )
 	end
 
 	for k, v in pairs(bpdefs.GetStructs()) do
-		if blackList2[v.name] then continue end
+		if blackList3[v.name] then continue end
 		Combo:AddChoice( v.name, {PN_Struct, v.name} )
 	end
 

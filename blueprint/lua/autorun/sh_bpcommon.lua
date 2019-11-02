@@ -4,6 +4,9 @@ module("bpcommon", package.seeall)
 
 file.CreateDir("blueprints")
 
+ENABLE_PROFILING = true
+ENABLE_DEEP_PROFILING = false
+
 function rescope(...)
 	local scopes = {...}
 	local vars = {}
@@ -35,6 +38,99 @@ function rescope(...)
 		end]]
 	end
 end
+
+local ps = {
+	enabled = false,
+	start = 0,
+}
+
+function ProfileStart(name)
+
+	if not ENABLE_PROFILING then return end
+	if ENABLE_DEEP_PROFILING then
+
+		ps.enabled = true
+		ps.stack = { children = {}, entries = {} }
+		ps.ptr = ps.stack
+
+	end
+
+	ps.start = os.clock()
+	ps.name = name or "unnamed"
+	--MsgC(Color(80,180,200), "Begin profile[" .. ps.name .. "]...\n")
+
+end
+
+function Profile(key, func, ...)
+
+	if not ps.enabled then return func(...) end
+
+	local tab = { parent = ps.ptr, children = {}, key = key, time = 0 }
+	table.insert(ps.ptr.children, tab)
+	ps.ptr = tab
+
+	local start = os.clock()
+	local ret = {func(...)}
+	local finish = os.clock()
+	local entry = tab.entry
+
+	tab.time = (finish - start) * 1000
+	ps.ptr = ps.ptr.parent
+
+	return unpack(ret)
+
+end
+
+local function RecurseStack(st, depth)
+
+	local data = {}
+	local timedata = {}
+
+	depth = depth or 0
+	for _, smp in pairs(st.children) do
+
+		local t = data[table.insert(data, {key=smp.key, smp=smp, t=nil})]
+
+		timedata[t.key] = timedata[t.key] or {}
+		t.t = timedata[t.key]
+
+		t.t.samples = (t.t.samples or 0) + 1
+		t.t.min = math.min((t.t.min or 99999), smp.time)
+		t.t.max = math.max((t.t.max or 0), smp.time)
+		t.t.total = (t.t.total or 0) + smp.time
+
+	end
+
+	table.sort(data, function(a,b) return a.t.total > b.t.total end)
+
+	for k,v in pairs(data) do
+		print( string.rep(" ", (depth)) .. string.format("%-" .. (32 - depth) .. "s%8.2f%8.2f%8.2f%8.2f%8.2f", " -" .. v.key .. "[" .. v.t.samples .. "]", 
+			v.smp.time,
+			(v.t.total)/v.t.samples,
+			v.t.total, 
+			v.t.min,
+			v.t.max))
+
+		RecurseStack(v.smp, depth+1)
+	end
+
+end
+
+function ProfileEnd()
+
+	if not ENABLE_PROFILING then return end
+
+	ps.enabled = false
+
+	if ENABLE_DEEP_PROFILING then
+		print( string.format("%-32s%8s%7s%10s%6s%8s", "function", "this", "avg", "total", "min", "max") )
+		RecurseStack(ps.stack)
+	end
+
+	MsgC(Color(80,180,200), "Total time[" .. ps.name .. "]: " .. (os.clock() - ps.start)*1000 .. "\n")
+
+end
+
 
 function CallbackList(t, listindex)
 	local env = getfenv(2)

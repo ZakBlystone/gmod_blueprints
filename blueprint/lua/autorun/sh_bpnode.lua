@@ -3,7 +3,7 @@ AddCSLuaFile()
 include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
 
-module("bpnode", package.seeall, bpcommon.rescope(bpschema))
+module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema))
 
 local meta = {}
 meta.__index = meta
@@ -126,10 +126,14 @@ end
 
 function meta:WriteToStream(stream, mode, version)
 
-	bpdata.WriteValue( self.nodeType, stream )
-	bpdata.WriteValue( self.literals, stream )
-	stream:WriteFloat( self.x )
-	stream:WriteFloat( self.y )
+	Profile("write-node", function()
+
+		bpdata.WriteValue( self.nodeType, stream )
+		bpdata.WriteValue( self.literals, stream )
+		stream:WriteFloat( self.x )
+		stream:WriteFloat( self.y )
+
+	end)
 
 end
 

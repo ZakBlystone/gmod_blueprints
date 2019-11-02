@@ -1042,7 +1042,7 @@ function CompileGraph(cs, graph)
 	-- compile graph's entry function
 	Profile(cs, "graph-entries", CompileGraphEntry, cs)
 
-	print("COMPILING GRAPH: " .. graph:GetName() .. " [" .. graph:GetFlags() .. "]")
+	--print("COMPILING GRAPH: " .. graph:GetName() .. " [" .. graph:GetFlags() .. "]")
 
 	-- compile hook listing for each event (only events that have hook designations)
 	cs.begin(CTX_Hooks .. cs.graph.id)

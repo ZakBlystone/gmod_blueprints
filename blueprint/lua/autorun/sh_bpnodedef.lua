@@ -1027,6 +1027,45 @@ NodeTypes = {
 		},
 		code = [[#1 = (type($1) == type($2)) and $1 or $2]],
 	},
+	["Client"] = SPECIAL {
+		pins = {
+			{ PD_Out, PN_Bool, "IsClient" },
+		},
+		compact = true,
+		code = [[#1 = CLIENT]],
+	},
+	["Server"] = SPECIAL {
+		pins = {
+			{ PD_Out, PN_Bool, "IsServer" },
+		},
+		compact = true,
+		code = [[#1 = SERVER]],
+	},
+	["ClientOnly"] = SPECIAL {
+		pins = {
+			{ PD_In, PN_Exec, "Exec" },
+			{ PD_Out, PN_Exec, "Thru" },
+		},
+		compact = false,
+		code = [[if CLIENT then #1 else goto popcall end]],
+	},
+	["ServerOnly"] = SPECIAL {
+		pins = {
+			{ PD_In, PN_Exec, "Exec" },
+			{ PD_Out, PN_Exec, "Thru" },
+		},
+		compact = false,
+		code = [[if SERVER then #1 else goto popcall end]],
+	},
+	["Role"] = SPECIAL {
+		pins = {
+			{ PD_In, PN_Exec, "Exec" },
+			{ PD_Out, PN_Exec, "Server" },
+			{ PD_Out, PN_Exec, "Client" },
+		},
+		compact = false,
+		code = [[if SERVER then #1 else #2 end]],
+	},
 	["AddEntityRelationship"] = "NPC:AddEntityRelationship, relationship=disposition",
 }
 

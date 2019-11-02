@@ -9,7 +9,7 @@ include("sh_bpvariable.lua")
 include("sh_bpstruct.lua")
 include("sh_bplist.lua")
 
-module("bpmodule", package.seeall, bpcommon.rescope(bpschema, bpnodedef)) --bpnodedef is temporary
+module("bpmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef)) --bpnodedef is temporary
 
 bpcommon.CallbackList({
 	"MODULE_CLEAR",
@@ -289,17 +289,25 @@ end
 
 function meta:NetSend()
 
-	local outStream = bpdata.OutStream()
-	self:WriteToStream( outStream, STREAM_NET )
-	outStream:WriteToNet(true)
+	bpcommon.ProfileStart("module:NetSend")
+	bpcommon.Profile("module-net-write", function()
+		local outStream = bpdata.OutStream()
+		bpcommon.Profile( "write-module", self.WriteToStream, self, outStream, STREAM_NET )
+		bpcommon.Profile( "write-net-stream", outStream.WriteToNet, outStream, true )
+	end)
+	bpcommon.ProfileEnd()
 
 end
 
 function meta:NetRecv()
 
+	bpcommon.ProfileStart("module:NetRecv")
+	bpcommon.Profile("module-net-read", function()
 	local inStream = bpdata.InStream()
-	inStream:ReadFromNet(true)
-	self:ReadFromStream( inStream, STREAM_NET )
+		bpcommon.Profile( "read-net-stream", inStream.ReadFromNet, inStream, true )
+		bpcommon.Profile( "read-module", self.ReadFromStream, self, inStream, STREAM_NET )
+	end)
+	bpcommon.ProfileEnd()
 
 end
 
@@ -331,17 +339,9 @@ function meta:WriteToStream(stream, mode)
 	stream:WriteInt( self.revision + 1, false ) -- each save is a revision off of the original
 	stream:WriteStr( self.uniqueID )
 
-	self.variables:WriteToStream(stream, mode, fmtVersion)
-	self.graphs:WriteToStream(stream, mode, fmtVersion)
-	self.structs:WriteToStream(stream, mode, fmtVersion)
-
-	stream:WriteInt( self.graphs:Size(), false )
-	for id, graph in self:Graphs() do
-		local name = graph:GetName()
-		stream:WriteInt( name:len(), false )
-		stream:WriteStr( name )
-		graph:WriteToStream(stream, mode, fmtVersion)
-	end
+	Profile("write-variables", self.variables.WriteToStream, self.variables, stream, mode, fmtVersion)
+	Profile("write-graphs", self.graphs.WriteToStream, self.graphs, stream, mode, fmtVersion)
+	Profile("write-structs", self.structs.WriteToStream, self.structs, stream, mode, fmtVersion)
 
 end
 
@@ -372,7 +372,7 @@ function meta:ReadFromStream(stream, mode)
 	end
 
 	if version >= 7 then
-		self.variables:ReadFromStream(stream, mode, version)
+		Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
 	elseif version >= 2 then
 		local vars = bpdata.ReadValue( stream )
 		for _, v in pairs(vars) do
@@ -386,7 +386,7 @@ function meta:ReadFromStream(stream, mode)
 	end
 
 	if version >= 7 then
-		self.graphs:ReadFromStream(stream, mode, version)
+		Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
 	else
 		local count = stream:ReadInt( false )
 		for i=1, count do
@@ -397,7 +397,7 @@ function meta:ReadFromStream(stream, mode)
 	end
 
 	if version >= 8 then
-		self.structs:ReadFromStream(stream, mode, version)
+		Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version)
 	end
 
 	if version < 4 then

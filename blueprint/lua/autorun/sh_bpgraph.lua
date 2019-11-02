@@ -7,7 +7,7 @@ include("sh_bpdata.lua")
 include("sh_bplist.lua")
 include("sh_bpnode.lua")
 
-module("bpgraph", package.seeall, bpcommon.rescope(bpschema, bpnodedef)) --bpnodedef is temporary
+module("bpgraph", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef)) --bpnodedef is temporary
 
 bpcommon.CallbackList({
 	"NODE_ADD",
@@ -305,21 +305,22 @@ function meta:GetNodeTypes()
 
 	if self.__cachedTypes then return self.__cachedTypes end
 
-	local types = {}
-	local base = self:GetModule():GetNodeTypes( self.id )
+	return Profile("cache-node-types", function()
+		local types = {}
+		local base = self:GetModule():GetNodeTypes( self.id )
 
-	table.Merge(types, base)
-	self:CreateFunctionNodeTypes(types)
+		table.Merge(types, base)
+		self:CreateFunctionNodeTypes(types)
 
-	-- blacklist invalid types in function graphs
-	if self.type == GT_Function then
-		for k, v in pairs(types) do
-			if v.latent then types[k] = nil end
-			if v.type == NT_Event then types[k] = nil end
+		-- blacklist invalid types in function graphs
+		if self.type == GT_Function then
+			for k, v in pairs(types) do
+				if v.latent then types[k] = nil end
+				if v.type == NT_Event then types[k] = nil end
+			end
 		end
-	end
-
-	return types
+		return types
+	end)
 
 end
 
@@ -358,37 +359,41 @@ end
 
 function meta:GetPinType(nodeID, pinID)
 
-	local ntype = self:GetNode(nodeID):GetType()
+	return Profile("get-pin-type", function()
 
-	if not ntype.pins[pinID] then return nil, nil end
+		local ntype = self:GetNode(nodeID):GetType()
 
-	if ntype.meta and ntype.meta.informs then
+		if not ntype.pins[pinID] then return nil, nil end
 
-		local hasInform = false
-		for i = 1, #ntype.meta.informs do
-			local t = ntype.meta.informs[i]
-			if t == pinID then hasInform = true end
-		end
+		if ntype.meta and ntype.meta.informs then
 
-		if hasInform then
+			local hasInform = false
 			for i = 1, #ntype.meta.informs do
-
 				local t = ntype.meta.informs[i]
+				if t == pinID then hasInform = true end
+			end
 
-				local isConnected, connection = self:IsPinConnected(nodeID, t)
-				if isConnected and connection ~= nil then
+			if hasInform then
+				for i = 1, #ntype.meta.informs do
 
-					if connection[1] == nodeID and self:GetNodePin(connection[3], connection[4])[2] ~= PN_Any then return self:GetPinType(connection[3], connection[4]) end
-					if connection[3] == nodeID and self:GetNodePin(connection[1], connection[2])[2] ~= PN_Any then return self:GetPinType(connection[1], connection[2]) end
+					local t = ntype.meta.informs[i]
+
+					local isConnected, connection = self:IsPinConnected(nodeID, t)
+					if isConnected and connection ~= nil then
+
+						if connection[1] == nodeID and self:GetNodePin(connection[3], connection[4])[2] ~= PN_Any then return self:GetPinType(connection[3], connection[4]) end
+						if connection[3] == nodeID and self:GetNodePin(connection[1], connection[2])[2] ~= PN_Any then return self:GetPinType(connection[1], connection[2]) end
+
+					end
 
 				end
-
 			end
+
 		end
 
-	end
+		return ntype.pins[pinID][2], ntype.pins[pinID][5]
 
-	return ntype.pins[pinID][2], ntype.pins[pinID][5]
+	end)
 
 end
 
@@ -656,118 +661,125 @@ end
 
 function meta:WriteToStream(stream, mode, version)
 
-	local namelookup = {}
-	local nametable = {}
-	local nodeentries = {}
+	Profile("write-single-graph", function()
 
-	stream:WriteInt( self.type, false )
-	stream:WriteInt( self.flags, false )
+		stream:WriteInt( self.type, false )
+		stream:WriteInt( self.flags, false )
 
-	if self.type == GT_Function then
-		self.inputs:WriteToStream(stream, mode, version)
-		self.outputs:WriteToStream(stream, mode, version)
-	end
-
-	self.nodes:WriteToStream(stream, mode, version)
-
-	bpdata.WriteValue( self.connections, stream )
-
-	if version >= 5 then
-
-		if mode == bpmodule.STREAM_FILE then
-			local connnectionMeta = {}
-			for id, c in self:Connections(true) do
-
-				local nt0 = self:GetNodeType(self:GetNode(c[1]))
-				local nt1 = self:GetNodeType(self:GetNode(c[3]))
-				local pin0 = nt0.pins[c[2]]
-				local pin1 = nt1.pins[c[4]]
-				connnectionMeta[id] = {nt0.name, pin0[3], nt1.name, pin1[3]}
-
-			end
-
-			bpdata.WriteValue( connnectionMeta, stream )
+		if self.type == GT_Function then
+			Profile("write-inputs", self.inputs.WriteToStream, self.inputs, stream, mode, version)
+			Profile("write-outputs", self.outputs.WriteToStream, self.outputs, stream, mode, version)
 		end
 
-	end
+		Profile("write-nodes", self.nodes.WriteToStream, self.nodes, stream, mode, version)
+		Profile("write-connections", bpdata.WriteValue, self.connections, stream )
+
+		if version >= 5 then
+
+			if mode == bpmodule.STREAM_FILE then
+				local connnectionMeta = {}
+				for id, c in self:Connections(true) do
+
+					local nt0 = self:GetNodeType(self:GetNode(c[1]))
+					local nt1 = self:GetNodeType(self:GetNode(c[3]))
+					local pin0 = nt0.pins[c[2]]
+					local pin1 = nt1.pins[c[4]]
+					connnectionMeta[id] = {nt0.name, pin0[3], nt1.name, pin1[3]}
+
+				end
+
+				bpdata.WriteValue( connnectionMeta, stream )
+			end
+
+		end
+
+	end)
 
 end
 
 function meta:ReadFromStream(stream, mode, version)
 
-	self:Clear()
+	Profile("read-single-graph", function()
 
-	if version >= 3 then
-		self.type = stream:ReadInt( false )
-	else
-		self.type = GT_Event
-	end
+		self:Clear()
 
-	if version >= 10 then self.flags = stream:ReadInt( false ) end
-
-	if self.type == GT_Function then
-		if version >= 7 then
-			self.inputs:ReadFromStream(stream, mode, version)
-			self.outputs:ReadFromStream(stream, mode, version)
+		if version >= 3 then
+			self.type = stream:ReadInt( false )
 		else
-			local numInputs = stream:ReadInt( false )
-			local numOutputs = stream:ReadInt( false )
-			for i=1, numInputs do
-				local v = bpvariable.New()
-				v:ReadFromStream( stream, mode, version )
-				self.inputs:Add(v)
+			self.type = GT_Event
+		end
+
+		if version >= 10 then self.flags = stream:ReadInt( false ) end
+
+		if self.type == GT_Function then
+			if version >= 7 then
+				self.inputs:SuppressEvents(true)
+				self.outputs:SuppressEvents(true)
+				self.inputs:ReadFromStream(stream, mode, version)
+				self.outputs:ReadFromStream(stream, mode, version)
+				self.inputs:SuppressEvents(false)
+				self.outputs:SuppressEvents(false)
+			else
+				local numInputs = stream:ReadInt( false )
+				local numOutputs = stream:ReadInt( false )
+				for i=1, numInputs do
+					local v = bpvariable.New()
+					v:ReadFromStream( stream, mode, version )
+					self.inputs:Add(v)
+				end
+				for i=1, numOutputs do
+					local v = bpvariable.New()
+					v:ReadFromStream( stream, mode, version )
+					self.outputs:Add(v)
+				end
 			end
-			for i=1, numOutputs do
-				local v = bpvariable.New()
-				v:ReadFromStream( stream, mode, version )
-				self.outputs:Add(v)
+		end
+
+		if version >= 7 then
+			self.deferredNodes:ReadFromStream(stream, mode, version)
+		else
+			local nametable = {}
+			local count = stream:ReadInt( false )
+			for i=1, count do 
+				local size = stream:ReadByte( false ) 
+				table.insert(nametable, stream:ReadStr( size ) )
+			end
+
+			self.deferred = {}
+
+			local count = stream:ReadInt( false )
+			for i=1, count do
+
+				local nodeTypeName = nametable[stream:ReadInt( false )]
+				local nodeX = stream:ReadFloat()
+				local nodeY = stream:ReadFloat()
+				local literals = bpdata.ReadValue( stream )
+				local redirect = NodeRedirectors[ nodeTypeName ]
+				if redirect then nodeTypeName = redirect end
+
+				table.insert(self.deferred, {
+					nodeType = nodeTypeName,
+					x = nodeX,
+					y = nodeY,
+					literals = literals,
+				})
+
 			end
 		end
-	end
 
-	if version >= 7 then
-		self.deferredNodes:ReadFromStream(stream, mode, version)
-	else
-		local nametable = {}
-		local count = stream:ReadInt( false )
-		for i=1, count do 
-			local size = stream:ReadByte( false ) 
-			table.insert(nametable, stream:ReadStr( size ) )
-		end
+		self.connections = bpdata.ReadValue( stream )
 
-		self.deferred = {}
+		if version >= 5 then
 
-		local count = stream:ReadInt( false )
-		for i=1, count do
+			if mode == bpmodule.STREAM_FILE then
 
-			local nodeTypeName = nametable[stream:ReadInt( false )]
-			local nodeX = stream:ReadFloat()
-			local nodeY = stream:ReadFloat()
-			local literals = bpdata.ReadValue( stream )
-			local redirect = NodeRedirectors[ nodeTypeName ]
-			if redirect then nodeTypeName = redirect end
+				self.connectionMeta = bpdata.ReadValue( stream )
 
-			table.insert(self.deferred, {
-				nodeType = nodeTypeName,
-				x = nodeX,
-				y = nodeY,
-				literals = literals,
-			})
-
-		end
-	end
-
-	self.connections = bpdata.ReadValue( stream )
-
-	if version >= 5 then
-
-		if mode == bpmodule.STREAM_FILE then
-
-			self.connectionMeta = bpdata.ReadValue( stream )
+			end
 
 		end
 
-	end
+	end)
 
 end
 
@@ -832,80 +844,88 @@ function meta:CreateDeferredData()
 
 	--print("CREATE DEFERRED NODES: " .. #self.deferred)
 
-	self.deferredNodes:CopyInto(self.nodes)
-	self.deferredNodes:Clear()
+	Profile("create-deferred", function()
 
-	self:CacheNodeTypes()
+		self.deferredNodes:CopyInto(self.nodes)
+		self.deferredNodes:Clear()
 
-	if self.deferred then
+		self:CacheNodeTypes()
 
-		self:SuppressEvents( true )
+		if self.deferred then
 
-		for _, v in pairs(self.deferred) do
+			self:SuppressEvents( true )
 
-			local id = self:AddNode( v.nodeType, v.x, v.y )
-			if id ~= nil then
-				for k, v in pairs(v.literals) do
-					--print("LOAD LITERAL[" .. id .. "|" .. nodeTypeName .. "]: " .. tostring(k) .. " = " .. tostring(v))
-					self:SetPinLiteral( id, k, v )
+			for _, v in pairs(self.deferred) do
+
+				local id = self:AddNode( v.nodeType, v.x, v.y )
+				if id ~= nil then
+					for k, v in pairs(v.literals) do
+						--print("LOAD LITERAL[" .. id .. "|" .. nodeTypeName .. "]: " .. tostring(k) .. " = " .. tostring(v))
+						self:SetPinLiteral( id, k, v )
+					end
+				end
+
+			end
+
+			self:SuppressEvents( false )
+
+			for id, node in self:Nodes() do
+				local nodeType = self:GetNodeType(node) --TODO create impromptu nodetypes for missing nodes to satisfy connections
+				if nodeType ~= nil then
+					self:FireListeners(CB_NODE_ADD, id)
 				end
 			end
 
-		end
+			self.deferred = nil
 
-		self:SuppressEvents( false )
+		else
 
-		for id, node in self:Nodes() do
-			local nodeType = self:GetNodeType(node) --TODO create impromptu nodetypes for missing nodes to satisfy connections
-			if nodeType ~= nil then
-				self:FireListeners(CB_NODE_ADD, id)
+			for id, node in self:Nodes() do
+				if node:PostInit() then self:FireListeners(CB_NODE_ADD, id) end
 			end
+
+			self:RemoveNodeIf( function(node) return node:GetType() == nil end )
+
 		end
 
-		self.deferred = nil
-
-	else
-
-		for id, node in self:Nodes() do
-			if node:PostInit() then self:FireListeners(CB_NODE_ADD, id) end
+		self:ResolveConnectionMeta()
+		self:RemoveInvalidConnections()
+		for i, connection in self:Connections() do
+			self:FireListeners(CB_CONNECTION_ADD, connection, i)
 		end
 
-		self:RemoveNodeIf( function(node) return node:GetType() == nil end )
-
-	end
-
-	self:ResolveConnectionMeta()
-	self:RemoveInvalidConnections()
-	for i, connection in self:Connections() do
-		self:FireListeners(CB_CONNECTION_ADD, connection, i)
-	end
+	end)
 
 end
 
 -- Quickly banging this out using existing tech
 function meta:CopyInto(other)
 
-	other:Clear()
-	other.module = self.module
-	other.id = self.id
-	other.name = self.name
-	other.type = self.type
-	other.flags = self.flags
+	Profile("copy-graph", function()
 
-	-- Deep copy will copy all members including graph which includes module etc...
-	-- So clear graph variable and set it on the other side of the deep copy
-	for _, node in self:Nodes() do node.graph = nil end
+		other:Clear()
+		other.module = self.module
+		other.id = self.id
+		other.name = self.name
+		other.type = self.type
+		other.flags = self.flags
 
-	self.nodes:CopyInto( other.nodes, true )
-	self.inputs:CopyInto( other.inputs, true )
-	self.outputs:CopyInto( other.outputs, true )
+		-- Deep copy will copy all members including graph which includes module etc...
+		-- So clear graph variable and set it on the other side of the deep copy
+		for _, node in self:Nodes() do node.graph = nil end
 
-	for _, node in other:Nodes() do node.graph = other tostring(other) end
-	for _, node in self:Nodes() do node.graph = self end
+		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes, true )
+		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs, true )
+		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs, true )
 
-	for _, c in self:Connections() do
-		table.insert(other.connections, {c[1], c[2], c[3], c[4]})
-	end
+		for _, node in other:Nodes() do node.graph = other tostring(other) end
+		for _, node in self:Nodes() do node.graph = self end
+
+		for _, c in self:Connections() do
+			table.insert(other.connections, {c[1], c[2], c[3], c[4]})
+		end
+
+	end)
 
 	return other
 

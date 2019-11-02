@@ -254,24 +254,28 @@ function meta:ReadFromStream(stream, mode, version)
 
 	if not self.constructor then error("No constructor for list items") end
 
-	self:Clear()
-	self.namedItems = stream:ReadBool()
-	self.nextID = stream:ReadInt(false)
-	local count = stream:ReadInt(false)
-	if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
-	for i=1, count do
-		local item = self.constructor()
-		item.id = stream:ReadInt(false)
-		if item.PostInit then item:PostInit() end
-		self.itemLookup[item.id] = item
-		if self.namedItems then item.name = bpdata.ReadValue( stream ) end
-		if not item.ReadFromStream then error("Need stream implementation for list item") end
-		item:ReadFromStream(stream, mode, version)
-		self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
-		table.insert(self.items, item)
-		self:FireListeners(CB_ADD, item.id, item)
-		self:FireListeners(CB_POSTMODIFY, MODIFY_ADD, item.id, item)
-	end
+	bpcommon.Profile("list-read", function()
+
+		self:Clear()
+		self.namedItems = stream:ReadBool()
+		self.nextID = stream:ReadInt(false)
+		local count = stream:ReadInt(false)
+		if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
+		for i=1, count do
+			local item = self.constructor()
+			item.id = stream:ReadInt(false)
+			if item.PostInit then item:PostInit() end
+			self.itemLookup[item.id] = item
+			if self.namedItems then item.name = bpdata.ReadValue( stream ) end
+			if not item.ReadFromStream then error("Need stream implementation for list item") end
+			item:ReadFromStream(stream, mode, version)
+			self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
+			table.insert(self.items, item)
+			self:FireListeners(CB_ADD, item.id, item)
+			self:FireListeners(CB_POSTMODIFY, MODIFY_ADD, item.id, item)
+		end
+
+	end)
 
 end
 
