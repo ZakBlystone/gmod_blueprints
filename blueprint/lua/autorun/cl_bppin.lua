@@ -38,7 +38,7 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self.node = node
 	self.pin = pin
 	self.pinID = pinID
-	self.nodeType = self.graph:GetNodeType( self.node )
+	self.nodeType = self.node:GetType()
 	self.pinType, self.pinEx = self.graph:GetPinType( self.node.id, self.pinID )
 
 	-- input pins watch for literal changes
@@ -121,7 +121,7 @@ function PANEL:InitLiteral()
 		local literalType = NodeLiteralTypes[ self.pinType ]
 		if literalType then
 			self.literalType = literalType
-			local literal = self.graph:GetPinLiteral(self.node.id, self.pinID) or ""
+			local literal = self.node:GetLiteral(self.pinID) or ""
 
 			if self.literalType == "bool" then
 				self.checkBox = vgui.Create("DCheckBox", self)
@@ -133,7 +133,7 @@ function PANEL:InitLiteral()
 				end
 
 				self.checkBox.OnChange = function(cb, val)
-					self.graph:SetPinLiteral( self.node.id, self.pinID, val and "true" or "false" )
+					self.node:SetLiteral( self.pinID, val and "true" or "false" )
 				end
 				self.checkBox:SetChecked(literal == "true" and true or false)
 
@@ -159,7 +159,7 @@ function PANEL:InitLiteral()
 				end
 
 				self.comboBox.OnSelect = function( pnl, index, value, data )
-					self.graph:SetPinLiteral( self.node.id, self.pinID, tostring(data) )
+					self.node:SetLiteral( self.pinID, tostring(data) )
 				end
 				self.comboBox.Paint = function(te)
 					local w,h = te:GetSize()
@@ -254,7 +254,7 @@ function PANEL:OnTextValue(str)
 
 	if literal ~= nil then
 
-		self.graph:SetPinLiteral( self.node.id, self.pinID, literal )
+		self.node:SetLiteral( self.pinID, literal )
 
 	end
 

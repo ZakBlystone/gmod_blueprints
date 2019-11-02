@@ -660,12 +660,12 @@ else
 end
 
 if CLIENT then concommand.Add("bp_reloadDefinitions", LoadDefinitionPack ) end
-if SERVER then 
-	LoadAndParseDefs()
-	timer.Simple(.1, function() 
-		bpnodedef.InstallDefs()
-	end )
-end
+
+LoadAndParseDefs()
+timer.Simple(.1, function() 
+	bpnodedef.InstallDefs()
+end )
+
 
 function Ready()
 	return ready

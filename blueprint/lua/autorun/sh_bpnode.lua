@@ -14,6 +14,7 @@ function meta:Init(nodeType, x, y, literals)
 	self.x = x or 0
 	self.y = y or 0
 	self.literals = literals or {}
+	self.data = {}
 	return self
 
 end
@@ -67,9 +68,25 @@ function meta:ToString(pinID)
 
 end
 
+function meta:GetPins()
+
+	return self:GetType().pins
+
+end
+
 function meta:GetPin(pinID)
 
-	return self:GetType().pins[pinID]
+	return self:GetPins()[pinID]
+
+end
+
+function meta:FindPin(dir, name)
+
+	local pins = self:GetPins()
+	for i=1, #pins do
+		if pins[i][1] == dir and pins[i][3] == name then return i end
+	end
+	return nil
 
 end
 
@@ -112,6 +129,21 @@ function meta:GetPos()
 
 end
 
+function meta:GetCode()
+
+	return self:GetType().code
+
+end
+
+function meta:GetMeta()
+
+	return self:GetType().meta
+
+end
+
+function meta:GetGraph() return self.graph end
+function meta:GetModule() return self:GetGraph():GetModule() end
+
 function meta:Move(x, y)
 
 	x = math.Round(x / 15) * 15
@@ -130,6 +162,7 @@ function meta:WriteToStream(stream, mode, version)
 
 		bpdata.WriteValue( self.nodeType, stream )
 		bpdata.WriteValue( self.literals, stream )
+		bpdata.WriteValue( self.data, stream )
 		stream:WriteFloat( self.x )
 		stream:WriteFloat( self.y )
 
@@ -141,6 +174,7 @@ function meta:ReadFromStream(stream, mode, version)
 
 	self.nodeType = bpdata.ReadValue(stream)
 	self.literals = bpdata.ReadValue(stream)
+	if version >= 11 then self.data = bpdata.ReadValue(stream) end
 	self.x = stream:ReadFloat()
 	self.y = stream:ReadFloat()
 

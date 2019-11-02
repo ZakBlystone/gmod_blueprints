@@ -18,11 +18,11 @@ function meta:Init()
 
 		if self.module then
 			if cb == bplist.CB_PREMODIFY then
-				self.module:PreModifyNodeType( "__Make" .. self.id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
-				self.module:PreModifyNodeType( "__Break" .. self.id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+				self.module:PreModifyNodeType( "__Make" .. self.id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+				self.module:PreModifyNodeType( "__Break" .. self.id, bpgraph.NODE_MODIFY_SIGNATURE, action )
 			elseif cb == bplist.CB_POSTMODIFY then
-				self.module:PostModifyNodeType( "__Make" .. self.id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
-				self.module:PostModifyNodeType( "__Break" .. self.id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+				self.module:PostModifyNodeType( "__Make" .. self.id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+				self.module:PostModifyNodeType( "__Break" .. self.id, bpgraph.NODE_MODIFY_SIGNATURE, action )
 			end
 		end
 

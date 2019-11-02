@@ -17,12 +17,12 @@ bpcommon.CallbackList({
 	"CONNECTION_ADD",
 	"CONNECTION_REMOVE",
 	"GRAPH_CLEAR",
-	"PREMODIFY_NODETYPE",
-	"POSTMODIFY_NODETYPE",
+	"PREMODIFY_NODE",
+	"POSTMODIFY_NODE",
 })
 
-NODETYPE_MODIFY_RENAME = 1
-NODETYPE_MODIFY_SIGNATURE = 2
+NODE_MODIFY_RENAME = 1
+NODE_MODIFY_SIGNATURE = 2
 
 FL_NONE = 0
 FL_LOCK_PINS = 1
@@ -61,13 +61,13 @@ function meta:Init(module, type)
 	self.inputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE, action)
-			self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE, action)
+			self.module:PreModifyNodeType( "__Call" .. self.id, NODE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType("__Entry", NODE_MODIFY_SIGNATURE, action)
+			self:PreModifyNodeType("__Exit", NODE_MODIFY_SIGNATURE, action)
 		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE, action )
+			self.module:PostModifyNodeType( "__Call" .. self.id, NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType("__Entry", NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType("__Exit", NODE_MODIFY_SIGNATURE, action )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -75,13 +75,13 @@ function meta:Init(module, type)
 	self.outputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE, action )
+			self.module:PreModifyNodeType( "__Call" .. self.id, NODE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType("__Entry", NODE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType("__Exit", NODE_MODIFY_SIGNATURE, action )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( "__Call" .. self.id, NODETYPE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_SIGNATURE, action )
+			self.module:PostModifyNodeType( "__Call" .. self.id, NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType("__Entry", NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType("__Exit", NODE_MODIFY_SIGNATURE, action )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -129,34 +129,65 @@ function meta:ClearFlag(fl) self.flags = bit.band(self.flags, bit.bnot(fl)) end
 function meta:GetFlags() return self.flags end
 function meta:CanRename() return not self:HasFlag(FL_LOCK_NAME) end
 
+function meta:PreModifyNode( node, action, subaction )
+
+	self:FireListeners(CB_PREMODIFY_NODE, node.id, action)
+
+	self.heldConnections[node.id] = {}
+	local held = self.heldConnections[node.id]
+	local pins = node:GetPins()
+
+	for i, c in self:Connections() do
+
+		if c[1] == node.id then --output
+			local other = self:GetNode(c[3])
+			local pin = pins[c[2]]
+			self:RemoveConnectionID(i)
+			table.insert(held, {pin[1], pin[3], c[3], PD_In, other:GetPin(c[4])[3]})
+		elseif c[3] == node.id then --input
+			local other = self:GetNode(c[1])
+			local pin = pins[c[4]]
+			self:RemoveConnectionID(i)
+			table.insert(held, {pin[1], pin[3], c[1], PD_Out, other:GetPin(c[2])[3]})
+		end
+
+	end
+
+end
+
+function meta:PostModifyNode( node, action, subaction )
+
+	self:FireListeners(CB_POSTMODIFY_NODE, node.id, action)
+
+	local ntype = node:GetType()
+	local held = self.heldConnections[node.id]
+	self.heldConnections[node.id] = nil
+
+	if ntype == nil then return end
+	if held == nil then return end
+
+	local pins = node:GetPins()
+
+	for k, c in pairs(held) do
+		local pinID = node:FindPin(c[1], c[2])
+		if pinID then
+			local other = self:GetNode(c[3])
+			local otherPin = other:FindPin(c[4], c[5])
+			if otherPin ~= nil then self:ConnectNodes(node.id, pinID, other.id, otherPin) end
+		else
+			print("Couldn't find pin: " .. tostring(c[2]))
+		end
+	end
+
+end
+
 function meta:PreModifyNodeType( nodeType, action, subaction )
 
-	self:FireListeners(CB_PREMODIFY_NODETYPE, nodeType, action)
-
-	if action == NODETYPE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
-
-		self.heldConnections[nodeType] = {}
-		local held = self.heldConnections[nodeType]
-		local ntype = self:GetNodeTypes()[nodeType]
-		if ntype == nil then return end
+	if action == NODE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
 
 		for id, node in self:Nodes() do
-			if node.nodeType ~= nodeType then continue end
-
-			for i, c in self:Connections() do
-
-				if c[1] == id then --output
-					local pin = ntype.pins[c[2]]
-					self:RemoveConnectionID(i)
-					table.insert(held, {id, pin[1], pin[3], c[3], c[4]})
-				elseif c[3] == id then --input
-					local pin = ntype.pins[c[4]]
-					self:RemoveConnectionID(i)
-					table.insert(held, {id, pin[1], pin[3], c[1], c[2]})
-				end
-
-			end
-
+			if node:GetTypeName() ~= nodeType then continue end
+			self:PreModifyNode( node, action, subaction )
 		end
 
 	end
@@ -166,34 +197,13 @@ end
 function meta:PostModifyNodeType( nodeType, action, subaction )
 
 	self:CacheNodeTypes()
-	self:FireListeners(CB_POSTMODIFY_NODETYPE, nodeType, action)
 
-	if action == NODETYPE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
+	if action == NODE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
 
-		local ntype = self:GetNodeTypes()[nodeType]
-		local held = self.heldConnections[nodeType]
-		if ntype == nil then return end
-		if held == nil then return end
-
-		local function findPin( dir, name )
-			for i=1, #ntype.pins do
-				if ntype.pins[i][1] == dir and ntype.pins[i][3] == name then return i end
-			end
-			return nil
+		for id, node in self:Nodes() do
+			if node:GetTypeName() ~= nodeType then continue end
+			self:PostModifyNode( node, action, subaction )
 		end
-
-		for _, c in pairs(held) do
-
-			local pinID = findPin( c[2], c[3] )
-			if pinID then
-				self:ConnectNodes(c[1], pinID, c[4], c[5])
-			else
-				print("Couldn't find pin: " .. tostring(c[3]))
-			end
-
-		end
-
-		self.heldConnections[nodeType] = nil
 
 	end
 
@@ -202,8 +212,8 @@ end
 function meta:PreModify(action, subaction)
 
 	if action == bpmodule.GRAPH_MODIFY_RENAME then
-		self:PreModifyNodeType("__Entry", NODETYPE_MODIFY_RENAME, subaction)
-		self:PreModifyNodeType("__Exit", NODETYPE_MODIFY_RENAME, subaction)
+		self:PreModifyNodeType("__Entry", NODE_MODIFY_RENAME, subaction)
+		self:PreModifyNodeType("__Exit", NODE_MODIFY_RENAME, subaction)
 	end
 
 end
@@ -211,8 +221,8 @@ end
 function meta:PostModify(action, subaction)
 
 	if action == bpmodule.GRAPH_MODIFY_RENAME then
-		self:PostModifyNodeType("__Entry", NODETYPE_MODIFY_RENAME, subaction)
-		self:PostModifyNodeType("__Exit", NODETYPE_MODIFY_RENAME, subaction)
+		self:PostModifyNodeType("__Entry", NODE_MODIFY_RENAME, subaction)
+		self:PostModifyNodeType("__Exit", NODE_MODIFY_RENAME, subaction)
 	end
 
 end
@@ -324,15 +334,6 @@ function meta:GetNodeTypes()
 
 end
 
-function meta:GetNodeType(node)
-
-	if node == nil then error("Tried to get nodetype of nil") end
-
-	local types = self:GetNodeTypes()
-	return types[ node.nodeType ]
-
-end
-
 function meta:Connections(forward)
 
 	if forward then
@@ -361,22 +362,24 @@ function meta:GetPinType(nodeID, pinID)
 
 	return Profile("get-pin-type", function()
 
-		local ntype = self:GetNode(nodeID):GetType()
+		local node = self:GetNode(nodeID)
+		local pin = node:GetPin(pinID)
+		local meta = node:GetMeta()
 
-		if not ntype.pins[pinID] then return nil, nil end
+		if not pin then return nil, nil end
 
-		if ntype.meta and ntype.meta.informs then
+		if meta and meta.informs then
 
 			local hasInform = false
-			for i = 1, #ntype.meta.informs do
-				local t = ntype.meta.informs[i]
+			for i = 1, #meta.informs do
+				local t = meta.informs[i]
 				if t == pinID then hasInform = true end
 			end
 
 			if hasInform then
-				for i = 1, #ntype.meta.informs do
+				for i = 1, #meta.informs do
 
-					local t = ntype.meta.informs[i]
+					local t = meta.informs[i]
 
 					local isConnected, connection = self:IsPinConnected(nodeID, t)
 					if isConnected and connection ~= nil then
@@ -391,7 +394,7 @@ function meta:GetPinType(nodeID, pinID)
 
 		end
 
-		return ntype.pins[pinID][2], ntype.pins[pinID][5]
+		return pin[2], pin[5]
 
 	end)
 
@@ -507,6 +510,9 @@ function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 	local p0 = self:GetNodePin(nodeID0, pinID0)
 	local p1 = self:GetNodePin(nodeID1, pinID1)
 
+	if p0 == nil then print("P0 pin not found: " .. nodeID0 .. " -> " .. pinID0) return false end
+	if p1 == nil then print("P1 pin not found: " .. nodeID1 .. " -> " .. pinID1) return false end
+
 	-- swap connection to ensure first is output and second is input
 	if p0[1] == PD_In and p1[1] == PD_Out then
 		local t = nodeID0 nodeID0 = nodeID1 nodeID1 = t
@@ -535,22 +541,6 @@ function meta:Clear()
 
 end
 
-function meta:GetPinLiteral(nodeID, pinID)
-
-	local node = self:GetNode(nodeID)
-	return node:GetLiteral(pinID)
-
-end
-
-function meta:SetPinLiteral(nodeID, pinID, value)
-
-	local node = self:GetNode(nodeID)
-	if node == nil then error("Tried to set literal on null node") end
-
-	node:SetLiteral(pinID, value)
-
-end
-
 function meta:AddNode(nodeTypeName, ...)
 
 	local nodeType = self:GetNodeTypes()[nodeTypeName]
@@ -561,12 +551,6 @@ function meta:AddNode(nodeTypeName, ...)
 
 	local node = self.nodeConstructor(nodeTypeName, ...)
 	return self.nodes:Add( node )
-
-end
-
-function meta:MoveNode(nodeID, x, y)
-
-	self:GetNode(nodeID):Move(x,y)
 
 end
 
@@ -616,19 +600,15 @@ function meta:CollapseSingleRerouteNode(nodeID)
 
 	local node = self:GetNode( nodeID )
 
-	--print("COLLAPSING REROUTE NODE: " .. nodeID)
-
 	local insert = {}
 	local connections = self.connections
 	local input = nil
 	for i, c in self:Connections() do
 
 		if c[1] == nodeID then --output
-			--print(" -output on " .. c[2] .. " => " .. c[3] .. "[" .. c[4] .. "]")
 			table.insert(insert, {c[3],c[4]})
 			self:RemoveConnectionID(i)
 		elseif c[3] == nodeID then --input
-			--print(" -input on " .. c[4] .. " <= " .. c[1] .. "[" .. c[2] .. "]")
 			input = {c[1],c[2]}
 			self:RemoveConnectionID(i)
 		end
@@ -652,7 +632,7 @@ end
 function meta:CollapseRerouteNodes()
 
 	for _, node in self:Nodes(true) do
-		if self:GetNodeType(node).collapse then
+		if node:GetType().collapse then
 			self:CollapseSingleRerouteNode( node.id )
 		end
 	end	
@@ -680,8 +660,8 @@ function meta:WriteToStream(stream, mode, version)
 				local connnectionMeta = {}
 				for id, c in self:Connections(true) do
 
-					local nt0 = self:GetNodeType(self:GetNode(c[1]))
-					local nt1 = self:GetNodeType(self:GetNode(c[3]))
+					local nt0 = self:GetNode(c[1]):GetType()
+					local nt1 = self:GetNode(c[3]):GetType()
 					local pin0 = nt0.pins[c[2]]
 					local pin1 = nt1.pins[c[4]]
 					connnectionMeta[id] = {nt0.name, pin0[3], nt1.name, pin1[3]}
@@ -811,8 +791,8 @@ function meta:ResolveConnectionMeta()
 		print("Resolving connection meta...")
 		for i, c in self:Connections(true) do
 			local meta = self.connectionMeta[i]
-			local nt0 = self:GetNodeType(self:GetNode(c[1]))
-			local nt1 = self:GetNodeType(self:GetNode(c[3]))
+			local nt0 = self:GetNode(c[1]):GetType()
+			local nt1 = self:GetNode(c[3]):GetType()
 			local pin0 = nt0.pins[c[2]]
 			local pin1 = nt1.pins[c[4]]
 
@@ -861,7 +841,7 @@ function meta:CreateDeferredData()
 				if id ~= nil then
 					for k, v in pairs(v.literals) do
 						--print("LOAD LITERAL[" .. id .. "|" .. nodeTypeName .. "]: " .. tostring(k) .. " = " .. tostring(v))
-						self:SetPinLiteral( id, k, v )
+						self:GetNode(id):SetLiteral( k, v )
 					end
 				end
 
@@ -870,7 +850,7 @@ function meta:CreateDeferredData()
 			self:SuppressEvents( false )
 
 			for id, node in self:Nodes() do
-				local nodeType = self:GetNodeType(node) --TODO create impromptu nodetypes for missing nodes to satisfy connections
+				local nodeType = node:GetType() --TODO create impromptu nodetypes for missing nodes to satisfy connections
 				if nodeType ~= nil then
 					self:FireListeners(CB_NODE_ADD, id)
 				end

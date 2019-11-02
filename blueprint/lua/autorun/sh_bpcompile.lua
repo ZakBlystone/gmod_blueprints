@@ -108,7 +108,7 @@ function CreateFunctionGraphVars(cs, uniqueKeys)
 	})
 
 	for nodeID, node in cs.graph:Nodes() do
-		local ntype = cs.graph:GetNodeType(node)
+		local ntype = node:GetType()
 		if ntype.type == NT_FuncInput then
 
 			for _, pinID in pairs(ntype.pinlayout.outputs) do
@@ -188,7 +188,7 @@ function EnumerateGraphVars(cs, uniqueKeys)
 
 	local localScopeUnique = {}
 	for nodeID, node in cs.graph:Nodes() do
-		local ntype = cs.graph:GetNodeType(node)
+		local ntype = node:GetType()
 		local extType = ntype.type
 		local e = nodeTypeEnumerateData[extType]
 		if not e then continue end
@@ -315,7 +315,7 @@ function GetNodePins(cs, nodeID, pinDir)
 
 	local out = {}
 	local node = cs.graph:GetNode(nodeID)
-	for pinID, pin in pairs(cs.graph:GetNodeType(node).pins) do
+	for pinID, pin in pairs(node:GetPins()) do
 		if pin[1] ~= pinDir then continue end
 		out[pinID] = pin
 	end
@@ -377,12 +377,12 @@ function CompileNodeSingle(cs, nodeID)
 	Profile(cs, "node-lookup", function()
 
 		node = cs.graph:GetNode(nodeID)
-		ntype = cs.graph:GetNodeType(node)
+		ntype = node:GetType()
 
 	end)
 
 	local lookup = ntype.pinlookup --maps pinIDs into their respective positions in the input / output lists
-	local code = ntype.code
+	local code = node:GetCode()
 
 	-- TODO: Instead of building these strings, find a more direct approach of compiling these
 	-- generate code based on function graph inputs and outputs
@@ -587,7 +587,7 @@ function WalkBackPureNodes(cs, nodeID, call)
 			for _, v in pairs(connections) do
 
 				local node = cs.graph:GetNode( v[1] )
-				if cs.graph:GetNodeType(node).type == NT_Pure then
+				if node:GetType().type == NT_Pure then
 					table.insert(stack, v[1])
 					table.insert(output, v[1])
 				end
@@ -612,7 +612,7 @@ end
 function CompileNodeFunction(cs, nodeID)
 
 	local node = cs.graph:GetNode(nodeID)
-	local nodeType = cs.graph:GetNodeType(node)
+	local nodeType = node:GetType()
 
 	cs.begin(CTX_FunctionNode .. cs.graph.id .. "_" .. nodeID)
 	if cs.debugcomments then cs.emit("-- " .. nodeType.name) end
@@ -651,7 +651,7 @@ function CompileNodeFunction(cs, nodeID)
 	WalkBackPureNodes(cs, nodeID, function(pure)
 		if emitted[pure] then return end
 		emitted[pure] = true
-		--printi( cs.graph:GetNodeType(cs.graph:GetNode(pure)).name )
+		--printi( cs.graph:GetNode(pure):ToString() )
 		cs.emitContext( CTX_SingleNode .. cs.graph.id .. "_" .. pure, 1 )
 	end)
 	popi()
@@ -708,7 +708,7 @@ function CompileGraphJumpTable(cs)
 
 	-- emit jumps for all non-pure functions
 	for id, node in cs.graph:Nodes() do
-		local nodeType = cs.graph:GetNodeType(node)
+		local nodeType = node:GetType()
 		if nodeType.type ~= NT_Pure then
 			cs.emit( "if ip == " .. id .. " then goto jmp_" .. id .. " end" )
 		end
@@ -719,7 +719,7 @@ function CompileGraphJumpTable(cs)
 	-- create jump vectors for each of those
 	local jumpTable = GetGraphJumpTable(cs)
 	for id, node in cs.graph:Nodes() do
-		local nodeType = cs.graph:GetNodeType(node)
+		local nodeType = node:GetType()
 		for _, j in pairs(nodeType.jumpSymbols or {}) do
 
 			jumpTable[id] = jumpTable[id] or {}
@@ -952,7 +952,7 @@ end
 function CompileGraphMetaHook(cs, graph, nodeID, name)
 
 	local node = cs.graph:GetNode(nodeID)
-	local nodeType = cs.graph:GetNodeType(node)
+	local nodeType = node:GetType()
 
 	cs.begin(CTX_MetaEvents .. name)
 
@@ -1024,14 +1024,14 @@ function CompileGraph(cs, graph)
 
 	-- compile all non-pure function nodes in the graph (and events / special nodes)
 	for id, node in cs.graph:Nodes() do
-		if cs.graph:GetNodeType(node).type ~= NT_Pure then
+		if node:GetType().type ~= NT_Pure then
 			Profile(cs, "functions", CompileNodeFunction, cs, id)
 		end
 	end
 
 	-- compile all events nodes in the graph
 	for id, node in cs.graph:Nodes() do
-		local ntype = cs.graph:GetNodeType(node)
+		local ntype = node:GetType()
 		if ntype.type == NT_Event then
 			CompileGraphMetaHook(cs, graph, id, ntype.name)
 		elseif ntype.type == NT_FuncInput then
@@ -1048,7 +1048,7 @@ function CompileGraph(cs, graph)
 	cs.begin(CTX_Hooks .. cs.graph.id)
 
 	for id, node in cs.graph:Nodes() do
-		local nodeType = cs.graph:GetNodeType(node)
+		local nodeType = node:GetType()
 		if nodeType.type == NT_Event and nodeType.hook then
 
 			cs.emit("[\"" .. nodeType.name .. "\"] = {")

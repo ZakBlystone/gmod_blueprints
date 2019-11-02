@@ -23,13 +23,13 @@ STREAM_NET = 2
 GRAPH_MODIFY_RENAME = 1
 GRAPH_MODIFY_SIGNATURE = 2
 GRAPH_NODETYPE_ACTIONS = {
-	[GRAPH_MODIFY_RENAME] = bpgraph.NODETYPE_MODIFY_RENAME,
-	[GRAPH_MODIFY_SIGNATURE] = bpgraph.NODETYPE_MODIFY_SIGNATURE,
+	[GRAPH_MODIFY_RENAME] = bpgraph.NODE_MODIFY_RENAME,
+	[GRAPH_MODIFY_SIGNATURE] = bpgraph.NODE_MODIFY_SIGNATURE,
 }
 
 
 fmtMagic = 0x42504D58
-fmtVersion = 10
+fmtVersion = 11
 
 local meta = {}
 meta.__index = meta
@@ -95,15 +95,15 @@ function meta:Init(type)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODETYPE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -117,11 +117,11 @@ function meta:Init(type)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__VGet" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__VSet" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__VGet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__VSet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__VGet" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__VSet" .. id, bpgraph.NODETYPE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__VGet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__VSet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)

@@ -111,7 +111,7 @@ function PANEL:Setup( graph, node )
 	self.nodeID = self.node.id
 	self.graph = graph
 	self.vgraph = self:GetParent():GetParent()
-	self.nodeType = self.graph:GetNodeType( self.node )
+	self.nodeType = self.node:GetType()
 
 	local w,h = calculateNodeSize( self, self.nodeType )
 	self:SetSize( w, h )
@@ -132,18 +132,18 @@ end
 
 function PANEL:OnGraphCallback( cb, ... )
 
-	if cb == CB_POSTMODIFY_NODETYPE then self:PostNodeTypeChanged( ... ) end
+	if cb == CB_POSTMODIFY_NODE then self:PostNodeChanged( ... ) end
 
 end
 
-function PANEL:PostNodeTypeChanged( nodeType, action )
+function PANEL:PostNodeChanged( nodeID, action )
 
-	if nodeType == self.nodeType.name then
-		self.nodeType = self.graph:GetNodeType( self.node )
+	if self.nodeID == nodeID then
+		self.nodeType = self.node:GetType()
 		local w,h = calculateNodeSize( self, self.nodeType )
 		self:SetSize( w, h )
 
-		if action == bpgraph.NODETYPE_MODIFY_SIGNATURE then
+		if action == bpgraph.NODE_MODIFY_SIGNATURE then
 			self:BuildPins()
 		end
 	end
@@ -334,7 +334,7 @@ function PANEL:Think()
 		end
 
 		--self:SetPos( x, y )
-		self.graph:MoveNode( self.nodeID, x - self.canvasFix, y - self.canvasFix )
+		self.node:Move( x - self.canvasFix, y - self.canvasFix )
 
 	end
 
