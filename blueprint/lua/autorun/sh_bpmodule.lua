@@ -331,12 +331,15 @@ end
 
 function meta:WriteToStream(stream, mode)
 
-	print("--WRITE MODULE TYPE: " .. self.type .. " [" .. self.version .. "]")
+	-- each save to disk is a revision on the loaded original
+	if mode == bpmodule.STREAM_FILE then
+		self.revision = self.revision + 1
+	end
 
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
 	stream:WriteInt( self.type, false )
-	stream:WriteInt( self.revision + 1, false ) -- each save is a revision off of the original
+	stream:WriteInt( self.revision, false )
 	stream:WriteStr( self.uniqueID )
 
 	Profile("write-variables", self.variables.WriteToStream, self.variables, stream, mode, fmtVersion)
@@ -356,15 +359,10 @@ function meta:ReadFromStream(stream, mode)
 	if version > fmtVersion then error("Blueprint data version is newer") end
 
 	self.version = version
-
-	print("--LOAD STREAM VERSION IS: " .. version)
-
 	self.type = stream:ReadInt( false )
-	print("MODULE TYPE: " .. self.type)
-
 	self.revision = stream:ReadInt( false )
 	self.uniqueID = stream:ReadStr( 16 )
-	print( bpcommon.GUIDToString( self.uniqueID ) )
+	print( bpcommon.GUIDToString( self.uniqueID ) .. " v" .. self.revision  )
 
 	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
 	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
