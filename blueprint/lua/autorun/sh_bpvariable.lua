@@ -101,12 +101,8 @@ function meta:ReadFromStream(stream, mode, version)
 	self.flags = stream:ReadInt( false )
 	self.default = bpdata.ReadValue( stream )
 	self.name = bpdata.ReadValue( stream )
-	if version >= 6 then
-		self.ex = bpdata.ReadValue( stream )
-	end
-	if version >= 9 then
-		self.repmode = bpdata.ReadValue( stream )
-	end
+	self.ex = bpdata.ReadValue( stream )
+	self.repmode = bpdata.ReadValue( stream )
 
 end
 

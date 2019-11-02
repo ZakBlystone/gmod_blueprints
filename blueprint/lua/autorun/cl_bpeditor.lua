@@ -100,24 +100,6 @@ function PANEL:Init()
 			RunConsoleCommand("pac_asset_browser")
 
 		end},
-		{"Convert", function()
-			Derma_StringRequest(
-				"Convert Outdated Blueprint",
-				"What filename though?",
-				"",
-				function( text )
-
-					self:RunCommand( function()
-					if file.Exists("blueprints/bpm_" .. text .. ".txt", "DATA") then
-						LastSavedFile = text
-						self.module:Load("blueprints/bpm_" .. text .. ".txt", true)
-					end
-					end)
-
-				end,
-				function( text ) end
-			)
-		end},
 	}
 
 	self.callback = function(...)

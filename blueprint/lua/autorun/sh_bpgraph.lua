@@ -654,23 +654,19 @@ function meta:WriteToStream(stream, mode, version)
 		Profile("write-nodes", self.nodes.WriteToStream, self.nodes, stream, mode, version)
 		Profile("write-connections", bpdata.WriteValue, self.connections, stream )
 
-		if version >= 5 then
+		if mode == bpmodule.STREAM_FILE then
+			local connnectionMeta = {}
+			for id, c in self:Connections(true) do
 
-			if mode == bpmodule.STREAM_FILE then
-				local connnectionMeta = {}
-				for id, c in self:Connections(true) do
+				local nt0 = self:GetNode(c[1]):GetType()
+				local nt1 = self:GetNode(c[3]):GetType()
+				local pin0 = nt0.pins[c[2]]
+				local pin1 = nt1.pins[c[4]]
+				connnectionMeta[id] = {nt0.name, pin0[3], nt1.name, pin1[3]}
 
-					local nt0 = self:GetNode(c[1]):GetType()
-					local nt1 = self:GetNode(c[3]):GetType()
-					local pin0 = nt0.pins[c[2]]
-					local pin1 = nt1.pins[c[4]]
-					connnectionMeta[id] = {nt0.name, pin0[3], nt1.name, pin1[3]}
-
-				end
-
-				bpdata.WriteValue( connnectionMeta, stream )
 			end
 
+			bpdata.WriteValue( connnectionMeta, stream )
 		end
 
 	end)
@@ -683,79 +679,24 @@ function meta:ReadFromStream(stream, mode, version)
 
 		self:Clear()
 
-		if version >= 3 then
-			self.type = stream:ReadInt( false )
-		else
-			self.type = GT_Event
-		end
-
-		if version >= 10 then self.flags = stream:ReadInt( false ) end
+		self.type = stream:ReadInt( false )
+		self.flags = stream:ReadInt( false )
 
 		if self.type == GT_Function then
-			if version >= 7 then
-				self.inputs:SuppressEvents(true)
-				self.outputs:SuppressEvents(true)
-				self.inputs:ReadFromStream(stream, mode, version)
-				self.outputs:ReadFromStream(stream, mode, version)
-				self.inputs:SuppressEvents(false)
-				self.outputs:SuppressEvents(false)
-			else
-				local numInputs = stream:ReadInt( false )
-				local numOutputs = stream:ReadInt( false )
-				for i=1, numInputs do
-					local v = bpvariable.New()
-					v:ReadFromStream( stream, mode, version )
-					self.inputs:Add(v)
-				end
-				for i=1, numOutputs do
-					local v = bpvariable.New()
-					v:ReadFromStream( stream, mode, version )
-					self.outputs:Add(v)
-				end
-			end
+			self.inputs:SuppressEvents(true)
+			self.outputs:SuppressEvents(true)
+			self.inputs:ReadFromStream(stream, mode, version)
+			self.outputs:ReadFromStream(stream, mode, version)
+			self.inputs:SuppressEvents(false)
+			self.outputs:SuppressEvents(false)
 		end
 
-		if version >= 7 then
-			self.deferredNodes:ReadFromStream(stream, mode, version)
-		else
-			local nametable = {}
-			local count = stream:ReadInt( false )
-			for i=1, count do 
-				local size = stream:ReadByte( false ) 
-				table.insert(nametable, stream:ReadStr( size ) )
-			end
-
-			self.deferred = {}
-
-			local count = stream:ReadInt( false )
-			for i=1, count do
-
-				local nodeTypeName = nametable[stream:ReadInt( false )]
-				local nodeX = stream:ReadFloat()
-				local nodeY = stream:ReadFloat()
-				local literals = bpdata.ReadValue( stream )
-				local redirect = NodeRedirectors[ nodeTypeName ]
-				if redirect then nodeTypeName = redirect end
-
-				table.insert(self.deferred, {
-					nodeType = nodeTypeName,
-					x = nodeX,
-					y = nodeY,
-					literals = literals,
-				})
-
-			end
-		end
-
+		self.deferredNodes:ReadFromStream(stream, mode, version)
 		self.connections = bpdata.ReadValue( stream )
 
-		if version >= 5 then
+		if mode == bpmodule.STREAM_FILE then
 
-			if mode == bpmodule.STREAM_FILE then
-
-				self.connectionMeta = bpdata.ReadValue( stream )
-
-			end
+			self.connectionMeta = bpdata.ReadValue( stream )
 
 		end
 

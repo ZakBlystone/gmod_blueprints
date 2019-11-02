@@ -174,7 +174,7 @@ function meta:ReadFromStream(stream, mode, version)
 
 	self.nodeType = bpdata.ReadValue(stream)
 	self.literals = bpdata.ReadValue(stream)
-	if version >= 11 then self.data = bpdata.ReadValue(stream) end
+	self.data = bpdata.ReadValue(stream)
 	self.x = stream:ReadFloat()
 	self.y = stream:ReadFloat()
 

@@ -28,8 +28,8 @@ GRAPH_NODETYPE_ACTIONS = {
 }
 
 
-fmtMagic = 0x42504D58
-fmtVersion = 11
+fmtMagic = 0x42504D30
+fmtVersion = 1
 
 local meta = {}
 meta.__index = meta
@@ -311,9 +311,9 @@ function meta:NetRecv()
 
 end
 
-function meta:Load(filename, oldFormat)
+function meta:Load(filename)
 
-	local inStream = bpdata.InStream(false, not oldFormat)
+	local inStream = bpdata.InStream(false, true)
 	if not inStream:LoadFile(filename, true, true) then
 		error("Failed to load blueprint, try using 'Convert'")
 	end
@@ -359,68 +359,16 @@ function meta:ReadFromStream(stream, mode)
 
 	print("--LOAD STREAM VERSION IS: " .. version)
 
-	if version >= 4 then
-		self.type = stream:ReadInt( false )
-		print("MODULE TYPE: " .. self.type)
-	end
+	self.type = stream:ReadInt( false )
+	print("MODULE TYPE: " .. self.type)
 
-	if version >= 5 then
-		self.revision = stream:ReadInt( false )
-		self.uniqueID = stream:ReadStr( 16 )
+	self.revision = stream:ReadInt( false )
+	self.uniqueID = stream:ReadStr( 16 )
+	print( bpcommon.GUIDToString( self.uniqueID ) )
 
-		print( bpcommon.GUIDToString( self.uniqueID ) )
-	end
-
-	if version >= 7 then
-		Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
-	elseif version >= 2 then
-		local vars = bpdata.ReadValue( stream )
-		for _, v in pairs(vars) do
-			local varID = self:NewVariable(v.name, v.type, v.default, v.flags, v.ex)
-			if v.id then 
-				print("REMAP VAR ID: " .. v.id)
-				self:GetVariable(varID).id = v.id
-				self.variables.nextID = v.id + 1
-			end
-		end
-	end
-
-	if version >= 7 then
-		Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
-	else
-		local count = stream:ReadInt( false )
-		for i=1, count do
-			local id = self:NewGraph( stream:ReadStr(stream:ReadInt(false)) )
-			local graph = self:GetGraph(id)
-			graph:ReadFromStream(stream, mode, version)
-		end
-	end
-
-	if version >= 8 then
-		Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version)
-	end
-
-	if version < 4 then
-
-		print("Blueprint uses old variable schema, remapping node types...")
-		local remaps = {}
-		for id, var in self:Variables() do
-			remaps["Set" .. var:GetName()] = "__VSet" .. id
-			remaps["Get" .. var:GetName()] = "__VGet" .. id
-		end
-
-		for _, graph in self:Graphs() do
-			graph:RemapNodeTypes( function(nodeType) 
-				local r = remaps[nodeType]
-				if r then
-					print(" " .. nodeType .. " => " .. r)
-					return r
-				end
-				return nodeType
-			end )
-		end
-
-	end
+	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
+	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
+	Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version)
 
 	for _, graph in self:Graphs() do
 		graph:CreateDeferredData()
