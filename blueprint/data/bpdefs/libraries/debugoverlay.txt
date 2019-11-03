@@ -16,7 +16,7 @@ LIB debugoverlay
 		IN mins, PN_Vector, #Minimum bounds of the box
 		IN maxs, PN_Vector, #Maximum bounds of the box
 		IN lifetime=1, PN_Number, #Number of seconds to appear
-		IN color, PN_Struct, PNF_None, Color, #The color of the box.
+		IN color, PN_Color, PNF_None, #The color of the box.
 	}
 	FUNC SHARED BoxAngles
 	{
@@ -26,7 +26,7 @@ LIB debugoverlay
 		IN maxs, PN_Vector, #Maximum bounds of the box
 		IN angle, PN_Angles, #The angle to draw the box at
 		IN lifetime=1, PN_Number, #Number of seconds to appear
-		IN color, PN_Struct, PNF_None, Color, #The color of the box.
+		IN color, PN_Color, PNF_None, #The color of the box.
 	}
 	FUNC SHARED Cross
 	{
@@ -34,7 +34,7 @@ LIB debugoverlay
 		IN origin, PN_Vector, #World position
 		IN size, PN_Number, #Size of the cross
 		IN lifetime=1, PN_Number, #Number of seconds to appear
-		IN color, PN_Struct, PNF_None, Color, #The color of the box.
+		IN color, PN_Color, PNF_None, #The color of the box.
 		IN ignoreZ=false, PN_Bool, #If true, will draw on top of everything; ignoring the Z buffer
 	}
 	FUNC SHARED EntityTextAtPosition
@@ -44,7 +44,7 @@ LIB debugoverlay
 		IN line, PN_Number, #Line of text, will offset text on the to display the new line unobstructed
 		IN text, PN_String, #The text to display
 		IN lifetime=1, PN_Number, #Number of seconds to appear
-		IN color, PN_Struct, PNF_None, Color, #The color of the text.
+		IN color, PN_Color, PNF_None, #The color of the text.
 	}
 	FUNC SHARED Grid
 	{
@@ -57,7 +57,7 @@ LIB debugoverlay
 		IN start, PN_Vector, #Start of line
 		IN end, PN_Vector, #End of line
 		IN lifetime=1, PN_Number, #Number of seconds to appear
-		IN color, PN_Struct, PNF_None, Color, #The color of the line.
+		IN color, PN_Color, PNF_None, #The color of the line.
 		IN ignoreZ=false, PN_Bool, #If true, will draw on top of everything; ignoring the Z buffer
 	}
 	FUNC SHARED ScreenText
@@ -67,7 +67,7 @@ LIB debugoverlay
 		IN y, PN_Number, #The position of the text, from 0 ( top ) to 1 ( bottom ).
 		IN text, PN_String, #The text to display
 		IN lifetime=1, PN_Number, #Number of seconds to appear
-		IN color, PN_Struct, PNF_None, Color, #The color of the text.
+		IN color, PN_Color, PNF_None, #The color of the text.
 	}
 	FUNC SHARED Sphere
 	{
@@ -75,7 +75,7 @@ LIB debugoverlay
 		IN origin, PN_Vector, #World position
 		IN size, PN_Number, #Size of the sphere
 		IN lifetime=1, PN_Number, #Number of seconds to appear
-		IN color, PN_Struct, PNF_None, Color, #The color of the line.
+		IN color, PN_Color, PNF_None, #The color of the line.
 		IN ignoreZ=false, PN_Bool, #If true, will draw on top of everything; ignoring the Z buffer
 	}
 	FUNC SHARED SweptBox
@@ -87,7 +87,7 @@ LIB debugoverlay
 		IN maxs, PN_Vector, #Maximum bounds of the box
 		IN angle, PN_Angles, #Angle of box
 		IN lifetime=1, PN_Number, #Number of seconds to appear
-		IN color, PN_Struct, PNF_None, Color, #The color of the box.
+		IN color, PN_Color, PNF_None, #The color of the box.
 	}
 	FUNC SHARED Text
 	{
@@ -104,7 +104,7 @@ LIB debugoverlay
 		IN pos2, PN_Vector, #Second point of the triangle
 		IN pos3, PN_Vector, #Third point of the triangle
 		IN lifetime=1, PN_Number, #Number of seconds to appear
-		IN color, PN_Struct, PNF_None, Color, #The color of the triangle.
+		IN color, PN_Color, PNF_None, #The color of the triangle.
 		IN ignoreZ=false, PN_Bool, #If true, will draw on top of everything; ignoring the Z buffer
 	}
 }

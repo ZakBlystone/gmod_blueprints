@@ -130,6 +130,7 @@ local function ParseDef( filePath, search )
 				pins = {},
 				nameMap = {},
 				invNameMap = {},
+				pinTypeOverride = args[2] and args[2]:Trim():sub(1,3) == "PN_" and pinTypeLookup[args[2]:Trim()] or nil,
 			}
 			d2 = d
 		elseif isCallback and lv == 0 then
@@ -153,7 +154,7 @@ local function ParseDef( filePath, search )
 				type = isHooks and DEFTYPE_HOOKS or (isClass and DEFTYPE_CLASS or DEFTYPE_LIB),
 				name = isHooks and args[1]:sub(7,-1) or (isClass and args[1]:sub(7,-1) or args[1]:sub(5,-1)),
 				typeName = args[2] and args[2]:Trim() or nil,
-				pinTypeOverride = args[3] and args[3]:Trim() or nil,
+				pinTypeOverride = args[3] and pinTypeLookup[args[3]:Trim()] or nil,
 				entries = {},
 			}
 		elseif tr:sub(0,1) == "{" then
@@ -175,6 +176,9 @@ local function ParseDef( filePath, search )
 			elseif args[1]:sub(1,4) == "JUMP" then
 				d2.jumpSymbols = d2.jumpSymbols or {}
 				table.insert(d2.jumpSymbols, table.concat(args, ","):sub(6,-1):Trim())
+			elseif args[1]:sub(1,5) == "LOCAL" then
+				d2.locals = d2.locals or {}
+				table.insert(d2.locals, table.concat(args, ","):sub(6,-1):Trim())
 			elseif args[1]:sub(1,4) == "WARN" then
 				d2.warn = table.concat(args, ","):sub(6,-1):gsub("\\n", "\n")
 			elseif args[1]:sub(1,9) == "PROTECTED" then
@@ -328,9 +332,10 @@ function CreateStructNodes( struct, output )
 	for k, v in pairs(struct.nameMap) do obj:RemapName(k, v) end
 	for _, pin in pairs(struct.pins) do obj:NewPin(pin.name, pin.type, pin.default, pin.flags, pin.ex) end
 	obj.pins:PreserveNames( false )
+	obj:SetMetaTable(struct.metatable)
 
-	local breaker = obj:BreakerNodeType()
-	local maker = obj:MakerNodeType()
+	local breaker = obj:BreakerNodeType(struct.pinTypeOverride)
+	local maker = obj:MakerNodeType(struct.pinTypeOverride)
 
 	output[maker.name] = maker
 	output[breaker.name] = breaker
@@ -369,10 +374,9 @@ function CreateLibNodes( lib, output )
 		if lib.type == DEFTYPE_CLASS then
 
 			if lib.pinTypeOverride then
-				local type = pinTypeLookup[lib.pinTypeOverride]
 				table.insert(ntype.pins, {
 					PD_In,
-					type,
+					lib.pinTypeOverride,
 					bpcommon.Camelize(lib.typeName or lib.name),
 					PNF_None,
 					nil,

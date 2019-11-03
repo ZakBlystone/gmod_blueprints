@@ -27,7 +27,7 @@ LIB team
 	{
 		DESC Returns the team's color.
 		IN teamIndex, PN_Number, #The team index.
-		OUT color, PN_Struct, PNF_None, Color, #The team's color as a Color structure.
+		OUT color, PN_Color, PNF_None, #The team's color as a Color structure.
 	}
 	PURE SHARED GetName
 	{
@@ -81,7 +81,7 @@ LIB team
 	{
 		DESC Sets the team's color.
 		IN teamIndex, PN_Number, #The team index.
-		IN color, PN_Struct, PNF_None, Color, #The team's new color as a Color structure.
+		IN color, PN_Color, PNF_None, #The team's new color as a Color structure.
 	}
 	FUNC SHARED SetScore
 	{
@@ -100,7 +100,7 @@ LIB team
 		DESC Creates a new team.
 		IN teamIndex, PN_Number, #The team index.
 		IN teamName, PN_String, #The team name.
-		IN teamColor, PN_Struct, PNF_None, Color, #The team color. Uses the Color structure.
+		IN teamColor, PN_Color, PNF_None, #The team color. Uses the Color structure.
 		IN isJoinable, PN_Bool, PNF_Nullable, #Whether the team is joinable or not.
 	}
 	FUNC SHARED TotalDeaths

@@ -107,13 +107,13 @@ HOOKS GM
 	{
 		DESC Returns the color for the given entity's team. This is used in chat and deathnotice text.
 		IN entity, PN_Ref, PNF_None, Entity, #Entity
-		OUT color, PN_Struct, PNF_None, Color, #Team Color
+		OUT color, PN_Color, PNF_None, #Team Color
 	}
 	CLIENT GetNumTeamColor
 	{
 		DESC Returns the team color for the given team index.
 		IN team, PN_Number, #Team index
-		OUT color, PN_Struct, PNF_None, Color, #Team Color
+		OUT color, PN_Color, PNF_None, #Team Color
 	}
 	SERVER GravGunDropped
 	{

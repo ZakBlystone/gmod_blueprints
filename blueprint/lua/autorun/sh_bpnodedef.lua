@@ -51,22 +51,11 @@ NodeTypes = {
 		compact = true,
 		collapse = true,
 	},
-	["Think"] = EVENT {
-		pins = {
-			{ PD_Out, PN_Number, "dt" },
-			{ PD_Out, PN_Number, "curTime" },
-		},
-		hook = "Think",
-		code = [[
-			#2 = FrameTime() 
-			#3 = CurTime()
-		]],
-	},
 	["EntityFireBullets"] = EVENT {
 		deprecated = true,
 		pins = {
-			{ PD_Out, PN_Entity, "entity" },
-			{ PD_Out, PN_Entity, "attacker" },
+			{ PD_Out, PN_Ref, "entity", PNF_None, "Entity" },
+			{ PD_Out, PN_Ref, "attacker", PNF_None, "Entity" },
 			{ PD_Out, PN_Number, "damage" },
 			{ PD_Out, PN_Number, "count" },
 			{ PD_Out, PN_Vector, "source" },
@@ -81,39 +70,6 @@ NodeTypes = {
 			#6 = arg[2].Src
 			#7 = arg[2].Dir
 		]],
-	},
-	["EntityEmitSound"] = EVENT {
-		pins = {
-			{ PD_Out, PN_Entity, "entity" },
-			{ PD_Out, PN_String, "soundname" },
-			{ PD_Out, PN_String, "originalSound" },
-		},
-		hook = "EntityEmitSound",
-		code = [[
-			#2 = arg[1].Entity
-			#3 = arg[1].SoundName
-			#4 = arg[1].OriginalSoundName
-		]],
-	},
-	["FireBullets"] = FUNCTION {
-		deprecated = true,
-		pins = {
-			{ PD_In, PN_Entity, "entity" },
-			{ PD_In, PN_Vector, "spread", PNF_Nullable },
-			{ PD_In, PN_Vector, "source" },
-			{ PD_In, PN_Vector, "dir" },
-			{ PD_In, PN_Number, "num" },
-			{ PD_In, PN_Number, "damage" },
-		},
-		code = "Entity_.FireBullets($2, { Spread = $3, Src = $4, Dir = $5, Num = $6, Damage = $7 })",
-	},
-	["Kill"] = FUNCTION {
-		deprecated = true,
-		pins = {
-			{ PD_In, PN_Player, "player" },
-			{ PD_In, PN_Bool, "silent" },
-		},
-		code = "if $3 then Player_.KillSilent($2) else Player_.Kill($2) end",
 	},
 	["ChatPrintAll"] = FUNCTION {
 		pins = {
@@ -235,23 +191,6 @@ NodeTypes = {
 		},
 		code = "print($2)",
 	},
-	["RotateAroundAxis"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Angles, "angles" },
-			{ PD_In, PN_Vector, "axis" },
-			{ PD_In, PN_Number, "rotation" },
-		},
-		code = "$2:RotateAroundAxis($3, $4)",
-		compact = false,
-	},
-	["VectorToAngle"] = PURE {
-		pins = {
-			{ PD_In, PN_Vector, "vector" },
-			{ PD_Out, PN_Angles, "angles" },
-		},
-		code = "#1 = $1:Angle()",
-		compact = true,
-	},
 	["AngleVectors"] = PURE {
 		pins = {
 			{ PD_In, PN_Angles, "angles" },
@@ -291,7 +230,7 @@ NodeTypes = {
 	["Player"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "id" },	
-			{ PD_Out, PN_Player, "player" },
+			{ PD_Out, PN_Ref, "player", PNF_None, "Player" },
 		},
 		code = "#1 = player.GetAll()[$1]",
 	},
@@ -532,7 +471,7 @@ NodeTypes = {
 	},
 	["SetEntityValue"] = FUNCTION {
 		pins = {
-			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Ref, "entity", PNF_None, "Entity" },
 			{ PD_In, PN_String, "key" },
 			{ PD_In, PN_Any, "value" },
 		},
@@ -540,7 +479,7 @@ NodeTypes = {
 	},
 	["GetEntityValue"] = PURE {
 		pins = {
-			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Ref, "entity", PNF_None, "Entity" },
 			{ PD_In, PN_String, "key" },
 			{ PD_Out, PN_Bool, "hasvalue"},
 			{ PD_Out, PN_Any, "value" },
@@ -549,14 +488,14 @@ NodeTypes = {
 	},
 	["ClearEntityValue"] = FUNCTION {
 		pins = {
-			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Ref, "entity", PNF_None, "Entity" },
 			{ PD_In, PN_String, "key" },
 		},
 		code = "if IsValid($2) then $2[\"bp_!graph_\" .. $3] = nil end",
 	},
 	["GetKeyValue"] = PURE {
 		pins = {
-			{ PD_In, PN_Entity, "entity" },
+			{ PD_In, PN_Ref, "entity", PNF_None, "Entity" },
 			{ PD_In, PN_String, "key" },
 			{ PD_Out, PN_String, "value" },
 		},
@@ -666,14 +605,14 @@ NodeTypes = {
 	["FindPlayerByName"] = PURE {
 		pins = {
 			{ PD_In, PN_String, "name" },
-			{ PD_Out, PN_Player, "player" },
+			{ PD_Out, PN_Ref, "player", PNF_None, "Player" },
 			{ PD_Out, PN_Bool, "found" },
 		},
 		code = "#2 = false for _, pl in pairs(player.GetAll()) do if pl:Nick():find( $1 ) ~= nil then #1 = pl #2 = true end end"
 	},
 	["MakeExplosion"] = FUNCTION {
 		pins = {
-			{ PD_In, PN_Entity, "owner", PNF_Nullable },
+			{ PD_In, PN_Ref, "owner", PNF_Nullable, "Entity" },
 			{ PD_In, PN_Vector, "position" },
 			{ PD_In, PN_Number, "damage" }
 		},
@@ -896,40 +835,6 @@ NodeTypes = {
 		compact = true,
 		code = "$2 = {}",
 	},
-	["TraceLine"] = FUNCTION {
-		pins = {
-			{ PD_In, PN_Vector, "start" },
-			{ PD_In, PN_Vector, "end" },
-			{ PD_In, PN_Entity, "filter", PNF_Nullable },
-			{ PD_In, PN_Enum, "mask", PNF_None, "MASK" },
-			{ PD_In, PN_Enum, "collisionGroup", PNF_None, "COLLISION_GROUP" },
-			{ PD_Out, PN_Bool, "hit" },
-			{ PD_Out, PN_Entity, "entity" },
-			{ PD_Out, PN_Vector, "pos" },
-			{ PD_Out, PN_Vector, "normal" },
-			{ PD_Out, PN_Number, "fraction" },
-		},
-		deprecated = true,
-		locals = {"tr"},
-		defaults = {
-			[5] = "MASK_SOLID",
-			[6] = "COLLISION_GROUP_NONE",
-		},
-		code = [[
-			%tr = util.TraceLine({
-				start = $2,
-				endpos = $3,
-				filter = $4,
-				mask = $5,
-				collisiongroup = $6,
-			})
-			#2 = %tr.Hit
-			#3 = %tr.Entity
-			#4 = %tr.HitPos
-			#5 = %tr.HitNormal
-			#6 = %tr.Fraction
-		]],
-	},
 	["CheckValue"] = PURE {
 		pins = {
 			{ PD_In, PN_Any, "value" },
@@ -1001,88 +906,6 @@ for k,v in pairs(NodeTypes) do
 		NodeTypes[k] = nil
 	end
 end
-
---[[local allpins = {}
-for i=1, PN_Max do
-	table.insert(allpins, { PD_In, i, PinTypeNames[i] })
-end
-for i=1, PN_Max do
-	table.insert(allpins, { PD_Out, i, PinTypeNames[i] })
-end
-
-NodeTypes["DEBUGALLPINTYPES"] = PURE {
-	pins = allpins,
-	compact = false,
-}]]
-
-local function AddHook(name, args)
-
-	local pins = {}
-	local code = ""
-	local ipin = 2
-	for k, v in pairs(args) do
-
-		table.insert( pins, { PD_Out, v[2], v[1], v[3], v[4] })
-		code = code .. "#" .. ipin .. " = arg[" .. ipin-1 .. "]\n"
-
-		ipin = ipin + 1
-
-	end
-
-	if code:len() > 0 then
-		code = code:sub(0, -2)
-	end
-
-	NodeTypes[name] = EVENT {
-		pins = pins,
-		hook = name,
-		code = code,
-		deprecated = true,
-	}
-
-end
-
-AddHook("OnNPCKilled", { {"npc", PN_Npc}, {"attacker", PN_Entity}, {"inflictor", PN_Entity} })
-AddHook("PlayerSpawn", { {"player", PN_Player}, {"transition", PN_Bool} })
-AddHook("PlayerSetModel", { {"player", PN_Player} })
-AddHook("PlayerUse", { {"player", PN_Player}, {"entity", PN_Entity} })
-AddHook("PlayerSay", { {"player", PN_Player}, {"text", PN_String}, {"teamChat", PN_Bool} })
-AddHook("PlayerDeath", { {"victim", PN_Player}, {"inflictor", PN_Entity}, {"attacker", PN_Entity} })
-AddHook("PlayerDisconnected", { {"player", PN_Player} })
-AddHook("PlayerEnteredVehicle", { {"player", PN_Player}, {"vehicle", PN_Vehicle}, {"role", PN_Number} })
-AddHook("PlayerLeaveVehicle", { {"player", PN_Player}, {"vehicle", PN_Vehicle} })
-AddHook("PlayerFrozeObject", { {"player", PN_Player}, {"entity", PN_Entity}, {"physobj", PN_PhysObj} })
-AddHook("PlayerUnfrozeObject", { {"player", PN_Player}, {"entity", PN_Entity}, {"physobj", PN_PhysObj} })
-AddHook("PlayerHurt", { {"victim", PN_Player}, {"attacker", PN_Entity}, {"health", PN_Number}, {"damage", PN_Number} })
-AddHook("PlayerTick", { {"player", PN_Player}, {"moveData", PN_Ref, PNF_None, "CMoveData"} })
-AddHook("GravGunOnDropped", { {"player", PN_Player}, {"entity", PN_Entity} })
-AddHook("GravGunOnPickedUp", { {"player", PN_Player}, {"entity", PN_Entity} })
-AddHook("PlayerButtonDown", { {"player", PN_Player}, {"button", PN_Enum, PNF_None, "BUTTON_CODE"} })
-AddHook("PlayerButtonUp", { {"player", PN_Player}, {"button", PN_Enum, PNF_None, "BUTTON_CODE"} })
-AddHook("KeyPress", { {"player", PN_Player}, {"key", PN_Enum, PNF_None, "IN"} })
-AddHook("KeyRelease", { {"player", PN_Player}, {"key", PN_Enum, PNF_None, "IN"} })
-AddHook("PlayerSwitchFlashlight", { {"player", PN_Player}, {"enabled", PN_Bool} })
-AddHook("EntityTakeDamage", { {"target", PN_Entity}, {"damageInfo", PN_Ref, PNF_None, "CTakeDamageInfo"} })
-AddHook("EntityRemoved", { {"entity", PN_Entity} })
-
---[[
-		pins = {
-			{ PD_In, PN_Exec, "Exec" },
-			{ PD_In, PN_Bool, "condition" },
-			{ PD_Out, PN_Exec, "True" },
-			{ PD_Out, PN_Exec, "False" },
-		},
-		code = "if $2 then #1 end #2",
-]]
-
---[[local t = {
-	["x"] = 1,
-	["y"] = 2,
-	["z"] = 3,
-}
-
-local a, b = next(t, 'x')
-print(a, b)]]
 
 for k,v in pairs(NodeTypes) do 
 	v.name = k

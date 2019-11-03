@@ -65,7 +65,7 @@ function meta:MarkAsCustom()
 
 end
 
-function meta:MakerNodeType()
+function meta:MakerNodeType( pinTypeOverride )
 
 	local ntype = { pins = {} }
 	ntype.name = "Make" .. self:GetName()
@@ -78,13 +78,17 @@ function meta:MakerNodeType()
 	ntype.isStruct = true
 	ntype.custom = self.custom
 
-	table.insert(ntype.pins, {
-		PD_Out,
-		PN_Struct,
-		self:GetName(),
-		PNF_None,
-		self:GetName(),
-	})
+	if pinTypeOverride then 
+		table.insert(ntype.pins, {PD_Out, pinTypeOverride, self:GetName()})
+	else
+		table.insert(ntype.pins, {
+			PD_Out,
+			PN_Struct,
+			self:GetName(),
+			PNF_None,
+			self:GetName(),
+		})
+	end
 
 	for _, pin in self.pins:Items() do
 
@@ -109,7 +113,7 @@ function meta:MakerNodeType()
 
 end
 
-function meta:BreakerNodeType()
+function meta:BreakerNodeType( pinTypeOverride )
 
 	local ntype = { pins = {} }
 	ntype.name = "Break" .. self:GetName()
@@ -122,13 +126,17 @@ function meta:BreakerNodeType()
 	ntype.isStruct = true
 	ntype.custom = self.custom
 
-	table.insert(ntype.pins, {
-		PD_In,
-		PN_Struct,
-		self:GetName(),
-		PNF_None,
-		self:GetName(),
-	})
+	if pinTypeOverride then 
+		table.insert(ntype.pins, {PD_In, pinTypeOverride, self:GetName()})
+	else
+		table.insert(ntype.pins, {
+			PD_In,
+			PN_Struct,
+			self:GetName(),
+			PNF_None,
+			self:GetName(),
+		})
+	end
 
 	for _, pin in self.pins:Items() do
 
@@ -138,7 +146,7 @@ function meta:BreakerNodeType()
 	end
 
 	local ret, arg = PinRetArg( ntype, nil, function(s,pin)
-		return "\n" .. s .. " = $1[\"" .. (self.invNameMap[pin[3]] or pin[3]) .. "\""
+		return "\n" .. s .. " = $1[\"" .. (self.invNameMap[pin[3]] or pin[3]) .. "\"]"
 	end, "")
 	if ret[1] == '\n' then ret = ret:sub(2,-1) end
 	ntype.code = ret

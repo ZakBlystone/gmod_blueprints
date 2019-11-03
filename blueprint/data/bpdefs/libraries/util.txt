@@ -72,7 +72,7 @@ LIB util
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to apply the decal to
 		IN position, PN_Vector, #The position of the decal.
 		IN normal, PN_Vector, #The direction of the decal.
-		IN color, PN_Struct, PNF_None, Color, #The color of the decal. Uses the Color structure. This only works when used on a brush model and only if the decal material has set $vertexcolor to 1.
+		IN color, PN_Color, PNF_None, #The color of the decal. Uses the Color structure. This only works when used on a brush model and only if the decal material has set $vertexcolor to 1.
 		IN w, PN_Number, #The width scale of the decal.
 		IN h, PN_Number, #The height scale of the decal.
 	}

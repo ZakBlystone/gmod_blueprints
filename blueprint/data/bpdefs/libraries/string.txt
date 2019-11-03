@@ -76,7 +76,7 @@ LIB string
 	FUNC SHARED FromColor
 	{
 		DESC Creates a string from a Color variable.
-		IN color, PN_Struct, PNF_None, Color, #The color to put in the string.
+		IN color, PN_Color, PNF_None, #The color to put in the string.
 		OUT string, PN_String, #Output
 	}
 	PURE SHARED GetExtensionFromFilename
@@ -231,7 +231,7 @@ LIB string
 	{
 		DESC Fetches a Color type from a string.
 		IN Inputstring, PN_String, #The string to convert from.
-		OUT color, PN_Struct, PNF_None, Color, #The output Color structure
+		OUT color, PN_Color, PNF_None, #The output Color structure
 	}
 	PURE SHARED ToMinutesSeconds
 	{

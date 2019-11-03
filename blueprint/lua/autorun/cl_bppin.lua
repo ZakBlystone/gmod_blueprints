@@ -54,9 +54,15 @@ function PANEL:Setup(graph, node, pin, pinID)
 
 	local isTable = bit.band(self.pin[4], PNF_Table) ~= 0
 
+	self.eprint = false
 	self.pinSpot.Paint = function(pinspot,w,h)
 
 		local pt = self.pinType
+
+		if not NodePinColors[pt] then
+			if not self.eprint then print("NO COLOR FOR PIN: " .. tostring(pt)) self.eprint = true end 
+			return
+		end
 
 		surface.SetDrawColor( NodePinColors[ pt ] )
 		surface.DrawRect(0,0,w,h)
@@ -116,6 +122,7 @@ function PANEL:InitLiteral()
 	local shift_up = 2
 	if IsValid(self.checkBox) then self.checkBox:Remove() self.checkBox = nil end
 	if IsValid(self.textEntry) then self.textEntry:Remove() self.textEntry = nil end
+	if IsValid(self.comboBox) then self.comboBox:Remove() self.comboBox = nil end
 
 	if self.pin[1] == PD_In then
 		local literalType = NodeLiteralTypes[ self.pinType ]

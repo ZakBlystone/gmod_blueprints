@@ -6,7 +6,7 @@ LIB render
 		IN startPos, PN_Vector, #Beam start position.
 		IN width, PN_Number, #The width of the beam.
 		IN textureEnd, PN_Number, #The end coordinate of the texture used.
-		IN color, PN_Struct, PNF_None, Color, #The color to be used. Uses the Color structure.
+		IN color, PN_Color, PNF_None, #The color to be used. Uses the Color structure.
 	}
 	FUNC CLIENT BlurRenderTarget
 	{
@@ -58,7 +58,7 @@ LIB render
 	{
 		DESC Clears a render target
 		IN texture, PN_Ref, PNF_None, ITexture
-		IN color, PN_Struct, PNF_None, Color, #The color, see Color structure
+		IN color, PN_Color, PNF_None, #The color, see Color structure
 	}
 	FUNC CLIENT ClearStencil
 	{
@@ -117,7 +117,7 @@ LIB render
 		IN width, PN_Number, #The width of the beam.
 		IN textureStart, PN_Number, #The start coordinate of the texture used.
 		IN textureEnd, PN_Number, #The end coordinate of the texture used.
-		IN color, PN_Struct, PNF_Nullable, Color, #The color to be used. Uses the Color structure.
+		IN color, PN_Color, PNF_Nullable, #The color to be used. Uses the Color structure.
 	}
 	FUNC CLIENT DrawBox
 	{
@@ -126,14 +126,14 @@ LIB render
 		IN angles, PN_Angles, #Orientation of the box.
 		IN mins, PN_Vector, #Start position of the box, relative to origin.
 		IN maxs, PN_Vector, #End position of the box, relative to origin.
-		IN color, PN_Struct, PNF_Nullable, Color, #The color of the box. Uses the Color structure.
+		IN color, PN_Color, PNF_Nullable, #The color of the box. Uses the Color structure.
 	}
 	FUNC CLIENT DrawLine
 	{
 		DESC Draws a line in 3D space.
 		IN startPos, PN_Vector, #Line start position in world coordinates.
 		IN endPos, PN_Vector, #Line end position in world coordinates.
-		IN color, PN_Struct, PNF_Nullable, Color, #The color to be used. Uses the Color structure.
+		IN color, PN_Color, PNF_Nullable, #The color to be used. Uses the Color structure.
 		IN writeZ, PN_Bool, PNF_Nullable, #Whether or not to consider the Z buffer. If false, the line will be drawn over everything currently drawn, if true, the line will be drawn with depth considered, as if it were a regular object in 3D space. BUG	 Enabling this option will cause the line to ignore the color's alpha. Issue Tracker: #1086
 	}
 	FUNC CLIENT DrawQuad
@@ -143,7 +143,7 @@ LIB render
 		IN vert2, PN_Vector, #The second vertex.
 		IN vert3, PN_Vector, #The third vertex.
 		IN vert4, PN_Vector, #The fourth vertex.
-		IN color, PN_Struct, PNF_Nullable, Color, #The color of the quad. See Color
+		IN color, PN_Color, PNF_Nullable, #The color of the quad. See Color
 	}
 	FUNC CLIENT DrawQuadEasy
 	{
@@ -152,7 +152,7 @@ LIB render
 		IN normal, PN_Vector, #The face direction of the quad.
 		IN width, PN_Number, #The width of the quad.
 		IN height, PN_Number, #The height of the quad.
-		IN color, PN_Struct, PNF_None, Color, #The color of the quad. Uses the Color structure.
+		IN color, PN_Color, PNF_None, #The color of the quad. Uses the Color structure.
 		IN rotation, PN_Number, PNF_Nullable, #The rotation of the quad counter-clockwise in degrees around the normal axis. In other words, the quad will always face the same way but this will rotate its corners.
 	}
 	FUNC CLIENT DrawScreenQuad
@@ -174,7 +174,7 @@ LIB render
 		IN radius, PN_Number, #Radius of the sphere. Negative radius will make the sphere render inwards rather than outwards.
 		IN longitudeSteps, PN_Number, #The number of longitude steps. This controls the quality of the sphere. Higher quality will lower performance significantly. 50 is a good number to start with.
 		IN latitudeSteps, PN_Number, #The number of latitude steps. This controls the quality of the sphere. Higher quality will lower performance significantly. 50 is a good number to start with.
-		IN color, PN_Struct, PNF_Nullable, Color, #The color of the sphere. Uses the Color structure.
+		IN color, PN_Color, PNF_Nullable, #The color of the sphere. Uses the Color structure.
 	}
 	FUNC CLIENT DrawSprite
 	{
@@ -182,7 +182,7 @@ LIB render
 		IN position, PN_Vector, #Position of the sprite.
 		IN width, PN_Number, #Width of the sprite.
 		IN height, PN_Number, #Height of the sprite.
-		IN color, PN_Struct, PNF_Nullable, Color, #Color of the sprite. Uses the Color structure.
+		IN color, PN_Color, PNF_Nullable, #Color of the sprite. Uses the Color structure.
 	}
 	FUNC CLIENT DrawTextureToScreen
 	{
@@ -205,7 +205,7 @@ LIB render
 		IN angle, PN_Angles, #Angles of the box.
 		IN mins, PN_Vector, #The lowest corner of the box.
 		IN maxs, PN_Vector, #The highest corner of the box.
-		IN color, PN_Struct, PNF_Nullable, Color, #The color of the box. Uses the Color structure.
+		IN color, PN_Color, PNF_Nullable, #The color of the box. Uses the Color structure.
 		IN writeZ, PN_Bool, PNF_Nullable, #Sets whenever to write to the zBuffer.
 	}
 	FUNC CLIENT DrawWireframeSphere
@@ -215,7 +215,7 @@ LIB render
 		IN radius, PN_Number, #The size of the sphere.
 		IN longitudeSteps, PN_Number, #The amount of longitude steps. The larger this number is, the smoother the sphere is.
 		IN latitudeSteps, PN_Number, #The amount of latitude steps. The larger this number is, the smoother the sphere is.
-		IN color, PN_Struct, PNF_Nullable, Color, #The color of the wireframe. Uses the Color structure.
+		IN color, PN_Color, PNF_Nullable, #The color of the wireframe. Uses the Color structure.
 		IN writeZ, PN_Bool, PNF_Nullable, #Whether or not to consider the Z buffer. If false, the wireframe will be drawn over everything currently drawn. If true, it will be drawn with depth considered, as if it were a regular object in 3D space.
 	}
 	FUNC CLIENT EnableClipping

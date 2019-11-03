@@ -9,7 +9,7 @@ CLASS ITexture
 		DESC Returns the color of the specified pixel, only works for textures created from PNG files.
 		IN x, PN_Number, #The X coordinate.
 		IN y, PN_Number, #The Y coordinate.
-		OUT color, PN_Struct, PNF_None, Color, #The color of the pixel as a Color structure.
+		OUT color, PN_Color, PNF_None, #The color of the pixel as a Color structure.
 	}
 	PURE SHARED GetMappingHeight
 	{

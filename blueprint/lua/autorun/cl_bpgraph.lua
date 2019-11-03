@@ -486,9 +486,11 @@ function PANEL:OpenContext( pinFilter )
 	end
 
 	createMenu.OnRemove = function()
-		self.pinHoldX = nil
-		self.pinHoldY = nil
-		self.grabbedPin = nil
+		if IsValid(self) then
+			self.pinHoldX = nil
+			self.pinHoldY = nil
+			self.grabbedPin = nil
+		end
 	end
 	--createMenu:SetKeyboardInputEnabled(true)
 	--createMenu:SetMouseInputEnabled(true)

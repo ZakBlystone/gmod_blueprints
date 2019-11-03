@@ -1,4 +1,4 @@
-CLASS Color
+CLASS Color, color, PN_Color
 {
 	FUNC SHARED SetUnpacked
 	{

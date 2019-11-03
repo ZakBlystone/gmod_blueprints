@@ -25,7 +25,7 @@ STRUCT ColorModifyParams
 }
 STRUCT TeamInfo
 {
-	PIN Color, PN_Struct, PNF_None, Color, #Team color
+	PIN Color, PN_Color, PNF_None, #Team color
 	PIN Joinable, PN_Bool
 	PIN Name, PN_String
 	PIN Score, PN_Number
@@ -246,7 +246,7 @@ STRUCT CollisionData, Passed as argument of ENTITY:PhysicsCollide.
 	PIN HitNormal, PN_Vector, #Normal of the surface that hit the other entity
 	PIN PhysObject, PN_Ref, PNF_None, PhysObj, #Entity's physics object
 }
-STRUCT Color
+STRUCT Color, PN_Color
 {
 	METATABLE Color
 	PIN r=255, PN_Number, #An integer from 0-255 describing the red value of the color.
@@ -393,7 +393,7 @@ STRUCT MeshTangentInfo
 }
 STRUCT MeshVertex
 {
-	PIN color, PN_Struct, PNF_None, Color, #The vertex color
+	PIN color, PN_Color, PNF_None, #The vertex color
 	PIN normal, PN_Vector, PNF_Nullable, #The triangles normal required to calculate lighting(optional).
 	PIN tangent, PN_Vector, PNF_Nullable, #The triangles tangent. Not used by the VertexLitGeneric shader.
 	PIN binormal, PN_Vector, PNF_Nullable, #The triangles binormal. Not used by the VertexLitGeneric shader.
@@ -495,7 +495,7 @@ STRUCT SequenceInfo, Used by Entity:GetSequenceInfo.
 	PIN cycleposeindex, PN_Number, #If non 0, index of pose parameter to be used as cycle index. This means that the sequence playback will be controlled by a pose parameter.
 	PIN anims, PN_Number, PNF_Table, #A 1-based array of all animationIDs associated with this sequence. For use with Entity:GetAnimInfo.
 }
-STRUCT SoundData, #Table used in sound.Add and sound.GetProperties.
+STRUCT SoundData, Table used in sound.Add and sound.GetProperties.
 {
 	PIN channel, PN_Enum, PNF_None, CHAN, #The sound channel to play in. See CHAN_ Enums
 	PIN name, PN_String, #The name of the sound.

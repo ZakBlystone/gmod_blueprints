@@ -93,7 +93,7 @@ LIB surface
 	PURE CLIENT GetDrawColor
 	{
 		DESC Returns the current color affecting draw operations.
-		OUT color, PN_Struct, PNF_None, Color, #The color that drawing operations will use as a Color structure.
+		OUT color, PN_Color, PNF_None, #The color that drawing operations will use as a Color structure.
 		CODE #1 = surface.GetDrawColor()\n#1 = Color(#1.r, #1.g, #1.b, #1.a)
 	}
 	PURE CLIENT GetHUDTexture
@@ -105,7 +105,7 @@ LIB surface
 	PURE CLIENT GetTextColor
 	{
 		DESC Returns the current color affecting text draw operations.
-		OUT color, PN_Struct, PNF_None, Color, #The color that text drawing operations will use as a Color structure.
+		OUT color, PN_Color, PNF_None, #The color that text drawing operations will use as a Color structure.
 		CODE #1 = surface.GetTextColor()\n#1 = Color(#1.r, #1.g, #1.b, #1.a)
 	}
 	PURE CLIENT GetTextSize
@@ -141,7 +141,7 @@ LIB surface
 	FUNC CLIENT SetDrawColor
 	{
 		DESC Set the color of any future shapes to be drawn, can be set by either using r, g, b, a as separate values or by a Color structure. Using a color structure is not recommended to be created procedurally.
-		IN color, PN_Struct, PNF_None, Color, #Color structure
+		IN color, PN_Color, PNF_None, #Color structure
 	}
 	FUNC CLIENT SetFont
 	{
@@ -156,7 +156,7 @@ LIB surface
 	FUNC CLIENT SetTextColor
 	{
 		DESC Set the color of any future text to be drawn, can be set by either using r, g, b, a as separate values or by a Color structure. Using a color structure is not recommended to be created procedurally.
-		IN color, PN_Struct, PNF_None, Color, #Color structure
+		IN color, PN_Color, PNF_None, #Color structure
 	}
 	FUNC CLIENT SetTextPos
 	{

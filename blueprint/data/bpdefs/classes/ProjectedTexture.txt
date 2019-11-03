@@ -13,7 +13,7 @@ CLASS ProjectedTexture
 	PURE CLIENT GetColor
 	{
 		DESC Returns the color of the ProjectedTexture, which was previously set by ProjectedTexture:SetColor.
-		OUT color, PN_Struct, PNF_None, Color, #Color structure, the color of the ProjectedTexture.
+		OUT color, PN_Color, PNF_None, #Color structure, the color of the ProjectedTexture.
 	}
 	PURE CLIENT GetConstantAttenuation
 	{
@@ -101,7 +101,7 @@ CLASS ProjectedTexture
 	FUNC CLIENT SetColor
 	{
 		DESC Sets the color of the projected texture.
-		IN color, PN_Struct, PNF_None, Color, #Must be a Color structure. Unlike other projected textures, this color can only go up to 255.
+		IN color, PN_Color, PNF_None, #Must be a Color structure. Unlike other projected textures, this color can only go up to 255.
 	}
 	FUNC CLIENT SetConstantAttenuation
 	{

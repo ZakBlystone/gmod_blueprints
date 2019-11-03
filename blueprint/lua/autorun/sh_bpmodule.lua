@@ -29,7 +29,7 @@ GRAPH_NODETYPE_ACTIONS = {
 
 
 fmtMagic = 0x42504D30
-fmtVersion = 1
+fmtVersion = 2
 
 local meta = {}
 meta.__index = meta

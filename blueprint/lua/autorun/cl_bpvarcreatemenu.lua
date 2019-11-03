@@ -82,32 +82,14 @@ function RequestVarSpec( module, callback, parent )
 		[PN_Bool] = false,
 		[PN_Vector] = false,
 		[PN_Number] = false,
-		[PN_PhysObj] = true,
-		[PN_Player] = true,
-		[PN_Entity] = true,
-		[PN_Npc] = true,
-		[PN_Vehicle] = true,
 		[PN_Any] = true,
 		[PN_String] = false,
-		[PN_Color] = true,
-		[PN_Weapon] = true,
+		[PN_Color] = false,
 		[PN_Angles] = false,
 		[PN_Enum] = true,
 		[PN_Ref] = true,
 		[PN_Struct] = true,
 		[PN_Func] = true,
-	}
-
-	local blackList2 = {
-		["Color"] = true,
-		["Vector"] = true,
-		["Angles"] = true,
-	}
-
-	local blackList3 = {
-		["Color"] = false,
-		["Vector"] = true,
-		["Angles"] = true,
 	}
 
 	for i=0, PN_Max do
@@ -119,12 +101,12 @@ function RequestVarSpec( module, callback, parent )
 	end
 
 	for k, v in pairs(bpdefs.GetClasses()) do
-		if blackList2[v.name] then continue end
+		if v.pinTypeOverride then continue end
 		Combo:AddChoice( v.name, {PN_Ref, v.name} )
 	end
 
 	for k, v in pairs(bpdefs.GetStructs()) do
-		if blackList3[v.name] then continue end
+		if v.pinTypeOverride then continue end
 		Combo:AddChoice( v.name, {PN_Struct, v.name} )
 	end
 

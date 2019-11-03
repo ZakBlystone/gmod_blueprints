@@ -64,6 +64,14 @@ CLASS Angle, angle, PN_Angles
 		DESC Subtracts the values of the argument angle to the orignal angle. This functions the same as angle1 - angle2 without creating a new angle object, skipping object construction and garbage collection.
 		IN angle, PN_Angles, #The angle to subtract.
 	}
+	PURE SHARED Unpack
+	{
+		DESC Unpacks the angle
+		OUT pitch, PN_Number
+		OUT yaw, PN_Number
+		OUT roll, PN_Number
+		CODE #1=$1.p #2=$1.y #3=$1.z
+	}
 	PURE SHARED Up
 	{
 		DESC Returns a normal vector facing in the direction that points up relative to the angle's direction.

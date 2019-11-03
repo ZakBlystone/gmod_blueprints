@@ -32,20 +32,20 @@ LIB GLOBAL
 	PURE SHARED ColorAlpha
 	{
 		DESC Returns a new Color structure with the RGB components of the given Color structure and the alpha value specified.
-		IN color, PN_Struct, PNF_None, Color, #The Color structure from which to take RGB values. This color will not be modified.
+		IN color, PN_Color, PNF_None, #The Color structure from which to take RGB values. This color will not be modified.
 		IN alpha, PN_Number, #The new alpha value, a number between 0 and 255. Values above 255 will be clamped.
-		OUT color, PN_Struct, PNF_None, Color, #The new Color structure with the modified alpha value
+		OUT color, PN_Color, PNF_None, #The new Color structure with the modified alpha value
 	}
 	PURE SHARED ColorRand
 	{
 		DESC Creates a Color structure with randomized red, green, and blue components. If the alpha argument is true, alpha will also be randomized.
 		IN randomizeAlpha, PN_Bool, PNF_Nullable, #Should alpha be randomized.
-		OUT color, PN_Struct, PNF_None, Color, #The created Color structure.
+		OUT color, PN_Color, PNF_None, #The created Color structure.
 	}
 	PURE SHARED ColorToHSL
 	{
 		DESC Converts a Color structure into HSL color space.
-		IN color, PN_Struct, PNF_None, Color, #The Color structure.
+		IN color, PN_Color, PNF_None, #The Color structure.
 		OUT hue, PN_Number, #The hue in degrees [0, 360).
 		OUT sat, PN_Number, #The saturation in the range [0, 1].
 		OUT light, PN_Number, #The lightness in the range [0, 1].
@@ -53,7 +53,7 @@ LIB GLOBAL
 	PURE SHARED ColorToHSV
 	{
 		DESC Converts a Color structure into HSV color space.
-		IN color, PN_Struct, PNF_None, Color, #The Color structure.
+		IN color, PN_Color, PNF_None, #The Color structure.
 		OUT hue, PN_Number, #The hue in degrees [0, 360).
 		OUT sat, PN_Number, #The saturation in the range [0, 1].
 		OUT value, PN_Number, #The value in the range [0, 1].
@@ -178,7 +178,7 @@ LIB GLOBAL
 	FUNC CLIENT DrawColorModify
 	{
 		DESC Draws the Color Modify shader, which can be used to adjust colors on screen.
-		IN params, PN_Struct, PNF_None, ColorModifyParams, #Color modification parameters. See g_colourmodify shader and the example below. Note that if you leave out a field, it will retain its last value which may have changed if another caller uses this function.
+		IN params, PN_Color, PNF_NoneModifyParams, #Color modification parameters. See g_colourmodify shader and the example below. Note that if you leave out a field, it will retain its last value which may have changed if another caller uses this function.
 	}
 	FUNC CLIENT DrawMaterialOverlay
 	{
@@ -338,7 +338,7 @@ LIB GLOBAL
 		IN hue, PN_Number, #The hue in degrees from 0-360.
 		IN saturation, PN_Number, #The saturation from 0-1.
 		IN light, PN_Number, #The lightness from 0-1.
-		OUT color, PN_Struct, PNF_None, Color, #The Color structure created from the HSL color space.
+		OUT color, PN_Color, PNF_None, #The Color structure created from the HSL color space.
 	}
 	PURE SHARED HSVToColor
 	{
@@ -346,7 +346,7 @@ LIB GLOBAL
 		IN hue, PN_Number, #The hue in degrees from 0-360.
 		IN saturation, PN_Number, #The saturation from 0-1.
 		IN value, PN_Number, #The value from 0-1.
-		OUT color, PN_Struct, PNF_None, Color, #The Color structure created from the HSV color space.
+		OUT color, PN_Color, PNF_None, #The Color structure created from the HSV color space.
 	}
 	FUNC SHARED HTTP
 	{

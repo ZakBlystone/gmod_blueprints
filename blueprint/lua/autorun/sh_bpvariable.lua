@@ -95,6 +95,17 @@ function meta:WriteToStream(stream, mode, version)
 
 end
 
+-- v1 -> v2 the schema typelist changed
+local typeRemap = {
+	[10] = PN_String,
+	[11] = PN_Color,
+	[13] = PN_Angles,
+	[14] = PN_Enum,
+	[15] = PN_Ref,
+	[16] = PN_Struct,
+	[17] = PN_Func,
+}
+
 function meta:ReadFromStream(stream, mode, version)
 
 	self.type = stream:ReadInt( false )
@@ -103,6 +114,8 @@ function meta:ReadFromStream(stream, mode, version)
 	self.name = bpdata.ReadValue( stream )
 	self.ex = bpdata.ReadValue( stream )
 	self.repmode = bpdata.ReadValue( stream )
+
+	if version == 1 then self.type = typeRemap[self.type] or self.type end
 
 end
 

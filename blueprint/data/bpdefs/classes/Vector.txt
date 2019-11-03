@@ -122,7 +122,7 @@ CLASS Vector, vector, PN_Vector
 	FUNC SHARED ToColor
 	{
 		DESC Translates the Vector (values ranging from 0 to 1) into a Color structure. This will also range the values from 0 - 1 to 0 - 255.
-		OUT color, PN_Struct, PNF_None, Color, #The created Color structure.
+		OUT color, PN_Color, PNF_None, #The created Color structure.
 	}
 	FUNC CLIENT ToScreen
 	{

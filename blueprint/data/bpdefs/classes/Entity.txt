@@ -397,7 +397,7 @@ CLASS Entity, entity
 	PURE SHARED GetColor
 	{
 		DESC Returns the color the entity is set to.
-		OUT color, PN_Struct, PNF_None, Color, #The color of the entity as a Color structure.
+		OUT color, PN_Color, PNF_None, #The color of the entity as a Color structure.
 	}
 	PURE SERVER GetConstrainedEntities
 	{
@@ -1024,7 +1024,7 @@ CLASS Entity, entity
 	{
 		DESC Causes the entity to break into its current models gibs, if it has any.
 		IN force, PN_Vector, #The force to apply to the created gibs.
-		IN color, PN_Struct, PNF_Nullable, Color, #If set, this will be color of the broken gibs instead of the entity's color.
+		IN color, PN_Color, PNF_Nullable, #If set, this will be color of the broken gibs instead of the entity's color.
 	}
 	FUNC SHARED GibBreakServer
 	{
@@ -1573,7 +1573,7 @@ CLASS Entity, entity
 	FUNC SHARED SetColor
 	{
 		DESC Sets the color of an entity.
-		IN color, PN_Struct, PNF_None, Color, #The color to set. Uses the Color structure.
+		IN color, PN_Color, PNF_None, #The color to set. Uses the Color structure.
 	}
 	FUNC SERVER SetCreator
 	{
