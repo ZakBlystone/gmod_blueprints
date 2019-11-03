@@ -53,7 +53,8 @@ local function FilterBySubstring( str ) return function(n)
 	end 
 end
 
-local function CombineFilter(a,b) return function(n) return a(n) or b(n) end end
+local function OrFilter(a,b) return function(n) return a(n) or b(n) end end
+local function AndFilter(a,b) return function(n) return a(n) and b(n) end end
 
 local function NodeNoAnim(node, expanded)
 
@@ -117,9 +118,9 @@ function PANEL:Init()
 		local function makeCat(p, x, y, z) tc[p] = tc[p] or {} if tc[p][x] then return tc[p][x] end local c = addTreeNode(p, x, y, z or expanded) tc[p][x] = c return c end
 		return function( name, nodeType )
 			local p = tree
-			makeCat(p, "Hooks", "icon16/connect.png")
-			makeCat(p, "Libs", "icon16/brick.png")
 			makeCat(p, "Classes", "icon16/bricks.png")
+			makeCat(p, "Libs", "icon16/brick.png")
+			makeCat(p, "Hooks", "icon16/connect.png")
 			makeCat(p, "Structs", "icon16/table.png")
 			if nodeType.deprecated then return end
 			if nodeType.isHook then
@@ -194,7 +195,7 @@ function PANEL:Think()
 
 end
 
-function PANEL:Setup( graph )
+function PANEL:Setup( graph, pinFilter )
 
 	self.graph = graph
 	self.graph:CacheNodeTypes() -- ensure we have the latest types
@@ -206,12 +207,26 @@ function PANEL:Setup( graph )
 		SortedFilteredNodeList( self.graph, func, self.treeInserter(tree, {}, autoExpand) )
 	end
 
-	makeSearchPage("All", "All nodes", "icon16/book.png", function() return true end)
-	makeSearchPage("Hooks", "Hook nodes", "icon16/connect.png", FilterByType(NT_Event), true)
-	makeSearchPage("Entity", "Entity nodes", "icon16/bricks.png", FilterByPinType(PN_Entity), true)
-	makeSearchPage("Player", "Player nodes", "icon16/user.png", FilterByPinType(PN_Player), true)
-	makeSearchPage("Special", "Special nodes", "icon16/plugin.png", CombineFilter( FilterByType(NT_Special), FilterByPinType(PN_Any) ), true)
-	makeSearchPage("Custom", "User created nodes", "icon16/wrench.png", function(n) return n.custom == true end, true)
+	local baseFilter = function() return true end
+
+	if pinFilter then
+
+		local pf = pinFilter
+
+		baseFilter = function(ntype)
+			return FindMatchingPin(ntype, pf) ~= nil
+		end
+
+	end
+
+	self.baseFilter = baseFilter
+
+	makeSearchPage("All", "All nodes", "icon16/book.png", baseFilter, pinFilter ~= nil)
+	makeSearchPage("Hooks", "Hook nodes", "icon16/connect.png", AndFilter(baseFilter, FilterByType(NT_Event)), true)
+	makeSearchPage("Entity", "Entity nodes", "icon16/bricks.png", AndFilter(baseFilter, FilterByPinType(PN_Entity)), true)
+	makeSearchPage("Player", "Player nodes", "icon16/user.png", AndFilter(baseFilter, FilterByPinType(PN_Player)), true)
+	makeSearchPage("Special", "Special nodes", "icon16/plugin.png", OrFilter( FilterByType(NT_Special), FilterByPinType(PN_Any) ), true)
+	makeSearchPage("Custom", "User created nodes", "icon16/wrench.png", AndFilter(baseFilter, function(n) return n.custom == true end), true)
 
 end
 
@@ -225,7 +240,7 @@ function PANEL:OnSearchTerm( text )
 		self.nextTimer = 0
 
 		self.resultList:Clear()
-		SortedFilteredNodeList( self.graph, FilterBySubstring( text:lower() ), self.treeInserter(self.resultList, {}, true) )
+		SortedFilteredNodeList( self.graph, AndFilter(self.baseFilter, FilterBySubstring( text:lower() ) ), self.treeInserter(self.resultList, {}, true) )
 	else
 		self.resultList:SetVisible(false)
 		self.tabs:SetVisible(true)

@@ -235,3 +235,14 @@ function FUNC_OUTPUT(t)
 	ConfigureNodeType(t)
 	return t
 end
+
+function FindMatchingPin(ntype, pf)
+	local m = ntype.meta
+	local informs = m and m.informs or nil
+	for id, pin in pairs(ntype.pins) do
+		local sameType = pin[2] == pf[2] and pin[5] == pf[5]
+		local sameFlags = bit.bor(bit.band(pf[4], pin[4]), PNF_Nullable) == bit.bor(pf[4], PNF_Nullable)
+		local tableMatch = informs ~= nil and #informs > 0 and bit.band(bit.band(pf[4], pin[4]), PNF_Table) ~= 0 and pin[2] == PN_Any
+		if pin[1] ~= pf[1] and ntype.name == "Pin" or ((sameType and sameFlags) or tableMatch) then return id end
+	end
+end

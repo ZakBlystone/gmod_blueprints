@@ -2,6 +2,27 @@ CALLBACK VOID
 {
 	
 }
+STRUCT ColorModifyParams
+{
+	NAME __CH~DO__pp_colour_addr, addRed
+	NAME __CH~DO__pp_colour_addg, addGreen
+	NAME __CH~DO__pp_colour_addb, addBlue
+	NAME __CH~DO__pp_colour_brightness, brightness
+	NAME __CH~DO__pp_colour_contrast, contrast
+	NAME __CH~DO__pp_colour_colour, color
+	NAME __CH~DO__pp_colour_mulr, multiplyRed
+	NAME __CH~DO__pp_colour_mulg, multiplyGreen
+	NAME __CH~DO__pp_colour_mulb, multiplyBlue
+	PIN __CH~DO__pp_colour_addr=0, PN_Number,
+	PIN __CH~DO__pp_colour_addg=0, PN_Number,
+	PIN __CH~DO__pp_colour_addb=0, PN_Number,
+	PIN __CH~DO__pp_colour_brightness=0, PN_Number,
+	PIN __CH~DO__pp_colour_contrast=1, PN_Number,
+	PIN __CH~DO__pp_colour_colour=1, PN_Number,
+	PIN __CH~DO__pp_colour_mulr=0, PN_Number,
+	PIN __CH~DO__pp_colour_mulg=0, PN_Number,
+	PIN __CH~DO__pp_colour_mulb=0, PN_Number,
+}
 STRUCT TeamInfo
 {
 	PIN Color, PN_Struct, PNF_None, Color, #Team color

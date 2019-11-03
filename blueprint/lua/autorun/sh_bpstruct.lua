@@ -94,7 +94,7 @@ function meta:MakerNodeType()
 	end
 
 	local ret, arg = PinRetArg( ntype, function(s,pin)
-		return "\n " .. (self.invNameMap[pin[3]] or pin[3]) .. " = " .. s
+		return "\n [\"" .. (self.invNameMap[pin[3]] or pin[3]) .. "\"] = " .. s
 	end)
 	local argt = "{ " .. arg .. "\n}"
 	ntype.code = ret .. " = "
@@ -138,7 +138,7 @@ function meta:BreakerNodeType()
 	end
 
 	local ret, arg = PinRetArg( ntype, nil, function(s,pin)
-		return "\n" .. s .. " = $1." .. (self.invNameMap[pin[3]] or pin[3]) .. ""
+		return "\n" .. s .. " = $1[\"" .. (self.invNameMap[pin[3]] or pin[3]) .. "\""
 	end, "")
 	if ret[1] == '\n' then ret = ret:sub(2,-1) end
 	ntype.code = ret

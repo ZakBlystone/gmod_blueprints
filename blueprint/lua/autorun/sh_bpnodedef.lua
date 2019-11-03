@@ -31,11 +31,13 @@ NodeRedirectors = {}
 NodeTypes = {
 	["Init"] = EVENT {
 		pins = {},
-		code = [[]]
+		code = [[]],
+		role = ROLE_Shared,
 	},
 	["Shutdown"] = EVENT {
 		pins = {},
-		code = [[]]
+		code = [[]],
+		role = ROLE_Shared,
 	},
 	["Pin"] = PURE {
 		pins = { 
@@ -93,16 +95,6 @@ NodeTypes = {
 			#4 = arg[1].OriginalSoundName
 		]],
 	},
-	["Spectate"] = "Player:Spectate",
-	["SpectateEntity"] = "Player:SpectateEntity",
-	["UnSpectate"] = "Player:UnSpectate",
-	["Alive"] = "Player:Alive, isAlive=alive",
-	["PlayerGetWeapon"] = "Player:GetWeapon, classname=class",
-	["PlayerGetActiveWeapon"] = "Player:GetActiveWeapon",
-	["Clip1"] = "Weapon:Clip1",
-	["SetClip1"] = "Weapon:SetClip1",
-	["PlayerName"] = "Player:Name",
-	["Use"] = "Entity:Use",
 	["FireBullets"] = FUNCTION {
 		deprecated = true,
 		pins = {
@@ -115,13 +107,6 @@ NodeTypes = {
 		},
 		code = "Entity_.FireBullets($2, { Spread = $3, Src = $4, Dir = $5, Num = $6, Damage = $7 })",
 	},
-	["GetModelScale"] = "Entity:GetModelScale",
-	["SetModelScale"] = "Entity:SetModelScale",
-	["SetVelocity"] = "Entity:SetVelocity",
-	["GetVelocity"] = "Entity:GetVelocity",
-	["SetGroundEntity"] = "Entity:SetGroundEntity",
-	["GetGroundEntity"] = "Entity:GetGroundEntity",
-	["Crouching"] = "Player:Crouching",
 	["Kill"] = FUNCTION {
 		deprecated = true,
 		pins = {
@@ -130,42 +115,12 @@ NodeTypes = {
 		},
 		code = "if $3 then Player_.KillSilent($2) else Player_.Kill($2) end",
 	},
-	["EmitSound"] = "Entity:EmitSound, target=entity",
-	["TakeDamage"] = "Entity:TakeDamage, target=entity",
-	["SetHealth"] = "Entity:SetHealth",
-	["SetArmor"] = "Player:SetArmor",
-	["ViewPunch"] = "Player:ViewPunch",
-	["Give"] = "Player:Give, classname=class",
-	["GiveAmmo"] = "Player:GiveAmmo",
-	["SetAmmo"] = "Player:SetAmmo",
-	["StripWeapon"] = "Player:StripWeapon, weapon=class",
-	["RemoveAllItems"] = "Player:RemoveAllItems",
-	["RemoveAllAmmo"] = "Player:RemoveAllAmmo",
-	["SetNoTarget"] = "Player:SetNoTarget",
-	["Remove"] = "Entity:Remove",
-	["GetClass"] = "Entity:GetClass",
-	["ChatPrint"] = "Player:ChatPrint",
 	["ChatPrintAll"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_String, "message" },
 		},
 		code = "for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $2) end",
 	},
-	["Wake"] = "PhysObj:Wake",
-	["ApplyForceCenter"] = "PhysObj:ApplyForceCenter",
-	["ApplyTorqueCenter"] = "PhysObj:ApplyTorqueCenter, force=torque",
-	["SetMass"] = "PhysObj:SetMass",
-	["EnableMotion"] = "PhysObj:EnableMotion",
-	["GetRagdollEntity"] = "Player:GetRagdollEntity",
-	["GetPhysicsObjectNum"] = "Entity:GetPhysicsObjectNum",
-	["GetPhysicsObject"] = "Entity:GetPhysicsObject",
-	["EyePos"] = "Entity:EyePos",
-	["EyeAngles"] = "Entity:EyeAngles",
-	["GetAimVector"] = "Player:GetAimVector, aimvector=dir",
-	["GetShootPos"] = "Player:GetShootPos",
-	["CreateRagdoll"] = "Player:CreateRagdoll",
-	["KeyDown"] = "Player:KeyDown, isDown=down",
-	["Say"] = "Player:Say",
 	["If"] = SPECIAL {
 		pins = {
 			{ PD_In, PN_Exec, "Exec" },
@@ -280,9 +235,6 @@ NodeTypes = {
 		},
 		code = "print($2)",
 	},
-	["Color"] = "MakeColor",
-	["BreakColor"] = "BreakColor",
-	["Angles"] = "Angle, p=pitch, y=yaw, r=roll",
 	["RotateAroundAxis"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Angles, "angles" },
@@ -319,7 +271,6 @@ NodeTypes = {
 		},
 		code = "#1, #2, #3 = $1.p, $1.y, $1.r",
 	},
-	["Vector"] = "Vector",
 	["VectorNormalize"] = PURE {
 		pins = {
 			{ PD_In, PN_Vector, "vector" },
@@ -337,12 +288,6 @@ NodeTypes = {
 		},
 		code = "#1, #2, #3 = $1.x, $1.y, $1.z",
 	},
-	--[[["LocalPlayer"] = PURE {
-		pins = {
-			{ PD_Out, PN_Player, "player" },
-		},
-		code = "#1 = LocalPlayer()",
-	},]]
 	["Player"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "id" },	
@@ -350,8 +295,6 @@ NodeTypes = {
 		},
 		code = "#1 = player.GetAll()[$1]",
 	},
-	["Entity"] = "Entity, id=index",
-	["EntIndex"] = "Entity:EntIndex, id=index",
 	["ToNumber"] = PURE {
 		pins = {
 			{ PD_In, PN_String, "value" },	
@@ -469,8 +412,6 @@ NodeTypes = {
 		},
 		code = "if __bpm.genericIsValid($2) then #1 else #2 end",
 	},
-	["IsNPC"] = "Entity:IsNPC",
-	["IsPlayer"] = "Entity:IsPlayer",
 	["CurTime"] = PURE {
 		pins = {
 			{ PD_Out, PN_Number, "curtime" },
@@ -478,7 +419,6 @@ NodeTypes = {
 		code = "#1 = CurTime()",
 		compact = true,
 	},
-	["FrameTime"] = "FrameTime, frametime=time",
 	["DivideNumber"] = PURE {
 		pins = {
 			{ PD_In, PN_Number, "A" },
@@ -545,7 +485,6 @@ NodeTypes = {
 		code = "#1 = $1:Length()",
 		compact = true,
 	},
-	["VectorRand"] = "VectorRand, result=vector",
 	["VectorMA"] = PURE {
 		pins = {
 			{ PD_In, PN_Vector, "base" },
@@ -591,17 +530,6 @@ NodeTypes = {
 		code = "#1 = $1 ~= $2",
 		compact = true,
 	},
-	["WaterLevel"] = "Entity:WaterLevel",
-	["GetAngles"] = "Entity:GetAngles",
-	["SetAngles"] = "Entity:SetAngles",
-	["GetPos"] = "Entity:GetPos, position=pos",
-	["SetPos"] = "Entity:SetPos, position=pos",
-	["SetOwner"] = "Entity:SetOwner",
-	["GetOwner"] = "Entity:GetOwner",
-	["EntityCreate"] = "ents.Create, classname=class",
-	["Spawn"] = "Entity:Spawn",
-	["Activate"] = "Entity:Activate",
-	["Fire"] = "Entity:Fire",
 	["SetEntityValue"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
@@ -626,7 +554,6 @@ NodeTypes = {
 		},
 		code = "if IsValid($2) then $2[\"bp_!graph_\" .. $3] = nil end",
 	},
-	["SetKeyValue"] = "Entity:SetKeyValue",
 	["GetKeyValue"] = PURE {
 		pins = {
 			{ PD_In, PN_Entity, "entity" },
@@ -635,13 +562,6 @@ NodeTypes = {
 		},
 		code = "#1 = Entity_.GetKeyValues($1)[$2] or \"\"",
 	},
-	["SetParent"] = "Entity:SetParent",
-	["SetModel"] = "Entity:SetModel",
-	["GetModel"] = "Entity:GetModel",
-	["SetColor"] = "Entity:SetColor",
-	["GetColor"] = "Entity:GetColor",
-	["SetName"] = "Entity:SetName",
-	["GetName"] = "Entity:GetName",
 	["ForEach"] = SPECIAL {
 		pins = {
 			{ PD_In, PN_Exec, "Exec" },
@@ -751,11 +671,6 @@ NodeTypes = {
 		},
 		code = "#2 = false for _, pl in pairs(player.GetAll()) do if pl:Nick():find( $1 ) ~= nil then #1 = pl #2 = true end end"
 	},
-	["AllPlayers"] = "player.GetAll",
-	["AllEntities"] = "ents.GetAll",
-	["AllEntitiesByClass"] = "ents.FindByClass, classname=class",
-	["AllEntitiesByName"] = "ents.FindByName",
-	["ScreenShake"] = "util.ScreenShake",
 	["MakeExplosion"] = FUNCTION {
 		pins = {
 			{ PD_In, PN_Entity, "owner", PNF_Nullable },
@@ -1066,7 +981,6 @@ NodeTypes = {
 		compact = false,
 		code = [[if SERVER then #1 else #2 end]],
 	},
-	["AddEntityRelationship"] = "NPC:AddEntityRelationship, relationship=disposition",
 }
 
 for k,v in pairs(NodeTypes) do
@@ -1088,7 +1002,7 @@ for k,v in pairs(NodeTypes) do
 	end
 end
 
-local allpins = {}
+--[[local allpins = {}
 for i=1, PN_Max do
 	table.insert(allpins, { PD_In, i, PinTypeNames[i] })
 end
@@ -1099,7 +1013,7 @@ end
 NodeTypes["DEBUGALLPINTYPES"] = PURE {
 	pins = allpins,
 	compact = false,
-}
+}]]
 
 local function AddHook(name, args)
 

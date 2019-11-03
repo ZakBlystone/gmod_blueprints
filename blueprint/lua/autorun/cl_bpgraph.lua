@@ -227,21 +227,35 @@ function PANEL:OnPinGrab( vnode, vpin, grabbing )
 
 			--self.rerouteConnection = true
 
+			local takeNode = nil
+			local takePin = nil
 			self.grabbedPin = nil
 			for k,v in self.graph:Connections() do
 
 				if v[1] == vnode.node.id and v[2] == vpin.pinID then
 
+					takeNode = v[3]
+					takePin = v[4]
 					self.graph:RemoveConnectionID(k)
-					return
+					break
 
 				elseif v[3] == vnode.node.id and v[4] == vpin.pinID then
 
+					takeNode = v[1]
+					takePin = v[2]
 					self.graph:RemoveConnectionID(k)
-					return
+					break
 
 				end
 
+			end
+
+			if takeNode and takePin then
+				local vnode = self.nodes[takeNode]
+				if vnode ~= nil then
+					self.grabbedPin = vnode:GetPin(takePin)
+					self.detaching = true
+				end
 			end
 
 		end
@@ -321,7 +335,7 @@ function PANEL:DrawConnections()
 
 		if self.grabbedPin.pin[1] == PD_In then
 		
-			local ax, ay = self:ScreenToLocal(gui.MouseX(), gui.MouseY())
+			local ax, ay = self:ScreenToLocal(self.pinHoldX or gui.MouseX(), self.pinHoldY or gui.MouseY())
 			local bx, by = self:PinPos(self.grabbedPin)
 
 			self:DrawHermite( ax, ay, bx, by, 
@@ -332,7 +346,7 @@ function PANEL:DrawConnections()
 		else
 
 			local ax, ay = self:PinPos(self.grabbedPin)
-			local bx, by = self:ScreenToLocal(gui.MouseX(), gui.MouseY())
+			local bx, by = self:ScreenToLocal(self.pinHoldX or gui.MouseX(), self.pinHoldY or gui.MouseY())
 
 			self:DrawHermite( ax, ay, bx, by, 
 				NodePinColors[ self.grabbedPin.pin[2] ],
@@ -437,7 +451,7 @@ function PANEL:Think()
 
 end
 
-function PANEL:OpenContext()
+function PANEL:OpenContext( pinFilter )
 
 	if self:GetIsLocked() then return end
 
@@ -445,6 +459,7 @@ function PANEL:OpenContext()
 	--self.menu = DermaMenu( false, self )
 
 	local x, y = gui.MouseX(), gui.MouseY()
+	local px, py = x, y
 
 
 	local createMenu = vgui.Create("BPCreateMenu")
@@ -460,12 +475,20 @@ function PANEL:OpenContext()
 	createMenu:SetPos(x,y)
 	createMenu:SetVisible( true )
 	createMenu:MakePopup()
-	createMenu:Setup( self.graph )
+	createMenu:Setup( self.graph, pinFilter )
 	createMenu.OnNodeTypeSelected = function( menu, nodeType )
 
-		x, y = self.canvas:ScreenToLocal(x, y)
+		x, y = self.canvas:ScreenToLocal(px, py)
 
-		self.graph:AddNode(nodeType.name, x - canvasFix, y - canvasFix)
+		local nodeID, node = self.graph:AddNode(nodeType.name, x - canvasFix, y - canvasFix)
+		self:ConnectNodeToGrabbedPin( node )
+
+	end
+
+	createMenu.OnRemove = function()
+		self.pinHoldX = nil
+		self.pinHoldY = nil
+		self.grabbedPin = nil
 	end
 	--createMenu:SetKeyboardInputEnabled(true)
 	--createMenu:SetMouseInputEnabled(true)
@@ -477,6 +500,20 @@ function PANEL:OpenContext()
 
 	--self.menu:SetMinimumWidth( 300 )
 	--self.menu:Open( x, y, false, self )
+
+end
+
+function PANEL:ConnectNodeToGrabbedPin( node )
+
+	if self.grabbedPin ~= nil and node ~= nil then
+
+		local pf = self.grabbedPin.pin
+		local match = FindMatchingPin(node:GetType(), pf)
+		if match ~= nil then
+			self.graph:ConnectNodes(self.grabbedPin.node.id, self.grabbedPin.pinID, node.id, match)
+		end
+
+	end
 
 end
 
@@ -515,8 +552,24 @@ function PANEL:OnMouseReleased( mouse )
 
 	if mouse == MOUSE_LEFT then
 		if self.grabbedPin then
-			self.rerouteConnection = false
-			self.grabbedPin = nil
+			if input.IsKeyDown( KEY_LALT ) then
+
+				x, y = self.canvas:ScreenToLocal(gui.MouseX(), gui.MouseY())
+
+				local nodeID, node = self.graph:AddNode("Pin", x - canvasFix, y - canvasFix)
+				self:ConnectNodeToGrabbedPin( node )
+				self.grabbedPin = nil
+
+			else
+				if not self.detaching or input.IsKeyDown( KEY_LSHIFT ) then
+					self:OpenContext(self.grabbedPin.pin)
+					self.pinHoldX = gui.MouseX()
+					self.pinHoldY = gui.MouseY()
+				else
+					self.grabbedPin = nil
+				end
+			end
+			self.detaching = false
 		end
 	end
 

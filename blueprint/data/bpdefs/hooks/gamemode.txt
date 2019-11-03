@@ -56,6 +56,18 @@ HOOKS GM
 		OUT newPos, PN_Vector, #New position
 		OUT newAngle, PN_Angles, #New position
 	}
+	CLIENT CreateClientsideRagdoll
+	{
+		DESC Called whenever an entity becomes a clientside ragdoll.
+		IN entity, PN_Ref, PNF_None, Entity, #The Entity that created the ragdoll
+		IN ragdoll, PN_Ref, PNF_None, Entity, #The ragdoll being created.
+	}
+	SERVER CreateEntityRagdoll
+	{
+		DESC Called when a serverside ragdoll of an entity has been created.
+		IN entity, PN_Ref, PNF_None, Entity, #Entity that owns the ragdoll
+		IN ragdoll, PN_Ref, PNF_None, Entity, #The ragdoll entity
+	}
 	SHARED EntityEmitSound
 	{
 		IN data, PN_Struct, PNF_None, EmitSoundInfo, #Information about the played sound. Changes done to this table can be applied by returning true from this hook.
@@ -125,9 +137,47 @@ HOOKS GM
 		IN entity, PN_Ref, PNF_None, Entity, #The entity the player is attempting to punt
 		OUT allow=true, PN_Bool, #Return true to allow and false to disallow.
 	}
+	CLIENT HUDAmmoPickedUp
+	{
+		DESC Called when the client has picked up ammo. Override to disable default HUD notification.
+		IN itemName, PN_String, #Name of the item (ammo) picked up
+		IN amount, PN_Number, #Amount of the item (ammo) picked up
+	}
+	CLIENT HUDDrawPickupHistory
+	{
+		DESC Renders the HUD pick-up history. Override to hide default or draw your own HUD.
+	}
+	CLIENT HUDDrawScoreBoard
+	{
+		DESC Called every frame to render the scoreboard.
+	}
+	CLIENT HUDDrawTargetID
+	{
+		DESC Called from GM:HUDPaint to draw player info when you hover over a player with your crosshair or mouse.
+	}
+	CLIENT HUDItemPickedUp
+	{
+		DESC Called when a weapon has been picked up. Override to disable the default HUD notification.
+		IN itemName, PN_String, #Name of the picked up item
+	}
 	CLIENT HUDPaint
 	{
 		DESC Called whenever the HUD should be drawn. Called right before GM:HUDDrawScoreBoard and after GM:HUDPaintBackground.
+	}
+	CLIENT HUDPaintBackground
+	{
+		DESC Called before GM:HUDPaint when the HUD background is being drawn.
+	}
+	CLIENT HUDShouldDraw
+	{
+		DESC Called when the Gamemode is about to draw a given element on the client's HUD (heads-up display).
+		IN name, PN_String, #The name of the HUD element. You can find a full list of HUD elements for this hook here.
+		OUT draw=true, PN_Bool, #Return false to prevent the given element from being drawn on the client's screen.
+	}
+	CLIENT HUDWeaponPickedUp
+	{
+		DESC Called when a weapon has been picked up. Override to disable the default HUD notification.
+		IN weapon, PN_Ref, PNF_None, Weapon, #The picked up weapon
 	}
 	SHARED KeyPress
 	{
@@ -383,6 +433,10 @@ HOOKS GM
 		IN attacker, PN_Ref, PNF_None, Player, #The person who broke the prop.
 		IN prop, PN_Ref, PNF_None, Entity, #The entity that has been broken by the attacker.
 	}
+	CLIENT RenderScreenspaceEffects
+	{
+		DESC Used to render post processing effects.
+	}
 	SHARED SetupMove
 	{
 		DESC SetupMove is called before the engine process movements. This allows us to override the players movement.
@@ -395,6 +449,12 @@ HOOKS GM
 		DESC Allows you to add extra positions to the player's PVS. This is the place to call AddOriginToPVS.
 		IN player, PN_Ref, PNF_None, Player, #The player
 		IN viewEntity, PN_Ref, PNF_None, Entity, #Players Player:GetViewEntity
+	}
+	CLIENT ShouldDrawLocalPlayer
+	{
+		DESC Called to determine if the LocalPlayer should be drawn.
+		IN player, PN_Ref, PNF_None, Player, #The player
+		OUT drawPlayer=true, PN_Bool, #True to draw the player, false to hide.
 	}
 	SHARED StartCommand
 	{
