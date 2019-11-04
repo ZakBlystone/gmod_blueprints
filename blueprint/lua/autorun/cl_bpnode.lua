@@ -255,7 +255,7 @@ function PANEL:Paint(w, h)
 
 	if not ntype.compact then draw.RoundedBox(6, inset, inset, w - inset * 2, 18, Color(ntc.r,ntc.g,ntc.b,180)) end
 	if ntype.role then
-		if ntype.role == ROLE_Shared then
+		if ntype.role == ROLE_Shared and false then
 			draw.RoundedBox(2, inset + w - 30, inset, 9, 18, Color(20,160,255,255))
 			draw.RoundedBox(2, inset + w - 30, inset + 9, 10, 9, Color(255,160,20,255))
 		elseif ntype.role == ROLE_Server then

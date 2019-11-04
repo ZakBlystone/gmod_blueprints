@@ -178,7 +178,7 @@ LIB GLOBAL
 	FUNC CLIENT DrawColorModify
 	{
 		DESC Draws the Color Modify shader, which can be used to adjust colors on screen.
-		IN params, PN_Color, PNF_NoneModifyParams, #Color modification parameters. See g_colourmodify shader and the example below. Note that if you leave out a field, it will retain its last value which may have changed if another caller uses this function.
+		IN params, PN_Struct, PNF_None, ColorModifyParams, #Color modification parameters. See g_colourmodify shader and the example below. Note that if you leave out a field, it will retain its last value which may have changed if another caller uses this function.
 	}
 	FUNC CLIENT DrawMaterialOverlay
 	{

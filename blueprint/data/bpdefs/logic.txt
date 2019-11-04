@@ -37,7 +37,7 @@ LIB LOGIC
 		DISPLAY <
 		IN A, PN_Number
 		IN B, PN_Number
-		OUT Result, PN_Number
+		OUT Result, PN_Bool
 		CODE #1 = $1 < $2
 		COMPACT
 	}
@@ -46,7 +46,7 @@ LIB LOGIC
 		DISPLAY <=
 		IN A, PN_Number
 		IN B, PN_Number
-		OUT Result, PN_Number
+		OUT Result, PN_Bool
 		CODE #1 = $1 <= $2
 		COMPACT
 	}
@@ -55,7 +55,7 @@ LIB LOGIC
 		DISPLAY >
 		IN A, PN_Number
 		IN B, PN_Number
-		OUT Result, PN_Number
+		OUT Result, PN_Bool
 		CODE #1 = $1 > $2
 		COMPACT
 	}
@@ -64,7 +64,7 @@ LIB LOGIC
 		DISPLAY >=
 		IN A, PN_Number
 		IN B, PN_Number
-		OUT Result, PN_Number
+		OUT Result, PN_Bool
 		CODE #1 = $1 >= $2
 		COMPACT
 	}

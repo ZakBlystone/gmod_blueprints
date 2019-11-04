@@ -44,7 +44,7 @@ DEFTYPE_LIB = 2
 DEFTYPE_STRUCT = 3
 DEFTYPE_HOOKS = 4
 
-DEFPACK_LOCATION = "blueprints/bp_definitionpack3.txt"
+DEFPACK_LOCATION = "blueprints/bp_definitionpack4.txt"
 
 local function EnumerateDefs( base, output, search )
 

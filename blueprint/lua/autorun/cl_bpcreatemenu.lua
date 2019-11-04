@@ -214,7 +214,8 @@ function PANEL:Setup( graph, pinFilter )
 		local pf = pinFilter
 
 		baseFilter = function(ntype)
-			return FindMatchingPin(ntype, pf) ~= nil
+			local pin = FindMatchingPin(ntype, pf)
+			return pin ~= nil and ntype.pins[pin][1] ~= pf[1]
 		end
 
 	end
