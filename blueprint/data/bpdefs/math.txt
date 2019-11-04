@@ -1,0 +1,84 @@
+LIB MATH
+{
+	PURE SHARED Modulo
+	{
+		DISPLAY %
+		IN A, PN_Number
+		IN B, PN_Number
+		OUT Result, PN_Number
+		CODE #1 = $1 % $2
+		COMPACT
+	}
+	PURE SHARED DivideNumber
+	{
+		DISPLAY /
+		IN A, PN_Number
+		IN B, PN_Number
+		OUT Result, PN_Number
+		CODE #1 = $1 / $2
+		COMPACT
+	}
+	PURE SHARED MultiplyNumber
+	{
+		DISPLAY *
+		IN A, PN_Number
+		IN B, PN_Number
+		OUT Result, PN_Number
+		CODE #1 = $1 * $2
+		COMPACT
+	}
+	PURE SHARED AddNumber
+	{
+		DISPLAY +
+		IN A, PN_Number
+		IN B, PN_Number
+		OUT Result, PN_Number
+		CODE #1 = $1 + $2
+		COMPACT
+	}
+	PURE SHARED SubNumber
+	{
+		DISPLAY -
+		IN A, PN_Number
+		IN B, PN_Number
+		OUT Result, PN_Number
+		CODE #1 = $1 - $2
+		COMPACT
+	}
+	PURE SHARED AddVector
+	{
+		DISPLAY vector + vector
+		IN A, PN_Vector
+		IN B, PN_Vector
+		OUT Result, PN_Vector
+		CODE #1 = $1 + $2
+		COMPACT
+	}
+	PURE SHARED SubVector
+	{
+		DISPLAY vector - vector
+		IN A, PN_Vector
+		IN B, PN_Vector
+		OUT Result, PN_Vector
+		CODE #1 = $1 - $2
+		COMPACT
+	}
+	PURE SHARED VectorMA
+	{
+		IN Base, PN_Vector
+		IN Dir, PN_Vector
+		IN Scalar, PN_Number
+		OUT Result, PN_Vector
+		CODE #1 = $1 + ($2 * $3)
+		COMPACT false
+	}
+	PURE SHARED ScaleVector
+	{
+		DISPLAY vector * number
+		IN Vector, PN_Vector
+		IN Scalar, PN_Number
+		OUT Result, PN_Vector
+		CODE #1 = $1 * $2
+		COMPACT
+	}
+}

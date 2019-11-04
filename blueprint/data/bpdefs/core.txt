@@ -1,0 +1,169 @@
+HOOKS CORE
+{
+	SHARED Init
+	{
+		NOHOOK
+	}
+	SHARED Shutdown
+	{
+		NOHOOK
+	}	
+}
+LIB CORE
+{
+	SPECIAL SHARED Sequence
+	{
+		IN Exec, PN_Exec
+		OUT 1, PN_Exec
+		OUT 2, PN_Exec
+		JUMP a
+		JUMP b
+		CODE pushjmp(^_a) ip = #_1 goto jumpto\n::^a::\npushjmp(^_b) ip = #_2 goto jumpto\n::^b::\ngoto popcall
+	}
+	SPECIAL SHARED ForEach
+	{
+		IN Exec, PN_Exec
+		IN Table, PN_Any, PNF_Table
+		OUT Thru, PN_Exec
+		OUT Each, PN_Exec
+		OUT Key, PN_Any
+		OUT Value, PN_Any
+		INFORM 2,6
+		JUMP iter
+		CODE #3 = nil\n::^iter::\n#3, #4 = next($2, #3)\nif #3 ~= nil then pushjmp(^_iter) ip = #_2 goto jumpto end\n#1
+	}
+	SPECIAL SHARED For
+	{
+		IN Exec, PN_Exec
+		IN Start=1, PN_Number
+		IN End=1, PN_Number
+		OUT Thru, PN_Exec
+		OUT Each, PN_Exec
+		OUT Num, PN_Number
+		JUMP iter
+		CODE #3 = $2 - 1\n::^iter::\nif #3 < $3 then #3 = #3 + 1 pushjmp(^_iter) ip = #_2 goto jumpto end\n#1
+	}
+	SPECIAL SHARED Debounce
+	{
+		IN Exec, PN_Exec
+		IN Delay, PN_Number
+		IN AlwaysReset, PN_Bool
+		OUT Thru, PN_Exec
+		OUT Debounced, PN_Exec
+		LATENT
+		LOCAL debounced
+		CODE %debounced = __bpm.delayExists("debounce_!graph_!node")\nif %debounced and $3 then __bpm.delay("debounce_!graph_!node", $2, function() end) end\nif %debounced then #2 end\n__bpm.delay("debounce_!graph_!node", $2, function() end)\n#1
+	}
+	SPECIAL SHARED Delay
+	{
+		IN Exec, PN_Exec
+		IN Delay, PN_Number
+		OUT Thru, PN_Exec
+		LATENT
+		CODE __bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)\ngoto popcall
+	}
+	SPECIAL SHARED DelayBoxed
+	{
+		IN Exec, PN_Exec
+		IN Delay, PN_Number
+		IN Value, PN_Any
+		OUT Thru, PN_Exec
+		OUT Value, PN_Any
+		INFORM 3,5
+		LATENT
+		CODE #2 = $3\n__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)\ngoto popcall
+	}
+	FUNC SERVER ChatPrintAll
+	{
+		DESC Sends a message to all players
+		IN Message, PN_String, #Message to send to all players
+		CODE for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $2) end
+	}
+	SPECIAL SHARED Client
+	{
+		OUT IsServer, PN_Bool
+		CODE #1 = CLIENT
+	}
+	SPECIAL SHARED Server
+	{
+		OUT IsServer, PN_Bool
+		CODE #1 = SERVER
+	}
+	SPECIAL SHARED ClientOnly
+	{
+		IN Exec, PN_Exec
+		OUT Thru, PN_Exec
+		CODE if CLIENT then #1 else goto popcall end
+	}
+	SPECIAL SHARED ServerOnly
+	{
+		IN Exec, PN_Exec
+		OUT Thru, PN_Exec
+		CODE if SERVER then #1 else goto popcall end
+	}
+	SPECIAL SHARED Role
+	{
+		IN Exec, PN_Exec
+		OUT Server, PN_Exec
+		OUT Client, PN_Exec
+		CODE if SERVER then #1 else #2 end
+	}
+	PURE SHARED ToString
+	{
+		IN Any, PN_Any
+		OUT String, PN_String
+		CODE #1 = tostring($1)
+	}
+	PURE SHARED ToNumber
+	{
+		IN Value, PN_String
+		OUT Number, PN_Number
+		CODE #1 = tonumber($1) or 0
+	}
+	FUNC SHARED Print
+	{
+		IN String, PN_String
+		CODE print($2)
+	}
+	PURE SHARED Number
+	{
+		IN Num, PN_Number
+		OUT Num, PN_Number
+		CODE #1 = $1
+	}
+	PURE SHARED Boolean
+	{
+		IN Bool, PN_Bool
+		OUT Bool, PN_Bool
+		CODE #1 = $1
+	}
+	PURE SHARED String
+	{
+		IN String, PN_String
+		OUT String, PN_String
+		CODE #1 = $2
+	}
+	PURE SHARED IsValid
+	{
+		IN Thing, PN_Any
+		OUT Valid, PN_Bool
+		CODE #1 = __bpm.genericIsValid($1)
+	}
+	SPECIAL SHARED CheckValid
+	{
+		IN Exec, PN_Exec
+		IN Thing, PN_Any
+		OUT Valid, PN_Exec
+		OUT NotValid, PN_Exec
+		CODE if __bpm.genericIsValid($2) then #1 else #2 end
+	}
+	PURE SHARED CheckValue
+	{
+		IN Value, PN_Any
+		IN Default, PN_Any
+		OUT Out, PN_Any
+		INFORM 1,2
+		COMPACT false
+		CODE #1 = (type($1) == type($2)) and $1 or $2
+	}
+}

@@ -3,7 +3,7 @@ AddCSLuaFile()
 include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
 
-module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema))
+module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef))
 
 local meta = {}
 meta.__index = meta
@@ -24,9 +24,11 @@ function meta:PostInit()
 	self.x = math.Round(self.x / 15) * 15
 	self.y = math.Round(self.y / 15) * 15
 
+	self.nodeType = NodeRedirectors[self.nodeType] or self.nodeType
+
 	local ntype = self:GetType()
 	if ntype == nil then 
-		if self.nodeType ~= "invalid" then print("Node type node found for: " .. self.nodeType) end
+		if self.nodeType ~= "invalid" then print("Node type not found for: " .. self.nodeType) end
 		return false 
 	end
 

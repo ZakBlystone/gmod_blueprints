@@ -394,7 +394,7 @@ function meta:BindGamemodeHooks()
 	local meta = bp.meta
 	local instance = self:GetSingleton()
 
-	if instance.Init then instance:Init() end
+	if instance.CORE_Init then instance:CORE_Init() end
 
 	for k,v in pairs(bp.events) do
 		if not v.hook or type(meta[k]) ~= "function" then continue end
@@ -420,7 +420,7 @@ function meta:UnbindGamemodeHooks()
 	end
 
 	instance.shuttingDown = true
-	if instance.Shutdown then instance:Shutdown() end
+	if instance.CORE_Shutdown then instance:CORE_Shutdown() end
 	instance.shuttingDown = false
 
 end

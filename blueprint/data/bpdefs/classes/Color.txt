@@ -2,36 +2,41 @@ CLASS Color, color, PN_Color
 {
 	FUNC SHARED SetUnpacked
 	{
+		TBD In Next Update
 		DESC Sets the r, g, b, and a of the color.
 		IN r, PN_Number
 		IN g, PN_Number
 		IN b, PN_Number
 		IN a, PN_Number
 	}
-	FUNC SHARED ToHSL
+	PURE SHARED ToHSL
 	{
+		TBD In Next Update
 		DESC Converts a Color structure into HSL color space. This calls ColorToHSL internally.
 		OUT hue, PN_Number, #The hue in degrees [0, 360).
 		OUT sat, PN_Number, #The saturation in the range [0, 1].
 		OUT light, PN_Number, #The lightness in the range [0, 1].
+		COMPACT false
 	}
-	FUNC SHARED ToHSV
+	PURE SHARED ToHSV
 	{
 		DESC Converts a Color structure into HSV color space. This calls ColorToHSV internally.
 		OUT hue, PN_Number, #The hue in degrees [0, 360).
 		OUT sat, PN_Number, #The saturation in range [0, 1].
 		OUT value, PN_Number, #The value in range [0, 1].
+		COMPACT false
 	}
-	FUNC SHARED ToVector
+	PURE SHARED ToVector
 	{
 		DESC Translates the Color structure into a Vector, losing the alpha channel. This will also range the values from 0 - 255 to 0 - 1
 		OUT vector, PN_Vector, #The created Vector
 	}
-	FUNC SHARED Unpack
+	PURE SHARED Unpack
 	{
 		DESC Returns the r, g, b, and a of the color.
 		OUT r, PN_Number, #r
 		OUT g, PN_Number, #g
 		OUT b, PN_Number, #b
+		COMPACT false
 	}
 }

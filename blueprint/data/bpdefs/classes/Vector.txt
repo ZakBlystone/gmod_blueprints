@@ -129,6 +129,15 @@ CLASS Vector, vector, PN_Vector
 		DESC Returns where on the screen the specified position vector would appear. A related function is gui.ScreenToVector, which converts a 2D coordinate to a 3D direction.
 		OUT screen, PN_Struct, PNF_None, ToScreenData, #The created ToScreenData structure.
 	}
+	PURE SHARED Unpack
+	{
+		DESC Unpacks the vector
+		OUT x, PN_Number
+		OUT y, PN_Number
+		OUT z, PN_Number
+		CODE #1, #2, #3 = $1.x, $1.y, $1.z
+		COMPACT false
+	}
 	FUNC SHARED WithinAABox
 	{
 		DESC Returns whenever the given vector is in a box created by the 2 other vectors.

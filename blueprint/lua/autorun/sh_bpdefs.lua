@@ -44,7 +44,7 @@ DEFTYPE_LIB = 2
 DEFTYPE_STRUCT = 3
 DEFTYPE_HOOKS = 4
 
-DEFPACK_LOCATION = "blueprints/bp_definitionpack2.txt"
+DEFPACK_LOCATION = "blueprints/bp_definitionpack3.txt"
 
 local function EnumerateDefs( base, output, search )
 
@@ -171,8 +171,14 @@ local function ParseDef( filePath, search )
 				local b = args[2]:Trim()
 				d2.nameMap[a] = b
 				d2.invNameMap[b] = a
+			elseif args[1]:sub(1,6) == "NOHOOK" then
+				d2.nohook = true
 			elseif args[1]:sub(1,4) == "CODE" then
 				d2.code = table.concat(args, ","):sub(6,-1):gsub("\\n", "\n")
+			elseif args[1]:sub(1,6) == "LATENT" then
+				d2.latent = true
+			elseif args[1]:sub(1,7) == "DISPLAY" then
+				d2.displayName = args[1]:sub(9,-1):Trim()
 			elseif args[1]:sub(1,4) == "JUMP" then
 				d2.jumpSymbols = d2.jumpSymbols or {}
 				table.insert(d2.jumpSymbols, table.concat(args, ","):sub(6,-1):Trim())
@@ -189,6 +195,9 @@ local function ParseDef( filePath, search )
 				d2.tbd = true
 			elseif args[1]:sub(1,7) == "COMPACT" then
 				d2.compact = true
+				local arg = args[1]:sub(9,-1):Trim():lower()
+				if arg == "true" then d2.compact = true end
+				if arg == "false" then d2.compact = false end
 			elseif args[1]:sub(1,6) == "INFORM" then
 				d2.informs = d2.informs or {}
 				for x in string.gmatch(tr, "%d+") do table.insert(d2.informs, tonumber(x)) end 
@@ -351,9 +360,9 @@ function CreateLibNodes( lib, output )
 
 		ntype.name = lib.name .. "_" .. v.func
 		if lib.type == DEFTYPE_CLASS then
-			ntype.displayName = lib.name .. ":" .. v.func
+			ntype.displayName = v.displayName or (lib.name .. ":" .. v.func)
 		else
-			ntype.displayName = lib.name == "GLOBAL" and v.func or lib.name .. "." .. v.func
+			ntype.displayName = v.displayName or (lib.name == "GLOBAL" and v.func or lib.name .. "." .. v.func)
 			if lib.name == "GLOBAL" then ntype.name = v.func end
 		end
 		ntype.role = v.role
@@ -364,9 +373,11 @@ function CreateLibNodes( lib, output )
 		ntype.category = lib.name
 		ntype.isClass = lib.type == DEFTYPE_CLASS
 		ntype.isLib = lib.type == DEFTYPE_LIB
-		ntype.compact = v.compact or false
+		ntype.compact = v.compact
 		ntype.jumpSymbols = v.jumpSymbols
 		ntype.deprecated = v.deprecated
+		ntype.latent = v.latent
+		ntype.locals = v.locals
 		ntype.meta = {
 			informs = v.informs or {}
 		}
@@ -418,7 +429,7 @@ function CreateLibNodes( lib, output )
 			call = lib.name == "GLOBAL" and v.func or lib.name .. "." .. v.func
 		end
 
-		if #pins[PD_In] == 1 and ntype.type == NT_Pure then
+		if #pins[PD_In] == 1 and ntype.type == NT_Pure and ntype.compact == nil then
 			ntype.compact = true
 		end
 
@@ -441,7 +452,7 @@ function CreateHooksetNodes( hookset, output )
 		ntype.pins = {}
 		ntype.name = hookset.name .. "_" .. v.hook
 		ntype.displayName = hookset.name .. ":" .. v.hook
-		ntype.hook = v.hook
+		if not v.nohook then ntype.hook = v.hook end
 		ntype.isHook = true
 		ntype.role = v.role
 		ntype.type = NT_Event

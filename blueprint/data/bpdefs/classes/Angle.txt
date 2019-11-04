@@ -70,7 +70,8 @@ CLASS Angle, angle, PN_Angles
 		OUT pitch, PN_Number
 		OUT yaw, PN_Number
 		OUT roll, PN_Number
-		CODE #1=$1.p #2=$1.y #3=$1.z
+		CODE #1, #2, #3 = $1.p, $1.y, $1.r
+		COMPACT false
 	}
 	PURE SHARED Up
 	{

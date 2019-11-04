@@ -357,7 +357,10 @@ function CompileVars(cs, code, inVars, outVars, nodeID, ntype)
 		lmap[v] = var
 	end
 
-	str = str:gsub("%%([%w_]+)", function(x) return GetVarCode(cs, lmap[x]) end)
+	str = str:gsub("%%([%w_]+)", function(x)
+		if not lmap[x] then error("FAILED TO FIND LOCAL: " .. tostring(x)) end
+		return GetVarCode(cs, lmap[x]) end
+	)
 
 	-- replace jumps
 	local jumpTable = GetGraphJumpTable(cs)[nodeID] or {}

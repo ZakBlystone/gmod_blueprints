@@ -1,0 +1,99 @@
+LIB LOGIC
+{
+	SPECIAL SHARED If
+	{
+		DESC Conditional 'If' statement
+		IN Exec, PN_Exec
+		IN Condition, PN_Bool
+		OUT True, PN_Exec, #Executes if true
+		OUT False, PN_Exec, #Executes if false
+		CODE if $2 then #1 end #2
+	}
+	PURE SHARED And
+	{
+		IN A, PN_Bool
+		IN B, PN_Bool
+		OUT Result, PN_Bool
+		CODE #1 = $1 and $2
+		COMPACT
+	}
+	PURE SHARED Or
+	{
+		IN A, PN_Bool
+		IN B, PN_Bool
+		OUT Result, PN_Bool
+		CODE #1 = $1 or $2
+		COMPACT
+	}
+	PURE SHARED Not
+	{
+		IN A, PN_Bool
+		OUT Result, PN_Bool
+		CODE #1 = not $1
+		COMPACT
+	}
+	PURE SHARED LessThan
+	{
+		DISPLAY <
+		IN A, PN_Number
+		IN B, PN_Number
+		OUT Result, PN_Number
+		CODE #1 = $1 < $2
+		COMPACT
+	}
+	PURE SHARED LessThanEqual
+	{
+		DISPLAY <=
+		IN A, PN_Number
+		IN B, PN_Number
+		OUT Result, PN_Number
+		CODE #1 = $1 <= $2
+		COMPACT
+	}
+	PURE SHARED GreaterThan
+	{
+		DISPLAY >
+		IN A, PN_Number
+		IN B, PN_Number
+		OUT Result, PN_Number
+		CODE #1 = $1 > $2
+		COMPACT
+	}
+	PURE SHARED GreaterThanEqual
+	{
+		DISPLAY >=
+		IN A, PN_Number
+		IN B, PN_Number
+		OUT Result, PN_Number
+		CODE #1 = $1 >= $2
+		COMPACT
+	}
+	PURE SHARED Equal
+	{
+		DISPLAY ==
+		IN A, PN_Any, PNF_Nullable
+		IN B, PN_Any, PNF_Nullable
+		OUT Result, PN_Bool
+		INFORM 1,2
+		CODE #1 = $1 == $2
+		COMPACT
+	}
+	PURE SHARED NotEqual
+	{
+		DISPLAY !=
+		IN A, PN_Any, PNF_Nullable
+		IN B, PN_Any, PNF_Nullable
+		OUT Result, PN_Bool
+		INFORM 1,2
+		CODE #1 = $1 ~= $2
+		COMPACT
+	}
+	PURE SHARED Concat
+	{
+		IN A, PN_String
+		IN B, PN_String
+		OUT Result, PN_String
+		CODE #1 = $1 .. $2
+		COMPACT
+	}
+}

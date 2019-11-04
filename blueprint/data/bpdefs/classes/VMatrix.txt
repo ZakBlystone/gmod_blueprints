@@ -176,6 +176,7 @@ CLASS VMatrix
 		OUT e42, PN_Number, #VMatrix:GetField(4, 2)
 		OUT e43, PN_Number, #VMatrix:GetField(4, 3)
 		OUT e44, PN_Number, #VMatrix:GetField(4, 4)
+		COMPACT false
 	}
 	FUNC SHARED Zero
 	{
