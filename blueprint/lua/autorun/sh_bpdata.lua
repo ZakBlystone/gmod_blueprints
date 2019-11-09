@@ -1,6 +1,7 @@
 AddCSLuaFile()
 
 include("sh_bpcommon.lua")
+include("sh_bpbuffer.lua")
 
 module("bpdata", package.seeall, bpcommon.rescope(bit))
 
@@ -217,12 +218,12 @@ end
 local OUT = {} OUT.__index = OUT
 local IN = {} IN.__index = IN
 
-function OUT:Init(bitstream, crc)
+function OUT:Init(bitstream, crc, fileBacked)
 	if bitstream then
 		self.bit = 0
 		self.buffer = {}
 	else
-		self.buffer = ""
+		self.buffer = NewBuffer(fileBacked) --""
 	end
 	self.signedCRC = crc
 	self.bitstream = bitstream
@@ -237,7 +238,8 @@ function OUT:GetString(compressed, base64encoded)
 			str = str .. string.char(self.buffer[i])
 		end
 	else
-		str = self.buffer
+		str = self.buffer:GetString()
+		self.buffer:Close()
 	end
 
 	if self.signedCRC then
@@ -277,10 +279,10 @@ end
 
 function OUT:WriteBits(v, bits)
 	if not self.bitstream then
-		if bits > 0 then self.buffer = self.buffer .. string.char(band(v, 0xFF)) end
-		if bits > 8 then self.buffer = self.buffer .. string.char(band(rshift(v,8), 0xFF)) end
-		if bits > 16 then self.buffer = self.buffer .. string.char(band(rshift(v,16), 0xFF)) end
-		if bits > 24 then self.buffer = self.buffer .. string.char(band(rshift(v,24), 0xFF)) end
+		if bits > 0 then self.buffer:Write(string.char(band(v, 0xFF))) end
+		if bits > 8 then self.buffer:Write(string.char(band(rshift(v,8), 0xFF))) end
+		if bits > 16 then self.buffer:Write(string.char(band(rshift(v,16), 0xFF))) end
+		if bits > 24 then self.buffer:Write(string.char(band(rshift(v,24), 0xFF))) end
 		return
 	end
 	if bits > 32 or bits <= 0 then return end
@@ -303,7 +305,7 @@ function OUT:WriteStr(str)
 	if self.bitstream then
 		for i=1, string.len(str) do self:WriteBits(str:byte(i), 8) end
 	else
-		self.buffer = self.buffer .. str
+		self.buffer:Write(str)
 	end
 end
 function OUT:WriteByte(v, signed) self:WriteStr(Byte2Str(v, signed)) end
@@ -430,7 +432,7 @@ IN.Read = IN.ReadStr
 IN.ReadLong = IN.ReadInt
 
 function InStream(bitstream, crc) return setmetatable({}, IN):Init(bitstream, crc) end
-function OutStream(bitstream, crc) return setmetatable({}, OUT):Init(bitstream, crc) end
+function OutStream(bitstream, crc, fileBacked) return setmetatable({}, OUT):Init(bitstream, crc, fileBacked) end
 
 
 
@@ -481,7 +483,7 @@ function WriteValue(t, buf, thread)
 	if thread then
 		buf.__counter = buf.__counter or 0
 		buf.__counter = buf.__counter + 1
-		if (buf.__counter % 20) == 0 then
+		if (buf.__counter % 2500) == 0 then
 			coroutine.yield() 
 		end
 	end
