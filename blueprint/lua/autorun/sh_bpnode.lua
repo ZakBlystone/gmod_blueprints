@@ -34,23 +34,15 @@ function meta:PostInit()
 
 	local defaults = ntype.defaults or {}
 
-	for pinID, pin in pairs(ntype.pins) do
-
-		local default = defaults[ntype.pinlookup[pinID][2]]
-
-		if pin[1] == PD_In then
-
-			local literal = NodeLiteralTypes[pin[2]]
-			if literal then
-
-				if self:GetLiteral(pinID) == nil then
-					self:SetLiteral(pinID, default or Defaults[pin[2]])
-				end
-
+	for pinID, pin, pos in self:SidePins(PD_In) do
+		local pinType = pin[2]
+		local default = defaults[pinType]
+		local literal = NodeLiteralTypes[pinType]
+		if literal then
+			if self:GetLiteral(pinID) == nil then
+				self:SetLiteral(pinID, default or Defaults[pinType])
 			end
-
 		end
-
 	end
 
 	return true
@@ -64,7 +56,7 @@ function meta:ToString(pinID)
 	local str = self.graph:GetName() .. "." .. ntype.name
 	if pinID then
 		local p = self:GetPin(pinID)
-		if p then str = str .. "." .. p[3] .. " : " .. p[2] .. "[" .. tostring(p[5]) .. "]" end
+		if p then str = str .. "." .. p[3] .. " : " .. (PinTypeNames[p[2]] or "UNKNOWN") .. (p[5] and "[" .. tostring(p[5]) .. "]" or "") end
 	end
 	return str
 
@@ -76,7 +68,33 @@ function meta:GetPins()
 
 end
 
-function meta:GetPin(pinID)
+function meta:GetNumSidePins(dir)
+
+	local pins = self:GetPins()
+	local i = 0
+	for k,v in pairs(pins) do 
+		if v[1] == dir then i = i + 1 end 
+	end
+	return i
+
+end
+
+function meta:SidePins(dir)
+
+	local pins = self:GetPins()
+	local i, j, num = 0, 0, #pins
+	return function()
+		i = i + 1
+		while i <= num and pins[i][1] ~= dir do i = i + 1 end
+		if i <= num then
+			j = j + 1
+			return i, pins[i], j
+		end
+	end
+
+end
+
+function meta:GetPin(pinID, dir)
 
 	return self:GetPins()[pinID]
 
@@ -115,6 +133,12 @@ function meta:GetType()
 
 end
 
+function meta:GetCodeType()
+
+	return self:GetType().type
+
+end
+
 function meta:GetTypeName()
 
 	return self.nodeType
@@ -133,15 +157,17 @@ function meta:GetPos()
 
 end
 
-function meta:GetCode()
+function meta:GetCode() return self:GetType().code end
+function meta:GetJumpSymbols() return self:GetType().jumpSymbols or {} end
+function meta:GetLocals() return self:GetType().locals or {} end
+function meta:GetMeta() return self:GetType().meta or {} end
+function meta:GetGraphThunk() return self:GetType().graphThunk end
+function meta:GetHook() return self:GetType().hook end
 
-	return self:GetType().code
+function meta:GetDisplayName()
 
-end
-
-function meta:GetMeta()
-
-	return self:GetType().meta
+	local ntype = self:GetType()
+	return ntype.displayName or ntype.name
 
 end
 

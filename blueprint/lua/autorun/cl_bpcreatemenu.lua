@@ -13,9 +13,9 @@ local function DisplayName(nodeType)
 end
 
 local function NodeIcon(nodeType)
-	if nodeType.role == ROLE_Server then return "icon16/bullet_blue.png" end
-	if nodeType.role == ROLE_Client then return "icon16/bullet_orange.png" end
-	if nodeType.role == ROLE_Shared then return "icon16/bullet_purple.png" end
+	if nodeType.meta.role == ROLE_Server then return "icon16/bullet_blue.png" end
+	if nodeType.meta.role == ROLE_Client then return "icon16/bullet_orange.png" end
+	if nodeType.meta.role == ROLE_Shared then return "icon16/bullet_purple.png" end
 	return "icon16/bullet_white.png"
 end
 

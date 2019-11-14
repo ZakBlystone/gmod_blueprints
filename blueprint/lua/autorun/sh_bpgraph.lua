@@ -284,8 +284,8 @@ end
 
 function meta:CreateFunctionNodeTypes( output )
 
-	local inPins = { { PD_Out, PN_Exec, "Exec" } }
-	local outPins = { { PD_In, PN_Exec, "Exec" } }
+	local inPins = { { PD_Out, PN_Exec, "Exec", PNF_None } }
+	local outPins = { { PD_In, PN_Exec, "Exec", PNF_None } }
 
 	for id, var in self.inputs:Items() do table.insert(inPins, var:CreatePin( PD_Out )) end
 	for id, var in self.outputs:Items() do table.insert(outPins, var:CreatePin( PD_In )) end
@@ -300,7 +300,7 @@ function meta:CreateFunctionNodeTypes( output )
 		displayName = self:GetName(),
 		name = "__Entry",
 		role = role,
-		noDelete = true,
+		meta = {noDelete = true},
 	}
 
 	output["__Exit"] = FUNC_OUTPUT {
@@ -325,7 +325,7 @@ function meta:GetNodeTypes()
 		-- blacklist invalid types in function graphs
 		if self.type == GT_Function then
 			for k, v in pairs(types) do
-				if v.latent then types[k] = nil end
+				if v.meta and v.meta.latent then types[k] = nil end
 				if v.type == NT_Event then types[k] = nil end
 			end
 		end

@@ -125,23 +125,10 @@ Defaults = {
 function ConfigureNodeType(t)
 
 	if t.type == NT_Function then
-		table.insert(t.pins, 1, { PD_Out, PN_Exec, "Thru" })
-		table.insert(t.pins, 1, { PD_In, PN_Exec, "Exec" })
+		table.insert(t.pins, 1, { PD_Out, PN_Exec, "Thru", PNF_None })
+		table.insert(t.pins, 1, { PD_In, PN_Exec, "Exec", PNF_None })
 	elseif t.type == NT_Event then
-		table.insert(t.pins, 1, { PD_Out, PN_Exec, "Exec" })
-	end
-
-	t.pinlayout = { inputs = {}, outputs = {} }
-	t.pinlookup = {}
-
-	for i, pin in pairs(t.pins) do
-		if pin[1] == PD_In then 
-			table.insert( t.pinlayout.inputs, i ) t.pinlookup[i] = { t.pinlayout.inputs, #t.pinlayout.inputs, PD_In } 
-		elseif pin[1] == PD_Out then 
-			table.insert( t.pinlayout.outputs, i ) t.pinlookup[i] = { t.pinlayout.outputs, #t.pinlayout.outputs, PD_Out } 
-		end
-		pin[4] = pin[4] or PNF_None
-		pin.id = i
+		table.insert(t.pins, 1, { PD_Out, PN_Exec, "Exec", PNF_None })
 	end
 
 	if t.type == NT_Function and t.code then

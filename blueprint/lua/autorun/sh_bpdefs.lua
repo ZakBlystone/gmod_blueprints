@@ -370,7 +370,6 @@ function CreateLibNodes( lib, output )
 			ntype.displayName = v.displayName or (lib.name == "GLOBAL" and v.func or lib.name .. "." .. v.func)
 			if lib.name == "GLOBAL" then ntype.name = v.func end
 		end
-		ntype.role = v.role
 		ntype.type = v.type
 		ntype.desc = v.desc
 		ntype.code = ""
@@ -378,13 +377,14 @@ function CreateLibNodes( lib, output )
 		ntype.category = lib.name
 		ntype.isClass = lib.type == DEFTYPE_CLASS
 		ntype.isLib = lib.type == DEFTYPE_LIB
-		ntype.compact = v.compact
 		ntype.jumpSymbols = v.jumpSymbols
 		ntype.deprecated = v.deprecated
-		ntype.latent = v.latent
 		ntype.locals = v.locals
 		ntype.meta = {
-			informs = v.informs or {}
+			informs = v.informs or {},
+			compact = v.compact,
+			role = v.role,
+			latent = v.latent,
 		}
 
 		if lib.type == DEFTYPE_CLASS then
@@ -415,7 +415,7 @@ function CreateLibNodes( lib, output )
 				pin.dir,
 				pin.type,
 				bpcommon.Camelize(pin.name),
-				pin.flags,
+				pin.flags or PNF_None,
 				pin.ex,
 			})
 
@@ -434,8 +434,8 @@ function CreateLibNodes( lib, output )
 			call = lib.name == "GLOBAL" and v.func or lib.name .. "." .. v.func
 		end
 
-		if #pins[PD_In] == 1 and ntype.type == NT_Pure and ntype.compact == nil then
-			ntype.compact = true
+		if #pins[PD_In] == 1 and ntype.type == NT_Pure and ntype.meta.compact == nil then
+			ntype.meta.compact = true
 		end
 
 		ntype.code = v.code or (ret .. (#pins[PD_Out] ~= 0 and " = " or "") .. call .. "(" .. arg .. ")")
@@ -459,11 +459,13 @@ function CreateHooksetNodes( hookset, output )
 		ntype.displayName = hookset.name .. ":" .. v.hook
 		if not v.nohook then ntype.hook = v.hook end
 		ntype.isHook = true
-		ntype.role = v.role
 		ntype.type = NT_Event
 		ntype.desc = v.desc
 		ntype.category = hookset.name
 		ntype.returns = v.returnsValues
+		ntype.meta = {
+			role = v.role,
+		}
 
 		for _, pin in pairs(v.pins) do
 
@@ -471,7 +473,7 @@ function CreateHooksetNodes( hookset, output )
 				ntype.returns and pin.dir or PD_Out,
 				pin.type,
 				bpcommon.Camelize(pin.name),
-				pin.flags,
+				pin.flags or PNF_None,
 				pin.ex,
 			})
 

@@ -79,7 +79,7 @@ function meta:MakerNodeType( pinTypeOverride )
 	ntype.custom = self.custom
 
 	if pinTypeOverride then 
-		table.insert(ntype.pins, {PD_Out, pinTypeOverride, self:GetName()})
+		table.insert(ntype.pins, {PD_Out, pinTypeOverride, self:GetName(), PNF_None})
 	else
 		table.insert(ntype.pins, {
 			PD_Out,
@@ -127,7 +127,7 @@ function meta:BreakerNodeType( pinTypeOverride )
 	ntype.custom = self.custom
 
 	if pinTypeOverride then 
-		table.insert(ntype.pins, {PD_In, pinTypeOverride, self:GetName()})
+		table.insert(ntype.pins, {PD_In, pinTypeOverride, self:GetName(), PNF_None})
 	else
 		table.insert(ntype.pins, {
 			PD_In,

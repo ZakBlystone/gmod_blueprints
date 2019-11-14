@@ -31,14 +31,14 @@ NodeRedirectors = {}
 NodeTypes = {
 	["Pin"] = PURE {
 		pins = { 
-			{ PD_In, PN_Any, "" },
-			{ PD_Out, PN_Any, "" },
+			{ PD_In, PN_Any, "", PNF_None },
+			{ PD_Out, PN_Any, "", PNF_None },
 		},
 		meta = {
-			informs = {1,2}
+			informs = {1,2},
+			compact = true,
 		},
 		code = "#1 = $1",
-		compact = true,
 		collapse = true,
 	},
 	["EntityFireBullets"] = EVENT {
@@ -46,10 +46,10 @@ NodeTypes = {
 		pins = {
 			{ PD_Out, PN_Ref, "entity", PNF_None, "Entity" },
 			{ PD_Out, PN_Ref, "attacker", PNF_None, "Entity" },
-			{ PD_Out, PN_Number, "damage" },
-			{ PD_Out, PN_Number, "count" },
-			{ PD_Out, PN_Vector, "source" },
-			{ PD_Out, PN_Vector, "direction" },
+			{ PD_Out, PN_Number, "damage", PNF_None },
+			{ PD_Out, PN_Number, "count", PNF_None },
+			{ PD_Out, PN_Vector, "source", PNF_None },
+			{ PD_Out, PN_Vector, "direction", PNF_None },
 		},
 		hook = "EntityFireBullets",
 		code = [[

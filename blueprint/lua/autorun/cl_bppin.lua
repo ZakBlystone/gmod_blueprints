@@ -38,7 +38,6 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self.node = node
 	self.pin = pin
 	self.pinID = pinID
-	self.nodeType = self.node:GetType()
 	self.pinType, self.pinEx = self.graph:GetPinType( self.node.id, self.pinID )
 
 	-- input pins watch for literal changes
@@ -93,7 +92,7 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self:SetSize(10,10)
 
 	local shift_up = 2
-	if not self.nodeType.compact then
+	if not self.node:GetMeta().compact then
 
 		self.label = vgui.Create("DLabel", self)
 		--self.label:SetFont("DermaDefaultBold")

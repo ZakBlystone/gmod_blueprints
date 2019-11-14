@@ -12,7 +12,7 @@ function meta:Init(type, default, flags, ex, repmode)
 
 	self.type = type or PN_Number
 	self.default = bit.band(flags or 0, PNF_Table) ~= 0 and "{}" or (default or Defaults[self.type])
-	self.flags = flags or 0
+	self.flags = flags or PNF_None
 	self.ex = ex
 	self.repmode = repmode
 	return self
@@ -62,7 +62,7 @@ function meta:GetterNodeType()
 			{PD_Out, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
 		},
 		code = "#1 = __self.__" .. self:GetName(),
-		compact = true,
+		meta = {compact = true},
 		custom = true,
 		displayName = "Get" .. self:GetName(),
 	}
@@ -77,7 +77,7 @@ function meta:SetterNodeType()
 			{PD_Out, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
 		},
 		code = "__self.__" .. self:GetName() .. " = $2 #2 = $2",
-		compact = true,
+		meta = {compact = true},
 		custom = true,
 		displayName = "Set" .. self:GetName(),
 	}
