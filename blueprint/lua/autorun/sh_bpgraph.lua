@@ -704,20 +704,6 @@ function meta:ReadFromStream(stream, mode, version)
 
 end
 
-function meta:RemapNodeTypes( func )
-
-	if self.deferred then
-		for _, node in pairs(self.deferred) do
-			node.nodeType = func(node.nodeType)
-		end
-	else
-		for id, node in self:Nodes() do
-			node.nodeType = func(node.nodeType)
-		end
-	end
-
-end
-
 function meta:ResolveConnectionMeta()
 
 	if self.connectionMeta ~= nil then
@@ -771,42 +757,10 @@ function meta:CreateDeferredData()
 		self.deferredNodes:Clear()
 
 		self:CacheNodeTypes()
+		self:RemoveNodeIf( function(node) return not node:PostInit() end )
 
-		if self.deferred then
-
-			self:SuppressEvents( true )
-
-			for _, v in pairs(self.deferred) do
-
-				local id = self:AddNode( v.nodeType, v.x, v.y )
-				if id ~= nil then
-					for k, v in pairs(v.literals) do
-						--print("LOAD LITERAL[" .. id .. "|" .. nodeTypeName .. "]: " .. tostring(k) .. " = " .. tostring(v))
-						self:GetNode(id):SetLiteral( k, v )
-					end
-				end
-
-			end
-
-			self:SuppressEvents( false )
-
-			for id, node in self:Nodes() do
-				local nodeType = node:GetType() --TODO create impromptu nodetypes for missing nodes to satisfy connections
-				if nodeType ~= nil then
-					self:FireListeners(CB_NODE_ADD, id)
-				end
-			end
-
-			self.deferred = nil
-
-		else
-
-			for id, node in self:Nodes() do
-				if node:PostInit() then self:FireListeners(CB_NODE_ADD, id) end
-			end
-
-			self:RemoveNodeIf( function(node) return node:GetType() == nil end )
-
+		for id, node in self:Nodes() do
+			self:FireListeners(CB_NODE_ADD, id)
 		end
 
 		self:ResolveConnectionMeta()

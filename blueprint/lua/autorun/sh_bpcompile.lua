@@ -977,6 +977,10 @@ function CompileGraphMetaHook(cs, graph, nodeID, name)
 		cs.emit("\t__ilph = __ilph + 1")
 	end
 
+	if cs.graph.type == GT_Function then
+		cs.emit("\t" .. GetVarCode(cs, FindVarForPin(cs, nil, nil)) .. " = false")
+	end
+
 	-- protected call into graph entrypoint, calls error handler on error
 	cs.emit("\tlocal b,e = pcall(graph_" .. cs.graph.id .. "_entry, " .. nodeID .. ")")
 	cs.emit("\tif not b then __bpm.onError(tostring(e), " .. cs.module.id .. ", __dbggraph or -1, __dbgnode or -1) end")

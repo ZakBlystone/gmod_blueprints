@@ -1,0 +1,100 @@
+LIB TABLE
+{
+	PURE SHARED Get
+	{
+		IN Table, PN_Any, PNF_Table
+		IN Key, PN_Any
+		OUT Value, PN_Any
+		INFORM 1,3
+		COMPACT
+		CODE #1 = $1[$2]
+	}
+	FUNC SHARED Set
+	{
+		IN Table, PN_Any, PNF_Table
+		IN Key, PN_Any
+		IN Value, PN_Any, PNF_Nullable
+		INFORM 3,5
+		COMPACT
+		CODE $2[$3] = $4
+	}
+	FUNC SHARED Clear
+	{
+		IN Table, PN_Any, PNF_Table
+		COMPACT
+		CODE $2 = {}
+	}
+	PURE SHARED HasKey
+	{
+		IN Table, PN_Any, PNF_Table
+		IN Key, PN_Any
+		OUT Has, PN_Bool
+		COMPACT
+		CODE #1 = $1[$2] ~= nil
+	}
+	PURE SHARED HasValue
+	{
+		IN Table, PN_Any, PNF_Table
+		IN Value, PN_Any
+		OUT Has, PN_Bool
+		INFORM 1,2
+		COMPACT
+		CODE #1 = table.HasValue($1, $2)
+	}
+	PURE SHARED GetOrDefault
+	{
+		IN Table, PN_Any, PNF_Table
+		IN Key, PN_Any
+		IN Default, PN_Any, PNF_Nullable
+		OUT Value, PN_Any
+		INFORM 1,3,4
+		COMPACT
+		LOCAL v
+		CODE %v = $1[$2] if %v == nil then #1 = $3 else #1 = %v end
+	}
+	PURE SHARED GetSize
+	{
+		DISPLAY Size
+		IN Table, PN_Any, PNF_Table
+		OUT Size, PN_Number
+		COMPACT
+		INFORM 1
+		CODE #1 = #$1
+	}
+	FUNC SHARED Insert
+	{
+		DESC Inserts a value into a table at the end of the table or at the given position.
+		IN Table, PN_Any, PNF_Table, #The table to insert the variable into.
+		IN Value, PN_Any, #The variable to insert into the table.
+		IN Position=-1, PN_Number, #The position in the table to insert the variable. If the third argument is nil this argument becomes the value to insert at the end of given table.
+		OUT Index, PN_Number, #The index the object was placed at.
+		LOCAL pos
+		CODE
+		{
+			%pos = $4
+			if %pos < 0 then %pos = #$2+1 end
+			#2 = table.insert($2, %pos, $3)
+		}
+		INFORM 3,4
+	}
+	FUNC SHARED Remove
+	{
+		DESC Removes a value from a table and shifts any other values down to fill the gap.
+		IN Table, PN_Any, PNF_Table, #The table to remove the value from.
+		IN Index, PN_Number, PNF_Nullable, #The index of the value to remove.
+		COMPACT
+		INFORM 3
+		OUT Key, PN_Any, #The value that was removed.
+		CODE #2 = table.remove($2, $3)
+	}
+	FUNC SHARED RemoveByValue
+	{
+		DESC Removes the first instance of a given value from the specified table with table.remove, then returns the key that the value was found at.
+		IN Table, PN_Any, PNF_Table, #The table that will be searched.
+		IN Value, PN_Any, #The value to find within the table.
+		OUT Key, PN_Any, #The key at which the value was found, or false if the value was not found.
+		COMPACT
+		INFORM 3,4
+		CODE #2 = table.RemoveByValue($2, $3)
+	}
+}

@@ -42,7 +42,13 @@ LIB UTIL
 		IN Name, PN_String
 		OUT Player, PN_Ref, PNF_None, Player
 		OUT Found, PN_Bool
-		CODE #2 = false for _, pl in pairs(player.GetAll()) do if pl:Nick():find( $1 ) ~= nil then #1 = pl #2 = true end end
+		CODE
+		{
+			for _, pl in pairs(player.GetAll()) do 
+			if pl:Nick():find($1) ~= nil then #1 = pl break end 
+			end
+			#2 = (#1 ~= nil)
+		}
 	}
 	PURE SHARED ContainsString
 	{
@@ -50,5 +56,21 @@ LIB UTIL
 		IN Find, PN_String
 		OUT Result, PN_Bool
 		CODE #1 = string.find($1, $2) ~= nil
+	}
+	FUNC SERVER MakeExplosion
+	{
+		IN Owner, PN_Ref, PNF_Nullable, Entity
+		IN Position, PN_Vector
+		IN Damage, PN_Number
+		LOCAL ent
+		CODE
+		{
+			%ent = ents.Create("env_explosion")
+			%ent:SetOwner($2)
+			%ent:SetPos($3)
+			%ent:Spawn()
+			%ent:SetKeyValue("iMagnitude", $4)
+			%ent:Fire("Explode")
+		}
 	}
 }

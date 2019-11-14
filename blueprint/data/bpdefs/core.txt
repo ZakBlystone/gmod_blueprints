@@ -18,7 +18,14 @@ LIB CORE
 		OUT 2, PN_Exec
 		JUMP a
 		JUMP b
-		CODE pushjmp(^_a) ip = #_1 goto jumpto\n::^a::\npushjmp(^_b) ip = #_2 goto jumpto\n::^b::\ngoto popcall
+		CODE
+		{
+			pushjmp(^_a) ip = #_1 goto jumpto
+			::^a::
+			pushjmp(^_b) ip = #_2 goto jumpto
+			::^b::
+			goto popcall
+		}
 	}
 	SPECIAL SHARED ForEach
 	{
@@ -30,7 +37,14 @@ LIB CORE
 		OUT Value, PN_Any
 		INFORM 2,6
 		JUMP iter
-		CODE #3 = nil\n::^iter::\n#3, #4 = next($2, #3)\nif #3 ~= nil then pushjmp(^_iter) ip = #_2 goto jumpto end\n#1
+		CODE 
+		{
+			#3 = nil
+			::^iter::
+			#3, #4 = next($2, #3)
+			if #3 ~= nil then pushjmp(^_iter) ip = #_2 goto jumpto end
+			#1
+		}
 	}
 	SPECIAL SHARED For
 	{
@@ -41,7 +55,13 @@ LIB CORE
 		OUT Each, PN_Exec
 		OUT Num, PN_Number
 		JUMP iter
-		CODE #3 = $2 - 1\n::^iter::\nif #3 < $3 then #3 = #3 + 1 pushjmp(^_iter) ip = #_2 goto jumpto end\n#1
+		CODE 
+		{
+			#3 = $2 - 1
+			::^iter::
+			if #3 < $3 then #3 = #3 + 1 pushjmp(^_iter) ip = #_2 goto jumpto end
+			#1
+		}
 	}
 	SPECIAL SHARED Debounce
 	{
@@ -52,7 +72,14 @@ LIB CORE
 		OUT Debounced, PN_Exec
 		LATENT
 		LOCAL debounced
-		CODE %debounced = __bpm.delayExists("debounce_!graph_!node")\nif %debounced and $3 then __bpm.delay("debounce_!graph_!node", $2, function() end) end\nif %debounced then #2 end\n__bpm.delay("debounce_!graph_!node", $2, function() end)\n#1
+		CODE 
+		{
+			%debounced = __bpm.delayExists("debounce_!graph_!node")
+			if %debounced and $3 then __bpm.delay("debounce_!graph_!node", $2, function() end) end
+			if %debounced then #2 end
+			__bpm.delay("debounce_!graph_!node", $2, function() end)
+			#1
+		}
 	}
 	SPECIAL SHARED Delay
 	{
@@ -60,7 +87,11 @@ LIB CORE
 		IN Delay, PN_Number
 		OUT Thru, PN_Exec
 		LATENT
-		CODE __bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)\ngoto popcall
+		CODE 
+		{
+			__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)
+			goto popcall
+		}
 	}
 	SPECIAL SHARED DelayBoxed
 	{
@@ -71,7 +102,12 @@ LIB CORE
 		OUT Value, PN_Any
 		INFORM 3,5
 		LATENT
-		CODE #2 = $3\n__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)\ngoto popcall
+		CODE
+		{
+			#2 = $3
+			__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)
+			goto popcall
+		}
 	}
 	FUNC SERVER ChatPrintAll
 	{

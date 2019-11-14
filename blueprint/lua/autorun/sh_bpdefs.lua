@@ -110,7 +110,9 @@ local function ParseDef( filePath, search )
 	local lines = string.Explode("\n", str)
 	local d = nil
 	local d2 = nil
+	local d3 = nil
 	local lv = 0
+	local inCodeBlock = false
 	local def = {}
 	for _, l in pairs(lines) do
 
@@ -163,6 +165,8 @@ local function ParseDef( filePath, search )
 			lv = lv - 1
 			if lv == 1 then if not d2.protected and not d2.tbd then table.insert(d.entries, d2) end d2 = nil end
 			if lv == 0 then table.insert(def, d) d = nil end
+		elseif lv == 3 and inCodeBlock then
+			d2.code = d2.code .. tr .. "\n"
 		elseif (lv == 2 and d2) or (lv == 1 and (d.type == DEFTYPE_CALLBACK or d.type == DEFTYPE_STRUCT)) then
 			if args[1]:sub(1,4) == "DESC" then
 				d2.desc = args[1]:sub(6,-1)
@@ -174,6 +178,7 @@ local function ParseDef( filePath, search )
 			elseif args[1]:sub(1,6) == "NOHOOK" then
 				d2.nohook = true
 			elseif args[1]:sub(1,4) == "CODE" then
+				inCodeBlock = true
 				d2.code = table.concat(args, ","):sub(6,-1):gsub("\\n", "\n")
 			elseif args[1]:sub(1,6) == "LATENT" then
 				d2.latent = true
