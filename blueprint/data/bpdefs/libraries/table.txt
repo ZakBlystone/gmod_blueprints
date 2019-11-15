@@ -31,7 +31,7 @@ LIB table
 		IN startPos=1, PN_Number, PNF_Nullable, #The key to start at
 		IN endPos=-1, PN_Number, PNF_Nullable, #The key to end at
 		OUT string, PN_String, #Concatenated values
-		CODE #2 = table.concat($2, $3, $4, $5 < 0 and nil or $5)
+		CODE #1 = table.concat($1, $2, $3, $4 < 0 and nil or $4)
 	}
 	FUNC SHARED Copy
 	{
@@ -78,14 +78,6 @@ LIB table
 		IN table, PN_Any, PNF_Table, #The table to get keys of
 		OUT keys, PN_Any, PNF_Table, #Table of keys
 	}
-	PURE SHARED HasValue
-	{
-		DESC Checks if a table has a value.
-		IN table, PN_Any, PNF_Table, #Table to check
-		IN value, PN_Any, #Value to search for
-		OUT exists, PN_Bool, #Returns true if the table has that value, false otherwise
-		INFORM 1,2
-	}
 	FUNC SHARED Inherit
 	{
 		DESC Copies any missing data from base to target, and sets the target's BaseClass member to the base table's pointer.
@@ -93,16 +85,6 @@ LIB table
 		IN base, PN_Any, PNF_Table, #Table to copy data from
 		OUT result, PN_Any, PNF_Table, #Target
 		INFORM 3,4,5
-	}
-	FUNC SHARED insert
-	{
-		DESC Inserts a value into a table at the end of the table or at the given position.
-		IN tbl, PN_Any, PNF_Table, #The table to insert the variable into.
-		IN position=-1, PN_Number, #The position in the table to insert the variable. If the third argument is nil this argument becomes the value to insert at the end of given table.
-		IN value, PN_Any, #The variable to insert into the table.
-		OUT index, PN_Number, #The index the object was placed at.
-		CODE #2 = table.insert($2, $3 < 0 and nil or $3, $4)
-		INFORM 3,5
 	}
 	PURE SHARED IsEmpty
 	{
@@ -160,21 +142,7 @@ LIB table
 		OUT value, PN_Any, #A random value from the table.
 		OUT key, PN_Any, #The key associated with the random value.
 		INFORM 1,2
-	}
-	FUNC SHARED remove
-	{
-		DESC Removes a value from a table and shifts any other values down to fill the gap.
-		IN table, PN_Any, PNF_Table, #The table to remove the value from.
-		IN index, PN_Number, PNF_Nullable, #The index of the value to remove.
-		OUT key, PN_Any, #The value that was removed.
-	}
-	FUNC SHARED RemoveByValue
-	{
-		DESC Removes the first instance of a given value from the specified table with table.remove, then returns the key that the value was found at.
-		IN table, PN_Any, PNF_Table, #The table that will be searched.
-		IN value, PN_Any, #The value to find within the table.
-		OUT key, PN_Any, #The key at which the value was found, or false if the value was not found.
-		INFORM 3,4
+		COMPACT false
 	}
 	FUNC SHARED Reverse
 	{

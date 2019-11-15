@@ -44,7 +44,7 @@ DEFTYPE_LIB = 2
 DEFTYPE_STRUCT = 3
 DEFTYPE_HOOKS = 4
 
-DEFPACK_LOCATION = "blueprints/bp_definitionpack4.txt"
+DEFPACK_LOCATION = "blueprints/bp_definitionpack7.txt"
 
 local function EnumerateDefs( base, output, search )
 
@@ -419,9 +419,8 @@ function CreateLibNodes( lib, output )
 				pin.ex,
 			})
 
-			local base = ntype.type == NT_Function and 1 or 0
 			if pin.default then
-				ntype.defaults[#ntype.pins + base] = pin.default
+				ntype.defaults[#ntype.pins] = pin.default
 				--print("DEFAULT[" .. (#ntype.pins + base) .. "]: " .. pin.default)
 			end
 

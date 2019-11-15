@@ -157,6 +157,7 @@ end
 
 function meta:PostModifyNode( node, action, subaction )
 
+	print("NODE MODIFICATION: " .. node:ToString() .. " " .. tostring(action) .. " " .. tostring(subaction))
 	self:FireListeners(CB_POSTMODIFY_NODE, node.id, action)
 
 	local ntype = node:GetType()
@@ -271,6 +272,7 @@ function meta:GetFunctionType()
 		displayName = self:GetName(),
 		custom = true,
 		graphThunk = self.id,
+		meta = {},
 	}
 
 end
@@ -307,6 +309,7 @@ function meta:CreateFunctionNodeTypes( output )
 		pins = outPins,
 		displayName = "Return",
 		name = "__Exit",
+		meta = {},
 	}
 
 end
@@ -320,10 +323,11 @@ function meta:GetNodeTypes()
 		local base = self:GetModule():GetNodeTypes( self.id )
 
 		table.Merge(types, base)
-		self:CreateFunctionNodeTypes(types)
 
-		-- blacklist invalid types in function graphs
 		if self.type == GT_Function then
+			self:CreateFunctionNodeTypes(types)
+
+			-- blacklist invalid types in function graphs
 			for k, v in pairs(types) do
 				if v.meta and v.meta.latent then types[k] = nil end
 				if v.type == NT_Event then types[k] = nil end
@@ -658,11 +662,11 @@ function meta:WriteToStream(stream, mode, version)
 			local connnectionMeta = {}
 			for id, c in self:Connections(true) do
 
-				local nt0 = self:GetNode(c[1]):GetType()
-				local nt1 = self:GetNode(c[3]):GetType()
-				local pin0 = nt0.pins[c[2]]
-				local pin1 = nt1.pins[c[4]]
-				connnectionMeta[id] = {nt0.name, pin0[3], nt1.name, pin1[3]}
+				local n0 = self:GetNode(c[1])
+				local n1 = self:GetNode(c[3])
+				local pin0 = n0:GetPins()[c[2]]
+				local pin1 = n1:GetPins()[c[4]]
+				connnectionMeta[id] = {n0:GetTypeName(), pin0[3], n1:GetTypeName(), pin1[3]}
 
 			end
 

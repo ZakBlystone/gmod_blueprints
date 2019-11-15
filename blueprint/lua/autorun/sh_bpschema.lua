@@ -131,16 +131,13 @@ function ConfigureNodeType(t)
 		table.insert(t.pins, 1, { PD_Out, PN_Exec, "Exec", PNF_None })
 	end
 
-	if t.type == NT_Function and t.code then
-		t.code = t.code .. " #1"
-	end
 end
 
 function PinRetArg( nodeType, infmt, outfmt, concat )
 
 	concat = concat or ","
 	--print(nodeType.name)
-	local base = (nodeType.type == NT_Function or nodeType.type == NT_Event) and 2 or 1
+	local base = (nodeType.type == NT_Event) and 2 or 1
 	local pins = {[PD_In] = {}, [PD_Out] = {}}
 	for k,v in pairs(nodeType.pins) do
 		local num = (base+#pins[v[1]])

@@ -182,4 +182,44 @@ CLASS VMatrix
 	{
 		DESC Sets all components of the matrix to 0, also known as a null matrix.
 	}
+	PURE SHARED Transform
+	{
+		DESC Transforms the input vector by this matrix, excluding position
+		IN vector, PN_Vector, #Vector to transform
+		IN w=1, PN_Number, #W component
+		OUT out, PN_Vector, #Transformed vector
+		LOCAL mv
+		CODE
+		{
+			%mv = $1:ToTable()
+			#1 = Vector(
+			%mv[1][1] * $2[1] + %mv[1][2] * $2[2] + %mv[1][3] * $2[3] + %mv[1][4] * $3,
+			%mv[2][1] * $2[1] + %mv[2][2] * $2[2] + %mv[2][3] * $2[3] + %mv[2][4] * $3,
+			%mv[3][1] * $2[1] + %mv[3][2] * $2[2] + %mv[3][3] * $2[3] + %mv[3][4] * $3
+			)
+		}
+	}
+	PURE SHARED TransformPosition
+	{
+		DESC Transforms the input vector by this matrix, including position
+		IN position, PN_Vector, #Vector to transform
+		OUT out, PN_Vector, #Transformed vector
+		CODE $1 * $2
+	}
+	PURE SHARED TransformNormal
+	{
+		DESC Transforms the input vector by this matrix, excluding position
+		IN position, PN_Vector, #Vector to transform
+		OUT out, PN_Vector, #Transformed vector
+		LOCAL mv
+		CODE
+		{
+			%mv = $1:ToTable()
+			#1 = Vector(
+			%mv[1][1] * $2[1] + %mv[1][2] * $2[2] + %mv[1][3] * $2[3],
+			%mv[2][1] * $2[1] + %mv[2][2] * $2[2] + %mv[2][3] * $2[3],
+			%mv[3][1] * $2[1] + %mv[3][2] * $2[2] + %mv[3][3] * $2[3]
+			)
+		}
+	}
 }

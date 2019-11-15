@@ -14,7 +14,7 @@ LIB UTIL
 		IN Entity, PN_Ref, PNF_None, Entity
 		IN Key, PN_String
 		IN Value, PN_Any
-		CODE if IsValid($2) then $2[\"bp_!graph_\" .. $3] = $4 end
+		CODE if IsValid($1) then $1[\"bp_!graph_\" .. $2] = $3 end
 	}
 	PURE SHARED GetEntityValue
 	{
@@ -28,7 +28,7 @@ LIB UTIL
 	{
 		IN Entity, PN_Ref, PNF_None, Entity
 		IN Key, PN_String
-		CODE if IsValid($2) then $2[\"bp_!graph_\" .. $3] = nil end
+		CODE if IsValid($1) then $1[\"bp_!graph_\" .. $2] = nil end
 	}
 	PURE SHARED GetKeyValue
 	{
@@ -66,10 +66,10 @@ LIB UTIL
 		CODE
 		{
 			%ent = ents.Create("env_explosion")
-			%ent:SetOwner($2)
-			%ent:SetPos($3)
+			%ent:SetOwner($1)
+			%ent:SetPos($2)
 			%ent:Spawn()
-			%ent:SetKeyValue("iMagnitude", $4)
+			%ent:SetKeyValue("iMagnitude", $3)
 			%ent:Fire("Explode")
 		}
 	}

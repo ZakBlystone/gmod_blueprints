@@ -13,6 +13,7 @@ local function DisplayName(nodeType)
 end
 
 local function NodeIcon(nodeType)
+	if not nodeType.meta then print("NO META FOR: " .. nodeType.name) end
 	if nodeType.meta.role == ROLE_Server then return "icon16/bullet_blue.png" end
 	if nodeType.meta.role == ROLE_Client then return "icon16/bullet_orange.png" end
 	if nodeType.meta.role == ROLE_Shared then return "icon16/bullet_purple.png" end

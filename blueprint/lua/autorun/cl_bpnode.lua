@@ -111,6 +111,7 @@ end
 
 function PANEL:OnRemove()
 
+	self:CloseNodeContext()
 	if self.graph then
 		self.graph:RemoveListener(self.callback)
 	end
@@ -257,10 +258,40 @@ function PANEL:Paint(w, h)
 
 end
 
-function PANEL:OnMousePressed()
+function PANEL:CloseNodeContext()
+
+	if IsValid( self.menu ) then
+		self.menu:Remove()
+	end
+
+end
+
+function PANEL:OpenNodeContext()
+
+	local options = self.node:GetOptions()
+	if #options == 0 then return end
+
+	self:CloseNodeContext()
+	self.menu = DermaMenu( false, self )
+
+	for k,v in pairs(options) do
+		self.menu:AddOption( v[1], v[2] )
+	end
+
+	self.menu:SetMinimumWidth( 100 )
+	self.menu:Open( gui.MouseX(), gui.MouseY(), false, self )
+
+end
+
+function PANEL:OnMousePressed(m)
 
 	if not self.node then return end
 	if self.vgraph:GetIsLocked() then return end
+
+	if m == MOUSE_RIGHT then
+		self:OpenNodeContext()
+		return
+	end
 
 	local screenX, screenY = self:LocalToScreen( 0, 0 )
 	self:MoveToFront()

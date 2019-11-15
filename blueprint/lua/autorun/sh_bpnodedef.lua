@@ -51,6 +51,7 @@ NodeTypes = {
 			{ PD_Out, PN_Vector, "source", PNF_None },
 			{ PD_Out, PN_Vector, "direction", PNF_None },
 		},
+		meta = {},
 		hook = "EntityFireBullets",
 		code = [[
 			#2 = arg[1]

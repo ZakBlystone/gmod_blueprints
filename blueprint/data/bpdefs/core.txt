@@ -113,7 +113,7 @@ LIB CORE
 	{
 		DESC Sends a message to all players
 		IN Message, PN_String, #Message to send to all players
-		CODE for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $2) end
+		CODE for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $1) end
 	}
 	SPECIAL SHARED Client
 	{
@@ -159,7 +159,7 @@ LIB CORE
 	FUNC SHARED Print
 	{
 		IN String, PN_String
-		CODE print($2)
+		CODE print($1)
 	}
 	PURE SHARED Number
 	{
@@ -177,7 +177,7 @@ LIB CORE
 	{
 		IN String, PN_String
 		OUT String, PN_String
-		CODE #1 = $2
+		CODE #1 = $1
 	}
 	PURE SHARED IsValid
 	{

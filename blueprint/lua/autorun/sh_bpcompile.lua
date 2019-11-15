@@ -284,6 +284,10 @@ end
 -- basically just adds a self prefix for global variables to scope them into the module
 function GetVarCode(cs, var, jump)
 
+	if var == nil then
+		error("Failed to get var for " .. cs.currentNode:ToString() .. " ``" .. cs.currentCode .. "``" )
+	end
+
 	local s = ""
 	if jump and var.jump then s = "goto jmp_" end
 	if var.literal then return s .. var.var end
@@ -318,6 +322,16 @@ function CompileVars(cs, code, inVars, outVars, nodeID)
 
 	local str = code
 	local node = cs.graph:GetNode(nodeID)
+	local inBase = 0
+	local outBase = 0
+
+	cs.currentNode = node
+	cs.currentCode = str
+
+	if node:GetCodeType() == NT_Function then
+		inBase = 1
+		outBase = 1
+	end
 
 	--printi("Compile Code: '" .. code .. "': " .. #inVars .. " " .. #outVars)
 
@@ -327,11 +341,11 @@ function CompileVars(cs, code, inVars, outVars, nodeID)
 	str = string.Replace( str, "!graph", tostring(cs.graph.id))
 
 	-- replace input pin codes
-	str = str:gsub("$(%d+)", function(x) return GetVarCode(cs, inVars[tonumber(x)]) end)
+	str = str:gsub("$(%d+)", function(x) return GetVarCode(cs, inVars[tonumber(x) + inBase]) end)
 
 	-- replace output pin codes
-	str = str:gsub("#_(%d+)", function(x) return GetVarCode(cs, outVars[tonumber(x)]) end)
-	str = str:gsub("#(%d+)", function(x) return GetVarCode(cs, outVars[tonumber(x)], true) end)
+	str = str:gsub("#_(%d+)", function(x) return GetVarCode(cs, outVars[tonumber(x) + outBase]) end)
+	str = str:gsub("#(%d+)", function(x) return GetVarCode(cs, outVars[tonumber(x) + outBase], true) end)
 
 	local lmap = {}
 	for k,v in pairs(node:GetLocals()) do
@@ -350,6 +364,10 @@ function CompileVars(cs, code, inVars, outVars, nodeID)
 	str = str:gsub("%^_([%w_]+)", function(x) return tostring(jumpTable[x]) end)
 	str = str:gsub("%^([%w_]+)", function(x) return "jmp_" .. jumpTable[x] end)
 	str = DesanitizeCodedString(str)
+
+	if node:GetCodeType() == NT_Function then
+		str = str .. "\n" .. GetVarCode(cs, outVars[1], true)
+	end
 
 	return str
 
@@ -370,6 +388,9 @@ function CompileNodeSingle(cs, nodeID)
 	local codeType = node:GetCodeType()
 	local graphThunk = node:GetGraphThunk()
 
+	cs.currentNode = node
+	cs.currentCode = str
+
 	-- TODO: Instead of building these strings, find a more direct approach of compiling these
 	-- generate code based on function graph inputs and outputs
 	if graphThunk ~= nil then
@@ -378,15 +399,15 @@ function CompileNodeSingle(cs, nodeID)
 		code = ""
 		local n = target.outputs:Size()
 		for i=1, n do
-			code = code .. "#" .. (i+1) .. (i~=n and ", " or " ")
+			code = code .. "#" .. i .. (i~=n and ", " or " ")
 		end
 		if n ~= 0 then code = code .. "= " end
 		code = code .. "__self:" .. target:GetName() .. "("
 		local n = target.inputs:Size()
 		for i=1, n do
-			code = code .. "$" .. (i+1) .. (i~=n and ", " or "")
+			code = code .. "$" .. i .. (i~=n and ", " or "")
 		end
-		code = code .. ")\n#1"
+		code = code .. ")"
 		--print(code)
 	end
 
@@ -571,7 +592,7 @@ function WalkBackPureNodes(cs, nodeID, call)
 			for _, v in pairs(connections) do
 
 				local node = cs.graph:GetNode( v[1] )
-				if node:GetType().type == NT_Pure then
+				if node:GetCodeType() == NT_Pure then
 					table.insert(stack, v[1])
 					table.insert(output, v[1])
 				end
@@ -935,6 +956,9 @@ function CompileGraphMetaHook(cs, graph, nodeID, name)
 
 	local node = cs.graph:GetNode(nodeID)
 
+	cs.currentNode = node
+	cs.currentCode = ""
+
 	cs.begin(CTX_MetaEvents .. name)
 
 	cs.emit("function meta:" .. name .. "(...)")
@@ -1009,17 +1033,17 @@ function CompileGraph(cs, graph)
 
 	-- compile all non-pure function nodes in the graph (and events / special nodes)
 	for id, node in cs.graph:Nodes() do
-		if node:GetType().type ~= NT_Pure then
+		if node:GetCodeType() ~= NT_Pure then
 			Profile(cs, "functions", CompileNodeFunction, cs, id)
 		end
 	end
 
 	-- compile all events nodes in the graph
 	for id, node in cs.graph:Nodes() do
-		local ntype = node:GetType()
-		if ntype.type == NT_Event then
-			CompileGraphMetaHook(cs, graph, id, ntype.name)
-		elseif ntype.type == NT_FuncInput then
+		local codeType = node:GetCodeType()
+		if codeType == NT_Event then
+			CompileGraphMetaHook(cs, graph, id, node:GetTypeName())
+		elseif codeType == NT_FuncInput then
 			CompileGraphMetaHook(cs, graph, id, graph:GetName())
 		end
 	end

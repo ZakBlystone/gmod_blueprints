@@ -31,7 +31,7 @@ LIB ents
 	{
 		DESC Gets all entities with the given class, supports wildcards. This works internally by iterating over ents.GetAll. Even if internally ents.GetAll is used, It is faster to use ents.FindByClass than ents.GetAll with a single class comparison.
 		IN class, PN_String, #The class of the entities to find.
-		OUT entities PN_Ref, PNF_Table, Entity, #A table containing all found entities
+		OUT entities, PN_Ref, PNF_Table, Entity, #A table containing all found entities
 	}
 	FUNC SHARED FindByClassAndParent
 	{

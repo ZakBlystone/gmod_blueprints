@@ -34,9 +34,10 @@ function meta:PostInit()
 
 	local defaults = ntype.defaults or {}
 
+	local base = self:GetCodeType() == NT_Function and -1 or 0
 	for pinID, pin, pos in self:SidePins(PD_In) do
 		local pinType = pin[2]
-		local default = defaults[pinType]
+		local default = defaults[base+pos]
 		local literal = NodeLiteralTypes[pinType]
 		if literal then
 			if self:GetLiteral(pinID) == nil then
@@ -46,6 +47,15 @@ function meta:PostInit()
 	end
 
 	return true
+
+end
+
+function meta:ShiftLiterals(d)
+
+	local l = table.Copy(self.literals)
+	for pinID, literal in pairs(l) do
+		self:SetLiteral(pinID+d, literal)
+	end
 
 end
 
@@ -64,7 +74,18 @@ end
 
 function meta:GetPins()
 
-	return self:GetType().pins
+	local pins = self:GetType().pins
+	if self.data.codeTypeOverride == NT_Pure and pins[1][2] == PN_Exec then
+		pins = table.Copy(pins)
+		table.remove(pins, 1)
+		table.remove(pins, 1)
+	elseif self.data.codeTypeOverride == NT_Function and pins[1][2] ~= PN_Exec then
+		pins = table.Copy(pins)
+		table.insert(pins, 1, { PD_Out, PN_Exec, "Thru", PNF_None })
+		table.insert(pins, 1, { PD_In, PN_Exec, "Exec", PNF_None })
+	end
+
+	return pins
 
 end
 
@@ -135,7 +156,7 @@ end
 
 function meta:GetCodeType()
 
-	return self:GetType().type
+	return self.data.codeTypeOverride or self:GetType().type
 
 end
 
@@ -154,6 +175,38 @@ end
 function meta:GetPos()
 
 	return self.x, self.y
+
+end
+
+function meta:ConvertType(t)
+
+	self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+	self.data.codeTypeOverride = t
+	self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+
+	if t == NT_Pure then
+		self:ShiftLiterals(-2)
+	elseif t == NT_Function then
+		self:ShiftLiterals(2)
+	end
+
+end
+
+function meta:GetOptions()
+
+	local opt = {}
+	if self:GetCodeType() == NT_Function then
+		local canConvert = false
+		for id, pin in self:SidePins(PD_Out) do
+			if pin[2] ~= PN_Exec then canConvert = true end
+		end
+		if canConvert then
+			table.insert(opt, {"ConvertToPure", function() self:ConvertType(NT_Pure) end })
+		end
+	elseif self:GetCodeType() == NT_Pure then
+		table.insert(opt, {"ConvertToNonPure", function() self:ConvertType(NT_Function) end })
+	end
+	return opt
 
 end
 

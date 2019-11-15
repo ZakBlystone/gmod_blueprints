@@ -16,13 +16,13 @@ LIB TABLE
 		IN Value, PN_Any, PNF_Nullable
 		INFORM 3,5
 		COMPACT
-		CODE $2[$3] = $4
+		CODE $1[$2] = $3
 	}
 	FUNC SHARED Clear
 	{
 		IN Table, PN_Any, PNF_Table
 		COMPACT
-		CODE $2 = {}
+		CODE $1 = {}
 	}
 	PURE SHARED HasKey
 	{
@@ -54,7 +54,7 @@ LIB TABLE
 	}
 	PURE SHARED GetSize
 	{
-		DISPLAY Size
+		DISPLAY TABLE.Size
 		IN Table, PN_Any, PNF_Table
 		OUT Size, PN_Number
 		COMPACT
@@ -71,9 +71,9 @@ LIB TABLE
 		LOCAL pos
 		CODE
 		{
-			%pos = $4
-			if %pos < 0 then %pos = #$2+1 end
-			#2 = table.insert($2, %pos, $3)
+			%pos = $3
+			if %pos < 0 then %pos = #$1+1 end
+			#1 = table.insert($1, %pos, $2)
 		}
 		INFORM 3,4
 	}
@@ -85,7 +85,7 @@ LIB TABLE
 		COMPACT
 		INFORM 3
 		OUT Key, PN_Any, #The value that was removed.
-		CODE #2 = table.remove($2, $3)
+		CODE #1 = table.remove($1, $2)
 	}
 	FUNC SHARED RemoveByValue
 	{
@@ -95,6 +95,6 @@ LIB TABLE
 		OUT Key, PN_Any, #The key at which the value was found, or false if the value was not found.
 		COMPACT
 		INFORM 3,4
-		CODE #2 = table.RemoveByValue($2, $3)
+		CODE #1 = table.RemoveByValue($1, $2)
 	}
 }

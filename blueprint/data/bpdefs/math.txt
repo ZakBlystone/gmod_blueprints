@@ -81,4 +81,30 @@ LIB MATH
 		CODE #1 = $1 * $2
 		COMPACT
 	}
+	PURE SHARED VectorMatrixMul
+	{
+		DISPLAY vector * matrix
+		IN Vector, PN_Vector
+		IN Matrix, PN_Ref, PNF_None, VMatrix
+		OUT Vector, PN_Vector
+		CODE #1 = $1 * $2
+		COMPACT
+	}
+	PURE SHARED MatrixMatrixMul
+	{
+		DISPLAY matrix * matrix
+		IN Matrix, PN_Ref, PNF_None, VMatrix
+		IN Matrix, PN_Ref, PNF_None, VMatrix
+		OUT Matrix, PN_Ref, PNF_None, VMatrix
+		CODE #1 = $1 * $2
+		COMPACT
+	}
+	FUNC SHARED MatrixFromAngles
+	{
+		DISPLAY angles -> matrix
+		IN Angles, PN_Angles
+		OUT Matrix, PN_Ref, PNF_None, VMatrix
+		CODE #1 = Matrix() #1:SetAngles($1)
+		COMPACT
+	}
 }

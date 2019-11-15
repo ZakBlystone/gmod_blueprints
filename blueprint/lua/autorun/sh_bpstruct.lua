@@ -77,6 +77,7 @@ function meta:MakerNodeType( pinTypeOverride )
 	ntype.category = self:GetName()
 	ntype.isStruct = true
 	ntype.custom = self.custom
+	ntype.meta = {}
 
 	if pinTypeOverride then 
 		table.insert(ntype.pins, {PD_Out, pinTypeOverride, self:GetName(), PNF_None})
@@ -125,6 +126,7 @@ function meta:BreakerNodeType( pinTypeOverride )
 	ntype.category = self:GetName()
 	ntype.isStruct = true
 	ntype.custom = self.custom
+	ntype.meta = {}
 
 	if pinTypeOverride then 
 		table.insert(ntype.pins, {PD_In, pinTypeOverride, self:GetName(), PNF_None})

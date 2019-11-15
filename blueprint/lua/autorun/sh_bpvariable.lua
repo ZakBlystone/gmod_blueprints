@@ -76,7 +76,7 @@ function meta:SetterNodeType()
 			{PD_In, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
 			{PD_Out, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
 		},
-		code = "__self.__" .. self:GetName() .. " = $2 #2 = $2",
+		code = "__self.__" .. self:GetName() .. " = $1 #1 = $1",
 		meta = {compact = true},
 		custom = true,
 		displayName = "Set" .. self:GetName(),

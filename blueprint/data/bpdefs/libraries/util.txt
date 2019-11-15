@@ -379,7 +379,7 @@ LIB util
 		DESC Adds a trail to the specified entity.
 		IN ent, PN_Ref, PNF_None, Entity, #Entity to attach trail to
 		IN attachmentID, PN_Number, #Attachment ID of the entitiys model to attach trail to. If you are not sure, set this to 0
-		IN color, PN_Any, PNF_Table, #Color of the trail, use Color
+		IN color, PN_Color, #Color of the trail, use Color
 		IN additive, PN_Bool, #Should the trail be additive or not
 		IN startWidth, PN_Number, #Start width of the trail
 		IN endWidth, PN_Number, #End width of the trail
