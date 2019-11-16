@@ -268,7 +268,9 @@ end
 
 function PANEL:OpenNodeContext()
 
-	local options = self.node:GetOptions()
+	local options = {}
+	self.node:GetOptions(options)
+
 	if #options == 0 then return end
 
 	self:CloseNodeContext()

@@ -2,6 +2,7 @@ AddCSLuaFile()
 
 include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
+include("sh_bpnodeclasses.lua")
 
 module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef))
 
@@ -29,8 +30,24 @@ function meta:PostInit()
 	local ntype = self:GetType()
 	if ntype == nil then 
 		if self.nodeType ~= "invalid" then print("Node type not found for: " .. self.nodeType) end
-		return false 
+		return false
 	end
+
+	if ntype.nodeClass then
+		local class = bpnodeclasses.Get(ntype.nodeClass)
+		if class == nil then print("Failed to get class: " .. ntype.nodeClass) end
+		if ntype.nodeClass and class ~= nil then
+			print("Override node class: " .. tostring(ntype.nodeClass))
+			local base = getmetatable(self)
+			local meta = table.Copy(class)
+			table.Inherit(meta, base)
+			meta.__index = meta
+			setmetatable(self, meta)
+			if meta.Setup then self:Setup() end
+		end
+	end
+
+	self:UpdatePins()
 
 	local defaults = ntype.defaults or {}
 
@@ -73,6 +90,16 @@ function meta:ToString(pinID)
 end
 
 function meta:GetPins()
+
+	return self.pinCache
+
+end
+
+function meta:UpdatePins()
+	self.pinCache = self:GeneratePins()
+end
+
+function meta:GeneratePins()
 
 	local pins = self:GetType().pins
 	if self.data.codeTypeOverride == NT_Pure and pins[1][2] == PN_Exec then
@@ -178,10 +205,23 @@ function meta:GetPos()
 
 end
 
+function meta:RemapPin(name)
+
+	local redirects = self:GetType().pinRedirects
+	local mapTo = redirects and redirects[name]
+	if mapTo then
+		print("Remap Pin: " .. name .. " -> " .. mapTo)
+		return mapTo
+	end
+	return name
+
+end
+
 function meta:ConvertType(t)
 
 	self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
 	self.data.codeTypeOverride = t
+	self:UpdatePins()
 	self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
 
 	if t == NT_Pure then
@@ -192,21 +232,19 @@ function meta:ConvertType(t)
 
 end
 
-function meta:GetOptions()
+function meta:GetOptions(tab)
 
-	local opt = {}
 	if self:GetCodeType() == NT_Function then
 		local canConvert = false
 		for id, pin in self:SidePins(PD_Out) do
 			if pin[2] ~= PN_Exec then canConvert = true end
 		end
 		if canConvert then
-			table.insert(opt, {"ConvertToPure", function() self:ConvertType(NT_Pure) end })
+			table.insert(tab, {"ConvertToPure", function() self:ConvertType(NT_Pure) end })
 		end
 	elseif self:GetCodeType() == NT_Pure then
-		table.insert(opt, {"ConvertToNonPure", function() self:ConvertType(NT_Function) end })
+		table.insert(tab, {"ConvertToNonPure", function() self:ConvertType(NT_Function) end })
 	end
-	return opt
 
 end
 

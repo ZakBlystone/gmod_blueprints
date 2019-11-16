@@ -737,6 +737,9 @@ function meta:ResolveConnectionMeta()
 			local pin0 = nt0:GetPin(c[2])
 			local pin1 = nt1:GetPin(c[4])
 
+			meta[2] = nt0:RemapPin(meta[2])
+			meta[4] = nt1:RemapPin(meta[4])
+
 			if meta == nil then continue end
 			if pin0 == nil or pin0[3]:lower() ~= meta[2]:lower() then
 				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")

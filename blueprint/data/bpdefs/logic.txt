@@ -11,18 +11,20 @@ LIB LOGIC
 	}
 	PURE SHARED And
 	{
-		IN A, PN_Bool
-		IN B, PN_Bool
 		OUT Result, PN_Bool
-		CODE #1 = $1 and $2
+		CLASS VariadicOperator
+		PARAM operator, and
+		REDIRECTPIN A, In_1
+		REDIRECTPIN B, In_2
 		COMPACT
 	}
 	PURE SHARED Or
 	{
-		IN A, PN_Bool
-		IN B, PN_Bool
 		OUT Result, PN_Bool
-		CODE #1 = $1 or $2
+		CLASS VariadicOperator
+		PARAM operator, or
+		REDIRECTPIN A, In_1
+		REDIRECTPIN B, In_2
 		COMPACT
 	}
 	PURE SHARED Not
@@ -90,14 +92,16 @@ LIB LOGIC
 	}
 	PURE SHARED Concat
 	{
-		IN A, PN_String
-		IN B, PN_String
 		OUT Result, PN_String
-		CODE #1 = $1 .. $2
 		COMPACT
+		CLASS VariadicOperator
+		REDIRECTPIN A, In_1
+		REDIRECTPIN B, In_2
+		PARAM operator, ..
 	}
 	PURE SHARED ConcatHuge
 	{
+		DEPRECATED
 		IN A, PN_String
 		IN B, PN_String
 		IN C, PN_String

@@ -21,46 +21,51 @@ LIB MATH
 	PURE SHARED MultiplyNumber
 	{
 		DISPLAY *
-		IN A, PN_Number
-		IN B, PN_Number
 		OUT Result, PN_Number
-		CODE #1 = $1 * $2
+		CLASS VariadicOperator
+		REDIRECTPIN A, In_1
+		REDIRECTPIN B, In_2
+		PARAM operator, *
 		COMPACT
 	}
 	PURE SHARED AddNumber
 	{
 		DISPLAY +
-		IN A, PN_Number
-		IN B, PN_Number
 		OUT Result, PN_Number
-		CODE #1 = $1 + $2
+		CLASS VariadicOperator
+		REDIRECTPIN A, In_1
+		REDIRECTPIN B, In_2
+		PARAM operator, +
 		COMPACT
 	}
 	PURE SHARED SubNumber
 	{
 		DISPLAY -
-		IN A, PN_Number
-		IN B, PN_Number
 		OUT Result, PN_Number
-		CODE #1 = $1 - $2
+		CLASS VariadicOperator
+		REDIRECTPIN A, In_1
+		REDIRECTPIN B, In_2
+		PARAM operator, -
 		COMPACT
 	}
 	PURE SHARED AddVector
 	{
 		DISPLAY vector + vector
-		IN A, PN_Vector
-		IN B, PN_Vector
 		OUT Result, PN_Vector
-		CODE #1 = $1 + $2
+		CLASS VariadicOperator
+		REDIRECTPIN A, In_1
+		REDIRECTPIN B, In_2
+		PARAM operator, +
 		COMPACT
 	}
 	PURE SHARED SubVector
 	{
 		DISPLAY vector - vector
-		IN A, PN_Vector
-		IN B, PN_Vector
 		OUT Result, PN_Vector
-		CODE #1 = $1 - $2
+		CLASS VariadicOperator
+		REDIRECTPIN A, In_1
+		REDIRECTPIN B, In_2
+		PARAM operator, -
 		COMPACT
 	}
 	PURE SHARED VectorMA

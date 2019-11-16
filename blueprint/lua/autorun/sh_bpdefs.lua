@@ -44,7 +44,7 @@ DEFTYPE_LIB = 2
 DEFTYPE_STRUCT = 3
 DEFTYPE_HOOKS = 4
 
-DEFPACK_LOCATION = "blueprints/bp_definitionpack7.txt"
+DEFPACK_LOCATION = "blueprints/bp_definitionpack8.txt"
 
 local function EnumerateDefs( base, output, search )
 
@@ -184,6 +184,18 @@ local function ParseDef( filePath, search )
 				d2.latent = true
 			elseif args[1]:sub(1,7) == "DISPLAY" then
 				d2.displayName = args[1]:sub(9,-1):Trim()
+			elseif args[1]:sub(1,5) == "CLASS" then
+				d2.nodeClass = args[1]:sub(7,-1):Trim()
+			elseif args[1]:sub(1,5) == "PARAM" then
+				local param = args[1]:sub(7,-1):Trim()
+				local value = args[2]:Trim()
+				d2.params = d2.params or {}
+				d2.params[param] = value
+			elseif args[1]:sub(1,11) == "REDIRECTPIN" then
+				local pinFrom = args[1]:sub(13,-1):Trim()
+				local pinTo = args[2]:Trim()
+				d2.pinRedirects = d2.pinRedirects or {}
+				d2.pinRedirects[pinFrom] = pinTo
 			elseif args[1]:sub(1,4) == "JUMP" then
 				d2.jumpSymbols = d2.jumpSymbols or {}
 				table.insert(d2.jumpSymbols, table.concat(args, ","):sub(6,-1):Trim())
@@ -380,6 +392,9 @@ function CreateLibNodes( lib, output )
 		ntype.jumpSymbols = v.jumpSymbols
 		ntype.deprecated = v.deprecated
 		ntype.locals = v.locals
+		ntype.nodeClass = v.nodeClass
+		ntype.params = v.params
+		ntype.pinRedirects = v.pinRedirects
 		ntype.meta = {
 			informs = v.informs or {},
 			compact = v.compact,
@@ -462,6 +477,7 @@ function CreateHooksetNodes( hookset, output )
 		ntype.desc = v.desc
 		ntype.category = hookset.name
 		ntype.returns = v.returnsValues
+		ntype.pinRedirects = v.pinRedirects
 		ntype.meta = {
 			role = v.role,
 		}
