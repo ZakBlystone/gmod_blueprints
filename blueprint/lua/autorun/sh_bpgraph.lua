@@ -588,12 +588,22 @@ function meta:RemoveInvalidConnections()
 	for i=#connections, 1, -1 do
 
 		local c = connections[i]
-		if not self:GetNode(c[1]) or not self:GetNode(c[3]) then
-			print("Removed invalid connection: " .. i)
+		local node1 = self:GetNode(c[1])
+		local node2 = self:GetNode(c[3])
+		if not node1 then
+			print("Removed invalid connection: " .. i .. " [output node not found : " .. tostring(c[1]) .. "]")
 			table.remove(connections, i)
-		elseif not self:GetNode(c[1]):GetPin(c[2]) or not self:GetNode(c[3]):GetPin(c[4]) then
-			print("Removed invalid connection: " .. i)
+		elseif not node2 then
+			print("Removed invalid connection: " .. i .. " [input node not found : " .. tostring(c[3]) .. "]")
 			table.remove(connections, i)
+		elseif not node1:GetPin(c[2]) then
+			print("Removed invalid connection: " .. i .. " [output pin not found : " .. node1:ToString() .. " : " .. tostring(c[2]) .. "]")
+			table.remove(connections, i)
+			PrintTable(c)
+		elseif not node2:GetPin(c[4]) then
+			print("Removed invalid connection: " .. i .. " [input pin not found : " .. node2:ToString() .. " : " .. tostring(c[4]) .. "]")
+			table.remove(connections, i)
+			PrintTable(c)
 		end
 
 	end	
@@ -722,16 +732,16 @@ function meta:ResolveConnectionMeta()
 		print("Resolving connection meta...")
 		for i, c in self:Connections(true) do
 			local meta = self.connectionMeta[i]
-			local nt0 = self:GetNode(c[1]):GetType()
-			local nt1 = self:GetNode(c[3]):GetType()
-			local pin0 = nt0.pins[c[2]]
-			local pin1 = nt1.pins[c[4]]
+			local nt0 = self:GetNode(c[1])
+			local nt1 = self:GetNode(c[3])
+			local pin0 = nt0:GetPin(c[2])
+			local pin1 = nt1:GetPin(c[4])
 
 			if meta == nil then continue end
 			if pin0 == nil or pin0[3]:lower() ~= meta[2]:lower() then
 				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")
 				c[2] = nil
-				for k, p in pairs(nt0.pins) do
+				for k, p in pairs(nt0:GetPins()) do
 					if p[1] == PD_Out and p[3]:lower() == meta[2]:lower() then c[2] = k break end
 				end
 				MsgC( c[2] ~= nil and Color(100,255,100) or Color(255,100,100), c[2] ~= nil and " Resolved\n" or " Not resolved\n" )
@@ -740,7 +750,7 @@ function meta:ResolveConnectionMeta()
 			if pin1 == nil or pin1[3]:lower() ~= meta[4]:lower() then
 				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
 				c[4] = nil
-				for k, p in pairs(nt0.pins) do
+				for k, p in pairs(nt1:GetPins()) do
 					if p[1] == PD_In and p[3]:lower() == meta[4]:lower() then c[4] = k break end
 				end
 				MsgC( c[4] ~= nil and Color(100,255,100) or Color(255,100,100), c[4] ~= nil and " Resolved\n" or " Not resolved\n" )

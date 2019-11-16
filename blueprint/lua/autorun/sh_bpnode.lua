@@ -115,7 +115,7 @@ function meta:SidePins(dir)
 
 end
 
-function meta:GetPin(pinID, dir)
+function meta:GetPin(pinID)
 
 	return self:GetPins()[pinID]
 

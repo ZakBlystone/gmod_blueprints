@@ -587,12 +587,12 @@ LIB GLOBAL
 	PURE CLIENT ScrH
 	{
 		DESC Gets the height of the game's window (in pixels).
-		OUT width, PN_Number, #The height of the game's window in pixels
+		OUT height, PN_Number, #The height of the game's window in pixels
 	}
 	PURE CLIENT ScrW
 	{
 		DESC Gets the width of the game's window (in pixels).
-		OUT height, PN_Number, #The width of the game's window in pixels
+		OUT width, PN_Number, #The width of the game's window in pixels
 	}
 	PURE SHARED SoundDuration
 	{
