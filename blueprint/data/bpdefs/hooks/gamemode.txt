@@ -427,6 +427,69 @@ HOOKS GM
 		DESC Called after the player was drawn.
 		IN player, PN_Ref, PNF_None, Player, #The player that was drawn.
 	}
+	SHARED PreCleanupMap
+	{
+		DESC Called right before the map cleans up (usually because game.CleanUpMap was called).
+	}
+	CLIENT PreDrawEffects
+	{
+		DESC Called just after GM:PreDrawViewModel and can technically be considered "PostDrawAllViewModels".
+	}
+	CLIENT PreDrawHalos
+	{
+		DESC Applies a "halo" glow effect to one or multiple entities.
+	}
+	CLIENT PreDrawHUD
+	{
+		DESC Called before any of 2D drawing functions. Drawing anything in it seems to work incorrectly.
+	}
+	CLIENT PreDrawOpaqueRenderables
+	{
+		DESC Called before all opaque entities are drawn.
+		IN isDrawingDepth, PN_Bool, #Whether the current draw is writing depth.
+		IN isDrawSkybox, PN_Bool, #Whether the current draw is drawing the skybox.
+		OUT preventOpaqueRenderables=false, PN_Bool, #Return true to prevent opaque renderables from drawing.
+	}
+	CLIENT PreDrawPlayerHands
+	{
+		DESC Called before the player hands are drawn.
+		IN hands, PN_Ref, PNF_None, Entity, #This is the gmod_hands entity before it is drawn.
+		IN viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity before it is drawn.
+		IN player, PN_Ref, PNF_None, Player, #The the owner of the view model.
+		IN weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
+		OUT preventRender, PN_Bool, #Return true to prevent the viewmodel hands from rendering
+	}
+	CLIENT PreDrawSkyBox
+	{
+		DESC Called before the sky box is drawn.
+		OUT disableSkybox, PN_Bool, #Return true to disable skybox drawing (both 2D and 3D skybox)
+	}
+	CLIENT PreDrawTranslucentRenderables
+	{
+		DESC Called before all the translucent entities are drawn.
+		IN isDrawingDepth, PN_Bool, #Whether the current draw is writing depth.
+		IN isDrawSkybox, PN_Bool #Whether the current draw is drawing the skybox.
+		OUT preventRender, PN_Bool, #Return true to prevent translucent renderables from drawing.
+	}
+	CLIENT PreDrawViewModel
+	{
+		DESC Called before the view model has been drawn. This hook by default also calls this on weapons.
+		IN viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity before it is drawn.
+		IN player, PN_Ref, PNF_None, Player, #The the owner of the view model.
+		IN weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
+		OUT preventRender, PN_Bool, #Return true to prevent the default view model rendering.
+	}
+	CLIENT PrePlayerDraw
+	{
+		DESC Called before the player is drawn.
+		IN player, PN_Ref, PNF_None, Player, #The player that is about to be drawn.
+		OUT preventRender, PN_Bool, #Prevent default player rendering. Return true to hide the player.
+	}
+	CLIENT PreRender
+	{
+		DESC Called before the renderer is about to start rendering the next frame.
+		OUT preventRender, PN_Bool, #Return true to prevent all rendering. This can make the whole game stop rendering anything.
+	}
 	SHARED PropBreak
 	{
 		DESC Called when a prop has been destroyed.
