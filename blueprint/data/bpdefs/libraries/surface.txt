@@ -6,8 +6,19 @@ LIB surface
 		IN fontName, PN_String, #The new font name.
 		IN fontData, PN_Struct, PNF_None, FontData, #The font properties. See the FontData structure.
 	}
+	SPECIAL CLIENT DisableClipping2
+	{
+		DISPLAY surface.DisableClipping
+		DESC Sets up a new 2D rendering context.
+		IN Exec, PN_Exec
+		OUT Thru, PN_Exec
+		OUT Draw, PN_Exec
+		JUMP finish
+		CODE surface.DisableClipping(true) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: surface.DisableClipping(false) #1
+	}
 	FUNC CLIENT DisableClipping
 	{
+		DEPRECATED
 		DESC Enables or disables the clipping used by the VGUI that limits the drawing operations to a panels bounds.
 		IN disable, PN_Bool, #True to disable, false to enable the clipping
 	}
