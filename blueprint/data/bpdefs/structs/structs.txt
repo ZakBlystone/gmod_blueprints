@@ -688,3 +688,23 @@ STRUCT ViewData, Table structure used for render.RenderView.
 	PIN bloomtone=true, PN_Bool, #Disables default engine bloom and pauses the "brightness changes" on HDR maps.
 	PIN offcenter, PN_Struct, PNF_Nullable, CamDataOrtho, #This allows you to "zoom in" on a part of the screen
 }
+STRUCT FontData
+{
+	NAME blursize, blurSize
+	NAME scanlines, scanLines
+	PIN font=Arial, PN_String, #The font source. This must be the actual name of the font, not a file name.
+	PIN extended=false, PN_Bool, #Allow the font to display glyphs that are outside of the Latin-1 range
+	PIN size=13, PN_Number, #The font height in pixels
+	PIN weight=500, PN_Number, #The font boldness
+	PIN blursize=0, PN_Number, #The strength of the font blurring
+	PIN scanlines=0, PN_Number, #The "scanline" interval Must be > 1 to work. This setting is per blursize per font
+	PIN antialias=true, PN_Bool, #Smooth the font
+	PIN underline=false, PN_Bool, #Add an underline to the font
+	PIN italic=false, PN_Bool, #Make the font italic
+	PIN strikeout=false, PN_Bool, #Add a strike through
+	PIN symbol=false, PN_Bool, #Enables the use of symbolic fonts such as Webdings
+	PIN rotary=false, PN_Bool, #Seems to add a line in the middle of each letter
+	PIN shadow=false, PN_Bool, #Add shadow casting to the font
+	PIN additive=false, PN_Bool, #Additive rendering
+	PIN outline=false, PN_Bool, #Add a black outline to the font.
+}
