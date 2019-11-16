@@ -183,6 +183,12 @@ function meta:RecacheNodeTypes()
 
 end
 
+function meta:GetUID()
+
+	return self.uniqueID
+
+end
+
 function meta:GetNodeTypes( graphID )
 
 	local types = {}
@@ -386,69 +392,117 @@ function meta:CreateTestModule()
 
 end
 
-function meta:BindGamemodeHooks()
+local imeta = {}
 
-	if not self:IsValid() then return end
+function imeta:__GetModule()
 
-	local bp = self:Get()
-	local meta = bp.meta
-	local instance = self:GetSingleton()
+	return self.__module
 
-	if instance.CORE_Init then instance:CORE_Init() end
+end
 
-	for k,v in pairs(bp.events) do
+function imeta:__GetUID()
+
+	return self.__guid
+
+end
+
+function imeta:__BindGamemodeHooks()
+
+	local meta = getmetatable(self)
+
+	if self.CORE_Init then self:CORE_Init() end
+	local bpm = self.__bpm
+
+	for k,v in pairs(bpm.events) do
 		if not v.hook or type(meta[k]) ~= "function" then continue end
-		local function call(...) return instance[k](instance, ...) end
-		hook.Add(v.hook, v.key, call)
+		local function call(...) return self[k](self, ...) end
+		local key = "bphook_" .. GUIDToString(self:__GetUID(), true)
+		print("BIND KEY: " .. v.hook .. " : " .. key)
+		hook.Add(v.hook, key, call)
 	end
 
 end
 
-function meta:UnbindGamemodeHooks()
+function imeta:__UnbindGamemodeHooks()
 
-	if not self:IsValid() then return end
+	local meta = getmetatable(self)
 
-	local bp = self:Get()
-	local meta = bp.meta
-	local instance = self:GetSingleton()
+	if self.shuttingDown then ErrorNoHalt("!!!!!Recursive shutdown!!!!!") return end
+	local bpm = self.__bpm
 
-	if instance.shuttingDown then ErrorNoHalt("!!!!!Recursive shutdown!!!!!") return end
-
-	for k,v in pairs(bp.events) do
+	for k,v in pairs(bpm.events) do
 		if not v.hook or type(meta[k]) ~= "function" then continue end
-		hook.Remove(v.hook, v.key)
+		local key = "bphook_" .. GUIDToString(self:__GetUID(), true)
+		print("UNBIND KEY: " .. v.hook .. " : " .. key)
+		hook.Remove(v.hook, key, false)
 	end
 
-	instance.shuttingDown = true
-	if instance.CORE_Shutdown then instance:CORE_Shutdown() end
-	instance.shuttingDown = false
+	self.shuttingDown = true
+	if self.CORE_Shutdown then self:CORE_Shutdown() end
+	self.shuttingDown = false
 
 end
 
-function meta:SetEnabled( enable )
+function imeta:__SetEnabled( enable )
 
-	if not self:IsValid() then return end
+	local modID = self.__module:GetUID()
+	local guid = self:__GetUID()
 
-	local isEnabled = activeModules[self.uniqueID] ~= nil
+	activeModules[modID] = activeModules[modID] or {}
+
+	local activeList = activeModules[modID]
+	local isEnabled = activeList[guid] ~= nil
 	if isEnabled == false and enable == true then
 		print("BINDING GAMEMODE HOOKS")
-		self:BindGamemodeHooks()
-		activeModules[self.uniqueID] = self
+		self:__BindGamemodeHooks()
+		activeList[guid] = self
 		return
 	end
 
 	if isEnabled == true and enable == false then
 		print("UN-BINDING GAMEMODE HOOKS")
-		self:UnbindGamemodeHooks()
-		activeModules[self.uniqueID] = nil
+		self:__UnbindGamemodeHooks()
+		activeList[guid] = nil
 		return
 	end
 
 end
 
+function meta:SetEnabled( enable )
+
+	local modID = self:GetUID()
+	activeModules[modID] = activeModules[modID] or {}
+	local activeList = activeModules[modID]
+
+	if enable then
+		self:GetSingleton():__SetEnabled( enable )
+	else
+		for k,v in pairs(activeList) do
+			v:__SetEnabled(false)
+		end
+		activeModules[modID] = {}
+	end
+
+end
+
+function meta:Instantiate(guid)
+
+	local instance = self:Get().new()
+	local meta = table.Copy(getmetatable(instance))
+	for k,v in pairs(imeta) do meta[k] = v end
+	setmetatable(instance, meta)
+	instance.__guid = guid or GUID()
+	instance.__module = self
+	return instance
+
+end
+
 function meta:GetSingleton()
 
-	self.singleton = self.singleton or (self:IsValid() and self:Get().new() or nil)
+	self.singleton = self.singleton or (self:IsValid() and self:Instantiate() or nil)
+	if not self.singleton then return end
+
+	self.singleton.__guid = self.uniqueID
 	return self.singleton
 
 end
@@ -514,7 +568,9 @@ end
 hook.Add("Think", "__updatebpmodules", function()
 
 	for _, m in pairs(activeModules) do
-		m:Get().update()
+		for _, instance in pairs(m) do
+			instance:update()
+		end
 	end
 
 end)
