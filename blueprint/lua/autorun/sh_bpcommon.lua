@@ -281,9 +281,15 @@ end
 	uptime = 24bits
 ]]
 
-function GUIDToString( guid )
+function GUIDToString( guid, raw )
 
-	return string.format("{%0.2X%0.2X%0.2X%0.2X-%0.2X%0.2X%0.2X%0.2X-%0.2X%0.2X%0.2X%0.2X-%0.2X%0.2X%0.2X%0.2X}",
+	local fmt = nil
+	if raw then
+		fmt = "%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X"
+	else
+		fmt = "{%0.2X%0.2X%0.2X%0.2X-%0.2X%0.2X%0.2X%0.2X-%0.2X%0.2X%0.2X%0.2X-%0.2X%0.2X%0.2X%0.2X}"
+	end
+	return string.format(fmt,
 		guid[1]:byte(),
 		guid[2]:byte(),
 		guid[3]:byte(),
@@ -327,5 +333,14 @@ function GUID()
 
 	local str, len = out:GetString(false, false)
 	return str
+
+end
+
+function GCHandle(func)
+
+	local prx = newproxy(true)
+	local meta = getmetatable(prx)
+	function meta.__gc( self ) pcall( func ) end
+	return prx
 
 end
