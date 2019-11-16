@@ -35,9 +35,8 @@ function meta:PostInit()
 
 	if ntype.nodeClass then
 		local class = bpnodeclasses.Get(ntype.nodeClass)
-		if class == nil then print("Failed to get class: " .. ntype.nodeClass) end
+		if class == nil then error("Failed to get class: " .. ntype.nodeClass) end
 		if ntype.nodeClass and class ~= nil then
-			print("Override node class: " .. tostring(ntype.nodeClass))
 			local base = getmetatable(self)
 			local meta = table.Copy(class)
 			table.Inherit(meta, base)
@@ -49,6 +48,13 @@ function meta:PostInit()
 
 	self:UpdatePins()
 
+	return true
+
+end
+
+function meta:SetLiteralDefaults()
+
+	local ntype = self:GetType()
 	local defaults = ntype.defaults or {}
 
 	local base = self:GetCodeType() == NT_Function and -1 or 0
@@ -63,8 +69,6 @@ function meta:PostInit()
 		end
 	end
 
-	return true
-
 end
 
 function meta:ShiftLiterals(d)
@@ -73,6 +77,7 @@ function meta:ShiftLiterals(d)
 	for pinID, literal in pairs(l) do
 		self:SetLiteral(pinID+d, literal)
 	end
+	self:RemoveInvalidLiterals()
 
 end
 
@@ -89,30 +94,37 @@ function meta:ToString(pinID)
 
 end
 
-function meta:GetPins()
-
-	return self.pinCache
-
-end
-
 function meta:UpdatePins()
-	self.pinCache = self:GeneratePins()
+
+	self.pinCache = {}
+	self:GeneratePins(self.pinCache)
+	self:SetLiteralDefaults()
+
 end
 
-function meta:GeneratePins()
+function meta:PreModify()
 
-	local pins = self:GetType().pins
+	self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+
+end
+
+function meta:PostModify()
+
+	self:UpdatePins()
+	self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+
+end
+
+function meta:GeneratePins(pins)
+
+	table.Add(pins, self:GetType().pins)
 	if self.data.codeTypeOverride == NT_Pure and pins[1][2] == PN_Exec then
-		pins = table.Copy(pins)
 		table.remove(pins, 1)
 		table.remove(pins, 1)
 	elseif self.data.codeTypeOverride == NT_Function and pins[1][2] ~= PN_Exec then
-		pins = table.Copy(pins)
 		table.insert(pins, 1, { PD_Out, PN_Exec, "Thru", PNF_None })
 		table.insert(pins, 1, { PD_In, PN_Exec, "Exec", PNF_None })
 	end
-
-	return pins
 
 end
 
@@ -127,13 +139,15 @@ function meta:GetNumSidePins(dir)
 
 end
 
-function meta:SidePins(dir)
+local filterNoOp = function() return true end
+function meta:SidePins(dir, filter)
 
+	filter = filter or filterNoOp
 	local pins = self:GetPins()
 	local i, j, num = 0, 0, #pins
 	return function()
 		i = i + 1
-		while i <= num and pins[i][1] ~= dir do i = i + 1 end
+		while i <= num and (pins[i][1] ~= dir or not filter(pins[i])) do i = i + 1 end
 		if i <= num then
 			j = j + 1
 			return i, pins[i], j
@@ -166,9 +180,22 @@ end
 
 function meta:SetLiteral(pinID, value)
 
+	local pins = self:GetPins()
+	if pinID < 1 or pinID > #pins then return end
+	if pins[pinID][1] == PD_Out or pins[pinID][2] == PN_Exec then return end
+
 	value = tostring(value)
 	self.literals[pinID] = value
 	self.graph:FireListeners(bpgraph.CB_PIN_EDITLITERAL, self.id, pinID, value)
+
+end
+
+function meta:RemoveInvalidLiterals()
+
+	local pins = self:GetPins()
+	for pinID, value in pairs(self.literals) do
+		if pins[pinID] == nil or pins[pinID][1] ~= PD_In or pins[pinID][2] == PN_Exec then self.literals[pinID] = nil end
+	end
 
 end
 
@@ -187,23 +214,9 @@ function meta:GetCodeType()
 
 end
 
-function meta:GetTypeName()
-
-	return self.nodeType
-
-end
-
-function meta:GetName()
-
-	return self.name
-
-end
-
-function meta:GetPos()
-
-	return self.x, self.y
-
-end
+function meta:GetTypeName() return self.nodeType end
+function meta:GetName() return self.name end
+function meta:GetPos() return self.x, self.y end
 
 function meta:RemapPin(name)
 
@@ -219,10 +232,9 @@ end
 
 function meta:ConvertType(t)
 
-	self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+	self:PreModify()
 	self.data.codeTypeOverride = t
-	self:UpdatePins()
-	self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+	self:PostModify()
 
 	if t == NT_Pure then
 		self:ShiftLiterals(-2)
@@ -248,12 +260,14 @@ function meta:GetOptions(tab)
 
 end
 
+function meta:GetPins() return self.pinCache end
 function meta:GetCode() return self:GetType().code end
 function meta:GetJumpSymbols() return self:GetType().jumpSymbols or {} end
 function meta:GetLocals() return self:GetType().locals or {} end
 function meta:GetMeta() return self:GetType().meta or {} end
 function meta:GetGraphThunk() return self:GetType().graphThunk end
 function meta:GetHook() return self:GetType().hook end
+function meta:GetInforms() return self:GetType().meta.informs end
 
 function meta:GetDisplayName()
 

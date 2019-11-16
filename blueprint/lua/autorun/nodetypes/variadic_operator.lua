@@ -8,8 +8,10 @@ function NODE:Setup()
 	PrintTable(self.literals)
 end
 
-function NODE:GeneratePins()
-	local pins = table.Copy(self.BaseClass.GeneratePins(self))
+function NODE:GeneratePins(pins)
+
+	self.BaseClass.GeneratePins(self, pins)
+
 	local dataPin = nil
 	local dataPinID = nil
 	for k,v in pairs(pins) do
@@ -19,7 +21,7 @@ function NODE:GeneratePins()
 			break
 		end
 	end
-	if dataPin == nil then print("No data pin") return pins end
+	if dataPin == nil then print("No data pin") return end
 
 	-- we need the data pin to be the last pin for backwards compatibility
 	table.remove(pins, dataPinID)
@@ -36,19 +38,18 @@ function NODE:GeneratePins()
 
 	table.insert(pins, dataPin)
 
-	return pins
 end
 
 function NODE:GetOptions(tab)
+
 	self.BaseClass.GetOptions(self, tab)
 
 	table.insert(tab, {
 		"AddPin",
 		function()
-			self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+			self:PreModify()
 			self.data.pinCount = self.data.pinCount + 1
-			self:UpdatePins()
-			self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+			self:PostModify()
 		end
 	})
 
@@ -57,14 +58,14 @@ function NODE:GetOptions(tab)
 		table.insert(tab, {
 			"RemovePin",
 			function()
-				self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+				self:PreModify()
 				self.data.pinCount = self.data.pinCount - 1
-				self:UpdatePins()
-				self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+				self:PostModify()
 			end
 		})
 
 	end
+
 end
 
 function NODE:GetOperator()

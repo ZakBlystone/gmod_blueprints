@@ -368,23 +368,22 @@ function meta:GetPinType(nodeID, pinID)
 
 		local node = self:GetNode(nodeID)
 		local pin = node:GetPin(pinID)
-		local meta = node:GetMeta()
+		local informs = node:GetInforms()
 
 		if not pin then return nil, nil end
 
-		if meta and meta.informs then
+		if informs then
 
 			local hasInform = false
-			for i = 1, #meta.informs do
-				local t = meta.informs[i]
+			for i = 1, #informs do
+				local t = informs[i]
 				if t == pinID then hasInform = true end
 			end
 
 			if hasInform then
-				for i = 1, #meta.informs do
+				for i = 1, #informs do
 
-					local t = meta.informs[i]
-
+					local t = informs[i]
 					local isConnected, connection = self:IsPinConnected(nodeID, t)
 					if isConnected and connection ~= nil then
 

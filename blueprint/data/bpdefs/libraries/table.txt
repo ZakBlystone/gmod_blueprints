@@ -31,7 +31,12 @@ LIB table
 		IN startPos=1, PN_Number, PNF_Nullable, #The key to start at
 		IN endPos=-1, PN_Number, PNF_Nullable, #The key to end at
 		OUT string, PN_String, #Concatenated values
-		CODE #1 = table.concat($1, $2, $3, $4 < 0 and nil or $4)
+		LOCAL endPos
+		CODE
+		{
+			%endPos = $4 < 0 and #$1 or $4
+			#1 = table.concat($1, $2, $3, %endPos)
+		}
 	}
 	FUNC SHARED Copy
 	{

@@ -92,7 +92,8 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self:SetSize(10,10)
 
 	local shift_up = 2
-	if not self.node:GetMeta().compact then
+	local meta = self.node:GetMeta()
+	if not meta.compact and not meta.hidePinNames then
 
 		self.label = vgui.Create("DLabel", self)
 		--self.label:SetFont("DermaDefaultBold")

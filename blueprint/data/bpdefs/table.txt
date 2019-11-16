@@ -97,4 +97,8 @@ LIB TABLE
 		INFORM 3,4
 		CODE #1 = table.RemoveByValue($1, $2)
 	}
+	PURE SHARED MakeArray
+	{
+		CLASS MakeArray
+	}
 }
