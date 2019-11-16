@@ -96,4 +96,15 @@ LIB LOGIC
 		CODE #1 = $1 .. $2
 		COMPACT
 	}
+	PURE SHARED ConcatHuge
+	{
+		IN A, PN_String
+		IN B, PN_String
+		IN C, PN_String
+		IN D, PN_String
+		IN E, PN_String
+		OUT Result, PN_String
+		CODE #1 = $1 .. $2 .. $3 .. $4 .. $5
+		COMPACT
+	}
 }
