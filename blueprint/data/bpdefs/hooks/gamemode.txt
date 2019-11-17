@@ -102,7 +102,7 @@ HOOKS GM
 	}
 	CLIENT CreateClientsideRagdoll
 	{
-		DESC Called whenever an entity becomes a clientside ragdoll.	
+		DESC Called whenever an entity becomes a clientside ragdoll.
 		IN entity, PN_Ref, PNF_None, Entity, #The Entity that created the ragdoll
 		IN ragdoll, PN_Ref, PNF_None, Entity, #The ragdoll being created.
 	}
