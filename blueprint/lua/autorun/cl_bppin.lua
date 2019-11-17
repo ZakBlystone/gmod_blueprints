@@ -91,7 +91,7 @@ function PANEL:Setup(graph, node, pin, pinID)
 		self.label = vgui.Create("DLabel", self)
 		--self.label:SetFont("DermaDefaultBold")
 		self.label:SetFont("Default")
-		self.label:SetText(pin:GetName())
+		self.label:SetText(pin:GetDisplayName())
 		self.label:SizeToContents()
 
 		if self.pin:IsOut() then

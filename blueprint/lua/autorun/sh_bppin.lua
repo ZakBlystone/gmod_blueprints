@@ -35,8 +35,9 @@ function meta:Init(dir, name, type)
 	return self
 end
 
-function meta:SetDir(dir) self.dir = dir end
-function meta:SetName(name) self.name = name end
+function meta:SetDir(dir) self.dir = dir return self end
+function meta:SetName(name) self.name = name return self end
+function meta:SetDisplayName(name) self.displayName = name return self end
 
 function meta:GetDir()
 	return self.dir
@@ -48,6 +49,10 @@ end
 
 function meta:GetName()
 	return self.name
+end
+
+function meta:GetDisplayName()
+	return self.displayName or self:GetName()
 end
 
 function meta:IsIn() return self:GetDir() == bpschema.PD_In end
