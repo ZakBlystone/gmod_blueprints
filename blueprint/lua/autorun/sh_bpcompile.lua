@@ -113,14 +113,15 @@ function CreateFunctionGraphVars(cs, uniqueKeys)
 
 			for pinID, pin in node:SidePins(PD_Out) do
 				local pinType = cs.graph:GetPinType( nodeID, pinID )
-				if pinType == PN_Exec then continue end
+				if pinType:IsType(PN_Exec) then continue end
 
-				local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_in_" .. (pin[3] ~= "" and pin[3] or "pin"))
+				local pinName = pin:GetName()
+				local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_in_" .. (pinName ~= "" and pinName or "pin"))
 				--print(" " .. key)
 
 				table.insert(cs.vars, {
 					var = key,
-					init = Defaults[pinType],
+					init = pinType:GetDefault(),
 					type = pinType,
 					node = nodeID,
 					pin = pinID,
@@ -133,10 +134,11 @@ function CreateFunctionGraphVars(cs, uniqueKeys)
 
 			for pinID, pin in node:SidePins(PD_In) do
 				local pinType = cs.graph:GetPinType( nodeID, pinID )
-				if pinType == PN_Exec then continue end
+				if pinType:IsType(PN_Exec) then continue end
 
 				-- TODO, multiple return nodes access the same variables, make these graph-scope instead.
-				local key = bpcommon.CreateUniqueKey({}, "func_" .. name .. "_out_" .. (pin[3] ~= "" and pin[3] or "pin"))
+				local pinName = pin:GetName()
+				local key = bpcommon.CreateUniqueKey({}, "func_" .. name .. "_out_" .. (pinName ~= "" and pinName or "pin"))
 
 				if node.literals and node.literals[pinID] ~= nil then
 
@@ -144,7 +146,7 @@ function CreateFunctionGraphVars(cs, uniqueKeys)
 
 					-- string literals need to be surrounded by quotes
 					-- TODO: Sanitize these
-					if pinType == PN_String then l = "\"" .. SanitizeString(l) .. "\"" end
+					if pinType:IsType(PN_String) then l = "\"" .. SanitizeString(l) .. "\"" end
 
 					table.insert(cs.vars, {
 						var = l,
@@ -160,7 +162,7 @@ function CreateFunctionGraphVars(cs, uniqueKeys)
 
 				table.insert(cs.vars, {
 					var = key,
-					init = Defaults[pinType],
+					init = pinType:GetDefault(),
 					type = pinType,
 					node = nodeID,
 					pin = pinID,
@@ -216,7 +218,7 @@ function EnumerateGraphVars(cs, uniqueKeys)
 
 				-- string literals need to be surrounded by quotes
 				-- TODO: Sanitize these
-				if pinType == PN_String then l = "\"" .. SanitizeString(l) .. "\"" end
+				if pinType:IsType(PN_String) then l = "\"" .. SanitizeString(l) .. "\"" end
 
 				table.insert(cs.vars, {
 					var = l,
@@ -235,14 +237,15 @@ function EnumerateGraphVars(cs, uniqueKeys)
 		for pinID, pin in node:SidePins(PD_Out) do
 			local pinType = cs.graph:GetPinType( nodeID, pinID )
 
-			if pinType == PN_Exec then continue end
+			if pinType:IsType(PN_Exec) then continue end
 
-			local key = bpcommon.CreateUniqueKey(unique, "fcall_" .. node:GetTypeName() .. "_ret_" .. (pin[3] ~= "" and pin[3] or "pin"))
+			local pinName = pin:GetName()
+			local key = bpcommon.CreateUniqueKey(unique, "fcall_" .. node:GetTypeName() .. "_ret_" .. (pinName ~= "" and pinName or "pin"))
 
 			table.insert(cs.vars, {
 				var = key,
 				type = pinType,
-				init = Defaults[pinType],
+				init = pinType:GetDefault(),
 				global = codeType ~= NT_Pure,
 				node = nodeID,
 				pin = pinID,
@@ -416,7 +419,7 @@ function CompileNodeSingle(cs, nodeID)
 		code = ""
 		local ipin = 2
 		for k, v in node:SidePins(PD_Out) do
-			if v[2] == PN_Exec then continue end
+			if v:IsType(PN_Exec) then continue end
 			code = code .. "#" .. k .. " = arg[" .. ipin-1 .. "]\n"
 			ipin = ipin + 1
 		end
@@ -428,7 +431,7 @@ function CompileNodeSingle(cs, nodeID)
 		code = ""
 		local ipin = 2
 		for k, v in node:SidePins(PD_In) do
-			if v[2] == PN_Exec then continue end
+			if v:IsType(PN_Exec) then continue end
 			code = code .. "#" .. k .. " = $" .. k .. "\n"
 			ipin = ipin + 1
 		end
@@ -458,7 +461,7 @@ function CompileNodeSingle(cs, nodeID)
 	-- iterate through all input pins
 	for pinID, pin, pos in node:SidePins(PD_In) do
 		local pinType = cs.graph:GetPinType( nodeID, pinID )
-		if pinType == PN_Exec then continue end
+		if pinType:IsType(PN_Exec) then continue end
 
 		if codeType == NT_FuncOutput then
 			outVars[pos] = FindVarForPin(cs, nodeID, pinID, true)
@@ -487,7 +490,7 @@ function CompileNodeSingle(cs, nodeID)
 				inVars[pos] = literalVar
 			else
 				-- unconnected nullable pins just have their value set to nil
-				local nullable = bit.band(pin[4], PNF_Nullable) ~= 0
+				local nullable = pin:HasFlag(PNF_Nullable)
 				if nullable then
 					--printi("Pin is nullable")
 					inVars[pos] = { var = "nil" }
@@ -514,7 +517,7 @@ function CompileNodeSingle(cs, nodeID)
 
 		else
 
-			if pinType == PN_Exec then
+			if pinType:IsType(PN_Exec) then
 
 				-- unconnect exec pins jump to ::jmp_0:: which just pops the stack
 				outVars[pos] = {
@@ -628,7 +631,7 @@ function CompileNodeFunction(cs, nodeID)
 
 		for pinID, pin in node:SidePins(PD_Out) do
 			local pinType = cs.graph:GetPinType( nodeID, pinID )
-			if pinType ~= PN_Exec then continue end
+			if not pinType:IsType(PN_Exec) then continue end
 
 			-- get the exec pin's connection and jump to the node it's connected to
 			local connection = GetPinConnections(cs, PD_Out, nodeID, pinID)[1]

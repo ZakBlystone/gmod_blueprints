@@ -1,6 +1,7 @@
 AddCSLuaFile()
 
 include("sh_bpcommon.lua")
+include("sh_bppin.lua")
 
 module("bpschema", package.seeall)
 
@@ -32,6 +33,7 @@ PNF_None = 0
 PNF_Table = 1
 PNF_Nullable = 2
 PNF_Bitfield = 4
+PNF_All = 7
 
 GT_Event = 0
 GT_Function = 1
@@ -122,13 +124,26 @@ Defaults = {
 	[PN_Func] = "nil",
 }
 
+function IsPinType(v)
+	return type(v) == "table"
+end
+
+function MakePin(dir, name, pintype, flags, ex)
+	local istype = type(pintype) == "table"
+	return bppin.New(
+		dir,
+		name,
+		istype and pintype or bppintype.New(pintype, flags, ex)
+	)
+end
+
 function ConfigureNodeType(t)
 
 	if t.type == NT_Function then
-		table.insert(t.pins, 1, { PD_Out, PN_Exec, "Thru", PNF_None })
-		table.insert(t.pins, 1, { PD_In, PN_Exec, "Exec", PNF_None })
+		table.insert(t.pins, 1, MakePin( PD_Out, "Thru", PN_Exec ))
+		table.insert(t.pins, 1, MakePin( PD_In, "Exec", PN_Exec ))
 	elseif t.type == NT_Event then
-		table.insert(t.pins, 1, { PD_Out, PN_Exec, "Exec", PNF_None })
+		table.insert(t.pins, 1, MakePin( PD_Out, "Exec", PN_Exec ))
 	end
 
 end
@@ -140,11 +155,12 @@ function PinRetArg( nodeType, infmt, outfmt, concat )
 	local base = (nodeType.type == NT_Event) and 2 or 1
 	local pins = {[PD_In] = {}, [PD_Out] = {}}
 	for k,v in pairs(nodeType.pins) do
-		local num = (base+#pins[v[1]])
-		local s = (v[1] == PD_In and "$" or "#") .. num
-		if infmt and v[1] == PD_In then s = infmt(s, v, num) end
-		if outfmt and v[1] == PD_Out then s = outfmt(s, v, num) end
-		table.insert(pins[v[1]], s)
+		local dir = v:GetDir()
+		local num = (base+#pins[dir])
+		local s = (dir == PD_In and "$" or "#") .. num
+		if infmt and dir == PD_In then s = infmt(s, v, num) end
+		if outfmt and dir == PD_Out then s = outfmt(s, v, num) end
+		table.insert(pins[dir], s)
 	end
 
 	local ret = table.concat(pins[PD_Out], concat)
@@ -199,10 +215,11 @@ end
 function FindMatchingPin(ntype, pf)
 	local m = ntype.meta
 	local informs = m and m.informs or nil
+	local ignoreNullable = bit.band( PNF_All, bit.bnot( PNF_Nullable ) )
 	for id, pin in pairs(ntype.pins) do
-		local sameType = pin[2] == pf[2] and pin[5] == pf[5]
-		local sameFlags = bit.bor(bit.band(pf[4], pin[4]), PNF_Nullable) == bit.bor(pf[4], PNF_Nullable)
-		local tableMatch = informs ~= nil and #informs > 0 and bit.band(bit.band(pf[4], pin[4]), PNF_Table) ~= 0 and pin[2] == PN_Any
-		if pin[1] ~= pf[1] and ntype.name == "Pin" or ((sameType and sameFlags) or tableMatch) then return id end
+		local sameType = pin:GetType():Equal(pf:GetType(), 0)
+		local sameFlags = pin:GetFlags(ignoreNullable) == pf:GetFlags(ignoreNullable)
+		local tableMatch = informs ~= nil and #informs > 0 and pin:HasFlag(PNF_Table) and pf:HasFlag(PNF_Table) and pin:IsType(PN_Any)
+		if pin:GetDir() ~= pf:GetDir() and ntype.name == "Pin" or ((sameType and sameFlags) or tableMatch) then return id end
 	end
 end

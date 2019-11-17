@@ -38,10 +38,10 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self.node = node
 	self.pin = pin
 	self.pinID = pinID
-	self.pinType, self.pinEx = self.graph:GetPinType( self.node.id, self.pinID )
+	self.pinType = self.graph:GetPinType( self.node.id, self.pinID )
 
 	-- input pins watch for literal changes
-	if self.pin[1] == PD_In and self.pinType ~= PN_Exec then
+	if self.pin:IsIn() and not self.pinType:IsType(PN_Exec) then
 		self.callback = function(...)
 			self:OnGraphCallback(...)
 		end
@@ -51,19 +51,12 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self.pinSpot = vgui.Create("DPanel", self)
 	self.pinSpot:SetSize(10,10)
 
-	local isTable = bit.band(self.pin[4], PNF_Table) ~= 0
+	local isTable = self.pin:HasFlag(PNF_Table)
 
 	self.eprint = false
 	self.pinSpot.Paint = function(pinspot,w,h)
 
-		local pt = self.pinType
-
-		if not NodePinColors[pt] then
-			if not self.eprint then print("NO COLOR FOR PIN: " .. tostring(pt)) self.eprint = true end 
-			return
-		end
-
-		surface.SetDrawColor( NodePinColors[ pt ] )
+		surface.SetDrawColor( self.pinType:GetColor() )
 		surface.DrawRect(0,0,w,h)
 		surface.SetDrawColor( Color(0,0,0,255) )
 
@@ -98,10 +91,10 @@ function PANEL:Setup(graph, node, pin, pinID)
 		self.label = vgui.Create("DLabel", self)
 		--self.label:SetFont("DermaDefaultBold")
 		self.label:SetFont("Default")
-		self.label:SetText(pin[3])
+		self.label:SetText(pin:GetName())
 		self.label:SizeToContents()
 
-		if self.pin[1] == PD_Out then
+		if self.pin:IsOut() then
 			self.pinSpot:SetPos( self.label:GetWide() + 5, self.label:GetTall() / 2 - self.pinSpot:GetTall() / 2)
 			self.label:SetPos( 0, -shift_up )
 		else
@@ -124,8 +117,8 @@ function PANEL:InitLiteral()
 	if IsValid(self.textEntry) then self.textEntry:Remove() self.textEntry = nil end
 	if IsValid(self.comboBox) then self.comboBox:Remove() self.comboBox = nil end
 
-	if self.pin[1] == PD_In then
-		local literalType = NodeLiteralTypes[ self.pinType ]
+	if self.pin:GetDir() == PD_In then
+		local literalType = self.pinType:GetLiteralType()
 		if literalType then
 			self.literalType = literalType
 			local literal = self.node:GetLiteral(self.pinID) or ""
@@ -156,9 +149,9 @@ function PANEL:InitLiteral()
 					self.comboBox:SetPos( 15, -shift_up )
 				end
 
-				local enum = bpdefs.GetEnum( self.pinEx )
+				local enum = bpdefs.GetEnum( self.pinType )
 				if enum == nil then
-					ErrorNoHalt("NO ENUM FOR " .. tostring( self.pinEx ))
+					ErrorNoHalt("NO ENUM FOR " .. tostring( self.pinType ))
 				else
 					for k, entry in pairs(enum.entries) do
 						self.comboBox:AddChoice( entry.shortkey, entry.key, literal == "" and (k == 1) or (entry.key == literal) )
@@ -226,7 +219,7 @@ function PANEL:OnLiteralEdit(nodeID, pinID, value)
 	if IsValid(self.textEntry) then self.textEntry:SetText(value) end
 	if IsValid(self.checkBox) then self.checkBox:SetChecked(value == "true" and true or false) end
 	if IsValid(self.comboBox) then
-		local enum = bpdefs.GetEnum( self.pinEx )
+		local enum = bpdefs.GetEnum( self.pinType )
 		local found = enum.lookup[value]
 		if found then
 			self.comboBox:SetText( enum.entries[found].shortkey )
@@ -270,10 +263,10 @@ end
 function PANEL:Think()
 
 	local prev = self.pinType
-	self.pinType, self.pinEx = self.graph:GetPinType( self.node.id, self.pinID )
+	self.pinType = self.graph:GetPinType( self.node.id, self.pinID )
 
 	if self.pinType ~= prev then
-		self:OnPinTypeChanged( self.pinType, self.pinEx )
+		self:OnPinTypeChanged( self.pinType )
 	end
 
 	if self.graph:IsPinConnected( self.node.id, self.pinID ) then
@@ -301,7 +294,7 @@ end
 function PANEL:PerformLayout(w, h)
 
 
-	--[[if self.pin[1] == PD_Out then
+	--[[if self.pin:IsOut() then
 
 		if self.label then
 			self.label:SetPos( 0, 0 )

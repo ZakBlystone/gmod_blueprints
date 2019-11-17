@@ -143,12 +143,12 @@ function meta:PreModifyNode( node, action, subaction )
 			local other = self:GetNode(c[3])
 			local pin = pins[c[2]]
 			self:RemoveConnectionID(i)
-			table.insert(held, {pin[1], pin[3], c[3], PD_In, other:GetPin(c[4])[3]})
+			table.insert(held, {pin:GetDir(), pin:GetName(), c[3], PD_In, other:GetPin(c[4]):GetName()})
 		elseif c[3] == node.id then --input
 			local other = self:GetNode(c[1])
 			local pin = pins[c[4]]
 			self:RemoveConnectionID(i)
-			table.insert(held, {pin[1], pin[3], c[1], PD_Out, other:GetPin(c[2])[3]})
+			table.insert(held, {pin:GetDir(), pin:GetName(), c[1], PD_Out, other:GetPin(c[2]):GetName()})
 		end
 
 	end
@@ -288,8 +288,8 @@ end
 
 function meta:CreateFunctionNodeTypes( output )
 
-	local inPins = { { PD_Out, PN_Exec, "Exec", PNF_None } }
-	local outPins = { { PD_In, PN_Exec, "Exec", PNF_None } }
+	local inPins = { MakePin( PD_Out, "Exec", PN_Exec ) }
+	local outPins = { MakePin( PD_In, "Exec", PN_Exec ) }
 
 	for id, var in self.inputs:Items() do table.insert(inPins, var:CreatePin( PD_Out )) end
 	for id, var in self.outputs:Items() do table.insert(outPins, var:CreatePin( PD_In )) end
@@ -389,8 +389,8 @@ function meta:GetPinType(nodeID, pinID)
 					local isConnected, connection = self:IsPinConnected(nodeID, t)
 					if isConnected and connection ~= nil then
 
-						if connection[1] == nodeID and self:GetNodePin(connection[3], connection[4])[2] ~= PN_Any then return self:GetPinType(connection[3], connection[4]) end
-						if connection[3] == nodeID and self:GetNodePin(connection[1], connection[2])[2] ~= PN_Any then return self:GetPinType(connection[1], connection[2]) end
+						if connection[1] == nodeID and not self:GetNodePin(connection[3], connection[4]):IsType(PN_Any) then return self:GetPinType(connection[3], connection[4]) end
+						if connection[3] == nodeID and not self:GetNodePin(connection[1], connection[2]):IsType(PN_Any) then return self:GetPinType(connection[1], connection[2]) end
 
 					end
 
@@ -399,7 +399,7 @@ function meta:GetPinType(nodeID, pinID)
 
 		end
 
-		return pin[2], pin[5]
+		return pin:GetType()
 
 	end)
 
@@ -408,7 +408,7 @@ end
 function meta:FindConnection(nodeID0, pinID0, nodeID1, pinID1)
 
 	local p0 = self:GetNodePin( nodeID0, pinID0 )
-	local dir = p0[1]
+	local dir = p0:GetDir()
 
 	if dir == PD_Out then
 
@@ -445,22 +445,22 @@ end
 
 function meta:CheckConversion(pin0, pin1)
 
-	if pin0[2] == PN_Ref and pin1[2] == PN_Ref then
-		if pin0[5] == "Player" and pin1[5] == "Entity" then
+	if pin0:GetBaseType() == PN_Ref and pin1:GetBaseType() == PN_Ref then
+		if pin0:GetSubType() == "Player" and pin1:GetSubType() == "Entity" then
 			return true
 		end
-		if pin0[5] == "Entity" and pin1[5] == "Player" then
+		if pin0:GetSubType() == "Entity" and pin1:GetSubType() == "Player" then
 			return true
 		end
 	end
 
-	local cv = NodePinImplicitConversions[pin0[2]]
+	local cv = NodePinImplicitConversions[pin0:GetBaseType()]
 	if cv then
 		for k,v in pairs(cv) do
 			if type(v) == "table" then
-				if v[1] == pin1[2] and v[2] == pin1[5] then return true end
+				if v[1] == pin1:GetBaseType() and v[2] == pin1:GetSubType() then return true end
 			else
-				if v == pin1[2] then return true end
+				if v == pin1:GetBaseType() then return true end
 			end
 		end
 	end
@@ -481,18 +481,16 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 	local p0 = self:GetNodePin(nodeID0, pinID0) --always PD_Out
 	local p1 = self:GetNodePin(nodeID1, pinID1) --always PD_In
 
-	if p0[2] == PN_Exec and self:IsPinConnected(nodeID0, pinID0) then return false, "Only one connection outgoing for exec pins" end
-	if p1[2] ~= PN_Exec and self:IsPinConnected(nodeID1, pinID1) then return false, "Only one connection for inputs" end
+	if p0:IsType(PN_Exec) and self:IsPinConnected(nodeID0, pinID0) then return false, "Only one connection outgoing for exec pins" end
+	if p1:IsType(PN_Exec) and self:IsPinConnected(nodeID1, pinID1) then return false, "Only one connection for inputs" end
 
-	if p0[1] == p1[1] then return false, "Can't connect " .. (p0[1] == PD_Out and "m/m" or "f/f") .. " pins" end
-	if bit.band(p0[4], PNF_Table) ~= bit.band(p1[4], PNF_Table) then return false, "Can't connect table to non-table pin" end
+	if p0:GetDir() == p1:GetDir() then return false, "Can't connect " .. (p0:IsOut() and "m/m" or "f/f") .. " pins" end
+	if p0:HasFlag(PNF_Table) ~= p1:HasFlag(PNF_Table) then return false, "Can't connect table to non-table pin" end
 
-	local p0Type = p0[2]
-	local p1Type = p1[2]
-	if (p0Type ~= p1Type) or (p0Type == PN_Ref and p0[5] ~= p1[5]) then
+	if not p0:GetType():Equal(p1:GetType()) then
 
-		if p0Type == PN_Any and p1Type ~= PN_Exec then return true end
-		if p1Type == PN_Any and p0Type ~= PN_Exec then return true end
+		if p0:IsType(PN_Any) and not p1:IsType(PN_Exec) then return true end
+		if p1:IsType(PN_Any) and not p0:IsType(PN_Exec) then return true end
 
 		-- Does not work properly, take into account pin directions to determine what conversion is being attempted
 		-- Maybe rectify pin ordering so pin0 is always PD_Out, and pin1 is always PD_In
@@ -504,7 +502,9 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
 	end
 
-	if p0[5] ~= p1[5] then return false, "Can't connect " .. self:NodePinToString(nodeID0, pinID0) .. " to " .. self:NodePinToString(nodeID1, pinID1) end
+	if p0:GetSubType() ~= p1:GetSubType() then 
+		return false, "Can't connect " .. self:NodePinToString(nodeID0, pinID0) .. " to " .. self:NodePinToString(nodeID1, pinID1)
+	end
 
 	return true
 
@@ -519,7 +519,7 @@ function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 	if p1 == nil then print("P1 pin not found: " .. nodeID1 .. " -> " .. pinID1) return false end
 
 	-- swap connection to ensure first is output and second is input
-	if p0[1] == PD_In and p1[1] == PD_Out then
+	if p0:IsIn() and p1:IsOut() then
 		local t = nodeID0 nodeID0 = nodeID1 nodeID1 = t
 		local t = pinID0 pinID0 = pinID1 pinID1 = t
 	end
@@ -677,7 +677,7 @@ function meta:WriteToStream(stream, mode, version)
 				local n1 = self:GetNode(c[3])
 				local pin0 = n0:GetPins()[c[2]]
 				local pin1 = n1:GetPins()[c[4]]
-				connnectionMeta[id] = {n0:GetTypeName(), pin0[3], n1:GetTypeName(), pin1[3]}
+				connnectionMeta[id] = {n0:GetTypeName(), pin0:GetName(), n1:GetTypeName(), pin1:GetName()}
 
 			end
 
@@ -741,22 +741,18 @@ function meta:ResolveConnectionMeta()
 			meta[2] = nt0:RemapPin(meta[2])
 			meta[4] = nt1:RemapPin(meta[4])
 
+			--print("Check Connection: " .. nt0:ToString(c[2]) .. " -> " .. nt1:ToString(c[4]))
+
 			if meta == nil then continue end
-			if pin0 == nil or pin0[3]:lower() ~= meta[2]:lower() then
+			if pin0 == nil or pin0:GetName():lower() ~= meta[2]:lower() then
 				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")
-				c[2] = nil
-				for k, p in pairs(nt0:GetPins()) do
-					if p[1] == PD_Out and p[3]:lower() == meta[2]:lower() then c[2] = k break end
-				end
+				c[2] = nt0:FindPin( PD_Out, meta[2] )
 				MsgC( c[2] ~= nil and Color(100,255,100) or Color(255,100,100), c[2] ~= nil and " Resolved\n" or " Not resolved\n" )
 			end
 
-			if pin1 == nil or pin1[3]:lower() ~= meta[4]:lower() then
+			if pin1 == nil or pin1:GetName():lower() ~= meta[4]:lower() then
 				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
-				c[4] = nil
-				for k, p in pairs(nt1:GetPins()) do
-					if p[1] == PD_In and p[3]:lower() == meta[4]:lower() then c[4] = k break end
-				end
+				c[4] = nt0:FindPin( PD_In, meta[4] )
 				MsgC( c[4] ~= nil and Color(100,255,100) or Color(255,100,100), c[4] ~= nil and " Resolved\n" or " Not resolved\n" )
 			end
 		end

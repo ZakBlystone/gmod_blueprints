@@ -3,9 +3,9 @@ AddCSLuaFile()
 local NODE = {}
 
 function NODE:Setup()
+
 	self.data.pinCount = self.data.pinCount or 2
 
-	PrintTable(self.literals)
 end
 
 function NODE:GeneratePins(pins)
@@ -15,7 +15,7 @@ function NODE:GeneratePins(pins)
 	local dataPin = nil
 	local dataPinID = nil
 	for k,v in pairs(pins) do
-		if v[1] == bpschema.PD_Out and v[2] ~= bpschema.PN_Exec then
+		if v:IsOut() and not v:IsType(bpschema.PN_Exec) then
 			dataPin = v
 			dataPinID = k
 			break
@@ -27,13 +27,11 @@ function NODE:GeneratePins(pins)
 	table.remove(pins, dataPinID)
 
 	for i=1, self.data.pinCount do
-		table.insert(pins, {
+		table.insert(pins, bpschema.MakePin(
 			bpschema.PD_In,
-			dataPin[2],
 			"In_" .. i,
-			dataPin[4],
-			dataPin[5],
-		})
+			dataPin:GetType()
+		))
 	end
 
 	table.insert(pins, dataPin)

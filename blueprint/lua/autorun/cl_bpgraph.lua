@@ -217,7 +217,7 @@ end
 
 function PANEL:OnPinGrab( vnode, vpin, grabbing )
 
-	print("GRAB PIN: " .. vpin.pin[3] .. "  " .. tostring(grabbing))
+	print("GRAB PIN: " .. tostring(vpin.pin) .. "  " .. tostring(grabbing))
 
 	if grabbing then
 
@@ -306,8 +306,8 @@ function PANEL:DrawConnection(connection)
 	if apintype == nil or bpintype == nil then return end
 
 	self:DrawHermite( ax, ay, bx, by, 
-		NodePinColors[ apintype ], 
-		NodePinColors[ bpintype ] 
+		apintype:GetColor(), 
+		bpintype:GetColor()
 	)
 
 end
@@ -333,14 +333,14 @@ function PANEL:DrawConnections()
 
 	if self.grabbedPin then
 
-		if self.grabbedPin.pin[1] == PD_In then
+		if self.grabbedPin.pin:IsIn() then
 		
 			local ax, ay = self:ScreenToLocal(self.pinHoldX or gui.MouseX(), self.pinHoldY or gui.MouseY())
 			local bx, by = self:PinPos(self.grabbedPin)
 
 			self:DrawHermite( ax, ay, bx, by, 
 				Color(255,255,255),
-				NodePinColors[ self.grabbedPin.pin[2] ]
+				self.grabbedPin.pin:GetColor()
 			)
 
 		else
@@ -349,7 +349,7 @@ function PANEL:DrawConnections()
 			local bx, by = self:ScreenToLocal(self.pinHoldX or gui.MouseX(), self.pinHoldY or gui.MouseY())
 
 			self:DrawHermite( ax, ay, bx, by, 
-				NodePinColors[ self.grabbedPin.pin[2] ],
+				self.grabbedPin.pin:GetColor(),
 				Color(255,255,255)
 			)
 

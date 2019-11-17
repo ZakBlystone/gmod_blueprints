@@ -80,15 +80,13 @@ function meta:MakerNodeType( pinTypeOverride )
 	ntype.meta = {}
 
 	if pinTypeOverride then 
-		table.insert(ntype.pins, {PD_Out, pinTypeOverride, self:GetName(), PNF_None})
+		table.insert(ntype.pins, MakePin(PD_Out, self:GetName(), pinTypeOverride, PNF_None))
 	else
-		table.insert(ntype.pins, {
+		table.insert(ntype.pins, MakePin(
 			PD_Out,
-			PN_Struct,
 			self:GetName(),
-			PNF_None,
-			self:GetName(),
-		})
+			PN_Struct, PNF_None, self:GetName()
+		))
 	end
 
 	for _, pin in self.pins:Items() do
@@ -99,7 +97,8 @@ function meta:MakerNodeType( pinTypeOverride )
 	end
 
 	local ret, arg = PinRetArg( ntype, function(s,pin)
-		return "\n [\"" .. (self.invNameMap[pin[3]] or pin[3]) .. "\"] = " .. s
+		local name = pin:GetName()
+		return "\n [\"" .. (self.invNameMap[name] or name) .. "\"] = " .. s
 	end)
 	local argt = "{ " .. arg .. "\n}"
 	ntype.code = ret .. " = "
@@ -107,7 +106,7 @@ function meta:MakerNodeType( pinTypeOverride )
 	ntype.code = ntype.code .. argt
 	if self.metaTable then ntype.code = ntype.code .. ", " .. self.metaTable .. "_)" end
 
-	for _, pin in pairs(ntype.pins) do pin[3] = bpcommon.Camelize(pin[3]) end
+	for _, pin in pairs(ntype.pins) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
 
 	ConfigureNodeType(ntype)
 	return ntype
@@ -129,15 +128,13 @@ function meta:BreakerNodeType( pinTypeOverride )
 	ntype.meta = {}
 
 	if pinTypeOverride then 
-		table.insert(ntype.pins, {PD_In, pinTypeOverride, self:GetName(), PNF_None})
+		table.insert(ntype.pins, MakePin(PD_In, self:GetName(), pinTypeOverride, PNF_None))
 	else
-		table.insert(ntype.pins, {
+		table.insert(ntype.pins, MakePin(
 			PD_In,
-			PN_Struct,
 			self:GetName(),
-			PNF_None,
-			self:GetName(),
-		})
+			PN_Struct, PNF_None, self:GetName()
+		))
 	end
 
 	for _, pin in self.pins:Items() do
@@ -148,12 +145,13 @@ function meta:BreakerNodeType( pinTypeOverride )
 	end
 
 	local ret, arg = PinRetArg( ntype, nil, function(s,pin)
-		return "\n" .. s .. " = $1[\"" .. (self.invNameMap[pin[3]] or pin[3]) .. "\"]"
+		local name = pin:GetName()
+		return "\n" .. s .. " = $1[\"" .. (self.invNameMap[name] or name) .. "\"]"
 	end, "")
 	if ret[1] == '\n' then ret = ret:sub(2,-1) end
 	ntype.code = ret
 
-	for _, pin in pairs(ntype.pins) do pin[3] = bpcommon.Camelize(pin[3]) end
+	for _, pin in pairs(ntype.pins) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
 
 	ConfigureNodeType(ntype)
 	return ntype

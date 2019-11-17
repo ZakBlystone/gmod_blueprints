@@ -282,11 +282,11 @@ function meta:RequestGraphForEvent( nodeType )
 
 	for k,v in pairs(nodeType.pins) do
 
-		if v[2] == PN_Exec then continue end
-		if v[1] == PD_Out then
-			graph.outputs:Add(bpvariable.New( v[2], nil, v[4], v[5] ), v[3])
+		if v:IsType(PN_Exec) then continue end
+		if v:IsOut() then
+			graph.outputs:Add(bpvariable.New( v:GetBaseType(), nil, v:GetFlags(), v:GetSubType() ), v:GetName())
 		else
-			graph.inputs:Add(bpvariable.New( v[2], nil, v[4], v[5] ), v[3])
+			graph.inputs:Add(bpvariable.New( v:GetBaseType(), nil, v:GetFlags(), v:GetSubType() ), v:GetName())
 		end
 
 	end

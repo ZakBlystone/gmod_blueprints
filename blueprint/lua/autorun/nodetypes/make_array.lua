@@ -3,26 +3,27 @@ AddCSLuaFile()
 local NODE = {}
 
 function NODE:Setup()
+
 	self.data.pinCount = self.data.pinCount or 1
+
 end
 
 function NODE:GeneratePins(pins)
 
+	local anyPin = bppintype.New(bpschema.PN_Any)
 	for i=1, self.data.pinCount do
-		table.insert(pins, {
+		table.insert(pins, bpschema.MakePin(
 			bpschema.PD_In,
-			bpschema.PN_Any,
 			"In_" .. i,
-			bpschema.PNF_None,
-		})
+			anyPin
+		))
 	end
 
-	table.insert(pins, {
+	table.insert(pins, bpschema.MakePin(
 		bpschema.PD_Out,
-		bpschema.PN_Any,
 		"Out",
-		bpschema.PNF_Table,
-	})
+		anyPin
+	))
 
 	self.BaseClass.GeneratePins(self, pins)
 
@@ -60,7 +61,7 @@ function NODE:GetInforms()
 
 	local informs = {}
 	for k,v in pairs(self:GetPins()) do
-		if v[2] == bpschema.PN_Any then
+		if v:IsType(bpschema.PN_Any) then
 			table.insert(informs, k)
 		end
 	end
@@ -74,7 +75,7 @@ function NODE:GetMeta()
 
 end
 
-local function sidePinFilter(pin) return pin[2] ~= bpschema.PN_Exec end
+local function sidePinFilter(pin) return not pin:IsType(bpschema.PN_Exec) end
 function NODE:GetCode()
 
 	local code = "#1 = {"

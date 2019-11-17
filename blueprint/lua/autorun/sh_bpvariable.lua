@@ -15,6 +15,7 @@ function meta:Init(type, default, flags, ex, repmode)
 	self.flags = flags or PNF_None
 	self.ex = ex
 	self.repmode = repmode
+	self.pintype = bppintype.New(self.type, self.flags, self.ex)
 	return self
 
 end
@@ -51,7 +52,7 @@ end
 
 function meta:CreatePin( dir, nameOverride )
 
-	return {dir, self:GetType(), self:GetName(), self:GetFlags(), self:GetExtended()}
+	return MakePin(dir, self:GetName(), self.pintype)
 
 end
 
@@ -59,7 +60,7 @@ function meta:GetterNodeType()
 
 	return PURE {
 		pins = {
-			{PD_Out, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
+			MakePin(PD_Out, "value", self.pintype),
 		},
 		code = "#1 = __self.__" .. self:GetName(),
 		meta = {compact = true},
@@ -73,8 +74,8 @@ function meta:SetterNodeType()
 
 	return FUNCTION {
 		pins = {
-			{PD_In, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
-			{PD_Out, self:GetType(), "value", self:GetFlags(), self:GetExtended()},
+			MakePin(PD_In, "value", self.pintype),
+			MakePin(PD_Out, "value", self.pintype),
 		},
 		code = "__self.__" .. self:GetName() .. " = $1 #1 = $1",
 		meta = {compact = true},
@@ -114,6 +115,7 @@ function meta:ReadFromStream(stream, mode, version)
 	self.name = bpdata.ReadValue( stream )
 	self.ex = bpdata.ReadValue( stream )
 	self.repmode = bpdata.ReadValue( stream )
+	self.pintype = bppintype.New(self.type, self.flags, self.ex)
 
 	if version == 1 then self.type = typeRemap[self.type] or self.type end
 

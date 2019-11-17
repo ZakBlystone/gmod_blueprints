@@ -27,11 +27,12 @@ local function calculateNodeSize(vnode)
 
 	local expand = false
 	for k,v in pairs(node:GetPins()) do
-		if (v[2] == PN_String or v[2] == PN_Enum) and v[1] == PD_In then
+		local baseType = v:GetBaseType()
+		if (baseType == PN_String or baseType == PN_Enum) and v:IsIn() then
 			expand = true
 		end
-		if v[1] == PD_In then inPinWidth = math.max(surface.GetTextSize( v[3] ) + padPin, inPinWidth) end
-		if v[1] == PD_Out then outPinWidth = math.max(surface.GetTextSize( v[3] ) + padPin, outPinWidth) end
+		if v:IsIn() then inPinWidth = math.max(surface.GetTextSize( v:GetName() ) + padPin, inPinWidth) end
+		if v:IsOut() then outPinWidth = math.max(surface.GetTextSize( v:GetName() ) + padPin, outPinWidth) end
 	end
 
 	if meta.compact then

@@ -59,12 +59,11 @@ function meta:SetLiteralDefaults()
 
 	local base = self:GetCodeType() == NT_Function and -1 or 0
 	for pinID, pin, pos in self:SidePins(PD_In) do
-		local pinType = pin[2]
 		local default = defaults[base+pos]
-		local literal = NodeLiteralTypes[pinType]
+		local literal = pin:GetLiteralType()
 		if literal then
 			if self:GetLiteral(pinID) == nil then
-				self:SetLiteral(pinID, default or Defaults[pinType])
+				self:SetLiteral(pinID, default or pin:GetDefault())
 			end
 		end
 	end
@@ -88,7 +87,8 @@ function meta:ToString(pinID)
 	local str = self.graph:GetName() .. "." .. ntype.name
 	if pinID then
 		local p = self:GetPin(pinID)
-		if p then str = str .. "." .. p[3] .. " : " .. (PinTypeNames[p[2]] or "UNKNOWN") .. (p[5] and "[" .. tostring(p[5]) .. "]" or "") end
+		if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end
+		if p then str = str .. "." .. p:ToString(true,false) end
 	end
 	return str
 
@@ -117,12 +117,12 @@ end
 function meta:GeneratePins(pins)
 
 	table.Add(pins, self:GetType().pins)
-	if self.data.codeTypeOverride == NT_Pure and pins[1][2] == PN_Exec then
+	if self.data.codeTypeOverride == NT_Pure and pins[1]:IsType(PN_Exec) then
 		table.remove(pins, 1)
 		table.remove(pins, 1)
-	elseif self.data.codeTypeOverride == NT_Function and pins[1][2] ~= PN_Exec then
-		table.insert(pins, 1, { PD_Out, PN_Exec, "Thru", PNF_None })
-		table.insert(pins, 1, { PD_In, PN_Exec, "Exec", PNF_None })
+	elseif self.data.codeTypeOverride == NT_Function and not pins[1]:IsType(PN_Exec) then
+		table.insert(pins, 1, MakePin( PD_Out, "Thru", PN_Exec ))
+		table.insert(pins, 1, MakePin( PD_In, "Exec", PN_Exec ))
 	end
 
 end
@@ -132,7 +132,7 @@ function meta:GetNumSidePins(dir)
 	local pins = self:GetPins()
 	local i = 0
 	for k,v in pairs(pins) do 
-		if v[1] == dir then i = i + 1 end 
+		if v:GetDir() == dir then i = i + 1 end 
 	end
 	return i
 
@@ -146,7 +146,7 @@ function meta:SidePins(dir, filter)
 	local i, j, num = 0, 0, #pins
 	return function()
 		i = i + 1
-		while i <= num and (pins[i][1] ~= dir or not filter(pins[i])) do i = i + 1 end
+		while i <= num and (pins[i]:GetDir() ~= dir or not filter(pins[i])) do i = i + 1 end
 		if i <= num then
 			j = j + 1
 			return i, pins[i], j
@@ -163,9 +163,10 @@ end
 
 function meta:FindPin(dir, name)
 
+	local lowerName = name:lower()
 	local pins = self:GetPins()
 	for i=1, #pins do
-		if pins[i][1] == dir and pins[i][3] == name then return i end
+		if pins[i]:GetDir() == dir and pins[i]:GetName():lower() == name then return i end
 	end
 	return nil
 
@@ -181,7 +182,7 @@ function meta:SetLiteral(pinID, value)
 
 	local pins = self:GetPins()
 	if pinID < 1 or pinID > #pins then return end
-	if pins[pinID][1] == PD_Out or pins[pinID][2] == PN_Exec then return end
+	if pins[pinID]:IsOut() or pins[pinID]:IsType(PN_Exec) then return end
 
 	value = tostring(value)
 	self.literals[pinID] = value
@@ -193,7 +194,7 @@ function meta:RemoveInvalidLiterals()
 
 	local pins = self:GetPins()
 	for pinID, value in pairs(self.literals) do
-		if pins[pinID] == nil or pins[pinID][1] ~= PD_In or pins[pinID][2] == PN_Exec then self.literals[pinID] = nil end
+		if pins[pinID] == nil or pins[pinID]:IsOut() or pins[pinID]:IsType(PN_Exec) then self.literals[pinID] = nil end
 	end
 
 end
@@ -214,7 +215,6 @@ function meta:GetCodeType()
 end
 
 function meta:GetTypeName() return self.nodeType end
-function meta:GetName() return self.name end
 function meta:GetPos() return self.x, self.y end
 
 function meta:RemapPin(name)
@@ -248,7 +248,7 @@ function meta:GetOptions(tab)
 	if self:GetCodeType() == NT_Function then
 		local canConvert = false
 		for id, pin in self:SidePins(PD_Out) do
-			if pin[2] ~= PN_Exec then canConvert = true end
+			if not pin:IsType(PN_Exec) then canConvert = true end
 		end
 		if canConvert then
 			table.insert(tab, {"ConvertToPure", function() self:ConvertType(NT_Pure) end })

@@ -31,8 +31,8 @@ NodeRedirectors = {}
 NodeTypes = {
 	["Pin"] = PURE {
 		pins = { 
-			{ PD_In, PN_Any, "", PNF_None },
-			{ PD_Out, PN_Any, "", PNF_None },
+			MakePin( PD_In, "", PN_Any ),
+			MakePin( PD_Out, "", PN_Any ),
 		},
 		meta = {
 			informs = {1,2},
@@ -44,12 +44,12 @@ NodeTypes = {
 	["EntityFireBullets"] = EVENT {
 		deprecated = true,
 		pins = {
-			{ PD_Out, PN_Ref, "entity", PNF_None, "Entity" },
-			{ PD_Out, PN_Ref, "attacker", PNF_None, "Entity" },
-			{ PD_Out, PN_Number, "damage", PNF_None },
-			{ PD_Out, PN_Number, "count", PNF_None },
-			{ PD_Out, PN_Vector, "source", PNF_None },
-			{ PD_Out, PN_Vector, "direction", PNF_None },
+			MakePin( PD_Out, "entity", PN_Ref, PNF_None, "Entity" ),
+			MakePin( PD_Out, "attacker", PN_Ref, PNF_None, "Entity" ),
+			MakePin( PD_Out, "damage", PN_Number, PNF_None ),
+			MakePin( PD_Out, "count", PN_Number, PNF_None ),
+			MakePin( PD_Out, "source", PN_Vector, PNF_None ),
+			MakePin( PD_Out, "direction", PN_Vector, PNF_None ),
 		},
 		meta = {},
 		hook = "EntityFireBullets",

@@ -32,10 +32,6 @@ local function SortedFilteredNodeList( graph, filter, res )
 	end
 end
 
-local refMaps = {
-	["Entity"] = PN_Entity,
-	["Player"] = PN_Player,
-}
 local function FilterByType( filterType ) return function(n) 
 		return n.type == filterType 
 	end 
@@ -43,7 +39,7 @@ end
 
 local function FilterByPinType( pinType ) return function(n) 
 		for _, pin in pairs(n.pins) do 
-			if pin[2] == pinType or pin[2] == PN_Ref and refMaps[pin[5]] == pinType then return true end 
+			if pin:GetType():Equal(pinType, 0) then return true end 
 		end 
 		return false 
 	end 
@@ -216,18 +212,22 @@ function PANEL:Setup( graph, pinFilter )
 
 		baseFilter = function(ntype)
 			local pin = FindMatchingPin(ntype, pf)
-			return pin ~= nil and ntype.pins[pin][1] ~= pf[1]
+			return pin ~= nil and ntype.pins[pin]:GetDir() ~= pf:GetDir()
 		end
 
 	end
 
 	self.baseFilter = baseFilter
 
+	local entityType = bppintype.New(PN_Ref, PNF_None, "Entity")
+	local playerType = bppintype.New(PN_Ref, PNF_None, "Player")
+	local anyType = bppintype.New(PN_Any, PNF_None)
+
 	makeSearchPage("All", "All nodes", "icon16/book.png", baseFilter, pinFilter ~= nil)
 	makeSearchPage("Hooks", "Hook nodes", "icon16/connect.png", AndFilter(baseFilter, FilterByType(NT_Event)), true)
-	makeSearchPage("Entity", "Entity nodes", "icon16/bricks.png", AndFilter(baseFilter, FilterByPinType(PN_Entity)), true)
-	makeSearchPage("Player", "Player nodes", "icon16/user.png", AndFilter(baseFilter, FilterByPinType(PN_Player)), true)
-	makeSearchPage("Special", "Special nodes", "icon16/plugin.png", OrFilter( FilterByType(NT_Special), FilterByPinType(PN_Any) ), true)
+	makeSearchPage("Entity", "Entity nodes", "icon16/bricks.png", AndFilter(baseFilter, FilterByPinType(entityType)), true)
+	makeSearchPage("Player", "Player nodes", "icon16/user.png", AndFilter(baseFilter, FilterByPinType(playerType)), true)
+	makeSearchPage("Special", "Special nodes", "icon16/plugin.png", OrFilter( FilterByType(NT_Special), FilterByPinType(anyType) ), true)
 	makeSearchPage("Custom", "User created nodes", "icon16/wrench.png", AndFilter(baseFilter, function(n) return n.custom == true end), true)
 
 end

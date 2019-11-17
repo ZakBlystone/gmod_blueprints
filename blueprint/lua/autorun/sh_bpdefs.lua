@@ -56,18 +56,21 @@ end
 
 function GetEnum( name )
 
+	if IsPinType(name) then return enums[name:GetSubType()] end
 	return enums[name]
 
 end
 
 function GetClass( name )
 
+	if IsPinType(name) then return classes[name:GetSubType()] end
 	return classes[name]
 
 end
 
 function GetStruct( name )
 
+	if IsPinType(name) then return structs[name:GetSubType()] end
 	return structs[name]
 
 end
@@ -405,34 +408,30 @@ function CreateLibNodes( lib, output )
 		if lib.type == DEFTYPE_CLASS then
 
 			if lib.pinTypeOverride then
-				table.insert(ntype.pins, {
+				table.insert(ntype.pins, MakePin(
 					PD_In,
-					lib.pinTypeOverride,
 					bpcommon.Camelize(lib.typeName or lib.name),
-					PNF_None,
-					nil,
-				})
+					lib.pinTypeOverride
+				))
 			else
-				table.insert(ntype.pins, {
+				table.insert(ntype.pins, MakePin(
 					PD_In,
-					PN_Ref,
 					bpcommon.Camelize(lib.typeName or lib.name),
-					PNF_None,
-					lib.name,
-				})
+					PN_Ref, PNF_None, lib.name
+				))
 			end
 
 		end
 
 		for _, pin in pairs(v.pins) do
 
-			table.insert(ntype.pins, {
+			table.insert(ntype.pins, MakePin(
 				pin.dir,
-				pin.type,
-				bpcommon.Camelize(pin.name),
-				pin.flags or PNF_None,
-				pin.ex,
-			})
+				pin.name,
+				pin.type, 
+				pin.flags, 
+				pin.ex
+			))
 
 			if pin.default then
 				ntype.defaults[#ntype.pins] = pin.default
@@ -484,13 +483,11 @@ function CreateHooksetNodes( hookset, output )
 
 		for _, pin in pairs(v.pins) do
 
-			table.insert(ntype.pins, {
+			table.insert(ntype.pins, MakePin(
 				ntype.returns and pin.dir or PD_Out,
-				pin.type,
 				bpcommon.Camelize(pin.name),
-				pin.flags or PNF_None,
-				pin.ex,
-			})
+				pin.type, pin.flags, pin.ex
+			))
 
 		end
 
