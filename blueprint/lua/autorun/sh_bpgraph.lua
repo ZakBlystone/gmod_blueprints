@@ -158,6 +158,8 @@ end
 function meta:PostModifyNode( node, action, subaction )
 
 	print("NODE MODIFICATION: " .. node:ToString() .. " " .. tostring(action) .. " " .. tostring(subaction))
+
+	node:UpdatePins()
 	self:FireListeners(CB_POSTMODIFY_NODE, node.id, action)
 
 	local ntype = node:GetType()

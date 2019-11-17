@@ -110,7 +110,6 @@ end
 
 function meta:PostModify()
 
-	self:UpdatePins()
 	self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
 
 end
