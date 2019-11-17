@@ -10,6 +10,12 @@ HOOKS GM
 		IN value, PN_Any, PNF_None, #Data provided with the input
 		OUT override, PN_Bool, #Return true to prevent this input from being processed.
 	}
+	CLIENT AdjustMouseSensitivity
+	{
+		DESC Allows you to adjust the mouse sensitivity.
+		IN defaultSensitivity, PN_Number, #The old sensitivity. In general it will be 0, which is equivalent to a sensitivity of 1.
+		OUT newSensitivity=-1, PN_Number, #A fraction of the normal sensitivity (0.5 would be half as sensitive), return -1 to not override.
+	}
 	SERVER AllowPlayerPickup
 	{
 		DESC Called when a player tries to pick up something using the "use" key, return to override.
@@ -55,6 +61,44 @@ HOOKS GM
 		IN angle, PN_Angles, #Current angle
 		OUT newPos, PN_Vector, #New position
 		OUT newAngle, PN_Angles, #New position
+	}
+	SERVER CanExitVehicle
+	{
+		DESC Determines if the player can exit the vehicle.
+		IN vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle entity.
+		IN player, PN_Ref, PNF_None, Player, #The player.
+		OUT canExit, PN_Bool, #True if the player can exit the vehicle.
+	}
+	SERVER CanPlayerEnterVehicle
+	{
+		DESC Determines whether or not the player can enter the vehicle.
+		IN player, PN_Ref, PNF_None, Player, #The player.
+		IN vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle.
+		IN role, PN_Number, #The role.
+		OUT canEnter, PN_Bool, #False if the player is not allowed to enter the vehicle.
+	}
+	SERVER CanPlayerSuicide
+	{
+		DESC Determines if the player can kill themselves using the concommands "kill" or "explode".
+		IN player, PN_Ref, PNF_None, Player, #The player.
+		OUT canSuicide, PN_Bool, #True if they can suicide.
+	}
+	SERVER CanPlayerUnfreeze
+	{
+		DESC Determines if the player can unfreeze the entity.
+		IN player, PN_Ref, PNF_None, Player, #The player.
+		IN entity, PN_Ref, PNF_None, Entity, #The entity.
+		IN phys, PN_Ref, PNF_None, PhysObj, #The physics object of the entity.
+		OUT canUnfreeze, PN_Bool, #True if they can unfreeze.
+	}
+	CLIENT ChatText
+	{
+		DESC Called when a message is printed to the chat box. Note, that this isn't working with player messages even though there are arguments for it.
+		IN index, PN_Number, #The index of the player.
+		IN name, PN_String, #The name of the player.
+		IN text, PN_String, #The text that is being sent.
+		IN type, PN_String, #Chat filter type.
+		OUT suppress=false, PN_Bool, #Return true to suppress the chat message
 	}
 	CLIENT CreateClientsideRagdoll
 	{
