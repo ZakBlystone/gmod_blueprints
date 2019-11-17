@@ -113,7 +113,11 @@ function meta:GetNameForItem( optName, item )
 	if self.preserveNames then return optName end
 	local name = bpcommon.Sanitize(optName) 
 	if name == nil then name = self.namePrefix .. item.id end
-	return bpcommon.Camelize(name)
+	name = bpcommon.Camelize(name)
+
+	local namesTaken = {}
+	for _, item in self:Items() do namesTaken[item:GetName()] = true end
+	return bpcommon.CreateUniqueKey(namesTaken, name)
 
 end
 

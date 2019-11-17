@@ -92,7 +92,7 @@ CLASS Player
 		IN slot, PN_Enum, PNF_None, GESTURE_SLOT, #The gesture slot. See GESTURE_SLOT_ Enums
 		IN weight, PN_Number, #The weight this slot should be set to. Value must be ranging from 0 to 1.
 	}
-	FUNC SHARED Armor
+	PURE SHARED Armor
 	{
 		DESC Returns the player's armor.
 		OUT armor, PN_Number, #The player's armor.

@@ -138,6 +138,7 @@ LIB CORE
 	{
 		IN Any, PN_Any
 		OUT String, PN_String
+		INFORM 1
 		CODE #1 = tostring($1)
 	}
 	PURE SHARED ToNumber
