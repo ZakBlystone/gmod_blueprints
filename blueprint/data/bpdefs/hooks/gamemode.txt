@@ -98,6 +98,7 @@ HOOKS GM
 		IN name, PN_String, #The name of the player.
 		IN text, PN_String, #The text that is being sent.
 		IN type, PN_String, #Chat filter type.
+		OUT suppress=false, PN_Bool, #Return true to suppress the chat message
 	}
 	CLIENT CreateClientsideRagdoll
 	{
