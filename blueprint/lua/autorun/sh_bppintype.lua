@@ -18,6 +18,14 @@ function meta:Init(type, flags, subtype)
 	return self
 end
 
+function meta:AsTable()
+	return New(self:GetBaseType(), bit.bor(self:GetFlags(), bpschema.PNF_Table), self:GetSubType())
+end
+
+function meta:AsSingle()
+	return New(self:GetBaseType(), bit.band(self:GetFlags(), bit.bnot(bpschema.PNF_Table)), self:GetSubType())
+end
+
 function meta:GetBaseType() return self.basetype end
 function meta:GetSubType() return self.subtype end
 function meta:GetFlags(mask) return bit.band(self.flags, mask or bpschema.PNF_All) end

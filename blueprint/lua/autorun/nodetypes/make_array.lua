@@ -22,7 +22,7 @@ function NODE:GeneratePins(pins)
 	table.insert(pins, bpschema.MakePin(
 		bpschema.PD_Out,
 		"Out",
-		anyPin
+		anyPin:AsTable()
 	))
 
 	self.BaseClass.GeneratePins(self, pins)
