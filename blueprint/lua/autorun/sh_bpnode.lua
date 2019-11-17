@@ -166,7 +166,7 @@ function meta:FindPin(dir, name)
 	local lowerName = name:lower()
 	local pins = self:GetPins()
 	for i=1, #pins do
-		if pins[i]:GetDir() == dir and pins[i]:GetName():lower() == name then return i end
+		if pins[i]:GetDir() == dir and pins[i]:GetName():lower() == lowerName then return i end
 	end
 	return nil
 
