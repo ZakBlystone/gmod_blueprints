@@ -28,7 +28,7 @@ local function calculateNodeSize(vnode)
 	local expand = false
 	for k,v in pairs(node:GetPins()) do
 		local baseType = v:GetBaseType()
-		if (baseType == PN_String or baseType == PN_Enum) and v:IsIn() then
+		if (baseType == PN_String or baseType == PN_Enum) and v:IsIn() and not node:IsPinConnected(k) then
 			expand = true
 		end
 		if v:IsIn() then inPinWidth = math.max(surface.GetTextSize( v:GetName() ) + padPin, inPinWidth) end
@@ -81,6 +81,10 @@ function PANEL:Init()
 		self:OnGraphCallback(...)
 	end
 
+	self.nodeCallback = function(...)
+		self:OnNodeCallback(...)
+	end
+
 end
 
 function PANEL:GetDisplayName()
@@ -107,21 +111,31 @@ function PANEL:Setup( graph, node )
 	self:BuildPins()
 
 	self.graph:AddListener(self.callback, bpgraph.CB_ALL)
+	self.node:AddListener(self.nodeCallback, bpnode.CB_ALL)
 
 end
 
 function PANEL:OnRemove()
 
 	self:CloseNodeContext()
-	if self.graph then
-		self.graph:RemoveListener(self.callback)
-	end
+	if self.graph then self.graph:RemoveListener(self.callback) end
+	if self.node then self.node:RemoveListener(self.nodeCallback) end
 
 end
 
 function PANEL:OnGraphCallback( cb, ... )
 
 	if cb == CB_POSTMODIFY_NODE then self:PostNodeChanged( ... ) end
+
+end
+
+function PANEL:OnNodeCallback( cb, ... )
+
+	--[[if cb == bpnode.CB_NODE_PINS_UPDATED then
+		local w,h = calculateNodeSize( self )
+		self:SetSize( w, h )
+		self:BuildPins()
+	end]]
 
 end
 
@@ -140,6 +154,8 @@ end
 
 function PANEL:BuildPins()
 
+	MsgC(Color(255,100,255), "Rebuild pins for node: " .. self.node:ToString() .. "\n")
+
 	if self.pins ~= nil then
 		for _, v in pairs(self.pins) do
 			v:Remove()
@@ -151,7 +167,8 @@ function PANEL:BuildPins()
 	local node = self.node
 	for pinID, pin, pos in node:SidePins(PD_In) do
 
-		local lit = node.literals and node.literals[pinID]
+		MsgC(Color(255,100,255), "\t" .. pin:ToString(true,true) .. "\n")
+
 		local x,y = pinLocation(self, PD_In, pos)
 
 		local vpin = vgui.Create("BPPin", self)
@@ -164,6 +181,8 @@ function PANEL:BuildPins()
 	end
 
 	for pinID, pin, pos in node:SidePins(PD_Out) do
+
+		MsgC(Color(255,100,255), "\t" .. pin:ToString(true,true) .. "\n")
 
 		local x,y = pinLocation(self, PD_Out, pos)
 
@@ -200,6 +219,9 @@ function PANEL:PerformLayout(pw, ph)
 		self.pins[pinID]:SetPos(x + inset, y + inset)
 
 	end
+
+	local w, h = calculateNodeSize(self)
+	self:SetSize( w, h )
 
 	for pinID, pin, pos in self.node:SidePins(PD_Out) do
 

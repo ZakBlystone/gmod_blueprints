@@ -74,7 +74,7 @@ function meta:HasFlag(...) return self:GetType():HasFlag(...) end
 function meta:ToString(printTypeInfo, printDir)
 	local str = self:GetName()
 	if printDir then str = str .. " (" .. (self:GetDir() == bpschema.PD_In and "IN" or "OUT") .. ")" end
-	if printTypeInfo then str = str .. " [" .. self.type:ToString() .. "]" end
+	if printTypeInfo then str = str .. " [" .. self:GetType():ToString() .. "]" end
 	return str
 end
 

@@ -66,6 +66,10 @@ function PANEL:Setup(graph, node, pin, pinID)
 			surface.DrawRect(w*.75,0,2,h)
 		end
 
+		--[[if self.pin:GetInformedType() then
+			surface.DrawRect(2,2,w-4,h-4)
+		end]]
+
 	end
 
 
@@ -117,7 +121,7 @@ function PANEL:InitLiteral()
 	if IsValid(self.textEntry) then self.textEntry:Remove() self.textEntry = nil end
 	if IsValid(self.comboBox) then self.comboBox:Remove() self.comboBox = nil end
 
-	if self.pin:GetDir() == PD_In then
+	if self.pin:GetDir() == PD_In and not self.pin:HasFlag(PNF_Table) then
 		local literalType = self.pinType:GetLiteralType()
 		if literalType then
 			self.literalType = literalType
@@ -263,9 +267,10 @@ end
 function PANEL:Think()
 
 	local prev = self.pinType
-	self.pinType = self.graph:GetPinType( self.node.id, self.pinID )
+	self.pinType = self.node:GetPin(self.pinID):GetType()
 
 	if self.pinType ~= prev then
+		MsgC(Color(255,180,30), "Pin type change: " .. prev:ToString() .. " -> " .. self.pinType:ToString() .. "\n")
 		self:OnPinTypeChanged( self.pinType )
 	end
 

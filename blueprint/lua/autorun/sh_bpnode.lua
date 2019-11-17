@@ -6,6 +6,10 @@ include("sh_bpnodeclasses.lua")
 
 module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef))
 
+bpcommon.CallbackList({
+	"NODE_PINS_UPDATED",
+})
+
 local meta = {}
 meta.__index = meta
 meta.__tostring = function(self) return self:ToString() end
@@ -17,6 +21,9 @@ function meta:Init(nodeType, x, y, literals)
 	self.y = y or 0
 	self.literals = literals or {}
 	self.data = {}
+
+	bpcommon.MakeObservable(self)
+
 	return self
 
 end
@@ -63,7 +70,7 @@ function meta:SetLiteralDefaults()
 		local default = defaults[base+pos]
 		local literal = pin:GetLiteralType()
 		if literal then
-			if self:GetLiteral(pinID) == nil then
+			if self:GetLiteral(pinID) == nil or (literal ~= "enum" and type(self:GetLiteral(pinID)) ~= literal) then
 				self:SetLiteral(pinID, default or pin:GetDefault())
 			end
 		end
@@ -89,9 +96,15 @@ function meta:ToString(pinID)
 	if pinID then
 		local p = self:GetPin(pinID)
 		if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end
-		if p then str = str .. "." .. p:ToString(true,false) end
+		if p then str = str .. "." .. p:ToString(true,true) end
 	end
 	return str
+
+end
+
+function meta:IsPinConnected( pinID )
+
+	return self.graph:IsPinConnected( self.id, pinID )
 
 end
 
@@ -100,28 +113,51 @@ function meta:UpdatePins()
 	self.pinCache = {}
 	self:GeneratePins(self.pinCache)
 	self:SetLiteralDefaults()
+	self:FireListeners(CB_NODE_PINS_UPDATED)
+
+end
+
+function meta:UpdatePinInforms()
+
+	local informs = self:GetInforms()
+	MsgC(Color(80,255,20), "Update " .. #informs .. " informs...\n")
+	for k,v in pairs(informs) do
+		local pin = self:GetPin(v)
+		MsgC(Color(80,255,20), "\tModify " .. pin:ToString(true,true) .. " -> ")
+		if self.informType == nil then
+			pin:SetInformedType(self.informType)
+		else
+			local base = pin:GetType(true)
+			pin:SetInformedType( self.informType:WithFlags(base:GetFlags()) )
+		end
+		MsgC(Color(80,255,20), pin:ToString(true,true) .. "\n")
+	end
+	self:SetLiteralDefaults()
+	self:FireListeners(CB_NODE_PINS_UPDATED)
 
 end
 
 function meta:ClearInforms()
 
-	if not self:HasInformPins() then return end
-	for k,v in pairs(self:GetInforms()) do
-		self:GetPin(v):SetInformedType(nil)
-	end
+	print("Cleared informs on node: " .. self:ToString())
+
+	self.informType = nil
+	self:UpdatePinInforms()
 
 end
 
-function meta:SetInform(pinID, type)
+function meta:SetInform(type)
 
-	self:GetPin(pinID):SetInformedType(type)
+	print("Set informs on node: " .. self:ToString() .. " : " .. type:ToString())
+
+	self.informType = type
+	self:UpdatePinInforms()
 
 end
 
 function meta:HasInformPins()
 
-	local informs = self:GetInforms()
-	return informs ~= nil and #informs > 0
+	return #self:GetInforms() > 0
 
 end
 
@@ -147,7 +183,9 @@ end
 
 function meta:GeneratePins(pins)
 
-	table.Add(pins, self:GetType().pins)
+	print("Generate node pins: " .. self:ToString())
+
+	table.Add(pins, table.Copy(self:GetType().pins))
 	if self.data.codeTypeOverride == NT_Pure and pins[1]:IsType(PN_Exec) then
 		table.remove(pins, 1)
 		table.remove(pins, 1)
@@ -313,7 +351,7 @@ function meta:GetLocals() return self:GetType().locals or {} end
 function meta:GetMeta() return self:GetType().meta or {} end
 function meta:GetGraphThunk() return self:GetType().graphThunk end
 function meta:GetHook() return self:GetType().hook end
-function meta:GetInforms() return self:GetType().meta.informs end
+function meta:GetInforms() return self:GetType().meta.informs or {} end
 
 function meta:GetDisplayName()
 

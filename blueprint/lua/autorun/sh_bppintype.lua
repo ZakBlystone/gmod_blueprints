@@ -6,7 +6,6 @@ module("bppintype", package.seeall)
 
 local meta = {}
 meta.__index = meta
-
 meta.__tostring = function(self)
 	return self:ToString()
 end
@@ -24,6 +23,10 @@ end
 
 function meta:AsSingle()
 	return New(self:GetBaseType(), bit.band(self:GetFlags(), bit.bnot(bpschema.PNF_Table)), self:GetSubType())
+end
+
+function meta:WithFlags(flags)
+	return New(self:GetBaseType(), flags, self:GetSubType())
 end
 
 function meta:GetBaseType() return self.basetype end

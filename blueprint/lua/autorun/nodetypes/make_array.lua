@@ -61,7 +61,7 @@ function NODE:GetInforms()
 
 	local informs = {}
 	for k,v in pairs(self:GetPins()) do
-		if v:IsType(bpschema.PN_Any) then
+		if v:GetType(true):IsType(bpschema.PN_Any) then
 			table.insert(informs, k)
 		end
 	end

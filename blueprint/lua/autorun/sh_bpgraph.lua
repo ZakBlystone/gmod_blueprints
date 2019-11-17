@@ -454,20 +454,26 @@ function meta:WalkInforms()
 	local candidateNodes = {}
 	local visited = {}
 
+	for id, node in self:Nodes() do
+		node:ClearInforms()
+	end
+
 	self:BuildInformDirectionalCandidates(PD_In, candidateNodes)
 
 	print("Forward Walk: ")
 	for k,v in pairs(candidateNodes) do
 		local nodes, connections = self:NodeWalk(v.id,
-			function(node,pinID) return node:IsInformPin(pinID) end,
+			function(node,pinID) return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_In end,
 			function(node) return node:HasInformPins() end,
 			visited )
 
-		if #connections == 0 then continue end
 		print(v:ToString())
-
+		if #connections == 0 then continue end
+		local pinType = self:GetNode(connections[1][1]):GetPin(connections[1][2]):GetType(true)
+		print("Propagate pin type: " .. pinType:ToString())
 		for _,c in pairs(connections) do
 			print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
+			self:GetNode(c[3]):SetInform(pinType)
 		end
 	end
 
@@ -476,58 +482,33 @@ function meta:WalkInforms()
 	print("Reverse Walk: ")
 	for k,v in pairs(candidateNodes) do
 		local nodes, connections = self:NodeWalk(v.id,
-			function(node,pinID) return node:IsInformPin(pinID) end,
+			function(node,pinID) return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_Out end,
 			function(node) return node:HasInformPins() end,
 			visited )
 
-		if #connections == 0 then continue end
 		print(v:ToString())
-
+		if #connections == 0 then continue end
+		local pinType = self:GetNode(connections[1][3]):GetPin(connections[1][4]):GetType(true)
+		print("Propagate pin type: " .. pinType:ToString())
 		for _,c in pairs(connections) do
 			print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
+			self:GetNode(c[1]):SetInform(pinType)
+			print("\t \\-> " .. self:GetNode(c[1]):ToString(c[2]))
 		end
+	end
+
+	print("Visited Nodes:")
+	for k,v in pairs(visited) do
+		print("\t" .. self:GetNode(k):ToString())
 	end
 
 end
 
 function meta:GetPinType(nodeID, pinID)
 
-	return Profile("get-pin-type", function()
-
-		local node = self:GetNode(nodeID)
-		local pin = node:GetPin(pinID)
-		local informs = node:GetInforms()
-
-		if not pin then return nil, nil end
-
-		if informs then
-
-			local hasInform = false
-			for i = 1, #informs do
-				local t = informs[i]
-				if t == pinID then hasInform = true end
-			end
-
-			if hasInform then
-				for i = 1, #informs do
-
-					local t = informs[i]
-					local isConnected, connection = self:IsPinConnected(nodeID, t)
-					if isConnected and connection ~= nil then
-
-						if connection[1] == nodeID and not self:GetNodePin(connection[3], connection[4]):IsType(PN_Any) then return self:GetPinType(connection[3], connection[4]) end
-						if connection[3] == nodeID and not self:GetNodePin(connection[1], connection[2]):IsType(PN_Any) then return self:GetPinType(connection[1], connection[2]) end
-
-					end
-
-				end
-			end
-
-		end
-
-		return pin:GetType()
-
-	end)
+	local node = self:GetNode(nodeID)
+	local pin = node:GetPin(pinID)
+	return pin:GetType()
 
 end
 
@@ -608,7 +589,7 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 	local p1 = self:GetNodePin(nodeID1, pinID1) --always PD_In
 
 	if p0:IsType(PN_Exec) and self:IsPinConnected(nodeID0, pinID0) then return false, "Only one connection outgoing for exec pins" end
-	if p1:IsType(PN_Exec) and self:IsPinConnected(nodeID1, pinID1) then return false, "Only one connection for inputs" end
+	if not p1:IsType(PN_Exec) and self:IsPinConnected(nodeID1, pinID1) then return false, "Only one connection for inputs" end
 
 	if p0:GetDir() == p1:GetDir() then return false, "Can't connect " .. (p0:IsOut() and "m/m" or "f/f") .. " pins" end
 
@@ -658,6 +639,9 @@ function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 
 	table.insert(self.connections, { nodeID0, pinID0, nodeID1, pinID1 })
 
+	print("CONNECTED: " .. self:GetNode(nodeID0):ToString(pinID0) .. " -> " .. self:GetNode(nodeID1):ToString(pinID1))
+
+	self:WalkInforms()
 	self:FireListeners(CB_CONNECTION_ADD, #self.connections, self.connections[#self.connections])
 
 	return true
@@ -693,6 +677,7 @@ function meta:RemoveConnectionID(id)
 	local c = self.connections[id]
 	if c ~= nil then
 		table.remove(self.connections, id)
+		self:WalkInforms()
 		self:FireListeners(CB_CONNECTION_REMOVE, id, c)
 	end
 
