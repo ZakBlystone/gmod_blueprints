@@ -487,7 +487,7 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 	if p0:GetDir() == p1:GetDir() then return false, "Can't connect " .. (p0:IsOut() and "m/m" or "f/f") .. " pins" end
 	if p0:HasFlag(PNF_Table) ~= p1:HasFlag(PNF_Table) then return false, "Can't connect table to non-table pin" end
 
-	if not p0:GetType():Equal(p1:GetType()) then
+	if not p0:GetType():Equal(p1:GetType(), 0) then
 
 		if p0:IsType(PN_Any) and not p1:IsType(PN_Exec) then return true end
 		if p1:IsType(PN_Any) and not p0:IsType(PN_Exec) then return true end
