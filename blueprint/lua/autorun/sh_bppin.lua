@@ -38,13 +38,17 @@ end
 function meta:SetDir(dir) self.dir = dir return self end
 function meta:SetName(name) self.name = name return self end
 function meta:SetDisplayName(name) self.displayName = name return self end
+function meta:SetInformedType(type) self.informed = type return self end
+
+function meta:GetInformedType() return self.informed end
 
 function meta:GetDir()
 	return self.dir
 end
 
-function meta:GetType()
-	return self.type
+function meta:GetType(raw)
+	if raw then return self.type end
+	return self.informed or self.type
 end
 
 function meta:GetName()

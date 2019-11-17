@@ -364,6 +364,132 @@ function meta:GetNodePin(nodeID, pinID)
 
 end
 
+function meta:GetPinConnections(pinDir, nodeID, pinID)
+
+	local out = {}
+	for k, v in self:Connections() do
+		if pinDir == PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
+		if pinDir == PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
+		table.insert(out, v)
+	end
+	return out
+
+end
+
+function meta:NodeWalk(nodeID, pinCondition, nodeCondition, visited)
+
+	visited = visited or {}
+
+	local max = 10000
+	local stack = {}
+	local nodes = {}
+	local connections = {}
+
+	table.insert(stack, nodeID)
+
+	while #stack > 0 and max > 0 do
+
+		max = max - 1
+
+		local pnode = stack[#stack]
+		table.remove(stack, #stack)
+
+		local node = self:GetNode(pnode)
+		for pinID, pin in node:Pins() do
+
+			for _, v in pairs( self:GetPinConnections(pin:GetDir(), pnode, pinID) ) do
+
+				local other = pin:GetDir() == PD_In and v[1] or v[3]
+				local otherPin = pin:GetDir() == PD_In and v[2] or v[4]
+				local node = self:GetNode( other )
+				if not pinCondition(node, otherPin) then continue end
+
+				if not visited[other] then
+					table.insert(connections, v)
+
+					visited[other] = true
+
+					if nodeCondition(node) then
+						visited[other] = true
+						table.insert(stack, other)
+						table.insert(nodes, node)
+					end
+				end
+
+			end
+
+		end
+
+	end
+
+	if max == 0 then
+		error("Infinite loop in graph")
+	end
+
+	return nodes, connections
+
+end
+
+function meta:BuildInformDirectionalCandidates(dir, candidateNodes)
+
+	for id, node in self:Nodes() do
+		for pinID, pin in node:SidePins(dir) do
+			if node:IsInformPin(pinID) then
+				for _, v in pairs( self:GetPinConnections(dir, id, pinID) ) do
+					local other = self:GetNode( dir == PD_In and v[1] or v[3] )
+					if other:IsInformPin( dir == PD_In and v[2] or v[4] ) == false then
+						if not table.HasValue(candidateNodes, other) then
+							table.insert(candidateNodes, other)
+						end
+					end
+				end
+			end
+		end
+	end
+
+end
+
+function meta:WalkInforms()
+
+	local candidateNodes = {}
+	local visited = {}
+
+	self:BuildInformDirectionalCandidates(PD_In, candidateNodes)
+
+	print("Forward Walk: ")
+	for k,v in pairs(candidateNodes) do
+		local nodes, connections = self:NodeWalk(v.id,
+			function(node,pinID) return node:IsInformPin(pinID) end,
+			function(node) return node:HasInformPins() end,
+			visited )
+
+		if #connections == 0 then continue end
+		print(v:ToString())
+
+		for _,c in pairs(connections) do
+			print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
+		end
+	end
+
+	self:BuildInformDirectionalCandidates(PD_Out, candidateNodes)
+
+	print("Reverse Walk: ")
+	for k,v in pairs(candidateNodes) do
+		local nodes, connections = self:NodeWalk(v.id,
+			function(node,pinID) return node:IsInformPin(pinID) end,
+			function(node) return node:HasInformPins() end,
+			visited )
+
+		if #connections == 0 then continue end
+		print(v:ToString())
+
+		for _,c in pairs(connections) do
+			print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
+		end
+	end
+
+end
+
 function meta:GetPinType(nodeID, pinID)
 
 	return Profile("get-pin-type", function()
@@ -485,6 +611,9 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 	if p1:IsType(PN_Exec) and self:IsPinConnected(nodeID1, pinID1) then return false, "Only one connection for inputs" end
 
 	if p0:GetDir() == p1:GetDir() then return false, "Can't connect " .. (p0:IsOut() and "m/m" or "f/f") .. " pins" end
+
+	if self:GetNode(nodeID0):GetTypeName() == "Pin" or self:GetNode(nodeID1):GetTypeName() == "Pin" then return true end
+
 	if p0:HasFlag(PNF_Table) ~= p1:HasFlag(PNF_Table) then return false, "Can't connect table to non-table pin" end
 
 	if not p0:GetType():Equal(p1:GetType(), 0) then
@@ -778,6 +907,7 @@ function meta:CreateDeferredData()
 		end
 
 		self:ResolveConnectionMeta()
+		self:WalkInforms()
 		self:RemoveInvalidConnections()
 		for i, connection in self:Connections() do
 			self:FireListeners(CB_CONNECTION_ADD, connection, i)

@@ -8,6 +8,7 @@ module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef)
 
 local meta = {}
 meta.__index = meta
+meta.__tostring = function(self) return self:ToString() end
 
 function meta:Init(nodeType, x, y, literals)
 
@@ -102,6 +103,36 @@ function meta:UpdatePins()
 
 end
 
+function meta:ClearInforms()
+
+	if not self:HasInformPins() then return end
+	for k,v in pairs(self:GetInforms()) do
+		self:GetPin(v):SetInformedType(nil)
+	end
+
+end
+
+function meta:SetInform(pinID, type)
+
+	self:GetPin(pinID):SetInformedType(type)
+
+end
+
+function meta:HasInformPins()
+
+	local informs = self:GetInforms()
+	return informs ~= nil and #informs > 0
+
+end
+
+function meta:IsInformPin(pinID)
+
+	local informs = self:GetInforms()
+	if informs == nil then return false end
+	return table.HasValue(informs, pinID)
+
+end
+
 function meta:PreModify()
 
 	self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
@@ -147,6 +178,22 @@ function meta:SidePins(dir, filter)
 	return function()
 		i = i + 1
 		while i <= num and (pins[i]:GetDir() ~= dir or not filter(pins[i])) do i = i + 1 end
+		if i <= num then
+			j = j + 1
+			return i, pins[i], j
+		end
+	end
+
+end
+
+function meta:Pins(filter)
+
+	filter = filter or filterNoOp
+	local pins = self:GetPins()
+	local i, j, num = 0, 0, #pins
+	return function()
+		i = i + 1
+		while i <= num and not filter(pins[i]) do i = i + 1 end
 		if i <= num then
 			j = j + 1
 			return i, pins[i], j
