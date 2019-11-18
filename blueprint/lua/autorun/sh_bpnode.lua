@@ -70,7 +70,7 @@ function meta:SetLiteralDefaults()
 		local default = defaults[base+pos]
 		local literal = pin:GetLiteralType()
 		if literal then
-			if self:GetLiteral(pinID) == nil or (literal ~= "enum" and type(self:GetLiteral(pinID)) ~= literal) then
+			if self:GetLiteral(pinID) == nil then
 				self:SetLiteral(pinID, default or pin:GetDefault())
 			end
 		end
