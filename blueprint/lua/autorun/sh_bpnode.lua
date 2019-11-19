@@ -120,17 +120,17 @@ end
 function meta:UpdatePinInforms()
 
 	local informs = self:GetInforms()
-	MsgC(Color(80,255,20), "Update " .. #informs .. " informs...\n")
+	--MsgC(Color(80,255,20), "Update " .. #informs .. " informs...\n")
 	for k,v in pairs(informs) do
 		local pin = self:GetPin(v)
-		MsgC(Color(80,255,20), "\tModify " .. pin:ToString(true,true) .. " -> ")
+		--MsgC(Color(80,255,20), "\tModify " .. pin:ToString(true,true) .. " -> ")
 		if self.informType == nil then
 			pin:SetInformedType(self.informType)
 		else
 			local base = pin:GetType(true)
 			pin:SetInformedType( self.informType:WithFlags(base:GetFlags()) )
 		end
-		MsgC(Color(80,255,20), pin:ToString(true,true) .. "\n")
+		--MsgC(Color(80,255,20), pin:ToString(true,true) .. "\n")
 	end
 	self:SetLiteralDefaults()
 	self:FireListeners(CB_NODE_PINS_UPDATED)
@@ -139,7 +139,7 @@ end
 
 function meta:ClearInforms()
 
-	print("Cleared informs on node: " .. self:ToString())
+	--print("Cleared informs on node: " .. self:ToString())
 
 	self.informType = nil
 	self:UpdatePinInforms()
@@ -148,7 +148,7 @@ end
 
 function meta:SetInform(type)
 
-	print("Set informs on node: " .. self:ToString() .. " : " .. type:ToString())
+	--print("Set informs on node: " .. self:ToString() .. " : " .. type:ToString())
 
 	self.informType = type
 	self:UpdatePinInforms()

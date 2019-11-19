@@ -376,57 +376,51 @@ function meta:GetPinConnections(pinDir, nodeID, pinID)
 
 end
 
-function meta:NodeWalk(nodeID, pinCondition, nodeCondition, visited)
+-- Starting at a given node, traverses connections in the graph which match a condition
+function meta:NodeWalk(nodeID, condition, visited)
 
 	visited = visited or {}
 
 	local max = 10000
 	local stack = {}
-	local nodes = {}
 	local connections = {}
 
-	table.insert(stack, nodeID)
-
-	while #stack > 0 and max > 0 do
-
-		max = max - 1
-
-		local pnode = stack[#stack]
-		table.remove(stack, #stack)
-
-		local node = self:GetNode(pnode)
+	-- Add node connections to stack
+	local function AddNodeConnections(node)
+		if visited[node] then return end visited[node] = true
 		for pinID, pin in node:Pins() do
-
-			for _, v in pairs( self:GetPinConnections(pin:GetDir(), pnode, pinID) ) do
-
+			for _, v in pairs( self:GetPinConnections(pin:GetDir(), node.id, pinID) ) do
 				local other = pin:GetDir() == PD_In and v[1] or v[3]
 				local otherPin = pin:GetDir() == PD_In and v[2] or v[4]
-				local node = self:GetNode( other )
-				if not pinCondition(node, otherPin) then continue end
+				local otherNode = self:GetNode( other )
 
-				if not visited[other] then
-					table.insert(connections, v)
-
-					visited[other] = true
-
-					if nodeCondition(node) then
-						visited[other] = true
-						table.insert(stack, other)
-						table.insert(nodes, node)
-					end
-				end
-
+				-- Push connection onto stack if condition passes
+				if condition(otherNode, otherPin) then table.insert(stack, v) end
 			end
-
 		end
+	end
+
+	-- Add current node's connections
+	AddNodeConnections(self:GetNode(nodeID))
+
+	while #stack > 0 and max > 0 do
+		max = max - 1
+
+		-- Pop connection from stack and insert it into output table
+		local conn = stack[#stack]
+		table.remove(stack, #stack)
+		table.insert(connections, conn)
+
+		local node0 = self:GetNode(conn[1])
+		local node1 = self:GetNode(conn[3])
+
+		-- Recurse into the node that hasn't been visited yet
+		AddNodeConnections(visited[node0] and node1 or node0)
 
 	end
 
-	if max == 0 then
-		error("Infinite loop in graph")
-	end
-
-	return nodes, connections
+	if max == 0 then error("Infinite loop in graph") end
+	return connections
 
 end
 
@@ -454,24 +448,19 @@ function meta:WalkInforms()
 	local candidateNodes = {}
 	local visited = {}
 
-	for id, node in self:Nodes() do
-		node:ClearInforms()
-	end
+	-- Clear all informs on all nodes
+	for id, node in self:Nodes() do node:ClearInforms() end
 
 	self:BuildInformDirectionalCandidates(PD_In, candidateNodes)
 
 	print("Forward Walk: ")
 	for k,v in pairs(candidateNodes) do
-		local nodes, connections = self:NodeWalk(v.id,
-			function(node,pinID) return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_In end,
-			function(node) return node:HasInformPins() end,
-			visited )
-
-		print(v:ToString())
-		if #connections == 0 then continue end
-		local pinType = self:GetNode(connections[1][1]):GetPin(connections[1][2]):GetType(true)
-		print("Propagate pin type: " .. pinType:ToString())
+		local connections = self:NodeWalk(v.id, function(node, pinID)
+			return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_In
+		end, visited)
+		local pinType = nil
 		for _,c in pairs(connections) do
+			if c[1] == v.id then pinType = self:GetNode(c[1]):GetPin(c[2]):GetType(true) end
 			print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
 			self:GetNode(c[3]):SetInform(pinType)
 		end
@@ -481,25 +470,20 @@ function meta:WalkInforms()
 
 	print("Reverse Walk: ")
 	for k,v in pairs(candidateNodes) do
-		local nodes, connections = self:NodeWalk(v.id,
-			function(node,pinID) return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_Out end,
-			function(node) return node:HasInformPins() end,
-			visited )
-
-		print(v:ToString())
-		if #connections == 0 then continue end
-		local pinType = self:GetNode(connections[1][3]):GetPin(connections[1][4]):GetType(true)
-		print("Propagate pin type: " .. pinType:ToString())
+		local connections = self:NodeWalk(v.id, function(node, pinID)
+			return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_Out
+		end, visited)
+		local pinType = nil
 		for _,c in pairs(connections) do
+			if c[3] == v.id then pinType = self:GetNode(c[3]):GetPin(c[4]):GetType(true) end
 			print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
 			self:GetNode(c[1]):SetInform(pinType)
-			print("\t \\-> " .. self:GetNode(c[1]):ToString(c[2]))
 		end
 	end
 
 	print("Visited Nodes:")
 	for k,v in pairs(visited) do
-		print("\t" .. self:GetNode(k):ToString())
+		print("\t" .. k:ToString())
 	end
 
 end
@@ -557,6 +541,12 @@ function meta:CheckConversion(pin0, pin1)
 			return true
 		end
 		if pin0:GetSubType() == "Entity" and pin1:GetSubType() == "Player" then
+			return true
+		end
+		if pin0:GetSubType() == "Weapon" and pin1:GetSubType() == "Entity" then
+			return true
+		end
+		if pin0:GetSubType() == "Entity" and pin1:GetSubType() == "Weapon" then
 			return true
 		end
 	end
