@@ -376,6 +376,22 @@ function meta:GetPinConnections(pinDir, nodeID, pinID)
 
 end
 
+function meta:GetUsedPinTypes(used, noFlags)
+
+	used = used or {}
+	for nodeID, node in self:Nodes() do
+		for pinID, pin in node:Pins() do
+			local pinType = pin:GetType()
+			if noFlags then pinType = pinType:WithFlags(0) end
+			if not table.HasValue(used, pinType) then
+				table.insert(used, pinType)
+			end
+		end
+	end
+	return used
+
+end
+
 -- Starting at a given node, traverses connections in the graph which match a condition
 function meta:NodeWalk(nodeID, condition, visited)
 

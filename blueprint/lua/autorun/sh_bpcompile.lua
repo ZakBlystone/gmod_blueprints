@@ -686,14 +686,25 @@ function CompileMetaTableLookup(cs)
 		"NPC",
 	}
 
-	for k, v in pairs( bpdefs.GetClasses() ) do
-		table.insert(tables, v.name)
-	end
+	-- Collect all used types from module and write out the needed meta tables
+	local types = cs.module:GetUsedPinTypes(nil, true)
+	for _, t in pairs(types) do
 
-	for k, v in pairs( bpdefs.GetStructs() ) do
-		if v.metatable then
-			table.insert(tables, v.metatable)
+		local baseType = t:GetBaseType()
+		if baseType == PN_Ref then
+
+			local class = bpdefs.GetClass(t)
+			table.insert(tables, class.name)
+
+		elseif baseType == PN_Struct then
+
+			local struct = bpdefs.GetStruct(t)
+			if struct.metatable then
+				table.insert(tables, struct.metatable)
+			end
+
 		end
+
 	end
 
 	for k, v in pairs(tables) do

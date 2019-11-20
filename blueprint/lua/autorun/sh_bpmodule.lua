@@ -262,6 +262,16 @@ function meta:CopyGraph( graphID )
 
 end
 
+function meta:GetUsedPinTypes(used, noFlags)
+
+	used = used or {}
+	for graphID, graph in self:Graphs() do
+		graph:GetUsedPinTypes(used, noFlags)
+	end
+	return used
+
+end
+
 function meta:RequestGraphForEvent( nodeType )
 
 	for _, graph in self:Graphs() do
