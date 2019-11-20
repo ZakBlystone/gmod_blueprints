@@ -194,6 +194,9 @@ local function ParseDef( filePath, search )
 				local value = args[2]:Trim()
 				d2.params = d2.params or {}
 				d2.params[param] = value
+			elseif args[1]:sub(1,11) == "REQUIREMETA" then
+				d2.requiredMeta = d2.requiredMeta or {}
+				table.insert(d2.requiredMeta, args[1]:sub(13,-1):Trim())
 			elseif args[1]:sub(1,11) == "REDIRECTPIN" then
 				local pinFrom = args[1]:sub(13,-1):Trim()
 				local pinTo = args[2]:Trim()
@@ -403,6 +406,7 @@ function CreateLibNodes( lib, output )
 			compact = v.compact,
 			role = v.role,
 			latent = v.latent,
+			requiredMeta = v.requiredMeta,
 		}
 
 		if lib.type == DEFTYPE_CLASS then

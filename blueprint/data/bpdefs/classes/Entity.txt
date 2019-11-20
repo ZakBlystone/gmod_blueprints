@@ -1115,6 +1115,7 @@ CLASS Entity, entity
 		DESC Checks if the entity is an NPC or not.
 		OUT isNPC, PN_Bool, #Whether the entity is an NPC.
 		CODE #1 = getmetatable($1) == NPC_
+		REQUIREMETA NPC
 	}
 	PURE SHARED IsOnFire
 	{
@@ -1131,6 +1132,7 @@ CLASS Entity, entity
 		DESC Checks if the entity is a player or not.
 		OUT isPlayer, PN_Bool, #Whether the entity is a player.
 		CODE #1 = getmetatable($1) == Player_
+		REQUIREMETA Player
 	}
 	PURE SERVER IsPlayerHolding
 	{
@@ -1174,12 +1176,14 @@ CLASS Entity, entity
 		DESC Checks if the entity is a vehicle or not.
 		OUT vehicle, PN_Bool, #Whether the entity is a vehicle.
 		CODE #1 = getmetatable($1) == Vehicle_
+		REQUIREMETA Vehicle
 	}
 	PURE SHARED IsWeapon
 	{
 		DESC Checks if the entity is a weapon or not.
 		OUT weapon, PN_Bool, #Whether the entity is a weapon
 		CODE #1 = getmetatable($1) == Weapon_
+		REQUIREMETA Weapon
 	}
 	PURE SHARED IsWidget
 	{

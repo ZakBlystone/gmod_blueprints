@@ -701,6 +701,17 @@ function CompileMetaTableLookup(cs)
 
 	end
 
+	-- Some nodes require access to additional metatables, process them here
+	for _, graph in cs.module:Graphs() do
+		for _, node in graph:Nodes() do
+			local rm = node:GetMeta().requiredMeta
+			if not rm then continue end
+			for _, m in pairs(rm) do
+				if not table.HasValue(tables, m) then table.insert(tables, m) end
+			end
+		end
+	end
+
 	for k, v in pairs(tables) do
 		cs.emit("local " .. v ..  "_ = FindMetaTable(\"" .. v .. "\")")
 	end
