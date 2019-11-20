@@ -229,6 +229,8 @@ function meta:Rename( id, newName )
 	if item == nil then return false end
 	if item.CanRename and not item:CanRename() then return false end
 
+	if newName == item.name then return false end
+
 	self:FireListeners(CB_PREMODIFY, MODIFY_RENAME, item.id, item)
 
 	local prev = item.name

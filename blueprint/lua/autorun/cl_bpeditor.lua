@@ -43,7 +43,10 @@ function PANEL:Init()
 			LastSavedFile = nil
 			local m = bpmodule.New()
 			p:SetModule( m )
-			m:NewGraph("EventGraph")
+			local id, graph = m:NewGraph("EventGraph")
+			graph:AddNode("CORE_Init", 120, 100)
+			graph:AddNode("GM_Think", 120, 300)
+			graph:AddNode("CORE_Shutdown", 120, 500)
 		end},
 		{"Save", function()
 
@@ -185,33 +188,16 @@ function PANEL:Init()
 	self.GraphList:SetText("Graphs")
 	self.GraphList.HandleAddItem = function(list)
 
-		Derma_Query("Graph Type",
-			"Graph Type",
-			"Event Graph",
-			function() 
+		local function MakeGraph(graphType)
+			local id = self.module:NewGraph( nil, graphType )
+			list:Rename(id)
+		end
 
-				Derma_StringRequest(
-					"Add Graph",
-					"Give it a name",
-					"",
-					function( text ) self.module:NewGraph( text, bpschema.GT_Event ) end,
-					function( text ) end
-				)
-
-			end,
-			"Function",
-			function() 
-
-
-				Derma_StringRequest(
-					"Add Function",
-					"Give it a name",
-					"",
-					function( text ) self.module:NewGraph( text, bpschema.GT_Function ) end,
-					function( text ) end
-				)
-
-			end)
+		local menu = DermaMenu( false, self )
+		menu:AddOption( "Event Graph", function() MakeGraph(bpschema.GT_Event) end )
+		menu:AddOption( "Function", function() MakeGraph(bpschema.GT_Function) end )
+		menu:SetMinimumWidth( 100 )
+		menu:Open( gui.MouseX(), gui.MouseY(), false, self )
 
 	end
 	self.GraphList.ItemBackgroundColor = function( list, id, item, selected )
@@ -258,13 +244,8 @@ function PANEL:Init()
 	self.StructList = vgui.Create("BPListView", submenu)
 	self.StructList:SetText("Structs")
 	self.StructList.HandleAddItem = function(pnl, list)
-		Derma_StringRequest(
-			"Add Struct",
-			"Give it a name",
-			"",
-			function( text ) list:ConstructNamed( text ) end,
-			function( text ) end
-		)
+		local itemID, item = list:Construct()
+		pnl:Rename(itemID)
 	end
 	local prev = self.StructList.PopulateMenuItems
 	self.StructList.PopulateMenuItems = function(pnl, items, id)
