@@ -678,13 +678,7 @@ function CompileMetaTableLookup(cs)
 
 	cs.begin(CTX_MetaTables)
 
-	local tables = {
-		"Player",
-		"Entity",
-		"PhysObj",
-		"Weapon",
-		"NPC",
-	}
+	local tables = {}
 
 	-- Collect all used types from module and write out the needed meta tables
 	local types = cs.module:GetUsedPinTypes(nil, true)
