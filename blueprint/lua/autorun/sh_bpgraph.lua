@@ -462,46 +462,52 @@ end
 
 function meta:WalkInforms()
 
-	local candidateNodes = {}
-	local visited = {}
+	Profile("walk-informs", function()
 
-	-- Clear all informs on all nodes
-	for id, node in self:Nodes() do node:ClearInforms() end
+		local candidateNodes = {}
+		local visited = {}
 
-	self:BuildInformDirectionalCandidates(PD_In, candidateNodes)
+		if self.suppressInformWalk then return end
 
-	print("Forward Walk: ")
-	for k,v in pairs(candidateNodes) do
-		local connections = self:NodeWalk(v.id, function(node, pinID)
-			return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_In
-		end, visited)
-		local pinType = nil
-		for _,c in pairs(connections) do
-			if c[1] == v.id then pinType = self:GetNode(c[1]):GetPin(c[2]):GetType(true) end
-			print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
-			self:GetNode(c[3]):SetInform(pinType)
+		-- Clear all informs on all nodes
+		for id, node in self:Nodes() do node:ClearInforms() end
+
+		self:BuildInformDirectionalCandidates(PD_In, candidateNodes)
+
+		--print("Forward Walk: ")
+		for k,v in pairs(candidateNodes) do
+			local connections = self:NodeWalk(v.id, function(node, pinID)
+				return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_In
+			end, visited)
+			local pinType = nil
+			for _,c in pairs(connections) do
+				if c[1] == v.id then pinType = self:GetNode(c[1]):GetPin(c[2]):GetType(true) end
+				--print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
+				self:GetNode(c[3]):SetInform(pinType)
+			end
 		end
-	end
 
-	self:BuildInformDirectionalCandidates(PD_Out, candidateNodes)
+		self:BuildInformDirectionalCandidates(PD_Out, candidateNodes)
 
-	print("Reverse Walk: ")
-	for k,v in pairs(candidateNodes) do
-		local connections = self:NodeWalk(v.id, function(node, pinID)
-			return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_Out
-		end, visited)
-		local pinType = nil
-		for _,c in pairs(connections) do
-			if c[3] == v.id then pinType = self:GetNode(c[3]):GetPin(c[4]):GetType(true) end
-			print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
-			self:GetNode(c[1]):SetInform(pinType)
+		--print("Reverse Walk: ")
+		for k,v in pairs(candidateNodes) do
+			local connections = self:NodeWalk(v.id, function(node, pinID)
+				return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_Out
+			end, visited)
+			local pinType = nil
+			for _,c in pairs(connections) do
+				if c[3] == v.id then pinType = self:GetNode(c[3]):GetPin(c[4]):GetType(true) end
+				--print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
+				self:GetNode(c[1]):SetInform(pinType)
+			end
 		end
-	end
 
-	print("Visited Nodes:")
-	for k,v in pairs(visited) do
-		print("\t" .. k:ToString())
-	end
+		--print("Visited Nodes:")
+		for k,v in pairs(visited) do
+			--print("\t" .. k:ToString())
+		end
+
+	end)
 
 end
 
@@ -646,7 +652,7 @@ function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 
 	table.insert(self.connections, { nodeID0, pinID0, nodeID1, pinID1 })
 
-	print("CONNECTED: " .. self:GetNode(nodeID0):ToString(pinID0) .. " -> " .. self:GetNode(nodeID1):ToString(pinID1))
+	--print("CONNECTED: " .. self:GetNode(nodeID0):ToString(pinID0) .. " -> " .. self:GetNode(nodeID1):ToString(pinID1))
 
 	self:WalkInforms()
 	self:FireListeners(CB_CONNECTION_ADD, #self.connections, self.connections[#self.connections])
@@ -767,11 +773,16 @@ end
 
 function meta:CollapseRerouteNodes()
 
+	self.suppressInformWalk = true
+
 	for _, node in self:Nodes(true) do
 		if node:GetType().collapse then
 			self:CollapseSingleRerouteNode( node.id )
 		end
-	end	
+	end
+
+	self.suppressInformWalk = false
+	self:WalkInforms()
 
 end
 
