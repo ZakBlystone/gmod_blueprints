@@ -427,7 +427,7 @@ function imeta:__BindGamemodeHooks()
 		if not v.hook or type(meta[k]) ~= "function" then continue end
 		local function call(...) return self[k](self, ...) end
 		local key = "bphook_" .. GUIDToString(self:__GetUID(), true)
-		print("BIND KEY: " .. v.hook .. " : " .. key)
+		--print("BIND KEY: " .. v.hook .. " : " .. key)
 		hook.Add(v.hook, key, call)
 	end
 
@@ -443,7 +443,7 @@ function imeta:__UnbindGamemodeHooks()
 	for k,v in pairs(bpm.events) do
 		if not v.hook or type(meta[k]) ~= "function" then continue end
 		local key = "bphook_" .. GUIDToString(self:__GetUID(), true)
-		print("UNBIND KEY: " .. v.hook .. " : " .. key)
+		--print("UNBIND KEY: " .. v.hook .. " : " .. key)
 		hook.Remove(v.hook, key, false)
 	end
 
@@ -463,14 +463,14 @@ function imeta:__SetEnabled( enable )
 	local activeList = activeModules[modID]
 	local isEnabled = activeList[guid] ~= nil
 	if isEnabled == false and enable == true then
-		print("BINDING GAMEMODE HOOKS")
+		--print("BINDING GAMEMODE HOOKS")
 		self:__BindGamemodeHooks()
 		activeList[guid] = self
 		return
 	end
 
 	if isEnabled == true and enable == false then
-		print("UN-BINDING GAMEMODE HOOKS")
+		--print("UN-BINDING GAMEMODE HOOKS")
 		self:__UnbindGamemodeHooks()
 		activeList[guid] = nil
 		return

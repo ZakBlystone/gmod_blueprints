@@ -183,8 +183,6 @@ end
 
 function meta:GeneratePins(pins)
 
-	print("Generate node pins: " .. self:ToString())
-
 	table.Add(pins, table.Copy(self:GetType().pins))
 	if self.data.codeTypeOverride == NT_Pure and pins[1]:IsType(PN_Exec) then
 		table.remove(pins, 1)

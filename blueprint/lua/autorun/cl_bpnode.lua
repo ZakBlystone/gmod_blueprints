@@ -154,7 +154,7 @@ end
 
 function PANEL:BuildPins()
 
-	MsgC(Color(255,100,255), "Rebuild pins for node: " .. self.node:ToString() .. "\n")
+	--MsgC(Color(255,100,255), "Rebuild pins for node: " .. self.node:ToString() .. "\n")
 
 	if self.pins ~= nil then
 		for _, v in pairs(self.pins) do
@@ -167,7 +167,7 @@ function PANEL:BuildPins()
 	local node = self.node
 	for pinID, pin, pos in node:SidePins(PD_In) do
 
-		MsgC(Color(255,100,255), "\t" .. pin:ToString(true,true) .. "\n")
+		--MsgC(Color(255,100,255), "\t" .. pin:ToString(true,true) .. "\n")
 
 		local x,y = pinLocation(self, PD_In, pos)
 
@@ -182,7 +182,7 @@ function PANEL:BuildPins()
 
 	for pinID, pin, pos in node:SidePins(PD_Out) do
 
-		MsgC(Color(255,100,255), "\t" .. pin:ToString(true,true) .. "\n")
+		--MsgC(Color(255,100,255), "\t" .. pin:ToString(true,true) .. "\n")
 
 		local x,y = pinLocation(self, PD_Out, pos)
 
