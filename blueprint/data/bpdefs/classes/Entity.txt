@@ -1288,12 +1288,14 @@ CLASS Entity, entity
 	PURE SHARED OBBMaxs
 	{
 		DESC Returns the highest corner of an entity's bounding box as a local vector.
-		OUT mins, PN_Vector, #The local position of the highest corner of the entity's oriented bounding box.
+		OUT maxs, PN_Vector, #The local position of the highest corner of the entity's oriented bounding box.
+		REDIRECTPIN mins, maxs
 	}
 	PURE SHARED OBBMins
 	{
 		DESC Returns the lowest corner of an entity's bounding box as a local vector.
-		OUT maxs, PN_Vector, #The local position of the lowest corner of the entity's oriented bounding box.
+		OUT mins, PN_Vector, #The local position of the lowest corner of the entity's oriented bounding box.
+		REDIRECTPIN maxs, mins
 	}
 	PURE SHARED ObjectCaps
 	{

@@ -246,7 +246,7 @@ function PANEL:Paint(w, h)
 
 	local err = _G.G_BPError
 	if err ~= nil then
-		if err.nodeID == self.node.id then
+		if err.nodeID == self.node.id and err.graphID == self.graph.id then
 			draw.RoundedBox(8, 0, 0, w, h, Color(200,80,80,255))
 		end
 	end

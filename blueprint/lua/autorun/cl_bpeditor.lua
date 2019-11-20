@@ -19,6 +19,7 @@ function PANEL:RunCommand( func, ... )
 	self.StatusText:SetText("")
 
 	local b = xpcall( func, function( err )
+		_G.G_BPError = nil
 		self.StatusText:SetTextColor( Color(255,100,100) )
 		self.StatusText:SetText( err )
 		print( err )
@@ -166,10 +167,6 @@ function PANEL:Init()
 	self.StatusText:Dock( FILL )
 	self.StatusText:SetText("")
 
-	if _G.G_BPError ~= nil then
-		self.StatusText:SetText( "Blueprint Error: " .. _G.G_BPError.msg )
-	end
-
 	self.ContentPanel = vgui.Create("DPanel", self)
 	self.ContentPanel:Dock( FILL )
 	self.ContentPanel:SetBackgroundColor( Color(50,50,50) )
@@ -291,6 +288,16 @@ function PANEL:Think()
 		else
 			vgraph:SetVisible(false)
 		end
+	end
+
+	if _G.G_BPError ~= nil then
+		if self.BpErrorWasNil then
+			self.BpErrorWasNil = false
+			self.StatusText:SetText( "Blueprint Error: " .. _G.G_BPError.msg .. " [" .. _G.G_BPError.graphID .. "]" )
+			self.GraphList:Select(_G.G_BPError.graphID)
+		end
+	else
+		self.BpErrorWasNil = true
 	end
 
 end

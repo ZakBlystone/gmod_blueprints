@@ -447,7 +447,8 @@ function meta:BuildInformDirectionalCandidates(dir, candidateNodes)
 			if node:IsInformPin(pinID) then
 				for _, v in pairs( self:GetPinConnections(dir, id, pinID) ) do
 					local other = self:GetNode( dir == PD_In and v[1] or v[3] )
-					if other:IsInformPin( dir == PD_In and v[2] or v[4] ) == false then
+					local otherPin = dir == PD_In and v[2] or v[4]
+					if other:IsInformPin( otherPin ) == false and other:GetPin( otherPin ):GetBaseType() ~= PN_Any then
 						if not table.HasValue(candidateNodes, other) then
 							table.insert(candidateNodes, other)
 						end

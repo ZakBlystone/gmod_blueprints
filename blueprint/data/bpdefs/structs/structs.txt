@@ -345,8 +345,8 @@ STRUCT HullTrace, Table used by util.TraceHull.
 	PIN mins, PN_Vector, #The 3D vector local to the start/endpos with the lowest (often negative) values. This will represent the corner with the lower bounds of the box.
 	PIN maxs, PN_Vector, #The 3D vector local to the start/endpos with the highest values. This will represent the corner with the upper bounds of the box.
 	PIN filter, PN_Ref, PNF_Nullable, Entity, #Things the trace should not hit
-	PIN mask=MASK_SOLID, PN_Enum, PNF_Bitfield, Mask, #The trace mask MASK_ Enums. This determines what the trace should hit and what it shouldn't hit.
-	PIN collisiongroup=COLLISION_GROUP_NONE, PN_Enum, PNF_None, #The collision group COLLISION_GROUP_ Enums. This determines what the trace should hit in regards to the entity's collision group.
+	PIN mask=MASK_SOLID, PN_Enum, PNF_Bitfield, MASK, #The trace mask MASK_ Enums. This determines what the trace should hit and what it shouldn't hit.
+	PIN collisiongroup=COLLISION_GROUP_NONE, PN_Enum, PNF_None, COLLISION_GROUP, #The collision group COLLISION_GROUP_ Enums. This determines what the trace should hit in regards to the entity's collision group.
 	PIN ignoreworld=false, PN_Bool, #Should the trace ignore world or not.
 	PIN output, PN_Struct, PNF_Nullable, TraceResult, #If set, the trace result will be written to the supplied table instead of returning a new table
 }

@@ -693,9 +693,21 @@ function CompileMetaTableLookup(cs)
 		elseif baseType == PN_Struct then
 
 			local struct = bpdefs.GetStruct(t)
-			if struct.metatable then
+			if struct ~= nil and struct.metatable then
 				table.insert(tables, struct.metatable)
 			end
+
+		elseif baseType == PN_Vector then
+
+			table.insert(tables, "Vector")
+
+		elseif baseType == PN_Angles then
+
+			table.insert(tables, "Angle")
+
+		elseif baseType == PN_Color then
+
+			table.insert(tables, "Color")
 
 		end
 
