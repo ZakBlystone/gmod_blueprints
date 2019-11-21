@@ -2,6 +2,7 @@ AddCSLuaFile()
 
 print("LOADED BPDEFS")
 
+include("sh_bptransfer.lua")
 include("sh_bpcommon.lua")
 include("sh_bpstruct.lua")
 
@@ -44,7 +45,7 @@ DEFTYPE_LIB = 2
 DEFTYPE_STRUCT = 3
 DEFTYPE_HOOKS = 4
 
-DEFPACK_LOCATION = "blueprints/bp_definitionpack10.txt"
+DEFPACK_LOCATION = "blueprints/bp_definitionpack.txt"
 
 local function EnumerateDefs( base, output, search )
 
@@ -618,6 +619,7 @@ function RebuildDefinitionPack( callback )
 		stream:WriteToFile(DEFPACK_LOCATION, true, true)
 		MsgC(Color(100,255,100), " Done\n")
 		if callback then callback() end
+		for k,v in pairs(bptransfer.GetStates()) do v:AddFile(DEFPACK_LOCATION, "defs") end
 	end)
 
 	local iter = 0
@@ -632,23 +634,17 @@ function RebuildDefinitionPack( callback )
 
 end
 
-function LoadDefinitionPack()
+function LoadDefinitionPack(str)
+
+	if str == nil then print("No pack to load") end
 
 	ready = false
-
-	local filename = DEFPACK_LOCATION
-	local filehandle = nil
-	if file.Exists(filename, "DATA") then filehandle = file.Open(filename, "r", "DATA") end
-	if file.Exists("data/" .. filename, "THIRDPARTY") then filehandle = file.Open("data/" .. filename, "r", "THIRDPARTY") end
-	if file.Exists("data/" .. filename, "DOWNLOAD") then filehandle = file.Open("data/" .. filename, "r", "DOWNLOAD") end
-
-	if filehandle == nil then error("Failed to load definitions, file not found") end
 
 	Init()
 
 	local co = coroutine.create( function()
 		local stream = bpdata.InStream(false, true)
-		stream:LoadFile(filehandle, true, true)
+		stream:LoadString(str, true, true)
 		MsgC(Color(100,255,100), "Reading Blueprint Definitions")
 		ReadTable("Hooks", hooksets, stream)
 		ReadTable("Structs", structs, stream)
@@ -675,35 +671,43 @@ end
 
 if SERVER then
 
-	if not file.Exists(DEFPACK_LOCATION, "DATA") then
-		print("Definition pack missing, generating now...")
-		RebuildDefinitionPack( function()
-			resource.AddFile(DEFPACK_LOCATION)
-			LoadDefinitionPack()
-		end )
-	else
-		resource.AddFile("data/" .. DEFPACK_LOCATION)
-	end
-
-	concommand.Add("bp_rebuildDefinitions", function() RebuildDefinitionPack(
-		function() timer.Simple(.1, LoadDefinitionPack) end
-	) end)
-
-else
-
-	hook.Add("Initialize", "bpdef_init", function()
-		LoadDefinitionPack()
-	end)
+	RebuildDefinitionPack()
+	concommand.Add("bp_rebuildDefinitions", function() RebuildDefinitionPack() end)
 
 end
 
-if CLIENT then concommand.Add("bp_reloadDefinitions", LoadDefinitionPack ) end
+local lastReceivedPack = nil
+
+if CLIENT then concommand.Add("bp_reloadDefinitions", function() LoadDefinitionPack(lastReceivedPack) end ) end
 
 LoadAndParseDefs()
-timer.Simple(.1, function() 
+timer.Simple(.1, function()
 	bpnodedef.InstallDefs()
 end )
 
+if SERVER then
+	hook.Add("BPTransferStateReady", "downloadDefs", function(ply, state)
+		state:AddFile(DEFPACK_LOCATION, "defs")
+	end)
+else
+	hook.Add("BPTransferRequest", "downloadDefs", function(state, data)
+		if data.tag == "defs" then
+			ready = false
+		end
+	end)
+	hook.Add("BPTransferReceived", "downloadDefs", function(state, data)
+		if data.tag == "defs" then
+			lastReceivedPack = data.buffer:GetString()
+			timer.Simple(.5, function()
+				LoadDefinitionPack(lastReceivedPack)
+			end)
+		end
+	end)
+end
+
+bptransfer.RegisterTag("defs", {
+	status = "Downloading Blueprint Definitions",
+})
 
 function Ready()
 	return ready
