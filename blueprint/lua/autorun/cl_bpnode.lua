@@ -113,6 +113,9 @@ function PANEL:Setup( graph, node )
 	self.graph:AddListener(self.callback, bpgraph.CB_ALL)
 	self.node:AddListener(self.nodeCallback, bpnode.CB_ALL)
 
+	local desc = self.node:GetDescription()
+	if desc and desc ~= "" then self:SetTooltip(desc) end
+
 end
 
 function PANEL:OnRemove()

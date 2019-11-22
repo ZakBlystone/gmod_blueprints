@@ -251,7 +251,7 @@ local function ParseDef( filePath, search )
 				end
 				for i=2, #args do
 					local c = args[i]:Trim()
-					if c:sub(1,1) == "#" then pin.desc = c:sub(2,-1) break else pin[params[i-1]] = c end
+					if c:sub(1,1) == "#" then pin.desc = tr:sub(tr:find("#"),-1) break else pin[params[i-1]] = c end
 				end
 
 				if pin.flags ~= nil and string.find(pin.flags, "|") then
@@ -363,7 +363,7 @@ function CreateStructNodes( struct, output )
 	obj.name = struct.name
 	obj.pins:PreserveNames( true )
 	for k, v in pairs(struct.nameMap) do obj:RemapName(k, v) end
-	for _, pin in pairs(struct.pins) do obj:NewPin(pin.name, pin.type, pin.default, pin.flags, pin.ex) end
+	for _, pin in pairs(struct.pins) do obj:NewPin(pin.name, pin.type, pin.default, pin.flags, pin.ex, pin.desc) end
 	obj.pins:PreserveNames( false )
 	obj:SetMetaTable(struct.metatable)
 
@@ -435,7 +435,8 @@ function CreateLibNodes( lib, output )
 				pin.name,
 				pin.type, 
 				pin.flags, 
-				pin.ex
+				pin.ex,
+				pin.desc
 			))
 
 			if pin.default then
@@ -491,7 +492,7 @@ function CreateHooksetNodes( hookset, output )
 			table.insert(ntype.pins, MakePin(
 				ntype.returns and pin.dir or PD_Out,
 				bpcommon.Camelize(pin.name),
-				pin.type, pin.flags, pin.ex
+				pin.type, pin.flags, pin.ex, pin.desc
 			))
 
 		end

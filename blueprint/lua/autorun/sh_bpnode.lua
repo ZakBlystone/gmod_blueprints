@@ -350,6 +350,7 @@ function meta:GetMeta() return self:GetType().meta or {} end
 function meta:GetGraphThunk() return self:GetType().graphThunk end
 function meta:GetHook() return self:GetType().hook end
 function meta:GetInforms() return self:GetType().meta.informs or {} end
+function meta:GetDescription() return self:GetType().desc end
 
 function meta:GetDisplayName()
 

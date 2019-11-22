@@ -2,10 +2,12 @@ HOOKS CORE
 {
 	SHARED Init
 	{
+		DESC Called when the blueprint is created
 		NOHOOK
 	}
 	SHARED Shutdown
 	{
+		DESC Called when the blueprint is shut down
 		NOHOOK
 	}	
 }

@@ -32,7 +32,7 @@ function meta:Init()
 
 end
 
-function meta:NewPin(name, type, default, flags, ex)
+function meta:NewPin(name, type, default, flags, ex, desc)
 
 	local var = bpvariable.New(type, default, flags, ex)
 	return self.pins:Add( var, self.nameMap[name] or name )

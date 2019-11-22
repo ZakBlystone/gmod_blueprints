@@ -128,12 +128,13 @@ function IsPinType(v)
 	return type(v) == "table"
 end
 
-function MakePin(dir, name, pintype, flags, ex)
+function MakePin(dir, name, pintype, flags, ex, desc)
 	local istype = type(pintype) == "table"
 	return bppin.New(
 		dir,
 		name,
-		istype and pintype or bppintype.New(pintype, flags, ex)
+		istype and pintype or bppintype.New(pintype, flags, ex),
+		desc
 	)
 end
 

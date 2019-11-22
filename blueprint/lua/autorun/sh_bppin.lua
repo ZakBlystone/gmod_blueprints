@@ -28,10 +28,11 @@ meta.__tostring = function(self)
 	return self:ToString(true, true)
 end
 
-function meta:Init(dir, name, type)
+function meta:Init(dir, name, type, desc)
 	self.dir = dir
 	self.name = name
 	self.type = type
+	self.desc = desc
 	return self
 end
 
@@ -39,6 +40,7 @@ function meta:SetDir(dir) self.dir = dir return self end
 function meta:SetName(name) self.name = name return self end
 function meta:SetDisplayName(name) self.displayName = name return self end
 function meta:SetInformedType(type) self.informed = type return self end
+function meta:GetDescription() return self.desc or self:GetDisplayName() end
 
 function meta:GetInformedType() return self.informed end
 

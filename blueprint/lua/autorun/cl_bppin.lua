@@ -85,6 +85,11 @@ function PANEL:Setup(graph, node, pin, pinID)
 	
 	end
 
+	local desc = self.pin:GetDescription()
+	if desc and desc ~= "" then
+		self:SetTooltip(desc)
+	end
+
 	self:SetBackgroundColor(Color(0,0,0,0))
 	self:SetSize(10,10)
 

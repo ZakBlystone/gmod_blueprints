@@ -572,6 +572,12 @@ function meta:CheckConversion(pin0, pin1)
 		if pin0:GetSubType() == "Entity" and pin1:GetSubType() == "Weapon" then
 			return true
 		end
+		if pin0:GetSubType() == "NPC" and pin1:GetSubType() == "Entity" then
+			return true
+		end
+		if pin0:GetSubType() == "Entity" and pin1:GetSubType() == "NPC" then
+			return true
+		end
 	end
 
 	local cv = NodePinImplicitConversions[pin0:GetBaseType()]

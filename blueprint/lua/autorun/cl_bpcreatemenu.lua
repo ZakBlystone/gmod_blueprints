@@ -107,6 +107,9 @@ function PANEL:Init()
 		table.insert(self.timers, { t = self.nextTimer, f = function()
 			local node = addTreeNode(p, DisplayName(nodeType), NodeIcon(nodeType), expanded)
 			node.InternalDoClick = function() treeItemClick(nodeType) end
+			if nodeType.desc and nodeType.desc ~= "" then
+				node:SetTooltip(nodeType.desc)
+			end
 		end })
 		self.nextTimer = self.nextTimer + 0.001
 	end
