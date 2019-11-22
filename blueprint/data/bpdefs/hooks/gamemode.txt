@@ -112,6 +112,12 @@ HOOKS GM
 		IN entity, PN_Ref, PNF_None, Entity, #Entity that owns the ragdoll
 		IN ragdoll, PN_Ref, PNF_None, Entity, #The ragdoll entity
 	}
+	CLIENT CreateMove
+	{
+		DESC Allows you to change the players movements before they're sent to the server.
+		IN cmd, PN_Ref, PNF_None, CUserCmd, #The User Command data
+		OUT disableDefaultMovement, PN_Bool, #Return true to: Disable Sandbox C menu "screen clicking", Disable Teammate nocollide (verification required), Prevent calling of C_BaseHLPlayer::CreateMove & subsequently C_BasePlayer::CreateMove
+	}
 	SHARED EntityEmitSound
 	{
 		IN data, PN_Struct, PNF_None, EmitSoundInfo, #Information about the played sound. Changes done to this table can be applied by returning true from this hook.
@@ -222,6 +228,15 @@ HOOKS GM
 	{
 		DESC Called when a weapon has been picked up. Override to disable the default HUD notification.
 		IN weapon, PN_Ref, PNF_None, Weapon, #The picked up weapon
+	}
+	CLIENT InputMouseApply
+	{
+		DESC Allows you to modify the supplied User Command with mouse input. This could be used to make moving the mouse do funky things to view angles.
+		IN cmd, PN_Ref, PNF_None, CUserCmd, #User command
+		IN x, PN_Number, #The amount of mouse movement across the X axis this frame
+		IN y, PN_Number, #The amount of mouse movement across the Y axis this frame
+		IN angle, PN_Angles, #The current view angle
+		OUT modified, PN_Bool, #Return true if we modified something
 	}
 	SHARED KeyPress
 	{
