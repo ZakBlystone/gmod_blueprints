@@ -2,6 +2,7 @@ AddCSLuaFile()
 
 include("sh_bpcommon.lua")
 include("sh_bpbuffer.lua")
+include("sh_bpstringtable.lua")
 
 module("bpdata", package.seeall, bpcommon.rescope(bit))
 
@@ -67,6 +68,9 @@ local WARNINGS_ENABLED = false
 local FLOAT_ROUNDING_ACCURACY = 0.00001
 local FLOAT_ROUNDING_FIX = 10000
 local FLOAT_DO_ROUNDING = false
+
+InStream = nil
+OutStream = nil
 
 local function SBRSH(v, b) return string.char(band(rshift(v, b), 0xFF)) end
 local function SBLSH(s, e, b) return lshift(s:byte(e), b) end
@@ -230,6 +234,10 @@ function OUT:Init(bitstream, crc, fileBacked)
 	return self
 end
 
+function OUT:UseStringTable()
+	self.stringTable = bpstringtable.New()
+end
+
 function OUT:GetString(compressed, base64encoded)
 	local str = nil
 	if self.bitstream then
@@ -238,7 +246,15 @@ function OUT:GetString(compressed, base64encoded)
 			str = str .. string.char(self.buffer[i])
 		end
 	else
-		str = self.buffer:GetString()
+		if self.stringTable then
+			-- Prepend string table
+			local b = OutStream(false, false, true)
+			self.stringTable:WriteToStream(b)
+			b:WriteStr(self.buffer:GetString(), true)
+			str = b:GetString(false, false)
+		else
+			str = self.buffer:GetString()
+		end
 		self.buffer:Close()
 	end
 
@@ -279,10 +295,7 @@ end
 
 function OUT:WriteBits(v, bits)
 	if not self.bitstream then
-		if bits > 0 then self.buffer:Write(string.char(band(v, 0xFF))) end
-		if bits > 8 then self.buffer:Write(string.char(band(rshift(v,8), 0xFF))) end
-		if bits > 16 then self.buffer:Write(string.char(band(rshift(v,16), 0xFF))) end
-		if bits > 24 then self.buffer:Write(string.char(band(rshift(v,24), 0xFF))) end
+		self:WriteStr(Num2Str( v, false, rshift(bits+7, 3) ), true)
 		return
 	end
 	if bits > 32 or bits <= 0 then return end
@@ -301,17 +314,18 @@ function OUT:WriteBool(b)
 	end
 end
 
-function OUT:WriteStr(str) 
+function OUT:WriteStr(str, raw)
 	if self.bitstream then
 		for i=1, string.len(str) do self:WriteBits(str:byte(i), 8) end
 	else
+		if self.stringTable and not raw then self:WriteBits( self.stringTable:Add( str ), 24 ) return end
 		self.buffer:Write(str)
 	end
 end
-function OUT:WriteByte(v, signed) self:WriteStr(Byte2Str(v, signed)) end
-function OUT:WriteShort(v, signed) self:WriteStr(Short2Str(v, signed)) end
-function OUT:WriteInt(v, signed) self:WriteStr(Int2Str(v, signed)) end
-function OUT:WriteFloat(v) self:WriteStr(Float2Str(v)) end
+function OUT:WriteByte(v, signed) self:WriteStr(Byte2Str(v, signed), true) end
+function OUT:WriteShort(v, signed) self:WriteStr(Short2Str(v, signed), true) end
+function OUT:WriteInt(v, signed) self:WriteStr(Int2Str(v, signed), true) end
+function OUT:WriteFloat(v) self:WriteStr(Float2Str(v), true) end
 
 --for compatibility
 OUT.Write = OUT.WriteStr
@@ -328,6 +342,10 @@ function IN:Init(bitstream, crc)
 	self.signedCRC = crc
 	self.bitstream = bitstream
 	return self
+end
+
+function IN:UseStringTable()
+	self.stringTable = bpstringtable.New()
 end
 
 function IN:Reset()
@@ -353,6 +371,11 @@ function IN:LoadString(str, compressed, base64encoded)
 	else
 		self.buffer = str
 	end
+
+	if self.stringTable then
+		self.stringTable:ReadFromStream(self)
+	end
+
 	return true
 end
 
@@ -384,12 +407,8 @@ end
 
 function IN:ReadBits(bits)
 	if not self.bitstream then 
-		local v = 0
-		if bits > 0 then v = v + self:ReadStr(1):byte(1) end
-		if bits > 8 then v = v + lshift(self:ReadStr(1):byte(1),8) end
-		if bits > 16 then v = v + lshift(self:ReadStr(1):byte(1),16) end
-		if bits > 24 then v = v + lshift(self:ReadStr(1):byte(1),24) end
-		return v
+		local bytes = rshift(bits+7, 3)
+		return Str2Num( self:ReadStr( bytes, true ), false, bytes )
 	end
 	if bits > 32 or bits <= 0 then return 0 end
 
@@ -411,28 +430,33 @@ function IN:ReadBool()
 	end
 end
 
-function IN:ReadStr(n)
+function IN:ReadStr(n, raw)
 	if self.bitstream then
 		local s = ""
 		for i=1, n do s = s .. string.char(self:ReadBits(8)) end
 		return s
 	else
-		local r = string.sub(self.buffer, self.byte, self.byte+(n-1))
-		self.byte = self.byte + n
+		local r = nil
+		if self.stringTable ~= nil and not raw then
+			r = self.stringTable:Get(self:ReadBits(24))
+		else
+			r = string.sub(self.buffer, self.byte, self.byte+(n-1))
+			self.byte = self.byte + n
+		end
 		return r
 	end
 end
-function IN:ReadByte(signed) return Str2Byte(self:ReadStr(1), signed) end
-function IN:ReadShort(signed) return Str2Short(self:ReadStr(2), signed) end
-function IN:ReadInt(signed) return Str2Int(self:ReadStr(4), signed) end
-function IN:ReadFloat() return Str2Float(self:ReadStr(4)) end
+function IN:ReadByte(signed) return Str2Byte(self:ReadStr(1, true), signed) end
+function IN:ReadShort(signed) return Str2Short(self:ReadStr(2, true), signed) end
+function IN:ReadInt(signed) return Str2Int(self:ReadStr(4, true), signed) end
+function IN:ReadFloat() return Str2Float(self:ReadStr(4, true)) end
 
 --for compatibility
 IN.Read = IN.ReadStr
 IN.ReadLong = IN.ReadInt
 
-function InStream(bitstream, crc) return setmetatable({}, IN):Init(bitstream, crc) end
-function OutStream(bitstream, crc, fileBacked) return setmetatable({}, OUT):Init(bitstream, crc, fileBacked) end
+InStream = function(bitstream, crc) return setmetatable({}, IN):Init(bitstream, crc) end
+OutStream = function(bitstream, crc, fileBacked) return setmetatable({}, OUT):Init(bitstream, crc, fileBacked) end
 
 
 
@@ -555,7 +579,7 @@ function WriteValue(t, buf, thread)
 		end
 	elseif ttype == "string" then
 		buf:WriteBits(DT_STRING, DT_STATUSBITS)
-		buf:WriteInt( t:len(), false )
+		if not buf.stringTable then buf:WriteInt( t:len(), false ) end
 		buf:WriteStr( t )
 	elseif ttype == "boolean" then
 		buf:WriteBits(DT_BOOL, DT_STATUSBITS)
@@ -625,8 +649,12 @@ function ReadValue(buf, thread)
 		local index = buf:ReadBits(ENTITY_BITS)
 		return ents.GetByIndex(index)
 	elseif ttype == DT_STRING then
-		local len = buf:ReadInt(false)
-		return buf:ReadStr( len )
+		if not buf.stringTable then 
+			local len = buf:ReadInt(false)
+			return buf:ReadStr( len )
+		else
+			return buf:ReadStr()
+		end
 	elseif ttype == DT_BOOL then
 		return buf:ReadBits( 1 ) == 1
 	end

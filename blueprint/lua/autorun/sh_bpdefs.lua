@@ -609,6 +609,7 @@ function RebuildDefinitionPack( callback )
 	local co = coroutine.create( function()
 		MsgC(Color(100,255,100), "Writing Blueprint Definitions")
 		local stream = bpdata.OutStream(false, true, true)
+		stream:UseStringTable()
 		WriteTable("Hooks", hooksets, stream)
 		WriteTable("Structs", structs, stream)
 		WriteTable("Callbacks", callbacks, stream)
@@ -624,7 +625,8 @@ function RebuildDefinitionPack( callback )
 
 	local iter = 0
 	timer.Create("DefWriter", 0, 0, function()
-		coroutine.resume(co)
+		local success, msg = coroutine.resume(co)
+		if not success then print("ERROR: " .. tostring(msg)) end
 		iter = iter + 1
 		if iter % 5 == 0 then MsgC(Color(100,255,100), ".") end
 		if coroutine.status(co) == "dead" then
@@ -644,6 +646,7 @@ function LoadDefinitionPack(str)
 
 	local co = coroutine.create( function()
 		local stream = bpdata.InStream(false, true)
+		stream:UseStringTable()
 		stream:LoadString(str, true, true)
 		MsgC(Color(100,255,100), "Reading Blueprint Definitions")
 		ReadTable("Hooks", hooksets, stream)
@@ -658,7 +661,8 @@ function LoadDefinitionPack(str)
 
 	local iter = 0
 	timer.Create("DefLoader", 0, 0, function()
-		coroutine.resume(co)
+		local success, msg = coroutine.resume(co)
+		if not success then print("ERROR: " .. tostring(msg)) end
 		iter = iter + 1
 		if iter % 5 == 0 then MsgC(Color(100,255,100), ".") end
 		if coroutine.status(co) == "dead" then

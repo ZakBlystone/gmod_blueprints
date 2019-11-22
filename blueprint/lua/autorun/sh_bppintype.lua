@@ -32,7 +32,7 @@ end
 function meta:GetBaseType() return self.basetype end
 function meta:GetSubType() return self.subtype end
 function meta:GetFlags(mask) return bit.band(self.flags, mask or bpschema.PNF_All) end
-function meta:GetColor() return bpschema.NodePinColors[ self:GetBaseType() ] end
+function meta:GetColor() return bpschema.NodePinColors[ self:GetBaseType() ] or Color(0,0,0,255) end
 function meta:GetTypeName() return bpschema.PinTypeNames[ self:GetBaseType() ] or "UNKNOWN" end
 function meta:GetLiteralType() return bpschema.NodeLiteralTypes[ self:GetBaseType() ] end
 function meta:GetDefault() return bpschema.Defaults[ self:GetBaseType() ] end
