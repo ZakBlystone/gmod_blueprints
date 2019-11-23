@@ -1,25 +1,25 @@
 LIB os
 {
-	FUNC SHARED clock
+	FUNC clock, SHARED
 	{
 		DESC Returns the approximate cpu time the application ran.
 		OUT clock, PN_Number, #runtime
 	}
-	FUNC SHARED date
+	FUNC date, SHARED
 	{
 		DESC Returns the date/time as a formatted string or in a table.
 		IN format, PN_String, #The format string. If this is equal to '*t' or '!*t' then this function will return a DateData structure, otherwise it will return a string. If this starts with an '!', the returned data will use the UTC timezone rather than the local timezone. See http://www.mkssoftware.com/docs/man3/strftime.3.asp for available format flags. BUG	 Not all flags are available on all operating systems and the result of using an invalid flag is undefined. This currently crashes the game on Windows. Most or all flags are available on OS X and Linux but considerably fewer are available on Windows. See http://msdn.microsoft.com/en-us/library/fe06s4ak.aspx for a list of available flags on Windows. Note that the # flags also crashes the game on Windows. Issue Tracker: #329
 		IN time, PN_Number, #Time to use for the format.
 		OUT formatted, PN_String, #Formatted date NOTE	 This will be a DateData structure if the first argument equals to '*t' or '!*t'
 	}
-	FUNC SHARED difftime
+	FUNC difftime, SHARED
 	{
 		DESC Subtracts the second of the first value and rounds the result.
 		IN timeA, PN_Number, #The first value.
 		IN timeB, PN_Number, #The value to subtract.
 		OUT difference, PN_Number, #diffTime
 	}
-	FUNC SHARED time
+	FUNC time, SHARED
 	{
 		DESC Returns the system time in seconds past the unix epoch. If a table is supplied, the function attempts to build a system time with the specified table members.
 		IN dateData, PN_Struct, PNF_Nullable, DateData, #Table to generate the time from. This table's data is interpreted as being in the local timezone. See DateData structure

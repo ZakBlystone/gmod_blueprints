@@ -1,6 +1,6 @@
 LIB UTIL
 {
-	PURE SHARED AngleVectors
+	PURE AngleVectors, SHARED
 	{
 		IN Angles, PN_Angles
 		OUT Forward, PN_Vector
@@ -9,14 +9,14 @@ LIB UTIL
 		CODE #1 = $1:Forward() #2 = $1:Right() #3 = $1:Up()
 		COMPACT false
 	}
-	FUNC SHARED SetEntityValue
+	FUNC SetEntityValue, SHARED
 	{
 		IN Entity, PN_Ref, PNF_None, Entity
 		IN Key, PN_String
 		IN Value, PN_Any
 		CODE if IsValid($1) then $1[\"bp_!graph_\" .. $2] = $3 end
 	}
-	PURE SHARED GetEntityValue
+	PURE GetEntityValue, SHARED
 	{
 		IN Entity, PN_Ref, PNF_None, Entity
 		IN Key, PN_String
@@ -24,20 +24,20 @@ LIB UTIL
 		OUT Value, PN_Any
 		CODE if IsValid($1) then #1 = $1[\"bp_!graph_\" .. $2] ~= nil #2 = $1[\"bp_!graph_\" .. $2] else #1 = false #2 = nil end
 	}
-	FUNC SHARED ClearEntityValue
+	FUNC ClearEntityValue, SHARED
 	{
 		IN Entity, PN_Ref, PNF_None, Entity
 		IN Key, PN_String
 		CODE if IsValid($1) then $1[\"bp_!graph_\" .. $2] = nil end
 	}
-	PURE SHARED GetKeyValue
+	PURE GetKeyValue, SHARED
 	{
 		IN Entity, PN_Ref, PNF_None, Entity
 		IN Key, PN_String
 		OUT Value, PN_String
 		CODE #1 = Entity_.GetKeyValues($1)[$2] or ""
 	}
-	PURE SHARED FindPlayerByName
+	PURE FindPlayerByName, SHARED
 	{
 		IN Name, PN_String
 		OUT Player, PN_Ref, PNF_None, Player
@@ -50,14 +50,14 @@ LIB UTIL
 			#2 = (#1 ~= nil)
 		}
 	}
-	PURE SHARED ContainsString
+	PURE ContainsString, SHARED
 	{
 		IN String, PN_String
 		IN Find, PN_String
 		OUT Result, PN_Bool
 		CODE #1 = string.find($1, $2) ~= nil
 	}
-	FUNC SERVER MakeExplosion
+	FUNC MakeExplosion, SERVER
 	{
 		IN Owner, PN_Ref, PNF_Nullable, Entity
 		IN Position, PN_Vector

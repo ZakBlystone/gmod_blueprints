@@ -1,48 +1,48 @@
 LIB cleanup
 {
-	FUNC SERVER Add
+	FUNC Add, SERVER
 	{
 		DESC Adds an entity to a player's cleanup list.
 		IN pl, PN_Ref, PNF_None, Player, #Who's cleanup list to add the entity to.
 		IN type, PN_String, #The type of cleanup.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to add to the player's cleanup list.
 	}
-	FUNC SERVER CC_AdminCleanup
+	FUNC CC_AdminCleanup, SERVER
 	{
 		DESC  Player pl
 		IN pl, PN_Ref, PNF_None, Player, #The player that called the console command.
 		IN command, PN_String, #The console command that called this function.
 		IN args, PN_Any, PNF_Table, #First and only arg is the cleanup type.
 	}
-	FUNC SERVER CC_Cleanup
+	FUNC CC_Cleanup, SERVER
 	{
 		DESC  Player pl
 		IN pl, PN_Ref, PNF_None, Player, #The player that called the console command.
 		IN command, PN_String, #The console command that called this function.
 		IN args, PN_Any, PNF_Table, #First and only arg is the cleanup type.
 	}
-	PURE SERVER GetList
+	PURE GetList, SERVER
 	{
 		DESC Gets the cleanup list.
 	}
-	PURE SHARED GetTable
+	PURE GetTable, SHARED
 	{
 		DESC Gets the table of cleanup types.
 		OUT types, PN_Any, PNF_Table, #cleanup_types
 	}
-	FUNC SHARED Register
+	FUNC Register, SHARED
 	{
 		DESC Registers a new cleanup type.
 		IN type, PN_String, #Name of type.
 	}
-	FUNC SERVER ReplaceEntity
+	FUNC ReplaceEntity, SERVER
 	{
 		DESC Replaces one entity in the cleanup module with another
 		IN from, PN_Ref, PNF_None, Entity, #Old entity
 		IN to, PN_Ref, PNF_None, Entity, #New entity
 		OUT success, PN_Bool, #Whether any action was taken.
 	}
-	FUNC CLIENT UpdateUI
+	FUNC UpdateUI, CLIENT
 	{
 		DESC Repopulates the clients cleanup menu
 	}

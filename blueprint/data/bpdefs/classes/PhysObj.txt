@@ -1,44 +1,44 @@
 CLASS PhysObj
 {
-	FUNC SHARED AddAngleVelocity
+	FUNC AddAngleVelocity, SHARED
 	{
 		DESC Adds the specified velocity to the current.
 		IN velocity, PN_Vector, #Additional velocity.
 	}
-	FUNC SHARED AddGameFlag
+	FUNC AddGameFlag, SHARED
 	{
 		DESC Adds one or more bit flags.
 		IN flags, PN_Enum, PNF_Bitfield, FVPHYSICS, #Bitflag, see FVPHYSICS_ Enums.
 	}
-	FUNC SHARED AddVelocity
+	FUNC AddVelocity, SHARED
 	{
 		DESC Adds the specified velocity to the current.
 		IN velocity, PN_Vector, #Additional velocity.
 	}
-	FUNC SHARED AlignAngles
+	FUNC AlignAngles, SHARED
 	{
 		DESC  Angle from
 		IN from, PN_Angles
 		IN to, PN_Angles
 		OUT angles, PN_Angles
 	}
-	FUNC SHARED ApplyForceCenter
+	FUNC ApplyForceCenter, SHARED
 	{
 		DESC Applies the specified force to the physics object. (in Newtons)
 		IN force, PN_Vector, #The force to be applied.
 	}
-	FUNC SHARED ApplyForceOffset
+	FUNC ApplyForceOffset, SHARED
 	{
 		DESC Applies the specified force on the physics object at the specified position
 		IN force, PN_Vector, #The force to be applied.
 		IN position, PN_Vector, #The position in world coordinates where the force is applied to the physics object.
 	}
-	FUNC SHARED ApplyTorqueCenter
+	FUNC ApplyTorqueCenter, SHARED
 	{
 		DESC Applies specified torque to the physics object.
 		IN torque, PN_Vector, #The torque to be applied in kg * degrees / s.
 	}
-	FUNC SHARED CalculateForceOffset
+	FUNC CalculateForceOffset, SHARED
 	{
 		DESC Calculates the force and torque on the center of mass for an offset force impulse. The outputs can be directly passed to PhysObj:ApplyForceCenter and PhysObj:ApplyTorqueCenter, respectively.
 		IN force, PN_Vector, #The initial force
@@ -46,7 +46,7 @@ CLASS PhysObj
 		OUT force, PN_Vector, #The calculated force on the physics object's center of mass
 		OUT torque, PN_Vector, #The calculated torque on the physics object's center of mass
 	}
-	FUNC SHARED CalculateVelocityOffset
+	FUNC CalculateVelocityOffset, SHARED
 	{
 		DESC Calculates the linear and angular velocities on the center of mass for an offset force impulse. The outputs can be directly passed to PhysObj:AddVelocity and PhysObj:AddAngleVelocity, respectively.
 		IN force, PN_Vector, #The initial force
@@ -54,331 +54,331 @@ CLASS PhysObj
 		OUT linear, PN_Vector, #The calculated linear velocity from the force on the physics object's center of mass
 		OUT angular, PN_Vector, #The calculated angular velocity from the force on the physics object's center of mass
 	}
-	FUNC SHARED ClearGameFlag
+	FUNC ClearGameFlag, SHARED
 	{
 		DESC Removes one of more specified flags.
 		IN flags, PN_Enum, PNF_Bitfield, FVPHYSICS, #Bitflag, see FVPHYSICS_ Enums.
 	}
-	FUNC SHARED ComputeShadowControl
+	FUNC ComputeShadowControl, SHARED
 	{
 		DESC Allows you to move a PhysObj to a point and angle in 3D space.
 		IN shadowparams, PN_Struct, PNF_None, ShadowParams, #The parameters for the shadow. See example code to see how its used.
 	}
-	FUNC SHARED EnableCollisions
+	FUNC EnableCollisions, SHARED
 	{
 		DESC Sets whether the physics object should collide with anything or not, including world.
 		IN enable, PN_Bool, #True to enable, false to disable.
 	}
-	FUNC SHARED EnableDrag
+	FUNC EnableDrag, SHARED
 	{
 		DESC Sets whenever the physics object should be affected by drag.
 		IN enable, PN_Bool, #True to enable, false to disable.
 	}
-	FUNC SHARED EnableGravity
+	FUNC EnableGravity, SHARED
 	{
 		DESC Sets whether the PhysObject should be affected by gravity
 		IN enable, PN_Bool, #True to enable, false to disable.
 	}
-	FUNC SHARED EnableMotion
+	FUNC EnableMotion, SHARED
 	{
 		DESC Sets whether the physobject should be able to move or not.
 		IN enable, PN_Bool, #True to enable, false to disable.
 	}
-	PURE SHARED GetAABB
+	PURE GetAABB, SHARED
 	{
 		DESC Returns the mins and max of the physics object.
 		OUT mins, PN_Vector, #Mins
 		OUT maxs, PN_Vector, #Maxs
 	}
-	PURE SHARED GetAngles
+	PURE GetAngles, SHARED
 	{
 		DESC Returns the angles of the physics object.
 		OUT angles, PN_Angles, #The angles of the physics object.
 	}
-	PURE SHARED GetAngleVelocity
+	PURE GetAngleVelocity, SHARED
 	{
 		DESC Gets the angular velocity of the object in degrees per second.
 		OUT velocity, PN_Vector, #The angular velocity
 	}
-	PURE SHARED GetContents
+	PURE GetContents, SHARED
 	{
 		DESC Returns the contents flag of the PhysObj.
 		OUT contents, PN_Enum, PNF_Bitfield, CONTENTS, #The CONTENTS_ Enums.
 	}
-	PURE SHARED GetDamping
+	PURE GetDamping, SHARED
 	{
 		DESC Returns the linear and angular damping of the physics object.
 		OUT linear, PN_Number, #The linear damping
 		OUT angular, PN_Number, #The angular damping
 	}
-	PURE SHARED GetEnergy
+	PURE GetEnergy, SHARED
 	{
 		DESC Returns the kinetic energy of the physobject.
 		OUT energy, PN_Number, #The kinetic energy
 	}
-	PURE SHARED GetEntity
+	PURE GetEntity, SHARED
 	{
 		DESC Returns the parent entity of the physics object.
 		OUT entity, PN_Ref, PNF_None, Entity, #parent
 	}
-	PURE SHARED GetInertia
+	PURE GetInertia, SHARED
 	{
 		DESC Returns the directional inertia of the physics object.
 		OUT inertia, PN_Vector, #directionalInertia
 	}
-	PURE SHARED GetInvInertia
+	PURE GetInvInertia, SHARED
 	{
 		DESC Returns 1 divided by the inertia.
 		OUT invInertia, PN_Number, #The inverted inertia
 	}
-	PURE SHARED GetInvMass
+	PURE GetInvMass, SHARED
 	{
 		DESC Returns 1 divided by the physics object's mass.
 		OUT invMass, PN_Number, #The inverted mass.
 	}
-	PURE SHARED GetMass
+	PURE GetMass, SHARED
 	{
 		DESC Returns the mass of the physics object.
 		OUT mass, PN_Number, #The mass in kilograms.
 	}
-	PURE SHARED GetMassCenter
+	PURE GetMassCenter, SHARED
 	{
 		DESC Returns the center of mass of the physics object as a local vector.
 		OUT center, PN_Vector, #The center of mass of the physics object.
 	}
-	PURE SHARED GetMaterial
+	PURE GetMaterial, SHARED
 	{
 		DESC Returns the physical material of the physics object.
 		OUT material, PN_String, #The physical material
 	}
-	PURE SHARED GetMesh
+	PURE GetMesh, SHARED
 	{
 		DESC Returns the physics mesh of the object which is used for physobj-on-physobj collision.
 		OUT mesh, PN_Struct, PNF_Table, MeshVertex, #Table of MeshVertex structures where each three vertices represent a triangle. Returns nil if the physics object is a sphere.
 	}
-	PURE SHARED GetMeshConvexes
+	PURE GetMeshConvexes, SHARED
 	{
 		DESC Returns all convex physics meshes of the object. See Entity.PhysicsInitMultiConvex for more information.
 		OUT mesh, PN_Struct, PNF_Table, MeshVertex, #Table of MeshVertex structures where each MeshVertex structure is an independent convex mesh and each three vertices represent a triangle. Returns nil if the physics object is a sphere.
 	}
-	PURE SHARED GetName
+	PURE GetName, SHARED
 	{
 		DESC Returns the name of the physics object.
 		OUT name, PN_String, #The name of the physics object.
 	}
-	PURE SHARED GetPos
+	PURE GetPos, SHARED
 	{
 		DESC Returns the position of the physics object.
 		OUT pos, PN_Vector, #The position
 	}
-	PURE SHARED GetPositionMatrix
+	PURE GetPositionMatrix, SHARED
 	{
 		DESC Returns the position and angle of the physics object as a 3x4 matrix (VMatrix is 4x4 so the fourth row goes unused). The first three columns store the angle as a rotation matrix, and the fourth column stores the position vector.
 		OUT matrix, PN_Ref, PNF_None, VMatrix, #The position and angle matrix.
 	}
-	PURE SHARED GetRotDamping
+	PURE GetRotDamping, SHARED
 	{
 		DESC Returns the rotation damping of the physics object.
 		OUT damping, PN_Number, #The rotation damping
 	}
-	PURE SHARED GetShadowAngles
+	PURE GetShadowAngles, SHARED
 	{
 		DESC Returns the angles of the PhysObj shadow. See PhysObj:UpdateShadow.
 		OUT angles, PN_Angles, #The angles of the PhysObj shadow.
 	}
-	PURE SHARED GetShadowPos
+	PURE GetShadowPos, SHARED
 	{
 		DESC Returns the position of the PhysObj shadow. See PhysObj:UpdateShadow.
 		OUT pos, PN_Vector, #The position of the PhysObj shadow.
 	}
-	PURE SHARED GetSpeedDamping
+	PURE GetSpeedDamping, SHARED
 	{
 		DESC Returns the speed damping of the physics object.
 		OUT damping, PN_Number, #speedDamping
 	}
-	PURE SERVER GetStress
+	PURE GetStress, SERVER
 	{
 		DESC Returns the stress of the entity.
 		OUT stress, PN_Number, #exertedStress
 	}
-	PURE SHARED GetSurfaceArea
+	PURE GetSurfaceArea, SHARED
 	{
 		DESC Returns the surface area of the physics object in source-units².
 		OUT area, PN_Number, #The surface area
 	}
-	PURE SHARED GetVelocity
+	PURE GetVelocity, SHARED
 	{
 		DESC Returns the absolute directional velocity of the physobject.
 		OUT velocity, PN_Vector, #velocity
 	}
-	PURE SHARED GetVelocityAtPoint
+	PURE GetVelocityAtPoint, SHARED
 	{
 		DESC Returns the world velocity of a point in world coordinates about the object.
 		IN point, PN_Vector
 		OUT velocity, PN_Vector
 	}
-	PURE SHARED GetVolume
+	PURE GetVolume, SHARED
 	{
 		DESC Returns the volume in source units cubed.
 		OUT volume, PN_Number, #volume
 	}
-	PURE SHARED HasGameFlag
+	PURE HasGameFlag, SHARED
 	{
 		DESC Returns whenever the specified flag(s) is/are set.
 		IN flags, PN_Enum, PNF_None, FVPHYSICS, #Bitflag, see FVPHYSICS_ Enums.
 		OUT hasFlag, PN_Bool, #If flag was set or not
 	}
-	PURE SHARED IsAsleep
+	PURE IsAsleep, SHARED
 	{
 		DESC Returns whether the physics object is "sleeping".
 		OUT asleep, PN_Bool, #Whether the physics object is sleeping.
 	}
-	PURE SHARED IsCollisionEnabled
+	PURE IsCollisionEnabled, SHARED
 	{
 		DESC Returns whenever the entity is able to collide or not.
 		OUT enabled, PN_Bool, #isCollisionEnabled
 	}
-	PURE SHARED IsDragEnabled
+	PURE IsDragEnabled, SHARED
 	{
 		DESC Returns whenever the entity is affected by drag.
 		OUT enabled, PN_Bool, #dragEnabled
 	}
-	PURE SHARED IsGravityEnabled
+	PURE IsGravityEnabled, SHARED
 	{
 		DESC Returns whenever the entity is affected by gravity.
 		OUT enabled, PN_Bool, #gravitated
 	}
-	PURE SHARED IsMotionEnabled
+	PURE IsMotionEnabled, SHARED
 	{
 		DESC Returns if the physics object can move itself (by velocity, acceleration)
 		OUT enabled, PN_Bool, #motionEnabled
 	}
-	PURE SHARED IsMoveable
+	PURE IsMoveable, SHARED
 	{
 		DESC Returns whenever the entity is able to move.
 		OUT moveable, PN_Bool, #movable
 	}
-	PURE SHARED IsPenetrating
+	PURE IsPenetrating, SHARED
 	{
 		DESC Returns whenever the physics object is penetrating another physics object.
 		OUT penetrating, PN_Bool, #Whether the physics object is penetrating another object.
 	}
-	PURE SHARED IsValid
+	PURE IsValid, SHARED
 	{
 		DESC Returns if the physics object is valid/not NULL.
 		OUT valid, PN_Bool, #isValid
 	}
-	PURE SHARED LocalToWorld
+	PURE LocalToWorld, SHARED
 	{
 		DESC Mapping a vector in local frame of the physics object to world frame.
 		IN pos, PN_Vector, #A vector in the physics object's local frame
 		OUT vector, PN_Vector, #The corresponding vector in world frame
 	}
-	PURE SHARED LocalToWorldVector
+	PURE LocalToWorldVector, SHARED
 	{
 		DESC Rotate a vector from the local frame of the physics object to world frame.
 		IN normal, PN_Vector, #A vector in the physics object's local frame
 		OUT vector, PN_Vector, #The corresponding vector in world frame
 	}
-	FUNC SHARED OutputDebugInfo
+	FUNC OutputDebugInfo, SHARED
 	{
 		DESC Prints debug info about the state of the physics object to the console.
 	}
-	FUNC SHARED RecheckCollisionFilter
+	FUNC RecheckCollisionFilter, SHARED
 	{
 		DESC Call this when the collision filter conditions change due to this object's state (e.g. changing solid type or collision group)
 	}
-	PURE SHARED RotateAroundAxis
+	PURE RotateAroundAxis, SHARED
 	{
 		DESC A convinience function for Angle:RotateAroundAxis.
 		IN dir, PN_Vector, #Direction, around which we will rotate
 		IN ang, PN_Number, #Amount of rotation, in degrees
 		OUT angles, PN_Angles, #The resulting angle
 	}
-	FUNC SHARED SetAngleDragCoefficient
+	FUNC SetAngleDragCoefficient, SHARED
 	{
 		DESC Sets the amount of drag to apply to a physics object when attempting to rotate.
 		IN coefficient, PN_Number, #Drag coefficient. The bigger this value is, the slower the angles will change.
 	}
-	FUNC SHARED SetAngles
+	FUNC SetAngles, SHARED
 	{
 		DESC Sets the angles of the physobject.
 		IN angles, PN_Angles, #The new angles of the physobject.
 	}
-	FUNC SHARED SetBuoyancyRatio
+	FUNC SetBuoyancyRatio, SHARED
 	{
 		DESC Sets the buoyancy ratio of the physics object. (How well it floats in water)
 		IN buoyancy, PN_Number, #Buoyancy ratio, where 0 is not buoyant at all (like a rock), and 1 is very buoyant (like wood)
 	}
-	FUNC SHARED SetContents
+	FUNC SetContents, SHARED
 	{
 		DESC Sets the contents flag of the PhysObj.
 		IN contents, PN_Enum, PNF_None, CONTENTS, #The CONTENTS_ Enums.
 	}
-	FUNC SHARED SetDamping
+	FUNC SetDamping, SHARED
 	{
 		DESC Sets the linear and angular damping of the physics object.
 		IN linearDamping, PN_Number, #Linear damping.
 		IN angularDamping, PN_Number, #Angular damping.
 	}
-	FUNC SHARED SetDragCoefficient
+	FUNC SetDragCoefficient, SHARED
 	{
 		DESC Modifies how much drag (air resistance) affects the object.
 		IN drag, PN_Number, #The drag coefficient It can be positive or negative.
 	}
-	FUNC SHARED SetInertia
+	FUNC SetInertia, SHARED
 	{
 		DESC Sets the directional inertia.
 		IN directionalInertia, PN_Vector, #The directional inertia of the object. A value of Vector(0,0,0) makes the physobject go invalid.
 	}
-	FUNC SHARED SetMass
+	FUNC SetMass, SHARED
 	{
 		DESC Sets the mass of the physics object.
 		IN mass, PN_Number, #The mass in kilograms.
 	}
-	FUNC SHARED SetMaterial
+	FUNC SetMaterial, SHARED
 	{
 		DESC Sets the material of the physobject.
 		IN materialName, PN_String, #The name of the phys material to use. From this list: Valve Developer
 	}
-	FUNC SHARED SetPos
+	FUNC SetPos, SHARED
 	{
 		DESC Sets the position of the physobject.
 		IN position, PN_Vector, #The new position of the physobject.
 		IN teleport, PN_Bool, PNF_Nullable
 	}
-	FUNC SHARED SetVelocity
+	FUNC SetVelocity, SHARED
 	{
 		DESC Sets the velocity of the physics object for the next iteration.
 		IN velocity, PN_Vector, #The new velocity of the physics object.
 	}
-	FUNC SHARED SetVelocityInstantaneous
+	FUNC SetVelocityInstantaneous, SHARED
 	{
 		DESC Sets the velocity of the physics object.
 		IN velocity, PN_Vector, #The new velocity of the physics object.
 	}
-	FUNC SHARED Sleep
+	FUNC Sleep, SHARED
 	{
 		DESC Makes the physics object "sleep".
 	}
-	FUNC SHARED UpdateShadow
+	FUNC UpdateShadow, SHARED
 	{
 		DESC Unlike PhysObj:SetPos and PhysObj:SetAngles, this allows the movement of a physobj while leaving physics interactions intact. This is used internally by the motion controller of the Gravity Gun , the +use pickup and the Physics Gun, and entities such as the crane.
 		IN targetPosition, PN_Vector, #The position we should move to.
 		IN targetAngles, PN_Angles, #The angle we should rotate towards.
 		IN frameTime, PN_Number, #The frame time to use for this movement, can be generally filled with FrameTime or ENTITY:PhysicsSimulate with the deltaTime. Can be set to 0 when you need to update the physics object just once.
 	}
-	FUNC SHARED Wake
+	FUNC Wake, SHARED
 	{
 		DESC Wakes the physics object.
 	}
-	FUNC SHARED WorldToLocal
+	FUNC WorldToLocal, SHARED
 	{
 		DESC Converts a vector to a relative to the physics object coordinate system.
 		IN vector, PN_Vector, #The vector in world space coordinates.
 		OUT local, PN_Vector, #The vector local to PhysObj:GetPos.
 	}
-	FUNC SHARED WorldToLocalVector
+	FUNC WorldToLocalVector, SHARED
 	{
 		DESC Rotate a vector from the world frame to the local frame of the physics object.
 		IN normal, PN_Vector, #A vector in the world frame

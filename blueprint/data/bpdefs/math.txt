@@ -1,6 +1,6 @@
 LIB MATH
 {
-	PURE SHARED Modulo
+	PURE Modulo, SHARED
 	{
 		DISPLAY %
 		IN A, PN_Number
@@ -9,7 +9,7 @@ LIB MATH
 		CODE #1 = $1 % $2
 		COMPACT
 	}
-	PURE SHARED DivideNumber
+	PURE DivideNumber, SHARED
 	{
 		DISPLAY /
 		IN A, PN_Number
@@ -18,7 +18,7 @@ LIB MATH
 		CODE #1 = $1 / $2
 		COMPACT
 	}
-	PURE SHARED MultiplyNumber
+	PURE MultiplyNumber, SHARED
 	{
 		DISPLAY *
 		OUT Result, PN_Number
@@ -28,7 +28,7 @@ LIB MATH
 		PARAM operator, *
 		COMPACT
 	}
-	PURE SHARED AddNumber
+	PURE AddNumber, SHARED
 	{
 		DISPLAY +
 		OUT Result, PN_Number
@@ -38,7 +38,7 @@ LIB MATH
 		PARAM operator, +
 		COMPACT
 	}
-	PURE SHARED SubNumber
+	PURE SubNumber, SHARED
 	{
 		DISPLAY -
 		OUT Result, PN_Number
@@ -48,7 +48,7 @@ LIB MATH
 		PARAM operator, -
 		COMPACT
 	}
-	PURE SHARED AddVector
+	PURE AddVector, SHARED
 	{
 		DISPLAY vector + vector
 		OUT Result, PN_Vector
@@ -58,7 +58,7 @@ LIB MATH
 		PARAM operator, +
 		COMPACT
 	}
-	PURE SHARED SubVector
+	PURE SubVector, SHARED
 	{
 		DISPLAY vector - vector
 		OUT Result, PN_Vector
@@ -68,7 +68,7 @@ LIB MATH
 		PARAM operator, -
 		COMPACT
 	}
-	PURE SHARED VectorMA
+	PURE VectorMA, SHARED
 	{
 		IN Base, PN_Vector
 		IN Dir, PN_Vector
@@ -77,7 +77,7 @@ LIB MATH
 		CODE #1 = $1 + ($2 * $3)
 		COMPACT false
 	}
-	PURE SHARED ScaleVector
+	PURE ScaleVector, SHARED
 	{
 		DISPLAY vector * number
 		IN Vector, PN_Vector
@@ -86,7 +86,7 @@ LIB MATH
 		CODE #1 = $1 * $2
 		COMPACT
 	}
-	PURE SHARED VectorMatrixMul
+	PURE VectorMatrixMul, SHARED
 	{
 		DISPLAY vector * matrix
 		IN Vector, PN_Vector
@@ -95,7 +95,7 @@ LIB MATH
 		CODE #1 = $1 * $2
 		COMPACT
 	}
-	PURE SHARED MatrixMatrixMul
+	PURE MatrixMatrixMul, SHARED
 	{
 		DISPLAY matrix * matrix
 		IN Matrix, PN_Ref, PNF_None, VMatrix
@@ -104,7 +104,7 @@ LIB MATH
 		CODE #1 = $1 * $2
 		COMPACT
 	}
-	FUNC SHARED MatrixFromAngles
+	FUNC MatrixFromAngles, SHARED
 	{
 		DISPLAY angles -> matrix
 		IN Angles, PN_Angles

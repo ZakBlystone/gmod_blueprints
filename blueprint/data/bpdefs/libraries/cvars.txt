@@ -6,41 +6,41 @@ CALLBACK FuncCvarChanged
 }
 LIB cvars
 {
-	FUNC SHARED AddChangeCallback
+	FUNC AddChangeCallback, SHARED
 	{
 		DESC Adds a callback to be called when the named convar changes.
 		IN name, PN_String, #The name of the convar to add the change callback to.
 		IN callback, PN_Func, PNF_None, FuncCvarChanged, #The function to be called when the convar changes. The arguments passed are: string convar - The name of the convar. string oldValue - The old value of the convar. string newValue - The new value of the convar.
 		IN identifier, PN_String, PNF_Nullable, #If set, you will be able to remove the callback using cvars.RemoveChangeCallback.
 	}
-	FUNC SHARED Bool
+	FUNC Bool, SHARED
 	{
 		DESC Retrieves console variable as a boolean.
 		IN cvar, PN_String, #Name of console variable
 		IN default, PN_Bool, PNF_Nullable, #The value to return if the console variable does not exist
 		OUT value, PN_Bool, #Retrieved value
 	}
-	PURE SHARED GetConVarCallbacks
+	PURE GetConVarCallbacks, SHARED
 	{
 		DESC Returns a table of the given ConVars callbacks.
 		IN name, PN_String, #The name of the ConVar.
 		IN createIfNotFound, PN_Bool, PNF_Nullable, #Whether or not to create the internal callback table for given ConVar if there isn't one yet. This argument is internal and should not be used.
 		OUT callbacks, PN_Func, PNF_Table, FuncCvarChanged, #A table of the convar's callbacks, or nil if the convar doesn't exist.
 	}
-	FUNC SHARED Number
+	FUNC Number, SHARED
 	{
 		DESC Retrieves console variable as a number.
 		IN cvar, PN_String, #Name of console variable
 		IN default, PN_Any, PNF_Nullable, #The value to return if the console variable does not exist
 		OUT value, PN_Number, #Retrieved value
 	}
-	FUNC SHARED RemoveChangeCallback
+	FUNC RemoveChangeCallback, SHARED
 	{
 		DESC Removes a callback for a convar using the the callback's identifier. The identifier should be the third argument specified for cvars.AddChangeCallback.
 		IN name, PN_String, #The name of the convar to remove the callback from.
 		IN indentifier, PN_String, #The callback's identifier.
 	}
-	FUNC SHARED String
+	FUNC String, SHARED
 	{
 		DESC Retrieves console variable as a string.
 		IN cvar, PN_String, #Name of console variable

@@ -1,12 +1,12 @@
 LIB language
 {
-	FUNC CLIENT Add
+	FUNC Add, CLIENT
 	{
 		DESC Adds a language item. Language placeholders preceded with "#" are replaced with full text in Garry's Mod once registered with this function.
 		IN placeholder, PN_String, #The key for this phrase, without the preceding "#".
 		IN fulltext, PN_String, #The phrase that should be displayed whenever this key is used.
 	}
-	PURE CLIENT GetPhrase
+	PURE GetPhrase, CLIENT
 	{
 		DESC Retrieves the translated version of inputted string. Useful for concentrating multiple translated strings.
 		IN phrase, PN_String, #The phrase to translate

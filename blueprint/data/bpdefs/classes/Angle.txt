@@ -1,70 +1,70 @@
 CLASS Angle, angle, PN_Angles
 {
-	FUNC SHARED Add
+	FUNC Add, SHARED
 	{
 		DESC Adds the values of the argument angle to the orignal angle. This functions the same as angle1 + angle2 without creating a new angle object, skipping object construction and garbage collection.
 		IN angle, PN_Angles, #The angle to add.
 	}
-	FUNC SHARED Div
+	FUNC Div, SHARED
 	{
 		DESC Divides all values of the original angle by a scalar. This functions the same as angle1 / num without creating a new angle object, skipping object construction and garbage collection.
 		IN scalar, PN_Number, #The number to divide by.
 	}
-	PURE SHARED Forward
+	PURE Forward, SHARED
 	{
 		DESC Returns a normal vector facing in the direction that the angle points.
 		OUT forward, PN_Vector, #The forward direction of the angle
 	}
-	PURE SHARED IsZero
+	PURE IsZero, SHARED
 	{
 		DESC Returns whether the pitch, yaw and roll are 0 or not.
 		OUT isZero, PN_Bool, #Whether the pitch, yaw and roll are 0 or not.
 	}
-	FUNC SHARED Mul
+	FUNC Mul, SHARED
 	{
 		DESC Multiplies a scalar to all the values of the orignal angle. This functions the same as num * angle without creating a new angle object, skipping object construction and garbage collection.
 		IN scalar, PN_Number, #The number to multiply.
 	}
-	FUNC SHARED Normalize
+	FUNC Normalize, SHARED
 	{
 		DESC Normalizes the angles by applying a module with 360 to pitch, yaw and roll.
 	}
-	PURE SHARED Right
+	PURE Right, SHARED
 	{
 		DESC Returns a normal vector facing in the direction that points right relative to the angle's direction.
 		OUT right, PN_Vector, #The right direction of the angle
 	}
-	FUNC SHARED RotateAroundAxis
+	FUNC RotateAroundAxis, SHARED
 	{
 		DESC Rotates the angle around the specified axis by the specified degrees.
 		IN axis, PN_Vector, #The axis to rotate around.
 		IN rotation, PN_Number, #The degrees to rotate around the specified axis.
 	}
-	FUNC SHARED Set
+	FUNC Set, SHARED
 	{
 		DESC Copies pitch, yaw and roll from the second angle to the first.
 		IN originalAngle, PN_Angles, #The angle to copy the values from.
 	}
-	FUNC SHARED SetUnpacked
+	FUNC SetUnpacked, SHARED
 	{
 		DESC Sets the p, y, and r of the angle.
 		IN p, PN_Number
 		IN y, PN_Number
 		IN r, PN_Number
 	}
-	PURE SHARED SnapTo
+	PURE SnapTo, SHARED
 	{
 		DESC Snaps the angle to nearest interval of degrees.
 		IN axis, PN_String, #The component/axis to snap. Can be either "p"/"pitch", "y"/"yaw" or "r"/"roll".
 		IN target, PN_Number, #The target angle snap interval
 		OUT snapped, PN_Angles, #The snapped angle.
 	}
-	FUNC SHARED Sub
+	FUNC Sub, SHARED
 	{
 		DESC Subtracts the values of the argument angle to the orignal angle. This functions the same as angle1 - angle2 without creating a new angle object, skipping object construction and garbage collection.
 		IN angle, PN_Angles, #The angle to subtract.
 	}
-	PURE SHARED Unpack
+	PURE Unpack, SHARED
 	{
 		DESC Unpacks the angle
 		OUT pitch, PN_Number
@@ -73,12 +73,12 @@ CLASS Angle, angle, PN_Angles
 		CODE #1, #2, #3 = $1.p, $1.y, $1.r
 		COMPACT false
 	}
-	PURE SHARED Up
+	PURE Up, SHARED
 	{
 		DESC Returns a normal vector facing in the direction that points up relative to the angle's direction.
 		OUT up, PN_Vector, #The up direction of the angle.
 	}
-	FUNC SHARED Zero
+	FUNC Zero, SHARED
 	{
 		DESC Sets pitch, yaw and roll to 0. This function is faster than doing it manually.
 	}

@@ -1,26 +1,26 @@
 CLASS IVideoWriter
 {
-	FUNC CLIENT AddFrame
+	FUNC AddFrame, CLIENT
 	{
 		DESC Adds the current framebuffer to the video stream.
 		IN frameTime, PN_Number, #Usually set to what FrameTime is, or simply 1/fps.
 		IN downsample, PN_Bool, #If true it will downsample the whole screenspace to the videos width and height, otherwise it will just record from the top left corner to the given width and height and therefor not the whole screen.
 	}
-	FUNC CLIENT Finish
+	FUNC Finish, CLIENT
 	{
 		DESC Ends the video recording and dumps it to disk.
 	}
-	PURE CLIENT Height
+	PURE Height, CLIENT
 	{
 		DESC Returns the height of the video stream.
 		OUT height, PN_Number, #height
 	}
-	FUNC CLIENT SetRecordSound
+	FUNC SetRecordSound, CLIENT
 	{
 		DESC Sets whether to record sound or not.
 		IN record, PN_Bool, #Record.
 	}
-	PURE CLIENT Width
+	PURE Width, CLIENT
 	{
 		DESC Returns the width of the video stream.
 		OUT width, PN_Number, #width

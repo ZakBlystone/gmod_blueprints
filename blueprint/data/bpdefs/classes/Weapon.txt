@@ -1,163 +1,163 @@
 CLASS Weapon
 {
-	PURE SHARED AllowsAutoSwitchFrom
+	PURE AllowsAutoSwitchFrom, SHARED
 	{
 		DESC Returns whether the weapon allows to being switched from when a better ( Weapon:GetWeight ) weapon is being picked up.
 		OUT allowed, PN_Bool, #Whether the weapon allows to being switched from.
 	}
-	PURE SHARED AllowsAutoSwitchTo
+	PURE AllowsAutoSwitchTo, SHARED
 	{
 		DESC Returns whether the weapon allows to being switched to when a better ( Weapon:GetWeight ) weapon is being picked up.
 		OUT allowed, PN_Bool, #Whether the weapon allows to being switched to.
 	}
-	FUNC SHARED CallOnClient
+	FUNC CallOnClient, SHARED
 	{
 		DESC Calls a SWEP function on client.
 		IN functionName, PN_String, #Name of function to call. If you want to call SWEP:MyFunc() on client, you type in "MyFunc"
 		IN arguments, PN_String, PNF_Nullable, #Arguments for the function, separated by spaces. NOTE	 Only the second argument is passed as argument and must be a string
 	}
-	PURE SHARED Clip1
+	PURE Clip1, SHARED
 	{
 		DESC Returns how much primary ammo is in the magazine.
 		OUT clip, PN_Number, #The amount of primary ammo in the magazine.
 	}
-	PURE SHARED Clip2
+	PURE Clip2, SHARED
 	{
 		DESC Returns how much secondary ammo is in magazine.
 		OUT clip, PN_Number, #The amount of secondary ammo in the magazine.
 	}
-	FUNC SHARED DefaultReload
+	FUNC DefaultReload, SHARED
 	{
 		DESC Forces the weapon to reload while playing given animation.
 		IN act, PN_Enum, PNF_None, ACT, #Sequence to use as reload animation. Uses the ACT_ Enums.
 		OUT reloaded, PN_Bool, #Did reloading actually take place
 	}
-	PURE SHARED GetActivity
+	PURE GetActivity, SHARED
 	{
 		DESC Returns the sequence enumeration number that the weapon is playing.
 		OUT act, PN_Enum, PNF_None, ACT, #Current activity, see ACT_ Enums. Returns 0 if the weapon doesn't have active sequence.
 	}
-	PURE SHARED GetHoldType
+	PURE GetHoldType, SHARED
 	{
 		DESC Returns the hold type of the weapon.
 		OUT type, PN_String, #The hold type of the weapon. You can find a list of default hold types here.
 	}
-	PURE SHARED GetMaxClip1
+	PURE GetMaxClip1, SHARED
 	{
 		DESC Returns maximum primary clip size
 		OUT maxClip, PN_Number, #Maximum primary clip size
 	}
-	PURE SHARED GetMaxClip2
+	PURE GetMaxClip2, SHARED
 	{
 		DESC Returns maximum secondary clip size
 		OUT maxClip, PN_Number, #Maximum secondary clip size
 	}
-	PURE SHARED GetNextPrimaryFire
+	PURE GetNextPrimaryFire, SHARED
 	{
 		DESC Gets the next time the weapon can primary fire. ( Can call WEAPON:PrimaryAttack )
 		OUT time, PN_Number, #The time, relative to CurTime
 	}
-	PURE SHARED GetNextSecondaryFire
+	PURE GetNextSecondaryFire, SHARED
 	{
 		DESC Gets the next time the weapon can secondary fire. ( Can call WEAPON:SecondaryAttack )
 		OUT time, PN_Number, #The time, relative to CurTime
 	}
-	PURE SHARED GetPrimaryAmmoType
+	PURE GetPrimaryAmmoType, SHARED
 	{
 		DESC Gets the primary ammo type of the given weapon.
 		OUT ammoID, PN_Number, #The ammo type ID, or -1 if not found.
 	}
-	PURE SHARED GetPrintName
+	PURE GetPrintName, SHARED
 	{
 		DESC Returns the non-internal name of the weapon, that should be for displaying.
 		OUT name, PN_String, #The "nice" name of the weapon.
 	}
-	PURE SHARED GetSecondaryAmmoType
+	PURE GetSecondaryAmmoType, SHARED
 	{
 		DESC Gets the ammo type of the given weapons secondary fire.
 		OUT ammoID, PN_Number, #The secondary ammo type ID, or -1 if not found.
 	}
-	PURE SHARED GetSlot
+	PURE GetSlot, SHARED
 	{
 		DESC Returns the slot of the weapon (slot numbers start from 0)
 		OUT slot, PN_Number, #The slot of the weapon
 	}
-	PURE SHARED GetSlotPos
+	PURE GetSlotPos, SHARED
 	{
 		DESC Returns slot position of the weapon
 		OUT slotPos, PN_Number, #The slot position of the weapon
 	}
-	PURE SHARED GetWeaponViewModel
+	PURE GetWeaponViewModel, SHARED
 	{
 		DESC Returns the view model of the weapon.
 		OUT viewModel, PN_String, #The view model of the weapon.
 	}
-	PURE SHARED GetWeaponWorldModel
+	PURE GetWeaponWorldModel, SHARED
 	{
 		DESC Returns the world model of the weapon.
 		OUT worldModel, PN_String, #The world model of the weapon.
 	}
-	PURE SHARED GetWeight
+	PURE GetWeight, SHARED
 	{
 		DESC Returns the "weight" of the weapon, which is used when deciding which Weapon is better by the engine.
 		OUT weight, PN_Number, #The weapon "weight".
 	}
-	PURE SHARED HasAmmo
+	PURE HasAmmo, SHARED
 	{
 		DESC Returns whether the weapon has ammo left or not. It will return false when there's no ammo left in the magazine and when there's no reserve ammo left.
 		OUT hasAmmo, PN_Bool, #Whether the weapon has ammo or not.
 	}
-	PURE CLIENT IsCarriedByLocalPlayer
+	PURE IsCarriedByLocalPlayer, CLIENT
 	{
 		DESC Returns whenever the weapon is carried by the local player.
 		OUT carried, PN_Bool, #Is the weapon is carried by the local player or not
 	}
-	PURE SHARED IsScripted
+	PURE IsScripted, SHARED
 	{
 		DESC Checks if the weapon is a SWEP or a built-in weapon.
 		OUT scripted, PN_Bool, #Returns true if weapon is scripted ( SWEP ), false if not ( A built-in HL2 weapon )
 	}
-	PURE SHARED IsWeaponVisible
+	PURE IsWeaponVisible, SHARED
 	{
 		DESC Returns whether the weapon is visible. The term visibility is not exactly what gets checked here, first it checks if the owner is a player, then checks if the active view model has EF_NODRAW flag NOT set.
 		OUT visible, PN_Bool, #Is visible or not
 	}
-	PURE SHARED LastShootTime
+	PURE LastShootTime, SHARED
 	{
 		DESC Returns the time since this weapon last fired a bullet with Entity:FireBullets in seconds. It is not networked.
 		OUT time, PN_Number, #The time in seconds when the last bullet was fired.
 	}
-	FUNC SHARED SendWeaponAnim
+	FUNC SendWeaponAnim, SHARED
 	{
 		DESC Forces weapon to play activity/animation.
 		IN act, PN_Enum, PNF_None, ACT, #Activity to play. See the ACT_ Enums (specifically ACT_VM_).
 	}
-	FUNC SHARED SetClip1
+	FUNC SetClip1, SHARED
 	{
 		DESC Lets you change the number of bullets in the given weapons primary clip.
 		IN clip, PN_Number, #The amount of bullets the clip should contain
 	}
-	FUNC SHARED SetClip2
+	FUNC SetClip2, SHARED
 	{
 		DESC Lets you change the number of bullets in the given weapons secondary clip.
 		IN clip, PN_Number, #The amount of bullets the clip should contain
 	}
-	FUNC SHARED SetHoldType
+	FUNC SetHoldType, SHARED
 	{
 		DESC Sets the hold type of the weapon. This function also calls WEAPON:SetWeaponHoldType and properly networks it to all clients.
 		IN name, PN_String, #Name of the hold type. You can find all default hold types here
 	}
-	FUNC SHARED SetLastShootTime
+	FUNC SetLastShootTime, SHARED
 	{
 		DESC Sets the time since this weapon last fired in seconds. Used in conjunction with Weapon:LastShootTime
 		IN time, PN_Number, PNF_Nullable, #The time in seconds when the last time the weapon was fired.
 	}
-	FUNC SHARED SetNextPrimaryFire
+	FUNC SetNextPrimaryFire, SHARED
 	{
 		DESC Sets when the weapon can fire again. Time should be based on CurTime.
 		IN time, PN_Number, #Time when player should be able to use primary fire again
 	}
-	FUNC SHARED SetNextSecondaryFire
+	FUNC SetNextSecondaryFire, SHARED
 	{
 		DESC Sets when the weapon can alt-fire again. Time should be based on CurTime.
 		IN time, PN_Number, #Time when player should be able to use secondary fire again

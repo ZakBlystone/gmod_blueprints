@@ -1,10 +1,10 @@
 LIB controlpanel
 {
-	FUNC CLIENT Clear
+	FUNC Clear, CLIENT
 	{
 		DESC Clears ALL the control panels ( for tools )
 	}
-	PURE CLIENT Get
+	PURE Get, CLIENT
 	{
 		DESC Returns (or creates if not exists) a controlpanel.
 		IN name, PN_String, #The name of the panel.

@@ -1,6 +1,6 @@
 LIB video
 {
-	FUNC CLIENT Record
+	FUNC Record, CLIENT
 	{
 		DESC Attempts to create an IVideoWriter.
 		WARN Writer can be null if record fails

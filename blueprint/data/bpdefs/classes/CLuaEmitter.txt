@@ -1,63 +1,63 @@
 CLASS CLuaEmitter
 {
-	FUNC CLIENT Add
+	FUNC Add, CLIENT
 	{
 		DESC Creates a new CLuaParticle with the given material and position.
 		IN material, PN_String, #The particles material. Can also be an IMaterial.
 		IN position, PN_Vector, #The position to spawn the particle on.
 		OUT particle, PN_Ref, PNF_None, CLuaParticle, #The created particle, if any.
 	}
-	FUNC CLIENT Draw
+	FUNC Draw, CLIENT
 	{
 		DESC Manually renders all particles the emitter has created.
 	}
-	FUNC CLIENT Finish
+	FUNC Finish, CLIENT
 	{
 		DESC Removes the emitter and all its particles.
 	}
-	PURE CLIENT GetNumActiveParticles
+	PURE GetNumActiveParticles, CLIENT
 	{
 		DESC Returns the amount of active particles of this emitter.
 		OUT count, PN_Number, #The amount of active particles of this emitter
 	}
-	PURE CLIENT GetPos
+	PURE GetPos, CLIENT
 	{
 		DESC Returns the position of this emitter. This is set when creating the emitter with ParticleEmitter.
 		OUT pos, PN_Vector, #Position of this particle emitter.
 	}
-	PURE CLIENT Is3D
+	PURE Is3D, CLIENT
 	{
 		DESC Returns whether this emitter is 3D or not. This is set when creating the emitter with ParticleEmitter.
 		OUT is3D, PN_Bool, #Whether this emitter is 3D or not.
 	}
-	PURE CLIENT IsValid
+	PURE IsValid, CLIENT
 	{
 		DESC Returns whether this CLuaEmitter is valid or not.
 		OUT valid, PN_Bool, #Whether this CLuaEmitter is valid or not.
 	}
-	FUNC CLIENT SetBBox
+	FUNC SetBBox, CLIENT
 	{
 		DESC Sets the bounding box for this emitter.
 		IN mins, PN_Vector, #The minimum position of the box
 		IN maxs, PN_Vector, #The maximum position of the box
 	}
-	FUNC CLIENT SetNearClip
+	FUNC SetNearClip, CLIENT
 	{
 		DESC This function sets the the distance between the render camera and the emitter at which the particles should start fading and at which distance fade ends ( alpha becomes 0 ).
 		IN distanceMin, PN_Number, #Min distance where the alpha becomes 0.
 		IN distanceMax, PN_Number, #Max distance where the alpha starts fading.
 	}
-	FUNC CLIENT SetNoDraw
+	FUNC SetNoDraw, CLIENT
 	{
 		DESC Prevents all particles of the emitter from automatically drawing.
 		IN noDraw, PN_Bool, #Whether we should draw the particles ( false ) or not ( true )
 	}
-	FUNC CLIENT SetParticleCullRadius
+	FUNC SetParticleCullRadius, CLIENT
 	{
 		DESC The function name has not much in common with its actual function, it applies a radius to every particles that affects the building of the bounding box, as it, usually is constructed by the particle that has the lowest x, y and z and the highest x, y and z, this function just adds/subtracts the radius and inflates the bounding box.
 		IN radius, PN_Number, #Particle radius.
 	}
-	FUNC CLIENT SetPos
+	FUNC SetPos, CLIENT
 	{
 		DESC Sets the position of the particle emitter.
 		IN position, PN_Vector, #New position.

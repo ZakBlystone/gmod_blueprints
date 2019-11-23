@@ -1,6 +1,6 @@
 LIB ai_schedule
 {
-	FUNC SERVER New
+	FUNC New, SERVER
 	{
 		DESC Creates a schedule for scripted NPC.
 		IN name, PN_String, #Name of the schedule.

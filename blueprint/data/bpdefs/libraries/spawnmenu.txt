@@ -1,28 +1,28 @@
 LIB spawnmenu
 {
-	FUNC CLIENT ActivateTool
+	FUNC ActivateTool, CLIENT
 	{
 		DESC Activates a tool, opens context menu and brings up the tool gun.
 		IN tool, PN_String, #Tool class/file name
 	}
-	FUNC CLIENT ActivateToolPanel
+	FUNC ActivateToolPanel, CLIENT
 	{
 		DESC Activates tools context menu in specified tool tab.
 		IN tab, PN_Number, #The tabID of the tab to open the context menu in
 		IN cp, PN_Ref, PNF_None, Panel, #The control panel to open
 	}
-	FUNC CLIENT ActiveControlPanel
+	FUNC ActiveControlPanel, CLIENT
 	{
 		DESC Returns currently opened control panel of a tool, post process effect or some other menu in spawnmenu.
 		OUT panel, PN_Ref, PNF_None, Panel, #The currently opened control panel, if any.
 	}
-	FUNC CLIENT AddContentType
+	FUNC AddContentType, CLIENT
 	{
 		DESC Registers a new content type that is saveable into spawnlists. Created/called by spawnmenu.CreateContentIcon.
 		IN name, PN_String, #An unique name of the content type.
 		IN constructor, PN_Func, PNF_None, ContentConstructor, #A function that is called whenever we need create a new panel for this content type. It has two arguments: Panel container - The container/parent of the new panel table data - Data for the content type passed from spawnmenu.CreateContentIcon 
 	}
-	FUNC CLIENT AddCreationTab
+	FUNC AddCreationTab, CLIENT
 	{
 		DESC Inserts a new tab into the CreationMenus table, which will be used by the creation menu to generate its tabs (Spawnlists, Weapons, Entities, etc.)
 		IN name, PN_String, #What text will appear on the tab (I.E Spawnlists).
@@ -31,7 +31,7 @@ LIB spawnmenu
 		IN order, PN_Number, PNF_Nullable, #The order in which this tab should be shown relative to the other tabs on the creation menu.
 		IN tooltip, PN_String, PNF_Nullable, #The tooltip to be shown for this tab.
 	}
-	FUNC CLIENT AddPropCategory
+	FUNC AddPropCategory, CLIENT
 	{
 		DESC Used to add addon spawnlists to the spawnmenu tree. This function should be called within SANDBOX:PopulatePropMenu.
 		IN classname, PN_String, #A unique classname of the list.
@@ -42,14 +42,14 @@ LIB spawnmenu
 		IN parentID, PN_Number, PNF_Nullable, #The unique ID of the parent category. This will make the created category a subcategory of category with given unique ID. 0 makes this a base category (such as Builder).
 		IN needsApp, PN_String, PNF_Nullable, #The needed game for this prop category, if one is needed. If the specified game is not mounted, the category isn't shown. This uses the shortcut name, e.g. cstrike, and not the Steam AppID.
 	}
-	FUNC CLIENT AddToolCategory
+	FUNC AddToolCategory, CLIENT
 	{
 		DESC Used to create a new category in the list inside of a spawnmenu ToolTab.
 		IN tab, PN_String, #The ToolTab name, as created with spawnmenu.AddToolTab. You can also use the default ToolTab names "Main" and "Utilities".
 		IN RealName, PN_String, #The identifier name
 		IN PrintName, PN_String, #The displayed name
 	}
-	FUNC CLIENT AddToolMenuOption
+	FUNC AddToolMenuOption, CLIENT
 	{
 		DESC Adds an option to the right side of the spawnmenu
 		IN tab, PN_String, #The spawnmenu tab to add into (for example "Utilities")
@@ -61,18 +61,18 @@ LIB spawnmenu
 		IN cpanel, PN_Ref, PNF_None, function, #A function to build the context panel. The function has one argument: Panel pnl - A DForm that will be shown in the context menu
 		IN table, PN_Any, PNF_Nullable|PNF_Table, #Allows to override the table that will be added to the tool list. Some of the fields will be overwritten by this function.
 	}
-	FUNC CLIENT AddToolTab
+	FUNC AddToolTab, CLIENT
 	{
 		DESC Adds a new tool tab to the right side of the spawnmenu via the SANDBOX:AddToolMenuTabs hook.
 		IN name, PN_String, #The internal name of the tab. This is used for sorting.
 		IN label, PN_String, PNF_Nullable, #The 'nice' name of the tab (Tip: language.Add)
 		IN icon, PN_String, PNF_Nullable, #The filepath to the icon of the tab. Should be a .png
 	}
-	FUNC CLIENT ClearToolMenus
+	FUNC ClearToolMenus, CLIENT
 	{
 		DESC Clears all the tools from the different tool categories and the categories itself, if ran at the correct place.
 	}
-	FUNC CLIENT CreateContentIcon
+	FUNC CreateContentIcon, CLIENT
 	{
 		DESC Creates a new content icon.
 		IN type, PN_String, #The type of the content icon.
@@ -80,28 +80,28 @@ LIB spawnmenu
 		IN data, PN_Any, PNF_Table, #The data to send to the content icon in spawnmenu.AddContentType
 		OUT panel, PN_Ref, PNF_None, Panel, #The created content icon, if it was returned by spawnmenu.AddContentType
 	}
-	PURE CLIENT GetContentType
+	PURE GetContentType, CLIENT
 	{
 		DESC Returns the function to create an vgui element for a specified content type
 		IN contentType, PN_String
 		OUT func, PN_Func, PNF_None, ContentConstructor, #The panel creation function
 	}
-	PURE CLIENT GetCreationTabs
+	PURE GetCreationTabs, CLIENT
 	{
 		DESC Gets the CreationMenus table, which was filled with creation menu tabs from spawnmenu.AddCreationTab.
 		OUT tabs, PN_Struct, PNF_None, CreationMenus, #The CreationMenus table. See the CreationMenus structure.
 	}
-	PURE CLIENT GetCustomPropTable
+	PURE GetCustomPropTable, CLIENT
 	{
 		DESC Similar to spawnmenu.GetPropTable, but only returns spawnlists created by addons via spawnmenu.AddPropCategory.
 		OUT table, PN_Any, PNF_Table, #See spawnmenu.GetPropTable for table format.
 	}
-	PURE CLIENT GetPropTable
+	PURE GetPropTable, CLIENT
 	{
 		DESC Returns a table of all prop categories and their props in the spawnmenu.
 		OUT table, PN_Any, PNF_Table, #Table of all the prop categories and props in the following format: { 	["settings/spawnlist/001-construction props.txt"] = { 		name = "Construction Props", 		icon = "icon16/page.png", 		id = 1, 		parentid = 0, 		needsapp = "", 		contents = { 			{ 				model = "models/Cranes/crane_frame.mdl", 				type = "model" 			} 			-- etc. 		}, 	} 	-- etc. }
 	}
-	PURE CLIENT GetToolMenu
+	PURE GetToolMenu, CLIENT
 	{
 		DESC Adds a new tool tab (or returns an existing one by name) to the right side of the spawnmenu via the SANDBOX:AddToolMenuTabs hook.
 		IN name, PN_String, #The internal name of the tab. This is used for sorting.
@@ -109,18 +109,18 @@ LIB spawnmenu
 		IN icon, PN_String, PNF_Nullable, #The filepath to the icon of the tab. Should be a .png
 		OUT table, PN_Any, PNF_Table, example, #A table of tables representing categories and items in the left part of the tab. See example below to example structure.
 	}
-	PURE CLIENT GetTools
+	PURE GetTools, CLIENT
 	{
 		DESC Gets a table of tools on the client.
 		OUT table, PN_Any, PNF_Table, #A table with groups of tools, along with information on each tool.
 	}
-	FUNC CLIENT PopulateFromTextFiles
+	FUNC PopulateFromTextFiles, CLIENT
 	{
 		TBD
 		DESC Loads spawnlists from text files.
 		IN callback, PN_Ref, PNF_None, function, #The function to call. Arguments are ( strFilename, strName, tabContents, icon, id, parentid, needsapp )
 	}
-	FUNC CLIENT SetActiveControlPanel
+	FUNC SetActiveControlPanel, CLIENT
 	{
 		DESC Sets currently active control panel to be returned by spawnmenu.ActiveControlPanel.
 		IN pnl, PN_Ref, PNF_None, Panel, #The panel to set.

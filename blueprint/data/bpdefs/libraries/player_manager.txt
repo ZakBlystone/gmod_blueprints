@@ -1,6 +1,6 @@
 LIB player_manager
 {
-	FUNC SHARED AddValidHands
+	FUNC AddValidHands, SHARED
 	{
 		DESC Assigns view model hands to player model.
 		IN name, PN_String, #Player model name
@@ -8,34 +8,34 @@ LIB player_manager
 		IN skin, PN_Number, #Skin to apply to the hands
 		IN bodygroups, PN_String, #Bodygroups to apply to the hands
 	}
-	FUNC SHARED AddValidModel
+	FUNC AddValidModel, SHARED
 	{
 		DESC Associates a simplified name with a path to a valid player model. Only used internally.
 		IN name, PN_String, #Simplified name
 		IN model, PN_String, #Valid PlayerModel path
 	}
-	FUNC SHARED AllValidModels
+	FUNC AllValidModels, SHARED
 	{
 		DESC Returns the entire list of valid player models.
 		OUT models, PN_String, PNF_Table, #Valid models
 	}
-	FUNC SHARED ClearPlayerClass
+	FUNC ClearPlayerClass, SHARED
 	{
 		DESC Clears a player's class association by setting their ClassID to 0
 		IN ply, PN_Ref, PNF_None, Player, #Player to clear class from
 	}
-	PURE SHARED GetPlayerClass
+	PURE GetPlayerClass, SHARED
 	{
 		DESC Gets a players class
 		IN ply, PN_Ref, PNF_None, Player, #Player to get class
 		OUT class, PN_String, #The players class
 	}
-	FUNC SHARED OnPlayerSpawn
+	FUNC OnPlayerSpawn, SHARED
 	{
 		DESC Applies basic class variables when the player spawns.
 		IN ply, PN_Ref, PNF_None, Player, #Player to setup
 	}
-	FUNC SHARED RegisterClass
+	FUNC RegisterClass, SHARED
 	{
 		TBD
 		DESC Register a class metatable to be assigned to players later
@@ -43,7 +43,7 @@ LIB player_manager
 		IN table, PN_Any, PNF_Table, #Class metatable
 		IN base, PN_String, #Base class name
 	}
-	FUNC SHARED RunClass
+	FUNC RunClass, SHARED
 	{
 		TBD
 		DESC Execute a named function within the player's set class
@@ -52,25 +52,25 @@ LIB player_manager
 		IN arguments, PN_Ref, PNF_None, vararg, #Optional arguments. Can be of any type.
 		OUT out_0, PN_Ref, PNF_None, vararg, #The values returned by the called function.
 	}
-	FUNC SHARED SetPlayerClass
+	FUNC SetPlayerClass, SHARED
 	{
 		DESC Sets a player's class
 		IN ply, PN_Ref, PNF_None, Player, #Player to set class
 		IN classname, PN_String, #Name of class to set
 	}
-	FUNC SHARED TranslatePlayerHands
+	FUNC TranslatePlayerHands, SHARED
 	{
 		DESC Retrieves correct hands for given player model. By default returns citizen hands.
 		IN name, PN_String, #Player model name
 		OUT result, PN_Struct, PNF_Table, TranslateHandsResult
 	}
-	FUNC SHARED TranslatePlayerModel
+	FUNC TranslatePlayerModel, SHARED
 	{
 		DESC Returns the valid model path for a simplified name.
 		IN name, PN_String, #The short name of the model.
 		OUT model, PN_String, #The valid model path for the short name.
 	}
-	FUNC SHARED TranslateToPlayerModelName
+	FUNC TranslateToPlayerModelName, SHARED
 	{
 		DESC Returns the simplified name for a valid model path of a player model.
 		IN model, PN_String, #The model path to a player model

@@ -1,133 +1,133 @@
 CLASS VMatrix
 {
-	PURE SHARED GetAngles
+	PURE GetAngles, SHARED
 	{
 		DESC Returns the absolute rotation of the matrix.
 		OUT angles, PN_Angles, #Absolute rotation of the matrix
 	}
-	PURE SHARED GetField
+	PURE GetField, SHARED
 	{
 		DESC Returns a specific field in the matrix.
 		IN row, PN_Number, #Row of the field whose value is to be retrieved, from 1 to 4
 		IN column, PN_Number, #Column of the field whose value is to be retrieved, from 1 to 4
 		OUT value, PN_Number, #The value of the specified field
 	}
-	PURE SHARED GetForward
+	PURE GetForward, SHARED
 	{
 		DESC Gets the forward direction of the matrix.
 		OUT forward, PN_Vector, #The forward direction of the matrix.
 	}
-	PURE SHARED GetInverse
+	PURE GetInverse, SHARED
 	{
 		DESC Returns an inverted matrix without modifying the original matrix.
 		OUT inverse, PN_Ref, PNF_None, VMatrix, #The inverted matrix if possible, nil otherwise
 	}
-	PURE SHARED GetInverseTR
+	PURE GetInverseTR, SHARED
 	{
 		DESC Returns an inverted matrix without modifying the original matrix. This function will not fail, but only works correctly on matrices that contain only translation and/or rotation.
 		OUT inverse, PN_Ref, PNF_None, VMatrix, #The inverted matrix.
 	}
-	PURE SHARED GetRight
+	PURE GetRight, SHARED
 	{
 		DESC Gets the right direction of the matrix.
 		OUT right, PN_Vector, #The right direction of the matrix.
 	}
-	PURE SHARED GetScale
+	PURE GetScale, SHARED
 	{
 		DESC Returns the absolute scale of the matrix.
 		OUT scale, PN_Vector, #Absolute scale of the matrix
 	}
-	PURE SHARED GetTranslation
+	PURE GetTranslation, SHARED
 	{
 		DESC Returns the absolute translation of the matrix.
 		OUT translation, PN_Vector, #Absolute translation of the matrix
 	}
-	PURE SHARED GetUp
+	PURE GetUp, SHARED
 	{
 		DESC Gets the up direction of the matrix.
 		OUT up, PN_Vector, #The up direction of the matrix.
 	}
-	FUNC SHARED Identity
+	FUNC Identity, SHARED
 	{
 		DESC Initializes the matrix as Identity matrix.
 	}
-	FUNC SHARED Invert
+	FUNC Invert, SHARED
 	{
 		DESC Inverts the matrix.
 		OUT success, PN_Bool, #Whether the matrix was inverted or not
 	}
-	FUNC SHARED InvertTR
+	FUNC InvertTR, SHARED
 	{
 		DESC Inverts the matrix. This function will not fail, but only works correctly on matrices that contain only translation and/or rotation.
 	}
-	PURE SHARED IsIdentity
+	PURE IsIdentity, SHARED
 	{
 		DESC Returns whether the matrix is equal to Identity matrix or not.
 		OUT identity, PN_Bool, #Is the matrix an Identity matrix or not
 	}
-	PURE SHARED IsRotationMatrix
+	PURE IsRotationMatrix, SHARED
 	{
 		DESC Returns whether the matrix is a rotation matrix or not.
 		OUT rotation, PN_Bool, #Is the matrix a rotation matrix or not
 	}
-	PURE SHARED IsZero
+	PURE IsZero, SHARED
 	{
 		DESC Checks whenever all fields of the matrix are 0, aka if this is a null matrix.
 		OUT zero, PN_Bool, #If the matrix is a null matrix.
 	}
-	FUNC SHARED Rotate
+	FUNC Rotate, SHARED
 	{
 		DESC Rotates the matrix by the given angle.
 		IN rotation, PN_Angles, #Rotation.
 	}
-	FUNC SHARED Scale
+	FUNC Scale, SHARED
 	{
 		DESC Scales the matrix by the given vector.
 		IN scale, PN_Vector, #Vector to scale with matrix with.
 	}
-	FUNC SHARED ScaleTranslation
+	FUNC ScaleTranslation, SHARED
 	{
 		DESC Scales the absolute translation with the given value.
 		IN scale, PN_Number, #Value to scale the translation with.
 	}
-	FUNC SHARED Set
+	FUNC Set, SHARED
 	{
 		DESC Copies values from the given matrix object.
 		IN src, PN_Ref, PNF_None, VMatrix, #The matrix to copy values from.
 	}
-	FUNC SHARED SetAngles
+	FUNC SetAngles, SHARED
 	{
 		DESC Sets the absolute rotation of the matrix.
 		IN angle, PN_Angles, #New angles.
 	}
-	FUNC SHARED SetField
+	FUNC SetField, SHARED
 	{
 		DESC Sets a specific field in the matrix.
 		IN row, PN_Number, #Row of the field to be set, from 1 to 4
 		IN column, PN_Number, #Column of the field to be set, from 1 to 4
 		IN value, PN_Number, #The value to set in that field
 	}
-	FUNC SHARED SetForward
+	FUNC SetForward, SHARED
 	{
 		DESC Sets the forward direction of the matrix.
 		IN forward, PN_Vector, #The forward direction of the matrix.
 	}
-	FUNC SHARED SetRight
+	FUNC SetRight, SHARED
 	{
 		DESC Sets the right direction of the matrix.
 		IN forward, PN_Vector, #The right direction of the matrix.
 	}
-	FUNC SHARED SetScale
+	FUNC SetScale, SHARED
 	{
 		DESC Modifies the scale of the matrix while preserving the rotation and translation.
 		IN scale, PN_Vector, #The scale to set.
 	}
-	FUNC SHARED SetTranslation
+	FUNC SetTranslation, SHARED
 	{
 		DESC Sets the absolute translation of the matrix.
 		IN translation, PN_Vector, #New translation.
 	}
-	FUNC SHARED SetUnpacked
+	FUNC SetUnpacked, SHARED
 	{
 		DESC Sets each component of the matrix.
 		IN e11, PN_Number
@@ -147,17 +147,17 @@ CLASS VMatrix
 		IN e43, PN_Number
 		IN e44, PN_Number
 	}
-	FUNC SHARED SetUp
+	FUNC SetUp, SHARED
 	{
 		DESC Sets the up direction of the matrix.
 		IN forward, PN_Vector, #The up direction of the matrix.
 	}
-	FUNC SHARED Translate
+	FUNC Translate, SHARED
 	{
 		DESC Translates the matrix by the given vector aka. adds the vector to the translation.
 		IN translation, PN_Vector, #Vector to translate the matrix by.
 	}
-	PURE SHARED Unpack
+	PURE Unpack, SHARED
 	{
 		DESC Returns each component of the matrix, expanding rows before columns.
 		OUT e11, PN_Number, #VMatrix:GetField(1, 1)
@@ -178,11 +178,11 @@ CLASS VMatrix
 		OUT e44, PN_Number, #VMatrix:GetField(4, 4)
 		COMPACT false
 	}
-	FUNC SHARED Zero
+	FUNC Zero, SHARED
 	{
 		DESC Sets all components of the matrix to 0, also known as a null matrix.
 	}
-	PURE SHARED Transform
+	PURE Transform, SHARED
 	{
 		DESC Transforms the input vector by this matrix, excluding position
 		IN vector, PN_Vector, #Vector to transform
@@ -199,14 +199,14 @@ CLASS VMatrix
 			)
 		}
 	}
-	PURE SHARED TransformPosition
+	PURE TransformPosition, SHARED
 	{
 		DESC Transforms the input vector by this matrix, including position
 		IN position, PN_Vector, #Vector to transform
 		OUT out, PN_Vector, #Transformed vector
 		CODE $1 * $2
 	}
-	PURE SHARED TransformNormal
+	PURE TransformNormal, SHARED
 	{
 		DESC Transforms the input vector by this matrix, excluding position
 		IN position, PN_Vector, #Vector to transform

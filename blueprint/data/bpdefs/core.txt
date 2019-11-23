@@ -1,11 +1,11 @@
 HOOKS CORE
 {
-	SHARED Init
+	HOOK Init, SHARED
 	{
 		DESC Called when the blueprint is created
 		NOHOOK
 	}
-	SHARED Shutdown
+	HOOK Shutdown, SHARED
 	{
 		DESC Called when the blueprint is shut down
 		NOHOOK
@@ -13,13 +13,13 @@ HOOKS CORE
 }
 LIB CORE
 {
-	SPECIAL SHARED Sequence
+	SPECIAL Sequence, SHARED
 	{
 		REDIRECTPIN 1, Out_1
 		REDIRECTPIN 2, Out_2
 		CLASS Sequence
 	}
-	SPECIAL SHARED ForEach
+	SPECIAL ForEach, SHARED
 	{
 		IN Exec, PN_Exec
 		IN Table, PN_Any, PNF_Table
@@ -38,10 +38,10 @@ LIB CORE
 			#1
 		}
 	}
-	SPECIAL SHARED For
+	SPECIAL For, SHARED
 	{
 		IN Exec, PN_Exec
-		IN Start=1, PN_Number
+		IN Start=1, PN_Number, #Start = 1
 		IN End=1, PN_Number
 		OUT Thru, PN_Exec
 		OUT Each, PN_Exec
@@ -55,7 +55,7 @@ LIB CORE
 			#1
 		}
 	}
-	SPECIAL SHARED Debounce
+	SPECIAL Debounce, SHARED
 	{
 		IN Exec, PN_Exec
 		IN Delay, PN_Number
@@ -73,7 +73,7 @@ LIB CORE
 			#1
 		}
 	}
-	SPECIAL SHARED Delay
+	SPECIAL Delay, SHARED
 	{
 		IN Exec, PN_Exec
 		IN Delay, PN_Number
@@ -85,7 +85,7 @@ LIB CORE
 			goto popcall
 		}
 	}
-	SPECIAL SHARED DelayBoxed
+	SPECIAL DelayBoxed, SHARED
 	{
 		IN Exec, PN_Exec
 		IN Delay, PN_Number
@@ -101,99 +101,99 @@ LIB CORE
 			goto popcall
 		}
 	}
-	FUNC SERVER ChatPrintAll
+	FUNC ChatPrintAll, SERVER
 	{
 		DESC Sends a message to all players
 		IN Message, PN_String, #Message to send to all players
 		CODE for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $1) end
 	}
-	SPECIAL SHARED Client
+	SPECIAL Client, SHARED
 	{
 		OUT IsServer, PN_Bool
 		CODE #1 = CLIENT
 	}
-	SPECIAL SHARED Server
+	SPECIAL Server, SHARED
 	{
 		OUT IsServer, PN_Bool
 		CODE #1 = SERVER
 	}
-	SPECIAL SHARED ClientOnly
+	SPECIAL ClientOnly, SHARED
 	{
 		IN Exec, PN_Exec
 		OUT Thru, PN_Exec
 		CODE if CLIENT then #1 else goto popcall end
 	}
-	SPECIAL SHARED ServerOnly
+	SPECIAL ServerOnly, SHARED
 	{
 		IN Exec, PN_Exec
 		OUT Thru, PN_Exec
 		CODE if SERVER then #1 else goto popcall end
 	}
-	SPECIAL SHARED Role
+	SPECIAL Role, SHARED
 	{
 		IN Exec, PN_Exec
 		OUT Server, PN_Exec
 		OUT Client, PN_Exec
 		CODE if SERVER then #1 else #2 end
 	}
-	PURE SHARED ToString
+	PURE ToString, SHARED
 	{
 		IN Any, PN_Any
 		OUT String, PN_String
 		INFORM 1
 		CODE #1 = tostring($1)
 	}
-	PURE SHARED ToNumber
+	PURE ToNumber, SHARED
 	{
 		IN Value, PN_String
 		OUT Number, PN_Number
 		CODE #1 = tonumber($1) or 0
 	}
-	FUNC SHARED Print
+	FUNC Print, SHARED
 	{
 		IN String, PN_String
 		CODE print($1)
 	}
-	PURE SHARED Number
+	PURE Number, SHARED
 	{
 		IN Num, PN_Number
 		OUT Num, PN_Number
 		CODE #1 = $1
 	}
-	PURE SHARED Boolean
+	PURE Boolean, SHARED
 	{
 		IN Bool, PN_Bool
 		OUT Bool, PN_Bool
 		CODE #1 = $1
 	}
-	PURE SHARED String
+	PURE String, SHARED
 	{
 		IN String, PN_String
 		OUT String, PN_String
 		CODE #1 = $1
 	}
-	PURE SHARED IsValid
+	PURE IsValid, SHARED
 	{
 		IN Thing, PN_Any
 		OUT Valid, PN_Bool
 		CODE #1 = __bpm.genericIsValid($1)
 		INFORM 1
 	}
-	PURE SHARED IsNil
+	PURE IsNil, SHARED
 	{
 		IN Thing, PN_Any
 		OUT Valid, PN_Bool
 		CODE #1 = $1 == nil
 		INFORM 1
 	}
-	PURE SHARED IsNotNil
+	PURE IsNotNil, SHARED
 	{
 		IN Thing, PN_Any
 		OUT Valid, PN_Bool
 		CODE #1 = $1 ~= nil
 		INFORM 1
 	}
-	SPECIAL SHARED CheckValid
+	SPECIAL CheckValid, SHARED
 	{
 		IN Exec, PN_Exec
 		IN Thing, PN_Any
@@ -201,9 +201,9 @@ LIB CORE
 		OUT NotValid, PN_Exec
 		CODE if __bpm.genericIsValid($2) then #1 else #2 end
 	}
-	PURE SHARED CheckValue
+	PURE CheckValue, SHARED
 	{
-		IN Value, PN_Any
+		IN Value, PN_Any, #Value to check
 		IN Default, PN_Any
 		OUT Out, PN_Any
 		INFORM 1,2

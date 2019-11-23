@@ -1,15 +1,15 @@
 CLASS IMesh
 {
-	FUNC CLIENT BuildFromTriangles
+	FUNC BuildFromTriangles, CLIENT
 	{
 		DESC Builds the mesh from a table mesh vertexes.
 		IN vertexes, PN_Any, PNF_Table, #A table consisting of MeshVertex structures.
 	}
-	FUNC CLIENT Destroy
+	FUNC Destroy, CLIENT
 	{
 		DESC Deletes the mesh and frees the memory used by it.
 	}
-	FUNC CLIENT Draw
+	FUNC Draw, CLIENT
 	{
 		DESC Renders the mesh with the active matrix.
 	}

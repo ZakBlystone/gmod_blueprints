@@ -1,6 +1,6 @@
 LIB vgui
 {
-	FUNC CLIENT Create
+	FUNC Create, CLIENT
 	{
 		TBD
 		DESC Creates a panel by the specified classname.
@@ -9,7 +9,7 @@ LIB vgui
 		IN name, PN_String, PNF_Nullable, #Name of the created panel.
 		OUT panel, PN_Ref, PNF_None, Panel, #panel
 	}
-	FUNC CLIENT CreateFromTable
+	FUNC CreateFromTable, CLIENT
 	{
 		TBD
 		DESC Creates a panel from table.
@@ -18,7 +18,7 @@ LIB vgui
 		IN name, PN_String, PNF_Nullable, #Name of your panel
 		OUT panel, PN_Ref, PNF_None, Panel, #Created panel
 	}
-	FUNC CLIENT CreateX
+	FUNC CreateX, CLIENT
 	{
 		TBD
 		DESC  string class
@@ -27,45 +27,45 @@ LIB vgui
 		IN name, PN_String, PNF_Nullable, #Name of the created panel
 		OUT panel, PN_Ref, PNF_None, Panel, #Created panel
 	}
-	FUNC CLIENT CursorVisible
+	FUNC CursorVisible, CLIENT
 	{
 		DESC Returns whenever the cursor is currently active and visible.
 		OUT visible, PN_Bool, #isCursorVisible
 	}
-	FUNC CLIENT FocusedHasParent
+	FUNC FocusedHasParent, CLIENT
 	{
 		DESC Returns whether the currently focused panel is a child of the given one.
 		IN parent, PN_Ref, PNF_None, Panel, #The parent panel to check the currently focused one against. This doesn't need to be a direct parent (focused panel can be a child of a child and so on).
 		OUT isParent, PN_Bool, #Whether or not the focused panel is a child of the passed one.
 	}
-	PURE CLIENT GetControlTable
+	PURE GetControlTable, CLIENT
 	{
 		TBD
 		DESC Gets the method table of this panel. Does not return parent methods!
 		IN Panelname, PN_String, #The name of the panel
 		OUT out_0, PN_Any, PNF_Table, #methods
 	}
-	PURE CLIENT GetHoveredPanel
+	PURE GetHoveredPanel, CLIENT
 	{
 		DESC Returns the panel the cursor is hovering above.
 		OUT panel, PN_Ref, PNF_None, Panel, #The panel that the user is currently hovering over with their cursor.
 	}
-	PURE CLIENT GetKeyboardFocus
+	PURE GetKeyboardFocus, CLIENT
 	{
 		DESC Returns the panel which is currently receiving keyboard input.
 		OUT panel, PN_Ref, PNF_None, Panel, #The panel with keyboard focus
 	}
-	PURE CLIENT GetWorldPanel
+	PURE GetWorldPanel, CLIENT
 	{
 		DESC Returns the global world panel which is the parent to all others.
 		OUT panel, PN_Ref, PNF_None, Panel, #The world panel
 	}
-	FUNC CLIENT IsHoveringWorld
+	FUNC IsHoveringWorld, CLIENT
 	{
 		DESC Returns whenever the cursor is hovering the world panel.
 		OUT isHovering, PN_Bool, #isHoveringWorld
 	}
-	FUNC CLIENT Register
+	FUNC Register, CLIENT
 	{
 		TBD
 		DESC Registers a panel for later creation.
@@ -74,14 +74,14 @@ LIB vgui
 		IN baseName, PN_String, #Name of the base of the panel.
 		OUT panel, PN_Ref, PNF_None, Panel, #panel
 	}
-	FUNC CLIENT RegisterFile
+	FUNC RegisterFile, CLIENT
 	{
 		TBD
 		DESC Registers a new VGUI panel from a file.
 		IN file, PN_String, #The file to register
 		OUT info, PN_Any, PNF_Table, #A table containing info about the panel. Can be supplied to vgui.CreateFromTable
 	}
-	FUNC CLIENT RegisterTable
+	FUNC RegisterTable, CLIENT
 	{
 		TBD
 		DESC Registers a table to use as a panel. All this function does is assigns Base key to your table and returns the table.

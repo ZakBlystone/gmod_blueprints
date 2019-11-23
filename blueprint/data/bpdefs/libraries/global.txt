@@ -1,11 +1,11 @@
 LIB GLOBAL
 {
-	FUNC SERVER AddOriginToPVS
+	FUNC AddOriginToPVS, SERVER
 	{
 		DESC Adds the specified vector to the PVS which is currently building. This allows all objects in visleafs visible from that vector to be drawn.
 		IN position, PN_Vector, #The origin to add.
 	}
-	FUNC CLIENT AddWorldTip
+	FUNC AddWorldTip, CLIENT
 	{
 		DESC This function creates a World Tip, similar to the one shown when aiming at a Thruster where it shows you its force.
 		IN entindex=nil, PN_Number, PNF_Nullable, #This argument is no longer used; it has no effect on anything. You can use nil in this argument.
@@ -14,7 +14,7 @@ LIB GLOBAL
 		IN pos, PN_Vector, PNF_Nullable, #Where in the world you want the World Tip to be drawn. If you add a valid Entity in the next argument, this argument will have no effect on the actual World Tip.
 		IN ent, PN_Ref, PNF_Nullable, Entity, #Which entity you want to associate with the World Tip. This argument is optional. If set to a valid entity, this will override the position set in pos with the Entity's position.
 	}
-	PURE SHARED Angle
+	PURE Angle, SHARED
 	{
 		DESC Creates an Angle object.
 		IN pitch, PN_Number, PNF_Nullable, #The pitch value of the angle. If this is an Angle, this function will return a copy of the given angle. If this is a string, this function will try to parse the string as a angle. If it fails, it returns a 0 angle. (See examples)
@@ -22,27 +22,27 @@ LIB GLOBAL
 		IN roll, PN_Number, PNF_Nullable, #The roll value of the angle.
 		OUT angles, PN_Angles, #Created angle
 	}
-	FUNC SHARED AngleRand
+	FUNC AngleRand, SHARED
 	{
 		DESC Returns an angle with a randomized pitch, yaw, and roll between min(inclusive), max(exclusive).
 		IN min, PN_Number, PNF_Nullable, #Min bound inclusive.
 		IN max, PN_Number, PNF_Nullable, #Max bound exclusive.
 		OUT angles, PN_Angles, #The randomly generated angle.
 	}
-	PURE SHARED ColorAlpha
+	PURE ColorAlpha, SHARED
 	{
 		DESC Returns a new Color structure with the RGB components of the given Color structure and the alpha value specified.
 		IN color, PN_Color, PNF_None, #The Color structure from which to take RGB values. This color will not be modified.
 		IN alpha, PN_Number, #The new alpha value, a number between 0 and 255. Values above 255 will be clamped.
 		OUT color, PN_Color, PNF_None, #The new Color structure with the modified alpha value
 	}
-	PURE SHARED ColorRand
+	PURE ColorRand, SHARED
 	{
 		DESC Creates a Color structure with randomized red, green, and blue components. If the alpha argument is true, alpha will also be randomized.
 		IN randomizeAlpha, PN_Bool, PNF_Nullable, #Should alpha be randomized.
 		OUT color, PN_Color, PNF_None, #The created Color structure.
 	}
-	PURE SHARED ColorToHSL
+	PURE ColorToHSL, SHARED
 	{
 		DESC Converts a Color structure into HSL color space.
 		IN color, PN_Color, PNF_None, #The Color structure.
@@ -50,7 +50,7 @@ LIB GLOBAL
 		OUT sat, PN_Number, #The saturation in the range [0, 1].
 		OUT light, PN_Number, #The lightness in the range [0, 1].
 	}
-	PURE SHARED ColorToHSV
+	PURE ColorToHSV, SHARED
 	{
 		DESC Converts a Color structure into HSV color space.
 		IN color, PN_Color, PNF_None, #The Color structure.
@@ -58,20 +58,20 @@ LIB GLOBAL
 		OUT sat, PN_Number, #The saturation in the range [0, 1].
 		OUT value, PN_Number, #The value in the range [0, 1].
 	}
-	FUNC CLIENT ClientsideScene
+	FUNC ClientsideScene, CLIENT
 	{
 		DESC Creates a scene entity based on the scene name and the entity.
 		IN name, PN_String, #The name of the scene.
 		IN targetEnt, PN_Ref, PNF_None, Entity, #The entity to play the scene on.
 		OUT sceneEntity, PN_Ref, PNF_None, CSEnt, #C_SceneEntity
 	}
-	PURE SHARED ConVarExists
+	PURE ConVarExists, SHARED
 	{
 		DESC Returns whether a ConVar with the given name exists or not
 		IN name, PN_String, #Name of the ConVar.
 		OUT exists, PN_Bool, #True if the ConVar exists, false otherwise.
 	}
-	FUNC SHARED CreateClientConVar
+	FUNC CreateClientConVar, SHARED
 	{
 		DESC Makes a clientside-only console variable
 		IN name, PN_String, #Name of the ConVar to be created and able to be accessed. This cannot be a name of existing console command or console variable. It will silently fail if it is.
@@ -83,7 +83,7 @@ LIB GLOBAL
 		IN max, PN_Number, PNF_Nullable, #If set, the convar cannot be changed to a number higher than this value. Next Update Change This feature is only available in the next update.
 		OUT convar, PN_Ref, PNF_None, ConVar, #Created convar.
 	}
-	FUNC SHARED CreateConVar
+	FUNC CreateConVar, SHARED
 	{
 		DESC Creates a console variable (ConVar), in general these are for things like gamemode/server settings.
 		IN name, PN_String, #Name of the convar. This cannot be a name of an engine console command or console variable. It will silently fail if it is. If it is the same name as another lua ConVar, it will return that ConVar object.
@@ -94,7 +94,7 @@ LIB GLOBAL
 		IN max, PN_Number, PNF_Nullable, #If set, the convar cannot be changed to a number higher than this value. Next Update Change This feature is only available in the next update.
 		OUT convar, PN_Ref, PNF_None, ConVar, #The convar created.
 	}
-	FUNC CLIENT CreateMaterial
+	FUNC CreateMaterial, CLIENT
 	{
 		DESC Creates a new material with the specified name and shader.
 		IN name, PN_String, #The material name. Must be unique.
@@ -102,7 +102,7 @@ LIB GLOBAL
 		IN materialData, PN_Any, PNF_Table, #Key-value table that contains shader parameters and proxies. See: List of Shader Parameters on Valve Developers Wiki and each shader's page from Category: Shaders. NOTE	 Unlike IMaterial:SetTexture, this table will not accept ITexture values. Instead, use the texture's name (see ITexture:GetName).
 		OUT material, PN_Ref, PNF_None, IMaterial, #Created material
 	}
-	FUNC CLIENT CreateParticleSystem
+	FUNC CreateParticleSystem, CLIENT
 	{
 		DESC Creates a new particle system.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to attach the control point to.
@@ -112,20 +112,20 @@ LIB GLOBAL
 		IN offset, PN_Vector, PNF_Nullable, #The offset from the Entity:GetPos of the entity we are attaching this CP to.
 		OUT particleSystem, PN_Ref, PNF_None, CNewParticleEffect, #The created particle system.
 	}
-	FUNC SHARED CreatePhysCollideBox
+	FUNC CreatePhysCollideBox, SHARED
 	{
 		DESC Creates a new PhysCollide from the given bounds.
 		IN mins, PN_Vector, #Min corner of the box. This is not automatically ordered with the maxs and must contain the smallest vector components. See OrderVectors.
 		IN maxs, PN_Vector, #Max corner of the box. This is not automatically ordered with the mins and must contain the largest vector components.
 		OUT physCollide, PN_Ref, PNF_None, PhysCollide, #The new PhysCollide. This will be a NULL PhysCollide (PhysCollide:IsValid returns false) if given bad vectors or no more PhysCollides can be created in the physics engine.
 	}
-	FUNC SHARED CreatePhysCollidesFromModel
+	FUNC CreatePhysCollidesFromModel, SHARED
 	{
 		DESC Creates PhysCollide objects for every physics object the model has. The model must be precached with util.PrecacheModel before being used with this function.
 		IN modelName, PN_String, #Model path to get the collision objects of.
 		OUT physCollides, PN_Ref, PNF_Table, PhysCollide, #Table of PhysCollide objects. The number of entries will match the model's physics object count. See also Entity:GetPhysicsObjectCount. Returns no value if the model doesn't exist, or has not been precached.
 	}
-	FUNC SHARED CreateSound
+	FUNC CreateSound, SHARED
 	{
 		DESC Returns a sound parented to the specified entity.
 		IN targetEnt, PN_Ref, PNF_None, Entity, #The target entity.
@@ -133,36 +133,36 @@ LIB GLOBAL
 		IN filter, PN_Ref, PNF_Nullable, CRecipientFilter, #A CRecipientFilter of the players that will have this sound networked to them. NOTE	 This argument only works serverside.
 		OUT soundPatch, PN_Ref, PNF_None, CSoundPatch, #The sound object
 	}
-	PURE SHARED CurTime
+	PURE CurTime, SHARED
 	{
 		DESC Returns the uptime of the server in seconds (to at least 4 decimal places)
 		OUT curTime, PN_Number, #Time synced with the game server.
 	}
-	FUNC SHARED DamageInfo
+	FUNC DamageInfo, SHARED
 	{
 		DESC Returns an CTakeDamageInfo object.
 		OUT damageInfo, PN_Ref, PNF_None, CTakeDamageInfo
 	}
-	FUNC SHARED DebugInfo
+	FUNC DebugInfo, SHARED
 	{
 		DESC Writes text to the right hand side of the screen, like the old error system. Messages disappear after a couple of seconds.
 		IN slot, PN_Number, #The location on the right hand screen to write the debug info to. Starts at 0, no upper limit
 		IN info, PN_String, #The debugging information to be written to the screen
 	}
-	FUNC CLIENT DOF_Kill
+	FUNC DOF_Kill, CLIENT
 	{
 		DESC Cancels current DOF post-process effect started with DOF_Start
 	}
-	FUNC CLIENT DOF_Start
+	FUNC DOF_Start, CLIENT
 	{
 		DESC Cancels any existing DOF post-process effects. Begins the DOF post-process effect.
 	}
-	FUNC CLIENT DOFModeHack
+	FUNC DOFModeHack, CLIENT
 	{
 		DESC A hacky method used to fix some bugs regarding DoF.
 		IN enable, PN_Bool, #Enables or disables depth-of-field mode
 	}
-	FUNC CLIENT DrawBloom
+	FUNC DrawBloom, CLIENT
 	{
 		DESC Draws the bloom shader, which creates a glowing effect from bright objects.
 		IN Darken, PN_Number, #Determines how much to darken the effect. A lower number will make the glow come from lower light levels. A value of 1 will make the bloom effect unnoticeable. Negative values will make even pitch black areas glow.
@@ -175,36 +175,36 @@ LIB GLOBAL
 		IN Green, PN_Number, #How much green to multiply with the glowing color. Should be between 0 and 1
 		IN Blue, PN_Number, #How much blue to multiply with the glowing color. Should be between 0 and 1
 	}
-	FUNC CLIENT DrawColorModify
+	FUNC DrawColorModify, CLIENT
 	{
 		DESC Draws the Color Modify shader, which can be used to adjust colors on screen.
 		IN params, PN_Struct, PNF_None, ColorModifyParams, #Color modification parameters. See g_colourmodify shader and the example below. Note that if you leave out a field, it will retain its last value which may have changed if another caller uses this function.
 	}
-	FUNC CLIENT DrawMaterialOverlay
+	FUNC DrawMaterialOverlay, CLIENT
 	{
 		DESC Draws a material overlay on the screen.
 		IN Material, PN_String, #This will be the material that is drawn onto the screen.
 		IN RefractAmount, PN_Number, #This will adjust how much the material will refract your screen.
 	}
-	FUNC CLIENT DrawMotionBlur
+	FUNC DrawMotionBlur, CLIENT
 	{
 		DESC Creates a motion blur effect by drawing your screen multiple times.
 		IN AddAlpha, PN_Number, #How much alpha to change per frame.
 		IN DrawAlpha, PN_Number, #How much alpha the frames will have. A value of 0 will not render the motion blur effect.
 		IN Delay, PN_Number, #Determines the amount of time between frames to capture.
 	}
-	FUNC CLIENT DrawSharpen
+	FUNC DrawSharpen, CLIENT
 	{
 		DESC Draws the sharpen shader, which creates more contrast.
 		IN Contrast, PN_Number, #How much contrast to create.
 		IN Distance, PN_Number, #How large the contrast effect will be.
 	}
-	FUNC CLIENT DrawSobel
+	FUNC DrawSobel, CLIENT
 	{
 		DESC Draws the sobel shader, which detects edges and draws a black border.
 		IN Threshold, PN_Number, #Determines the threshold of edges. A value of 0 will make your screen completely black.
 	}
-	FUNC CLIENT DrawSunbeams
+	FUNC DrawSunbeams, CLIENT
 	{
 		DESC Renders the post-processing effect of beams of light originating from the map's sun. Utilises the "pp/sunbeams" material
 		IN darken, PN_Number, #$darken property for sunbeams material
@@ -213,29 +213,29 @@ LIB GLOBAL
 		IN sunX, PN_Number, #$sunx property for sunbeams material
 		IN sunY, PN_Number, #$suny property for sunbeams material
 	}
-	FUNC CLIENT DrawTexturize
+	FUNC DrawTexturize, CLIENT
 	{
 		DESC Draws the texturize shader, which replaces each pixel on your screen with a different part of the texture depending on its brightness. See g_texturize for information on making the texture.
 		IN Scale, PN_Number, #Scale of the texture. A smaller number creates a larger texture.
 		IN BaseTexture, PN_Number, #This will be the texture to use in the effect. Make sure you use Material to get the texture number
 	}
-	FUNC CLIENT DrawToyTown
+	FUNC DrawToyTown, CLIENT
 	{
 		DESC Draws the toy town shader, which blurs the top and bottom of your screen. This can make very large objects look like toys, hence the name.
 		IN Passes, PN_Number, #An integer determining how many times to draw the effect. A higher number creates more blur.
 		IN Height, PN_Number, #The amount of screen which should be blurred on the top and bottom.
 	}
-	FUNC SHARED DropEntityIfHeld
+	FUNC DropEntityIfHeld, SHARED
 	{
 		DESC Drops the specified entity if it is being held by any player with Gravity Gun or +use pickup.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to drop.
 	}
-	FUNC SHARED EffectData
+	FUNC EffectData, SHARED
 	{
 		DESC Returns a CEffectData object to be used with util.Effect.
 		OUT effect, PN_Ref, PNF_None, CEffectData
 	}
-	FUNC SHARED EmitSentence
+	FUNC EmitSentence, SHARED
 	{
 		DESC Plays a sentence from scripts/sentences.txt
 		IN soundName, PN_String, #The sound to play
@@ -247,7 +247,7 @@ LIB GLOBAL
 		IN soundFlags=SND_NOFLAGS, PN_Enum, PNF_Nullable, SND, #The flags of the sound, see SND_ Enums
 		IN pitch=100, PN_Number, PNF_Nullable, #The pitch of the sound, 0-255
 	}
-	FUNC SHARED EmitSound
+	FUNC EmitSound, SHARED
 	{
 		DESC Emits the specified sound at the specified position.
 		IN soundName, PN_String, #The sound to play
@@ -259,53 +259,53 @@ LIB GLOBAL
 		IN soundFlags=SND_NOFLAGS, PN_Enum, PNF_Nullable, SND, #The flags of the sound, see SND_ Enums
 		IN pitch=100, PN_Number, PNF_Nullable, #The pitch of the sound, 0-255
 	}
-	PURE SHARED Entity
+	PURE Entity, SHARED
 	{
 		DESC Returns the entity with the matching Entity:EntIndex.
 		IN index, PN_Number, #The entity index.
 		OUT entity, PN_Ref, PNF_None, Entity, #The entity if it exists, or NULL if it doesn't.
 	}
-	FUNC SHARED ErrorNoHalt
+	FUNC ErrorNoHalt, SHARED
 	{
 		DESC Alias of ErrorNoHalt.
 		IN message, PN_Any, #Converts all arguments to strings and prints them with no spacing or line breaks.
 	}
-	PURE CLIENT EyeAngles
+	PURE EyeAngles, CLIENT
 	{
 		DESC Returns the angles of the current render context as calculated by GM:CalcView.
 		OUT angles, PN_Angles, #The angle of the currently rendered scene.
 	}
-	PURE CLIENT EyePos
+	PURE EyePos, CLIENT
 	{
 		DESC Returns the origin of the current render context as calculated by GM:CalcView.
 		OUT pos, PN_Vector, #Camera position.
 	}
-	PURE CLIENT EyeVector
+	PURE EyeVector, CLIENT
 	{
 		DESC Returns the normal vector of the current render context as calculated by GM:CalcView, similar to EyeAngles.
 		OUT vector, PN_Vector, #View direction of the currently rendered scene.
 	}
-	PURE CLIENT FrameNumber
+	PURE FrameNumber, CLIENT
 	{
 		DESC Returns the number of frames rendered since the game was launched.
 	}
-	PURE SHARED FrameTime
+	PURE FrameTime, SHARED
 	{
 		DESC Returns the CurTime-based time in seconds it took to render the last frame.
 		OUT time, PN_Number, #time (in seconds)
 	}
-	PURE SHARED GetConVar
+	PURE GetConVar, SHARED
 	{
 		DESC Gets the ConVar with the specified name. This function caches the ConVar object internally.
 		IN name, PN_String, #Name of the ConVar to get
 		OUT convar, PN_Ref, PNF_None, ConVar, #The ConVar object
 	}
-	PURE SHARED GetHostName
+	PURE GetHostName, SHARED
 	{
 		DESC Returns the name of the current server.
 		OUT hostName, PN_String, #The name of the server.
 	}
-	FUNC CLIENT GetRenderTarget
+	FUNC GetRenderTarget, CLIENT
 	{
 		DESC Creates or gets the rendertarget with the given name.
 		IN name, PN_String, #The internal name of the render target.
@@ -314,7 +314,7 @@ LIB GLOBAL
 		IN additive, PN_Bool, PNF_Nullable, #Sets whenever the rt should be additive.
 		OUT rt, PN_Ref, PNF_None, ITexture, #The render target
 	}
-	FUNC CLIENT GetRenderTargetEx
+	FUNC GetRenderTargetEx, CLIENT
 	{
 		DESC Creates (or gets if it already exsits) the rendertarget with the given name, this function allows to adjust the creation of a rendertarget more than GetRenderTarget.
 		IN name, PN_String, #The internal name of the render target. WARNING	 The name is treated like a path and gets its extension discarded. "name.1" and "name.2" are considered the same name and will result in the same render target being reused.
@@ -327,12 +327,12 @@ LIB GLOBAL
 		IN imageFormat, PN_Enum, PNF_None, IMAGE, #Image format, see IMAGE_FORMAT_ Enums.
 		OUT rt, PN_Ref, PNF_None, ITexture, #The new render target.
 	}
-	PURE CLIENT GetViewEntity
+	PURE GetViewEntity, CLIENT
 	{
 		DESC Returns the entity the client is using to see from (such as the player itself, the camera, or another entity).
 		OUT entity, PN_Ref, PNF_None, Entity, #The view entity.
 	}
-	PURE SHARED HSLToColor
+	PURE HSLToColor, SHARED
 	{
 		DESC Converts a color from HSL color space into RGB color space and returns a Color structure.
 		IN hue, PN_Number, #The hue in degrees from 0-360.
@@ -340,7 +340,7 @@ LIB GLOBAL
 		IN light, PN_Number, #The lightness from 0-1.
 		OUT color, PN_Color, PNF_None, #The Color structure created from the HSL color space.
 	}
-	PURE SHARED HSVToColor
+	PURE HSVToColor, SHARED
 	{
 		DESC Converts a color from HSV color space into RGB color space and returns a Color structure.
 		IN hue, PN_Number, #The hue in degrees from 0-360.
@@ -348,55 +348,55 @@ LIB GLOBAL
 		IN value, PN_Number, #The value from 0-1.
 		OUT color, PN_Color, PNF_None, #The Color structure created from the HSV color space.
 	}
-	FUNC SHARED HTTP
+	FUNC HTTP, SHARED
 	{
 		PROTECTED
 		DESC Launches an asynchronous http request with the given parameters.
 		IN parameters, PN_Struct, PNF_None, HTTPRequest, #The request parameters. See HTTPRequest structure.
 		OUT success, PN_Bool, #true if we made a request, nil if we failed.
 	}
-	PURE SHARED IsEnemyEntityName
+	PURE IsEnemyEntityName, SHARED
 	{
 		DESC Returns if the given NPC class name is an enemy.
 		IN className, PN_String, #Class name of the entity to check
 		OUT enemy, PN_Bool, #Is an enemy
 	}
-	PURE SHARED IsEntity
+	PURE IsEntity, SHARED
 	{
 		DESC Returns if the passed object is an Entity. Alias of isentity.
 		IN variable, PN_Any, #The variable to check.
 		OUT isEntity, PN_Bool, #True if the variable is an Entity.
 	}
-	PURE SHARED IsFirstTimePredicted
+	PURE IsFirstTimePredicted, SHARED
 	{
 		DESC Returns if this is the first time this hook was predicted.
 		OUT predicted, PN_Bool, #Whether or not this is the first time being predicted.
 	}
-	PURE SHARED IsFriendEntityName
+	PURE IsFriendEntityName, SHARED
 	{
 		DESC Returns if the given NPC class name is a friend.
 		IN className, PN_String, #Class name of the entity to check
 		OUT friendly, PN_Bool, #Is a friend
 	}
-	PURE SHARED IsMounted
+	PURE IsMounted, SHARED
 	{
 		DESC Checks whether or not a game is currently mounted. Uses data given by engine.GetGames.
 		IN game, PN_String, #The game string/app ID to check.
 		OUT mounted, PN_Bool, #True if the game is mounted.
 	}
-	PURE SHARED IsTableOfEntitiesValid
+	PURE IsTableOfEntitiesValid, SHARED
 	{
 		DESC Returns whether or not every element within a table is a valid entity
 		IN table, PN_Ref, PNF_Table, Entity, #Table containing entities to check
 		OUT allValid, PN_Bool, #All entities valid
 	}
-	PURE SHARED IsUselessModel
+	PURE IsUselessModel, SHARED
 	{
 		DESC Returns whether or not a model is useless by checking that the file path is that of a proper model.
 		IN modelName, PN_String, #The model name to be checked
 		OUT isUseless, PN_Bool, #Whether or not the model is useless
 	}
-	PURE SHARED Lerp
+	PURE Lerp, SHARED
 	{
 		DESC Performs a linear interpolation from the start number to the end number.
 		IN t, PN_Number, #The fraction for finding the result. This number is clamped between 0 and 1.
@@ -404,7 +404,7 @@ LIB GLOBAL
 		IN to, PN_Number, #The ending number. The result will be equal to this if delta is 1.
 		OUT value, PN_Number, #The result of the linear interpolation, (1 - t) * from + t * to.
 	}
-	PURE SHARED LerpAngle
+	PURE LerpAngle, SHARED
 	{
 		DESC Returns point between first and second angle using given fraction and linear interpolation
 		IN ratio, PN_Number, #Ratio of progress through values
@@ -412,7 +412,7 @@ LIB GLOBAL
 		IN angleEnd, PN_Angles, #Angle to end at
 		OUT angle, PN_Angles, #angle
 	}
-	PURE SHARED LerpVector
+	PURE LerpVector, SHARED
 	{
 		DESC Linear interpolation between two vectors. It is commonly used to smooth movement between two vectors.
 		IN fraction, PN_Number, #Fraction ranging from 0 to 1
@@ -420,12 +420,12 @@ LIB GLOBAL
 		IN to, PN_Vector, #The desired Vector
 		OUT vector, PN_Vector, #The lerped vector.
 	}
-	PURE CLIENT LocalPlayer
+	PURE LocalPlayer, CLIENT
 	{
 		DESC Returns the player object of the current client.
 		OUT player, PN_Ref, PNF_None, Player, #The player object representing the client.
 	}
-	PURE SHARED LocalToWorld
+	PURE LocalToWorld, SHARED
 	{
 		DESC Translates the specified position and angle from the specified local coordinate system into worldspace coordinates.
 		IN localPos, PN_Vector, #The position vector in the source coordinate system, that should be translated to world coordinates
@@ -435,7 +435,7 @@ LIB GLOBAL
 		OUT pos, PN_Vector, #The world position of the supplied local position.
 		OUT angles, PN_Angles, #The world angles of the supplied local angle.
 	}
-	FUNC SHARED Material
+	FUNC Material, SHARED
 	{
 		DESC Either returns the material with the given name, or loads the material interpreting the first argument as the path.
 		IN materialName, PN_String, #The material name or path. The path is relative to the materials/ folder. You do not need to add materials/ to your path. To retrieve a Lua material created with CreateMaterial, just prepend a "!" to the material name. NOTE	 Since paths are relative to the materials folder, resource paths like ../data/MyImage.jpg will work since ".." translates to moving up a parent directory in the file tree.
@@ -443,31 +443,31 @@ LIB GLOBAL
 		OUT material, PN_Ref, PNF_None, IMaterial, #Generated material
 		OUT time, PN_Number, #How long it took for the function to run
 	}
-	PURE SHARED Matrix
+	PURE Matrix, SHARED
 	{
 		DESC Returns a VMatrix object.
 		IN data, PN_Any, PNF_Nullable|PNF_Table, #Initial data to initialize the matrix with. Leave empty to initialize an identity matrix. See examples for usage. Can be a VMatrix to copy its data.
 		OUT matrix, PN_Ref, PNF_None, VMatrix, #New matrix.
 	}
-	FUNC CLIENT Mesh
+	FUNC Mesh, CLIENT
 	{
 		DESC Returns a new mesh object.
 		IN mat, PN_Ref, PNF_Nullable, IMaterial, #The material the mesh is intended to be rendered with. It's merely a hint that tells that mesh what vertex format it should use.
 		OUT mesh, PN_Ref, PNF_None, IMesh, #The created object.
 	}
-	PURE CLIENT NumModelSkins
+	PURE NumModelSkins, CLIENT
 	{
 		DESC Returns the amount of skins the specified model has.
 		IN modelName, PN_String, #Model to return amount of skins of
 		OUT count, PN_Number, #Amount of skins
 	}
-	FUNC SHARED OrderVectors
+	FUNC OrderVectors, SHARED
 	{
 		DESC Modifies the given vectors so that all of vector2's axis are larger than vector1's by switching them around. Also known as ordering vectors.
 		IN vector1, PN_Vector, #Bounding box min resultant
 		IN vector2, PN_Vector, #Bounding box max resultant
 	}
-	FUNC SHARED ParticleEffect
+	FUNC ParticleEffect, SHARED
 	{
 		DESC Creates a particle effect.
 		IN particleName, PN_String, #The name of the particle effect.
@@ -475,7 +475,7 @@ LIB GLOBAL
 		IN angles, PN_Angles, #The orientation of the effect.
 		IN parent, PN_Ref, PNF_Nullable, Entity, #If set, the particle will be parented to the entity.
 	}
-	FUNC SHARED ParticleEffectAttach
+	FUNC ParticleEffectAttach, SHARED
 	{
 		DESC Creates a particle effect with specialized parameters.
 		IN particleName, PN_String, #The name of the particle effect.
@@ -483,65 +483,65 @@ LIB GLOBAL
 		IN entity, PN_Ref, PNF_None, Entity, #The entity to be used in the way specified by the attachType.
 		IN attachmentID, PN_Number, #The id of the attachment to be used in the way specified by the attachType.
 	}
-	FUNC CLIENT ParticleEmitter
+	FUNC ParticleEmitter, CLIENT
 	{
 		DESC Creates a new CLuaEmitter.
 		IN position, PN_Vector, #The start position of the emitter. This is only used to determine particle drawing order for translucent particles.
 		IN use3D, PN_Bool, #Whenever to render the particles in 2D or 3D mode.
 		OUT emitter, PN_Ref, PNF_None, CLuaEmitter, #The new particle emitter.
 	}
-	FUNC SHARED PrecacheParticleSystem
+	FUNC PrecacheParticleSystem, SHARED
 	{
 		DESC Precaches the particle with the specified name.
 		IN particleSystemName, PN_String, #The name of the particle system.
 	}
-	FUNC SERVER PrecacheScene
+	FUNC PrecacheScene, SERVER
 	{
 		DESC Precaches a scene file.
 		IN scene, PN_String, #Path to the scene file to precache.
 	}
-	FUNC SERVER PrecacheSentenceFile
+	FUNC PrecacheSentenceFile, SERVER
 	{
 		DESC Load and precache a custom sentence file.
 		IN filename, PN_String, #The path to the custom sentences.txt.
 	}
-	FUNC SERVER PrecacheSentenceGroup
+	FUNC PrecacheSentenceGroup, SERVER
 	{
 		DESC Precache a sentence group in a sentences.txt definition file.
 		IN group, PN_String, #The group to precache.
 	}
-	FUNC SERVER PrintMessage
+	FUNC PrintMessage, SERVER
 	{
 		DESC Displays a message in the chat, console, or center of screen of every player.
 		IN type, PN_Enum, PNF_None, HUD, #Which type of message should be sent to the players
 		IN message, PN_String, #Message to be sent to the players
 	}
-	FUNC CLIENT ProjectedTexture
+	FUNC ProjectedTexture, CLIENT
 	{
 		DESC Creates a new ProjectedTexture.
 		OUT texture, PN_Ref, PNF_None, ProjectedTexture, #Newly created projected texture.
 	}
-	PURE CLIENT RealFrameTime
+	PURE RealFrameTime, CLIENT
 	{
 		DESC Returns the real frame-time which is unaffected by host_timescale. To be used for GUI effects (for example)
 		OUT time, PN_Number, #Real frame time
 	}
-	PURE SHARED RealTime
+	PURE RealTime, SHARED
 	{
 		DESC Returns the uptime of the game/server in seconds (to at least 4 decimal places)
 		OUT time, PN_Number, #Uptime of the game/server.
 	}
-	FUNC SERVER RecipientFilter
+	FUNC RecipientFilter, SERVER
 	{
 		DESC Creates a new CRecipientFilter.
 		OUT filter, PN_Ref, PNF_None, CRecipientFilter, #The new created recipient filter.
 	}
-	PURE CLIENT RenderAngles
+	PURE RenderAngles, CLIENT
 	{
 		DESC Returns the angle that the clients view is being rendered at
 		OUT angles, PN_Angles, #Render Angles
 	}
-	FUNC CLIENT RenderDoF
+	FUNC RenderDoF, CLIENT
 	{
 		DESC Renders a Depth of Field effect
 		IN origin, PN_Vector, #Origin to render the effect at
@@ -554,69 +554,69 @@ LIB GLOBAL
 		IN inView, PN_Any, PNF_Table, #Table of view data
 		IN fov, PN_Number, #FOV to render the effect with
 	}
-	FUNC CLIENT RenderStereoscopy
+	FUNC RenderStereoscopy, CLIENT
 	{
 		DESC Renders the stereoscopic post-process effect
 		IN viewOrigin, PN_Vector, #Origin to render the effect at
 		IN viewAngles, PN_Angles, #Angles to render the effect at
 	}
-	FUNC CLIENT RenderSuperDoF
+	FUNC RenderSuperDoF, CLIENT
 	{
 		DESC Renders the Super Depth of Field post-process effect
 		IN viewOrigin, PN_Vector, #Origin to render the effect at
 		IN viewAngles, PN_Angles, #Angles to render the effect at
 		IN viewFOV, PN_Number, #Field of View to render the effect at
 	}
-	FUNC SHARED SafeRemoveEntity
+	FUNC SafeRemoveEntity, SHARED
 	{
 		DESC Removes the given entity unless it is a player or the world entity
 		IN ent, PN_Ref, PNF_None, Entity, #Entity to safely remove.
 	}
-	FUNC SHARED SafeRemoveEntityDelayed
+	FUNC SafeRemoveEntityDelayed, SHARED
 	{
 		DESC Removes entity after delay using SafeRemoveEntity
 		IN entity, PN_Ref, PNF_None, Entity, #Entity to be removed
 		IN delay, PN_Number, #Delay for entity removal in seconds
 	}
-	PURE CLIENT ScreenScale
+	PURE ScreenScale, CLIENT
 	{
 		DESC Returns a number based on the Size argument and your screen's width. The screen's width is always equal to size 640. This function is primarily used for scaling font sizes.
 		IN Size, PN_Number, #The number you want to scale.
 		OUT scaled, PN_Number, #The scaled output
 	}
-	PURE CLIENT ScrH
+	PURE ScrH, CLIENT
 	{
 		DESC Gets the height of the game's window (in pixels).
 		OUT height, PN_Number, #The height of the game's window in pixels
 	}
-	PURE CLIENT ScrW
+	PURE ScrW, CLIENT
 	{
 		DESC Gets the width of the game's window (in pixels).
 		OUT width, PN_Number, #The width of the game's window in pixels
 	}
-	PURE SHARED SoundDuration
+	PURE SoundDuration, SHARED
 	{
 		DESC Returns the duration of the sound specified in seconds.
 		IN soundName, PN_String, #The sound file path.
 		OUT duration, PN_Number, #Sound duration in seconds.
 	}
-	PURE SHARED STNDRD
+	PURE STNDRD, SHARED
 	{
 		DESC Returns the ordinal suffix of a given number.
 		IN number, PN_Number, #The number to find the ordinal suffix of.
 		OUT suffix, PN_String, #suffix
 	}
-	PURE SHARED SysTime
+	PURE SysTime, SHARED
 	{
 		DESC Returns a highly accurate time in seconds since the start up, ideal for benchmarking.
 		OUT time, PN_Number, #Uptime of the server.
 	}
-	PURE SHARED TauntCamera
+	PURE TauntCamera, SHARED
 	{
 		DESC Returns a TauntCamera object
 		OUT camera, PN_Ref, PNF_None, TauntCamera
 	}
-	PURE SHARED TimedCos
+	PURE TimedCos, SHARED
 	{
 		DESC Returns a cosine value that fluctuates based on the current time
 		IN frequency, PN_Number, #The frequency of fluctuation
@@ -625,7 +625,7 @@ LIB GLOBAL
 		IN offset, PN_Number, #Offset variable that doesn't affect the rate of change, but causes the returned value to be offset by time
 		OUT cosine, PN_Number, #Cosine value
 	}
-	PURE SHARED TimedSin
+	PURE TimedSin, SHARED
 	{
 		DESC Returns a sine value that fluctuates based on CurTime. The value returned will be between the start value plus/minus the range value.
 		IN frequency, PN_Number, #The frequency of fluctuation, in hertz
@@ -634,25 +634,25 @@ LIB GLOBAL
 		IN offset, PN_Number, #Offset variable that doesn't affect the rate of change, but causes the returned value to be offset by time
 		OUT sine, PN_Number, #Sine value
 	}
-	PURE SHARED tonumber
+	PURE tonumber, SHARED
 	{
 		DESC Attempts to convert the value to a number.
 		IN value, PN_Any, #The value to convert. Can be a number or string.
 		IN base, PN_Number, PNF_Nullable, #The numeric base used in the string. Can be any integer between 2 and 36, inclusive.
 		OUT number, PN_Number, #The numeric representation of the value with the given base, or nil if the conversion failed.
 	}
-	PURE SHARED TypeID
+	PURE TypeID, SHARED
 	{
 		DESC Gets the associated type ID of the variable.
 		IN variable, PN_Any, #The variable to get the type ID of.
 		OUT type, PN_Enum, PNF_None, TYPE, #The type ID of the variable. See the TYPE_ Enums.
 	}
-	PURE SHARED UnPredictedCurTime
+	PURE UnPredictedCurTime, SHARED
 	{
 		DESC Returns the current asynchronous in-game time.
 		OUT time, PN_Number, #The asynchronous in-game time.
 	}
-	PURE SHARED Vector
+	PURE Vector, SHARED
 	{
 		DESC Creates a Vector object.
 		IN x, PN_Number, PNF_Nullable, #The x component of the vector. If this is a Vector, this function will return a copy of the given vector. If this is a string, this function will try to parse the string as a vector. If it fails, it returns a 0 vector. (See examples)
@@ -660,14 +660,14 @@ LIB GLOBAL
 		IN z, PN_Number, PNF_Nullable, #The z component of the vector.
 		OUT vector, PN_Vector, #The created vector object.
 	}
-	PURE SHARED VectorRand
+	PURE VectorRand, SHARED
 	{
 		DESC Returns a random vector whose components are each between min(inclusive), max(exclusive).
 		IN min=-1, PN_Number, PNF_Nullable, #Min bound inclusive.
 		IN max=1, PN_Number, PNF_Nullable, #Max bound exclusive.
 		OUT vector, PN_Vector, #The random direction vector.
 	}
-	PURE SHARED WorldToLocal
+	PURE WorldToLocal, SHARED
 	{
 		DESC Translates the specified position and angle into the specified coordinate system.
 		IN worldPos, PN_Vector, #The position that should be translated from the current to the new system.

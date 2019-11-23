@@ -1,6 +1,6 @@
 CLASS CSEnt
 {
-	FUNC CLIENT Remove
+	FUNC Remove, CLIENT
 	{
 		DESC Removes the clientside entity
 	}

@@ -1,23 +1,23 @@
 LIB scripted_ents
 {
-	FUNC SHARED Alias
+	FUNC Alias, SHARED
 	{
 		DESC Defines an alias string that can be used to refer to another classname
 		IN alias, PN_String, #A new string which can be used to refer to another classname
 		IN classname, PN_String, #The classname the alias should refer to
 	}
-	PURE SHARED Get
+	PURE Get, SHARED
 	{
 		DESC Returns a copy of the ENT table for a class, including functions defined by the base class
 		IN classname, PN_String, #The classname of the ENT table to return, can be an alias
 		OUT ent, PN_Struct, PNF_None, ENT, #entTable
 	}
-	PURE SHARED GetList
+	PURE GetList, SHARED
 	{
 		DESC Returns a copy of the list of all ENT tables registered
 		OUT ents, PN_Struct, PNF_None, ENT, #A table of all entities in the following format: (table keys are the classnames) table t - The ENT structure associated with the entity boolean isBaseType - Always true string Base - The entity base (note capital B in the key name) string type - The entity type
 	}
-	PURE SHARED GetMember
+	PURE GetMember, SHARED
 	{
 		TBD
 		DESC Retrieves a member of entity's table.
@@ -25,32 +25,32 @@ LIB scripted_ents
 		IN name, PN_String, #Name of member to retrieve
 		OUT out_0, PN_Any, #The member or nil if failed
 	}
-	PURE SHARED GetSpawnable
+	PURE GetSpawnable, SHARED
 	{
 		DESC Returns a list of all ENT tables which contain either ENT.Spawnable or ENT.AdminSpawnable
 		OUT ents, PN_Any, PNF_Table, #A table of ENT structures
 	}
-	PURE SHARED GetStored
+	PURE GetStored, SHARED
 	{
 		TBD
 		DESC Returns the actual ENT table for a class. Modifying functions/variables in this table will change newly spawned entities
 		IN classname, PN_String, #The classname of the ENT table to return
 		OUT out_0, PN_Any, PNF_Table, #entTable
 	}
-	PURE SHARED GetType
+	PURE GetType, SHARED
 	{
 		DESC Returns the 'type' of a class, this will one of the following: 'anim', 'ai', 'brush', 'point'.
 		IN classname, PN_String, #The classname to check
 		OUT type, PN_String, #type
 	}
-	FUNC SHARED IsBasedOn
+	FUNC IsBasedOn, SHARED
 	{
 		DESC Checks if name is based on base
 		IN name, PN_String, #Entity's class name to be checked
 		IN base, PN_String, #Base class name to be checked
 		OUT result, PN_Bool, #Returns true if class name is based on base, else false.
 	}
-	FUNC SHARED Register
+	FUNC Register, SHARED
 	{
 		TBD
 		DESC Registers an ENT table with a classname. Reregistering an existing classname will automatically update the functions of all existing entities of that class.

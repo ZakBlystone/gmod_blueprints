@@ -1,6 +1,6 @@
 LIB construct
 {
-	FUNC SERVER Magnet
+	FUNC Magnet, SERVER
 	{
 		DESC Creates a magnet.
 		IN ply, PN_Ref, PNF_None, Player, #Player that will have the numpad control over the magnet
@@ -20,7 +20,7 @@ LIB construct
 		IN frozen, PN_Bool, PNF_Nullable, #Freeze the magnet on start
 		OUT magnet, PN_Ref, PNF_None, Entity, #The magnet
 	}
-	FUNC SERVER SetPhysProp
+	FUNC SetPhysProp, SERVER
 	{
 		DESC Sets props physical properties.
 		IN ply, PN_Ref, PNF_None, Player, #The player. This variable is not used and can be left out.

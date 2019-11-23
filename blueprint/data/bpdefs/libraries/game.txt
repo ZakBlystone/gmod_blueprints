@@ -1,155 +1,155 @@
 LIB game
 {
-	FUNC SHARED AddAmmoType
+	FUNC AddAmmoType, SHARED
 	{
 		DESC Adds a new ammo type to the game.
 		IN ammoData, PN_Struct, PNF_None, AmmoData, #The attributes of the ammo. See the AmmoData structure.
 	}
-	FUNC SHARED AddDecal
+	FUNC AddDecal, SHARED
 	{
 		DESC Registers a new decal.
 		IN decalName, PN_String, #The name of the decal.
 		IN materialName, PN_String, #The material to be used for the decal. May also be a list of material names, in which case a random material from that list will be chosen every time the decal is placed.
 	}
-	FUNC SHARED AddParticles
+	FUNC AddParticles, SHARED
 	{
 		DESC Loads a particle file.
 		IN particleFileName, PN_String, #The path of the file to add. Must be (file).pcf.
 	}
-	FUNC SHARED CleanUpMap
+	FUNC CleanUpMap, SHARED
 	{
 		DESC If called serverside it will remove ALL entities which were not created by the map(not players or weapons held by players). On the client it will remove decals, sounds, gibs, dead NPCs, and entities created via ents.CreateClientProp.
 		IN dontSendToClients=false, PN_Bool, #If set to true, don't run this functions on all clients.
 		IN extraFilters, PN_Ref, PNF_Table|PNF_Nullable, Entity, #Entity classes not to reset during cleanup.
 	}
-	PURE SHARED GetAmmoData
+	PURE GetAmmoData, SHARED
 	{
 		DESC Returns the AmmoData structure for given ID.
 		IN id, PN_Number, #ID of the ammo type to look up the data for
 		OUT ammoData, PN_Struct, PNF_None, AmmoData, #The AmmoData structure containing all ammo data
 	}
-	PURE SHARED GetAmmoID
+	PURE GetAmmoID, SHARED
 	{
 		DESC Returns the ammo type ID for given ammo type name.
 		IN name, PN_String, #Name of the ammo type to look up ID of
 		OUT id, PN_Number, #The ammo type ID of the given ammo type, or -1 if not found
 	}
-	PURE SHARED GetAmmoTypes
+	PURE GetAmmoTypes, SHARED
 	{
 		DESC Returns a list of all ammo types currently registered.
 		OUT ammoTypes, PN_Struct, PNF_Table, AmmoData, #A table containing all ammo types. The keys are ammo IDs, the values are the names associated with those IDs.
 	}
-	PURE SERVER GetGlobalCounter
+	PURE GetGlobalCounter, SERVER
 	{
 		DESC Returns the counter of a Global State.
 		IN name, PN_String, #The name of the Global State to get.
 		OUT value, PN_Number, #The value of the given Global State, 0 if the global state doesn't exist.
 	}
-	PURE SERVER GetGlobalState
+	PURE GetGlobalState, SERVER
 	{
 		DESC Returns whether a Global State is off, active or dead ( inactive )
 		IN name, PN_String, #The name of the Global State to get.
 		OUT value, PN_Enum, PNF_None, GLOBAL, #The value of the given Global State, 0 if the global state doesn't exist.
 	}
-	PURE SHARED GetIPAddress
+	PURE GetIPAddress, SHARED
 	{
 		DESC Returns the public IP address and port of the current server. This will return the IP/port that you are connecting through when ran clientside.
 		OUT ipAddress, PN_String, #The IP address and port in the format "x.x.x.x:x"
 	}
-	PURE SHARED GetMap
+	PURE GetMap, SHARED
 	{
 		DESC Returns the name of the current map, without a file extension. On the menu state, returns "menu".
 		OUT mapName, PN_String, #The name of the current map, without a file extension.
 	}
-	PURE SERVER GetMapNext
+	PURE GetMapNext, SERVER
 	{
 		DESC Returns the next map that would be loaded according to the file that is set by the mapcyclefile convar.
 		OUT nextMap, PN_String, #The next map
 	}
-	PURE SHARED GetMapVersion
+	PURE GetMapVersion, SHARED
 	{
 		DESC Returns the VBSP version of the current map.
 		OUT version, PN_Number, #The version of the map
 	}
-	PURE SHARED GetSkillLevel
+	PURE GetSkillLevel, SHARED
 	{
 		DESC Returns the difficulty level of the game.
 		OUT skill, PN_Number, #The difficulty level, Easy( 1 ), Normal( 2 ), Hard( 3 ).
 	}
-	PURE SHARED GetTimeScale
+	PURE GetTimeScale, SHARED
 	{
 		DESC Returns the time scale of the game
 		OUT timeScale, PN_Number, #The time scale
 	}
-	PURE SHARED GetWorld
+	PURE GetWorld, SHARED
 	{
 		DESC Returns the worldspawn entity.
 		OUT world, PN_Ref, PNF_None, Entity, #The world
 	}
-	PURE SHARED IsDedicated
+	PURE IsDedicated, SHARED
 	{
 		DESC Returns true if the server is a dedicated server, false if it is a Listen server or a singleplayer game.
 		OUT dedicated, PN_Bool, #Is the server dedicated or not.
 	}
-	FUNC SERVER KickID
+	FUNC KickID, SERVER
 	{
 		DESC Kicks a player from the server. This can be ran before the player has spawned.
 		IN id, PN_String, #UserID or SteamID of the player to kick.
 		IN reason, PN_String, #Reason to display to the player. This can span across multiple lines.
 	}
-	FUNC SERVER LoadNextMap
+	FUNC LoadNextMap, SERVER
 	{
 		DESC Loads the next map according to the nextlevel convar, or from the current mapcycle file set by the respective convar.
 	}
-	FUNC SERVER MapLoadType
+	FUNC MapLoadType, SERVER
 	{
 		DESC Returns the map load type of the current map.
 		OUT loadType, PN_String, #The load type. Possible values are: "newgame", "loadgame", "transition", "background".
 	}
-	FUNC SHARED MaxPlayers
+	FUNC MaxPlayers, SHARED
 	{
 		DESC Returns the maximum amount of players (including bots) that the server can have.
 		OUT maxPlayers, PN_Number, #The maximum amount of players
 	}
-	FUNC SHARED MountGMA
+	FUNC MountGMA, SHARED
 	{
 		DESC Mounts a GMA addon from the disk. Any error models currently loaded that the mounted addon provides will be reloaded.
 		IN path, PN_String, #Location of the GMA file to mount, relative to the garrysmod directory
 		OUT success, PN_Bool, #Was loaded successfully
 		OUT files, PN_String, PNF_Table, #If successful, a table of files that have been mounted
 	}
-	FUNC SHARED RemoveRagdolls
+	FUNC RemoveRagdolls, SHARED
 	{
 		DESC Removes all the clientside ragdolls.
 	}
-	FUNC SERVER SetGlobalCounter
+	FUNC SetGlobalCounter, SERVER
 	{
 		DESC Sets the counter of a Global State.
 		IN name, PN_String, #The name of the Global State to set.
 		IN count, PN_Number, #The value to set for that Global State.
 	}
-	FUNC SERVER SetGlobalState
+	FUNC SetGlobalState, SERVER
 	{
 		DESC Sets whether a Global State is off, active or dead ( inactive )
 		IN name, PN_String, #The name of the Global State to set.
 		IN state, PN_Enum, PNF_None, GLOBAL, #The state of the Global State.
 	}
-	FUNC SERVER SetSkillLevel
+	FUNC SetSkillLevel, SERVER
 	{
 		DESC Sets the difficulty level of the game, can be retrieved with game.GetSkillLevel.
 		IN level, PN_Number, #The difficulty level, Easy( 1 ), Normal( 2 ), Hard( 3 ).
 	}
-	FUNC SERVER SetTimeScale
+	FUNC SetTimeScale, SERVER
 	{
 		DESC Sets the time scale of the game.
 		IN timeScale, PN_Number, #The new timescale, minimum value is 0.001 and maximum is 5.
 	}
-	FUNC SHARED SinglePlayer
+	FUNC SinglePlayer, SHARED
 	{
 		DESC Returns whenever the current session is a single player game.
 		OUT isSinglePlayer, PN_Bool, #Is single player
 	}
-	FUNC SHARED StartSpot
+	FUNC StartSpot, SHARED
 	{
 		DESC Returns position the player should start from, this is not the same thing as spawn points, it is used to properly transit the player between maps.
 		OUT startSpot, PN_Vector, #Start position

@@ -1,35 +1,35 @@
 CLASS Schedule
 {
-	FUNC SERVER AddTask
+	FUNC AddTask, SERVER
 	{
 		DESC Adds a task to the schedule. See also Schedule:AddTaskEx if you wish to customize task start and run function names.
 		IN taskname, PN_String, #Custom task name
 		IN taskdata, PN_Any, #Task data to be passed into the NPC's functions
 	}
-	FUNC SERVER AddTaskEx
+	FUNC AddTaskEx, SERVER
 	{
 		DESC Adds a task to the schedule with completely custom function names.
 		IN start, PN_String, #The full name of a function on the entity's table to be ran when the task is started.
 		IN run, PN_String, #The full name of a function on the entity's table to be ran when the task is continuously running.
 		IN data, PN_Number, #Task data to be passed into the NPC's functions
 	}
-	FUNC SERVER EngTask
+	FUNC EngTask, SERVER
 	{
 		DESC Adds an engine task to the schedule.
 		IN taskname, PN_String, #Task name, see ai_task.h
 		IN taskdata, PN_Number, #Task data, can be a float.
 	}
-	PURE SERVER GetTask
+	PURE GetTask, SERVER
 	{
 		DESC Returns the task at the given index.
 		IN num, PN_Number, #Task index.
 	}
-	FUNC SERVER Init
+	FUNC Init, SERVER
 	{
 		DESC  string debugName
 		IN debugName, PN_String, #The name passed from ai_schedule.New.
 	}
-	FUNC SERVER NumTasks
+	FUNC NumTasks, SERVER
 	{
 		DESC Returns the number of tasks in the schedule.
 		OUT count, PN_Number, #The number of tasks in this schedule.

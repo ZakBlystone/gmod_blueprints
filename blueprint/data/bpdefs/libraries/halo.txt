@@ -1,6 +1,6 @@
 LIB halo
 {
-	FUNC CLIENT Add
+	FUNC Add, CLIENT
 	{
 		DESC Applies a "halo" glow effect to one or multiple entities.
 		IN entities, PN_Ref, PNF_Table, Entity, #A table of entities to add the halo effect to
@@ -11,7 +11,7 @@ LIB halo
 		IN additive, PN_Bool, PNF_Nullable, #Sets the render mode of the halo to additive.
 		IN ignoreZ, PN_Bool, PNF_Nullable, #Renders the halo through anything when set to true.
 	}
-	PURE CLIENT RenderedEntity
+	PURE RenderedEntity, CLIENT
 	{
 		DESC Returns the entity the halo library is currently rendering the halo for.
 		OUT entity, PN_Ref, PNF_None, Entity, #If set, the currently rendered entity by the halo library.

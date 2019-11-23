@@ -1,45 +1,45 @@
 CLASS ISave
 {
-	FUNC SHARED EndBlock
+	FUNC EndBlock, SHARED
 	{
 		DESC Ends current data block started with ISave:StartBlock and returns to the parent block.
 	}
-	FUNC SHARED StartBlock
+	FUNC StartBlock, SHARED
 	{
 		DESC Starts a new block of data that you can write to inside current block. Blocks must be ended with ISave:EndBlock.
 		IN name, PN_String, #Name of the new block. Used for determining which block is which, returned by IRestore:StartBlock during game load.
 	}
-	FUNC SHARED WriteAngle
+	FUNC WriteAngle, SHARED
 	{
 		DESC Writes an Angle to the save object.
 		IN ang, PN_Angles, #The angle to write.
 	}
-	FUNC SHARED WriteBool
+	FUNC WriteBool, SHARED
 	{
 		DESC Writes a boolean to the save object.
 		IN bool, PN_Bool, #The boolean to write.
 	}
-	FUNC SHARED WriteEntity
+	FUNC WriteEntity, SHARED
 	{
 		DESC Writes an Entity to the save object.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to write.
 	}
-	FUNC SHARED WriteFloat
+	FUNC WriteFloat, SHARED
 	{
 		DESC Writes a floating point number to the save object.
 		IN float, PN_Number, #The floating point number to write.
 	}
-	FUNC SHARED WriteInt
+	FUNC WriteInt, SHARED
 	{
 		DESC Writes an integer number to the save object.
 		IN int, PN_Number, #The integer number to write.
 	}
-	FUNC SHARED WriteString
+	FUNC WriteString, SHARED
 	{
 		DESC Writes a string to the save object.
 		IN str, PN_String, #The string to write. Maximum length is 1024.
 	}
-	FUNC SHARED WriteVector
+	FUNC WriteVector, SHARED
 	{
 		DESC Writes a Vector to the save object.
 		IN vec, PN_Vector, #The vector to write.

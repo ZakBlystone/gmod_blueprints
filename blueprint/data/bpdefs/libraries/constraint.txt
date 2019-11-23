@@ -1,6 +1,6 @@
 LIB constraint
 {
-	FUNC SERVER AddConstraintTable
+	FUNC AddConstraintTable, SERVER
 	{
 		DESC Stores information about constraints in an entity's table.
 		IN ent1, PN_Ref, PNF_None, Entity, #The entity to store the information on.
@@ -9,7 +9,7 @@ LIB constraint
 		IN ent3, PN_Ref, PNF_Nullable, Entity, #Optional. Same as ent2.
 		IN ent4, PN_Ref, PNF_Nullable, Entity, #Optional. Same as ent2.
 	}
-	FUNC SERVER AddConstraintTableNoDelete
+	FUNC AddConstraintTableNoDelete, SERVER
 	{
 		DESC Stores info about the constraints on the entity's table. The only difference between this and constraint.AddConstraintTable is that the constraint does not get deleted when the entity is removed.
 		IN ent1, PN_Ref, PNF_None, Entity, #The entity to store the information on.
@@ -18,7 +18,7 @@ LIB constraint
 		IN ent3, PN_Ref, PNF_Nullable, Entity, #Optional. Same as ent2.
 		IN ent4, PN_Ref, PNF_Nullable, Entity, #Optional. Same as ent2.
 	}
-	FUNC SERVER AdvBallsocket
+	FUNC AdvBallsocket, SERVER
 	{
 		DESC Creates an advanced ballsocket (ragdoll) constraint.
 		IN Ent1, PN_Ref, PNF_None, Entity, #First entity.
@@ -42,7 +42,7 @@ LIB constraint
 		IN nocollide, PN_Number, #Whether the entities should be no-collided.
 		OUT constraint, PN_Ref, PNF_None, Entity, #A phys_ragdollconstraint entity. Will return false if the constraint could not be created.
 	}
-	FUNC SERVER Axis
+	FUNC Axis, SERVER
 	{
 		DESC Creates an axis constraint.
 		IN Ent1, PN_Ref, PNF_None, Entity, #First entity.
@@ -59,7 +59,7 @@ LIB constraint
 		IN DontAddTable, PN_Bool, #Whether or not to add the constraint info on the entity table. See constraint.AddConstraintTable.
 		OUT constraint, PN_Ref, PNF_None, Entity, #Constraint. Will return false if the constraint could not be created.
 	}
-	FUNC SERVER Ballsocket
+	FUNC Ballsocket, SERVER
 	{
 		DESC Creates a ballsocket joint.
 		IN Ent1, PN_Ref, PNF_None, Entity, #First entity
@@ -72,14 +72,14 @@ LIB constraint
 		IN nocollide, PN_Number, #Whether the entities should be nocollided
 		OUT constraint, PN_Ref, PNF_None, Entity, #Constraint. Will return false if the constraint could not be created.
 	}
-	PURE SERVER CanConstrain
+	PURE CanConstrain, SERVER
 	{
 		DESC Basic checks to make sure that the specified entity and bone are valid. Returns false if we should not be constraining the entity.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to check
 		IN bone, PN_Number, #The bone of the entity to check (use 0 for mono boned ents)
 		OUT canConstrain, PN_Bool, #shouldConstrain
 	}
-	FUNC SERVER CreateKeyframeRope
+	FUNC CreateKeyframeRope, SERVER
 	{
 		DESC Creates a rope without any constraint
 		IN pos, PN_Vector
@@ -95,7 +95,7 @@ LIB constraint
 		IN kv, PN_Any, PNF_Table
 		OUT rope, PN_Ref, PNF_None, Entity, #rope
 	}
-	FUNC SERVER CreateStaticAnchorPoint
+	FUNC CreateStaticAnchorPoint, SERVER
 	{
 		DESC Creates an invisible, non-moveable anchor point in the world to which things can be attached.
 		IN pos, PN_Vector, #The position to spawn the anchor at
@@ -104,7 +104,7 @@ LIB constraint
 		OUT bone, PN_Number, #bone
 		OUT localPos, PN_Vector, #LPos
 	}
-	FUNC SERVER Elastic
+	FUNC Elastic, SERVER
 	{
 		DESC Creates an elastic constraint.
 		IN Ent1, PN_Ref, PNF_None, Entity, #First entity.
@@ -122,7 +122,7 @@ LIB constraint
 		OUT constraint, PN_Ref, PNF_None, Entity, #Constraint. Will return false if the constraint could not be created.
 		OUT rope, PN_Ref, PNF_None, Entity, #rope. Will return nil if the constraint could not be created.
 	}
-	PURE SERVER Find
+	PURE Find, SERVER
 	{
 		DESC Returns the constraint of a specified type between two entities, if it exists
 		IN ent1, PN_Ref, PNF_None, Entity, #The first entity to check
@@ -132,52 +132,52 @@ LIB constraint
 		IN bone2, PN_Number, #The bone number for the second entity
 		OUT constraint, PN_Ref, PNF_None, Entity, #constraint
 	}
-	PURE SERVER FindConstraint
+	PURE FindConstraint, SERVER
 	{
 		DESC Returns the first constraint of a specific type directly connected to the entity found
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to check
 		IN type, PN_String, #The type of constraint (eg. "Weld", "Elastic", "NoCollide")
 		OUT constraint, PN_Any, PNF_Table, #The constraint table, set with constraint.AddConstraintTable
 	}
-	PURE SERVER FindConstraintEntity
+	PURE FindConstraintEntity, SERVER
 	{
 		DESC Returns the other entity involved in the first constraint of a specific type directly connected to the entity
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to check
 		IN type, PN_String, #The type of constraint (eg. "Weld", "Elastic", "NoCollide")
 		OUT entity, PN_Ref, PNF_None, Entity, #The other entity.
 	}
-	PURE SERVER FindConstraints
+	PURE FindConstraints, SERVER
 	{
 		DESC Returns a table of all constraints of a specific type directly connected to the entity
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to check
 		IN type, PN_String, #The type of constraint (eg. "Weld", "Elastic", "NoCollide")
 		OUT constraints, PN_Ref, PNF_Table, Entity, #All the constraints of this entity.
 	}
-	FUNC SERVER ForgetConstraints
+	FUNC ForgetConstraints, SERVER
 	{
 		DESC Make this entity forget any constraints it knows about. Note that this will not actually remove the constraints.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity that will forget its constraints.
 	}
-	PURE SERVER GetAllConstrainedEntities
+	PURE GetAllConstrainedEntities, SERVER
 	{
 		DESC Returns a table of all entities recursively constrained to an entitiy.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to check
 		IN ResultTable, PN_Ref, PNF_Nullable|PNF_Table, Entity, #Table used to return result. Optional.
 		OUT entites, PN_Ref, PNF_Table, Entity, #A table containing all of the constrained entities. This includes all entities constrained to entities constrained to the supplied entity, etc.
 	}
-	PURE SERVER GetTable
+	PURE GetTable, SERVER
 	{
 		DESC Returns a table of all constraints directly connected to the entity
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to check
 		OUT constraints, PN_Ref, PNF_Table, Entity, #A list of all constraints connected to the entity.
 	}
-	PURE SERVER HasConstraints
+	PURE HasConstraints, SERVER
 	{
 		DESC Returns true if the entity has constraints attached to it
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to check
 		OUT hasConstraints, PN_Bool, #Whether the entity has any constraints or not.
 	}
-	FUNC SERVER Hydraulic
+	FUNC Hydraulic, SERVER
 	{
 		DESC Creates a Hydraulic constraint.
 		IN pl, PN_Ref, PNF_None, Player, #The player that will be used to call numpad.OnDown.
@@ -199,7 +199,7 @@ LIB constraint
 		OUT controller, PN_Ref, PNF_None, Entity, #controller. Can return nil depending on how the constraint was created. Will return nil if the constraint could not be created.
 		OUT slider, PN_Ref, PNF_None, Entity, #slider. Can return nil depending on how the constraint was created. Will return nil if the constraint could not be created.
 	}
-	FUNC SERVER Keepupright
+	FUNC Keepupright, SERVER
 	{
 		DESC Creates a keep upright constraint.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to keep upright
@@ -208,7 +208,7 @@ LIB constraint
 		IN angularLimit, PN_Number, #Basically, the strength of the constraint
 		OUT constraint, PN_Ref, PNF_None, Entity, #The created constraint, if any or false if the constraint failed to set
 	}
-	FUNC SERVER Motor
+	FUNC Motor, SERVER
 	{
 		DESC Creates a motor constraint.
 		IN Ent1, PN_Ref, PNF_None, Entity, #First entity.
@@ -231,7 +231,7 @@ LIB constraint
 		OUT constraint, PN_Ref, PNF_None, Entity, #Constraint. Will return false if the constraint could not be created.
 		OUT axis, PN_Ref, PNF_None, Entity, #axis. Will return nil if the constraint could not be created.
 	}
-	FUNC SERVER Muscle
+	FUNC Muscle, SERVER
 	{
 		DESC Creates a muscle constraint.
 		IN pl, PN_Ref, PNF_None, Player, #The player that will be used to call numpad.OnDown.
@@ -255,7 +255,7 @@ LIB constraint
 		OUT controller, PN_Ref, PNF_None, Entity, #controller. Will return nil if the constraint could not be created.
 		OUT slider, PN_Ref, PNF_None, Entity, #slider. Will return nil if the fixed argument is not 1 or if the constraint could not be created.
 	}
-	FUNC SERVER NoCollide
+	FUNC NoCollide, SERVER
 	{
 		DESC Creates an no-collide "constraint". Disables collision between two entities.
 		IN Ent1, PN_Ref, PNF_None, Entity, #First entity.
@@ -264,7 +264,7 @@ LIB constraint
 		IN Bone2, PN_Number, #Bone of second entity (0 for non-ragdolls).
 		OUT constraint, PN_Ref, PNF_None, Entity, #Constraint. Will return false if the constraint could not be created.
 	}
-	FUNC SERVER Pulley
+	FUNC Pulley, SERVER
 	{
 		DESC Creates a pulley constraint.
 		IN Ent1, PN_Ref, PNF_None, Entity
@@ -281,14 +281,14 @@ LIB constraint
 		IN material, PN_String, #Material of the rope.
 		OUT constraint, PN_Ref, PNF_None, Entity, #Constraint. Will return false if the constraint could not be created.
 	}
-	FUNC SERVER RemoveAll
+	FUNC RemoveAll, SERVER
 	{
 		DESC Attempts to remove all constraints associated with an entity
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to remove constraints from
 		OUT success, PN_Bool, #Whether any constraints were removed
 		OUT count, PN_Number, #Number of constraints removed
 	}
-	FUNC SERVER RemoveConstraints
+	FUNC RemoveConstraints, SERVER
 	{
 		DESC Attempts to remove all constraints of a specified type associated with an entity
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to check
@@ -296,7 +296,7 @@ LIB constraint
 		OUT success, PN_Bool, #Whether we removed any constraints or not
 		OUT count, PN_Number, #The amount of constraints removed
 	}
-	FUNC SERVER Rope
+	FUNC Rope, SERVER
 	{
 		DESC Creates a rope constraint - with rope!
 		IN Ent1, PN_Ref, PNF_None, Entity, #First entity
@@ -314,7 +314,7 @@ LIB constraint
 		OUT constraint, PN_Ref, PNF_None, Entity, #Constraint. Will be a keyframe_rope if you roping to the same bone on the same entity. Will return false if the constraint could not be created.
 		OUT rope, PN_Ref, PNF_None, Entity, #rope. Will return nil if "Constraint" is a keyframe_rope or if the constraint could not be created.
 	}
-	FUNC SERVER Slider
+	FUNC Slider, SERVER
 	{
 		DESC Creates a slider constraint.
 		IN Ent1, PN_Ref, PNF_None, Entity, #First entity.
@@ -328,7 +328,7 @@ LIB constraint
 		OUT constraint, PN_Ref, PNF_None, Entity, #Constraint. Will return false if the constraint could not be created.
 		OUT rope, PN_Ref, PNF_None, Entity, #rope. Will return nil if the constraint could not be created.
 	}
-	FUNC SERVER Weld
+	FUNC Weld, SERVER
 	{
 		DESC Creates a weld constraint
 		IN ent1, PN_Ref, PNF_None, Entity, #The first entity
@@ -340,7 +340,7 @@ LIB constraint
 		IN deleteent1onbreak, PN_Bool, #If true, when ent2 is removed, ent1 will also be removed
 		OUT constraint, PN_Ref, PNF_None, Entity, #constraint
 	}
-	FUNC SERVER Winch
+	FUNC Winch, SERVER
 	{
 		DESC Creates a Winch constraint.
 		IN pl, PN_Ref, PNF_None, Player, #The player that will be used to call numpad.OnDown and numpad.OnUp.

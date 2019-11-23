@@ -1,15 +1,15 @@
 CLASS PhysCollide
 {
-	FUNC SHARED Destroy
+	FUNC Destroy, SHARED
 	{
 		DESC Destroys the PhysCollide object.
 	}
-	PURE SHARED IsValid
+	PURE IsValid, SHARED
 	{
 		DESC Checks whether this PhysCollide object is valid or not.
 		OUT valid, PN_Bool, #Is valid or not.
 	}
-	FUNC SHARED TraceBox
+	FUNC TraceBox, SHARED
 	{
 		DESC Performs a trace against this PhysCollide with the given parameters. This can be used for both line traces and box traces.
 		IN origin, PN_Vector, #The origin for the PhysCollide during the trace

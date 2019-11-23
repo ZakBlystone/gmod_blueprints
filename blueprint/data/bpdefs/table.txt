@@ -1,6 +1,6 @@
 LIB TABLE
 {
-	PURE SHARED Get
+	PURE Get, SHARED
 	{
 		IN Table, PN_Any, PNF_Table
 		IN Key, PN_Any
@@ -9,7 +9,7 @@ LIB TABLE
 		COMPACT
 		CODE #1 = $1[$2]
 	}
-	FUNC SHARED Set
+	FUNC Set, SHARED
 	{
 		IN Table, PN_Any, PNF_Table
 		IN Key, PN_Any
@@ -18,13 +18,13 @@ LIB TABLE
 		COMPACT
 		CODE $1[$2] = $3
 	}
-	FUNC SHARED Clear
+	FUNC Clear, SHARED
 	{
 		IN Table, PN_Any, PNF_Table
 		COMPACT
 		CODE $1 = {}
 	}
-	PURE SHARED HasKey
+	PURE HasKey, SHARED
 	{
 		IN Table, PN_Any, PNF_Table
 		IN Key, PN_Any
@@ -32,7 +32,7 @@ LIB TABLE
 		COMPACT
 		CODE #1 = $1[$2] ~= nil
 	}
-	PURE SHARED HasValue
+	PURE HasValue, SHARED
 	{
 		IN Table, PN_Any, PNF_Table
 		IN Value, PN_Any
@@ -41,7 +41,7 @@ LIB TABLE
 		COMPACT
 		CODE #1 = table.HasValue($1, $2)
 	}
-	PURE SHARED GetOrDefault
+	PURE GetOrDefault, SHARED
 	{
 		IN Table, PN_Any, PNF_Table
 		IN Key, PN_Any
@@ -52,7 +52,7 @@ LIB TABLE
 		LOCAL v
 		CODE %v = $1[$2] if %v == nil then #1 = $3 else #1 = %v end
 	}
-	PURE SHARED GetSize
+	PURE GetSize, SHARED
 	{
 		DISPLAY TABLE.Size
 		IN Table, PN_Any, PNF_Table
@@ -61,7 +61,7 @@ LIB TABLE
 		INFORM 1
 		CODE #1 = #$1
 	}
-	FUNC SHARED Insert
+	FUNC Insert, SHARED
 	{
 		DESC Inserts a value into a table at the end of the table or at the given position.
 		IN Table, PN_Any, PNF_Table, #The table to insert the variable into.
@@ -77,7 +77,7 @@ LIB TABLE
 		}
 		INFORM 3,4
 	}
-	FUNC SHARED Remove
+	FUNC Remove, SHARED
 	{
 		DESC Removes a value from a table and shifts any other values down to fill the gap.
 		IN Table, PN_Any, PNF_Table, #The table to remove the value from.
@@ -87,7 +87,7 @@ LIB TABLE
 		OUT Key, PN_Any, #The value that was removed.
 		CODE #1 = table.remove($1, $2)
 	}
-	FUNC SHARED RemoveByValue
+	FUNC RemoveByValue, SHARED
 	{
 		DESC Removes the first instance of a given value from the specified table with table.remove, then returns the key that the value was found at.
 		IN Table, PN_Any, PNF_Table, #The table that will be searched.
@@ -97,7 +97,7 @@ LIB TABLE
 		INFORM 3,4
 		CODE #1 = table.RemoveByValue($1, $2)
 	}
-	PURE SHARED MakeArray
+	PURE MakeArray, SHARED
 	{
 		CLASS MakeArray
 	}

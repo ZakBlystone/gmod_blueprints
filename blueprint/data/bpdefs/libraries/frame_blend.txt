@@ -1,37 +1,37 @@
 LIB frame_blend
 {
-	FUNC CLIENT AddFrame
+	FUNC AddFrame, CLIENT
 	{
 		DESC Adds a frame to the blend. Calls frame_blend.CompleteFrame once enough frames have passed since last frame_blend.CompleteFrame call.
 	}
-	FUNC CLIENT BlendFrame
+	FUNC BlendFrame, CLIENT
 	{
 		DESC Blends the frame(s).
 	}
-	FUNC CLIENT CompleteFrame
+	FUNC CompleteFrame, CLIENT
 	{
 		DESC Renders the frame onto internal render target.
 	}
-	FUNC CLIENT DrawPreview
+	FUNC DrawPreview, CLIENT
 	{
 		DESC Actually draws the frame blend effect.
 	}
-	PURE CLIENT IsActive
+	PURE IsActive, CLIENT
 	{
 		DESC Returns whether frame blend post processing effect is enabled or not.
 		OUT active, PN_Bool, #Is frame blend enabled or not
 	}
-	PURE CLIENT IsLastFrame
+	PURE IsLastFrame, CLIENT
 	{
 		DESC Returns whether the current frame is the last frame?
 		OUT last, PN_Bool, #Whether the current frame is the last frame?
 	}
-	PURE CLIENT RenderableFrames
+	PURE RenderableFrames, CLIENT
 	{
 		DESC Returns amount of frames needed to render?
 		OUT frames, PN_Number, #Amount of frames needed to render?
 	}
-	PURE CLIENT ShouldSkipFrame
+	PURE ShouldSkipFrame, CLIENT
 	{
 		DESC Returns whether we should skip frame or not
 		OUT skip, PN_Bool, #Should the frame be skipped or not

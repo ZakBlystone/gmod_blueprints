@@ -1,30 +1,30 @@
 LIB gmsave
 {
-	FUNC SERVER LoadMap
+	FUNC LoadMap, SERVER
 	{
 		DESC Loads a saved map.
 		IN mapData, PN_String, #The JSON encoded string containing all the map data.
 		IN ply, PN_Ref, PNF_None, Player, #The player to load positions for
 	}
-	FUNC SERVER PlayerLoad
+	FUNC PlayerLoad, SERVER
 	{
 		DESC Sets player position and angles from supplied table
 		IN ply, PN_Ref, PNF_None, Player, #The player to "load" values for
 		IN data, PN_Any, PNF_Table, #A table containing Origin and Angle keys for position and angles to set.
 	}
-	FUNC SERVER PlayerSave
+	FUNC PlayerSave, SERVER
 	{
 		DESC Returns a table containing player position and angles. Used by gmsave.SaveMap.
 		IN ply, PN_Ref, PNF_None, Player, #The player to "save"
 		OUT data, PN_Any, PNF_Table, #A table containing player position ( Origin ) and angles ( Angle )
 	}
-	FUNC SERVER SaveMap
+	FUNC SaveMap, SERVER
 	{
 		DESC Saves the map
 		IN ply, PN_Ref, PNF_None, Player, #The player, whose position should be saved for loading the save
 		OUT data, PN_String, #The encoded to JSON string containing save data
 	}
-	FUNC SERVER ShouldSaveEntity
+	FUNC ShouldSaveEntity, SERVER
 	{
 		DESC Returns if we should save this entity in a duplication or a map save or not.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity

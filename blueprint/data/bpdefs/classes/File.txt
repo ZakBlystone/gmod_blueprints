@@ -1,126 +1,126 @@
 CLASS File
 {
-	FUNC SHARED Close
+	FUNC Close, SHARED
 	{
 		DESC Dumps the file changes to disk and closes the file handle which makes the handle useless.
 	}
-	FUNC SHARED Flush
+	FUNC Flush, SHARED
 	{
 		DESC Dumps the file changes to disk and saves the file.
 	}
-	FUNC SHARED Read
+	FUNC Read, SHARED
 	{
 		DESC Reads the specified amount of chars and returns them as a binary string.
 		IN length, PN_Number, #Reads the specified amount of chars.
 		OUT data, PN_String, #data
 	}
-	FUNC SHARED ReadBool
+	FUNC ReadBool, SHARED
 	{
 		DESC Reads one byte of the file and returns whether that byte was not 0.
 		OUT value, PN_Bool, #val
 	}
-	FUNC SHARED ReadByte
+	FUNC ReadByte, SHARED
 	{
 		DESC Reads one unsigned 8-bit integer from the file.
 		OUT value, PN_Number, #The unsigned 8-bit integer from the file.
 	}
-	FUNC SHARED ReadDouble
+	FUNC ReadDouble, SHARED
 	{
 		DESC Reads 8 bytes from the file converts them to a double and returns them.
 		OUT value, PN_Number, #value
 	}
-	FUNC SHARED ReadFloat
+	FUNC ReadFloat, SHARED
 	{
 		DESC Reads 4 bytes from the file converts them to a float and returns them.
 		OUT value, PN_Number, #The read value
 	}
-	FUNC SHARED ReadLine
+	FUNC ReadLine, SHARED
 	{
 		DESC Returns the contents of the file from the current position up until the end of the current line.
 		OUT value, PN_String, #The string of data from the read line.
 	}
-	FUNC SHARED ReadLong
+	FUNC ReadLong, SHARED
 	{
 		DESC Reads a signed 32-bit integer from the file.
 		OUT value, PN_Number, #A signed 32-bit integer
 	}
-	FUNC SHARED ReadShort
+	FUNC ReadShort, SHARED
 	{
 		DESC Reads a signed 16-bit integer from the file.
 		OUT value, PN_Number, #int16
 	}
-	FUNC SHARED ReadULong
+	FUNC ReadULong, SHARED
 	{
 		DESC Reads a unsigned 32-bit integer from the file.
 		OUT value, PN_Number, #An unsigned 32-bit integer
 	}
-	FUNC SHARED ReadUShort
+	FUNC ReadUShort, SHARED
 	{
 		DESC Reads a unsigned 16-bit integer from the file.
 		OUT value, PN_Number, #The 16-bit integer
 	}
-	FUNC SHARED Seek
+	FUNC Seek, SHARED
 	{
 		DESC Sets the file pointer to the specified position.
 		IN pos, PN_Number, #Pointer position.
 	}
-	PURE SHARED Size
+	PURE Size, SHARED
 	{
 		DESC Returns the size of the file in bytes.
 		OUT size, PN_Number, #size
 	}
-	FUNC SHARED Skip
+	FUNC Skip, SHARED
 	{
 		DESC Moves the file pointer by the specified amount of chars.
 		IN amount, PN_Number, #The amount of chars to skip, can be negative to skip backwards.
 		OUT offset, PN_Number, #amount
 	}
-	PURE SHARED Tell
+	PURE Tell, SHARED
 	{
 		DESC Returns the current position of the file pointer.
 		OUT offset, PN_Number, #pos
 	}
-	FUNC SHARED Write
+	FUNC Write, SHARED
 	{
 		DESC Writes the given string into the file.
 		IN data, PN_String, #Binary data to write to the file.
 	}
-	FUNC SHARED WriteBool
+	FUNC WriteBool, SHARED
 	{
 		DESC Writes a boolean value to the file as one byte.
 		IN bool, PN_Bool, #The bool to be written to the file.
 	}
-	FUNC SHARED WriteByte
+	FUNC WriteByte, SHARED
 	{
 		DESC Write an 8-bit unsigned integer to the file.
 		IN uint8, PN_Number, #The 8-bit unsigned integer to be written to the file.
 	}
-	FUNC SHARED WriteDouble
+	FUNC WriteDouble, SHARED
 	{
 		DESC Writes a 8byte floating point double to the file.
 		IN double, PN_Number, #The double to be written to the file.
 	}
-	FUNC SHARED WriteFloat
+	FUNC WriteFloat, SHARED
 	{
 		DESC Writes a 4byte float to the file.
 		IN float, PN_Number, #The float to be written to the file.
 	}
-	FUNC SHARED WriteLong
+	FUNC WriteLong, SHARED
 	{
 		DESC Writes a 32-bit signed integer to the file.
 		IN int32, PN_Number, #The 32-bit signed integer to be written to the file.
 	}
-	FUNC SHARED WriteShort
+	FUNC WriteShort, SHARED
 	{
 		DESC Writes a 16-bit signed integer to the file.
 		IN int16, PN_Number, #The 16-bit signed integer to be written to the file.
 	}
-	FUNC SHARED WriteULong
+	FUNC WriteULong, SHARED
 	{
 		DESC Writes an unsigned 32-bit integer to the file.
 		IN uint32, PN_Number, #The unsigned 32-bit integer to be written to the file.
 	}
-	FUNC SHARED WriteUShort
+	FUNC WriteUShort, SHARED
 	{
 		DESC Writes an unsigned 16-bit integer to the file.
 		IN uint16, PN_Number, #The unsigned 16-bit integer to the file.

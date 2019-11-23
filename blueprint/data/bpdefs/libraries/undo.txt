@@ -1,59 +1,59 @@
 LIB undo
 {
-	FUNC SERVER AddEntity
+	FUNC AddEntity, SERVER
 	{
 		DESC Adds an entity to the current undo block
 		IN entity, PN_Ref, PNF_None, Entity, #The entity to add
 	}
-	FUNC SERVER AddFunction
+	FUNC AddFunction, SERVER
 	{
 		TBD
 		DESC Adds a function to call when the current undo block is undone
 		IN func, PN_Ref, PNF_None, function, #The function to call
 		IN arguments, PN_Ref, PNF_None, vararg, #Arguments to pass to the function (after the undo info table)
 	}
-	FUNC SERVER Create
+	FUNC Create, SERVER
 	{
 		DESC Begins a new undo entry
 		IN name, PN_String, #Name of the undo message to show to players
 	}
-	FUNC SERVER Do_Undo
+	FUNC Do_Undo, SERVER
 	{
 		DESC Processes an undo block (in table form). This is used internally by the undo manager when a player presses Z.
 		IN tab, PN_Struct, PNF_None, Undo, #The undo block to process as an Undo structure
 		OUT removedEntities, PN_Number, #Number of removed entities
 	}
-	FUNC SHARED Finish
+	FUNC Finish, SHARED
 	{
 		DESC Completes an undo entry, and registers it with the player's client
 	}
-	PURE SHARED GetTable
+	PURE GetTable, SHARED
 	{
 		DESC Serverside, returns a table containing all undo blocks of all players. Clientside, returns a table of the local player's undo blocks.
 		OUT undoTable, PN_Any, PNF_Table, #The undo table.
 	}
-	FUNC CLIENT MakeUIDirty
+	FUNC MakeUIDirty, CLIENT
 	{
 		DESC Makes the UI dirty - it will re-create the controls the next time it is viewed. We also take this opportun
 	}
-	FUNC SERVER ReplaceEntity
+	FUNC ReplaceEntity, SERVER
 	{
 		DESC Replaces any instance of the "from" reference with the "to" reference, in any existing undo block. Returns true if something was replaced
 		IN from, PN_Ref, PNF_None, Entity, #The old entity
 		IN to, PN_Ref, PNF_None, Entity, #The new entity to replace the old one
 		OUT wasReplaced, PN_Bool, #somethingReplaced
 	}
-	FUNC SERVER SetCustomUndoText
+	FUNC SetCustomUndoText, SERVER
 	{
 		DESC Sets a custom undo text for the current undo block
 		IN customText, PN_String, #The text to display when the undo block is undone
 	}
-	FUNC SERVER SetPlayer
+	FUNC SetPlayer, SERVER
 	{
 		DESC Sets the player which the current undo block belongs to
 		IN player, PN_Ref, PNF_None, Player, #The player responsible for undoing the block
 	}
-	FUNC CLIENT SetupUI
+	FUNC SetupUI, CLIENT
 	{
 		DESC Adds a hook (CPanelPaint) to the control panel paint function so we can determine when it is being drawn.
 	}

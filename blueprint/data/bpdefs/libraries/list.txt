@@ -1,39 +1,39 @@
 LIB list
 {
-	FUNC SHARED Add
+	FUNC Add, SHARED
 	{
 		DESC Adds an item to a named list
 		IN identifier, PN_String, #The list identifier
 		IN item, PN_Any, #The item to add to the list
 	}
-	FUNC SHARED Contains
+	FUNC Contains, SHARED
 	{
 		DESC Returns true if the list contains the value. (as a value - not a key)
 		IN list, PN_String, #List to search through
 		IN value, PN_Any, #The value to test
 		OUT contains, PN_Bool, #Returns true if the list contains the value, false otherwise
 	}
-	PURE SHARED Get
+	PURE Get, SHARED
 	{
 		DESC Returns a copy of the list stored at identifier
 		IN identifier, PN_String, #The list identifier
 		OUT list, PN_Any, PNF_Table, #The copy of the list
 	}
-	PURE SHARED GetForEdit
+	PURE GetForEdit, SHARED
 	{
 		PROTECTED
 		DESC Returns the actual table of the list stored at identifier. Modifying this will affect the stored list
 		IN identifier, PN_String, #The list identifier
 		OUT list, PN_Any, PNF_Table, #The actual list
 	}
-	FUNC SHARED HasEntry
+	FUNC HasEntry, SHARED
 	{
 		DESC Returns true if the list contains the given key.
 		IN list, PN_String, #List to search through
 		IN key, PN_Any, #The key to test
 		OUT hasEntry, PN_Bool, #Returns true if the list contains the key, false otherwise
 	}
-	FUNC SHARED Set
+	FUNC Set, SHARED
 	{
 		PROTECTED
 		DESC Sets a specific position in the named list to a value.

@@ -1,25 +1,25 @@
 LIB cookie
 {
-	FUNC SHARED Delete
+	FUNC Delete, SHARED
 	{
 		DESC Deletes a cookie on the client.
 		IN name, PN_String, #The name of the cookie that you want to delete.
 	}
-	PURE SHARED GetNumber
+	PURE GetNumber, SHARED
 	{
 		DESC Gets the value of a cookie on the client as a number.
 		IN name, PN_String, #The name of the cookie that you want to get.
 		IN default, PN_Any, PNF_Nullable, #Value to return if the cookie does not exist.
 		OUT value, PN_Number, #The cookie value
 	}
-	PURE SHARED GetString
+	PURE GetString, SHARED
 	{
 		DESC Gets the value of a cookie on the client as a string.
 		IN name, PN_String, #The name of the cookie that you want to get.
 		IN default, PN_Any, PNF_Nullable, #Value to return if the cookie does not exist.
 		OUT value, PN_String, #The cookie value
 	}
-	FUNC SHARED Set
+	FUNC Set, SHARED
 	{
 		DESC Sets the value of a cookie, which is saved automatically by the sql library.
 		IN key, PN_String, #The name of the cookie that you want to set.

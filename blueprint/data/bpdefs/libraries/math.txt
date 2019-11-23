@@ -1,25 +1,25 @@
 LIB math
 {
-	PURE SHARED abs
+	PURE abs, SHARED
 	{
 		DESC Calculates the absolute value of a number (effectively removes any negative sign).
 		IN x, PN_Number, #The number to get the absolute value of.
 		OUT result, PN_Number, #absolute_value
 	}
-	PURE SHARED acos
+	PURE acos, SHARED
 	{
 		DESC Returns the arc cosine of the given number.
 		IN cos, PN_Number, #Cosine value in range of -1 to 1.
 		OUT result, PN_Number, #An angle in radians, between 0 and pi, which has the given cos value. nan if the argument is out of range.
 	}
-	PURE SHARED AngleDifference
+	PURE AngleDifference, SHARED
 	{
 		DESC Calculates the difference between two angles.
 		IN a, PN_Number, #The first angle.
 		IN b, PN_Number, #The second angle.
 		OUT result, PN_Number, #The difference between the angles between -180 and 180
 	}
-	PURE SHARED Approach
+	PURE Approach, SHARED
 	{
 		DESC Gradually approaches the target value by the specified amount.
 		IN current, PN_Number, #The value we're currently at.
@@ -27,7 +27,7 @@ LIB math
 		IN change, PN_Number, #The amount that the current value is allowed to change by to approach the target. (It makes no difference whether this is positive or negative.)
 		OUT result, PN_Number, #New current value, closer to the target than it was previously.
 	}
-	PURE SHARED ApproachAngle
+	PURE ApproachAngle, SHARED
 	{
 		DESC Increments an angle towards another by specified rate.
 		IN currentAngle, PN_Number, #The current angle to increase
@@ -35,32 +35,32 @@ LIB math
 		IN rate, PN_Number, #The amount to approach the target angle by
 		OUT result, PN_Number, #Modified angle
 	}
-	PURE SHARED asin
+	PURE asin, SHARED
 	{
 		DESC Returns the arc sine of the given number.
 		IN normal, PN_Number, #Sine value in the range of -1 to 1.
 		OUT result, PN_Number, #An angle in radians, in the range -pi/2 to pi/2, which has the given sine value. nan if the argument is out of range.
 	}
-	PURE SHARED atan
+	PURE atan, SHARED
 	{
 		DESC Returns the arc tangent of the given number.
 		IN normal, PN_Number, #Tangent value.
 		OUT result, PN_Number, #An angle in radians, in the range -pi/2 to pi/2, which has the given tangent.
 	}
-	PURE SHARED atan2
+	PURE atan2, SHARED
 	{
 		DESC atan2 functions like math.atan(y / x), except it also takes into account the quadrant of the angle and so doesn't have a limited range of output.
 		IN y, PN_Number, #Y coordinate.
 		IN x, PN_Number, #X coordinate.
 		OUT result, PN_Number, #The angle of the line from (0, 0) to (x, y) in radians, in the range -pi to pi.
 	}
-	PURE SHARED BinToInt
+	PURE BinToInt, SHARED
 	{
 		DESC Converts a binary string into a number.
 		IN string, PN_String, #Binary string to convert
 		OUT result, PN_Number, #Base 10 number.
 	}
-	PURE SHARED BSplinePoint
+	PURE BSplinePoint, SHARED
 	{
 		DESC Basic code for Bézier-Spline algorithm.
 		IN tDiff, PN_Number, #From 0 to 1, where alongside the spline the point will be.
@@ -68,7 +68,7 @@ LIB math
 		IN tMax, PN_Number, #Just leave this at 1.
 		OUT result, PN_Vector, #Point on Bezier curve, related to tDiff.
 	}
-	PURE SHARED calcBSplineN
+	PURE calcBSplineN, SHARED
 	{
 		DESC Basic code for Bezier-Spline algorithm, helper function for math.BSplinePoint.
 		IN i, PN_Number
@@ -77,13 +77,13 @@ LIB math
 		IN tinc, PN_Number
 		OUT result, PN_Number
 	}
-	PURE SHARED ceil
+	PURE ceil, SHARED
 	{
 		DESC Ceils or rounds a number up.
 		IN number, PN_Number, #The number to be rounded up.
 		OUT result, PN_Number, #ceiled numbers
 	}
-	PURE SHARED Clamp
+	PURE Clamp, SHARED
 	{
 		DESC Clamps a number between a minimum and maximum value
 		IN input, PN_Number, #The number to clamp.
@@ -91,25 +91,25 @@ LIB math
 		IN max, PN_Number, #The maximum value, this function will never return a number greater than this.
 		OUT result, PN_Number, #The clamped value.
 	}
-	PURE SHARED cos
+	PURE cos, SHARED
 	{
 		DESC Returns the cosine of given angle.
 		IN number, PN_Number, #Angle in radians
 		OUT result, PN_Number, #Cosine of given angle
 	}
-	PURE SHARED cosh
+	PURE cosh, SHARED
 	{
 		DESC Returns the hyperbolic cosine of the given angle.
 		IN number, PN_Number, #Angle in radians.
 		OUT result, PN_Number, #The hyperbolic cosine of the given angle.
 	}
-	PURE SHARED deg
+	PURE deg, SHARED
 	{
 		DESC Converts radians to degrees.
 		IN radians, PN_Number, #Value to be converted to degrees.
 		OUT degrees, PN_Number, #degrees
 	}
-	PURE SHARED Dist
+	PURE Dist, SHARED
 	{
 		DESC Returns the difference between two points in 2D space. Alias of math.Distance.
 		IN x1, PN_Number, #X position of first point
@@ -118,7 +118,7 @@ LIB math
 		IN y2, PN_Number, #Y position of second point
 		OUT result, PN_Number, #Distance between the two points.
 	}
-	PURE SHARED Distance
+	PURE Distance, SHARED
 	{
 		DESC Returns the difference between two points in 2D space.
 		IN x1, PN_Number, #X position of first point
@@ -127,7 +127,7 @@ LIB math
 		IN y2, PN_Number, #Y position of second point
 		OUT result, PN_Number, #Distance between the two points
 	}
-	PURE SHARED EaseInOut
+	PURE EaseInOut, SHARED
 	{
 		DESC Calculates the progress of a value fraction, taking in to account given easing fractions
 		IN progress, PN_Number, #Fraction of the progress to ease
@@ -135,126 +135,126 @@ LIB math
 		IN easeOut, PN_Number, #Fraction of how much easing to end with
 		OUT result, PN_Number, #Eased Value
 	}
-	PURE SHARED exp
+	PURE exp, SHARED
 	{
 		DESC Returns the x power of the Euler constant e.
 		IN exponent, PN_Number, #The exponent for the function.
 		OUT result, PN_Number, #e to the specified power
 	}
-	PURE SHARED floor
+	PURE floor, SHARED
 	{
 		DESC Floors or rounds a number down.
 		IN number, PN_Number, #The number to be rounded down.
 		OUT result, PN_Number, #floored numbers
 	}
-	PURE SHARED fmod
+	PURE fmod, SHARED
 	{
 		DESC Returns the modulus of the specified values.
 		IN base, PN_Number, #The base value.
 		IN modulator, PN_Number, #The modulator.
 		OUT result, PN_Number, #The calculated modulus.
 	}
-	PURE SHARED frexp
+	PURE frexp, SHARED
 	{
 		DESC Used to split the number value into a normalized fraction and an exponent. Two values are returned: the first is a multiplier in the range 1/2 (inclusive) to 1 (exclusive) and the second is an integer exponent.
 		IN x, PN_Number, #The value to get the normalized fraction and the exponent from.
 		OUT multiplier, PN_Number, #m, multiplier - between 0.5 and 1
 		OUT exponent, PN_Number, #e, exponent - always an integer
 	}
-	PURE SHARED IntToBin
+	PURE IntToBin, SHARED
 	{
 		DESC Converts an integer to a binary (base-2) string.
 		IN int, PN_Number, #Number to be converted.
 		OUT result, PN_String, #Binary number string. The length of this will always be a multiple of 3.
 	}
-	PURE SHARED ldexp
+	PURE ldexp, SHARED
 	{
 		DESC Takes a normalised number and returns the floating point representation.
 		IN normalizedFraction, PN_Number, #The value to get the normalized fraction and the exponent from.
 		IN exponent, PN_Number, #The value to get the normalized fraction and the exponent from.
 		OUT result, PN_Number, #result
 	}
-	PURE SHARED log
+	PURE log, SHARED
 	{
 		DESC With one argument, return the natural logarithm of x (to base e).
 		IN x, PN_Number, #The value to get the base from exponent from.
 		IN base, PN_Number, PNF_Nullable, #The logarithmic base.
 		OUT result, PN_Number, #Logarithm of x to the given base
 	}
-	PURE SHARED log10
+	PURE log10, SHARED
 	{
 		DESC Returns the base-10 logarithm of x. This is usually more accurate than math.log(x, 10).
 		IN x, PN_Number, #The value to get the base from exponent from.
 		OUT result, PN_Number
 	}
-	PURE SHARED max
+	PURE max, SHARED
 	{
 		DESC Returns the largest value of all arguments.
 		IN a, PN_Number
 		IN b, PN_Number
 		OUT result, PN_Number, #The largest number
 	}
-	PURE SHARED min
+	PURE min, SHARED
 	{
 		DESC Returns the smallest value of all arguments.
 		IN a, PN_Number
 		IN b, PN_Number
 		OUT result, PN_Number, #The smallest number
 	}
-	PURE SHARED mod
+	PURE mod, SHARED
 	{
 		DESC Returns the modulus of the specified values. Same as math.fmod.
 		IN base, PN_Number, #The base value
 		IN modulator, PN_Number, #Modulator
 		OUT result, PN_Number, #The calculated modulus
 	}
-	PURE SHARED modf
+	PURE modf, SHARED
 	{
 		DESC Returns the integral and fractional component of the modulo operation.
 		IN base, PN_Number, #The base value.
 		OUT integral, PN_Number, #The integral component.
 		OUT frational, PN_Number, #The fractional component.
 	}
-	PURE SHARED NormalizeAngle
+	PURE NormalizeAngle, SHARED
 	{
 		DESC Normalizes angle, so it returns value between -180 and 180.
 		IN angle, PN_Number, #The angle to normalize, in degrees.
 		OUT normalized, PN_Number, #The normalized angle, in the range of -180 to 180 degrees.
 	}
-	PURE SHARED pow
+	PURE pow, SHARED
 	{
 		DESC Returns x raised to the power y. In particular, math.pow(1.0, x) and math.pow(x, 0.0) always return 1.0, even when x is a zero or a NaN. If both x and y are finite, x is negative, and y is not an integer then math.pow(x, y) is undefined.
 		IN x, PN_Number, #Base.
 		IN y, PN_Number, #Exponent.
 		OUT result, PN_Number, #y power of x
 	}
-	PURE SHARED rad
+	PURE rad, SHARED
 	{
 		DESC Converts an angle in degrees to it's equivalent in radians.
 		IN degrees, PN_Number, #The angle measured in degrees.
 		OUT radians, PN_Number, #radians
 	}
-	PURE SHARED Rand
+	PURE Rand, SHARED
 	{
 		DESC Returns a random float between min and max.
 		IN min, PN_Number, #The minimum value.
 		IN max, PN_Number, #The maximum value.
 		OUT result, PN_Number, #Random float between min and max.
 	}
-	PURE SHARED random
+	PURE random, SHARED
 	{
 		DESC When called without arguments, returns a uniform pseudo-random real number in the range 0 to 1 which includes 0 but excludes 1.
 		IN min, PN_Number, PNF_Nullable, #If m is the only parameter: upper limit. If n is also provided: lower limit. If provided, this must be an integer.
 		IN max, PN_Number, PNF_Nullable, #Upper limit. If provided, this must be an integer.
 		OUT result, PN_Number, #Random value
 	}
-	FUNC SHARED randomseed
+	FUNC randomseed, SHARED
 	{
 		PROTECTED
 		DESC Seeds the random number generator. The same seed will guarantee the same sequence of numbers each time with math.random.
 		IN seed, PN_Number, #The new seed
 	}
-	PURE SHARED Remap
+	PURE Remap, SHARED
 	{
 		DESC Remaps the value from one range to another
 		IN value, PN_Number, #The value
@@ -264,44 +264,44 @@ LIB math
 		IN outMax, PN_Number, #The maximum of new range
 		OUT result, PN_Number, #The number in the new range
 	}
-	PURE SHARED Round
+	PURE Round, SHARED
 	{
 		DESC Rounds the given value to the nearest whole number or to the given decimal places.
 		IN value, PN_Number, #The value to round.
 		IN decimals, PN_Number, PNF_Nullable, #The decimal places to round to.
 		OUT result, PN_Number, #The rounded value.
 	}
-	PURE SHARED sin
+	PURE sin, SHARED
 	{
 		DESC Returns the sine of given angle.
 		IN number, PN_Number, #Angle in radians
 		OUT result, PN_Number, #Sine for given angle
 	}
-	PURE SHARED sinh
+	PURE sinh, SHARED
 	{
 		DESC Returns the hyperbolic sine of the given angle.
 		IN number, PN_Number, #Angle in radians.
 		OUT result, PN_Number, #The hyperbolic sine of the given angle.
 	}
-	PURE SHARED sqrt
+	PURE sqrt, SHARED
 	{
 		DESC Returns the square root of the number.
 		IN value, PN_Number, #Value to get the square root of.
 		OUT result, PN_Number, #squareRoot
 	}
-	PURE SHARED tan
+	PURE tan, SHARED
 	{
 		DESC Returns the tangent of the given angle.
 		IN value, PN_Number, #Angle in radians
 		OUT result, PN_Number, #The tangent of the given angle.
 	}
-	PURE SHARED tanh
+	PURE tanh, SHARED
 	{
 		DESC Returns the hyperbolic tangents of the given number.
 		IN number, PN_Number, #Angle in radians.
 		OUT result, PN_Number, #The hyperbolic tangent of the given angle.
 	}
-	PURE SHARED TimeFraction
+	PURE TimeFraction, SHARED
 	{
 		DESC Returns the fraction of where the current time is relative to the start and end times
 		IN start, PN_Number, #Start time in seconds
@@ -309,7 +309,7 @@ LIB math
 		IN current, PN_Number, #Current time in seconds
 		OUT result, PN_Number, #Fraction
 	}
-	PURE SHARED Truncate
+	PURE Truncate, SHARED
 	{
 		DESC Rounds towards zero.
 		IN num, PN_Number, #The number to truncate

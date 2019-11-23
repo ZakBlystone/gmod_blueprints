@@ -1,27 +1,27 @@
 LIB navmesh
 {
-	FUNC SERVER AddWalkableSeed
+	FUNC AddWalkableSeed, SERVER
 	{
 		DESC Add this position and normal to the list of walkable positions, used before map generation with navmesh.BeginGeneration
 		IN pos, PN_Vector, #The terrain position.
 		IN dir, PN_Vector, #The normal of this terrain position.
 	}
-	FUNC SERVER BeginGeneration
+	FUNC BeginGeneration, SERVER
 	{
 		DESC Starts the generation of a new navmesh.
 	}
-	FUNC SERVER ClearWalkableSeeds
+	FUNC ClearWalkableSeeds, SERVER
 	{
 		DESC Clears all the walkable positions, used before calling navmesh.BeginGeneration.
 	}
-	FUNC SERVER CreateNavArea
+	FUNC CreateNavArea, SERVER
 	{
 		DESC Creates a new CNavArea.
 		IN corner, PN_Vector, #The first corner of the new CNavArea
 		IN opposite_corner, PN_Vector, #The opposite (diagonally) corner of the new CNavArea
 		OUT area, PN_Ref, PNF_None, CNavArea, #The new CNavArea or nil if we failed for some reason.
 	}
-	FUNC SERVER Find
+	FUNC Find, SERVER
 	{
 		DESC Returns a bunch of areas within distance, used to find hiding spots by NextBots for example.
 		IN pos, PN_Vector, #The position to search around
@@ -30,58 +30,58 @@ LIB navmesh
 		IN stepup, PN_Number, #Maximum stepup( jump height ) allowed
 		OUT areas, PN_Ref, PNF_Table, CNavArea, #A table of CNavAreas
 	}
-	PURE SERVER GetAllNavAreas
+	PURE GetAllNavAreas, SERVER
 	{
 		DESC Returns an integer indexed table of all CNavAreas on the current map. If the map doesn't have a navmesh generated then this will return an empty table.
 		OUT areas, PN_Ref, PNF_Table, CNavArea, #A table of all the CNavAreas on the current map.
 	}
-	PURE SERVER GetEditCursorPosition
+	PURE GetEditCursorPosition, SERVER
 	{
 		DESC Returns the position of the edit cursor when nav_edit is set to 1.
 		OUT position, PN_Vector, #The position of the edit cursor.
 	}
-	PURE SERVER GetGroundHeight
+	PURE GetGroundHeight, SERVER
 	{
 		DESC Finds the closest standable ground at, above, or below the provided position.
 		IN pos, PN_Vector, #Position to find the closest ground for.
 		OUT height, PN_Number, #The height of the ground layer.
 		OUT normal, PN_Vector, #The normal of the ground layer.
 	}
-	PURE SERVER GetMarkedArea
+	PURE GetMarkedArea, SERVER
 	{
 		DESC Returns the currently marked CNavArea, for use with editing console commands.
 		OUT area, PN_Ref, PNF_None, CNavArea, #The currently marked CNavArea.
 	}
-	PURE SERVER GetMarkedLadder
+	PURE GetMarkedLadder, SERVER
 	{
 		DESC Returns the currently marked CNavLadder, for use with editing console commands.
 		OUT ladder, PN_Ref, PNF_None, CNavLadder, #The currently marked CNavLadder.
 	}
-	PURE SERVER GetNavArea
+	PURE GetNavArea, SERVER
 	{
 		DESC Returns the Nav Area contained in this position that also satisfies the elevation limit.
 		IN pos, PN_Vector, #The position to search for.
 		IN beneathLimit, PN_Number, #The elevation limit at which the Nav Area will be searched.
 		OUT out_0, PN_Ref, PNF_None, CNavArea, #The nav area.
 	}
-	PURE SERVER GetNavAreaByID
+	PURE GetNavAreaByID, SERVER
 	{
 		DESC Returns a CNavArea by the given ID.
 		IN id, PN_Number, #ID of the CNavArea to get. Starts with 1.
 		OUT area, PN_Ref, PNF_None, CNavArea, #The CNavArea with given ID.
 	}
-	PURE SERVER GetNavAreaCount
+	PURE GetNavAreaCount, SERVER
 	{
 		DESC Returns the highest ID of all nav areas on the map. While this can be used to get all nav areas, this number may not actually be the actual number of nav areas on the map.
 		OUT count, PN_Number, #The highest ID of all nav areas on the map.
 	}
-	PURE SERVER GetNavLadderByID
+	PURE GetNavLadderByID, SERVER
 	{
 		DESC Returns a CNavLadder by the given ID.
 		IN id, PN_Number, #ID of the CNavLadder to get. Starts with 1.
 		OUT ladder, PN_Ref, PNF_None, CNavLadder, #The CNavLadder with given ID.
 	}
-	PURE SERVER GetNearestNavArea
+	PURE GetNearestNavArea, SERVER
 	{
 		DESC Returns the closest CNavArea to given position at the same height, or beneath it.
 		IN pos, PN_Vector, #The position to look from
@@ -92,44 +92,44 @@ LIB navmesh
 		IN team, PN_Number, PNF_Nullable, #This will internally call CNavArea:IsBlocked to check if the target CNavArea is not to be navigated by the given team. Currently this appears to do nothing.
 		OUT area, PN_Ref, PNF_None, CNavArea, #The closest CNavArea found with the given parameters.
 	}
-	PURE SERVER GetPlayerSpawnName
+	PURE GetPlayerSpawnName, SERVER
 	{
 		DESC Returns the classname of the player spawn entity.
 		OUT class, PN_String, #The classname of the spawn point entity. By default returns "info_player_start"
 	}
-	FUNC SERVER IsGenerating
+	FUNC IsGenerating, SERVER
 	{
 		DESC Whether we're currently generating a new navmesh with navmesh.BeginGeneration.
 		OUT generating, PN_Bool, #Whether we're generating a nav mesh or not.
 	}
-	FUNC SERVER IsLoaded
+	FUNC IsLoaded, SERVER
 	{
 		DESC Returns true if a navmesh has been loaded when loading the map.
 		OUT loaded, PN_Bool, #Whether a navmesh has been loaded when loading the map.
 	}
-	FUNC SERVER Load
+	FUNC Load, SERVER
 	{
 		DESC Loads a new navmesh from the .nav file for current map discarding any changes made to the navmesh previously.
 	}
-	FUNC SERVER Reset
+	FUNC Reset, SERVER
 	{
 		DESC Deletes every CNavArea and CNavLadder on the map without saving the changes.
 	}
-	FUNC SERVER Save
+	FUNC Save, SERVER
 	{
 		DESC Saves any changes made to navmesh to the .nav file.
 	}
-	FUNC SERVER SetMarkedArea
+	FUNC SetMarkedArea, SERVER
 	{
 		DESC Sets the CNavArea as marked, so it can be used with editing console commands.
 		IN area, PN_Ref, PNF_None, CNavArea, #The CNavArea to set as the marked area.
 	}
-	FUNC SERVER SetMarkedLadder
+	FUNC SetMarkedLadder, SERVER
 	{
 		DESC Sets the CNavLadder as marked, so it can be used with editing console commands.
 		IN area, PN_Ref, PNF_None, CNavLadder, #The CNavLadder to set as the marked ladder.
 	}
-	FUNC SERVER SetPlayerSpawnName
+	FUNC SetPlayerSpawnName, SERVER
 	{
 		DESC Sets the classname of the default spawn point entity, used before generating a new navmesh with navmesh.BeginGeneration.
 		IN spawnPointClass, PN_String, #The classname of what the player uses to spawn, automatically adds it to the walkable positions during map generation.

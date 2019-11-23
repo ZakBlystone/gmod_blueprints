@@ -1,21 +1,21 @@
 CLASS Stack
 {
-	FUNC SHARED Pop
+	FUNC Pop, SHARED
 	{
 		DESC Pop an item from the stack
 		IN amount, PN_Number, PNF_Nullable, #Amount of items you want to pop.
 	}
-	FUNC SHARED Push
+	FUNC Push, SHARED
 	{
 		DESC Push an item onto the stack
 		IN object, PN_Any, #The item you want to push
 	}
-	FUNC SHARED Size
+	FUNC Size, SHARED
 	{
 		DESC Returns the size of the stack
 		OUT count, PN_Number, #The size of the stack
 	}
-	FUNC SHARED Top
+	FUNC Top, SHARED
 	{
 		DESC Get the item at the top of the stack
 		OUT item, PN_Any, #The item at the top of the stack

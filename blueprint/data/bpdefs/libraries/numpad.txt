@@ -1,25 +1,25 @@
 LIB numpad
 {
-	FUNC SERVER Activate
+	FUNC Activate, SERVER
 	{
 		DESC Activates numpad key owned by the player
 		IN ply, PN_Ref, PNF_None, Player, #The player whose numpad should be simulated
 		IN key, PN_Enum, PNF_None, KEY, #The key to press, see KEY_ Enums
 		IN isButton, PN_Bool, #Should this keypress pretend to be a from a gmod_button? (causes numpad.FromButton to return true)
 	}
-	FUNC SERVER Deactivate
+	FUNC Deactivate, SERVER
 	{
 		DESC Deactivates numpad key owned by the player
 		IN ply, PN_Ref, PNF_None, Player, #The player whose numpad should be simulated
 		IN key, PN_Enum, PNF_None, KEY, #The key to press, corresponding to KEY_ Enums
 		IN isButton, PN_Bool, #Should this keypress pretend to be a from a gmod_button? (causes numpad.FromButton to return true)
 	}
-	FUNC SERVER FromButton
+	FUNC FromButton, SERVER
 	{
 		DESC Returns true during a function added with numpad.Register when the third argument to numpad.Activate is true.
 		OUT result, PN_Bool, #wasButton
 	}
-	FUNC SERVER OnDown
+	FUNC OnDown, SERVER
 	{
 		TBD
 		DESC Calls a function registered with numpad.Register when a player presses specified key.
@@ -29,7 +29,7 @@ LIB numpad
 		IN ..., PN_Ref, PNF_None, vararg, #Arguments to pass to the function passed to numpad.Register.
 		OUT out_0, PN_Number, #The impulse ID
 	}
-	FUNC SERVER OnUp
+	FUNC OnUp, SERVER
 	{
 		TBD
 		DESC Calls a function registered with numpad.Register when a player releases specified key.
@@ -39,19 +39,19 @@ LIB numpad
 		IN ..., PN_Ref, PNF_None, vararg, #Arguments to pass to the function passed to numpad.Register.
 		OUT out_0, PN_Number, #The impulse ID
 	}
-	FUNC SERVER Register
+	FUNC Register, SERVER
 	{
 		TBD
 		DESC Registers a numpad library action for use with numpad.OnDown and numpad.OnUp
 		IN id, PN_String, #The unique id of your action.
 		IN func, PN_Ref, PNF_None, function, #The function to be executed. Arguments are: Player ply - The player who pressed the button vararg ... - The 4th and all subsequent arguments passed from numpad.OnDown and/or numpad.OnUp Returning false in this function will remove the listener which triggered this function (example: return false if one of your varargs is an entity which is no longer valid)
 	}
-	FUNC SERVER Remove
+	FUNC Remove, SERVER
 	{
 		DESC Removes a function added by either numpad.OnUp or numpad.OnDown
 		IN ID, PN_Number, #The impulse ID returned by numpad.OnUp or numpad.OnDown
 	}
-	FUNC SERVER Toggle
+	FUNC Toggle, SERVER
 	{
 		DESC Either runs numpad.Activate or numpad.Deactivate depending on the key's current state
 		IN ply, PN_Ref, PNF_None, Player, #The player whose numpad should be simulated

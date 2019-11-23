@@ -1,18 +1,18 @@
 LIB matproxy
 {
-	FUNC CLIENT Add
+	FUNC Add, CLIENT
 	{
 		DESC Adds a material proxy.
 		IN MatProxyData, PN_Struct, PNF_None, MatProxyData, #The information about the proxy. See MatProxyData structure
 	}
-	FUNC CLIENT Call
+	FUNC Call, CLIENT
 	{
 		DESC Called by the engine from OnBind
 		IN uname, PN_String
 		IN mat, PN_Ref, PNF_None, IMaterial
 		IN ent, PN_Ref, PNF_None, Entity
 	}
-	FUNC CLIENT Init
+	FUNC Init, CLIENT
 	{
 		DESC Called by the engine from OnBind
 		IN name, PN_String
@@ -20,7 +20,7 @@ LIB matproxy
 		IN mat, PN_Ref, PNF_None, IMaterial
 		IN values, PN_Any, PNF_Table
 	}
-	FUNC CLIENT ShouldOverrideProxy
+	FUNC ShouldOverrideProxy, CLIENT
 	{
 		DESC Called by engine, returns true if we're overriding a proxy
 		IN name, PN_String, #The name of proxy in question

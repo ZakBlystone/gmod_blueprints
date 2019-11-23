@@ -1,64 +1,64 @@
 CLASS CRecipientFilter
 {
-	FUNC SERVER AddAllPlayers
+	FUNC AddAllPlayers, SERVER
 	{
 		DESC Adds all players to the recipient filter.
 	}
-	FUNC SERVER AddPAS
+	FUNC AddPAS, SERVER
 	{
 		DESC Adds all players that are in the same PAS as this position.
 		IN pos, PN_Vector, #PAS position that players may be able to see.
 	}
-	FUNC SERVER AddPlayer
+	FUNC AddPlayer, SERVER
 	{
 		DESC Adds a player to the recipient filter
 		IN Player, PN_Ref, PNF_None, Player, #Player to add to the recipient filter.
 	}
-	FUNC SERVER AddPVS
+	FUNC AddPVS, SERVER
 	{
 		DESC Adds all players that are in the same PVS as this position.
 		IN Position, PN_Vector, #PVS position.
 	}
-	FUNC SERVER AddRecipientsByTeam
+	FUNC AddRecipientsByTeam, SERVER
 	{
 		DESC Adds all players that are on the given team to the filter.
 		IN teamid, PN_Number, #Team index to add players from.
 	}
-	PURE SERVER GetCount
+	PURE GetCount, SERVER
 	{
 		DESC Returns the number of valid players in the recipient filter.
 		OUT count, PN_Number, #Number of valid players in the recipient filter.
 	}
-	PURE SERVER GetPlayers
+	PURE GetPlayers, SERVER
 	{
 		DESC Returns a table of all valid players currently in the recipient filter.
 		OUT players, PN_Ref, PNF_Table, Player, #A table of all valid players currently in the recipient filter.
 	}
-	FUNC SERVER RemoveAllPlayers
+	FUNC RemoveAllPlayers, SERVER
 	{
 		DESC Removes all players from the recipient filter.
 	}
-	FUNC SERVER RemovePAS
+	FUNC RemovePAS, SERVER
 	{
 		DESC Removes all players from the filter that are in Potentially Audible Set for given position.
 		IN position, PN_Vector, #The position to test
 	}
-	FUNC SERVER RemovePlayer
+	FUNC RemovePlayer, SERVER
 	{
 		DESC Removes the player from the recipient filter.
 		IN Player, PN_Ref, PNF_None, Player, #The player that should be in the recipient filter if you call this function.
 	}
-	FUNC SERVER RemovePVS
+	FUNC RemovePVS, SERVER
 	{
 		DESC Removes all players that can see this PVS from the recipient filter.
 		IN pos, PN_Vector, #Position that players may be able to see.
 	}
-	FUNC SERVER RemoveRecipientsByTeam
+	FUNC RemoveRecipientsByTeam, SERVER
 	{
 		DESC Removes all players that are on the given team from the filter.
 		IN teamid, PN_Number, #Team index to remove players from.
 	}
-	FUNC SERVER RemoveRecipientsNotOnTeam
+	FUNC RemoveRecipientsNotOnTeam, SERVER
 	{
 		DESC Removes all players that are not on the given team from the filter.
 		IN teamid, PN_Number, #Team index.

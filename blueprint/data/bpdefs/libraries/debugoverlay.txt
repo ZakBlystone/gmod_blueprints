@@ -1,6 +1,6 @@
 LIB debugoverlay
 {
-	FUNC SHARED Axis
+	FUNC Axis, SHARED
 	{
 		DESC Displays an axis indicator at the specified position.
 		IN origin, PN_Vector, #World position
@@ -9,7 +9,7 @@ LIB debugoverlay
 		IN lifetime=1, PN_Number, #Number of seconds to appear
 		IN ignoreZ=false, PN_Bool, #If true, will draw on top of everything; ignoring the Z buffer
 	}
-	FUNC SHARED Box
+	FUNC Box, SHARED
 	{
 		DESC Displays a solid coloured box at the specified position.
 		IN origin, PN_Vector, #World position
@@ -18,7 +18,7 @@ LIB debugoverlay
 		IN lifetime=1, PN_Number, #Number of seconds to appear
 		IN color, PN_Color, PNF_None, #The color of the box.
 	}
-	FUNC SHARED BoxAngles
+	FUNC BoxAngles, SHARED
 	{
 		DESC Displays a solid coloured box at the specified position.
 		IN origin, PN_Vector, #World position
@@ -28,7 +28,7 @@ LIB debugoverlay
 		IN lifetime=1, PN_Number, #Number of seconds to appear
 		IN color, PN_Color, PNF_None, #The color of the box.
 	}
-	FUNC SHARED Cross
+	FUNC Cross, SHARED
 	{
 		DESC Creates a coloured cross at the specified position for the specified time.
 		IN origin, PN_Vector, #World position
@@ -37,7 +37,7 @@ LIB debugoverlay
 		IN color, PN_Color, PNF_None, #The color of the box.
 		IN ignoreZ=false, PN_Bool, #If true, will draw on top of everything; ignoring the Z buffer
 	}
-	FUNC SHARED EntityTextAtPosition
+	FUNC EntityTextAtPosition, SHARED
 	{
 		DESC Displays 2D text at the specified coordinates.
 		IN origin, PN_Vector, #World position
@@ -46,12 +46,12 @@ LIB debugoverlay
 		IN lifetime=1, PN_Number, #Number of seconds to appear
 		IN color, PN_Color, PNF_None, #The color of the text.
 	}
-	FUNC SHARED Grid
+	FUNC Grid, SHARED
 	{
 		DESC Draws a 3D grid of limited size in given position.
 		IN origin, PN_Vector, #World position
 	}
-	FUNC SHARED Line
+	FUNC Line, SHARED
 	{
 		DESC Displays a coloured line at the specified position.
 		IN start, PN_Vector, #Start of line
@@ -60,7 +60,7 @@ LIB debugoverlay
 		IN color, PN_Color, PNF_None, #The color of the line.
 		IN ignoreZ=false, PN_Bool, #If true, will draw on top of everything; ignoring the Z buffer
 	}
-	FUNC SHARED ScreenText
+	FUNC ScreenText, SHARED
 	{
 		DESC Displays text triangle at the specified coordinates.
 		IN x, PN_Number, #The position of the text, from 0 ( left ) to 1 ( right ).
@@ -69,7 +69,7 @@ LIB debugoverlay
 		IN lifetime=1, PN_Number, #Number of seconds to appear
 		IN color, PN_Color, PNF_None, #The color of the text.
 	}
-	FUNC SHARED Sphere
+	FUNC Sphere, SHARED
 	{
 		DESC Displays a coloured sphere at the specified position.
 		IN origin, PN_Vector, #World position
@@ -78,7 +78,7 @@ LIB debugoverlay
 		IN color, PN_Color, PNF_None, #The color of the line.
 		IN ignoreZ=false, PN_Bool, #If true, will draw on top of everything; ignoring the Z buffer
 	}
-	FUNC SHARED SweptBox
+	FUNC SweptBox, SHARED
 	{
 		DESC Displays "swept" box, two boxes connected with lines by their verices.
 		IN start, PN_Vector, #Start of box sweep
@@ -89,7 +89,7 @@ LIB debugoverlay
 		IN lifetime=1, PN_Number, #Number of seconds to appear
 		IN color, PN_Color, PNF_None, #The color of the box.
 	}
-	FUNC SHARED Text
+	FUNC Text, SHARED
 	{
 		DESC Displays text at the specified position.
 		IN origin, PN_Vector, #World position
@@ -97,7 +97,7 @@ LIB debugoverlay
 		IN lifetime=1, PN_Number, #Number of seconds to appear
 		IN viewCheck=false, PN_Bool, #Clip text that is obscured
 	}
-	FUNC SHARED Triangle
+	FUNC Triangle, SHARED
 	{
 		DESC Displays a colored triangle at the specified coordinates.
 		IN pos1, PN_Vector, #First point of the triangle

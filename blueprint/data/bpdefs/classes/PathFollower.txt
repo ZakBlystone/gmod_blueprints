@@ -1,12 +1,12 @@
 CLASS PathFollower
 {
-	FUNC SERVER Chase
+	FUNC Chase, SERVER
 	{
 		DESC If you created your path with type "Chase" this functions should be used in place of PathFollower:Update to cause the bot to chase the specified entity.
 		IN bot, PN_Ref, PNF_None, NextBot, #The bot to update along the path
 		IN ent, PN_Ref, PNF_None, Entity, #The entity we want to chase
 	}
-	FUNC SERVER Compute
+	FUNC Compute, SERVER
 	{
 		DESC Compute shortest path from bot to 'goal' via A* algorithm.
 		IN from, PN_Ref, PNF_None, NextBot, #The nextbot we're generating for
@@ -14,136 +14,136 @@ CLASS PathFollower
 		IN generator, PN_Ref, PNF_Nullable, function, #A funtion that allows you to alter the path generation. See example below for the default function.
 		OUT found, PN_Bool, # If returns true, path was found to the goal position. If returns false, path may either be invalid (use IsValid() to check), or valid but doesn't reach all the way to the goal.
 	}
-	FUNC SERVER Draw
+	FUNC Draw, SERVER
 	{
 		DESC Draws the path. This is meant for debugging - and uses debug overlay.
 	}
-	FUNC SERVER FirstSegment
+	FUNC FirstSegment, SERVER
 	{
 		DESC Returns the first segment of the path.
 		OUT first, PN_Struct, PNF_None, PathSegment, #A table with PathSegment structure.
 	}
-	PURE SERVER GetAge
+	PURE GetAge, SERVER
 	{
 		DESC Returns the age since the path was built
 		OUT age, PN_Number, #Path age
 	}
-	PURE SERVER GetAllSegments
+	PURE GetAllSegments, SERVER
 	{
 		DESC Returns all of the segments of the given path.
 		OUT segments, PN_Struct, PNF_Table, PathSegment, #A table of tables with PathSegment structure.
 	}
-	PURE SERVER GetClosestPosition
+	PURE GetClosestPosition, SERVER
 	{
 		DESC The closest position along the path to a position
 		IN position, PN_Vector, #The point we're querying for
 		OUT closest, PN_Vector, #The closest position on the path
 	}
-	PURE SERVER GetCurrentGoal
+	PURE GetCurrentGoal, SERVER
 	{
 		DESC Returns the current goal data. Can return nil if the current goal is invalid, for example immediately after PathFollower:Update.
 		OUT goal, PN_Struct, PNF_None, PathSegment, #A table with PathSegment structure.
 	}
-	PURE SERVER GetCursorData
+	PURE GetCursorData, SERVER
 	{
 		DESC Returns the cursor data
 		OUT data, PN_Struct, PNF_Nonde, CursorData, #A table with 3 keys: number curvature Vector forward Vector pos 
 	}
-	PURE SERVER GetCursorPosition
+	PURE GetCursorPosition, SERVER
 	{
 		DESC Returns the current progress along the path
 		OUT progress, PN_Number, #The current progress
 	}
-	PURE SERVER GetEnd
+	PURE GetEnd, SERVER
 	{
 		DESC Returns the path end position
 		OUT pos, PN_Vector, #The end position
 	}
-	PURE SERVER GetGoalTolerance
+	PURE GetGoalTolerance, SERVER
 	{
 		DESC Returns how close we can get to the goal to call it done.
 		OUT tolerance, PN_Number, #The distance we're setting it to
 	}
-	PURE SERVER GetHindrance
+	PURE GetHindrance, SERVER
 	{
 		DESC  Entity
 		OUT hinderance, PN_Ref, PNF_None, Entity
 	}
-	PURE SERVER GetLength
+	PURE GetLength, SERVER
 	{
 		DESC Returns the total length of the path
 		OUT length, PN_Number, #The length of the path
 	}
-	PURE SERVER GetMinLookAheadDistance
+	PURE GetMinLookAheadDistance, SERVER
 	{
 		DESC Returns the minimum range movement goal must be along path.
 		OUT distance, PN_Number, #The minimum look ahead distance
 	}
-	PURE SERVER GetPositionOnPath
+	PURE GetPositionOnPath, SERVER
 	{
 		DESC Returns the vector position of distance along path
 		IN distance, PN_Number, #The distance along the path to query
 		OUT pos, PN_Vector, #The position
 	}
-	PURE SERVER GetStart
+	PURE GetStart, SERVER
 	{
 		DESC Returns the path start position
 		OUT start, PN_Vector, #The start position
 	}
-	FUNC SERVER Invalidate
+	FUNC Invalidate, SERVER
 	{
 		DESC Invalidates the current path
 	}
-	FUNC SERVER IsValid
+	FUNC IsValid, SERVER
 	{
 		DESC Returns true if the path is valid
 		OUT valid, PN_Bool, #Wether the path is valid or not.
 	}
-	FUNC SERVER LastSegment
+	FUNC LastSegment, SERVER
 	{
 		DESC Returns the last segment of the path.
 		OUT last, PN_Struct, PNF_None, PathSegment, #A table with PathSegment structure.
 	}
-	FUNC SERVER MoveCursor
+	FUNC MoveCursor, SERVER
 	{
 		DESC Moves the cursor by give distance.
 		IN distance, PN_Number, #The distance to move the cursor (in relative world units)
 	}
-	FUNC SERVER MoveCursorTo
+	FUNC MoveCursorTo, SERVER
 	{
 		DESC Sets the cursor position to given distance.
 		IN distance, PN_Number, #The distance to move the cursor (in world units)
 	}
-	FUNC SERVER MoveCursorToClosestPosition
+	FUNC MoveCursorToClosestPosition, SERVER
 	{
 		DESC Moves the cursor of the path to the closest position compared to given vector.
 		IN pos, PN_Vector
 		IN type, PN_Number, PNF_Nullable, #Seek type 0 = SEEK_ENTIRE_PATH - Search the entire path length 1 = SEEK_AHEAD - Search from current cursor position forward toward end of path 2 = SEEK_BEHIND - Search from current cursor position backward toward path start 
 		IN alongLimit, PN_Number, PNF_Nullable
 	}
-	FUNC SERVER MoveCursorToEnd
+	FUNC MoveCursorToEnd, SERVER
 	{
 		DESC Moves the cursor to the end of the path
 	}
-	FUNC SERVER MoveCursorToStart
+	FUNC MoveCursorToStart, SERVER
 	{
 		DESC Moves the cursor to the end of the path
 	}
-	FUNC SERVER ResetAge
+	FUNC ResetAge, SERVER
 	{
 		DESC Resets the age which is retrieved by PathFollower:GetAge to 0.
 	}
-	FUNC SERVER SetGoalTolerance
+	FUNC SetGoalTolerance, SERVER
 	{
 		DESC How close we can get to the goal to call it done
 		IN distance, PN_Number, #The distance we're setting it to
 	}
-	FUNC SERVER SetMinLookAheadDistance
+	FUNC SetMinLookAheadDistance, SERVER
 	{
 		DESC Sets minimum range movement goal must be along path
 		IN mindist, PN_Number, #The minimum look ahead distance
 	}
-	FUNC SERVER Update
+	FUNC Update, SERVER
 	{
 		DESC Move the bot along the path.
 		IN bot, PN_Ref, PNF_None, NextBot, #The bot to update along the path

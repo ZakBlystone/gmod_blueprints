@@ -1,6 +1,6 @@
 LIB markup
 {
-	FUNC CLIENT Parse
+	FUNC Parse, CLIENT
 	{
 		DESC Parses markup into a MarkupObject. Currently, this only supports fonts and colors as demonstrated in the example.
 		IN markup, PN_String, #The markup to be parsed.

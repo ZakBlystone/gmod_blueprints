@@ -284,8 +284,8 @@ local function ParseDef( filePath, search )
 				local params = string.Explode(" ", args[1])
 				d2 = {
 					type = nodetypeLookup[params[1]],
-					role = roleLookup[params[2]],
-					func = params[3],
+					role = roleLookup[args[2]:Trim()],
+					func = params[2],
 					pins = {},
 					desc = "",
 				}
@@ -293,15 +293,15 @@ local function ParseDef( filePath, search )
 				local params = string.Explode(" ", args[1])
 				d2 = {
 					type = nodetypeLookup[params[1]],
-					role = roleLookup[params[2]],
-					func = params[3],
+					role = roleLookup[args[2]:Trim()],
+					func = params[2],
 					pins = {},
 					desc = "",
 				}
 			elseif d.type == DEFTYPE_HOOKS then
 				local params = string.Explode(" ", args[1])
 				d2 = {
-					role = roleLookup[params[1]],
+					role = roleLookup[args[2]:Trim()],
 					hook = params[2],
 					pins = {},
 					desc = "",

@@ -1,129 +1,129 @@
 CLASS Tool
 {
-	FUNC SHARED Allowed
+	FUNC Allowed, SHARED
 	{
 		DESC Checks whether the tool is allowed on the server. This will always return true clientside and will not be affected by SANDBOX:CanTool.
 		OUT allowed, PN_Bool, #Returns true if the tool is allowed.
 	}
-	FUNC SHARED BuildConVarList
+	FUNC BuildConVarList, SHARED
 	{
 		DESC Builds a list of all ConVars set via the ClientConVar variable on the TOOL structure and their default values. This is used for the preset system.
 		OUT convars, PN_Ref, PNF_Table, ConVar, #A list of all convars and their default values.
 	}
-	FUNC SHARED CheckObjects
+	FUNC CheckObjects, SHARED
 	{
 		DESC Checks all added objects to see if they're still valid, if not, clears the list of objects.
 	}
-	FUNC SHARED ClearObjects
+	FUNC ClearObjects, SHARED
 	{
 		DESC Clears all objects previously set with Tool:SetObject.
 	}
-	FUNC SHARED Create
+	FUNC Create, SHARED
 	{
 		DESC Initializes the tool object
 		OUT tool, PN_Ref, PNF_None, Tool, #The created tool object.
 	}
-	FUNC SHARED CreateConVars
+	FUNC CreateConVars, SHARED
 	{
 		DESC Creates clientside ConVars based on the ClientConVar table specified in the tool structure. Also creates the 'toolmode_allow_X' ConVar.
 	}
-	PURE SHARED GetBone
+	PURE GetBone, SHARED
 	{
 		DESC Retrieves a physics bone number previously stored using Tool:SetObject.
 		IN id, PN_Number, #The id of the object which was set in Tool:SetObject.
 		OUT bone, PN_Number, #Associated physics bone with given id.
 	}
-	PURE SHARED GetClientInfo
+	PURE GetClientInfo, SHARED
 	{
 		DESC Attempts to grab a clientside tool ConVar.
 		IN name, PN_String, #Name of the convar to retrieve. The function will automatically add the "mytoolfilename_" part to it.
 		OUT string, PN_String, #The value of the requested ConVar.
 	}
-	PURE SHARED GetClientNumber
+	PURE GetClientNumber, SHARED
 	{
 		DESC Attempts to grab a clientside tool ConVar.
 		IN name, PN_String, #Name of the convar to retrieve. The function will automatically add the "mytoolfilename_" part to it.
 		IN default, PN_Number, PNF_Nullable, #The default value to return in case the lookup fails.
 		OUT number, PN_Number, #The value of the requested ConVar.
 	}
-	PURE SHARED GetEnt
+	PURE GetEnt, SHARED
 	{
 		DESC Retrieves an Entity previously stored using Tool:SetObject.
 		IN id, PN_Number, #The id of the object which was set in Tool:SetObject.
 		OUT entity, PN_Ref, PNF_None, Entity, #Associated Entity with given id.
 	}
-	PURE SHARED GetHelpText
+	PURE GetHelpText, SHARED
 	{
 		DESC Returns a language key based on this tool's name and the current stage it is on.
 		OUT text, PN_String, #The returned language key, for example "#tool.weld.1"
 	}
-	PURE SHARED GetLocalPos
+	PURE GetLocalPos, SHARED
 	{
 		DESC Retrieves an local vector previously stored using Tool:SetObject. See also Tool:GetPos.
 		IN id, PN_Number, #The id of the object which was set in Tool:SetObject.
 		OUT pos, PN_Vector, #Associated local vector with given id.
 	}
-	PURE SHARED GetMode
+	PURE GetMode, SHARED
 	{
 		DESC Returns the name of the current tool mode.
 		OUT mode, PN_String, #The current tool mode.
 	}
-	PURE SHARED GetNormal
+	PURE GetNormal, SHARED
 	{
 		DESC Retrieves an normal vector previously stored using Tool:SetObject.
 		IN id, PN_Number, #The id of the object which was set in Tool:SetObject.
 		OUT normal, PN_Vector, #Associated normal vector with given id.
 	}
-	PURE SHARED GetOperation
+	PURE GetOperation, SHARED
 	{
 		DESC Returns the current operation of the tool set by Tool:SetOperation.
 		OUT operation, PN_Number, #The current operation the tool is at.
 	}
-	PURE SHARED GetOwner
+	PURE GetOwner, SHARED
 	{
 		DESC Returns the owner of this tool.
 		OUT owner, PN_Ref, PNF_None, Player, #Player using the tool
 	}
-	PURE SHARED GetPhys
+	PURE GetPhys, SHARED
 	{
 		DESC Retrieves an PhysObj previously stored using Tool:SetObject. See also Tool:GetEnt.
 		IN id, PN_Number, #The id of the object which was set in Tool:SetObject.
 		OUT physObj, PN_Ref, PNF_None, PhysObj, #Associated PhysObj with given id. If it wasn't specified, returns current PhysObj of associated Entity
 	}
-	PURE SHARED GetPos
+	PURE GetPos, SHARED
 	{
 		DESC Retrieves an vector previously stored using Tool:SetObject. See also Tool:GetLocalPos.
 		IN id, PN_Number, #The id of the object which was set in Tool:SetObject.
 		OUT pos, PN_Vector, #Associated vector with given id. The vector is converted from Tool:GetLocalPos.
 	}
-	PURE SHARED GetServerInfo
+	PURE GetServerInfo, SHARED
 	{
 		DESC Attempts to grab a serverside tool ConVar. This will not do anything on client, despite the function being defined shared.
 		IN name, PN_String, #Name of the convar to retrieve. The function will automatically add the "mytoolfilename_" part to it.
 		OUT info, PN_String, #The value of the requested ConVar.
 	}
-	PURE SHARED GetStage
+	PURE GetStage, SHARED
 	{
 		DESC Returns the current stage of the tool set by Tool:SetStage.
 		OUT stage, PN_Number, #The current stage of the current operation the tool is at.
 	}
-	FUNC SHARED MakeGhostEntity
+	FUNC MakeGhostEntity, SHARED
 	{
 		DESC Initializes the ghost entity with the given model. Removes any old ghost entity if called multiple times.
 		IN model, PN_String, #The model of the new ghost entity
 		IN pos, PN_Vector, #Position to initialize the ghost entity at, usually not needed since this is updated in Tool:UpdateGhostEntity.
 		IN angle, PN_Angles, #Angle to initialize the ghost entity at, usually not needed since this is updated in Tool:UpdateGhostEntity.
 	}
-	FUNC SHARED NumObjects
+	FUNC NumObjects, SHARED
 	{
 		DESC Returns the amount of stored objects ( Entitys ) the tool has.
 		OUT count, PN_Number, #The amount of stored objects, or Tool:GetStage clientide.
 	}
-	FUNC SHARED ReleaseGhostEntity
+	FUNC ReleaseGhostEntity, SHARED
 	{
 		DESC Removes any ghost entity created for this tool.
 	}
-	FUNC SHARED SetObject
+	FUNC SetObject, SHARED
 	{
 		DESC Stores an Entity for later use in the tool.
 		IN id, PN_Number, #The id of the object to store.
@@ -133,26 +133,26 @@ CLASS Tool
 		IN bone, PN_Number, #The hit bone to store.
 		IN normal, PN_Vector, #The hit normal to store.
 	}
-	FUNC SHARED SetOperation
+	FUNC SetOperation, SHARED
 	{
 		DESC Sets the current operation of the tool. Does nothing clientside. See also Tool:SetStage.
 		IN operation, PN_Number, #The new operation ID to set.
 	}
-	FUNC SHARED SetStage
+	FUNC SetStage, SHARED
 	{
 		DESC Sets the current stage of the tool. Does nothing clientside.
 		IN stage, PN_Number, #The new stage to set.
 	}
-	FUNC SHARED StartGhostEntity
+	FUNC StartGhostEntity, SHARED
 	{
 		DESC Initializes the ghost entity based on the supplied entity.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to copy ghost parameters off
 	}
-	FUNC SHARED UpdateData
+	FUNC UpdateData, SHARED
 	{
 		DESC Sets the tool's stage to how many stored objects the tool has.
 	}
-	FUNC SHARED UpdateGhostEntity
+	FUNC UpdateGhostEntity, SHARED
 	{
 		DESC Updates the position and orientation of the ghost entity based on where the toolgun owner is looking along with data from object with id 1 set by Tool:SetObject.
 	}

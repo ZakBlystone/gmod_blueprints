@@ -1,6 +1,6 @@
 LIB widgets
 {
-	FUNC CLIENT RenderMe
+	FUNC RenderMe, CLIENT
 	{
 		DESC Renders a widget. Normally you won't need to call this.
 		IN entity, PN_Ref, PNF_None, Entity, #Widget entity to render

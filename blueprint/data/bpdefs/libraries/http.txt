@@ -7,7 +7,7 @@ CALLBACK FuncHTTPLibSuccess
 }
 LIB http
 {
-	FUNC SHARED Fetch
+	FUNC Fetch, SHARED
 	{
 		PROTECTED
 		DESC Launches a GET request.
@@ -16,7 +16,7 @@ LIB http
 		IN onFailure, PN_Func, PNF_Nullable, FuncHTTPFailed, #Function to be called on failure. Arguments are string error - The error message
 		IN headers, PN_Any, PNF_Nullable|PNF_Table, #KeyValue table for headers
 	}
-	FUNC SHARED Post
+	FUNC Post, SHARED
 	{
 		PROTECTED
 		DESC Sends an asynchronous POST request to a HTTP server.

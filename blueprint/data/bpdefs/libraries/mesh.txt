@@ -1,17 +1,17 @@
 LIB mesh
 {
-	FUNC CLIENT AdvanceVertex
+	FUNC AdvanceVertex, CLIENT
 	{
 		DESC Pushes the new vertex data onto the render stack.
 	}
-	FUNC CLIENT Begin
+	FUNC Begin, CLIENT
 	{
 		DESC Starts a new dynamic mesh. If an IMesh is passed, it will use that mesh instead.
 		IN mesh, PN_Ref, PNF_Nullable, IMesh, #Mesh to build. This argument can be removed if you wish to build a "dynamic" mesh. See examples below.
 		IN primitiveType, PN_Enum, PNF_None, MATERIAL, #Primitive type, see MATERIAL_ Enums.
 		IN primiteCount, PN_Number, #The amount of primitives.
 	}
-	FUNC CLIENT Color
+	FUNC Color, CLIENT
 	{
 		DESC Sets the color to be used for the next vertex.
 		IN r, PN_Number, #Red component.
@@ -19,21 +19,21 @@ LIB mesh
 		IN b, PN_Number, #Blue component.
 		IN a, PN_Number, #Alpha component.
 	}
-	FUNC CLIENT End
+	FUNC End, CLIENT
 	{
 		DESC Ends the mesh and renders it.
 	}
-	FUNC CLIENT Normal
+	FUNC Normal, CLIENT
 	{
 		DESC Sets the normal to be used for the next vertex.
 		IN normal, PN_Vector, #The normal of the vertex.
 	}
-	FUNC CLIENT Position
+	FUNC Position, CLIENT
 	{
 		DESC Sets the position to be used for the next vertex.
 		IN position, PN_Vector, #The position of the vertex.
 	}
-	FUNC CLIENT Quad
+	FUNC Quad, CLIENT
 	{
 		DESC Draws a quad using 4 vertices.
 		IN vertex1, PN_Vector, #The first vertex.
@@ -41,7 +41,7 @@ LIB mesh
 		IN vertex3, PN_Vector, #The third vertex.
 		IN vertex4, PN_Vector, #The fourth vertex.
 	}
-	FUNC CLIENT QuadEasy
+	FUNC QuadEasy, CLIENT
 	{
 		DESC Draws a quad using a position, a normal and the size.
 		IN position, PN_Vector, #The center of the quad.
@@ -49,7 +49,7 @@ LIB mesh
 		IN sizeX, PN_Number, #X size in pixels.
 		IN sizeY, PN_Number, #Y size in pixels.
 	}
-	FUNC CLIENT Specular
+	FUNC Specular, CLIENT
 	{
 		DESC Sets the specular map values.
 		IN r, PN_Number, #The red channel multiplier of the specular map.
@@ -57,24 +57,24 @@ LIB mesh
 		IN b, PN_Number, #The blue channel multiplier of the specular map.
 		IN a, PN_Number, #The alpha channel multiplier of the specular map.
 	}
-	FUNC CLIENT TangentS
+	FUNC TangentS, CLIENT
 	{
 		DESC Sets the s tangent to be used.
 		IN sTanger, PN_Vector, #The s tangent.
 	}
-	FUNC CLIENT TangentT
+	FUNC TangentT, CLIENT
 	{
 		DESC Sets the T tangent to be used.
 		IN tTanger, PN_Vector, #The t tangent.
 	}
-	FUNC CLIENT TexCoord
+	FUNC TexCoord, CLIENT
 	{
 		DESC Sets the texture coordinates for the next vertex.
 		IN stage, PN_Number, #The stage of the texture coordinate.
 		IN u, PN_Number, #U coordinate.
 		IN v, PN_Number, #V coordinate.
 	}
-	FUNC CLIENT UserData
+	FUNC UserData, CLIENT
 	{
 		DESC It is recommended to use IMesh:BuildFromTriangles instead of the mesh library.
 		IN tangentX, PN_Number
@@ -82,7 +82,7 @@ LIB mesh
 		IN tangentZ, PN_Number
 		IN tangentHandedness, PN_Number
 	}
-	FUNC CLIENT VertexCount
+	FUNC VertexCount, CLIENT
 	{
 		DESC Returns the amount of vertex that have yet been pushed.
 		OUT vertices, PN_Number, #vertexCount

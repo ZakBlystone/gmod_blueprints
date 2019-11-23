@@ -12,7 +12,7 @@ CALLBACK FuncAutoComplete
 }
 LIB concommand
 {
-	FUNC SHARED Add
+	FUNC Add, SHARED
 	{
 		DESC Creates a console command that runs a function in lua with optional autocompletion function and help text.
 		IN name, PN_String, #The command name to be used in console. This cannot be a name of existing console command or console variable. It will silently fail if it is.

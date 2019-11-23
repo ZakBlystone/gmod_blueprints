@@ -1,13 +1,13 @@
 LIB cam
 {
-	FUNC CLIENT ApplyShake
+	FUNC ApplyShake, CLIENT
 	{
 		DESC Shakes the screen at a certain position.
 		IN pos, PN_Vector, #Origin of the shake.
 		IN angles, PN_Angles, #Angles of the shake.
 		IN factor, PN_Number, #The shake factor.
 	}
-	FUNC CLIENT Start3D
+	FUNC Start3D, CLIENT
 	{
 		DESC Sets up a new 3D rendering context. Must be finished by cam.End3D.
 		IN pos, PN_Vector, PNF_Nullable, #Render cam position.
@@ -21,7 +21,7 @@ LIB cam
 		IN zFar, PN_Number, PNF_Nullable, #Distance to far clipping plane.
 		DEPRECATED
 	}
-	FUNC CLIENT Start3D2D
+	FUNC Start3D2D, CLIENT
 	{
 		DESC Sets up a new 2D rendering context. Must be finished by cam.End3D2D.
 		IN pos, PN_Vector, #Origin of the 3D2D context, ie. the top left corner, (0, 0).
@@ -29,7 +29,7 @@ LIB cam
 		IN scale, PN_Number, #The scale of the render context. If scale is 1 then 1 pixel in 2D context will equal to 1 unit in 3D context.
 		DEPRECATED
 	}
-	FUNC CLIENT StartOrthoView
+	FUNC StartOrthoView, CLIENT
 	{
 		DESC Sets up a new 3d context using orthographic projection.
 		IN leftOffset, PN_Number, #The left plane offset.
@@ -38,7 +38,7 @@ LIB cam
 		IN bottomOffset, PN_Number, #The bottom plane offset.
 		DEPRECATED
 	}
-	SPECIAL CLIENT IgnoreZ
+	SPECIAL IgnoreZ, CLIENT
 	{
 		DESC Tells the renderer to ignore the depth buffer and draw any upcoming operation "ontop" of everything that was drawn yet.
 		IN Exec, PN_Exec
@@ -47,7 +47,7 @@ LIB cam
 		JUMP finish
 		CODE cam.IgnoreZ(true) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.IgnoreZ(false) #1
 	}
-	SPECIAL CLIENT Advanced
+	SPECIAL Advanced, CLIENT
 	{
 		DESC Sets up a new rendering context. This is an extended version of cam.Start3D and cam.Start2D.
 		IN Exec, PN_Exec
@@ -57,7 +57,7 @@ LIB cam
 		JUMP finish
 		CODE cam.Start($2) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.End() #1
 	}
-	SPECIAL CLIENT 2D
+	SPECIAL 2D, CLIENT
 	{
 		DESC Sets up a new 2D rendering context.
 		IN Exec, PN_Exec
@@ -66,7 +66,7 @@ LIB cam
 		JUMP finish
 		CODE cam.Start2D() pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.End2D() #1
 	}
-	SPECIAL CLIENT 3D2D
+	SPECIAL 3D2D, CLIENT
 	{
 		DESC Sets up a new 2D rendering context.
 		IN Exec, PN_Exec
@@ -78,7 +78,7 @@ LIB cam
 		JUMP finish
 		CODE cam.Start3D2D($2, $3, $4) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.End3D2D() #1
 	}
-	SPECIAL CLIENT 3D
+	SPECIAL 3D, CLIENT
 	{
 		DESC Sets up a new 3D rendering context.
 		IN Exec, PN_Exec
@@ -96,7 +96,7 @@ LIB cam
 		JUMP finish
 		CODE cam.Start3D($2, $3, $4, $5, $6, $7, $8, $9, $10) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.End3D() #1
 	}
-	SPECIAL CLIENT OrthoView
+	SPECIAL OrthoView, CLIENT
 	{
 		DESC Sets up a new 3d context using orthographic projection.
 		IN Exec, PN_Exec
@@ -109,7 +109,7 @@ LIB cam
 		JUMP finish
 		CODE cam.StartOrthoView($2, $3, $4, $5) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: cam.EndOrthoView() #1
 	}
-	SPECIAL CLIENT Matrix
+	SPECIAL Matrix, CLIENT
 	{
 		DESC Sets up a new 3d context using orthographic projection.
 		IN Exec, PN_Exec

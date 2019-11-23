@@ -1,74 +1,74 @@
 LIB saverestore
 {
-	FUNC SHARED AddRestoreHook
+	FUNC AddRestoreHook, SHARED
 	{
 		TBD
 		DESC Adds a restore/load hook for the Half-Life 2 save system.
 		IN identifier, PN_String, #The unique identifier for this hook.
 		IN callback, PN_Ref, PNF_None, function, #The function to be called when an engine save is being loaded. It has one argument: IRestore save - The restore object to be used to read data from save file that is being loaded You can also use those functions to read data: saverestore.ReadVar saverestore.ReadTable saverestore.LoadEntity 
 	}
-	FUNC SHARED AddSaveHook
+	FUNC AddSaveHook, SHARED
 	{
 		TBD
 		DESC Adds a save hook for the Half-Life 2 save system. You can this to carry data through level transitions in Half-Life 2.
 		IN identifier, PN_String, #The unique identifier for this hook.
 		IN callback, PN_Ref, PNF_None, function, #The function to be called when an engine save is being saved. It has one argument: ISave save - The save object to be used to write data to the save file that is being saved You can also use those functions to save data: saverestore.WriteVar saverestore.WriteTable saverestore.SaveEntity 
 	}
-	FUNC SHARED LoadEntity
+	FUNC LoadEntity, SHARED
 	{
 		DESC Loads Entity:GetTable from the save game file that is being loaded and merges it with the given entitys Entity:GetTable.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity which will receive the loaded values from the save.
 		IN save, PN_Ref, PNF_None, IRestore, #The restore object to read the Entity:GetTable from.
 	}
-	FUNC SHARED LoadGlobal
+	FUNC LoadGlobal, SHARED
 	{
 		DESC Called by engine when a save is being loaded.
 		IN save, PN_Ref, PNF_None, IRestore, #The restore object to read data from the save file with.
 	}
-	FUNC SHARED PreRestore
+	FUNC PreRestore, SHARED
 	{
 		DESC Called by the engine just before saverestore.LoadGlobal is.
 	}
-	FUNC SHARED PreSave
+	FUNC PreSave, SHARED
 	{
 		DESC Called by the engine just before saverestore.SaveGlobal is.
 	}
-	FUNC SHARED ReadTable
+	FUNC ReadTable, SHARED
 	{
 		DESC Reads a table from the save game file that is being loaded.
 		IN save, PN_Ref, PNF_None, IRestore, #The restore object to read the table from.
 		OUT table, PN_Any, PNF_Table, #The table that has been read, if any
 	}
-	FUNC SHARED ReadVar
+	FUNC ReadVar, SHARED
 	{
 		DESC Loads a variable from the save game file that is being loaded.
 		IN save, PN_Ref, PNF_None, IRestore, #The restore object to read variables from.
 		OUT table, PN_Any, #The variable that was read, if any.
 	}
-	FUNC SHARED SaveEntity
+	FUNC SaveEntity, SHARED
 	{
 		DESC Saves entitys Entity:GetTable to the save game file that is being saved.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to save Entity:GetTable of.
 		IN save, PN_Ref, PNF_None, ISave, #The save object to save Entity:GetTable to.
 	}
-	FUNC SHARED SaveGlobal
+	FUNC SaveGlobal, SHARED
 	{
 		DESC Called by engine when a save is being saved.
 		IN save, PN_Ref, PNF_None, ISave, #The save object to write data into the save file.
 	}
-	FUNC SHARED WritableKeysInTable
+	FUNC WritableKeysInTable, SHARED
 	{
 		DESC Returns how many writable keys are in the given table.
 		IN table, PN_Any, PNF_Table, #The table to test.
 		OUT written, PN_Number, #The number of keys that can be written with saverestore.WriteTable.
 	}
-	FUNC SHARED WriteTable
+	FUNC WriteTable, SHARED
 	{
 		DESC Write a table to a save game file that is being saved.
 		IN table, PN_Any, PNF_Table, #The table to write
 		IN save, PN_Ref, PNF_None, ISave, #The save object to write the table to.
 	}
-	FUNC SHARED WriteVar
+	FUNC WriteVar, SHARED
 	{
 		DESC Writes a variable to the save game file that is being saved.
 		IN value, PN_Any, #The value to save. It can be one of the following types: number, boolean, string, Entity, Angle, Vector or table.

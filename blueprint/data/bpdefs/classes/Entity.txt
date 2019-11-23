@@ -4,118 +4,118 @@ CALLBACK FuncEntityCallback
 }
 CLASS Entity, entity
 {
-	FUNC SHARED Activate
+	FUNC Activate, SHARED
 	{
 		DESC Activates the entity. This needs to be used on some entities (like constraints) after being spawned.
 	}
-	FUNC SHARED AddEffects
+	FUNC AddEffects, SHARED
 	{
 		DESC Applies an engine effect to an entity.
 		IN effect, PN_Enum, PNF_None, EF, #The effect to apply, see EF_ Enums.
 	}
-	FUNC SHARED AddEFlags
+	FUNC AddEFlags, SHARED
 	{
 		DESC Adds engine flags.
 		IN flag, PN_Enum, PNF_None, EFL, #Engine flag to add, see EFL_ Enums
 	}
-	FUNC SHARED AddFlags
+	FUNC AddFlags, SHARED
 	{
 		DESC Adds flags to the entity.
 		IN flag, PN_Enum, PNF_None, FL, #Flag to add, see FL_ Enums
 	}
-	FUNC SERVER AddGesture
+	FUNC AddGesture, SERVER
 	{
 		DESC Adds a gesture animation to the entity and plays it. See Entity:AddGestureSequence and Entity:AddLayeredSequence for functions that takes sequences instead of ACT_ Enums.
 		IN activity, PN_Enum, PNF_None, ACT, #The activity to play as the gesture. See ACT_ Enums.
 		IN autokill=true, PN_Bool, PNF_Nullable
 		OUT layerID, PN_Number, #Layer ID of the started gesture, used to manipulate the played gesture by other functions.
 	}
-	FUNC SERVER AddGestureSequence
+	FUNC AddGestureSequence, SERVER
 	{
 		DESC Adds a gesture animation to the entity and plays it. See Entity:AddGesture for a function that takes ACT_ Enums. See also Entity:AddLayeredSequence.
 		IN sequence, PN_Number, #The sequence ID to play as the gesture. See Entity:LookupSequence.
 		IN autokill=true, PN_Bool, PNF_Nullable
 		OUT layerID, PN_Number, #Layer ID of the started gesture, used to manipulate the played gesture by other functions.
 	}
-	FUNC SERVER AddLayeredSequence
+	FUNC AddLayeredSequence, SERVER
 	{
 		DESC Adds a gesture animation to the entity and plays it. See Entity:AddGestureSequence for a function that doesn't take priority. See Entity:AddGesture for a function that takes ACT_ Enums.
 		IN sequence, PN_Number, #The sequence ID to play as the gesture. See Entity:LookupSequence.
 		IN priority, PN_Number
 		OUT layerID, PN_Number, #Layer ID of created layer
 	}
-	FUNC SHARED AddSolidFlags
+	FUNC AddSolidFlags, SHARED
 	{
 		DESC Adds solid flag(s) to the entity.
 		IN flags, PN_Enum, PNF_None, FSOLID, #The flag(s) to apply, see FSOLID_ Enums.
 	}
-	FUNC SHARED AddToMotionController
+	FUNC AddToMotionController, SHARED
 	{
 		DESC Adds a PhysObject to the entity's motion controller so that ENTITY:PhysicsSimulate will be called for given PhysObject as well.
 		IN physObj, PN_Ref, PNF_None, PhysObj, #The PhysObj to add to the motion controller.
 	}
-	PURE SHARED AlignAngles
+	PURE AlignAngles, SHARED
 	{
 		DESC Returns an angle based on the ones inputted that you can use to align an object.
 		IN from, PN_Angles, #The angle you want to align from
 		IN to, PN_Angles, #The angle you want to align to
 		OUT angles, PN_Angles, #The resulting aligned angle
 	}
-	FUNC CLIENT BecomeRagdollOnClient
+	FUNC BecomeRagdollOnClient, CLIENT
 	{
 		DESC Spawns a clientside ragdoll for the entity, positioning it in place of the original entity, and makes the entity invisible. It doesn't preserve flex values (face posing) as CSRagdolls don't support flex.
 		OUT ragdoll, PN_Ref, PNF_None, CSEnt, #The created ragdoll.
 	}
-	PURE CLIENT BeingLookedAtByLocalPlayer
+	PURE BeingLookedAtByLocalPlayer, CLIENT
 	{
 		DESC Returns true if the entity is being looked at by the local player and is within 256 units of distance.
 		OUT lookedAt, PN_Bool, #Is the entity being looked at by the local player and within 256 units.
 	}
-	PURE SERVER BodyTarget
+	PURE BodyTarget, SERVER
 	{
 		DESC Returns a centered vector of this entity, NPCs use this internally to aim at their targets.
 		IN origin, PN_Vector, #The vector of where the the attack comes from.
 		IN noisy=false, PN_Bool, PNF_Nullable, #Decides if it should return the centered vector with a random offset to it.
 		OUT center, PN_Vector, #The centered vector.
 	}
-	PURE SHARED BoneHasFlag
+	PURE BoneHasFlag, SHARED
 	{
 		DESC Returns whether the entity's bone has the flag or not.
 		IN boneID, PN_Number, #Bone ID to test flag of.
 		IN flag, PN_Enum, PNF_None, BONE, #The flag to test, see BONE_ Enums
 		OUT hasFlag, PN_Bool, #Whether the bone has that flag or not
 	}
-	PURE SHARED BoneLength
+	PURE BoneLength, SHARED
 	{
 		DESC This function takes the boneID and returns the length of it in an unrounded decimal
 		IN boneID, PN_Number, #The ID of the bone you want the length of. You may want to get the length of the next bone ( boneID + 1 ) for decent results
 		OUT length, PN_Number, #The length of the bone
 	}
-	PURE SHARED BoundingRadius
+	PURE BoundingRadius, SHARED
 	{
 		DESC Returns the distance between the center of the bounding box and the furthest bounding box corner.
 		OUT radius, PN_Number, #The radius of the bounding box.
 	}
-	FUNC SHARED CallOnRemove
+	FUNC CallOnRemove, SHARED
 	{
 		DESC Causes a specified function to be run if the entity is removed by any means. This can later be undone by Entity:RemoveCallOnRemove if you need it to not run.
 		IN identifier, PN_String, #Identifier of the function within CallOnRemove
 		IN callback, PN_Func, PNF_None, FuncEntityCallback, #Function to be called on remove
 	}
-	FUNC SHARED ClearPoseParameters
+	FUNC ClearPoseParameters, SHARED
 	{
 		DESC Resets all pose parameters such as aim_yaw, aim_pitch and rotation.
 	}
-	FUNC SHARED CollisionRulesChanged
+	FUNC CollisionRulesChanged, SHARED
 	{
 		DESC Declares that the collision rules of the entity have changed, and subsequent calls for GM:ShouldCollide with this entity may return a different value than they did previously.
 	}
-	PURE SERVER CreatedByMap
+	PURE CreatedByMap, SERVER
 	{
 		DESC Returns whether the entity was created by map or not.
 		OUT createdByMap, PN_Bool, #Is created by map?
 	}
-	FUNC CLIENT CreateParticleEffect
+	FUNC CreateParticleEffect, CLIENT
 	{
 		DESC Creates a clientside particle system attached to the entity. See also CreateParticleSystem
 		IN particle, PN_String, #The particle name to create
@@ -123,50 +123,50 @@ CLASS Entity, entity
 		IN options=nil, PN_Struct, PNF_Nullable|PNF_Table, ParticleAttachment, #Control points
 		OUT effect, PN_Ref, PNF_None, CNewParticleEffect, #The created particle system.
 	}
-	FUNC CLIENT CreateShadow
+	FUNC CreateShadow, CLIENT
 	{
 		DESC Draws the shadow of an entity.
 	}
-	FUNC SERVER DeleteOnRemove
+	FUNC DeleteOnRemove, SERVER
 	{
 		DESC Whenever the entity is removed, entityToRemove will be removed also.
 		IN entityToRemove, PN_Ref, PNF_None, Entity, #The entity to be removed
 	}
-	FUNC CLIENT DestroyShadow
+	FUNC DestroyShadow, CLIENT
 	{
 		DESC Removes the shadow for the entity.
 	}
-	FUNC CLIENT DisableMatrix
+	FUNC DisableMatrix, CLIENT
 	{
 		DESC Disables an active matrix.
 		IN matrixType=RenderMultiply, PN_String, #The name of the matrix type to disable.
 	}
-	FUNC SHARED DispatchTraceAttack
+	FUNC DispatchTraceAttack, SHARED
 	{
 		DESC Performs a trace attack.
 		IN damageInfo, PN_Ref, PNF_None, CTakeDamageInfo, #The damage to apply.
 		IN traceRes, PN_Struct, PNF_None, TraceResult, #Trace result to use to deal damage. See TraceResult structure
 		IN dir, PN_Vector, PNF_Nullable, #Direction of the attack.
 	}
-	FUNC SERVER DontDeleteOnRemove
+	FUNC DontDeleteOnRemove, SERVER
 	{
 		DESC This removes the argument entity from an ent's list of entities to 'delete on remove'
 		IN entityToUnremove, PN_Ref, PNF_None, Entity, #The entity to be removed from the list of entities to delete
 	}
-	FUNC CLIENT DrawModel
+	FUNC DrawModel, CLIENT
 	{
 		DESC Draws the entity or model.
 	}
-	FUNC SHARED DrawShadow
+	FUNC DrawShadow, SHARED
 	{
 		DESC Sets whether an entity's shadow should be drawn.
 		IN shouldDraw, PN_Bool, #True to enable, false to disable shadow drawing.
 	}
-	FUNC SERVER DropToFloor
+	FUNC DropToFloor, SERVER
 	{
 		DESC Move an entity down until it collides with something.
 	}
-	FUNC SHARED EmitSound
+	FUNC EmitSound, SHARED
 	{
 		DESC Plays a sound on an entity. If run clientside, the sound will only be heard locally.
 		IN sound, PN_String, #The name of the sound to be played.
@@ -175,186 +175,186 @@ CLASS Entity, entity
 		IN volume=1, PN_Number, PNF_Nullable, #The volume, from 0 to 1.
 		IN channel=CHAN_AUTO, PN_Enum, PNF_Nullable, CHAN, #The sound channel, see CHAN_ Enums.
 	}
-	FUNC SERVER EnableConstraints
+	FUNC EnableConstraints, SERVER
 	{
 		DESC Toggles the constraints of this ragdoll entity on and off.
 		IN toggleConstraints, PN_Bool, #Set to true to enable the constraints and false to disable them.
 	}
-	FUNC CLIENT EnableMatrix
+	FUNC EnableMatrix, CLIENT
 	{
 		DESC Can be used to apply a custom VMatrix to the entity, mostly used for scaling the model by a Vector.
 		IN matrixType=RenderMultiply, PN_String, #The name of the matrix type.
 		IN matrix, PN_Ref, PNF_None, VMatrix, #The matrix to apply before drawing the entity.
 	}
-	PURE SHARED EntIndex
+	PURE EntIndex, SHARED
 	{
 		DESC Gets the unique entity index of an entity.
 		OUT index, PN_Number, #The index of the entity. -1 for clientside-only or serverside-only entities.
 	}
-	FUNC SERVER Extinguish
+	FUNC Extinguish, SERVER
 	{
 		DESC Extinguishes the entity if it is on fire. Has no effect if called inside GM:EntityTakeDamage (and the attacker is the flame that's hurting the entity)
 	}
-	PURE SHARED EyeAngles
+	PURE EyeAngles, SHARED
 	{
 		DESC Returns the direction a player/npc/ragdoll is looking as a world-oriented angle.
 		OUT angles, PN_Angles, #eyeAng
 	}
-	PURE SHARED EyePos
+	PURE EyePos, SHARED
 	{
 		DESC Returns the position of an Player/NPC's view.
 		OUT pos, PN_Vector, #View position of the entity.
 	}
-	PURE SHARED FindBodygroupByName
+	PURE FindBodygroupByName, SHARED
 	{
 		DESC Searches for bodygroup with given name.
 		IN name, PN_String, #The bodygroup name to search for.
 		OUT id, PN_Number, #Bodygroup ID, -1 if not found
 	}
-	PURE SHARED FindTransitionSequence
+	PURE FindTransitionSequence, SHARED
 	{
 		DESC Returns a transition from the given start and end sequence.
 		IN currentSequence, PN_Number, #The currently playing sequence
 		IN goalSequence, PN_Number, #The goal sequence.
 		OUT sequence, PN_Number, #The transition sequence, -1 if not available.
 	}
-	FUNC SERVER Fire
+	FUNC Fire, SERVER
 	{
 		DESC Fires an entity's input. You can find inputs for most entities on the Valve Developer Wiki
 		IN input, PN_String, #The name of the input to fire
 		IN param, PN_String, #The value to give to the input, can also be a number or a boolean.
 		IN delay=0, PN_Number, PNF_Nullable, #Delay in seconds before firing
 	}
-	FUNC SHARED FireBullets
+	FUNC FireBullets, SHARED
 	{
 		DESC Fires a bullet.
 		IN bulletInfo, PN_Struct, PNF_None, Bullet, #The bullet data to be used. See the Bullet structure.
 		IN suppressHostEvents=false, PN_Bool, PNF_Nullable, #Has the effect of encasing the FireBullets call in SuppressHostEvents, only works in multiplayer.
 	}
-	FUNC SHARED FollowBone
+	FUNC FollowBone, SHARED
 	{
 		DESC Makes an entity follow another entity's bone.
 		IN parent, PN_Ref, PNF_Nullable, Entity, #The entity to follow the bone of. If unset, removes the FollowBone effect.
 		IN boneid, PN_Number, #The bone to follow
 	}
-	FUNC SHARED ForcePlayerDrop
+	FUNC ForcePlayerDrop, SHARED
 	{
 		DESC Forces the Entity to be dropped, when it is being held by a player's gravitygun or physgun.
 	}
-	FUNC SHARED FrameAdvance
+	FUNC FrameAdvance, SHARED
 	{
 		DESC Advances the cycle of an animated entity.
 		IN interval=0, PN_Number, #How many seconds to advance the cycle. Set to 0 to let the engine calculate this for you based on CurTime.
 	}
-	PURE SHARED GetAbsVelocity
+	PURE GetAbsVelocity, SHARED
 	{
 		DESC Returns the entity's velocity.
 		OUT velocity, PN_Vector, #The velocity of the entity.
 	}
-	PURE SHARED GetAngles
+	PURE GetAngles, SHARED
 	{
 		DESC Gets the angles of given entity.
 		OUT angles, PN_Angles, #The angles of the entity.
 	}
-	PURE SHARED GetAnimInfo
+	PURE GetAnimInfo, SHARED
 	{
 		DESC Returns a table containing the number of frames, flags, name, and FPS of an entity's animation ID.
 		IN animIndex, PN_Number, #The animation ID to look up
 		OUT info, PN_Struct, PNF_None, AnimInfo, #Information about the animation, or nil if the index is out of bounds
 	}
-	PURE CLIENT GetAnimTime
+	PURE GetAnimTime, CLIENT
 	{
 		DESC Returns the last time the entity had an animation update. Returns 0 if the entity doesn't animate.
 		OUT time, PN_Number, #The last time the entity had an animation update.
 	}
-	PURE SHARED GetAttachment
+	PURE GetAttachment, SHARED
 	{
 		DESC Gets the orientation and position of the attachment by its ID, returns nothing if the attachment does not exist.
 		IN attachmentId, PN_Number, #The internal ID of the attachment.
 		OUT attachment, PN_Struct, PNF_None, AngPos, #The angle and position of the attachment. See the AngPos structure. Most notably, the table contains the keys "Ang" and "Pos".
 	}
-	PURE SHARED GetAttachments
+	PURE GetAttachments, SHARED
 	{
 		DESC Returns a table containing all attachments of the given entitys model. Returns an empty table or nil in case it's model has no attachments.
 		OUT attachment, PN_Struct, PNF_Table, AttachmentData, #Attachment data. See AttachmentData structure.
 		CODE #1 = Entity_.GetAttachments($1)\n#1 = #1 or {}
 	}
-	PURE SHARED GetBaseVelocity
+	PURE GetBaseVelocity, SHARED
 	{
 		DESC Returns the entity's base velocity which is their velocity due to forces applied by other entities. This includes entity-on-entity collision or riding a treadmill.
 		OUT velocity, PN_Vector, #The base velocity of the entity.
 	}
-	PURE SERVER GetBloodColor
+	PURE GetBloodColor, SERVER
 	{
 		DESC Returns the blood color of this entity. This can be set with Entity:SetBloodColor.
 		OUT bloodColor, PN_Enum, PNF_None, BLOOD_COLOR, #Color from BLOOD_COLOR_ Enums
 	}
-	PURE SHARED GetBodygroup
+	PURE GetBodygroup, SHARED
 	{
 		DESC Gets the exact value for specific bodygroup of given entity.
 		IN id, PN_Number, #The id of bodygroup to get value of. Starts from 0.
 		OUT bodyGroup, PN_Number, #Current bodygroup. Starts from 0.
 	}
-	PURE SHARED GetBodygroupName
+	PURE GetBodygroupName, SHARED
 	{
 		DESC Gets the name of specific bodygroup for given entity.
 		IN id, PN_Number, #The id of bodygroup to get the name of.
 		OUT name, PN_String, #The name of the bodygroup
 	}
-	PURE SHARED GetBodyGroups
+	PURE GetBodyGroups, SHARED
 	{
 		DESC Returns a list of all bodygroups of the entity.
 		OUT groups, PN_Struct, PNF_Table, BodyGroupData, #Bodygroups as a table of BodyGroupData structures if the entity can have bodygroups.
 	}
-	PURE SHARED GetBoneContents
+	PURE GetBoneContents, SHARED
 	{
 		DESC Returns the contents of the specified bone.
 		IN bone, PN_Number, #The bone id. See Entity:LookupBone.
 		OUT contents, PN_Enum, PNF_Bitfield, CONTENTS, #The contents as a CONTENTS_ Enums or 0 on failure.
 	}
-	PURE SHARED GetBoneController
+	PURE GetBoneController, SHARED
 	{
 		DESC Returns the value of the bone controller with the specified ID.
 		IN boneID, PN_Number, #ID of the bone controller. Goes from 0 to 3.
 		OUT controller, PN_Number, #The value set on the bone controller.
 	}
-	PURE SHARED GetBoneCount
+	PURE GetBoneCount, SHARED
 	{
 		DESC Returns the amount of bones in the entity.
 		OUT count, PN_Number, #The amount of bones in given entity; -1 on failure.
 	}
-	PURE SHARED GetBoneMatrix
+	PURE GetBoneMatrix, SHARED
 	{
 		DESC Returns the matrix (position / rotation transform) of a given bone entity.
 		IN boneID, PN_Number, #The bone to retrieve matrix of.
 		OUT matrix, PN_Ref, PNF_None, VMatrix, #The matrix. Some entities don't update animation every frame such as prop_physics and won't have accurate bone matrix.
 	}
-	PURE SHARED GetBoneName
+	PURE GetBoneName, SHARED
 	{
 		DESC Returns name of given bone id.
 		IN index, PN_Number, #ID of bone to lookup name of
 		OUT name, PN_String, #The name of given bone nil in case we failed or entity doesn't have a model "__INVALIDBONE__" in case the name cannot be read or the index is out of range.
 	}
-	PURE SHARED GetBoneParent
+	PURE GetBoneParent, SHARED
 	{
 		DESC Returns parent bone of given bone.
 		IN bone, PN_Number, #The bode ID of the bone to get parent of
 		OUT parent, PN_Number, #Parent bone ID or -1 if we failed for some reason.
 	}
-	PURE SHARED GetBonePosition
+	PURE GetBonePosition, SHARED
 	{
 		DESC Returns the position and angle of the given attachment, relative to the world.
 		IN boneIndex, PN_Number, #The bone index of the bone to get the position of. See Entity:LookupBone.
 		OUT pos, PN_Vector, #The bone's position relative to the world.
 		OUT angle, PN_Angles, #The bone's angle relative to the world.
 	}
-	PURE SHARED GetBoneSurfaceProp
+	PURE GetBoneSurfaceProp, SHARED
 	{
 		DESC Returns the surface property of the specified bone.
 		IN bone, PN_Number, #The bone id. See Entity:LookupBone.
 		OUT surf, PN_String, #The surface property of the bone to be used with util.GetSurfaceIndex or an empty string on failure.
 	}
-	PURE SHARED GetBrushPlane
+	PURE GetBrushPlane, SHARED
 	{
 		DESC Returns info about given plane of non-nodraw brush model surfaces of the entity's model. Works on worldspawn as well.
 		IN id, PN_Number, #The index of the plane to get info of. Starts from 0.
@@ -362,169 +362,169 @@ CLASS Entity, entity
 		OUT normal, PN_Vector, #The normal of the plane.
 		OUT dist, PN_Number, #The "distance" of the plane. The distance is the dot product of the plane's normal and the point it was initialized with.
 	}
-	PURE SHARED GetBrushPlaneCount
+	PURE GetBrushPlaneCount, SHARED
 	{
 		DESC Returns the amount of planes of non-nodraw brush model surfaces of the entity's model.
 		OUT count, PN_Number, #The amount of brush model planes of the entity's model. This will be 0 for any non-brush model.
 	}
-	PURE SHARED GetChildBones
+	PURE GetChildBones, SHARED
 	{
 		DESC Returns ids of child bones of given bone.
 		IN boneid, PN_Number, #Bone id to lookup children of
 		OUT childBones, PN_Number, PNF_Table, any, #A table of bone ids
 	}
-	PURE SHARED GetChildren
+	PURE GetChildren, SHARED
 	{
 		DESC Gets the children of the entity - that is, every entity whose move parent is this entity.
 		OUT children, PN_Ref, PNF_Table, Entity, #A list of movement children entities
 	}
-	PURE SHARED GetClass
+	PURE GetClass, SHARED
 	{
 		DESC Returns the classname of a entity. This is often the name of the Lua file or folder containing the files for the entity
 		OUT classname, PN_String, #The entity's classname
 	}
-	PURE SHARED GetCollisionBounds
+	PURE GetCollisionBounds, SHARED
 	{
 		DESC Returns an entity's collision bounding box. In most cases, this will return the same bounding box as Entity:GetModelBounds unless the entity does not have a physics mesh or it has a PhysObj different from the default.
 		OUT mins, PN_Vector, #The minimum vector of the collision bounds
 		OUT maxs, PN_Vector, #The maximum vector of the collision bounds
 	}
-	PURE SHARED GetCollisionGroup
+	PURE GetCollisionGroup, SHARED
 	{
 		DESC Returns the entity's collision group
 		OUT group, PN_Enum, PNF_None, COLLISION_GROUP, #The collision group. See COLLISION_GROUP_ Enums
 	}
-	PURE SHARED GetColor
+	PURE GetColor, SHARED
 	{
 		DESC Returns the color the entity is set to.
 		OUT color, PN_Color, PNF_None, #The color of the entity as a Color structure.
 	}
-	PURE SERVER GetConstrainedEntities
+	PURE GetConstrainedEntities, SERVER
 	{
 		DESC Returns the two entities involved in a constraint ent, or nil if the entity is not a constraint.
 		OUT entity1, PN_Ref, PNF_None, Entity, #ent1
 		OUT entity2, PN_Ref, PNF_None, Entity, #ent2
 	}
-	PURE SERVER GetConstrainedPhysObjects
+	PURE GetConstrainedPhysObjects, SERVER
 	{
 		DESC Returns the two entities physobjects involved in a constraint ent, or no value if the entity is not a constraint.
 		OUT phys1, PN_Ref, PNF_None, PhysObj, #phys1
 		OUT phys2, PN_Ref, PNF_None, PhysObj, #phys2
 	}
-	PURE SERVER GetCreationID
+	PURE GetCreationID, SERVER
 	{
 		DESC Returns entity's creation ID. Unlike Entity:EntIndex or Entity:MapCreationID, it will always increase and old values won't be reused.
 		OUT id, PN_Number, #The creation ID
 	}
-	PURE SHARED GetCreationTime
+	PURE GetCreationTime, SHARED
 	{
 		DESC Returns the time the entity was created on, relative to CurTime.
 		OUT time, PN_Number, #The time the entity was created on.
 	}
-	PURE SERVER GetCreator
+	PURE GetCreator, SERVER
 	{
 		DESC Gets the creator of the SENT.
 		OUT creator, PN_Ref, PNF_None, Player, #The creator, NULL for no creator.
 	}
-	PURE SHARED GetCustomCollisionCheck
+	PURE GetCustomCollisionCheck, SHARED
 	{
 		DESC Returns whether this entity uses custom collision check set by Entity:SetCustomCollisionCheck.
 		OUT isUsingCheck, PN_Bool, #Whether this entity uses custom collision check or not
 	}
-	PURE SHARED GetCycle
+	PURE GetCycle, SHARED
 	{
 		DESC Returns the frame of the currently played sequence. This will be a number between 0 and 1 as a representation of sequence progress.
 		OUT frame, PN_Number, #The frame of the currently played sequence
 	}
-	PURE SHARED GetEffects
+	PURE GetEffects, SHARED
 	{
 		DESC Returns a bit flag of all engine effect flags of the entity.
 		OUT effects, PN_Enum, PNF_Bitfield, EF, #Engine effect flags, see EF_ Enums
 	}
-	PURE SHARED GetEFlags
+	PURE GetEFlags, SHARED
 	{
 		DESC Returns a bit flag of all engine flags of the entity.
 		OUT flags, PN_Enum, PNF_Bitfield, EFL, #Engine flags, see EFL_ Enums
 	}
-	PURE SHARED GetElasticity
+	PURE GetElasticity, SHARED
 	{
 		DESC Returns the elasticity of this entity, used by some flying entities such as the Helicopter NPC to determine how much it should bounce around when colliding.
 		OUT elasticity, PN_Number, #elasticity
 	}
-	PURE SHARED GetFlags
+	PURE GetFlags, SHARED
 	{
 		DESC Returns all flags of given entity.
 		OUT flags, PN_Enum, PNF_Bitfield, FL, #Flags of given entity as a bitflag, see FL_ Enums
 	}
-	PURE SHARED GetFlexBounds
+	PURE GetFlexBounds, SHARED
 	{
 		DESC Returns acceptable value range for the flex.
 		IN flex, PN_Number, #The ID of the flex to look up bounds of
 		OUT min, PN_Number, #The minimum value for this flex
 		OUT max, PN_Number, #The maximum value for this flex
 	}
-	PURE SHARED GetFlexIDByName
+	PURE GetFlexIDByName, SHARED
 	{
 		DESC Returns the ID of the flex based on given name.
 		IN name, PN_String, #The name of the flex to get the ID of. Case sensitive.
 		OUT id, PN_Number, #The ID of flex nil if no flex with given name was found
 		CODE #1 = Entity_.GetFlexIDByName($1, $2) #1 = #1 or -1
 	}
-	PURE SHARED GetFlexName
+	PURE GetFlexName, SHARED
 	{
 		DESC Returns flex name.
 		IN id, PN_Number, #The flex id to look up name of
 		OUT name, PN_String, #The flex name
 	}
-	PURE SHARED GetFlexNum
+	PURE GetFlexNum, SHARED
 	{
 		DESC Returns the number of flexes this entity has.
 		OUT count, PN_Number, #The number of flexes.
 	}
-	PURE SHARED GetFlexScale
+	PURE GetFlexScale, SHARED
 	{
 		DESC Returns the flex scale of the entity.
 		OUT scale, PN_Number, #The flex scale
 	}
-	PURE SHARED GetFlexWeight
+	PURE GetFlexWeight, SHARED
 	{
 		DESC Returns current weight ( value ) of the flex.
 		IN flex, PN_Number, #The ID of the flex to get weight of
 		OUT weight, PN_Number, #The current weight of the flex
 	}
-	PURE SHARED GetForward
+	PURE GetForward, SHARED
 	{
 		DESC Returns the forward vector of the entity, as a normalized direction vector
 		OUT forward, PN_Vector, #forwardDir
 	}
-	PURE SERVER GetFriction
+	PURE GetFriction, SERVER
 	{
 		DESC Returns how much friction an entity has. Entities default to 1 (100%) and can be higher or even negative.
 		OUT friction, PN_Number, #friction
 	}
-	PURE SHARED GetGravity
+	PURE GetGravity, SHARED
 	{
 		DESC Gets the gravity multiplier of the entity.
 		OUT gravity, PN_Number, #gravityMultiplier
 	}
-	PURE SHARED GetGroundEntity
+	PURE GetGroundEntity, SHARED
 	{
 		DESC Returns the object the entity is standing on.
 		OUT groundEntity, PN_Ref, PNF_None, Entity, #The ground entity.
 	}
-	PURE SERVER GetGroundSpeedVelocity
+	PURE GetGroundSpeedVelocity, SERVER
 	{
 		DESC Returns the entity's ground speed velocity, which is based on the entity's walk/run speed and/or the ground speed of their sequence ( Entity:GetSequenceGroundSpeed ). Will return an empty Vector if the entity isn't moving on the ground.
 		OUT velocity, PN_Vector, #The ground speed velocity.
 	}
-	PURE SHARED GetHitBoxBone
+	PURE GetHitBoxBone, SHARED
 	{
 		DESC Gets the bone the hit box is attached to.
 		IN hitbox, PN_Number, #The number of the hit box.
 		IN group, PN_Number, #The number of the hit box group. This should be 0 in most cases.
 		OUT bone, PN_Number, #The number of the bone. Will be nil if the hit box index was out of range.
 	}
-	PURE SHARED GetHitBoxBounds
+	PURE GetHitBoxBounds, SHARED
 	{
 		DESC Gets the bounds (min and max corners) of a hit box.
 		IN hitbox, PN_Number, #The number of the hit box.
@@ -532,333 +532,333 @@ CLASS Entity, entity
 		OUT mins, PN_Vector, #Hit box mins. Will be nil if the hit box index was out of range.
 		OUT maxs, PN_Vector, #Hit box maxs. Will be nil if the hit box index was out of range.
 	}
-	PURE SHARED GetHitBoxCount
+	PURE GetHitBoxCount, SHARED
 	{
 		DESC Gets how many hit boxes are in a given hit box group
 		IN group, PN_Number, #The number of the hit box group
 		OUT count, PN_Number, #The number of hit boxes.
 	}
-	PURE SHARED GetHitBoxGroupCount
+	PURE GetHitBoxGroupCount, SHARED
 	{
 		DESC Returns the number of hit box groups that an entity has.
 		OUT count, PN_Number, #number of hit box groups
 	}
-	PURE SHARED GetHitboxSet
+	PURE GetHitboxSet, SHARED
 	{
 		DESC Returns entity's current hit box set
 		OUT id, PN_Number, #The current hit box set id, or no value if the entity doesn't have hit boxes
 		OUT name, PN_String, #The current hit box set name, or no value if the entity doesn't have hit boxes
 	}
-	PURE SHARED GetHitboxSetCount
+	PURE GetHitboxSetCount, SHARED
 	{
 		DESC Returns the amount of hitbox sets in the entity.
 		OUT count, PN_Number, #The amount of hitbox sets in the entity.
 	}
-	PURE SHARED GetInternalVariable
+	PURE GetInternalVariable, SHARED
 	{
 		DESC An interface for accessing internal key values on entities. This function returns variables created with DEFINE_KEYFIELD in C++ entities.
 		IN VariableName, PN_String, #Name of variable corresponding to an entity save value.
 		OUT value, PN_Any, #The internal variable value
 	}
-	PURE SERVER GetKeyValues
+	PURE GetKeyValues, SERVER
 	{
 		DESC Returns a table containing all key values the entity has.
 		OUT values, PN_Any, PNF_Table, #A table of key values.
 	}
-	PURE SERVER GetLayerCycle
+	PURE GetLayerCycle, SERVER
 	{
 		DESC Returns the animation cycle/frame for given layer.
 		IN layerID, PN_Number, #The Layer ID
 		OUT frame, PN_Number, #The animation cycle/frame for given layer.
 	}
-	PURE SERVER GetLayerDuration
+	PURE GetLayerDuration, SERVER
 	{
 		DESC Returns the duration of given layer.
 		IN layerID, PN_Number, #The Layer ID
 		OUT duration, PN_Number, #The duration of the layer
 	}
-	PURE SERVER GetLayerWeight
+	PURE GetLayerWeight, SERVER
 	{
 		DESC Returns the current weight of the layer. See Entity:SetLayerWeight for more information.
 		IN layerID, PN_Number, #The Layer ID
 		OUT weight, PN_Number, #The current weight of the layer
 	}
-	PURE SERVER GetLightingOriginEntity
+	PURE GetLightingOriginEntity, SERVER
 	{
 		DESC Returns the entity that is being used as the light origin position for this entity.
 		OUT entity, PN_Ref, PNF_None, Entity, #The lighting entity. This will usually be NULL.
 	}
-	PURE SHARED GetLocalAngles
+	PURE GetLocalAngles, SHARED
 	{
 		DESC Returns the rotation of the entity relative to its parent entity.
 		OUT angles, PN_Angles, #Relative angle
 	}
-	PURE SHARED GetLocalAngularVelocity
+	PURE GetLocalAngularVelocity, SHARED
 	{
 		DESC Returns the non-VPhysics angular velocity of the entity relative to its parent entity.
 		OUT velocity, PN_Angles, #The velocity
 	}
-	PURE SHARED GetLocalPos
+	PURE GetLocalPos, SHARED
 	{
 		DESC Returns entity's position relative to it's parent.
 		OUT pos, PN_Vector, #Relative position
 	}
-	PURE SHARED GetManipulateBoneAngles
+	PURE GetManipulateBoneAngles, SHARED
 	{
 		DESC Gets the entity's angle manipulation of the given bone. This is relative to the default angle, so the angle is zero when unmodified.
 		IN boneID, PN_Number, #The bone's ID
 		OUT angles, PN_Angles, #The entity's angle manipulation of the given bone.
 	}
-	PURE SHARED GetManipulateBoneJiggle
+	PURE GetManipulateBoneJiggle, SHARED
 	{
 		DESC Returns the jiggle amount of the entity's bone.
 		IN boneID, PN_Number, #The bone ID
 		OUT jiggle, PN_Number, #Returns a value ranging from 0 to 255 depending on the value set with Entity:ManipulateBoneJiggle.
 	}
-	PURE SHARED GetManipulateBonePosition
+	PURE GetManipulateBonePosition, SHARED
 	{
 		DESC Gets the entity's position manipulation of the given bone. This is relative to the default position, so it is zero when unmodified.
 		IN boneId, PN_Number, #The bone's ID
 		OUT pos, PN_Vector, #The entity's position manipulation of the given bone.
 	}
-	PURE SHARED GetManipulateBoneScale
+	PURE GetManipulateBoneScale, SHARED
 	{
 		DESC Gets the entity's scale manipulation of the given bone. Normal scale is Vector( 1, 1, 1 )
 		IN boneID, PN_Number, #The bone's ID
 		OUT scale, PN_Vector, #The entity's scale manipulation of the given bone
 	}
-	PURE SHARED GetMaterial
+	PURE GetMaterial, SHARED
 	{
 		DESC Returns the material override for this entity.
 		OUT material, PN_String, #material
 	}
-	PURE SHARED GetMaterials
+	PURE GetMaterials, SHARED
 	{
 		DESC Returns all materials of the entity's model.
 		OUT materials, PN_String, PNF_Table, #A table containing full paths to the materials of the model.
 	}
-	PURE SERVER GetMaterialType
+	PURE GetMaterialType, SERVER
 	{
 		DESC Returns the surface material of this entity.
 		OUT type, PN_Enum, PNF_None, MAT, #Surface material. See MAT_ Enums
 	}
-	PURE SHARED GetMaxHealth
+	PURE GetMaxHealth, SHARED
 	{
 		DESC Returns the max health that the entity was given. It can be set via Entity:SetMaxHealth.
 		OUT maxHealth, PN_Number, #Max health.
 	}
-	PURE SHARED GetModel
+	PURE GetModel, SHARED
 	{
 		DESC Gets the model of given entity.
 		OUT model, PN_String, #The entity's model. Will be a filesystem path for most models. This will be nil for entities which cannot have models, such as point entities.
 		CODE #1 = Entity_.GetModel($1)\n#1 = #1 or ""
 	}
-	PURE SHARED GetModelBounds
+	PURE GetModelBounds, SHARED
 	{
 		DESC Returns the entity's model bounds. This is different than the collision bounds/hull. This is not scaled with Entity:SetModelScale, and will return the model's original, unmodified mins and maxs.
 		OUT mins, PN_Vector, #The minimum vector of the bounds
 		OUT maxs, PN_Vector, #The maximum vector of the bounds
 	}
-	PURE SHARED GetModelContents
+	PURE GetModelContents, SHARED
 	{
 		DESC Returns the contents of the entity's current model.
 		OUT contents, PN_Enum, PNF_Bitfield, CONTENTS, #The contents of the entity's model. See CONTENTS_ Enums.
 	}
-	PURE CLIENT GetModelPhysBoneCount
+	PURE GetModelPhysBoneCount, CLIENT
 	{
 		DESC Gets the physics bone count of the entity's model. This is only applicable to ragdoll models and only to "anim" type Scripted Entities.
 		OUT count, PN_Number, #How many physics bones exist on the model.
 	}
-	PURE SHARED GetModelRadius
+	PURE GetModelRadius, SHARED
 	{
 		DESC Gets the models radius.
 		OUT radius, PN_Number, #The radius of the model
 	}
-	PURE SHARED GetModelRenderBounds
+	PURE GetModelRenderBounds, SHARED
 	{
 		DESC Returns the entity's model render bounds. By default this will return the same bounds as Entity:GetModelBounds.
 		OUT mins, PN_Vector, #The minimum vector of the bounds
 		OUT maxs, PN_Vector, #The maximum vector of the bounds
 	}
-	PURE SHARED GetModelScale
+	PURE GetModelScale, SHARED
 	{
 		DESC Gets the selected entity's model scale.
 		OUT scale, PN_Number, #Scale of that entity's model.
 	}
-	PURE SERVER GetMomentaryRotButtonPos
+	PURE GetMomentaryRotButtonPos, SERVER
 	{
 		DESC Returns the amount a momentary_rot_button entity is turned based on the given angle. 0 meaning completely turned closed, 1 meaning completely turned open.
 		IN turnAngle, PN_Angles, #The angle of rotation to compare - usually should be Entity:GetAngles.
 		OUT amount, PN_Number, #The amount the momentary_rot_button is turned, ranging from 0 to 1, or nil if the entity is not a momentary_rot_button.
 	}
-	PURE SHARED GetMoveCollide
+	PURE GetMoveCollide, SHARED
 	{
 		DESC Returns the move collide type of the entity. The move collide is the way a physics object reacts to hitting an object - will it bounce, slide?
 		OUT moveCollide, PN_Enum, PNF_None, MOVECOLLIDE, #The move collide type, see MOVECOLLIDE_ Enums
 	}
-	PURE SHARED GetMoveParent
+	PURE GetMoveParent, SHARED
 	{
 		DESC Returns the movement parent of this entity.
 		OUT parent, PN_Ref, PNF_None, Entity, #The movement parent of this entity.
 	}
-	PURE SHARED GetMoveType
+	PURE GetMoveType, SHARED
 	{
 		DESC Returns the entity's movetype
 		OUT moveType, PN_Enum, PNF_None, MOVETYPE, #Move type. See MOVETYPE_ Enums
 	}
-	PURE SERVER GetName
+	PURE GetName, SERVER
 	{
 		DESC Returns the mapping name of this entity.
 		OUT name, PN_String, #The name of the Entity
 	}
-	PURE SHARED GetNoDraw
+	PURE GetNoDraw, SHARED
 	{
 		DESC Returns if the entity's rendering and transmitting has been disabled.
 		OUT noDraw, PN_Bool, #Whether the entity's rendering and transmitting has been disabled.
 	}
-	PURE SHARED GetNetworkOrigin
+	PURE GetNetworkOrigin, SHARED
 	{
 		DESC Gets networked origin for entity.
 		OUT origin, PN_Vector, #origin
 	}
-	PURE SHARED GetNumBodyGroups
+	PURE GetNumBodyGroups, SHARED
 	{
 		DESC Returns the body group count of the entity.
 		OUT count, PN_Number, #Amount of bodygroups the entitys model has
 	}
-	PURE SHARED GetNumPoseParameters
+	PURE GetNumPoseParameters, SHARED
 	{
 		DESC Returns the number of pose parameters this entity has.
 		OUT count, PN_Number, #Amount of pose parameters the entity has
 	}
-	PURE SHARED GetOwner
+	PURE GetOwner, SHARED
 	{
 		DESC Returns the owner entity of this entity. See Entity:SetOwner for more info.
 		OUT owner, PN_Ref, PNF_None, Entity, #The owner entity of this entity.
 	}
-	PURE SHARED GetParent
+	PURE GetParent, SHARED
 	{
 		DESC Returns the parent entity of this entity.
 		OUT parent, PN_Ref, PNF_None, Entity, #parentEntity
 	}
-	PURE SHARED GetParentAttachment
+	PURE GetParentAttachment, SHARED
 	{
 		DESC Returns the attachment index of the entity's parent. Returns 0 if the entity is not parented to a specific attachment or if it isn't parented at all.
 		OUT attachment, PN_Number, #The parented attachment index
 	}
-	PURE SHARED GetParentPhysNum
+	PURE GetParentPhysNum, SHARED
 	{
 		DESC If the entity is parented to an entity that has a model with multiple physics objects (like a ragdoll), this is used to retrieve what physics object number the entity is parented to on it's parent.
 		OUT phys, PN_Number, #The physics object id, or nil if the entity has no parent
 	}
-	PURE SHARED GetParentWorldTransformMatrix
+	PURE GetParentWorldTransformMatrix, SHARED
 	{
 		DESC Returns the position and angle of the entity's move parent as a 3x4 matrix (VMatrix is 4x4 so the fourth row goes unused). The first three columns store the angle as a rotation matrix, and the fourth column stores the position vector.
 		OUT matrix, PN_Ref, PNF_None, VMatrix, #The position and angle matrix. If the entity has no move parent, an identity matrix will be returned. If the entity is parented to attachment 0 or the parent isn't a BaseAnimating entity, the equivalent of Entity:GetMoveParent():GetWorldTransformMatrix() will be returned.
 	}
-	PURE SHARED GetPersistent
+	PURE GetPersistent, SHARED
 	{
 		DESC Returns whether the entity is persistent or not.
 		OUT isPersistent, PN_Bool, #True if the entity is set to be persistent.
 	}
-	PURE SERVER GetPhysicsAttacker
+	PURE GetPhysicsAttacker, SERVER
 	{
 		DESC Returns player who is claiming kills of physics damage the entity deals.
 		IN timeLimit, PN_Number, #The time to check if the entity was still a proper physics attacker.
 		OUT attacker, PN_Ref, PNF_None, Player, #The player. If entity that was set is not a player, it will return NULL entity.
 	}
-	PURE SHARED GetPhysicsObject
+	PURE GetPhysicsObject, SHARED
 	{
 		DESC Returns the entity's physics object, if the entity has physics.
 		OUT physObj, PN_Ref, PNF_None, PhysObj, #The entity's physics object.
 	}
-	PURE SHARED GetPhysicsObjectCount
+	PURE GetPhysicsObjectCount, SHARED
 	{
 		DESC Returns the number of physics objects an entity has (usually 1 for non-ragdolls)
 		OUT count, PN_Number, #numObjects
 	}
-	PURE SHARED GetPhysicsObjectNum
+	PURE GetPhysicsObjectNum, SHARED
 	{
 		DESC Returns a specific physics object from an entity with multiple PhysObjects (like ragdolls)
 		IN id, PN_Number, #The number corresponding to the PhysObj to grab. Starts at 0.
 		OUT physObj, PN_Ref, PNF_None, PhysObj, #The physics object
 	}
-	PURE SHARED GetPlaybackRate
+	PURE GetPlaybackRate, SHARED
 	{
 		DESC Returns the playback rate of the main sequence on this entity, with 1.0 being the default speed.
 		OUT rate, PN_Number, #The playback rate.
 	}
-	PURE SHARED GetPos
+	PURE GetPos, SHARED
 	{
 		DESC Gets the position of entity in world.
 		OUT pos, PN_Vector, #The position of the entity.
 	}
-	PURE SHARED GetPoseParameter
+	PURE GetPoseParameter, SHARED
 	{
 		DESC Returns the pose parameter value
 		IN name, PN_String, #Pose parameter name to look up
 		OUT value, PN_Number, #Value of given pose parameter. WARNING: This value will be from 0 - 1 on the client and from minimum range to maximum range on the server! You'll have to remap this value clientside to Entity:GetPoseParameterRange's returns if you want get the actual pose parameter value. See Entity:SetPoseParameter's example.
 	}
-	PURE SHARED GetPoseParameterName
+	PURE GetPoseParameterName, SHARED
 	{
 		DESC Returns name of given pose parameter
 		IN id, PN_Number, #Id of the pose paremeter
 		OUT name, PN_String, #Name of given pose parameter
 	}
-	PURE SHARED GetPoseParameterRange
+	PURE GetPoseParameterRange, SHARED
 	{
 		DESC Returns pose parameter range
 		IN id, PN_Number, #Pose parameter ID to look up
 		OUT min, PN_Number, #The minimum value
 		OUT max, PN_Number, #The maximum value
 	}
-	PURE CLIENT GetPredictable
+	PURE GetPredictable, CLIENT
 	{
 		DESC Returns whether this entity is predictable or not.
 		OUT isPredictable, PN_Bool, #Whether this entity is predictable or not.
 	}
-	PURE SHARED GetRagdollOwner
+	PURE GetRagdollOwner, SHARED
 	{
 		DESC Returns the entity which the ragdoll came from. The opposite of Player:GetRagdollEntity.
 		OUT owner, PN_Ref, PNF_None, Entity, #The entity who owns the ragdoll.
 	}
-	PURE CLIENT GetRenderAngles
+	PURE GetRenderAngles, CLIENT
 	{
 		DESC Returns the entity's render angles, set by Entity:SetRenderAngles in a drawing hook.
 		OUT angles, PN_Angles, #The entitys render angles
 	}
-	PURE CLIENT GetRenderBounds
+	PURE GetRenderBounds, CLIENT
 	{
 		DESC Returns render bounds of the entity. Can be overridden by Entity:SetRenderBounds.
 		OUT mins, PN_Vector, #The minimum vector of the bounds
 		OUT maxs, PN_Vector, #The maximum vector of the bounds.
 	}
-	PURE SHARED GetRenderFX
+	PURE GetRenderFX, SHARED
 	{
 		DESC Returns current render FX of the entity.
 		OUT flags, PN_Enum, PNF_Bitfield, kRenderFx, #The current render FX of the entity. See kRenderFx_ Enums
 	}
-	PURE CLIENT GetRenderGroup
+	PURE GetRenderGroup, CLIENT
 	{
 		DESC Returns the render group of the entity.
 		OUT renderGroup, PN_Enum, PNF_None, RENDERGROUP, #The render group. See RENDERGROUP_ Enums
 	}
-	PURE SHARED GetRenderMode
+	PURE GetRenderMode, SHARED
 	{
 		DESC Returns the render mode of the entity.
 		OUT renderMode, PN_Enum, PNF_None, RENDERMODE, #The render Mode. See RENDERMODE_ Enums
 	}
-	PURE CLIENT GetRenderOrigin
+	PURE GetRenderOrigin, CLIENT
 	{
 		DESC Returns the entity's render origin, set by Entity:SetRenderOrigin in a drawing hook.
 		OUT origin, PN_Vector, #The entitys render origin
 	}
-	PURE SHARED GetRight
+	PURE GetRight, SHARED
 	{
 		DESC Returns the rightward vector of the entity, as a normalized direction vector
 		OUT right, PN_Vector, #rightDir
 	}
-	PURE SHARED GetRotatedAABB
+	PURE GetRotatedAABB, SHARED
 	{
 		DESC Returns the min and max of the entity's axis-aligned bounding box.
 		IN min, PN_Vector, #Minimum extent of the bounding box.
@@ -866,58 +866,58 @@ CLASS Entity, entity
 		OUT mins, PN_Vector, #Minimum extent of the AABB
 		OUT maxs, PN_Vector, #Maximum extent of the AABB
 	}
-	PURE SHARED GetSaveTable
+	PURE GetSaveTable, SHARED
 	{
 		DESC Returns a table of save values for an entity.
 		IN showAll, PN_Bool, #If set, shows all variables, not just the ones for save.
 		OUT PN_Any, PNF_Table, #A table containing all save values in key/value format. The value may be a sequential table (starting with 1) if the field in question is an array in engine.
 	}
-	PURE SHARED GetSequence
+	PURE GetSequence, SHARED
 	{
 		DESC Return the index of the model sequence that is currently active for the entity.
 		OUT sequence, PN_Number, #The index of the model sequence.
 	}
-	PURE SHARED GetSequenceActivity
+	PURE GetSequenceActivity, SHARED
 	{
 		DESC Return activity id out of sequence id. Opposite of Entity:SelectWeightedSequence.
 		IN seq, PN_Number, #The sequence ID
 		OUT activity, PN_Enum, PNF_None, ACT, #The activity ID, ie ACT_ Enums
 	}
-	PURE SHARED GetSequenceActivityName
+	PURE GetSequenceActivityName, SHARED
 	{
 		DESC Returns the activity name for the given sequence id.
 		IN sequenceId, PN_Number, #The sequence id.
 		OUT name, PN_String, #The ACT_ Enums as a string, returns "Not Found!" with an invalid sequence and "No model!" when no model is set.
 	}
-	PURE SHARED GetSequenceCount
+	PURE GetSequenceCount, SHARED
 	{
 		DESC Returns the amount of sequences ( animations ) the entity's model has.
 		OUT count, PN_Number, #The amount of sequences ( animations ) the entity's model has.
 	}
-	PURE SHARED GetSequenceGroundSpeed
+	PURE GetSequenceGroundSpeed, SHARED
 	{
 		DESC Returns the ground speed of the entity's sequence.
 		IN sequenceId, PN_Number, #The sequence ID.
 		OUT speed, PN_Number, #The ground speed of this sequence.
 	}
-	PURE SHARED GetSequenceInfo
+	PURE GetSequenceInfo, SHARED
 	{
 		DESC Returns a table of information about an entity's sequence.
 		IN sequenceId, PN_Number, #The sequence id of the entity.
 		OUT info, PN_Struct, PNF_None, SequenceInfo, #Table of information about the entity's sequence, or nil is ID is out of range. See SequenceInfo structure
 	}
-	PURE SHARED GetSequenceList
+	PURE GetSequenceList, SHARED
 	{
 		DESC Returns a list of all sequences ( animations ) the model has.
 		OUT sequenceList, PN_String, PNF_Table, #The list of all sequences ( animations ) the model has. The indices start with 0!
 	}
-	PURE SERVER GetSequenceMoveDist
+	PURE GetSequenceMoveDist, SERVER
 	{
 		DESC Returns an entity's sequence move distance (the change in position over the course of the entire sequence).
 		IN sequenceId, PN_Number, #The sequence index.
 		OUT distance, PN_Number, #The move distance of the sequence.
 	}
-	PURE SHARED GetSequenceMovement
+	PURE GetSequenceMovement, SHARED
 	{
 		DESC Returns the delta movement and angles of a sequence of the entity's model.
 		IN sequenceId, PN_Number, #The sequence index. See Entity:GetSequenceName.
@@ -927,142 +927,142 @@ CLASS Entity, entity
 		OUT deltaPos, PN_Vector, #The delta vector of the animation, how much the model's origin point moved.
 		OUT deltaAngles, PN_Angles, #The delta angle of the animation.
 	}
-	PURE SERVER GetSequenceMoveYaw
+	PURE GetSequenceMoveYaw, SERVER
 	{
 		DESC Returns the change in heading direction in between the start and the end of the sequence.
 		IN seq, PN_Number, #The sequence index. See Entity:LookupSequence.
 		OUT yaw, PN_Number, #The yaw delta. Returns 99999 for no movement.
 	}
-	PURE SHARED GetSequenceName
+	PURE GetSequenceName, SHARED
 	{
 		DESC Return the name of the sequence for the index provided. Refer to Entity:GetSequence to find the current active sequence on this entity.
 		IN index, PN_Number, #The index of the sequence to look up.
 		OUT name, PN_String, #Name of the sequence.
 	}
-	PURE SHARED GetShouldPlayPickupSound
+	PURE GetShouldPlayPickupSound, SHARED
 	{
 		DESC Checks if the entity plays a sound when picked up by a player.
 		OUT shouldPlay, PN_Bool, #True if it plays the pickup sound, false otherwise.
 	}
-	PURE SHARED GetShouldServerRagdoll
+	PURE GetShouldServerRagdoll, SHARED
 	{
 		DESC Returns if entity should create a server ragdoll on death or a client one.
 		OUT shouldServerRagdoll, PN_Bool, #Returns true if ragdoll will be created on server, false if on client
 	}
-	PURE SHARED GetSkin
+	PURE GetSkin, SHARED
 	{
 		DESC Returns the skin index of the current skin.
 		OUT skin, PN_Number, #skinIndex
 	}
-	PURE SHARED GetSolid
+	PURE GetSolid, SHARED
 	{
 		DESC Returns solid type of an entity.
 		OUT solidType, PN_Enum, PNF_None, SOLID, #The solid type. See the SOLID_ Enums.
 	}
-	PURE SHARED GetSolidFlags
+	PURE GetSolidFlags, SHARED
 	{
 		DESC Returns solid flag(s) of an entity.
 		OUT solidFlags, PN_Enum, PNF_Bitfield, FSOLID, #The flag(s) of the entity, see FSOLID_ Enums.
 	}
-	PURE SHARED GetSpawnEffect
+	PURE GetSpawnEffect, SHARED
 	{
 		DESC Returns if we should show a spawn effect on spawn on this entity.
 		OUT playSpawnEffect, PN_Bool, #The flag to allow or disallow the spawn effect.
 	}
-	PURE SHARED GetSpawnFlags
+	PURE GetSpawnFlags, SHARED
 	{
 		DESC Returns the bitwise spawn flags used by the entity.
 		OUT spawnFlags, PN_Enum, PNF_Bitfield, SF, #The spawn flags of the entity, see SF_Enums.
 	}
-	PURE SHARED GetSubMaterial
+	PURE GetSubMaterial, SHARED
 	{
 		DESC Returns the material override for the given index.
 		IN index, PN_Number, #The index of the sub material. Acceptable values are from 0 to 31.
 		OUT material, PN_String, #The material that overrides this index, if any.
 	}
-	PURE SHARED GetSubModels
+	PURE GetSubModels, SHARED
 	{
 		DESC Returns a list of models included into the entity's model in the .qc file.
 		OUT subModels, PN_Struct, PNF_Table, SubModel, #The list of models included into the entity's model in the .qc file.
 	}
-	PURE SHARED GetTable
+	PURE GetTable, SHARED
 	{
 		DESC Returns the table that contains all values saved within the entity.
 		OUT table, PN_Any, PNF_Table, #entTable
 	}
-	PURE SHARED GetTouchTrace
+	PURE GetTouchTrace, SHARED
 	{
 		DESC Returns the last trace used in the collision callbacks such as ENTITY:StartTouch, ENTITY:Touch and ENTITY:EndTouch.
 		OUT trace, PN_Struct, PNF_None, TraceResult, #The TraceResult structure
 	}
-	PURE SHARED GetTransmitWithParent
+	PURE GetTransmitWithParent, SHARED
 	{
 		DESC Returns true if the TransmitWithParent flag is set or not.
 		OUT transmitWithParent, PN_Bool, #Is the TransmitWithParent flag is set or not
 	}
-	PURE SERVER GetUnFreezable
+	PURE GetUnFreezable, SERVER
 	{
 		DESC Returns if the entity is unfreezable, meaning it can't be frozen with the physgun. By default props are freezable, so this function will typically return false.
 		OUT unFreezable, PN_Bool, #True if the entity is unfreezable, false otherwise.
 	}
-	PURE SHARED GetUp
+	PURE GetUp, SHARED
 	{
 		DESC Returns the upward vector of the entity, as a normalized direction vector
 		OUT up, PN_Vector, #upDir
 	}
-	PURE SHARED GetVelocity
+	PURE GetVelocity, SHARED
 	{
 		DESC Returns the entity's velocity.
 		OUT velocity, PN_Vector, #The velocity of the entity.
 	}
-	PURE SHARED GetWorldTransformMatrix
+	PURE GetWorldTransformMatrix, SHARED
 	{
 		DESC Returns the position and angle of the entity as a 3x4 matrix (VMatrix is 4x4 so the fourth row goes unused). The first three columns store the angle as a rotation matrix, and the fourth column stores the position vector.
 		OUT matrix, PN_Ref, PNF_None, VMatrix, #The position and angle matrix.
 	}
-	FUNC SHARED GibBreakClient
+	FUNC GibBreakClient, SHARED
 	{
 		DESC Causes the entity to break into its current models gibs, if it has any.
 		IN force, PN_Vector, #The force to apply to the created gibs.
 		IN color, PN_Color, PNF_Nullable, #If set, this will be color of the broken gibs instead of the entity's color.
 	}
-	FUNC SHARED GibBreakServer
+	FUNC GibBreakServer, SHARED
 	{
 		DESC Causes the entity to break into its current models gibs, if it has any.
 		IN force, PN_Vector, #The force to apply to the created gibs
 	}
-	PURE SHARED HasBoneManipulations
+	PURE HasBoneManipulations, SHARED
 	{
 		DESC Returns whether or not the bone manipulation functions have ever been called on given entity.
 		OUT hasManipulations, PN_Bool, #True if the entity has been bone manipulated, false otherwise.
 	}
-	PURE SHARED HasFlexManipulatior
+	PURE HasFlexManipulatior, SHARED
 	{
 		DESC Returns whether or not the the entity has had flex manipulations performed with Entity:SetFlexWeight or Entity:SetFlexScale.
 		OUT hasFlexManipulator, PN_Bool, #True if the entity has flex manipulations, false otherwise.
 	}
-	PURE SERVER HeadTarget
+	PURE HeadTarget, SERVER
 	{
 		DESC Returns the position of the head of this entity, NPCs use this internally to aim at their targets.
 		IN origin, PN_Vector, #The vector of where the attack comes from.
 		OUT pos, PN_Vector, #The head position.
 	}
-	PURE SHARED Health
+	PURE Health, SHARED
 	{
 		DESC Returns the health of the entity.
 		OUT health, PN_Number, #health
 	}
-	FUNC SERVER Ignite
+	FUNC Ignite, SERVER
 	{
 		DESC Sets the entity on fire.
 		IN length, PN_Number, #How long to keep the entity ignited. Not supplying this argument will not ignite the entity at all.
 		IN radius=0, PN_Number, PNF_Nullable, #The radius of the ignition, will ignite everything around the entity that is in this radius.
 	}
-	FUNC CLIENT InitializeAsClientEntity
+	FUNC InitializeAsClientEntity, CLIENT
 	{
 		DESC Initializes this entity as being clientside only.
 	}
-	FUNC SERVER Input
+	FUNC Input, SERVER
 	{
 		DESC Fires input to the entity with the ability to make another entity responsible.
 		IN input, PN_String, #The name of the input to fire
@@ -1070,1058 +1070,1058 @@ CLASS Entity, entity
 		IN caller, PN_Ref, PNF_None, Entity, #The entity that is triggering this input (EG the button that was pushed)
 		IN param, PN_Any, PNF_Nullable, #The value to give to the input. Can be either a string, a number or a boolean.
 	}
-	FUNC CLIENT InvalidateBoneCache
+	FUNC InvalidateBoneCache, CLIENT
 	{
 		DESC Resets the entity's bone cache values in order to prepare for a model change.
 	}
-	PURE SHARED IsConstrained
+	PURE IsConstrained, SHARED
 	{
 		DESC Returns true if the entity has constraints attached to it
 		OUT constrained, PN_Bool, #Whether the entity is constrained or not.
 	}
-	PURE SERVER IsConstraint
+	PURE IsConstraint, SERVER
 	{
 		DESC Returns if entity is constraint or not
 		OUT constraint, PN_Bool, #Is the entity a constraint or not
 	}
-	PURE SHARED IsDormant
+	PURE IsDormant, SHARED
 	{
 		DESC Returns whether the entity is dormant or not. Client/server entities become dormant when they leave the PVS on the server. Client side entities can decide for themselves whether to become dormant. This mainly applies to PVS.
 		OUT dormant, PN_Bool, #Whether the entity is dormant or not.
 	}
-	PURE SERVER IsInWorld
+	PURE IsInWorld, SERVER
 	{
 		DESC Returns whether the entity is inside a wall or outside of the map.
 		OUT inWorld, PN_Bool, #Is the entity in world
 	}
-	PURE SERVER IsLagCompensated
+	PURE IsLagCompensated, SERVER
 	{
 		DESC Returns whether the entity is lag compensated or not.
 		OUT lagCompensated, PN_Bool, #Whether the entity is lag compensated or not.
 	}
-	PURE SHARED IsLineOfSightClear
+	PURE IsLineOfSightClear, SHARED
 	{
 		DESC Returns true if the target is in line of sight. This will only work on CBaseCombatCharacter entities.
 		IN target, PN_Vector, #The target to test. You can also supply an Entity instead of a Vector
 		OUT hasLineOfSight, PN_Bool, #Returns true if the line of sight is clear
 	}
-	PURE SHARED IsMarkedForDeletion
+	PURE IsMarkedForDeletion, SHARED
 	{
 		DESC Returns if the entity is going to be deleted in the next frame.
 		OUT deleted, PN_Bool, #If the entity is going to be deleted.
 	}
-	PURE SHARED IsNPC
+	PURE IsNPC, SHARED
 	{
 		DESC Checks if the entity is an NPC or not.
 		OUT isNPC, PN_Bool, #Whether the entity is an NPC.
 		CODE #1 = getmetatable($1) == NPC_
 		REQUIREMETA NPC
 	}
-	PURE SHARED IsOnFire
+	PURE IsOnFire, SHARED
 	{
 		DESC Returns whether the entity is on fire.
 		OUT onFire, PN_Bool, #Whether the entity is on fire or not.
 	}
-	PURE SHARED IsOnGround
+	PURE IsOnGround, SHARED
 	{
 		DESC Returns whether the entity is on ground or not.
 		OUT onGround, PN_Bool, #Whether the entity is on ground or not.
 	}
-	PURE SHARED IsPlayer
+	PURE IsPlayer, SHARED
 	{
 		DESC Checks if the entity is a player or not.
 		OUT isPlayer, PN_Bool, #Whether the entity is a player.
 		CODE #1 = getmetatable($1) == Player_
 		REQUIREMETA Player
 	}
-	PURE SERVER IsPlayerHolding
+	PURE IsPlayerHolding, SERVER
 	{
 		DESC Returns true if the entity is being held by a player. Either by physics gun, gravity gun or use-key (+use).
 		OUT isHeld, PN_Bool, #IsBeingHeld
 	}
-	PURE SERVER IsPlayingGesture
+	PURE IsPlayingGesture, SERVER
 	{
 		DESC Returns whether there's a gesture is given activity being played.
 		IN activity, PN_Enum, PNF_None, ACT, #The activity to test. See ACT_ Enums.
 		OUT playingGesture, PN_Bool, #Whether there's a gesture is given activity being played.
 	}
-	PURE SHARED IsRagdoll
+	PURE IsRagdoll, SHARED
 	{
 		DESC Checks if the entity is a ragdoll.
 		OUT ragdoll, PN_Bool, #Is ragdoll or not
 	}
-	PURE SHARED IsScripted
+	PURE IsScripted, SHARED
 	{
 		DESC Checks if the entity is a SENT or a built-in entity.
 		OUT scripted, PN_Bool, #Returns true if entity is scripted ( SENT ), false if not ( A built-in engine entity )
 	}
-	PURE SHARED IsSolid
+	PURE IsSolid, SHARED
 	{
 		DESC Returns if the entity is solid or not. Very useful for determining if the entity is a trigger or not.
 		OUT solid, PN_Bool, #Whether the entity is solid or not.
 	}
-	PURE SHARED IsValid
+	PURE IsValid, SHARED
 	{
 		DESC Returns whether the entity is a valid entity or not.
 		OUT valid, PN_Bool, #true if the entity is valid, false otherwise
 	}
-	PURE SERVER IsValidLayer
+	PURE IsValidLayer, SERVER
 	{
 		DESC Returns whether the given layer ID is valid and exists on this entity.
 		IN layerID, PN_Number, #The Layer ID
 		OUT valid, PN_Bool, #Whether the given layer ID is valid and exists on this entity.
 	}
-	PURE SHARED IsVehicle
+	PURE IsVehicle, SHARED
 	{
 		DESC Checks if the entity is a vehicle or not.
 		OUT vehicle, PN_Bool, #Whether the entity is a vehicle.
 		CODE #1 = getmetatable($1) == Vehicle_
 		REQUIREMETA Vehicle
 	}
-	PURE SHARED IsWeapon
+	PURE IsWeapon, SHARED
 	{
 		DESC Checks if the entity is a weapon or not.
 		OUT weapon, PN_Bool, #Whether the entity is a weapon
 		CODE #1 = getmetatable($1) == Weapon_
 		REQUIREMETA Weapon
 	}
-	PURE SHARED IsWidget
+	PURE IsWidget, SHARED
 	{
 		DESC Returns whether the entity is a widget or not.
 		OUT widget, PN_Bool, #Whether the entity is a widget or not.
 	}
-	PURE SHARED IsWorld
+	PURE IsWorld, SHARED
 	{
 		DESC Returns if the entity is the map's Entity[0] worldspawn
 		OUT world, PN_Bool, #isWorld
 	}
-	PURE SHARED LocalToWorld
+	PURE LocalToWorld, SHARED
 	{
 		DESC Converts a vector local to an entity into a worldspace vector
 		IN local, PN_Vector, #The local vector
 		OUT pos, PN_Vector, #The translated to world coordinates vector
 	}
-	PURE SHARED LocalToWorldAngles
+	PURE LocalToWorldAngles, SHARED
 	{
 		DESC Converts a local angle (local to the entity) to a world angle.
 		IN local, PN_Angles, #The local angle
 		OUT angles, PN_Angles, #The world angle
 	}
-	PURE SHARED LookupAttachment
+	PURE LookupAttachment, SHARED
 	{
 		DESC Returns the attachment index of the given attachment name.
 		IN attachmentName, PN_String, #The name of the attachment.
 		OUT index, PN_Number, #The attachment index, or 0 if the attachment does not exist and -1 if the model is invalid.
 	}
-	PURE SHARED LookupBone
+	PURE LookupBone, SHARED
 	{
 		DESC Gets the bone index of the given bone name, returns nothing if the bone does not exist.
 		IN boneName, PN_String, #The name of the bone.
 		OUT index, PN_Number, #Index of the given bone name
 	}
-	PURE SHARED LookupSequence
+	PURE LookupSequence, SHARED
 	{
 		DESC Returns sequence ID from its name.
 		IN name, PN_String, #Sequence name
 		OUT id, PN_Number, #Sequence ID for that name. This will differ for models with same sequence names. Will be -1 whether the sequence is invalid.
 		OUT duration, PN_Number, #The sequence duration 0 if the sequence is invalid
 	}
-	FUNC SHARED MakePhysicsObjectAShadow
+	FUNC MakePhysicsObjectAShadow, SHARED
 	{
 		DESC Turns the Entity:GetPhysicsObject into a physics shadow. It's used internally for the Player's and NPC's physics object, and certain HL2 entities such as the crane.
 		IN allowPhysicsMovement, PN_Bool, #Whether to allow the physics shadow to move under stress.
 		IN allowPhysicsRotation, PN_Bool, #Whether to allow the physics shadow to rotate under stress.
 	}
-	FUNC SHARED ManipulateBoneAngles
+	FUNC ManipulateBoneAngles, SHARED
 	{
 		DESC Sets custom bone angles.
 		IN boneID, PN_Number, #Index of the bone you want to manipulate
 		IN ang, PN_Angles, #Angle to apply.
 	}
-	FUNC SHARED ManipulateBoneJiggle
+	FUNC ManipulateBoneJiggle, SHARED
 	{
 		DESC Manipulates the bone's jiggle status. This allows non jiggly bones to become jiggly.
 		IN boneID, PN_Number, #Index of the bone you want to manipulate.
 		IN enabled, PN_Number, #0 = No Jiggle
 	}
-	FUNC SHARED ManipulateBonePosition
+	FUNC ManipulateBonePosition, SHARED
 	{
 		DESC Sets custom bone offsets.
 		IN boneID, PN_Number, #Index of the bone you want to manipulate
 		IN pos, PN_Vector, #Position vector to apply
 	}
-	FUNC SHARED ManipulateBoneScale
+	FUNC ManipulateBoneScale, SHARED
 	{
 		DESC Sets custom bone scale.
 		IN boneID, PN_Number, #Index of the bone you want to manipulate
 		IN scale, PN_Vector, #Scale vector to apply. Note that the scale is relative to the original bone scale, not relative to the world or the entity.
 	}
-	PURE SERVER MapCreationID
+	PURE MapCreationID, SERVER
 	{
 		DESC Returns entity's map creation ID. Unlike Entity:EntIndex or Entity:GetCreationID, it will always be the same on same map, no matter how much you clean up or restart it.
 		OUT id, PN_Number, #The map creation ID or -1 if the entity is not compiled into the map.
 	}
-	FUNC CLIENT MarkShadowAsDirty
+	FUNC MarkShadowAsDirty, CLIENT
 	{
 		DESC Refreshes the shadow of the entity.
 	}
-	FUNC SHARED MuzzleFlash
+	FUNC MuzzleFlash, SHARED
 	{
 		DESC Fires the muzzle flash effect of the weapon the entity is carrying. This only creates a light effect and is often called alongside Weapon:SendWeaponAnim
 	}
-	PURE SHARED NearestPoint
+	PURE NearestPoint, SHARED
 	{
 		DESC Performs a Ray OBBox intersection from the given position to the origin of the OBBox with the entity and returns the hit position on the OBBox
 		IN position, PN_Vector, #The vector to start the intersection from.
 		OUT point, PN_Vector, #The nearest hit point of the entity's bounding box in world coordinates.
 	}
-	FUNC SHARED NextThink
+	FUNC NextThink, SHARED
 	{
 		DESC In the case of a scripted entity, this will cause the next ENTITY:Think event to be run at the given time.
 		IN timestamp, PN_Number, #The relative to CurTime timestamp, at which the next think should occur.
 	}
-	PURE SHARED OBBCenter
+	PURE OBBCenter, SHARED
 	{
 		DESC Returns the center of an entity's bounding box as a local vector.
 		OUT center, PN_Vector, #OBBCenter
 	}
-	PURE SHARED OBBMaxs
+	PURE OBBMaxs, SHARED
 	{
 		DESC Returns the highest corner of an entity's bounding box as a local vector.
 		OUT maxs, PN_Vector, #The local position of the highest corner of the entity's oriented bounding box.
 		REDIRECTPIN mins, maxs
 	}
-	PURE SHARED OBBMins
+	PURE OBBMins, SHARED
 	{
 		DESC Returns the lowest corner of an entity's bounding box as a local vector.
 		OUT mins, PN_Vector, #The local position of the lowest corner of the entity's oriented bounding box.
 		REDIRECTPIN maxs, mins
 	}
-	PURE SHARED ObjectCaps
+	PURE ObjectCaps, SHARED
 	{
 		DESC Returns the entity's capabilities as a bitfield. In the engine this function is mostly used to check the use type, the save/restore system and level transitions flags.
 		OUT PN_Number, #The bitfield, a combination of the FCAP_ flags.
 	}
-	FUNC SERVER PassesDamageFilter
+	FUNC PassesDamageFilter, SERVER
 	{
 		DESC Tests whether the damage passes the entity filter.
 		IN dmg, PN_Ref, PNF_None, CTakeDamageInfo, #The damage info to test
 		OUT passes, PN_Bool, #Whether the damage info passes the entity filter.
 	}
-	FUNC SERVER PassesFilter
+	FUNC PassesFilter, SERVER
 	{
 		DESC Tests whether the entity passes the entity filter.
 		IN caller, PN_Ref, PNF_None, Entity, #The initiator of the test.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to test against the entity filter.
 		OUT passes, PN_Bool, #Whether the entity info passes the entity filter.
 	}
-	FUNC SHARED PhysicsDestroy
+	FUNC PhysicsDestroy, SHARED
 	{
 		DESC Destroys the current physics object of an entity.
 	}
-	FUNC SHARED PhysicsFromMesh
+	FUNC PhysicsFromMesh, SHARED
 	{
 		DESC Initializes the physics mesh of the entity from a triangle soup defined by a table of vertices. The resulting mesh is hollow, may contain holes, and always has a volume of 0.
 		IN vertices, PN_Struct, PNF_None, MeshVertex, #A table consisting of MeshVertex structure (only the pos element is taken into account). Every 3 vertices define a triangle in the physics mesh.
 		OUT success, PN_Bool, #Returns true on success, nil otherwise.
 	}
-	FUNC SHARED PhysicsInit
+	FUNC PhysicsInit, SHARED
 	{
 		DESC Initializes the physics object of the entity using its current model. Deletes the previous physics object if it existed and the new object creation was successful.
 		IN solidType, PN_Enum, PNF_None, SOLID, #The solid type of the physics object to create, see SOLID_ Enums. Should be SOLID_VPHYSICS in most cases.
 		OUT success, PN_Bool, #Returns true on success, false otherwise.
 	}
-	FUNC SHARED PhysicsInitBox
+	FUNC PhysicsInitBox, SHARED
 	{
 		DESC Makes the physics object of the entity a AABB.
 		IN mins, PN_Vector, #The minimum position of the box. This is automatically ordered with the maxs.
 		IN maxs, PN_Vector, #The maximum position of the box. This is automatically ordered with the mins.
 		OUT success, PN_Bool, #Returns true on success, nil otherwise. This fails when the game cannot create any more PhysCollides.
 	}
-	FUNC SHARED PhysicsInitConvex
+	FUNC PhysicsInitConvex, SHARED
 	{
 		DESC Initializes the physics mesh of the entity with a convex mesh defined by a table of points. The resulting mesh is the convex hull of all the input points. If successful, the previous physics object will be removed.
 		IN convex, PN_Struct, PNF_None, Convex, #A table of eight Vectors, in local coordinates, to be used in the computation of the convex mesh. Order does not matter.
 		OUT success, PN_Bool, #Returns true on success, nil otherwise.
 	}
-	FUNC SHARED PhysicsInitMultiConvex
+	FUNC PhysicsInitMultiConvex, SHARED
 	{
 		DESC An advanced version of Entity:PhysicsInitConvex which initializes a physics object from multiple convex meshes. This should be used for physics objects with a custom shape which cannot be represented by a single convex mesh.
 		IN convex, PN_Struct, PNF_Table, Convex, #A table consisting of tables of Vectors. Each sub-table defines a set of points to be used in the computation of one convex mesh.
 		OUT success, PN_Bool, #Returns true on success, nil otherwise
 	}
-	FUNC SHARED PhysicsInitShadow
+	FUNC PhysicsInitShadow, SHARED
 	{
 		DESC Initializes the entity's physics object as a physics shadow. Removes the previous physics object if successful. This is used internally for the Player's and NPC's physics object, and certain HL2 entities such as the crane.
 		IN allowPhysicsMovement=true, PN_Bool, PNF_Nullable, #Whether to allow the physics shadow to move under stress.
 		IN allowPhysicsRotation=true, PN_Bool, PNF_Nullable, #Whether to allow the physics shadow to rotate under stress.
 		OUT success, PN_Bool, #Return true on success, nil otherwise.
 	}
-	FUNC SHARED PhysicsInitSphere
+	FUNC PhysicsInitSphere, SHARED
 	{
 		DESC Makes the physics object of the entity a sphere.
 		IN radius, PN_Number, #The radius of the sphere.
 		IN physmat, PN_String, #Physical material from surfaceproperties.txt or added with physenv.AddSurfaceData.
 		OUT success, PN_Bool, #Returns true on success, false otherwise
 	}
-	FUNC SHARED PhysicsInitStatic
+	FUNC PhysicsInitStatic, SHARED
 	{
 		DESC Initializes a static physics object of the entity using its current model. If successful, the previous physics object is removed.
 		IN solidType, PN_Enum, PNF_None, SOLID, #The solid type of the physics object to create, see SOLID_ Enums. Should be SOLID_VPHYSICS in most cases.
 		OUT success, PN_Bool, #Returns true on success, false otherwise. This will fail if the entity's current model has no associated physics mesh.
 	}
-	FUNC SHARED PhysWake
+	FUNC PhysWake, SHARED
 	{
 		DESC Wakes up the entity's physics object
 	}
-	FUNC SERVER PlayScene
+	FUNC PlayScene, SERVER
 	{
 		DESC Makes the entity play a .vcd scene.
 		IN scene, PN_String, #Filepath to scene
 		IN delay=0, PN_Number, #Delay in seconds until the scene starts playing.
 	}
-	FUNC SERVER PointAtEntity
+	FUNC PointAtEntity, SERVER
 	{
 		DESC Changes an entities angles so that it faces the target entity.
 		IN target, PN_Ref, PNF_None, Entity, #The entity to face.
 	}
-	FUNC SERVER PrecacheGibs
+	FUNC PrecacheGibs, SERVER
 	{
 		DESC Precaches gibs for the entity's model.
 	}
-	FUNC SERVER RagdollSolve
+	FUNC RagdollSolve, SERVER
 	{
 		DESC Normalizes the ragdoll. This is used alongside Kinect in Entity:SetRagdollBuildFunction, for more info see ragdoll_motion entity.
 	}
-	FUNC SERVER RagdollStopControlling
+	FUNC RagdollStopControlling, SERVER
 	{
 		DESC Sets the function to build the ragdoll. This is used alongside Kinect in Entity:SetRagdollBuildFunction, for more info see ragdoll_motion entity.
 	}
-	FUNC SERVER RagdollUpdatePhysics
+	FUNC RagdollUpdatePhysics, SERVER
 	{
 		DESC Makes the physics objects follow the set bone positions. This is used alongside Kinect in Entity:SetRagdollBuildFunction, for more info see ragdoll_motion entity.
 	}
-	FUNC SHARED Remove
+	FUNC Remove, SHARED
 	{
 		DESC Removes the entity it is used on.
 	}
-	FUNC SHARED RemoveAllDecals
+	FUNC RemoveAllDecals, SHARED
 	{
 		DESC Removes all decals from the entities surface.
 	}
-	FUNC SERVER RemoveAllGestures
+	FUNC RemoveAllGestures, SERVER
 	{
 		DESC Removes and stops all gestures.
 	}
-	FUNC SHARED RemoveCallback
+	FUNC RemoveCallback, SHARED
 	{
 		DESC Removes a callback previously added with Entity:AddCallback
 		IN hook, PN_String, #The hook name to remove. See Entity Callbacks
 		IN callbackid, PN_Number, #The callback id previously retrieved with the return of Entity:AddCallback or Entity:GetCallbacks
 	}
-	FUNC SHARED RemoveCallOnRemove
+	FUNC RemoveCallOnRemove, SHARED
 	{
 		DESC Removes a function previously added via Entity:CallOnRemove.
 		IN identifier, PN_String, #Identifier of the function within CallOnRemove
 	}
-	FUNC SHARED RemoveEffects
+	FUNC RemoveEffects, SHARED
 	{
 		DESC Removes an engine effect applied to an entity.
 		IN effect, PN_Enum, PNF_None, EF, #The effect to remove, see EF_ Enums.
 	}
-	FUNC SHARED RemoveEFlags
+	FUNC RemoveEFlags, SHARED
 	{
 		DESC Removes specified engine flag
 		IN flag, PN_Enum, PNF_None, EFL, #The flag to remove, see EFL_ Enums
 	}
-	FUNC SHARED RemoveFlags
+	FUNC RemoveFlags, SHARED
 	{
 		DESC Removes specified flag(s) from the entity
 		IN flag, PN_Enum, PNF_None, FL, #The flag(s) to remove, see FL_ Enums
 	}
-	FUNC SHARED RemoveFromMotionController
+	FUNC RemoveFromMotionController, SHARED
 	{
 		DESC Removes a PhysObject from the entity's motion controller so that ENTITY:PhysicsSimulate will no longer be called for given PhysObject.
 		IN physObj, PN_Ref, PNF_None, PhysObj, #The PhysObj to remove from the motion controller.
 	}
-	FUNC SERVER RemoveGesture
+	FUNC RemoveGesture, SERVER
 	{
 		DESC Removes and stops the gesture with given activity.
 		IN activity, PN_Enum, PNF_None, ACT, #The activity remove. See ACT_ Enums.
 	}
-	FUNC SHARED RemoveSolidFlags
+	FUNC RemoveSolidFlags, SHARED
 	{
 		DESC Removes solid flag(s) from the entity.
 		IN flags, PN_Enum, PNF_None, FSOLID, #The flag(s) to remove, see FSOLID_ Enums.
 	}
-	FUNC SHARED ResetSequence
+	FUNC ResetSequence, SHARED
 	{
 		DESC Plays an animation on the entity. This may not always work on engine entities.
 		IN sequence, PN_Number, #The sequence to play. Also accepts strings.
 	}
-	FUNC SHARED ResetSequenceInfo
+	FUNC ResetSequenceInfo, SHARED
 	{
 		DESC Reset entity sequence info such as playback rate, ground speed, last event check, etc.
 	}
-	FUNC SERVER Respawn
+	FUNC Respawn, SERVER
 	{
 		DESC Makes the entity/weapon respawn.
 	}
-	FUNC SERVER RestartGesture
+	FUNC RestartGesture, SERVER
 	{
 		DESC Restarts the entity's animation gesture. If the given gesture is already playing, it will reset it and play it from the beginning.
 		IN activity, PN_Enum, PNF_None, ACT, #The activity number to send to the entity. See ACT_ Enums and Entity:GetSequenceActivity
 		IN addIfMissing=true, PN_Bool, PNF_Nullable, #Add/start the gesture to if it has not been yet started.
 		IN autokill=true, PN_Bool, PNF_Nullable
 	}
-	PURE SHARED SelectWeightedSequence
+	PURE SelectWeightedSequence, SHARED
 	{
 		DESC Returns sequence ID corresponding to given activity ID.
 		IN act, PN_Enum, PNF_None, ACT, #The activity ID, see ACT_ Enums.
 		OUT sequence, PN_Number, #The sequence ID
 	}
-	PURE SHARED SelectWeightedSequenceSeeded
+	PURE SelectWeightedSequenceSeeded, SHARED
 	{
 		DESC Returns the sequence ID corresponding to given activity ID, and uses the provided seed for random selection. The seed should be the same server-side and client-side if used in a predicted environment.
 		IN act, PN_Enum, PNF_None, ACT, #The activity ID, see ACT_ Enums.
 		IN seed, PN_Number, #The seed to use for randomly selecting a sequence in the case the activity ID has multiple sequences bound to it. Entity:SelectWeightedSequence uses the same seed as util.SharedRandom internally for this.
 		OUT sequence, PN_Number, #The sequence ID
 	}
-	FUNC SHARED SendViewModelMatchingSequence
+	FUNC SendViewModelMatchingSequence, SHARED
 	{
 		DESC Sends sequence animation to the view model. It is recommended to use this for view model animations, instead of Entity:ResetSequence.
 		IN seq, PN_Number, #The sequence ID returned by Entity:LookupSequence or Entity:SelectWeightedSequence.
 	}
-	PURE SHARED SequenceDuration
+	PURE SequenceDuration, SHARED
 	{
 		DESC Returns length of currently played sequence.
 		IN seqid=nil, PN_Number, PNF_Nullable, #A sequence ID to return the length specific sequence of instead of the entity's main/currently playing sequence.
 		OUT duration, PN_Number, #The length of the sequence
 	}
-	FUNC SHARED SetAbsVelocity
+	FUNC SetAbsVelocity, SHARED
 	{
 		DESC Sets the entity's velocity.
 		IN velocity, PN_Vector, #The new velocity to set.
 	}
-	FUNC SHARED SetAngles
+	FUNC SetAngles, SHARED
 	{
 		DESC Sets the angles of the entity.
 		IN angles, PN_Angles, #The new angles.
 	}
-	FUNC SHARED SetAnimation
+	FUNC SetAnimation, SHARED
 	{
 		DESC Sets a player's third-person animation. Mainly used by Weapons to start the player's weapon attack and reload animations.
 		IN playerAnim, PN_Enum, PNF_None, PLAYER, #Player animation, see PLAYER_ Enums.
 	}
-	FUNC CLIENT SetAnimTime
+	FUNC SetAnimTime, CLIENT
 	{
 		DESC Sets the time (relative to CurTime) of the current animation frame, which is used to determine Entity:GetCycle.
 		IN time, PN_Number, #The current animation time.
 	}
-	FUNC SHARED SetAttachment
+	FUNC SetAttachment, SHARED
 	{
 		DESC Parents the sprite to an attachment on another model.
 		IN ent, PN_Ref, PNF_None, Entity, #The entity to attach/parent to
 		IN attachment, PN_Number, #The attachment ID to parent to
 	}
-	FUNC SERVER SetBloodColor
+	FUNC SetBloodColor, SERVER
 	{
 		DESC Sets the blood color this entity uses.
 		IN bloodColor, PN_Enum, PNF_None, BLOOD_COLOR, #An integer corresponding to BLOOD_COLOR_ Enums.
 	}
-	FUNC SHARED SetBodygroup
+	FUNC SetBodygroup, SHARED
 	{
 		DESC Sets an entities' bodygroup.
 		IN bodygroup, PN_Number, #The id of the bodygroup you're setting. Starts from 0.
 		IN value, PN_Number, #The value you're setting the bodygroup to. Starts from 0.
 	}
-	FUNC SHARED SetBodyGroups
+	FUNC SetBodyGroups, SHARED
 	{
 		DESC Sets the bodygroups from a string. A convenience function for Entity:SetBodygroup.
 		IN bodygroups, PN_String, #Body groups to set. Each single-digit number in the string represents a separate bodygroup. This make it impossible to set any bodygroup to a value higher than 9! For that you need to use Entity:SetBodygroup.
 	}
-	FUNC SHARED SetBoneController
+	FUNC SetBoneController, SHARED
 	{
 		DESC Sets the specified value on the bone controller with the given ID of this entity, it's used in HL1 to change the head rotation of NPCs, turret aiming and so on.
 		IN boneControllerID, PN_Number, #The ID of the bone controller to set the value to.
 		IN value, PN_Number, #The value to set on the specified bone controller.
 	}
-	FUNC SHARED SetBoneMatrix
+	FUNC SetBoneMatrix, SHARED
 	{
 		DESC Sets the bone matrix of given bone to given matrix. See also Entity:GetBoneMatrix.
 		IN boneid, PN_Number, #The ID of the bone
 		IN matrix, PN_Ref, PNF_None, VMatrix, #The matrix to set.
 	}
-	FUNC CLIENT SetBonePosition
+	FUNC SetBonePosition, CLIENT
 	{
 		DESC Sets the bone position and angles.
 		IN bone, PN_Number, #The bone ID to manipulate
 		IN pos, PN_Vector, #The position to set
 		IN ang, PN_Angles, #The angles to set
 	}
-	FUNC SHARED SetCollisionBounds
+	FUNC SetCollisionBounds, SHARED
 	{
 		DESC Sets the collision bounds for the entity, which are used for triggers ( Entity:SetTrigger, ENTITY:Touch ), determining if rendering is necessary clientside, and collision ( If Entity:SetSolid set as SOLID_BBOX ).
 		IN mins, PN_Vector, #The minimum vector of the bounds. The vector must be smaller than second argument on all axises.
 		IN maxs, PN_Vector, #The maximum vector of the bounds. The vector must be bigger than first argument on all axises.
 	}
-	FUNC SHARED SetCollisionBoundsWS
+	FUNC SetCollisionBoundsWS, SHARED
 	{
 		DESC Sets the collision bounds for the entity, which are used for triggers ( Entity:SetTrigger, ENTITY:Touch ), determining if rendering is necessary clientside, and collision ( If Entity:SetSolid set as SOLID_BBOX ).
 		IN vec1, PN_Vector, #The first vector of the bounds.
 		IN vec2, PN_Vector, #The second vector of the bounds.
 	}
-	FUNC SHARED SetCollisionGroup
+	FUNC SetCollisionGroup, SHARED
 	{
 		DESC Sets the entity's collision group.
 		IN group, PN_Enum, PNF_None, COLLISION_GROUP, #Collision group of the entity, see COLLISION_GROUP_ Enums
 	}
-	FUNC SHARED SetColor
+	FUNC SetColor, SHARED
 	{
 		DESC Sets the color of an entity.
 		IN color, PN_Color, PNF_None, #The color to set. Uses the Color structure.
 	}
-	FUNC SERVER SetCreator
+	FUNC SetCreator, SERVER
 	{
 		DESC Sets the creator of the SENT.
 		IN ply, PN_Ref, PNF_None, Player, #The creator
 	}
-	FUNC SHARED SetCustomCollisionCheck
+	FUNC SetCustomCollisionCheck, SHARED
 	{
 		DESC Marks the entity to call GM:ShouldCollide.
 		IN enable, PN_Bool, #Enable or disable the custom collision check
 	}
-	FUNC SHARED SetCycle
+	FUNC SetCycle, SHARED
 	{
 		DESC Sets the progress of the current animation to a specific value between 0 and 1.
 		IN value, PN_Number, #The desired cycle value
 	}
-	FUNC SHARED SetElasticity
+	FUNC SetElasticity, SHARED
 	{
 		DESC Sets the elasticity of this entity, used by some flying entities such as the Helicopter NPC to determine how much it should bounce around when colliding.
 		IN elasticity, PN_Number, #The elasticity to set.
 	}
-	FUNC SHARED SetEntity
+	FUNC SetEntity, SHARED
 	{
 		DESC Allows you to set the Start or End entity attachment for the rope.
 		IN name, PN_String, #The name of the variable to modify.
 		IN entity, PN_Ref, PNF_None, Entity, #The entity to apply to the specific attachment.
 	}
-	FUNC SHARED SetEyeTarget
+	FUNC SetEyeTarget, SHARED
 	{
 		DESC Sets the position an entity's eyes look toward.
 		IN pos, PN_Vector, #The world position the entity is looking toward.
 	}
-	FUNC SHARED SetFlexScale
+	FUNC SetFlexScale, SHARED
 	{
 		DESC Sets the flex scale of the entity.
 		IN scale, PN_Number, #The new flex scale to set to
 	}
-	FUNC SHARED SetFlexWeight
+	FUNC SetFlexWeight, SHARED
 	{
 		DESC Sets the flex weight.
 		IN flex, PN_Number, #The ID of the flex to modify weight of
 		IN weight, PN_Number, #The new weight to set
 	}
-	FUNC SERVER SetFriction
+	FUNC SetFriction, SERVER
 	{
 		DESC Sets how much friction an entity has when sliding against a surface. Entities default to 1 (100%) and can be higher or even negative.
 		IN friction, PN_Number, #Friction multiplier
 	}
-	FUNC SHARED SetGravity
+	FUNC SetGravity, SHARED
 	{
 		DESC Sets the gravity multiplier of the entity.
 		IN gravityMultiplier, PN_Number, #Value which specifies the gravity multiplier.
 	}
-	FUNC SHARED SetGroundEntity
+	FUNC SetGroundEntity, SHARED
 	{
 		DESC Sets the ground the entity is standing on.
 		IN groundEntity, PN_Ref, PNF_Nullable, Entity, #The ground entity.
 	}
-	FUNC SHARED SetHealth
+	FUNC SetHealth, SHARED
 	{
 		DESC Sets the health of the entity.
 		IN health, PN_Number, #New health value.
 	}
-	FUNC SHARED SetHitboxSet
+	FUNC SetHitboxSet, SHARED
 	{
 		DESC Sets the current Hitbox set for the entity.
 		IN id, PN_Number, #The new hitbox set to set. Can be a name as a string, or the ID as a number.
 	}
-	FUNC CLIENT SetIK
+	FUNC SetIK, CLIENT
 	{
 		DESC Enables or disable the inverse kinematic usage of this entity.
 		IN useIK=false, PN_Bool, PNF_Nullable, #The state of the IK.
 	}
-	FUNC SHARED SetKeyValue
+	FUNC SetKeyValue, SHARED
 	{
 		DESC Sets Hammer key values on an entity.
 		IN key, PN_String, #The internal key name
 		IN value, PN_String, #The value to set
 	}
-	FUNC SERVER SetLagCompensated
+	FUNC SetLagCompensated, SERVER
 	{
 		DESC This allows the entity to be lag compensated during Player:LagCompensation.
 		IN enable, PN_Bool, #Whether the entity should be lag compensated or not.
 	}
-	FUNC SERVER SetLayerBlendIn
+	FUNC SetLayerBlendIn, SERVER
 	{
 		DESC This function only works on BaseAnimatingOverlay entites!
 		IN layerID, PN_Number, #The Layer ID
 		IN blendIn, PN_Number
 	}
-	FUNC SERVER SetLayerBlendOut
+	FUNC SetLayerBlendOut, SERVER
 	{
 		DESC This function only works on BaseAnimatingOverlay entites!
 		IN layerID, PN_Number, #The Layer ID
 		IN blendOut, PN_Number
 	}
-	FUNC SERVER SetLayerCycle
+	FUNC SetLayerCycle, SERVER
 	{
 		DESC Sets the animation cycle/frame of given layer.
 		IN layerID, PN_Number, #The Layer ID
 		IN cycle, PN_Number, #The new animation cycle/frame for given layer.
 	}
-	FUNC SERVER SetLayerDuration
+	FUNC SetLayerDuration, SERVER
 	{
 		DESC Sets the duration of given layer. This internally overrides the Entity:SetLayerPlaybackRate.
 		IN layerID, PN_Number, #The Layer ID
 		IN duration, PN_Number, #The new duration of the layer in seconds.
 	}
-	FUNC SERVER SetLayerLooping
+	FUNC SetLayerLooping, SERVER
 	{
 		DESC Sets whether the layer should loop or not.
 		IN layerID, PN_Number, #The Layer ID
 		IN loop, PN_Bool, #Whether the layer should loop or not.
 	}
-	FUNC SERVER SetLayerPlaybackRate
+	FUNC SetLayerPlaybackRate, SERVER
 	{
 		DESC Sets the layer playback rate. See also Entity:SetLayerDuration.
 		IN layerID, PN_Number, #The Layer ID
 		IN rate, PN_Number, #The new playback rate.
 	}
-	FUNC SERVER SetLayerPriority
+	FUNC SetLayerPriority, SERVER
 	{
 		DESC Sets the priority of given layer.
 		IN layerID, PN_Number, #The Layer ID
 		IN priority, PN_Number, #The new priority of the layer.
 	}
-	FUNC SERVER SetLayerWeight
+	FUNC SetLayerWeight, SERVER
 	{
 		DESC Sets the layer weight. This influences how strongly the animation should be overriding the normal animations of the entity.
 		IN layerID, PN_Number, #The Layer ID
 		IN weight, PN_Number, #The new layer weight.
 	}
-	FUNC CLIENT SetLegacyTransform
+	FUNC SetLegacyTransform, CLIENT
 	{
 		DESC This forces an entity to use the bone transformation behaviour from versions prior to 2014-07-08. This behaviour affects Entity:EnableMatrix and Entity:SetModelScale and is incorrect, therefore this function be used exclusively as a quick fix for old scripts that rely on it.
 		IN enabled, PN_Bool, #Whether the entity should use the old bone transformation behaviour or not.
 	}
-	FUNC SERVER SetLightingOriginEntity
+	FUNC SetLightingOriginEntity, SERVER
 	{
 		DESC Sets the entity to be used as the light origin position for this entity.
 		IN lightOrigin, PN_Ref, PNF_None, Entity, #The lighting entity.
 	}
-	FUNC SHARED SetLocalAngles
+	FUNC SetLocalAngles, SHARED
 	{
 		DESC Sets angles relative to angles of Entity:GetParent
 		IN ang, PN_Angles, #The local angle
 	}
-	FUNC SHARED SetLocalAngularVelocity
+	FUNC SetLocalAngularVelocity, SHARED
 	{
 		DESC Sets the entity's angular velocity (rotation speed).
 		IN angVel, PN_Angles, #The angular velocity to set.
 	}
-	FUNC SHARED SetLocalPos
+	FUNC SetLocalPos, SHARED
 	{
 		DESC Sets local position relative to the parented position. This is for use with Entity:SetParent to offset position.
 		IN pos, PN_Vector, #The local position
 	}
-	FUNC SHARED SetLocalVelocity
+	FUNC SetLocalVelocity, SHARED
 	{
 		DESC Sets the entity's local velocity which is their velocity due to movement in the world from forces such as gravity. Does not include velocity from entity-on-entity collision or other world movement.
 		IN velocity, PN_Vector, #The new velocity to set.
 	}
-	FUNC CLIENT SetLOD
+	FUNC SetLOD, CLIENT
 	{
 		DESC Sets the Level Of Detail model to use with this entity. This may not work for all models if the model doesn't include any LOD sub models.
 		IN lod=-1, PN_Number, PNF_Nullable, #The Level Of Detail model ID to use. -1 leaves the engine to automatically set the Level of Detail.
 	}
-	FUNC SHARED SetMaterial
+	FUNC SetMaterial, SHARED
 	{
 		DESC Sets the rendering material override of the entity.
 		IN materialName, PN_String, #New material name. Use an empty string ("") to reset to the default materials.
 		IN forceMaterial=false, PN_Bool, PNF_Nullable, #Use it if you wish to apply material other than VertexLitGeneric (such as tools/toolswhite).
 	}
-	FUNC SERVER SetMaxHealth
+	FUNC SetMaxHealth, SERVER
 	{
 		DESC Sets the maximum health for entity. Note, that you can still set entity's health above this amount with Entity:SetHealth.
 		IN maxhealth, PN_Number, #What the max health should be
 	}
-	FUNC SHARED SetModel
+	FUNC SetModel, SHARED
 	{
 		DESC Sets the model of the entity.
 		IN model, PN_String, #New model value.
 	}
-	FUNC SHARED SetModelName
+	FUNC SetModelName, SHARED
 	{
 		DESC Alter the model name returned by Entity:GetModel. Does not affect the entity's actual model.
 		IN modelname, PN_String, #The new model name.
 	}
-	FUNC SHARED SetModelScale
+	FUNC SetModelScale, SHARED
 	{
 		DESC Scales the model of the entity, if the entity is a Player or an NPC the hitboxes will be scaled as well.
 		IN scale, PN_Number, #A float to scale the model by. 0 will not draw anything. < 0 will draw the model inverted.
 		IN deltaTime=0, PN_Number, PNF_Nullable, #Transition time of the scale change, set to 0 to modify the scale right away.
 	}
-	FUNC SHARED SetMoveCollide
+	FUNC SetMoveCollide, SHARED
 	{
 		DESC Sets the move collide type of the entity. The move collide is the way a physics object reacts to hitting an object - will it bounce, slide?
 		IN moveCollideType, PN_Enum, PNF_None, MOVECOLLIDE, #The move collide type, see MOVECOLLIDE_ Enums
 	}
-	FUNC SHARED SetMoveParent
+	FUNC SetMoveParent, SHARED
 	{
 		DESC Sets the Movement Parent of an entity to another entity.
 		IN Parent, PN_Ref, PNF_None, Entity, #The entity to change this entity's Movement Parent to.
 	}
-	FUNC SHARED SetMoveType
+	FUNC SetMoveType, SHARED
 	{
 		DESC Sets the entity's move type. This should be called before initializing the physics object on the entity, unless it will override SetMoveType such as Entity:PhysicsInitBox.
 		IN movetype, PN_Enum, PNF_None, MOVETYPE, #The new movetype, see MOVETYPE_ Enums
 	}
-	FUNC SERVER SetName
+	FUNC SetName, SERVER
 	{
 		DESC Sets the mapping name of the entity.
 		IN name, PN_String, #The name to set for the entity.
 	}
-	FUNC SHARED SetNetworkOrigin
+	FUNC SetNetworkOrigin, SHARED
 	{
 		DESC Virtually changes entity position for clients. Does the same thing as Entity:SetPos when used serverside.
 		IN origin, PN_Vector, #The position to make clients think this entity is at.
 	}
-	FUNC CLIENT SetNextClientThink
+	FUNC SetNextClientThink, CLIENT
 	{
 		DESC Sets the next time the clientside ENTITY:Think is called.
 		IN nextthink, PN_Number, #The next time, relative to CurTime, to execute the ENTITY:Think clientside.
 	}
-	FUNC SHARED SetNoDraw
+	FUNC SetNoDraw, SHARED
 	{
 		DESC Sets if the entity's model should render at all.
 		IN shouldNotDraw, PN_Bool, #true disables drawing
 	}
-	FUNC SHARED SetNotSolid
+	FUNC SetNotSolid, SHARED
 	{
 		DESC Sets whether the entity is solid or not.
 		IN IsNotSolid, PN_Bool, #True will make the entity not solid, false will make it solid.
 	}
-	FUNC SHARED SetOwner
+	FUNC SetOwner, SHARED
 	{
 		DESC Sets the owner of this entity, disabling all physics interaction with it.
 		IN owner, PN_Ref, PNF_Nullable, Entity, #The entity to be set as owner.
 	}
-	FUNC SHARED SetParent
+	FUNC SetParent, SHARED
 	{
 		DESC Sets the parent of this entity, making it move with its parent.
 		IN parent, PN_Ref, PNF_Nullable, Entity, #The entity to parent to. Setting this to nil will clear the parent.
 		IN attachmentId=-1, PN_Number, PNF_Nullable, #The attachment id to use when parenting, defaults to -1 or whatever the parent had set previously.
 	}
-	FUNC SHARED SetParentPhysNum
+	FUNC SetParentPhysNum, SHARED
 	{
 		DESC Sets the parent of an entity to another entity with the given physics bone number. Similar to Entity:SetParent, except it is parented to a physbone. This function is useful mainly for ragdolls.
 		IN bone, PN_Number, #Physics bone number to attach to. Use 0 for objects with only one physics bone. (See Entity:GetPhysicsObjectNum)
 	}
-	FUNC SHARED SetPersistent
+	FUNC SetPersistent, SHARED
 	{
 		DESC Sets whether or not the given entity is persistent. A persistent entity will be saved on server shutdown and loaded back when the server starts up. Additionally, by default persistent entities cannot be grabbed with the physgun and tools cannot be used on them.
 		IN persist, PN_Bool, #Whether or not the entity should be persistent.
 	}
-	FUNC SERVER SetPhysConstraintObjects
+	FUNC SetPhysConstraintObjects, SERVER
 	{
 		DESC When called on a constraint entity, sets the two physics objects to be constrained.
 		IN Phys1, PN_Ref, PNF_None, PhysObj, #The first physics object to be constrained.
 		IN Phys2, PN_Ref, PNF_None, PhysObj, #The second physics object to be constrained.
 	}
-	FUNC SERVER SetPhysicsAttacker
+	FUNC SetPhysicsAttacker, SERVER
 	{
 		DESC Sets the player who gets credit if this entity kills something with physics damage within the time limit.
 		IN entity, PN_Ref, PNF_None, Player, #Player who gets the kills. Setting this to a non-player entity will not work.
 		IN timeLimit=5, PN_Number, PNF_Nullable, #Time in seconds until the entity forgets its physics attacker and prevents it from getting the kill credit.
 	}
-	FUNC SHARED SetPlaybackRate
+	FUNC SetPlaybackRate, SHARED
 	{
 		DESC Allows you to set how fast an entity's animation will play, with 1.0 being the default speed.
 		IN rate, PN_Number, #How fast the animation will play.
 	}
-	FUNC SHARED SetPos
+	FUNC SetPos, SHARED
 	{
 		DESC Moves the entity to the specified position.
 		IN pos, PN_Vector, #The position to move the entity to.
 	}
-	FUNC SHARED SetPoseParameter
+	FUNC SetPoseParameter, SHARED
 	{
 		DESC Sets the specified pose parameter to the specified value.
 		IN name, PN_String, #Name of the pose parameter.
 		IN value, PN_Number, #The value to set the pose to.
 	}
-	FUNC CLIENT SetPredictable
+	FUNC SetPredictable, CLIENT
 	{
 		DESC Sets whether an entity should be predictable or not. When an entity is set as predictable, its DT vars can be changed during predicted hooks. This is useful for entities which can be controlled by player input.
 		IN predictable, PN_Bool, #whether to make this entity predictable or not.
 	}
-	FUNC SERVER SetPreventTransmit
+	FUNC SetPreventTransmit, SERVER
 	{
 		DESC Prevents the server from sending any further information about the entity to a player.
 		IN player, PN_Ref, PNF_None, Player, #The player to stop networking the entity to.
 		IN stopTransmitting, PN_Bool, #true to stop the entity from networking, false to make it network again.
 	}
-	FUNC SERVER SetRagdollAng
+	FUNC SetRagdollAng, SERVER
 	{
 		DESC Sets the bone angles. This is used alongside Kinect in Entity:SetRagdollBuildFunction, for more info see ragdoll_motion entity.
 		IN boneid, PN_Number, #Bone ID
 		IN angles, PN_Angles, #Angle to set
 	}
-	FUNC SERVER SetRagdollBuildFunction
+	FUNC SetRagdollBuildFunction, SERVER
 	{
 		DESC Sets the function to build the ragdoll. This is used alongside Kinect, for more info see ragdoll_motion entity.
 		IN func, PN_Func, PNF_None, FuncEntityCallback, #The build function.
 	}
-	FUNC SERVER SetRagdollPos
+	FUNC SetRagdollPos, SERVER
 	{
 		DESC Sets the bone position. This is used alongside Kinect in Entity:SetRagdollBuildFunction, for more info see ragdoll_motion entity.
 		IN boneid, PN_Number, #Bone ID
 		IN pos, PN_Vector, #Position to set
 	}
-	FUNC CLIENT SetRenderAngles
+	FUNC SetRenderAngles, CLIENT
 	{
 		DESC Sets the render angles of the Entity.
 		IN angles, PN_Angles, #The new render angles to be set to.
 	}
-	FUNC CLIENT SetRenderBounds
+	FUNC SetRenderBounds, CLIENT
 	{
 		DESC Sets the render bounds for the entity. For world space coordinates see Entity:SetRenderBoundsWS.
 		IN mins, PN_Vector, #The minimum corner of the bounds, relative to origin of the entity.
 		IN maxs, PN_Vector, #The maximum corner of the bounds, relative to origin of the entity.
 		IN add, PN_Vector, PNF_Nullable, #If defined, adds this vector to maxs and subtracts this vector from mins.
 	}
-	FUNC CLIENT SetRenderBoundsWS
+	FUNC SetRenderBoundsWS, CLIENT
 	{
 		DESC Sets the render bounds for the entity in world space coordinates. For relative coordinates see Entity:SetRenderBounds.
 		IN mins, PN_Vector, #The minimum corner of the bounds, relative to origin of the world/map.
 		IN maxs, PN_Vector, #The maximum corner of the bounds, relative to origin of the world/map.
 		IN add, PN_Vector, PNF_Nullable, #If defined, adds this vector to maxs and subtracts this vector from mins.
 	}
-	FUNC CLIENT SetRenderClipPlane
+	FUNC SetRenderClipPlane, CLIENT
 	{
 		DESC Used to specify a plane, past which an object will be visually clipped.
 		IN normal, PN_Vector, #The normal of the plane. Anything behind the normal will be clipped.
 		IN dist, PN_Number, #The position of the plane.
 	}
-	FUNC CLIENT SetRenderClipPlaneEnabled
+	FUNC SetRenderClipPlaneEnabled, CLIENT
 	{
 		DESC Enables the use of clipping planes to "cut" objects.
 		IN enabled, PN_Bool, #Enable or disable clipping planes
 	}
-	FUNC SHARED SetRenderFX
+	FUNC SetRenderFX, SHARED
 	{
 		DESC Sets entity's render FX.
 		IN renderFX, PN_Enum, PNF_None, kRenderFx, #The new render FX to set, see kRenderFx_ Enums
 	}
-	FUNC SHARED SetRenderMode
+	FUNC SetRenderMode, SHARED
 	{
 		DESC Sets the render mode of the entity.
 		IN renderMode, PN_Enum, PNF_None, RENDERMODE, #New render mode to set, see RENDERMODE_ Enums.
 	}
-	FUNC CLIENT SetRenderOrigin
+	FUNC SetRenderOrigin, CLIENT
 	{
 		DESC Set the origin in which the Entity will be drawn from.
 		IN newOrigin, PN_Vector, #The new origin in world coordinates where the Entity's model will now be rendered from.
 	}
-	FUNC SHARED SetSaveValue
+	FUNC SetSaveValue, SHARED
 	{
 		DESC Sets a save value for an entity.
 		IN name, PN_String, #Name of the save value to set
 		IN value, PN_Any, #Value to set
 		OUT PN_Bool, #Key successfully set
 	}
-	FUNC SHARED SetSequence
+	FUNC SetSequence, SHARED
 	{
 		DESC Sets the entity's model sequence.
 		IN sequenceId, PN_Number, #The sequence to play. Also accepts strings.
 	}
-	FUNC SHARED SetShouldPlayPickupSound
+	FUNC SetShouldPlayPickupSound, SHARED
 	{
 		DESC Sets whether or not the entity should make a physics contact sound when it's been picked up by a player.
 		IN playsound=false, PN_Bool, PNF_Nullable, #True to play the pickup sound, false otherwise.
 	}
-	FUNC SHARED SetShouldServerRagdoll
+	FUNC SetShouldServerRagdoll, SHARED
 	{
 		DESC Sets if entity should create a server ragdoll on death or a client one.
 		IN serverRagdoll, PN_Bool, #Set true if ragdoll should be created on server, false if on client
 	}
-	FUNC SHARED SetSkin
+	FUNC SetSkin, SHARED
 	{
 		DESC Sets the skin of the entity.
 		IN skinIndex, PN_Number, #0-based index of the skin to use.
 	}
-	FUNC SHARED SetSolid
+	FUNC SetSolid, SHARED
 	{
 		DESC Sets the solidity of an entity.
 		IN solidType, PN_Enum, PNF_None, SOLID, #The solid type. See the SOLID_ Enums.
 	}
-	FUNC SHARED SetSolidFlags
+	FUNC SetSolidFlags, SHARED
 	{
 		DESC Sets solid flag(s) for the entity.
 		IN flags, PN_Enum, PNF_Bitfield, FSOLID, #The flag(s) to set, see FSOLID_ Enums.
 	}
-	FUNC SHARED SetSpawnEffect
+	FUNC SetSpawnEffect, SHARED
 	{
 		DESC Sets whether the entity should use a spawn effect when it is created on the client.
 		IN spawnEffect, PN_Bool, #Sets if we should show a spawn effect.
 	}
-	FUNC SHARED SetSubMaterial
+	FUNC SetSubMaterial, SHARED
 	{
 		DESC Overrides a single material on the model of this entity.
 		IN index, PN_Number, PNF_Nullable, #Index of the material to override, acceptable values are from 0 to 31.
 		IN material, PN_String, PNF_Nullable, #The material to override the default one with. Set to nil to revert to default material.
 	}
-	FUNC SHARED SetTransmitWithParent
+	FUNC SetTransmitWithParent, SHARED
 	{
 		DESC When this flag is set the entity will only transmit to the player when its parent is transmitted. This is useful for things like viewmodel attachments since without this flag they will transmit to everyone (and cause the viewmodels to transmit to everyone too).
 		IN transmitWithParent, PN_Bool, #Will set the TransmitWithParent flag on or off
 	}
-	FUNC SERVER SetTrigger
+	FUNC SetTrigger, SERVER
 	{
 		DESC Marks the entity as a trigger, so it will generate ENTITY:StartTouch, ENTITY:Touch and ENTITY:EndTouch callbacks.
 		IN maketrigger, PN_Bool, #Make the entity trigger or not
 	}
-	FUNC SERVER SetUnFreezable
+	FUNC SetUnFreezable, SERVER
 	{
 		DESC Sets whether an entity can be unfrozen, meaning that it cannot be unfrozen using the physgun.
 		IN freezable=false, PN_Bool, PNF_Nullable, #True to make the entity unfreezable, false otherwise.
 	}
-	FUNC CLIENT SetupBones
+	FUNC SetupBones, CLIENT
 	{
 		DESC Forces the entity to reconfigure its bones. You might need to call this after changing your model's scales or when manually drawing the entity multiple times at different positions.
 	}
-	FUNC CLIENT SetupPhonemeMappings
+	FUNC SetupPhonemeMappings, CLIENT
 	{
 		DESC Initializes the class names of an entity's phoneme mappings (mouth movement data). This is called by default with argument "phonemes" when a flex-based entity (such as an NPC) is created.
 		IN fileRoot, PN_String, #The file prefix of the phoneme mappings (relative to "garrysmod/expressions/").
 	}
-	FUNC SERVER SetUseType
+	FUNC SetUseType, SERVER
 	{
 		DESC Sets the use type of an entity, affecting how often ENTITY:Use will be called for Lua entities.
 		IN useType, PN_Enum, PNF_None, _USE, #The use type to apply to the entity. Uses _USE Enums.
 	}
-	FUNC SHARED SetVelocity
+	FUNC SetVelocity, SHARED
 	{
 		DESC Sets the entity's velocity. For entities with physics, consider using PhysObj:SetVelocity on the PhysObj of the entity.
 		IN velocity, PN_Vector, #The new velocity to set.
 	}
-	FUNC SHARED SetWeaponModel
+	FUNC SetWeaponModel, SHARED
 	{
 		DESC Sets the model and associated weapon to this viewmodel entity.
 		IN viewModel, PN_String, #The model string to give to this viewmodel.
 		IN weapon, PN_Ref, PNF_Nullable, Weapon, #The weapon entity to associate this viewmodel to.
 	}
-	PURE SHARED SkinCount
+	PURE SkinCount, SHARED
 	{
 		DESC Returns the amount of skins the entity has.
 		OUT count, PN_Number, #The amount of skins the entity's model has.
 	}
-	FUNC CLIENT SnatchModelInstance
+	FUNC SnatchModelInstance, CLIENT
 	{
 		DESC Moves the model instance from the source entity to this entity. This can be used to transfer decals that have been applied on one entity to another.
 		IN sourceEntity, PN_Ref, PNF_None, Entity, #Entity to move the model instance from.
 		OUT success, PN_Bool, #Whether the operation was successful or not
 	}
-	FUNC SHARED Spawn
+	FUNC Spawn, SHARED
 	{
 		DESC Initializes the entity and starts its networking. If called on a player, it will respawn them.
 	}
-	FUNC SHARED StartLoopingSound
+	FUNC StartLoopingSound, SHARED
 	{
 		DESC Starts a "looping" sound. As with any other sound playing methods, this function expects the sound file to be looping itself and will not automatically loop a non looping sound file as one might expect.
 		IN sound, PN_String, #Sound to play. Can be either a sound script or a filepath.
 		OUT id, PN_Number, #The ID number of started sound starting with 0, or -1 if we failed for some reason.
 	}
-	FUNC SHARED StartMotionController
+	FUNC StartMotionController, SHARED
 	{
 		DESC Starts a motion controller in the physics engine tied to this entity's PhysObj, which enables the use of ENTITY:PhysicsSimulate.
 	}
-	FUNC CLIENT StopAndDestroyParticles
+	FUNC StopAndDestroyParticles, CLIENT
 	{
 		DESC Stops all particle effects parented to the entity and immediately destroys them.
 	}
-	FUNC SHARED StopLoopingSound
+	FUNC StopLoopingSound, SHARED
 	{
 		DESC Stops a sound created by Entity:StartLoopingSound.
 		IN id, PN_Number, #The sound ID returned by Entity:StartLoopingSound
 	}
-	FUNC SHARED StopMotionController
+	FUNC StopMotionController, SHARED
 	{
 		DESC Stops the motion controller created with Entity:StartMotionController.
 	}
-	FUNC CLIENT StopParticleEmission
+	FUNC StopParticleEmission, CLIENT
 	{
 		DESC Stops all particle effects parented to the entity.
 	}
-	FUNC SHARED StopParticles
+	FUNC StopParticles, SHARED
 	{
 		DESC Stops any attached to the entity .pcf particles using ParticleEffectAttach.
 	}
-	FUNC CLIENT StopParticlesNamed
+	FUNC StopParticlesNamed, CLIENT
 	{
 		DESC Stops all particle effects parented to the entity with given name.
 		IN name, PN_String, #The name of the particle to stop.
 	}
-	FUNC CLIENT StopParticlesWithNameAndAttachment
+	FUNC StopParticlesWithNameAndAttachment, CLIENT
 	{
 		DESC Stops all particle effects parented to the entity with given name on given attachment.
 		IN name, PN_String, #The name of the particle to stop.
 		IN attachment, PN_Number, #The attachment of the entity to stop particles on.
 	}
-	FUNC SHARED StopSound
+	FUNC StopSound, SHARED
 	{
 		DESC Stops emitting the given sound script from the entity, especially useful for looping sound scripts.
 		IN soundscript, PN_String, #The name of the sound script to stop playback of.
 	}
-	FUNC SERVER TakeDamage
+	FUNC TakeDamage, SERVER
 	{
 		DESC Applies the specified amount of damage to the entity with DMG_GENERIC flag.
 		IN damage, PN_Number, #The amount of damage to be applied.
 		IN attacker, PN_Ref, PNF_None, Entity, #The entity that initiated the attack that caused the damage.
 		IN inflictor, PN_Ref, PNF_None, Entity, #The entity that applied the damage, eg. a weapon.
 	}
-	FUNC SERVER TakeDamageInfo
+	FUNC TakeDamageInfo, SERVER
 	{
 		DESC Applies the damage specified by the damage info to the entity.
 		IN damageInfo, PN_Ref, PNF_None, CTakeDamageInfo, #The damage to apply.
 	}
-	FUNC SERVER TakePhysicsDamage
+	FUNC TakePhysicsDamage, SERVER
 	{
 		DESC Applies forces to our physics object in response to damage.
 		IN damageInfo, PN_Ref, PNF_None, CTakeDamageInfo, #The damageinfo to apply. Only CTakeDamageInfo:GetDamageForce and CTakeDamageInfo:GetDamagePosition are used.
 	}
-	FUNC SERVER TestPVS
+	FUNC TestPVS, SERVER
 	{
 		DESC Check if the given position or entity is within this entity's PVS.
 		IN testPoint, PN_Any, #Entity or Vector to test against. If an entity is given, this function will test using its bounding box.
 		OUT inPVS, PN_Bool, #True if the testPoint is within our PVS.
 	}
-	PURE SHARED TranslateBoneToPhysBone
+	PURE TranslateBoneToPhysBone, SHARED
 	{
 		DESC Returns the ID of a PhysObj attached to the given bone. To be used with Entity:GetPhysicsObjectNum.
 		IN boneID, PN_Number, #The ID of a bone to look up the "physics root" bone of.
 		OUT physID, PN_Number, #The PhysObj ID of the given bone. -1 if we somehow cannot translate
 	}
-	FUNC SHARED TranslatePhysBoneToBone
+	FUNC TranslatePhysBoneToBone, SHARED
 	{
 		DESC Returns the boneID of the bone the given PhysObj is attached to.
 		IN physID, PN_Number, #The PhysObj number on the entity
 		OUT bondID, PN_Number, #The boneID of the bone the PhysObj is attached to.
 	}
-	FUNC SERVER Use
+	FUNC Use, SERVER
 	{
 		DESC Activates the entity, as if a player pressed the Use key (Default E) on it.
 		IN activator, PN_Ref, PNF_None, Player, #The player who is using the entity
@@ -2129,68 +2129,68 @@ CLASS Entity, entity
 		IN useType=USE_SET, PN_Enum, PNF_None, USE, #The type of use to trigger. See USE_ Enums
 		IN integer=1, PN_Number, #You can usually set this to 1.
 	}
-	FUNC SHARED UseClientSideAnimation
+	FUNC UseClientSideAnimation, SHARED
 	{
 		DESC Does nothing on server.
 	}
-	FUNC SHARED UseTriggerBounds
+	FUNC UseTriggerBounds, SHARED
 	{
 		DESC Enables or disables trigger bounds.
 		IN enable, PN_Bool, #Enable or disable the bounds.
 		IN boundSize=0, PN_Number, PNF_Nullable, #The distance/size of the trigger bounds.
 	}
-	PURE SHARED ViewModelIndex
+	PURE ViewModelIndex, SHARED
 	{
 		DESC Returns the index of this view model, it can be used to identify which one of the player's view models this entity is.
 		OUT index, PN_Number, #View model index, ranges from 0 to 2, nil if the entity is not a view model
 	}
-	PURE SERVER Visible
+	PURE Visible, SERVER
 	{
 		DESC Returns whether the target/given entity is visible from the this entity.
 		IN target, PN_Ref, PNF_None, Entity, #Entity to check for visibility to.
 		OUT visible, PN_Bool, #If the entities can see each other.
 	}
-	PURE SERVER VisibleVec
+	PURE VisibleVec, SERVER
 	{
 		DESC Returns true if supplied vector is visible from the entity's line of sight.
 		IN pos, PN_Vector, #The position to check for visibility
 		OUT visible, PN_Bool, #Within line of sight
 	}
-	PURE SHARED WaterLevel
+	PURE WaterLevel, SHARED
 	{
 		DESC Returns an integer that represents how deep in water the entity is.
 		OUT level, PN_Number, #The water level.
 	}
-	FUNC SHARED Weapon_SetActivity
+	FUNC Weapon_SetActivity, SHARED
 	{
 		DESC Sets the activity of the entity's active weapon.
 		IN act, PN_Enum, PNF_None, ACT, #Activity number. See ACT_ Enums.
 		IN duration, PN_Number, #How long the animation should take in seconds.
 	}
-	FUNC SHARED Weapon_TranslateActivity
+	FUNC Weapon_TranslateActivity, SHARED
 	{
 		DESC Calls and returns WEAPON:TranslateActivity on the weapon the entity ( player or NPC ) carries.
 		IN act, PN_Number, #The activity to translate
 		OUT translated, PN_Number, #The translated activity
 	}
-	PURE SHARED WorldSpaceAABB
+	PURE WorldSpaceAABB, SHARED
 	{
 		DESC Returns two vectors representing the minimum and maximum extent of the entity's bounding box.
 		OUT mins, PN_Vector, #The minimum vector for the entity's bounding box.
 		OUT mxas, PN_Vector, #The maximum vector for the entity's bounding box.
 	}
-	PURE SHARED WorldSpaceCenter
+	PURE WorldSpaceCenter, SHARED
 	{
 		DESC Returns the center of the entity according to its collision model.
 		OUT center, PN_Vector, #The center of the entity
 	}
-	PURE SHARED WorldToLocal
+	PURE WorldToLocal, SHARED
 	{
 		DESC Converts a worldspace vector into a vector local to an entity
 		IN pos, PN_Vector, #The world vector
 		OUT local, PN_Vector, #The local vector
 	}
-	PURE SHARED WorldToLocalAngles
+	PURE WorldToLocalAngles, SHARED
 	{
 		DESC Converts world angles to local angles ( local to the entity )
 		IN angles, PN_Angles, #The world angles

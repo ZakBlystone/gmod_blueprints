@@ -1,6 +1,6 @@
 LIB debug
 {
-	FUNC SHARED Trace
+	FUNC Trace, SHARED
 	{
 		DESC Prints out the lua function call stack to the console.
 	}

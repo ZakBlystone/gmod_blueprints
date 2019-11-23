@@ -1,19 +1,19 @@
 LIB killicon
 {
-	FUNC CLIENT Add
+	FUNC Add, CLIENT
 	{
 		DESC Creates new kill icon using a texture.
 		IN class, PN_String, #Weapon or entity class
 		IN texture, PN_String, #Path to the texture
 		IN color, PN_Any, PNF_Table, #Color of the kill icon
 	}
-	FUNC CLIENT AddAlias
+	FUNC AddAlias, CLIENT
 	{
 		DESC Creates kill icon from existing one.
 		IN new_class, PN_String, #New class of the kill icon
 		IN existing_class, PN_String, #Already existing kill icon class
 	}
-	FUNC CLIENT AddFont
+	FUNC AddFont, CLIENT
 	{
 		DESC Adds kill icon for given weapon/entity class using special font.
 		IN class, PN_String, #Weapon or entity class
@@ -21,7 +21,7 @@ LIB killicon
 		IN symbol, PN_String, #The symbol to be used
 		IN color, PN_Any, PNF_Table, #Color of the killicon
 	}
-	FUNC CLIENT Draw
+	FUNC Draw, CLIENT
 	{
 		DESC Draws a kill icon.
 		IN x, PN_Number, #X coordinate of the icon
@@ -29,13 +29,13 @@ LIB killicon
 		IN name, PN_String, #Classname of the kill icon
 		IN alpha, PN_Number, #Alpha/transparency value ( 0 - 255 ) of the icon
 	}
-	PURE CLIENT Exists
+	PURE Exists, CLIENT
 	{
 		DESC Checks if kill icon exists for given class.
 		IN class, PN_String, #The class to test
 		OUT exists, PN_Bool, #Returns true if kill icon exists
 	}
-	PURE CLIENT GetSize
+	PURE GetSize, CLIENT
 	{
 		DESC Returns the size of a kill icon.
 		IN name, PN_String, #Classname of the kill icon

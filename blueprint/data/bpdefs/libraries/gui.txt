@@ -1,58 +1,58 @@
 LIB gui
 {
-	FUNC CLIENT ActivateGameUI
+	FUNC ActivateGameUI, CLIENT
 	{
 		DESC Opens the game menu overlay.
 	}
-	FUNC CLIENT EnableScreenClicker
+	FUNC EnableScreenClicker, CLIENT
 	{
 		DESC Enables the mouse cursor without restricting player movement, like using Sandbox's context menu.
 		IN enabled, PN_Bool, #Whether the cursor should be enabled or not. (true = enable, false = disable)
 	}
-	FUNC CLIENT HideGameUI
+	FUNC HideGameUI, CLIENT
 	{
 		DESC Hides the game menu overlay.
 	}
-	PURE CLIENT IsConsoleVisible
+	PURE IsConsoleVisible, CLIENT
 	{
 		DESC Returns whether the console is visible or not.
 		OUT visible, PN_Bool, #Whether the console is visible or not.
 	}
-	PURE CLIENT IsGameUIVisible
+	PURE IsGameUIVisible, CLIENT
 	{
 		DESC Returns whenever the game menu overlay ( main menu ) is open or not.
 		OUT visible, PN_Bool, #Whenever the game menu overlay ( main menu ) is open or not
 	}
-	PURE CLIENT MousePos
+	PURE MousePos, CLIENT
 	{
 		DESC Returns the cursor's position on the screen, or 0, 0 if cursor is not visible.
 		OUT x, PN_Number, #mouseX
 		OUT y, PN_Number, #mouseY
 	}
-	PURE CLIENT MouseX
+	PURE MouseX, CLIENT
 	{
 		DESC Returns x component of the mouse position.
 		OUT out_0, PN_Number, #mouseX
 	}
-	PURE CLIENT MouseY
+	PURE MouseY, CLIENT
 	{
 		DESC Returns y component of the mouse position.
 		OUT out_0, PN_Number, #mouseY
 	}
-	FUNC CLIENT OpenURL
+	FUNC OpenURL, CLIENT
 	{
 		PROTECTED
 		DESC Opens specified URL in the steam overlay browser. The URL has to start with either http:// or https://
 		IN url, PN_String, #URL to open
 	}
-	PURE CLIENT ScreenToVector
+	PURE ScreenToVector, CLIENT
 	{
 		DESC Converts the specified screen position to a direction vector local to the player's view. A related function is Vector:ToScreen, which translates a 3D position to a screen coordinate.
 		IN x, PN_Number, #X coordinate on the screen.
 		IN y, PN_Number, #Y coordinate on the screen.
 		OUT vector, PN_Vector, #Direction
 	}
-	FUNC CLIENT SetMousePos
+	FUNC SetMousePos, CLIENT
 	{
 		PROTECTED
 		DESC Sets the cursor's position on the screen, relative to the topleft corner of the window

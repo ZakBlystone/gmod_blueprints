@@ -1,130 +1,130 @@
 CLASS CUserCmd
 {
-	FUNC SHARED ClearButtons
+	FUNC ClearButtons, SHARED
 	{
 		DESC Removes all keys from the command.
 	}
-	FUNC SHARED ClearMovement
+	FUNC ClearMovement, SHARED
 	{
 		DESC Clears the movement from the command.
 	}
-	FUNC SHARED CommandNumber
+	FUNC CommandNumber, SHARED
 	{
 		DESC Returns an increasing number representing the index of the user cmd.
 		OUT number, PN_Number, #The command number
 	}
-	PURE SHARED GetButtons
+	PURE GetButtons, SHARED
 	{
 		DESC Returns a bitflag indicating which buttons are pressed.
 		OUT buttons, PN_Enum, PNF_Bitfield, IN, #Pressed buttons, see IN_ Enums
 	}
-	PURE SHARED GetForwardMove
+	PURE GetForwardMove, SHARED
 	{
 		DESC The speed the client wishes to move forward with, negative if the clients wants to move backwards.
 		OUT forwardMove, PN_Number, #The desired speed
 	}
-	PURE SHARED GetImpulse
+	PURE GetImpulse, SHARED
 	{
 		DESC Gets the current impulse from the client, usually 0.
 		OUT impulse, PN_Number, #The impulse
 	}
-	PURE SHARED GetMouseWheel
+	PURE GetMouseWheel, SHARED
 	{
 		DESC Returns the scroll delta as whole number.
 		OUT wheel, PN_Number, #Scroll delta
 	}
-	PURE SHARED GetMouseX
+	PURE GetMouseX, SHARED
 	{
 		DESC Returns the delta of the angular horizontal mouse movement of the player.
 		OUT mouseX, PN_Number, #xDelta
 	}
-	PURE SHARED GetMouseY
+	PURE GetMouseY, SHARED
 	{
 		DESC Returns the delta of the angular vertical mouse movement of the player.
 		OUT mouseY, PN_Number, #yDelta
 	}
-	PURE SHARED GetSideMove
+	PURE GetSideMove, SHARED
 	{
 		DESC The speed the client wishes to move sideways with, positive if it wants to move right, negative if it wants to move left.
 		OUT sideMove, PN_Number, #requestSpeed
 	}
-	PURE SHARED GetUpMove
+	PURE GetUpMove, SHARED
 	{
 		DESC The speed the client wishes to move up with, negative if the clients wants to move down.
 		OUT upMove, PN_Number, #requestSpeed
 	}
-	PURE SHARED GetViewAngles
+	PURE GetViewAngles, SHARED
 	{
 		DESC Gets the direction the player is looking in.
 		OUT angles, PN_Angles, #requestDir
 	}
-	PURE SHARED IsForced
+	PURE IsForced, SHARED
 	{
 		DESC When players are not sending usercommands to the server (often due to lag), their last usercommand will be executed multiple times as a backup. This function returns true if that is happening.
 		OUT forced, PN_Bool, #isForced
 	}
-	PURE SHARED KeyDown
+	PURE KeyDown, SHARED
 	{
 		DESC Returns true if the specified button(s) is pressed.
 		IN key, PN_Enum, PNF_None, IN, #Bitflag representing which button to check, see IN_ Enums.
 		OUT down, PN_Bool, #Is key down or not
 	}
-	FUNC SHARED RemoveKey
+	FUNC RemoveKey, SHARED
 	{
 		DESC Removed a key bit from the current key bitflag.
 		IN button, PN_Enum, PNF_None, IN, #Bitflag to be removed from the key bitflag, see IN_ Enums.
 	}
-	FUNC SHARED SelectWeapon
+	FUNC SelectWeapon, SHARED
 	{
 		DESC Forces the associated player to select a weapon. This is used internally in the default HL2 weapon selection HUD.
 		IN weapon, PN_Ref, PNF_None, Weapon, #The weapon entity to select.
 	}
-	FUNC SHARED SetButtons
+	FUNC SetButtons, SHARED
 	{
 		DESC Sets the buttons as a bitflag. See also CUserCmd:GetButtons.
 		IN buttons, PN_Enum, PNF_None, IN, #Bitflag representing which buttons are "down", see IN_ Enums.
 	}
-	FUNC SHARED SetForwardMove
+	FUNC SetForwardMove, SHARED
 	{
 		DESC Sets speed the client wishes to move forward with, negative if the clients wants to move backwards.
 		IN speed, PN_Number, #The new speed to request. The client will not be able to move faster than their set walk/sprint speed.
 	}
-	FUNC SHARED SetImpulse
+	FUNC SetImpulse, SHARED
 	{
 		DESC Sets the impulse command to be sent to the server.
 		IN speed, PN_Number, #The impulse to send.
 	}
-	FUNC SHARED SetMouseWheel
+	FUNC SetMouseWheel, SHARED
 	{
 		DESC Sets the scroll delta.
 		IN speed, PN_Number, #The scroll delta.
 	}
-	FUNC SHARED SetMouseX
+	FUNC SetMouseX, SHARED
 	{
 		DESC Sets the delta of the angular horizontal mouse movement of the player.
 		IN speed, PN_Number, #Angular horizontal move delta.
 	}
-	FUNC SHARED SetMouseY
+	FUNC SetMouseY, SHARED
 	{
 		DESC Sets the delta of the angular vertical mouse movement of the player.
 		IN speed, PN_Number, #Angular vertical move delta.
 	}
-	FUNC SHARED SetSideMove
+	FUNC SetSideMove, SHARED
 	{
 		DESC Sets speed the client wishes to move sidewards with, positive to move right, negative to move left.
 		IN speed, PN_Number, #The new speed to request.
 	}
-	FUNC SHARED SetUpMove
+	FUNC SetUpMove, SHARED
 	{
 		DESC Sets speed the client wishes to move upwards with, negative to move down.
 		IN speed, PN_Number, #The new speed to request.
 	}
-	FUNC SHARED SetViewAngles
+	FUNC SetViewAngles, SHARED
 	{
 		DESC Sets the direction the client wants to move in.
 		IN viewAngle, PN_Angles, #New view angles.
 	}
-	PURE SHARED TickCount
+	PURE TickCount, SHARED
 	{
 		DESC Returns tick count since joining the server.
 		OUT ticks, PN_Number, #The amount of ticks passed since joining the server.

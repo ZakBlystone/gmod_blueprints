@@ -1,6 +1,6 @@
 CLASS MarkupObject
 {
-	FUNC CLIENT Draw
+	FUNC Draw, CLIENT
 	{
 		DESC Draws the computed markupobject to the screen.
 		IN xOffset, PN_Number, #The X coordinate on the screen.
@@ -9,17 +9,17 @@ CLASS MarkupObject
 		IN yAlign, PN_Enum, PNF_None, TEXT_ALIGN, #The alignment of the y coordinate using TEXT_ALIGN_ Enums
 		IN alphaoverride, PN_Number, PNF_Nullable, #Sets the alpha of all drawn objects to this.
 	}
-	PURE CLIENT GetHeight
+	PURE GetHeight, CLIENT
 	{
 		DESC Gets computed the height of the markupobject.
 		OUT height, PN_Number, #The computed height.
 	}
-	PURE CLIENT GetWidth
+	PURE GetWidth, CLIENT
 	{
 		DESC Gets computed the width of the markupobject.
 		OUT width, PN_Number, #The computed width.
 	}
-	FUNC CLIENT Size
+	FUNC Size, CLIENT
 	{
 		DESC Gets computed the width and height of the markupobject.
 		OUT width, PN_Number, #The computed width.

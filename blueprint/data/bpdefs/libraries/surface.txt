@@ -1,12 +1,12 @@
 LIB surface
 {
-	FUNC CLIENT CreateFont
+	FUNC CreateFont, CLIENT
 	{
 		DESC Creates a new font.
 		IN fontName, PN_String, #The new font name.
 		IN fontData, PN_Struct, PNF_None, FontData, #The font properties. See the FontData structure.
 	}
-	SPECIAL CLIENT DisableClipping2
+	SPECIAL DisableClipping2, CLIENT
 	{
 		DISPLAY surface.DisableClipping
 		DESC Sets up a new 2D rendering context.
@@ -16,13 +16,13 @@ LIB surface
 		JUMP finish
 		CODE surface.DisableClipping(true) pushjmp(^_finish) ip = #_2 goto jumpto ::^finish:: surface.DisableClipping(false) #1
 	}
-	FUNC CLIENT DisableClipping
+	FUNC DisableClipping, CLIENT
 	{
 		DEPRECATED
 		DESC Enables or disables the clipping used by the VGUI that limits the drawing operations to a panels bounds.
 		IN disable, PN_Bool, #True to disable, false to enable the clipping
 	}
-	FUNC CLIENT DrawCircle
+	FUNC DrawCircle, CLIENT
 	{
 		DESC Draws a hollow circle, made of dots. For a filled circle, see examples for surface.DrawPoly.
 		IN originX, PN_Number, #The center x integer coordinate.
@@ -33,7 +33,7 @@ LIB surface
 		IN b, PN_Number, #The blue value of the color to draw the circle with. Unused if a Color structure was given.
 		IN a, PN_Number, PNF_Nullable, #The alpha value of the color to draw the circle with. Unused if a Color structure was given.
 	}
-	FUNC CLIENT DrawLine
+	FUNC DrawLine, CLIENT
 	{
 		DESC Draws a line from one point to another.
 		IN startX, PN_Number, #The start x integer coordinate.
@@ -41,7 +41,7 @@ LIB surface
 		IN endX, PN_Number, #The end x integer coordinate.
 		IN endY, PN_Number, #The end y integer coordinate.
 	}
-	FUNC CLIENT DrawOutlinedRect
+	FUNC DrawOutlinedRect, CLIENT
 	{
 		DESC Draws a hollow box with a border width of 1 px.
 		IN x, PN_Number, #The start x integer coordinate.
@@ -49,12 +49,12 @@ LIB surface
 		IN w, PN_Number, #The integer width.
 		IN h, PN_Number, #The integer height.
 	}
-	FUNC CLIENT DrawPoly
+	FUNC DrawPoly, CLIENT
 	{
 		DESC Draws a textured polygon (secretly a triangle fan) with a maximum of 256 vertices. Only works properly with convex polygons. You may try to render concave polygons, but there is no guarantee that things wont get messed up.
 		IN vertices, PN_Struct, PNF_None, PolygonVertex, #A table containing integer vertices. See the PolygonVertex structure. The vertices must be in clockwise order.
 	}
-	FUNC CLIENT DrawRect
+	FUNC DrawRect, CLIENT
 	{
 		DESC Draws a solid rectangle on the screen.
 		IN x, PN_Number, #The X integer co-ordinate.
@@ -62,12 +62,12 @@ LIB surface
 		IN width, PN_Number, #The integer width of the rectangle.
 		IN height, PN_Number, #The integer height of the rectangle.
 	}
-	FUNC CLIENT DrawText
+	FUNC DrawText, CLIENT
 	{
 		DESC Draw the specified text on the screen, using the previously set position, font and color.
 		IN text, PN_String, #The text to be rendered.
 	}
-	FUNC CLIENT DrawTexturedRect
+	FUNC DrawTexturedRect, CLIENT
 	{
 		DESC Draw a textured rectangle with the given position and dimensions on the screen, using the current active texture set with surface.SetMaterial. It is also affected by surface.SetDrawColor.
 		IN x, PN_Number, #The X integer co-ordinate.
@@ -75,7 +75,7 @@ LIB surface
 		IN width, PN_Number, #The integer width of the rectangle.
 		IN height, PN_Number, #The integer height of the rectangle.
 	}
-	FUNC CLIENT DrawTexturedRectRotated
+	FUNC DrawTexturedRectRotated, CLIENT
 	{
 		DESC Draw a textured rotated rectangle with the given position and dimensions and angle on the screen, using the current active texture.
 		IN x, PN_Number, #The X integer co-ordinate, representing the center of the rectangle.
@@ -84,7 +84,7 @@ LIB surface
 		IN height, PN_Number, #The integer height of the rectangle.
 		IN rotation, PN_Number, #The rotation of the rectangle, in degrees.
 	}
-	FUNC CLIENT DrawTexturedRectUV
+	FUNC DrawTexturedRectUV, CLIENT
 	{
 		DESC Draws a textured rectangle with a repeated or partial texture.
 		IN x, PN_Number, #The X integer coordinate.
@@ -96,86 +96,86 @@ LIB surface
 		IN endU, PN_Number, #The U texture mapping of the rectangle end.
 		IN endV, PN_Number, #The V texture mapping of the rectangle end.
 	}
-	PURE CLIENT GetAlphaMultiplier
+	PURE GetAlphaMultiplier, CLIENT
 	{
 		DESC Returns the current alpha multiplier affecting drawing operations.
 		OUT multiplier, PN_Number, #The multiplier ranging from 0 to 1.
 	}
-	PURE CLIENT GetDrawColor
+	PURE GetDrawColor, CLIENT
 	{
 		DESC Returns the current color affecting draw operations.
 		OUT color, PN_Color, PNF_None, #The color that drawing operations will use as a Color structure.
 		CODE #1 = surface.GetDrawColor()\n#1 = Color(#1.r, #1.g, #1.b, #1.a)
 	}
-	PURE CLIENT GetHUDTexture
+	PURE GetHUDTexture, CLIENT
 	{
 		DESC Gets the HUD texture with the specified name.
 		IN name, PN_String, #The name of the texture.
 		OUT texture, PN_Ref, PNF_None, ITexture, #text
 	}
-	PURE CLIENT GetTextColor
+	PURE GetTextColor, CLIENT
 	{
 		DESC Returns the current color affecting text draw operations.
 		OUT color, PN_Color, PNF_None, #The color that text drawing operations will use as a Color structure.
 		CODE #1 = surface.GetTextColor()\n#1 = Color(#1.r, #1.g, #1.b, #1.a)
 	}
-	PURE CLIENT GetTextSize
+	PURE GetTextSize, CLIENT
 	{
 		DESC Returns the width and height (in pixels) of the given text, but only if the font has been set with surface.SetFont.
 		IN text, PN_String, #The string to check the size of.
 		OUT width, PN_Number, #Width of the provided text
 		OUT height, PN_Number, #Height of the provided text
 	}
-	PURE CLIENT GetTextureID
+	PURE GetTextureID, CLIENT
 	{
 		DESC Returns the texture id of the material with the given name/path.
 		IN name/path, PN_String, #Name or path of the texture.
 		OUT id, PN_Number, #The texture ID
 	}
-	PURE CLIENT GetTextureSize
+	PURE GetTextureSize, CLIENT
 	{
 		DESC Returns the size of the texture with the associated texture ID.
 		IN textureID, PN_Number, #The texture ID, returned by surface.GetTextureID.
 		OUT width, PN_Number, #The texture width.
 		OUT height, PN_Number, #The texture height.
 	}
-	FUNC CLIENT PlaySound
+	FUNC PlaySound, CLIENT
 	{
 		DESC Play a sound file directly on the client (such as UI sounds, etc).
 		IN soundfile, PN_String, #The path to the sound file, which must be relative to the sound/ folder.
 	}
-	FUNC CLIENT SetAlphaMultiplier
+	FUNC SetAlphaMultiplier, CLIENT
 	{
 		DESC Sets the alpha multiplier that will influence all upcoming drawing operations.
 		IN multiplier, PN_Number, #The multiplier ranging from 0 to 1.
 	}
-	FUNC CLIENT SetDrawColor
+	FUNC SetDrawColor, CLIENT
 	{
 		DESC Set the color of any future shapes to be drawn, can be set by either using r, g, b, a as separate values or by a Color structure. Using a color structure is not recommended to be created procedurally.
 		IN color, PN_Color, PNF_None, #Color structure
 	}
-	FUNC CLIENT SetFont
+	FUNC SetFont, CLIENT
 	{
 		DESC Set the current font to be used for text operations later.
 		IN fontName, PN_String, #The name of the font to use.
 	}
-	FUNC CLIENT SetMaterial
+	FUNC SetMaterial, CLIENT
 	{
 		DESC Sets the material to be used in all upcoming draw operations using the surface library.
 		IN material, PN_Ref, PNF_None, IMaterial, #The material to be used.
 	}
-	FUNC CLIENT SetTextColor
+	FUNC SetTextColor, CLIENT
 	{
 		DESC Set the color of any future text to be drawn, can be set by either using r, g, b, a as separate values or by a Color structure. Using a color structure is not recommended to be created procedurally.
 		IN color, PN_Color, PNF_None, #Color structure
 	}
-	FUNC CLIENT SetTextPos
+	FUNC SetTextPos, CLIENT
 	{
 		DESC Set the top-left position to draw any future text at.
 		IN x, PN_Number, #The X integer co-ordinate.
 		IN y, PN_Number, #The Y integer co-ordinate.
 	}
-	FUNC CLIENT SetTexture
+	FUNC SetTexture, CLIENT
 	{
 		DESC Sets the texture to be used in all upcoming draw operations using the surface library.
 		IN textureID, PN_Number, #The ID of the texture to draw with returned by surface.GetTextureID.

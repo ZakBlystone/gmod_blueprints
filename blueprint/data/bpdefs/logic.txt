@@ -1,6 +1,6 @@
 LIB LOGIC
 {
-	SPECIAL SHARED If
+	SPECIAL If, SHARED
 	{
 		DESC Conditional 'If' statement
 		IN Exec, PN_Exec
@@ -9,7 +9,7 @@ LIB LOGIC
 		OUT False, PN_Exec, #Executes if false
 		CODE if $2 then #1 end #2
 	}
-	PURE SHARED And
+	PURE And, SHARED
 	{
 		OUT Result, PN_Bool
 		CLASS VariadicOperator
@@ -18,7 +18,7 @@ LIB LOGIC
 		REDIRECTPIN B, In_2
 		COMPACT
 	}
-	PURE SHARED Or
+	PURE Or, SHARED
 	{
 		OUT Result, PN_Bool
 		CLASS VariadicOperator
@@ -27,14 +27,14 @@ LIB LOGIC
 		REDIRECTPIN B, In_2
 		COMPACT
 	}
-	PURE SHARED Not
+	PURE Not, SHARED
 	{
 		IN A, PN_Bool
 		OUT Result, PN_Bool
 		CODE #1 = not $1
 		COMPACT
 	}
-	PURE SHARED LessThan
+	PURE LessThan, SHARED
 	{
 		DISPLAY <
 		IN A, PN_Number
@@ -43,7 +43,7 @@ LIB LOGIC
 		CODE #1 = $1 < $2
 		COMPACT
 	}
-	PURE SHARED LessThanEqual
+	PURE LessThanEqual, SHARED
 	{
 		DISPLAY <=
 		IN A, PN_Number
@@ -52,7 +52,7 @@ LIB LOGIC
 		CODE #1 = $1 <= $2
 		COMPACT
 	}
-	PURE SHARED GreaterThan
+	PURE GreaterThan, SHARED
 	{
 		DISPLAY >
 		IN A, PN_Number
@@ -61,7 +61,7 @@ LIB LOGIC
 		CODE #1 = $1 > $2
 		COMPACT
 	}
-	PURE SHARED GreaterThanEqual
+	PURE GreaterThanEqual, SHARED
 	{
 		DISPLAY >=
 		IN A, PN_Number
@@ -70,7 +70,7 @@ LIB LOGIC
 		CODE #1 = $1 >= $2
 		COMPACT
 	}
-	PURE SHARED Equal
+	PURE Equal, SHARED
 	{
 		DISPLAY ==
 		IN A, PN_Any, PNF_Nullable
@@ -80,7 +80,7 @@ LIB LOGIC
 		CODE #1 = $1 == $2
 		COMPACT
 	}
-	PURE SHARED NotEqual
+	PURE NotEqual, SHARED
 	{
 		DISPLAY !=
 		IN A, PN_Any, PNF_Nullable
@@ -90,7 +90,7 @@ LIB LOGIC
 		CODE #1 = $1 ~= $2
 		COMPACT
 	}
-	PURE SHARED Concat
+	PURE Concat, SHARED
 	{
 		OUT Result, PN_String
 		COMPACT
@@ -99,7 +99,7 @@ LIB LOGIC
 		REDIRECTPIN B, In_2
 		PARAM operator, ..
 	}
-	PURE SHARED ConcatHuge
+	PURE ConcatHuge, SHARED
 	{
 		DEPRECATED
 		IN A, PN_String

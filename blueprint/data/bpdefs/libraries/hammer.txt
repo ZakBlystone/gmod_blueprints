@@ -1,6 +1,6 @@
 LIB hammer
 {
-	FUNC SERVER SendCommand
+	FUNC SendCommand, SERVER
 	{
 		PROTECTED
 		DESC Sends command to Hammer, if Hammer is running with the current map loaded.

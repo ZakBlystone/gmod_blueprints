@@ -1,101 +1,101 @@
 LIB team
 {
-	FUNC SHARED AddScore
+	FUNC AddScore, SHARED
 	{
 		DESC Increases the score of the given team
 		IN index, PN_Number, #Index of the team
 		IN increment, PN_Number, #Amount to increase the team's score by
 	}
-	FUNC SHARED BestAutoJoinTeam
+	FUNC BestAutoJoinTeam, SHARED
 	{
 		DESC Returns the team index of the team with the least players. Falls back to TEAM_UNASSIGNED
 		OUT index, PN_Number, #Team index
 	}
-	PURE SHARED GetAllTeams
+	PURE GetAllTeams, SHARED
 	{
 		DESC Returns a table consisting of information on every defined team
 		OUT teams, PN_Struct, PNF_Table, TeamInfo, #Team info
 	}
-	PURE SHARED GetClass
+	PURE GetClass, SHARED
 	{
 		TBD
 		DESC Returns the selectable classes for the given team. This can be added to with team/SetClass
 		IN index, PN_Number, #Index of the team
 		OUT out_0, PN_Any, PNF_Table, #Selectable classes
 	}
-	PURE SHARED GetColor
+	PURE GetColor, SHARED
 	{
 		DESC Returns the team's color.
 		IN teamIndex, PN_Number, #The team index.
 		OUT color, PN_Color, PNF_None, #The team's color as a Color structure.
 	}
-	PURE SHARED GetName
+	PURE GetName, SHARED
 	{
 		DESC Returns the name of the team.
 		IN teamIndex, PN_Number, #The team index.
 		OUT name, PN_String, #The team name. If the team is not defined, returns an empty string.
 	}
-	PURE SHARED GetPlayers
+	PURE GetPlayers, SHARED
 	{
 		DESC Returns a table with all player of the specified team.
 		IN teamIndex, PN_Number, #The team index.
 		OUT players, PN_Ref, PNF_Table, Player, #A table of Players that belong to the requested team.
 	}
-	PURE SHARED GetScore
+	PURE GetScore, SHARED
 	{
 		DESC Returns the score of the team.
 		IN teamIndex, PN_Number, #The team index.
 		OUT score, PN_Number, #score
 	}
-	PURE SHARED GetSpawnPoint
+	PURE GetSpawnPoint, SHARED
 	{
 		DESC Returns a table of valid spawnpoint classes the team can use. These are set with team.SetSpawnPoint.
 		IN index, PN_Number, #Index of the team
 		OUT classes, PN_String, PNF_Table, #Valid spawnpoint classes
 	}
-	PURE SHARED GetSpawnPoints
+	PURE GetSpawnPoints, SHARED
 	{
 		DESC Returns a table of valid spawnpoint entities the team can use. These are set with team.SetSpawnPoint.
 		IN index, PN_Number, #Index of the team
 		OUT points, PN_Ref, PNF_Table, Entity, #Valid spawnpoint entities
 	}
-	FUNC SHARED Joinable
+	FUNC Joinable, SHARED
 	{
 		DESC Returns if a team is joinable or not. This is set in team.SetUp.
 		IN index, PN_Number, #The index of the team.
 		OUT joinable, PN_Bool, #True if the team is joinable. False otherwise.
 	}
-	FUNC SHARED NumPlayers
+	FUNC NumPlayers, SHARED
 	{
 		DESC Returns the amount of players in a team.
 		IN teamIndex, PN_Number, #The team index.
 		OUT players, PN_Number, #playerCount
 	}
-	FUNC SHARED SetClass
+	FUNC SetClass, SHARED
 	{
 		DESC Sets valid classes for use by a team. Classes can be created using player_manager.RegisterClass
 		IN index, PN_Number, #Index of the team
 		IN classes, PN_Number, PNF_Table, #A class ID or table of class IDs
 	}
-	FUNC SHARED SetColor
+	FUNC SetColor, SHARED
 	{
 		DESC Sets the team's color.
 		IN teamIndex, PN_Number, #The team index.
 		IN color, PN_Color, PNF_None, #The team's new color as a Color structure.
 	}
-	FUNC SHARED SetScore
+	FUNC SetScore, SHARED
 	{
 		DESC Sets the score of the given team
 		IN index, PN_Number, #Index of the team
 		IN score, PN_Number, #The team's new score
 	}
-	FUNC SHARED SetSpawnPoint
+	FUNC SetSpawnPoint, SHARED
 	{
 		DESC Sets valid spawnpoint classes for use by a team.
 		IN index, PN_Number, #Index of the team
 		IN classes, PN_String, PNF_Table, #A spawnpoint classname or table of spawnpoint classnames
 	}
-	FUNC SHARED SetUp
+	FUNC SetUp, SHARED
 	{
 		DESC Creates a new team.
 		IN teamIndex, PN_Number, #The team index.
@@ -103,19 +103,19 @@ LIB team
 		IN teamColor, PN_Color, PNF_None, #The team color. Uses the Color structure.
 		IN isJoinable, PN_Bool, PNF_Nullable, #Whether the team is joinable or not.
 	}
-	FUNC SHARED TotalDeaths
+	FUNC TotalDeaths, SHARED
 	{
 		DESC Returns the sum of deaths of all players of the team.
 		IN teamIndex, PN_Number, #The team index.
 		OUT deaths, PN_Number, #deathCount
 	}
-	FUNC SHARED TotalFrags
+	FUNC TotalFrags, SHARED
 	{
 		DESC Get's the total frags in a team.
 		IN Entity, PN_Ref, PNF_None, Entity, #Entity or number.
 		OUT frags, PN_Number, #index
 	}
-	FUNC SHARED Valid
+	FUNC Valid, SHARED
 	{
 		DESC Returns true if the given team index is valid
 		IN index, PN_Number, #Index of the team
