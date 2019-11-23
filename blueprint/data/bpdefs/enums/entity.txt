@@ -1,334 +1,334 @@
-ENUM BLOOD_COLOR, Enumerations used by Entity:GetBloodColor and Entity:SetBloodColor.
+ENUM BLOOD_COLOR, #Enumerations used by Entity:GetBloodColor and Entity:SetBloodColor.
 {
-	DONT_BLEED, No blood
-	BLOOD_COLOR_RED, Normal red blood
-	BLOOD_COLOR_YELLOW, Yellow blood
-	BLOOD_COLOR_GREEN, Green-red blood
-	BLOOD_COLOR_MECH, Sparks
-	BLOOD_COLOR_ANTLION, Yellow blood
-	BLOOD_COLOR_ZOMBIE, Green-red blood
-	BLOOD_COLOR_ANTLION_WORKER, Bright green blood
+	VALUE DONT_BLEED, #No blood
+	VALUE BLOOD_COLOR_RED, #Normal red blood
+	VALUE BLOOD_COLOR_YELLOW, #Yellow blood
+	VALUE BLOOD_COLOR_GREEN, #Green-red blood
+	VALUE BLOOD_COLOR_MECH, #Sparks
+	VALUE BLOOD_COLOR_ANTLION, #Yellow blood
+	VALUE BLOOD_COLOR_ZOMBIE, #Green-red blood
+	VALUE BLOOD_COLOR_ANTLION_WORKER, #Bright green blood
 }
 
-ENUM BONE, Used by Entity:BoneHasFlag.
+ENUM BONE, #Used by Entity:BoneHasFlag.
 {
-	BONE_PHYSICALLY_SIMULATED, 
-	BONE_PHYSICS_PROCEDURAL, 
-	BONE_ALWAYS_PROCEDURAL, 
-	BONE_SCREEN_ALIGN_SPHERE, 
-	BONE_SCREEN_ALIGN_CYLINDER, 
-	BONE_CALCULATE_MASK, 
-	BONE_USED_BY_HITBOX, A hitbox is attached to this bone
-	BONE_USED_BY_ATTACHMENT, An attachment is attached to this bone
-	BONE_USED_BY_VERTEX_LOD0, 
-	BONE_USED_BY_VERTEX_LOD1, 
-	BONE_USED_BY_VERTEX_LOD2, 
-	BONE_USED_BY_VERTEX_LOD3, 
-	BONE_USED_BY_VERTEX_LOD4, 
-	BONE_USED_BY_VERTEX_LOD5, 
-	BONE_USED_BY_VERTEX_LOD6, 
-	BONE_USED_BY_VERTEX_LOD7, 
-	BONE_USED_BY_VERTEX_MASK, 
-	BONE_USED_BY_BONE_MERGE, 
-	BONE_USED_BY_ANYTHING, Is this bone used by anything? ( If any BONE_USED_BY_* flags are true )
-	BONE_USED_MASK, 
+	VALUE BONE_PHYSICALLY_SIMULATED 
+	VALUE BONE_PHYSICS_PROCEDURAL 
+	VALUE BONE_ALWAYS_PROCEDURAL 
+	VALUE BONE_SCREEN_ALIGN_SPHERE 
+	VALUE BONE_SCREEN_ALIGN_CYLINDER 
+	VALUE BONE_CALCULATE_MASK 
+	VALUE BONE_USED_BY_HITBOX, #A hitbox is attached to this bone
+	VALUE BONE_USED_BY_ATTACHMENT, #An attachment is attached to this bone
+	VALUE BONE_USED_BY_VERTEX_LOD0 
+	VALUE BONE_USED_BY_VERTEX_LOD1 
+	VALUE BONE_USED_BY_VERTEX_LOD2 
+	VALUE BONE_USED_BY_VERTEX_LOD3 
+	VALUE BONE_USED_BY_VERTEX_LOD4 
+	VALUE BONE_USED_BY_VERTEX_LOD5 
+	VALUE BONE_USED_BY_VERTEX_LOD6 
+	VALUE BONE_USED_BY_VERTEX_LOD7 
+	VALUE BONE_USED_BY_VERTEX_MASK 
+	VALUE BONE_USED_BY_BONE_MERGE 
+	VALUE BONE_USED_BY_ANYTHING, #Is this bone used by anything? ( If any BONE_USED_BY_* flags are true )
+	VALUE BONE_USED_MASK 
 }
 
 ENUM MOVETYPE
 {
-	MOVETYPE_NONE, Don't move
-	MOVETYPE_ISOMETRIC, For players, in TF2 commander view, etc
-	MOVETYPE_WALK, Player only, moving on the ground
-	MOVETYPE_STEP, Monster/NPC movement
-	MOVETYPE_FLY, Fly, no gravity
-	MOVETYPE_FLYGRAVITY, Fly, with gravity
-	MOVETYPE_VPHYSICS, Physics movetype
-	MOVETYPE_PUSH, No clip to world, but pushes and crushes things
-	MOVETYPE_NOCLIP, Noclip
-	MOVETYPE_LADDER, For players, when moving on a ladder
-	MOVETYPE_OBSERVER, Spectator movetype. DO NOT use this to make player spectate
-	MOVETYPE_CUSTOM, Custom movetype, can be applied to the player to prevent the default movement code from running, while still calling the related hooks
+	VALUE MOVETYPE_NONE, #Don't move
+	VALUE MOVETYPE_ISOMETRIC, #For players, in TF2 commander view, etc
+	VALUE MOVETYPE_WALK, #Player only, moving on the ground
+	VALUE MOVETYPE_STEP, #Monster/NPC movement
+	VALUE MOVETYPE_FLY, #Fly, no gravity
+	VALUE MOVETYPE_FLYGRAVITY, #Fly, with gravity
+	VALUE MOVETYPE_VPHYSICS, #Physics movetype
+	VALUE MOVETYPE_PUSH, #No clip to world, but pushes and crushes things
+	VALUE MOVETYPE_NOCLIP, #Noclip
+	VALUE MOVETYPE_LADDER, #For players, when moving on a ladder
+	VALUE MOVETYPE_OBSERVER, #Spectator movetype. DO NOT use this to make player spectate
+	VALUE MOVETYPE_CUSTOM, #Custom movetype, can be applied to the player to prevent the default movement code from running, while still calling the related hooks
 }
 
 ENUM MOVECOLLIDE
 {
-	MOVECOLLIDE_DEFAULT, Default behavior
-	MOVECOLLIDE_FLY_BOUNCE, Entity bounces, reflects, based on elasticity of surface and object - applies friction (adjust velocity)
-	MOVECOLLIDE_FLY_CUSTOM, ENTITY:Touch will modify the velocity however it likes
-	MOVECOLLIDE_FLY_SLIDE, Entity slides along surfaces (no bounce) - applies friciton (adjusts velocity)
-	MOVECOLLIDE_COUNT, Number of different movecollides
+	VALUE MOVECOLLIDE_DEFAULT, #Default behavior
+	VALUE MOVECOLLIDE_FLY_BOUNCE, #Entity bounces, reflects, based on elasticity of surface and object - applies friction (adjust velocity)
+	VALUE MOVECOLLIDE_FLY_CUSTOM, #ENTITY:Touch will modify the velocity however it likes
+	VALUE MOVECOLLIDE_FLY_SLIDE, #Entity slides along surfaces (no bounce) - applies friciton (adjusts velocity)
+	VALUE MOVECOLLIDE_COUNT, #Number of different movecollides
 }
 
 ENUM SOLID
 {
-	SOLID_NONE, Does not collide with anything. NOTE: No Physics Object will be created when using this.
-	SOLID_BSP, The entity has a brush model defined by the map. Does not collide with other SOLID_BSP entities.
-	SOLID_BBOX, Uses the entity's axis-aligned bounding box for collisions
-	SOLID_OBB, Uses the entity's object-aligned bounding box for collisions
-	SOLID_OBB_YAW, Same as SOLID_OBB but restricts orientation to the Z-axis. NOTE: Seems to be broken.
-	SOLID_CUSTOM, Always call into the entity for tests
-	SOLID_VPHYSICS, Uses the PhysObjects of the entity
+	VALUE SOLID_NONE, #Does not collide with anything. NOTE: No Physics Object will be created when using this.
+	VALUE SOLID_BSP, #The entity has a brush model defined by the map. Does not collide with other SOLID_BSP entities.
+	VALUE SOLID_BBOX, #Uses the entity's axis-aligned bounding box for collisions
+	VALUE SOLID_OBB, #Uses the entity's object-aligned bounding box for collisions
+	VALUE SOLID_OBB_YAW, #Same as SOLID_OBB but restricts orientation to the Z-axis. NOTE: Seems to be broken.
+	VALUE SOLID_CUSTOM, #Always call into the entity for tests
+	VALUE SOLID_VPHYSICS, #Uses the PhysObjects of the entity
 }
 
-ENUM FSOLID, Enumerations used by Entity:SetSolidFlags and Entity:GetSolidFlags.
+ENUM FSOLID, #Enumerations used by Entity:SetSolidFlags and Entity:GetSolidFlags.
 {
-	FSOLID_CUSTOMRAYTEST, Ignore solid type + always call into the entity for ray tests
-	FSOLID_CUSTOMBOXTEST, Ignore solid type + always call into the entity for swept box tests
-	FSOLID_NOT_SOLID, The object is currently not solid
-	FSOLID_TRIGGER, This is something may be collideable but fires touch functions even when it's not collideable (when the FSOLID_NOT_SOLID flag is set)
-	FSOLID_NOT_STANDABLE, The player can't stand on this
-	FSOLID_VOLUME_CONTENTS, Contains volumetric contents (like water)
-	FSOLID_FORCE_WORLD_ALIGNED, Forces the collision representation to be world-aligned even if it's SOLID_BSP or SOLID_VPHYSICS
-	FSOLID_USE_TRIGGER_BOUNDS, Uses a special trigger bounds separate from the normal OBB
-	FSOLID_ROOT_PARENT_ALIGNED, Collisions are defined in root parent's local coordinate space
-	FSOLID_TRIGGER_TOUCH_DEBRIS, This trigger will touch debris objects
-	FSOLID_MAX_BITS, The amount of bits needed to store the all the flags in a variable/sent over network.
+	VALUE FSOLID_CUSTOMRAYTEST, #Ignore solid type + always call into the entity for ray tests
+	VALUE FSOLID_CUSTOMBOXTEST, #Ignore solid type + always call into the entity for swept box tests
+	VALUE FSOLID_NOT_SOLID, #The object is currently not solid
+	VALUE FSOLID_TRIGGER, #This is something may be collideable but fires touch functions even when it's not collideable (when the FSOLID_NOT_SOLID flag is set)
+	VALUE FSOLID_NOT_STANDABLE, #The player can't stand on this
+	VALUE FSOLID_VOLUME_CONTENTS, #Contains volumetric contents (like water)
+	VALUE FSOLID_FORCE_WORLD_ALIGNED, #Forces the collision representation to be world-aligned even if it's SOLID_BSP or SOLID_VPHYSICS
+	VALUE FSOLID_USE_TRIGGER_BOUNDS, #Uses a special trigger bounds separate from the normal OBB
+	VALUE FSOLID_ROOT_PARENT_ALIGNED, #Collisions are defined in root parent's local coordinate space
+	VALUE FSOLID_TRIGGER_TOUCH_DEBRIS, #This trigger will touch debris objects
+	VALUE FSOLID_MAX_BITS, #The amount of bits needed to store the all the flags in a variable/sent over network.
 }
 
-ENUM FVPHYSICS, Enumerations used by PhysObj:AddGameFlag, PhysObj:HasGameFlag and PhysObj:ClearGameFlag.
+ENUM FVPHYSICS, #Enumerations used by PhysObj:AddGameFlag, PhysObj:HasGameFlag and PhysObj:ClearGameFlag.
 {
-	FVPHYSICS_CONSTRAINT_STATIC, Won't receive physics forces from collisions and won't collide with other PhysObj with the same flag set.
-	FVPHYSICS_DMG_DISSOLVE, Colliding with entities will cause 1000 damage with DMG_DISSOLVE as the damage type, but only if EFL_NO_DISSOLVE is not set.
-	FVPHYSICS_DMG_SLICE, Does slice damage, not just blunt damage.
-	FVPHYSICS_HEAVY_OBJECT, Will deal high physics damage even with a small mass.
-	FVPHYSICS_MULTIOBJECT_ENTITY, This PhysObj is part of an entity with multiple PhysObj , such as a ragdoll or a vehicle , and will be considered during collision damage events.
-	FVPHYSICS_NO_IMPACT_DMG, Colliding with entities won't cause physics damage.
-	FVPHYSICS_NO_NPC_IMPACT_DMG, Like FVPHYSICS_NO_NPC_IMPACT_DMG, but only checks for NPCs. Usually set on Combine Balls fired by Combine Soldiers.
-	FVPHYSICS_NO_PLAYER_PICKUP, Doesn't allow the player to pick this PhysObj with the Gravity Gun or +use pickup.
-	FVPHYSICS_NO_SELF_COLLISIONS, We won't collide with other PhysObj associated to the same entity, only used for vehicles and ragdolls held by the Super Gravity Gun.
-	FVPHYSICS_PART_OF_RAGDOLL, This PhysObj is part of a ragdoll.
-	FVPHYSICS_PENETRATING, Set by the physics engine when two PhysObj are penetrating each other. This is only automatically updated for non-static physics objects.
-	FVPHYSICS_PLAYER_HELD, Set when the player is holding this PhysObj with the Gravity Gun or +use pickup.
-	FVPHYSICS_WAS_THROWN, This object was thrown by the Gravity Gun , stuns Antlion guards, Hunters, and squashes Antlion grubs.
+	VALUE FVPHYSICS_CONSTRAINT_STATIC, #Won't receive physics forces from collisions and won't collide with other PhysObj with the same flag set.
+	VALUE FVPHYSICS_DMG_DISSOLVE, #Colliding with entities will cause 1000 damage with DMG_DISSOLVE as the damage type, but only if EFL_NO_DISSOLVE is not set.
+	VALUE FVPHYSICS_DMG_SLICE, #Does slice damage, not just blunt damage.
+	VALUE FVPHYSICS_HEAVY_OBJECT, #Will deal high physics damage even with a small mass.
+	VALUE FVPHYSICS_MULTIOBJECT_ENTITY, #This PhysObj is part of an entity with multiple PhysObj , such as a ragdoll or a vehicle , and will be considered during collision damage events.
+	VALUE FVPHYSICS_NO_IMPACT_DMG, #Colliding with entities won't cause physics damage.
+	VALUE FVPHYSICS_NO_NPC_IMPACT_DMG, #Like FVPHYSICS_NO_NPC_IMPACT_DMG, but only checks for NPCs. Usually set on Combine Balls fired by Combine Soldiers.
+	VALUE FVPHYSICS_NO_PLAYER_PICKUP, #Doesn't allow the player to pick this PhysObj with the Gravity Gun or +use pickup.
+	VALUE FVPHYSICS_NO_SELF_COLLISIONS, #We won't collide with other PhysObj associated to the same entity, only used for vehicles and ragdolls held by the Super Gravity Gun.
+	VALUE FVPHYSICS_PART_OF_RAGDOLL, #This PhysObj is part of a ragdoll.
+	VALUE FVPHYSICS_PENETRATING, #Set by the physics engine when two PhysObj are penetrating each other. This is only automatically updated for non-static physics objects.
+	VALUE FVPHYSICS_PLAYER_HELD, #Set when the player is holding this PhysObj with the Gravity Gun or +use pickup.
+	VALUE FVPHYSICS_WAS_THROWN, #This object was thrown by the Gravity Gun , stuns Antlion guards, Hunters, and squashes Antlion grubs.
 }
 
 ENUM COLLISION_GROUP
 {
-	COLLISION_GROUP_NONE, Normal
-	COLLISION_GROUP_DEBRIS, Collides with nothing but world and static stuff
-	COLLISION_GROUP_DEBRIS_TRIGGER, Same as debris, but hits triggers. Useful for an item that can be shot, but doesn't collide.
-	COLLISION_GROUP_INTERACTIVE_DEBRIS, Collides with everything except other interactive debris or debris
-	COLLISION_GROUP_INTERACTIVE, Collides with everything except interactive debris or debris
-	COLLISION_GROUP_PLAYER, 
-	COLLISION_GROUP_BREAKABLE_GLASS, NPCs can see straight through an Entity with this applied.
-	COLLISION_GROUP_VEHICLE, 
-	COLLISION_GROUP_PLAYER_MOVEMENT, For HL2, same as Collision_Group_Player, for TF2, this filters out other players and CBaseObjects
-	COLLISION_GROUP_NPC, 
-	COLLISION_GROUP_IN_VEHICLE, Doesn't collide with anything, no traces
-	COLLISION_GROUP_WEAPON, Doesn't collide with players and vehicles
-	COLLISION_GROUP_VEHICLE_CLIP, Only collides with vehicles
-	COLLISION_GROUP_PROJECTILE, 
-	COLLISION_GROUP_DOOR_BLOCKER, Blocks entities not permitted to get near moving doors
-	COLLISION_GROUP_PASSABLE_DOOR, Let's the Player through, nothing else.
-	COLLISION_GROUP_DISSOLVING, Things that are dissolving are in this group
-	COLLISION_GROUP_PUSHAWAY, Nonsolid on client and server, pushaway in player code
-	COLLISION_GROUP_NPC_ACTOR, 
-	COLLISION_GROUP_NPC_SCRIPTED, 
-	COLLISION_GROUP_WORLD, Doesn't collide with players/props
-	LAST_SHARED_COLLISION_GROUP, Amount of COLLISION_GROUP_ enumerations
+	VALUE COLLISION_GROUP_NONE, #Normal
+	VALUE COLLISION_GROUP_DEBRIS, #Collides with nothing but world and static stuff
+	VALUE COLLISION_GROUP_DEBRIS_TRIGGER, #Same as debris, but hits triggers. Useful for an item that can be shot, but doesn't collide.
+	VALUE COLLISION_GROUP_INTERACTIVE_DEBRIS, #Collides with everything except other interactive debris or debris
+	VALUE COLLISION_GROUP_INTERACTIVE, #Collides with everything except interactive debris or debris
+	VALUE COLLISION_GROUP_PLAYER 
+	VALUE COLLISION_GROUP_BREAKABLE_GLASS, #NPCs can see straight through an Entity with this applied.
+	VALUE COLLISION_GROUP_VEHICLE 
+	VALUE COLLISION_GROUP_PLAYER_MOVEMENT, #For HL2, same as Collision_Group_Player, for TF2, this filters out other players and CBaseObjects
+	VALUE COLLISION_GROUP_NPC 
+	VALUE COLLISION_GROUP_IN_VEHICLE, #Doesn't collide with anything, no traces
+	VALUE COLLISION_GROUP_WEAPON, #Doesn't collide with players and vehicles
+	VALUE COLLISION_GROUP_VEHICLE_CLIP, #Only collides with vehicles
+	VALUE COLLISION_GROUP_PROJECTILE 
+	VALUE COLLISION_GROUP_DOOR_BLOCKER, #Blocks entities not permitted to get near moving doors
+	VALUE COLLISION_GROUP_PASSABLE_DOOR, #Let's the Player through, nothing else.
+	VALUE COLLISION_GROUP_DISSOLVING, #Things that are dissolving are in this group
+	VALUE COLLISION_GROUP_PUSHAWAY, #Nonsolid on client and server, pushaway in player code
+	VALUE COLLISION_GROUP_NPC_ACTOR 
+	VALUE COLLISION_GROUP_NPC_SCRIPTED 
+	VALUE COLLISION_GROUP_WORLD, #Doesn't collide with players/props
+	VALUE LAST_SHARED_COLLISION_GROUP, #Amount of COLLISION_GROUP_ enumerations
 }
 
-ENUM EF, Enumerations used by Entity:AddEffects, Entity:RemoveEffects and Entity:IsEffectActive.
+ENUM EF, #Enumerations used by Entity:AddEffects, Entity:RemoveEffects and Entity:IsEffectActive.
 {
-	EF_BONEMERGE, Performs bone merge on client side
-	EF_BONEMERGE_FASTCULL, For use with EF_BONEMERGE. If this is set, then it places this ents origin at its parent and uses the parent's bbox + the max extents of the aiment. Otherwise, it sets up the parent's bones every frame to figure out where to place the aiment, which is inefficient because it'll setup the parent's bones even if the parent is not in the PVS.
-	EF_BRIGHTLIGHT, DLIGHT centered at entity origin
-	EF_DIMLIGHT, Player flashlight
-	EF_NOINTERP, Don't interpolate the next frame
-	EF_NOSHADOW, Disables shadow
-	EF_NODRAW, Prevents the entity from drawing and networking.
-	EF_NORECEIVESHADOW, Don't receive shadows
-	EF_ITEM_BLINK, Makes the entity blink
-	EF_PARENT_ANIMATES, Always assume that the parent entity is animating
-	EF_FOLLOWBONE, Internal flag that is set by Entity:FollowBone
+	VALUE EF_BONEMERGE, #Performs bone merge on client side
+	VALUE EF_BONEMERGE_FASTCULL, #For use with EF_BONEMERGE. If this is set, then it places this ents origin at its parent and uses the parent's bbox + the max extents of the aiment. Otherwise, it sets up the parent's bones every frame to figure out where to place the aiment, which is inefficient because it'll setup the parent's bones even if the parent is not in the PVS.
+	VALUE EF_BRIGHTLIGHT, #DLIGHT centered at entity origin
+	VALUE EF_DIMLIGHT, #Player flashlight
+	VALUE EF_NOINTERP, #Don't interpolate the next frame
+	VALUE EF_NOSHADOW, #Disables shadow
+	VALUE EF_NODRAW, #Prevents the entity from drawing and networking.
+	VALUE EF_NORECEIVESHADOW, #Don't receive shadows
+	VALUE EF_ITEM_BLINK, #Makes the entity blink
+	VALUE EF_PARENT_ANIMATES, #Always assume that the parent entity is animating
+	VALUE EF_FOLLOWBONE, #Internal flag that is set by Entity:FollowBone
 }
 
-ENUM EFL, Enumerations used by Entity:AddEFlags, Entity:RemoveEFlags and Entity:IsEFlagSet.
+ENUM EFL, #Enumerations used by Entity:AddEFlags, Entity:RemoveEFlags and Entity:IsEFlagSet.
 {
-	EFL_BOT_FROZEN, This is set on bots that are frozen
-	EFL_CHECK_UNTOUCH, 
-	EFL_DIRTY_ABSANGVELOCITY, Some dirty bits with respect to abs computations
-	EFL_DIRTY_ABSTRANSFORM, 
-	EFL_DIRTY_ABSVELOCITY, 
-	EFL_DIRTY_SHADOWUPDATE, (Client only) need shadow manager to update the shadow
-	EFL_DIRTY_SPATIAL_PARTITION, 
-	EFL_DIRTY_SURROUNDING_COLLISION_BOUNDS, 
-	EFL_DONTBLOCKLOS, Entity shouldn't block NPC line-of-sight
-	EFL_DONTWALKON, NPCs should not walk on this entity
-	EFL_DORMANT, Entity is dormant, no updates to client
-	EFL_FORCE_CHECK_TRANSMIT, The default behavior in ShouldTransmit is to not send an entity if it doesn't have a model. Certain entities want to be sent anyway because all the drawing logic is in the client DLL. They can set this flag and the engine will transmit them even if they don't have model
-	EFL_HAS_PLAYER_CHILD, One of the child entities is a player
-	EFL_IN_SKYBOX, This is set if the entity detects that it's in the skybox. This forces it to pass the "in PVS" for transmission
-	EFL_IS_BEING_LIFTED_BY_BARNACLE, 
-	EFL_KEEP_ON_RECREATE_ENTITIES, This is a special entity that should not be deleted when we restart entities only
-	EFL_KILLME, This entity is marked for death -- This allows the game to actually delete ents at a safe time. WARNING: You should never set this flag manually.
-	EFL_NOCLIP_ACTIVE, Lets us know when the noclip command is active
-	EFL_NOTIFY, Another entity is watching events on this entity (used by teleport)
-	EFL_NO_AUTO_EDICT_ATTACH, Don't attach the edict
-	EFL_NO_DAMAGE_FORCES, -2147483648, Doesn't accept forces from physics damage
-	EFL_NO_DISSOLVE, Entitiy shouldn't dissolve
-	EFL_NO_GAME_PHYSICS_SIMULATION, 
-	EFL_NO_MEGAPHYSCANNON_RAGDOLL, Mega physcannon can't ragdoll these guys
-	EFL_NO_PHYSCANNON_INTERACTION, Physcannon can't pick these up or punt them
-	EFL_NO_ROTORWASH_PUSH, 
-	EFL_NO_THINK_FUNCTION, Avoid executing the entity's Think
-	EFL_NO_WATER_VELOCITY_CHANGE, Don't adjust this entity's velocity when transitioning into water
-	EFL_SERVER_ONLY, Non-networked entity
-	EFL_SETTING_UP_BONES, Set while a model is setting up its bones
-	EFL_TOUCHING_FLUID, Used to determine if an entity is floating
-	EFL_USE_PARTITION_WHEN_NOT_SOLID, Entities with this flag set show up in the partition even when not solid
+	VALUE EFL_BOT_FROZEN, #This is set on bots that are frozen
+	VALUE EFL_CHECK_UNTOUCH 
+	VALUE EFL_DIRTY_ABSANGVELOCITY, #Some dirty bits with respect to abs computations
+	VALUE EFL_DIRTY_ABSTRANSFORM 
+	VALUE EFL_DIRTY_ABSVELOCITY 
+	VALUE EFL_DIRTY_SHADOWUPDATE (Client only) need shadow manager to update the shadow
+	VALUE EFL_DIRTY_SPATIAL_PARTITION 
+	VALUE EFL_DIRTY_SURROUNDING_COLLISION_BOUNDS 
+	VALUE EFL_DONTBLOCKLOS, #Entity shouldn't block NPC line-of-sight
+	VALUE EFL_DONTWALKON, #NPCs should not walk on this entity
+	VALUE EFL_DORMANT, #Entity is dormant, no updates to client
+	VALUE EFL_FORCE_CHECK_TRANSMIT, #The default behavior in ShouldTransmit is to not send an entity if it doesn't have a model. Certain entities want to be sent anyway because all the drawing logic is in the client DLL. They can set this flag and the engine will transmit them even if they don't have model
+	VALUE EFL_HAS_PLAYER_CHILD, #One of the child entities is a player
+	VALUE EFL_IN_SKYBOX, #This is set if the entity detects that it's in the skybox. This forces it to pass the "in PVS" for transmission
+	VALUE EFL_IS_BEING_LIFTED_BY_BARNACLE 
+	VALUE EFL_KEEP_ON_RECREATE_ENTITIES, #This is a special entity that should not be deleted when we restart entities only
+	VALUE EFL_KILLME, #This entity is marked for death -- This allows the game to actually delete ents at a safe time. WARNING: You should never set this flag manually.
+	VALUE EFL_NOCLIP_ACTIVE, #Lets us know when the noclip command is active
+	VALUE EFL_NOTIFY, #Another entity is watching events on this entity (used by teleport)
+	VALUE EFL_NO_AUTO_EDICT_ATTACH, #Don't attach the edict
+	VALUE EFL_NO_DAMAGE_FORCES -2147483648, Doesn't accept forces from physics damage
+	VALUE EFL_NO_DISSOLVE, #Entitiy shouldn't dissolve
+	VALUE EFL_NO_GAME_PHYSICS_SIMULATION 
+	VALUE EFL_NO_MEGAPHYSCANNON_RAGDOLL, #Mega physcannon can't ragdoll these guys
+	VALUE EFL_NO_PHYSCANNON_INTERACTION, #Physcannon can't pick these up or punt them
+	VALUE EFL_NO_ROTORWASH_PUSH 
+	VALUE EFL_NO_THINK_FUNCTION, #Avoid executing the entity's Think
+	VALUE EFL_NO_WATER_VELOCITY_CHANGE, #Don't adjust this entity's velocity when transitioning into water
+	VALUE EFL_SERVER_ONLY, #Non-networked entity
+	VALUE EFL_SETTING_UP_BONES, #Set while a model is setting up its bones
+	VALUE EFL_TOUCHING_FLUID, #Used to determine if an entity is floating
+	VALUE EFL_USE_PARTITION_WHEN_NOT_SOLID, #Entities with this flag set show up in the partition even when not solid
 }
 
-ENUM FL, Enumerations used by Entity:AddFlags, Entity:RemoveFlags and Entity:IsFlagSet.
+ENUM FL, #Enumerations used by Entity:AddFlags, Entity:RemoveFlags and Entity:IsFlagSet.
 {
-	FL_ONGROUND, Is the entity on ground or not
-	FL_DUCKING, Is player ducking or not
-	FL_ANIMDUCKING, Is the player in the process of ducking or standing up
-	FL_WATERJUMP, The player is jumping out of water
-	FL_ONTRAIN, This player is controlling a func_train
-	FL_INRAIN, Indicates the entity is standing in rain
-	FL_FROZEN, Completely freezes the player, BUG: Bots will still be able to look around.
-	FL_ATCONTROLS, This player is controlling something UI related in the world, this prevents his movement, but doesn't freeze mouse movement, jumping, etc.
-	FL_CLIENT, Is this entity a player or not
-	FL_FAKECLIENT, Bots have this flag
-	FL_INWATER, Is the player in water or not
-	FL_FLY, This entity can fly
-	FL_SWIM, This entity can swim
-	FL_CONVEYOR, This entity is a func_conveyor
-	FL_NPC, NPCs have this flag (NPC: Ignore player push)
-	FL_GODMODE, Whether the player has god mode enabled
-	FL_NOTARGET, Makes the entity invisible to AI
-	FL_AIMTARGET, This entity can be aimed at
-	FL_PARTIALGROUND, Not all corners are valid
-	FL_STATICPROP, It's a static prop
-	FL_GRAPHED, worldgraph has this ent listed as something that blocks a connection
-	FL_GRENADE, This entity is a grenade, unused
-	FL_STEPMOVEMENT, Changes the SV_Movestep() behavior to not do any processing
-	FL_DONTTOUCH, Doesn't generate touch functions, calls ENTITY:EndTouch when this flag gets set during a touch callback
-	FL_BASEVELOCITY, Base velocity has been applied this frame (used to convert base velocity into momentum)
-	FL_WORLDBRUSH, This entity is a brush and part of the world
-	FL_OBJECT, This entity can be seen by NPCs
-	FL_KILLME, This entity is about to get removed
-	FL_ONFIRE, This entity is on fire
-	FL_DISSOLVING, The entity is currently dissolving
-	FL_TRANSRAGDOLL, This entity is about to become a ragdoll
-	FL_UNBLOCKABLE_BY_PLAYER, -2147483648, This moving door can't be blocked by the player
+	VALUE FL_ONGROUND, #Is the entity on ground or not
+	VALUE FL_DUCKING, #Is player ducking or not
+	VALUE FL_ANIMDUCKING, #Is the player in the process of ducking or standing up
+	VALUE FL_WATERJUMP, #The player is jumping out of water
+	VALUE FL_ONTRAIN, #This player is controlling a func_train
+	VALUE FL_INRAIN, #Indicates the entity is standing in rain
+	VALUE FL_FROZEN, #Completely freezes the player, BUG: Bots will still be able to look around.
+	VALUE FL_ATCONTROLS, #This player is controlling something UI related in the world, this prevents his movement, but doesn't freeze mouse movement, jumping, etc.
+	VALUE FL_CLIENT, #Is this entity a player or not
+	VALUE FL_FAKECLIENT, #Bots have this flag
+	VALUE FL_INWATER, #Is the player in water or not
+	VALUE FL_FLY, #This entity can fly
+	VALUE FL_SWIM, #This entity can swim
+	VALUE FL_CONVEYOR, #This entity is a func_conveyor
+	VALUE FL_NPC, #NPCs have this flag (NPC: Ignore player push)
+	VALUE FL_GODMODE, #Whether the player has god mode enabled
+	VALUE FL_NOTARGET, #Makes the entity invisible to AI
+	VALUE FL_AIMTARGET, #This entity can be aimed at
+	VALUE FL_PARTIALGROUND, #Not all corners are valid
+	VALUE FL_STATICPROP, #It's a static prop
+	VALUE FL_GRAPHED, #worldgraph has this ent listed as something that blocks a connection
+	VALUE FL_GRENADE, #This entity is a grenade, unused
+	VALUE FL_STEPMOVEMENT, #Changes the SV_Movestep() behavior to not do any processing
+	VALUE FL_DONTTOUCH, #Doesn't generate touch functions, calls ENTITY:EndTouch when this flag gets set during a touch callback
+	VALUE FL_BASEVELOCITY, #Base velocity has been applied this frame (used to convert base velocity into momentum)
+	VALUE FL_WORLDBRUSH, #This entity is a brush and part of the world
+	VALUE FL_OBJECT, #This entity can be seen by NPCs
+	VALUE FL_KILLME, #This entity is about to get removed
+	VALUE FL_ONFIRE, #This entity is on fire
+	VALUE FL_DISSOLVING, #The entity is currently dissolving
+	VALUE FL_TRANSRAGDOLL, #This entity is about to become a ragdoll
+	VALUE FL_UNBLOCKABLE_BY_PLAYER -2147483648, This moving door can't be blocked by the player
 }
 
 ENUM DMG
 {
-	DMG_GENERIC, Generic damage
-	DMG_CRUSH, Caused by physics interaction. Ignored by airboat drivers. Used by the Crowbar
-	DMG_BULLET, Bullet damage
-	DMG_SLASH, Sharp objects, such as Manhacks or other NPCs attacks
-	DMG_BURN, Damage from fire
-	DMG_VEHICLE, Hit by a vehicle. This will need to be set for passengers of some vehicle to receive damage.
-	DMG_FALL, Fall damage
-	DMG_BLAST, Explosion damage. Will be ignored by most vehicle passengers.
-	DMG_CLUB, Crowbar damage
-	DMG_SHOCK, Electrical damage, shows smoke at the damage position
-	DMG_SONIC, Sonic damage,used by the Gargantua and Houndeye NPCs
-	DMG_ENERGYBEAM, Laser
-	DMG_PREVENT_PHYSICS_FORCE, Prevent a physics force
-	DMG_NEVERGIB, Never creates gibs. (Used by the crossbow)
-	DMG_ALWAYSGIB, Always create gibs
-	DMG_DROWN, Drown damage
-	DMG_PARALYZE, Same as DMG_POISON
-	DMG_NERVEGAS, Neurotoxin damage
-	DMG_POISON, Poison damage
-	DMG_RADIATION, Radiation. Will be ignored by most vehicle passengers.
-	DMG_DROWNRECOVER, Damage applied to the player to restore health after drowning
-	DMG_ACID, Toxic chemicals or acid burns
-	DMG_SLOWBURN, In an oven
-	DMG_REMOVENORAGDOLL, Don't create a ragdoll on death
-	DMG_PHYSGUN, Damage done by the gravity gun
-	DMG_PLASMA, Plasma
-	DMG_AIRBOAT, Airboat gun damage
-	DMG_DISSOLVE, Forces the entity to dissolve on death. This is what the combine ball uses when it hits a target
-	DMG_BLAST_SURFACE, This won't hurt the player underwater
-	DMG_DIRECT, Direct damage to the entity that does not go through any damage value modifications
-	DMG_BUCKSHOT, The pellets fired from a shotgun
-	DMG_SNIPER, Damage from SniperRound/SniperPenetratedRound ammo types
-	DMG_MISSILEDEFENSE, Damage from npc_missiledefense, npc_combinegunship, or monster_mortar
+	VALUE DMG_GENERIC, #Generic damage
+	VALUE DMG_CRUSH, #Caused by physics interaction. Ignored by airboat drivers. Used by the Crowbar
+	VALUE DMG_BULLET, #Bullet damage
+	VALUE DMG_SLASH, #Sharp objects, such as Manhacks or other NPCs attacks
+	VALUE DMG_BURN, #Damage from fire
+	VALUE DMG_VEHICLE, #Hit by a vehicle. This will need to be set for passengers of some vehicle to receive damage.
+	VALUE DMG_FALL, #Fall damage
+	VALUE DMG_BLAST, #Explosion damage. Will be ignored by most vehicle passengers.
+	VALUE DMG_CLUB, #Crowbar damage
+	VALUE DMG_SHOCK, #Electrical damage, shows smoke at the damage position
+	VALUE DMG_SONIC, #Sonic damage,used by the Gargantua and Houndeye NPCs
+	VALUE DMG_ENERGYBEAM, #Laser
+	VALUE DMG_PREVENT_PHYSICS_FORCE, #Prevent a physics force
+	VALUE DMG_NEVERGIB, #Never creates gibs. (Used by the crossbow)
+	VALUE DMG_ALWAYSGIB, #Always create gibs
+	VALUE DMG_DROWN, #Drown damage
+	VALUE DMG_PARALYZE, #Same as DMG_POISON
+	VALUE DMG_NERVEGAS, #Neurotoxin damage
+	VALUE DMG_POISON, #Poison damage
+	VALUE DMG_RADIATION, #Radiation. Will be ignored by most vehicle passengers.
+	VALUE DMG_DROWNRECOVER, #Damage applied to the player to restore health after drowning
+	VALUE DMG_ACID, #Toxic chemicals or acid burns
+	VALUE DMG_SLOWBURN, #In an oven
+	VALUE DMG_REMOVENORAGDOLL, #Don't create a ragdoll on death
+	VALUE DMG_PHYSGUN, #Damage done by the gravity gun
+	VALUE DMG_PLASMA, #Plasma
+	VALUE DMG_AIRBOAT, #Airboat gun damage
+	VALUE DMG_DISSOLVE, #Forces the entity to dissolve on death. This is what the combine ball uses when it hits a target
+	VALUE DMG_BLAST_SURFACE, #This won't hurt the player underwater
+	VALUE DMG_DIRECT, #Direct damage to the entity that does not go through any damage value modifications
+	VALUE DMG_BUCKSHOT, #The pellets fired from a shotgun
+	VALUE DMG_SNIPER, #Damage from SniperRound/SniperPenetratedRound ammo types
+	VALUE DMG_MISSILEDEFENSE, #Damage from npc_missiledefense, npc_combinegunship, or monster_mortar
 }
 
 ENUM USE
 {
-	USE_OFF,
-	USE_ON,
-	USE_SET,
-	USE_TOGGLE,
+	VALUE USE_OFF
+	VALUE USE_ON
+	VALUE USE_SET
+	VALUE USE_TOGGLE
 }
 
-ENUM _USE, Enumerations used by Entity:SetUseType. Affects when ENTITY:Use is triggered.
+ENUM _USE, #Enumerations used by Entity:SetUseType. Affects when ENTITY:Use is triggered.
 {
-	CONTINUOUS_USE, Fire a USE_ON signal every tick as long as the player holds their use key and aims at the target.
-	ONOFF_USE, Fires a USE_ON signal when starting to use an entity, and a USE_OFF signal when letting go. WARNING: There is no guarantee to receive both ON and OFF signals. A signal will only be sent when pushing or letting go of the use key while actually aiming at the entity, so an ON signal might not be followed by an OFF signal if the player is aiming somewhere else when releasing the key, and similarly, an OFF signal may not be preceded by an ON signal if the player started aiming at the entity only after pressing the key. Therefore, this method of input is unreliable and should not be used.
-	DIRECTIONAL_USE, Like a wheel turning.
-	SIMPLE_USE, Fire a USE_ON signal only once when player presses their use key while aiming at the target.
+	VALUE CONTINUOUS_USE, #Fire a USE_ON signal every tick as long as the player holds their use key and aims at the target.
+	VALUE ONOFF_USE, #Fires a USE_ON signal when starting to use an entity, and a USE_OFF signal when letting go. WARNING: There is no guarantee to receive both ON and OFF signals. A signal will only be sent when pushing or letting go of the use key while actually aiming at the entity, so an ON signal might not be followed by an OFF signal if the player is aiming somewhere else when releasing the key, and similarly, an OFF signal may not be preceded by an ON signal if the player started aiming at the entity only after pressing the key. Therefore, this method of input is unreliable and should not be used.
+	VALUE DIRECTIONAL_USE, #Like a wheel turning.
+	VALUE SIMPLE_USE, #Fire a USE_ON signal only once when player presses their use key while aiming at the target.
 }
 
-ENUM SF, Enumerations describing certain spawnflags. Everything except for SF_PHYS* is serverside only.
+ENUM SF, #Enumerations describing certain spawnflags. Everything except for SF_PHYS* is serverside only.
 {
-	SF_CITIZEN_AMMORESUPPLIER, Citizen that resupplies ammo
-	SF_CITIZEN_FOLLOW, "Follow the player as soon as I spawn"
-	SF_CITIZEN_IGNORE_SEMAPHORE, "Work outside the speech semaphore system"
-	SF_CITIZEN_MEDIC, Makes the citizen a medic
-	SF_CITIZEN_NOT_COMMANDABLE, Citizen cannot join players squad, and will not able to be commanded by the Half-Life 2 command system for Citizens
-	SF_CITIZEN_RANDOM_HEAD, Gives the citizen a random head
-	SF_CITIZEN_RANDOM_HEAD_FEMALE, Gives the citizen a random female head
-	SF_CITIZEN_RANDOM_HEAD_MALE, Gives the citizen a random male head
-	SF_CITIZEN_USE_RENDER_BOUNDS, "Use render bounds instead of human hull for guys sitting in chairs, etc". Must be set before Spawn() is called to take effect
-	SF_FLOOR_TURRET_CITIZEN, Makes the floor turret friendly
-	SF_NPC_ALTCOLLISION, Do Alternate collision for this NPC (player avoidance)
-	SF_NPC_ALWAYSTHINK, Think outside PVS
-	SF_NPC_DROP_HEALTHKIT, NPC Drops health kit when it dies
-	SF_NPC_FADE_CORPSE, Fade Corpse
-	SF_NPC_FALL_TO_GROUND, If not set, means *teleport* to ground
-	SF_NPC_GAG, No IDLE sounds until angry
-	SF_NPC_LONG_RANGE, Long Visibility/Shoot
-	SF_NPC_NO_PLAYER_PUSHAWAY, Ignore player push - Don't give way to player
-	SF_NPC_NO_WEAPON_DROP, NPC Doesn't drop weapon on death
-	SF_NPC_START_EFFICIENT, Don't acquire enemies or avoid obstacles
-	SF_NPC_TEMPLATE, This entity is a template for the npc_template_maker. It will not spawn automatically and cannot be used with point_template.
-	SF_NPC_WAIT_FOR_SCRIPT, Wait for script
-	SF_NPC_WAIT_TILL_SEEN, Wait till seen
-	SF_PHYSBOX_MOTIONDISABLED, If set, calls PhysObj:EnableMotion( false ) on the func_physbox when the physics are created
-	SF_PHYSBOX_NEVER_PICK_UP, Gravity gun is NOT allowed to pick this up.
-	SF_PHYSPROP_MOTIONDISABLED, If set, calls PhysObj:EnableMotion( false ) on the func_physbox when the physics are created. See Physics optimization
-	SF_PHYSPROP_PREVENT_PICKUP, Prevent that physbox from being picked up
-	SF_ROLLERMINE_FRIENDLY, Makes the rollermine friendly
+	VALUE SF_CITIZEN_AMMORESUPPLIER, #Citizen that resupplies ammo
+	VALUE SF_CITIZEN_FOLLOW "Follow the player as soon as I spawn"
+	VALUE SF_CITIZEN_IGNORE_SEMAPHORE "Work outside the speech semaphore system"
+	VALUE SF_CITIZEN_MEDIC, #Makes the citizen a medic
+	VALUE SF_CITIZEN_NOT_COMMANDABLE, #Citizen cannot join players squad, and will not able to be commanded by the Half-Life 2 command system for Citizens
+	VALUE SF_CITIZEN_RANDOM_HEAD, #Gives the citizen a random head
+	VALUE SF_CITIZEN_RANDOM_HEAD_FEMALE, #Gives the citizen a random female head
+	VALUE SF_CITIZEN_RANDOM_HEAD_MALE, #Gives the citizen a random male head
+	VALUE SF_CITIZEN_USE_RENDER_BOUNDS "Use render bounds instead of human hull for guys sitting in chairs, etc". Must be set before Spawn() is called to take effect
+	VALUE SF_FLOOR_TURRET_CITIZEN, #Makes the floor turret friendly
+	VALUE SF_NPC_ALTCOLLISION, #Do Alternate collision for this NPC (player avoidance)
+	VALUE SF_NPC_ALWAYSTHINK, #Think outside PVS
+	VALUE SF_NPC_DROP_HEALTHKIT, #NPC Drops health kit when it dies
+	VALUE SF_NPC_FADE_CORPSE, #Fade Corpse
+	VALUE SF_NPC_FALL_TO_GROUND, #If not set, means *teleport* to ground
+	VALUE SF_NPC_GAG, #No IDLE sounds until angry
+	VALUE SF_NPC_LONG_RANGE, #Long Visibility/Shoot
+	VALUE SF_NPC_NO_PLAYER_PUSHAWAY, #Ignore player push - Don't give way to player
+	VALUE SF_NPC_NO_WEAPON_DROP, #NPC Doesn't drop weapon on death
+	VALUE SF_NPC_START_EFFICIENT, #Don't acquire enemies or avoid obstacles
+	VALUE SF_NPC_TEMPLATE, #This entity is a template for the npc_template_maker. It will not spawn automatically and cannot be used with point_template.
+	VALUE SF_NPC_WAIT_FOR_SCRIPT, #Wait for script
+	VALUE SF_NPC_WAIT_TILL_SEEN, #Wait till seen
+	VALUE SF_PHYSBOX_MOTIONDISABLED, #If set, calls PhysObj:EnableMotion( false ) on the func_physbox when the physics are created
+	VALUE SF_PHYSBOX_NEVER_PICK_UP, #Gravity gun is NOT allowed to pick this up.
+	VALUE SF_PHYSPROP_MOTIONDISABLED, #If set, calls PhysObj:EnableMotion( false ) on the func_physbox when the physics are created. See Physics optimization
+	VALUE SF_PHYSPROP_PREVENT_PICKUP, #Prevent that physbox from being picked up
+	VALUE SF_ROLLERMINE_FRIENDLY, #Makes the rollermine friendly
 }
 
-ENUM SIM, Enumerations used by ENTITY:PhysicsSimulate.
+ENUM SIM, #Enumerations used by ENTITY:PhysicsSimulate.
 {
-	SIM_NOTHING, Don't simulate physics
-	SIM_LOCAL_ACCELERATION, Vectors in local coordinate system
-	SIM_LOCAL_FORCE, Vectors in local coordinate system
-	SIM_GLOBAL_ACCELERATION, Vectors in world coordinate system
-	SIM_GLOBAL_FORCE, Vectors in world coordinate system
+	VALUE SIM_NOTHING, #Don't simulate physics
+	VALUE SIM_LOCAL_ACCELERATION, #Vectors in local coordinate system
+	VALUE SIM_LOCAL_FORCE, #Vectors in local coordinate system
+	VALUE SIM_GLOBAL_ACCELERATION, #Vectors in world coordinate system
+	VALUE SIM_GLOBAL_FORCE, #Vectors in world coordinate system
 }
 
-ENUM STUDIO, Used by ENTITY:Draw and ENTITY:DrawTranslucent.
+ENUM STUDIO, #Used by ENTITY:Draw and ENTITY:DrawTranslucent.
 {
-	STUDIO_RENDER, 
-	STUDIO_VIEWXFORMATTACHMENTS, 
-	STUDIO_DRAWTRANSLUCENTSUBMODELS, 
-	STUDIO_TWOPASS, 
-	STUDIO_STATIC_LIGHTING, 
-	STUDIO_WIREFRAME, 
-	STUDIO_ITEM_BLINK, 
-	STUDIO_NOSHADOWS, 
-	STUDIO_WIREFRAME_VCOLLIDE, 
-	STUDIO_GENERATE_STATS, Not a studio flag, but used to flag when we want studio stats
-	STUDIO_SSAODEPTHTEXTURE, Not a studio flag, but used to flag model as using shadow depth material override
-	STUDIO_SHADOWDEPTHTEXTURE, Not a studio flag, but used to flag model as using shadow depth material override
-	STUDIO_TRANSPARENCY, Not a studio flag, but used to flag model as a non-sorting brush model
+	VALUE STUDIO_RENDER 
+	VALUE STUDIO_VIEWXFORMATTACHMENTS 
+	VALUE STUDIO_DRAWTRANSLUCENTSUBMODELS 
+	VALUE STUDIO_TWOPASS 
+	VALUE STUDIO_STATIC_LIGHTING 
+	VALUE STUDIO_WIREFRAME 
+	VALUE STUDIO_ITEM_BLINK 
+	VALUE STUDIO_NOSHADOWS 
+	VALUE STUDIO_WIREFRAME_VCOLLIDE 
+	VALUE STUDIO_GENERATE_STATS, #Not a studio flag, but used to flag when we want studio stats
+	VALUE STUDIO_SSAODEPTHTEXTURE, #Not a studio flag, but used to flag model as using shadow depth material override
+	VALUE STUDIO_SHADOWDEPTHTEXTURE, #Not a studio flag, but used to flag model as using shadow depth material override
+	VALUE STUDIO_TRANSPARENCY, #Not a studio flag, but used to flag model as a non-sorting brush model
 }
 
-ENUM TRANSMIT, Enumerations used in ENTITY:UpdateTransmitState hook.
+ENUM TRANSMIT, #Enumerations used in ENTITY:UpdateTransmitState hook.
 {
-	TRANSMIT_ALWAYS, Always transmit the entity
-	TRANSMIT_NEVER, Never transmit the entity, default for point entities
-	TRANSMIT_PVS, Transmit when entity is in players view
+	VALUE TRANSMIT_ALWAYS, #Always transmit the entity
+	VALUE TRANSMIT_NEVER, #Never transmit the entity, default for point entities
+	VALUE TRANSMIT_PVS, #Transmit when entity is in players view
 }

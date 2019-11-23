@@ -270,7 +270,7 @@ local function ParseDef( filePath, search )
 		elseif lv == 1 and d then
 			if d.type == DEFTYPE_ENUM then
 				local k = {
-					key = args[1]:Trim(),
+					key = args[1]:sub(7,-1):Trim(),
 					desc = table.concat(args, ",", 2):Trim(),
 				}
 				k.desc = k.desc:len() > 0 and k.desc or nil

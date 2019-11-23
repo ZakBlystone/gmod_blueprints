@@ -4,12 +4,15 @@ include("sh_bptransfer.lua")
 include("sh_bpcommon.lua")
 include("sh_bpstruct.lua")
 include("sh_bpnodetypegroup.lua")
+include("sh_bpstruct.lua")
 
 module("bpdefs", package.seeall, bpcommon.rescope(bpschema))
 
 local pinTypeLookup = {}
 local pinFlagLookup = {}
 local nodeGroups = {}
+local structs = {}
+local enums = {}
 
 local roleLookup = {
 	["SERVER"] = ROLE_Server,
@@ -178,8 +181,6 @@ end
 
 function LoadAndParseDefs()
 
-	bpcommon.ProfileStart("parse definitions")
-
 	local foundDefs = {}
 	EnumerateDefs( "data/bpdefs/*", foundDefs, "THIRDPARTY" )
 
@@ -187,8 +188,6 @@ function LoadAndParseDefs()
 		ParseDefinitionFile(v[1], v[2])
 		--break
 	end
-
-	bpcommon.ProfileEnd()
 
 end
 
@@ -243,8 +242,59 @@ local function ParseNodeValue(nodeType, v)
 	if key == "REQUIREMETA" then nodeType:AddRequiredMeta(v.tuple[2]) end
 	if key == "TBD" then nodeType.TBD = true end
 	if key == "WARN" then nodeType:SetWarning(v.literal) end
-	if key == "IN" or key == "OUT" or key == "PIN" then nodeType:AddPin( ParsePin(v) ) end
+	if key == "IN" or key == "OUT" then nodeType:AddPin( ParsePin(v) ) end
 end
+
+RegisterBlock("STRUCT", 0, function(block, parent)
+
+	local name = block.tuple[2]
+	local desc = block.literal
+	block.struct = bpstruct.New()
+	block.struct:SetName(name)
+	block.struct.pins:PreserveNames(true)
+
+	table.insert(structs, block.struct)
+
+end,
+function(block, value) 
+	local key = value.tuple[1]
+	if key == "NAME" then block.struct:RemapName(value.tuple[2], value.tuple[3]) end
+	if key == "PIN" then
+		local pin = ParsePin(value)
+		block.struct:NewPin(
+			pin:GetName(),
+			pin:GetBaseType(),
+			pin:GetDefault(),
+			pin:GetFlags(),
+			pin:GetSubType(),
+			pin:GetDescription())
+	end
+end,
+function(block, parent)
+
+	block.struct.pins:PreserveNames(false)
+
+end)
+
+RegisterBlock("ENUM", 0, function(block, parent)
+
+	local name = block.tuple[2]
+	block.enum = { name = name, entries = {}, lookup = {} }
+
+	table.insert(enums, block.enum)
+
+end,
+function(block, value)
+
+	if value.tuple[1] == "VALUE" then
+		table.insert(block.enum.entries, {
+			key = value.tuple[2],
+			desc = value.literal,
+		})
+		block.enum.lookup[value.tuple[2]] = #block.enum.entries
+	end
+
+end)
 
 RegisterBlock("HOOKS", 0, function(block, parent)
 
@@ -297,15 +347,19 @@ RegisterNodeBlock("PURE", NT_Pure)
 RegisterNodeBlock("FUNC", NT_Func)
 RegisterNodeBlock("SPECIAL", NT_Special)
 
-if SERVER then
+if SERVER and false then
+	bpcommon.ProfileStart("parse definitions")
 	nodeGroups = {}
 	LoadAndParseDefs()
 
 	local stream = bpdata.OutStream(false, true, true)
 	stream:UseStringTable()
 	stream:WriteInt(#nodeGroups, false)
-	for i=1, #nodeGroups do
-		nodeGroups[i]:WriteToStream(stream)
-	end
+	stream:WriteInt(#structs, false)
+	for i=1, #nodeGroups do nodeGroups[i]:WriteToStream(stream) end
+	for i=1, #structs do structs[i]:WriteToStream(stream) end
+	bpdata.WriteValue(enums, stream)
+
 	stream:WriteToFile("blueprints/newpack.txt", true, false)
+	bpcommon.ProfileEnd()
 end

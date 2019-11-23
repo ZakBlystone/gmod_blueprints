@@ -1,246 +1,246 @@
-ENUM BOX, Enumerations used by render.SetModelLighting.
+ENUM BOX, #Enumerations used by render.SetModelLighting.
 {
-	BOX_FRONT, Place the light from the front
-	BOX_BACK, Place the light behind
-	BOX_RIGHT, Place the light to the right
-	BOX_LEFT, Place the light to the left
-	BOX_TOP, Place the light to the top
-	BOX_BOTTOM, Place the light to the bottom
+	VALUE BOX_FRONT, #Place the light from the front
+	VALUE BOX_BACK, #Place the light behind
+	VALUE BOX_RIGHT, #Place the light to the right
+	VALUE BOX_LEFT, #Place the light to the left
+	VALUE BOX_TOP, #Place the light to the top
+	VALUE BOX_BOTTOM, #Place the light to the bottom
 }
 
-ENUM CREATERENDERTARGETFLAGS, Enumerations used by GetRenderTargetEx. Clientside only.
+ENUM CREATERENDERTARGETFLAGS, #Enumerations used by GetRenderTargetEx. Clientside only.
 {
-	CREATERENDERTARGETFLAGS_HDR,
-	CREATERENDERTARGETFLAGS_AUTOMIPMAP,
-	CREATERENDERTARGETFLAGS_UNFILTERABLE_OK,
+	VALUE CREATERENDERTARGETFLAGS_HDR
+	VALUE CREATERENDERTARGETFLAGS_AUTOMIPMAP
+	VALUE CREATERENDERTARGETFLAGS_UNFILTERABLE_OK
 }
 
-ENUM IMAGE_FORMAT, Enumerations used by GetRenderTargetEx. Clientside only.
+ENUM IMAGE_FORMAT, #Enumerations used by GetRenderTargetEx. Clientside only.
 {
-	IMAGE_FORMAT_DEFAULT, 
-	IMAGE_FORMAT_RGBA8888, 
-	IMAGE_FORMAT_ABGR8888, 
-	IMAGE_FORMAT_RGB888, 
-	IMAGE_FORMAT_BGR888, 
-	IMAGE_FORMAT_RGB565, 
-	IMAGE_FORMAT_ARGB8888, 
-	IMAGE_FORMAT_BGRA8888, 
-	IMAGE_FORMAT_RGBA16161616, 
-	IMAGE_FORMAT_RGBA16161616F, 
+	VALUE IMAGE_FORMAT_DEFAULT 
+	VALUE IMAGE_FORMAT_RGBA8888 
+	VALUE IMAGE_FORMAT_ABGR8888 
+	VALUE IMAGE_FORMAT_RGB888 
+	VALUE IMAGE_FORMAT_BGR888 
+	VALUE IMAGE_FORMAT_RGB565 
+	VALUE IMAGE_FORMAT_ARGB8888 
+	VALUE IMAGE_FORMAT_BGRA8888 
+	VALUE IMAGE_FORMAT_RGBA16161616 
+	VALUE IMAGE_FORMAT_RGBA16161616F 
 }
 
-ENUM TEXFILTER, Enumerations used by render.PushFilterMin and render.PushFilterMag.
+ENUM TEXFILTER, #Enumerations used by render.PushFilterMin and render.PushFilterMag.
 {
-	TEXFILTER.NONE,
-	TEXFILTER.POINT,
-	TEXFILTER.LINEAR,
-	TEXFILTER.ANISOTROPIC,
+	VALUE TEXFILTER.NONE,
+	VALUE TEXFILTER.POINT,
+	VALUE TEXFILTER.LINEAR,
+	VALUE TEXFILTER.ANISOTROPIC,
 }
 
-ENUM TEXTUREFLAGS, Bit flags used by GetRenderTargetEx. Clientside only. Information taken from here
+ENUM TEXTUREFLAGS, #Bit flags used by GetRenderTargetEx. Clientside only. Information taken from here
 {
-	TEXTUREFLAGS_POINTSAMPLE, Low quality, "pixel art" texture filtering.
-	TEXTUREFLAGS_TRILINEAR, Medium quality texture filtering.
-	TEXTUREFLAGS_CLAMPS, Clamp S coordinates.
-	TEXTUREFLAGS_CLAMPT, Clamp T coordinates.
-	TEXTUREFLAGS_ANISOTROPIC, High quality texture filtering.
-	TEXTUREFLAGS_HINT_DXT5, Used in skyboxes. Makes sure edges are seamless.
-	TEXTUREFLAGS_PWL_CORRECTED, Purpose unknown.
-	TEXTUREFLAGS_NORMAL, Texture is a normal map.
-	TEXTUREFLAGS_NOMIP, Render largest mipmap only. (Does not delete existing mipmaps, just disables them.)
-	TEXTUREFLAGS_NOLOD, Not affected by texture resolution settings.
-	TEXTUREFLAGS_ALL_MIPS, No Minimum Mipmap
-	TEXTUREFLAGS_PROCEDURAL, Texture is an procedural texture (code can modify it).
-	TEXTUREFLAGS_ONEBITALPHA, One bit alpha channel used.
-	TEXTUREFLAGS_EIGHTBITALPHA, Eight bit alpha channel used.
-	TEXTUREFLAGS_ENVMAP, Texture is an environment map.
-	TEXTUREFLAGS_RENDERTARGET, Texture is a render target.
-	TEXTUREFLAGS_DEPTHRENDERTARGET, Texture is a depth render target.
-	TEXTUREFLAGS_NODEBUGOVERRIDE, 
-	TEXTUREFLAGS_SINGLECOPY, 
-	TEXTUREFLAGS_UNUSED_00080000, 
-	TEXTUREFLAGS_IMMEDIATE_CLEANUP, This feature is deprecated. You should avoid using it as it may be removed in a future version. Immediately destroy this texture when its reference count hits zero (aka TEXTUREFLAGS_UNUSED_00100000)
-	TEXTUREFLAGS_UNUSED_00200000, 
-	TEXTUREFLAGS_UNUSED_00400000, 
-	TEXTUREFLAGS_NODEPTHBUFFER, Do not buffer for Video Processing, generally render distance.
-	TEXTUREFLAGS_UNUSED_01000000, 
-	TEXTUREFLAGS_CLAMPU, Clamp U coordinates (for volumetric textures).
-	TEXTUREFLAGS_VERTEXTEXTURE, Usable as a vertex texture
-	TEXTUREFLAGS_SSBUMP, Texture is a SSBump. (SSB)
-	TEXTUREFLAGS_UNUSED_10000000, 
-	TEXTUREFLAGS_BORDER, Clamp to border colour on all texture coordinates
-	TEXTUREFLAGS_UNUSED_40000000, 
-	TEXTUREFLAGS_UNUSED_80000000, 
+	VALUE TEXTUREFLAGS_POINTSAMPLE, #Low quality, "pixel art" texture filtering.
+	VALUE TEXTUREFLAGS_TRILINEAR, #Medium quality texture filtering.
+	VALUE TEXTUREFLAGS_CLAMPS, #Clamp S coordinates.
+	VALUE TEXTUREFLAGS_CLAMPT, #Clamp T coordinates.
+	VALUE TEXTUREFLAGS_ANISOTROPIC, #High quality texture filtering.
+	VALUE TEXTUREFLAGS_HINT_DXT5, #Used in skyboxes. Makes sure edges are seamless.
+	VALUE TEXTUREFLAGS_PWL_CORRECTED, #Purpose unknown.
+	VALUE TEXTUREFLAGS_NORMAL, #Texture is a normal map.
+	VALUE TEXTUREFLAGS_NOMIP, #Render largest mipmap only. (Does not delete existing mipmaps, just disables them.)
+	VALUE TEXTUREFLAGS_NOLOD, #Not affected by texture resolution settings.
+	VALUE TEXTUREFLAGS_ALL_MIPS, #No Minimum Mipmap
+	VALUE TEXTUREFLAGS_PROCEDURAL, #Texture is an procedural texture (code can modify it).
+	VALUE TEXTUREFLAGS_ONEBITALPHA, #One bit alpha channel used.
+	VALUE TEXTUREFLAGS_EIGHTBITALPHA, #Eight bit alpha channel used.
+	VALUE TEXTUREFLAGS_ENVMAP, #Texture is an environment map.
+	VALUE TEXTUREFLAGS_RENDERTARGET, #Texture is a render target.
+	VALUE TEXTUREFLAGS_DEPTHRENDERTARGET, #Texture is a depth render target.
+	VALUE TEXTUREFLAGS_NODEBUGOVERRIDE 
+	VALUE TEXTUREFLAGS_SINGLECOPY 
+	VALUE TEXTUREFLAGS_UNUSED_00080000 
+	VALUE TEXTUREFLAGS_IMMEDIATE_CLEANUP, #This feature is deprecated. You should avoid using it as it may be removed in a future version. Immediately destroy this texture when its reference count hits zero (aka TEXTUREFLAGS_UNUSED_00100000)
+	VALUE TEXTUREFLAGS_UNUSED_00200000 
+	VALUE TEXTUREFLAGS_UNUSED_00400000 
+	VALUE TEXTUREFLAGS_NODEPTHBUFFER, #Do not buffer for Video Processing, generally render distance.
+	VALUE TEXTUREFLAGS_UNUSED_01000000 
+	VALUE TEXTUREFLAGS_CLAMPU, #Clamp U coordinates (for volumetric textures).
+	VALUE TEXTUREFLAGS_VERTEXTEXTURE, #Usable as a vertex texture
+	VALUE TEXTUREFLAGS_SSBUMP, #Texture is a SSBump. (SSB)
+	VALUE TEXTUREFLAGS_UNUSED_10000000 
+	VALUE TEXTUREFLAGS_BORDER, #Clamp to border colour on all texture coordinates
+	VALUE TEXTUREFLAGS_UNUSED_40000000 
+	VALUE TEXTUREFLAGS_UNUSED_80000000 
 }
 
-ENUM RT_SIZE, Enumerations used by GetRenderTargetEx. Clientside only.
+ENUM RT_SIZE, #Enumerations used by GetRenderTargetEx. Clientside only.
 {
-	RT_SIZE_NO_CHANGE, Only allowed for render targets that don't want a depth buffer (because if they have a depth buffer, the render target must be less than or equal to the size of the framebuffer).
-	RT_SIZE_DEFAULT, Don't play with the specified width and height other than making sure it fits in the framebuffer.
-	RT_SIZE_PICMIP, Apply picmip to the render target's width and height.
-	RT_SIZE_HDR, frame_buffer_width / 4
-	RT_SIZE_FULL_FRAME_BUFFER, Same size as frame buffer, or next lower power of 2 if we can't do that.
-	RT_SIZE_OFFSCREEN, Target of specified size, don't mess with dimensions
-	RT_SIZE_FULL_FRAME_BUFFER_ROUNDED_UP, Same size as the frame buffer, rounded up if necessary for systems that can't do non-power of two textures.
-	RT_SIZE_REPLAY_SCREENSHOT, Rounded down to power of 2, essentially
-	RT_SIZE_LITERAL, Use the size passed in. Don't clamp it to the frame buffer size. Really.
-	RT_SIZE_LITERAL_PICMIP, 
+	VALUE RT_SIZE_NO_CHANGE, #Only allowed for render targets that don't want a depth buffer (because if they have a depth buffer, the render target must be less than or equal to the size of the framebuffer).
+	VALUE RT_SIZE_DEFAULT, #Don't play with the specified width and height other than making sure it fits in the framebuffer.
+	VALUE RT_SIZE_PICMIP, #Apply picmip to the render target's width and height.
+	VALUE RT_SIZE_HDR, #frame_buffer_width / 4
+	VALUE RT_SIZE_FULL_FRAME_BUFFER, #Same size as frame buffer, or next lower power of 2 if we can't do that.
+	VALUE RT_SIZE_OFFSCREEN, #Target of specified size, don't mess with dimensions
+	VALUE RT_SIZE_FULL_FRAME_BUFFER_ROUNDED_UP, #Same size as the frame buffer, rounded up if necessary for systems that can't do non-power of two textures.
+	VALUE RT_SIZE_REPLAY_SCREENSHOT, #Rounded down to power of 2, essentially
+	VALUE RT_SIZE_LITERAL, #Use the size passed in. Don't clamp it to the frame buffer size. Really.
+	VALUE RT_SIZE_LITERAL_PICMIP 
 }
 
-ENUM DOF, Internal globals for SimpleDoF. Clientside only.
+ENUM DOF, #Internal globals for SimpleDoF. Clientside only.
 {
-	DOF_OFFSET,
-	DOF_SPACING,
+	VALUE DOF_OFFSET
+	VALUE DOF_SPACING
 }
 
-ENUM TEXT_ALIGN, Enumerations used by draw.SimpleText, draw.DrawText and in TextData structure.
+ENUM TEXT_ALIGN, #Enumerations used by draw.SimpleText, draw.DrawText and in TextData structure.
 {
-	TEXT_ALIGN_LEFT, Align the text on the left
-	TEXT_ALIGN_CENTER, Align the text in center
-	TEXT_ALIGN_RIGHT, Align the text on the right
-	TEXT_ALIGN_TOP, Align the text on the top
-	TEXT_ALIGN_BOTTOM, Align the text on the bottom
+	VALUE TEXT_ALIGN_LEFT, #Align the text on the left
+	VALUE TEXT_ALIGN_CENTER, #Align the text in center
+	VALUE TEXT_ALIGN_RIGHT, #Align the text on the right
+	VALUE TEXT_ALIGN_TOP, #Align the text on the top
+	VALUE TEXT_ALIGN_BOTTOM, #Align the text on the bottom
 }
 
 ENUM RENDERGROUP
 {
-	RENDERGROUP_STATIC_HUGE, Huge static prop, possibly leftover from goldsrc
-	RENDERGROUP_OPAQUE_HUGE, Huge opaque entity, possibly leftover from goldsrc
-	RENDERGROUP_STATIC, Static props?
-	RENDERGROUP_OPAQUE, For non transparent/solid entities. For scripted entities, this will have ENTITY:Draw called
-	RENDERGROUP_TRANSLUCENT, For translucent/transparent entities For scripted entities, this will have ENTITY:DrawTranslucent called
-	RENDERGROUP_BOTH, For both translucent/transparent and opaque/solid anim entities For scripted entities, this will have both, ENTITY:Draw and ENTITY:DrawTranslucent called
-	RENDERGROUP_VIEWMODEL, Solid weapon view models
-	RENDERGROUP_VIEWMODEL_TRANSLUCENT, Transparent overlays etc
-	RENDERGROUP_OPAQUE_BRUSH, For brush entities
-	RENDERGROUP_OTHER, Unclassfied. Won't get drawn.
+	VALUE RENDERGROUP_STATIC_HUGE, #Huge static prop, possibly leftover from goldsrc
+	VALUE RENDERGROUP_OPAQUE_HUGE, #Huge opaque entity, possibly leftover from goldsrc
+	VALUE RENDERGROUP_STATIC, #Static props?
+	VALUE RENDERGROUP_OPAQUE, #For non transparent/solid entities. For scripted entities, this will have ENTITY:Draw called
+	VALUE RENDERGROUP_TRANSLUCENT, #For translucent/transparent entities For scripted entities, this will have ENTITY:DrawTranslucent called
+	VALUE RENDERGROUP_BOTH, #For both translucent/transparent and opaque/solid anim entities For scripted entities, this will have both, ENTITY:Draw and ENTITY:DrawTranslucent called
+	VALUE RENDERGROUP_VIEWMODEL, #Solid weapon view models
+	VALUE RENDERGROUP_VIEWMODEL_TRANSLUCENT, #Transparent overlays etc
+	VALUE RENDERGROUP_OPAQUE_BRUSH, #For brush entities
+	VALUE RENDERGROUP_OTHER, #Unclassfied. Won't get drawn.
 }
 
 ENUM RENDERMODE
 {
-	RENDERMODE_NORMAL, Default render mode. Transparently has no effect.
-	RENDERMODE_TRANSCOLOR, Supports transparency.
-	RENDERMODE_TRANSTEXTURE, 
-	RENDERMODE_GLOW, Intended for glowing sprites. Allows transparency, and forces the sprite or model to be rendered unlit. The size of a sprite rendered with Glow is consistent with the screen size (unlike the alternative World Space Glow), making it appear larger at a distance, in comparison to the world. The GlowProxySize keyvalue affects this Render Mode on sprites.
-	RENDERMODE_TRANSALPHA, Enables Alphatesting. Legacy port from Goldsource. Obsolete in Source due to Alphatesting being handled in materials. Does not allow transparency. Use this to make alpha of Color work for your entity. For players, it must be set for their active weapon aswell.
-	RENDERMODE_TRANSADD, Add the material's color values to the existing image, instead of performing a multiplication. Sprites will appear through world geometry and the sprite/model will always brighten the world. Allows transparency.
-	RENDERMODE_ENVIROMENTAL, Causes the material to be not be drawn at all, similarly to Don't Render.
-	RENDERMODE_TRANSADDFRAMEBLEND, Functions like Additive, but also blends between animation frames. Requires the material to have a functioning animating texture. Allows transparency.
-	RENDERMODE_TRANSALPHADD, Functions similarly to Additive, except that the alpha channel controls the opacity of the sprite. An example of use is for dark sprites, with an example material being sprites/strider_blackball.vmt.
-	RENDERMODE_WORLDGLOW, Functions similarly to Glow, with the exception that the size of the sprite is relative to the world rather than the screen. The GlowProxySize keyvalue affects this Render Mode on sprites.
-	RENDERMODE_NONE, The entity is still being drawn and networked albeit invisible, therefore not making this Render Mode ideal for performance reasons. To completely avoid drawing and networking an entity, see EF_NODRAW.
+	VALUE RENDERMODE_NORMAL, #Default render mode. Transparently has no effect.
+	VALUE RENDERMODE_TRANSCOLOR, #Supports transparency.
+	VALUE RENDERMODE_TRANSTEXTURE 
+	VALUE RENDERMODE_GLOW, #Intended for glowing sprites. Allows transparency, and forces the sprite or model to be rendered unlit. The size of a sprite rendered with Glow is consistent with the screen size (unlike the alternative World Space Glow), making it appear larger at a distance, in comparison to the world. The GlowProxySize keyvalue affects this Render Mode on sprites.
+	VALUE RENDERMODE_TRANSALPHA, #Enables Alphatesting. Legacy port from Goldsource. Obsolete in Source due to Alphatesting being handled in materials. Does not allow transparency. Use this to make alpha of Color work for your entity. For players, it must be set for their active weapon aswell.
+	VALUE RENDERMODE_TRANSADD, #Add the material's color values to the existing image, instead of performing a multiplication. Sprites will appear through world geometry and the sprite/model will always brighten the world. Allows transparency.
+	VALUE RENDERMODE_ENVIROMENTAL, #Causes the material to be not be drawn at all, similarly to Don't Render.
+	VALUE RENDERMODE_TRANSADDFRAMEBLEND, #Functions like Additive, but also blends between animation frames. Requires the material to have a functioning animating texture. Allows transparency.
+	VALUE RENDERMODE_TRANSALPHADD, #Functions similarly to Additive, except that the alpha channel controls the opacity of the sprite. An example of use is for dark sprites, with an example material being sprites/strider_blackball.vmt.
+	VALUE RENDERMODE_WORLDGLOW, #Functions similarly to Glow, with the exception that the size of the sprite is relative to the world rather than the screen. The GlowProxySize keyvalue affects this Render Mode on sprites.
+	VALUE RENDERMODE_NONE, #The entity is still being drawn and networked albeit invisible, therefore not making this Render Mode ideal for performance reasons. To completely avoid drawing and networking an entity, see EF_NODRAW.
 }
 
-ENUM kRenderFx, Used by Entity:SetRenderFX and returned by Entity:GetRenderFX.
+ENUM kRenderFx, #Used by Entity:SetRenderFX and returned by Entity:GetRenderFX.
 {
-	kRenderFxNone, None. No change.
-	kRenderFxPulseSlow, Slowly pulses the entitys transparency, +-15 to the current alpha.
-	kRenderFxPulseFast, Quickly pulses the entitys transparency, +-15 to the current alpha.
-	kRenderFxPulseSlowWide, Slowly pulses the entitys transparency, +-60 to the current alpha.
-	kRenderFxPulseFastWide, Quickly pulses the entitys transparency, +-60 to the current alpha.
-	kRenderFxFadeSlow, Slowly fades away the entity, making it completely invisible. Starts from whatever alpha the entity currently has set.
-	kRenderFxFadeFast, Quickly fades away the entity, making it completely invisible. Starts from whatever alpha the entity currently has set.
-	kRenderFxSolidSlow, Slowly solidifies the entity, making it fully opaque. Starts from whatever alpha the entity currently has set.
-	kRenderFxSolidFast, Quickly solidifies the entity, making it fully opaque. Starts from whatever alpha the entity currently has set.
-	kRenderFxStrobeSlow, Slowly switches the entitys transparency between its alpha and 0.
-	kRenderFxStrobeFast, Quickly switches the entitys transparency between its alpha and 0.
-	kRenderFxStrobeFaster, Very quickly switches the entitys transparency between its alpha and 0.
-	kRenderFxFlickerSlow, Same as Strobe Slow, but the interval is more randomized.
-	kRenderFxFlickerFast, Same as Strobe Fast, but the interval is more randomized.
-	kRenderFxNoDissipation, 
-	kRenderFxDistort, Flickers ( randomizes ) the entitys transparency
-	kRenderFxHologram, Same as Distort, but fades the entity away the farther you are from it.
-	kRenderFxExplode, 
-	kRenderFxGlowShell, 
-	kRenderFxClampMinScale, 
-	kRenderFxEnvRain, 
-	kRenderFxEnvSnow, 
-	kRenderFxSpotlight, 
-	kRenderFxRagdoll, 
-	kRenderFxPulseFastWider, Quickly pulses the entitys transparency, from 0 to 255.
+	VALUE kRenderFxNone, #None. No change.
+	VALUE kRenderFxPulseSlow, #Slowly pulses the entitys transparency, +-15 to the current alpha.
+	VALUE kRenderFxPulseFast, #Quickly pulses the entitys transparency, +-15 to the current alpha.
+	VALUE kRenderFxPulseSlowWide, #Slowly pulses the entitys transparency, +-60 to the current alpha.
+	VALUE kRenderFxPulseFastWide, #Quickly pulses the entitys transparency, +-60 to the current alpha.
+	VALUE kRenderFxFadeSlow, #Slowly fades away the entity, making it completely invisible. Starts from whatever alpha the entity currently has set.
+	VALUE kRenderFxFadeFast, #Quickly fades away the entity, making it completely invisible. Starts from whatever alpha the entity currently has set.
+	VALUE kRenderFxSolidSlow, #Slowly solidifies the entity, making it fully opaque. Starts from whatever alpha the entity currently has set.
+	VALUE kRenderFxSolidFast, #Quickly solidifies the entity, making it fully opaque. Starts from whatever alpha the entity currently has set.
+	VALUE kRenderFxStrobeSlow, #Slowly switches the entitys transparency between its alpha and 0.
+	VALUE kRenderFxStrobeFast, #Quickly switches the entitys transparency between its alpha and 0.
+	VALUE kRenderFxStrobeFaster, #Very quickly switches the entitys transparency between its alpha and 0.
+	VALUE kRenderFxFlickerSlow, #Same as Strobe Slow, but the interval is more randomized.
+	VALUE kRenderFxFlickerFast, #Same as Strobe Fast, but the interval is more randomized.
+	VALUE kRenderFxNoDissipation 
+	VALUE kRenderFxDistort, #Flickers ( randomizes ) the entitys transparency
+	VALUE kRenderFxHologram, #Same as Distort, but fades the entity away the farther you are from it.
+	VALUE kRenderFxExplode 
+	VALUE kRenderFxGlowShell 
+	VALUE kRenderFxClampMinScale 
+	VALUE kRenderFxEnvRain 
+	VALUE kRenderFxEnvSnow 
+	VALUE kRenderFxSpotlight 
+	VALUE kRenderFxRagdoll 
+	VALUE kRenderFxPulseFastWider, #Quickly pulses the entitys transparency, from 0 to 255.
 }
 
-ENUM MATERIAL, Enumerations used by mesh.Begin. Clientside only.
+ENUM MATERIAL, #Enumerations used by mesh.Begin. Clientside only.
 {
-	MATERIAL_LINES, 
-	MATERIAL_LINE_LOOP, 
-	MATERIAL_LINE_STRIP, 
-	MATERIAL_POINTS, 
-	MATERIAL_POLYGON, 
-	MATERIAL_QUADS, 
-	MATERIAL_TRIANGLES, 
-	MATERIAL_TRIANGLE_STRIP
+	VALUE MATERIAL_LINES 
+	VALUE MATERIAL_LINE_LOOP 
+	VALUE MATERIAL_LINE_STRIP 
+	VALUE MATERIAL_POINTS 
+	VALUE MATERIAL_POLYGON 
+	VALUE MATERIAL_QUADS 
+	VALUE MATERIAL_TRIANGLES 
+	VALUE MATERIAL_TRIANGLE_STRIP
 }
 
-ENUM MATERIAL_CULLMODE, Enumerations used by render.CullMode. Clientside only.
+ENUM MATERIAL_CULLMODE, #Enumerations used by render.CullMode. Clientside only.
 {
-	MATERIAL_CULLMODE_CCW, Counter clock wise cull mode
-	MATERIAL_CULLMODE_CW, Clock wise cull mode
+	VALUE MATERIAL_CULLMODE_CCW, #Counter clock wise cull mode
+	VALUE MATERIAL_CULLMODE_CW, #Clock wise cull mode
 }
 
-ENUM MATERIAL_FOG, Enumerations used by render.GetFogMode and render.FogMode. Clientside only.
+ENUM MATERIAL_FOG, #Enumerations used by render.GetFogMode and render.FogMode. Clientside only.
 {
-	MATERIAL_FOG_NONE, No fog
-	MATERIAL_FOG_LINEAR, Linear fog
-	MATERIAL_FOG_LINEAR_BELOW_FOG_Z, For use in conjunction with render.SetFogZ. Does not work if start distance is bigger than end distance. Ignores density setting. Seems to be broken? Used for underwater fog by the engine.
+	VALUE MATERIAL_FOG_NONE, #No fog
+	VALUE MATERIAL_FOG_LINEAR, #Linear fog
+	VALUE MATERIAL_FOG_LINEAR_BELOW_FOG_Z, #For use in conjunction with render.SetFogZ. Does not work if start distance is bigger than end distance. Ignores density setting. Seems to be broken? Used for underwater fog by the engine.
 }
 
-ENUM MATERIAL_LIGHT, Enumerations used by render.SetLocalModelLights. Clientside only.
+ENUM MATERIAL_LIGHT, #Enumerations used by render.SetLocalModelLights. Clientside only.
 {
-	MATERIAL_LIGHT_DISABLE, No light
-	MATERIAL_LIGHT_POINT, Point light
-	MATERIAL_LIGHT_DIRECTIONAL, Directional light
-	MATERIAL_LIGHT_SPOT, Spot light
+	VALUE MATERIAL_LIGHT_DISABLE, #No light
+	VALUE MATERIAL_LIGHT_POINT, #Point light
+	VALUE MATERIAL_LIGHT_DIRECTIONAL, #Directional light
+	VALUE MATERIAL_LIGHT_SPOT, #Spot light
 }
 
-ENUM MATERIAL_RT_DEPTH, Enumerations used by GetRenderTargetEx. Clientside only.
+ENUM MATERIAL_RT_DEPTH, #Enumerations used by GetRenderTargetEx. Clientside only.
 {
-	MATERIAL_RT_DEPTH_SHARED, Do not create a depth-stencil buffer. Use the default depth-stencil buffer if used as render target 0.
-	MATERIAL_RT_DEPTH_SEPARATE, Create a depth-stencil buffer. Use the created depth-stencil buffer if used as render target 0.
-	MATERIAL_RT_DEPTH_NONE, Do not create a depth-stencil buffer. Disable depth and stencil buffer usage if used as render target 0.
-	MATERIAL_RT_DEPTH_ONLY, Create a depth-stencil buffer. Use the created depth-stencil buffer if used as render target 0. Creates a color texture despite the name. Seems to behave the same as MATERIAL_RT_DEPTH_SEPARATE.
+	VALUE MATERIAL_RT_DEPTH_SHARED, #Do not create a depth-stencil buffer. Use the default depth-stencil buffer if used as render target 0.
+	VALUE MATERIAL_RT_DEPTH_SEPARATE, #Create a depth-stencil buffer. Use the created depth-stencil buffer if used as render target 0.
+	VALUE MATERIAL_RT_DEPTH_NONE, #Do not create a depth-stencil buffer. Disable depth and stencil buffer usage if used as render target 0.
+	VALUE MATERIAL_RT_DEPTH_ONLY, #Create a depth-stencil buffer. Use the created depth-stencil buffer if used as render target 0. Creates a color texture despite the name. Seems to behave the same as MATERIAL_RT_DEPTH_SEPARATE.
 }
 
 ENUM STENCIL
 {
-	STENCIL_NEVER, Never passes.
-	STENCIL_LESS, Passes where the reference value is less than the stencil value.
-	STENCIL_EQUAL, Passes where the reference value is equal to the stencil value.
-	STENCIL_LESSEQUAL, Passes where the reference value is less than or equal to the stencil value.
-	STENCIL_GREATER, Passes where the reference value is greater than the stencil value.
-	STENCIL_NOTEQUAL, Passes where the reference value is not equal to the stencil value.
-	STENCIL_GREATEREQUAL, Passes where the reference value is greater than or equal to the stencil value.
-	STENCIL_ALWAYS, Always passes.
-	STENCIL_KEEP, Preserves the existing stencil buffer value.
-	STENCIL_ZERO, Sets the value in the stencil buffer to 0.
-	STENCIL_REPLACE, Sets the value in the stencil buffer to the reference value, set using render.SetStencilReferenceValue.
-	STENCIL_INCRSAT, Increments the value in the stencil buffer by 1, clamping the result.
-	STENCIL_DECRSAT, Decrements the value in the stencil buffer by 1, clamping the result.
-	STENCIL_INVERT, Inverts the value in the stencil buffer.
-	STENCIL_INCR, Increments the value in the stencil buffer by 1, wrapping around on overflow.
-	STENCIL_DECR, Decrements the value in the stencil buffer by 1, wrapping around on overflow.
+	VALUE STENCIL_NEVER, #Never passes.
+	VALUE STENCIL_LESS, #Passes where the reference value is less than the stencil value.
+	VALUE STENCIL_EQUAL, #Passes where the reference value is equal to the stencil value.
+	VALUE STENCIL_LESSEQUAL, #Passes where the reference value is less than or equal to the stencil value.
+	VALUE STENCIL_GREATER, #Passes where the reference value is greater than the stencil value.
+	VALUE STENCIL_NOTEQUAL, #Passes where the reference value is not equal to the stencil value.
+	VALUE STENCIL_GREATEREQUAL, #Passes where the reference value is greater than or equal to the stencil value.
+	VALUE STENCIL_ALWAYS, #Always passes.
+	VALUE STENCIL_KEEP, #Preserves the existing stencil buffer value.
+	VALUE STENCIL_ZERO, #Sets the value in the stencil buffer to 0.
+	VALUE STENCIL_REPLACE, #Sets the value in the stencil buffer to the reference value, set using render.SetStencilReferenceValue.
+	VALUE STENCIL_INCRSAT, #Increments the value in the stencil buffer by 1, clamping the result.
+	VALUE STENCIL_DECRSAT, #Decrements the value in the stencil buffer by 1, clamping the result.
+	VALUE STENCIL_INVERT, #Inverts the value in the stencil buffer.
+	VALUE STENCIL_INCR, #Increments the value in the stencil buffer by 1, wrapping around on overflow.
+	VALUE STENCIL_DECR, #Decrements the value in the stencil buffer by 1, wrapping around on overflow.
 }
 
-ENUM STENCILCOMPARISONFUNCTION, Enumerations for use with render.SetStencilCompareFunction.
+ENUM STENCILCOMPARISONFUNCTION, #Enumerations for use with render.SetStencilCompareFunction.
 {
-	STENCILCOMPARISONFUNCTION_NEVER, Never passes.
-	STENCILCOMPARISONFUNCTION_LESS, Passes where the reference value is less than the stencil value.
-	STENCILCOMPARISONFUNCTION_EQUAL, Passes where the reference value is equal to the stencil value.
-	STENCILCOMPARISONFUNCTION_LESSEQUAL, Passes where the reference value is less than or equal to the stencil value.
-	STENCILCOMPARISONFUNCTION_GREATER, Passes where the reference value is greater than the stencil value.
-	STENCILCOMPARISONFUNCTION_NOTEQUAL, Passes where the reference value is not equal to the stencil value.
-	STENCILCOMPARISONFUNCTION_GREATEREQUAL, Passes where the reference value is greater than or equal to the stencil value.
-	STENCILCOMPARISONFUNCTION_ALWAYS, Always passes.
+	VALUE STENCILCOMPARISONFUNCTION_NEVER, #Never passes.
+	VALUE STENCILCOMPARISONFUNCTION_LESS, #Passes where the reference value is less than the stencil value.
+	VALUE STENCILCOMPARISONFUNCTION_EQUAL, #Passes where the reference value is equal to the stencil value.
+	VALUE STENCILCOMPARISONFUNCTION_LESSEQUAL, #Passes where the reference value is less than or equal to the stencil value.
+	VALUE STENCILCOMPARISONFUNCTION_GREATER, #Passes where the reference value is greater than the stencil value.
+	VALUE STENCILCOMPARISONFUNCTION_NOTEQUAL, #Passes where the reference value is not equal to the stencil value.
+	VALUE STENCILCOMPARISONFUNCTION_GREATEREQUAL, #Passes where the reference value is greater than or equal to the stencil value.
+	VALUE STENCILCOMPARISONFUNCTION_ALWAYS, #Always passes.
 }
 
-ENUM STENCILOPERATION, Enumerations for use with render.SetStencilPassOperation, render.SetStencilFailOperation and render.SetStencilZFailOperation. Clientside only.
+ENUM STENCILOPERATION, #Enumerations for use with render.SetStencilPassOperation, render.SetStencilFailOperation and render.SetStencilZFailOperation. Clientside only.
 {
-	STENCILOPERATION_KEEP, Preserves the existing stencil buffer value.
-	STENCILOPERATION_ZERO, Sets the value in the stencil buffer to 0.
-	STENCILOPERATION_REPLACE, Sets the value in the stencil buffer to the reference value, set using render.SetStencilReferenceValue.
-	STENCILOPERATION_INCRSAT, Increments the value in the stencil buffer by 1, clamping the result.
-	STENCILOPERATION_DECRSAT, Decrements the value in the stencil buffer by 1, clamping the result.
-	STENCILOPERATION_INVERT, Inverts the value in the stencil buffer.
-	STENCILOPERATION_INCR, Increments the value in the stencil buffer by 1, wrapping around on overflow.
-	STENCILOPERATION_DECR, Decrements the value in the stencil buffer by 1, wrapping around on overflow.
+	VALUE STENCILOPERATION_KEEP, #Preserves the existing stencil buffer value.
+	VALUE STENCILOPERATION_ZERO, #Sets the value in the stencil buffer to 0.
+	VALUE STENCILOPERATION_REPLACE, #Sets the value in the stencil buffer to the reference value, set using render.SetStencilReferenceValue.
+	VALUE STENCILOPERATION_INCRSAT, #Increments the value in the stencil buffer by 1, clamping the result.
+	VALUE STENCILOPERATION_DECRSAT, #Decrements the value in the stencil buffer by 1, clamping the result.
+	VALUE STENCILOPERATION_INVERT, #Inverts the value in the stencil buffer.
+	VALUE STENCILOPERATION_INCR, #Increments the value in the stencil buffer by 1, wrapping around on overflow.
+	VALUE STENCILOPERATION_DECR, #Decrements the value in the stencil buffer by 1, wrapping around on overflow.
 }

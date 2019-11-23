@@ -1,27 +1,27 @@
-ENUM NavDir, Enumerations used by CNavArea methods.
+ENUM NavDir, #Enumerations used by CNavArea methods.
 {
-	NORTH, North from given CNavArea
-	EAST, East from given CNavArea
-	SOUTH, South from given CNavArea
-	WEST, West from given CNavArea
+	VALUE NORTH, #North from given CNavArea
+	VALUE EAST, #East from given CNavArea
+	VALUE SOUTH, #South from given CNavArea
+	VALUE WEST, #West from given CNavArea
 }
-ENUM NavCorner, Enumerations used by CNavArea methods.
+ENUM NavCorner, #Enumerations used by CNavArea methods.
 {
-	NORTH_WEST, North West Corner
-	NORTH_EAST, North East Corner
-	SOUTH_EAST, South East Corner
-	SOUTH_WEST, South West Corner
-	NUM_CORNERS, 4
+	VALUE NORTH_WEST, #North West Corner
+	VALUE NORTH_EAST, #North East Corner
+	VALUE SOUTH_EAST, #South East Corner
+	VALUE SOUTH_WEST, #South West Corner
+	VALUE NUM_CORNERS, #4
 }
-ENUM NavTraverseType, Enumerations used by CNavArea:GetParentHow.
+ENUM NavTraverseType, #Enumerations used by CNavArea:GetParentHow.
 {
-	GO_NORTH,
-	GO_EAST,
-	GO_SOUTH,
-	GO_WEST,
-	GO_LADDER_UP,
-	GO_LADDER_DOWN,
-	GO_JUMP,
-	GO_ELEVATOR_UP,
-	GO_ELEVATOR_DOWN,
+	VALUE GO_NORTH
+	VALUE GO_EAST
+	VALUE GO_SOUTH
+	VALUE GO_WEST
+	VALUE GO_LADDER_UP
+	VALUE GO_LADDER_DOWN
+	VALUE GO_JUMP
+	VALUE GO_ELEVATOR_UP
+	VALUE GO_ELEVATOR_DOWN
 }

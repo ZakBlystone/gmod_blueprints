@@ -1,9 +1,9 @@
-ENUM DOCK, Enumerations used by Panel:Dock.
+ENUM DOCK, #Enumerations used by Panel:Dock.
 {
-	NODOCK, Don't dock
-	FILL, Fill parent
-	LEFT, Dock to the left
-	RIGHT, Dock to the right
-	TOP, Dock to the top
-	BOTTOM, Dock to the bottom
+	VALUE NODOCK, #Don't dock
+	VALUE FILL, #Fill parent
+	VALUE LEFT, #Dock to the left
+	VALUE RIGHT, #Dock to the right
+	VALUE TOP, #Dock to the top
+	VALUE BOTTOM, #Dock to the bottom
 }

@@ -39,6 +39,12 @@ function meta:NewPin(name, type, default, flags, ex, desc)
 
 end
 
+function meta:SetName(name)
+
+	self.name = name
+
+end
+
 function meta:GetName()
 
 	return self.name

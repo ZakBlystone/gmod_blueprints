@@ -1,352 +1,352 @@
 ENUM IN
 {
-	IN_ATTACK, +attack bound key ( Default: Left Mouse Button )
-	IN_JUMP, +jump bound key ( Default: Space )
-	IN_DUCK, +duck bound key ( Default: CTRL )
-	IN_FORWARD, +forward bound key ( Default: W )
-	IN_BACK, +back bound key ( Default: S )
-	IN_USE, +use bound key ( Default: E )
-	IN_CANCEL, 
-	IN_LEFT, +left bound key ( Look left )
-	IN_RIGHT, +right bound key ( Look right )
-	IN_MOVELEFT, +moveleft bound key ( Default: A )
-	IN_MOVERIGHT, +moveright bound key ( Default: D )
-	IN_ATTACK2, +attack2 bound key ( Default: Right Mouse Button )
-	IN_RUN, 
-	IN_RELOAD, +reload bound key ( Default: R )
-	IN_ALT1, +alt1 bound key
-	IN_ALT2, +alt2 bound key
-	IN_SCORE, +showscores bound key ( Default: Tab )
-	IN_SPEED, +speed bound key ( Default: Shift )
-	IN_WALK, +walk bound key ( Slow walk )
-	IN_ZOOM, +zoom bound key ( Suit Zoom )
-	IN_WEAPON1, For use in weapons. Set in the physgun when scrolling an object away from you.
-	IN_WEAPON2, For use in weapons. Set in the physgun when scrolling an object towards you.
-	IN_BULLRUSH, 
-	IN_GRENADE1, +grenade1 bound key
-	IN_GRENADE2, +grenade2 bound key
+	VALUE IN_ATTACK +attack bound key ( Default: Left Mouse Button )
+	VALUE IN_JUMP +jump bound key ( Default: Space )
+	VALUE IN_DUCK +duck bound key ( Default: CTRL )
+	VALUE IN_FORWARD +forward bound key ( Default: W )
+	VALUE IN_BACK +back bound key ( Default: S )
+	VALUE IN_USE +use bound key ( Default: E )
+	VALUE IN_CANCEL 
+	VALUE IN_LEFT +left bound key ( Look left )
+	VALUE IN_RIGHT +right bound key ( Look right )
+	VALUE IN_MOVELEFT +moveleft bound key ( Default: A )
+	VALUE IN_MOVERIGHT +moveright bound key ( Default: D )
+	VALUE IN_ATTACK2 +attack2 bound key ( Default: Right Mouse Button )
+	VALUE IN_RUN 
+	VALUE IN_RELOAD +reload bound key ( Default: R )
+	VALUE IN_ALT1 +alt1 bound key
+	VALUE IN_ALT2 +alt2 bound key
+	VALUE IN_SCORE +showscores bound key ( Default: Tab )
+	VALUE IN_SPEED +speed bound key ( Default: Shift )
+	VALUE IN_WALK +walk bound key ( Slow walk )
+	VALUE IN_ZOOM +zoom bound key ( Suit Zoom )
+	VALUE IN_WEAPON1, #For use in weapons. Set in the physgun when scrolling an object away from you.
+	VALUE IN_WEAPON2, #For use in weapons. Set in the physgun when scrolling an object towards you.
+	VALUE IN_BULLRUSH 
+	VALUE IN_GRENADE1 +grenade1 bound key
+	VALUE IN_GRENADE2 +grenade2 bound key
 }
 
 ENUM BUTTON_CODE
 {
-	BUTTON_CODE_INVALID, -1, 
-	BUTTON_CODE_NONE, 
-	BUTTON_CODE_LAST, 
-	BUTTON_CODE_COUNT, 
-	KEY_FIRST, 
-	KEY_NONE, 
-	KEY_0, Normal number 0 key
-	KEY_1, Normal number 1 key
-	KEY_2, Normal number 2 key
-	KEY_3, Normal number 3 key
-	KEY_4, Normal number 4 key
-	KEY_5, Normal number 5 key
-	KEY_6, Normal number 6 key
-	KEY_7, Normal number 7 key
-	KEY_8, Normal number 8 key
-	KEY_9, Normal number 9 key
-	KEY_A, 
-	KEY_B, 
-	KEY_C, 
-	KEY_D, 
-	KEY_E, 
-	KEY_F, 
-	KEY_G, 
-	KEY_H, 
-	KEY_I, 
-	KEY_J, 
-	KEY_K, 
-	KEY_L, 
-	KEY_M, 
-	KEY_N, 
-	KEY_O, 
-	KEY_P, 
-	KEY_Q, 
-	KEY_R, 
-	KEY_S, 
-	KEY_T, 
-	KEY_U, 
-	KEY_V, 
-	KEY_W, 
-	KEY_X, 
-	KEY_Y, 
-	KEY_Z, 
-	KEY_PAD_0, Keypad number 0 key
-	KEY_PAD_1, Keypad number 1 key
-	KEY_PAD_2, Keypad number 2 key
-	KEY_PAD_3, Keypad number 3 key
-	KEY_PAD_4, Keypad number 4 key
-	KEY_PAD_5, Keypad number 5 key
-	KEY_PAD_6, Keypad number 6 key
-	KEY_PAD_7, Keypad number 7 key
-	KEY_PAD_8, Keypad number 8 key
-	KEY_PAD_9, Keypad number 9 key
-	KEY_PAD_DIVIDE, Keypad division/slash key (/)
-	KEY_PAD_MULTIPLY, Keypad asterisk key (*)
-	KEY_PAD_MINUS, Keypad minus key
-	KEY_PAD_PLUS, Keypad plus key
-	KEY_PAD_ENTER, Keypad enter key
-	KEY_PAD_DECIMAL, Keypad dot key (.)
-	KEY_LBRACKET, 
-	KEY_RBRACKET, 
-	KEY_SEMICOLON, 
-	KEY_APOSTROPHE, 
-	KEY_BACKQUOTE, 
-	KEY_COMMA, 
-	KEY_PERIOD, 
-	KEY_SLASH, 
-	KEY_BACKSLASH, 
-	KEY_MINUS, 
-	KEY_EQUAL, 
-	KEY_ENTER, 
-	KEY_SPACE, 
-	KEY_BACKSPACE, 
-	KEY_TAB, 
-	KEY_CAPSLOCK, 
-	KEY_NUMLOCK, 
-	KEY_ESCAPE, 
-	KEY_SCROLLLOCK, 
-	KEY_INSERT, 
-	KEY_DELETE, 
-	KEY_HOME, 
-	KEY_END, 
-	KEY_PAGEUP, 
-	KEY_PAGEDOWN, 
-	KEY_BREAK, 
-	KEY_LSHIFT, The left Shift key, has been seen to be triggered by Right Shift in PANEL:OnKeyCodePressed
-	KEY_RSHIFT, 
-	KEY_LALT, 
-	KEY_RALT, 
-	KEY_LCONTROL, 
-	KEY_RCONTROL, 
-	KEY_LWIN, The left Windows key or the Command key on Mac OSX
-	KEY_RWIN, The right Windows key or the Command key on Mac OSX
-	KEY_APP, 
-	KEY_UP, 
-	KEY_LEFT, 
-	KEY_DOWN, 
-	KEY_RIGHT, 
-	KEY_F1, 
-	KEY_F2, 
-	KEY_F3, 
-	KEY_F4, 
-	KEY_F5, 
-	KEY_F6, 
-	KEY_F7, 
-	KEY_F8, 
-	KEY_F9, 
-	KEY_F10, 
-	KEY_F11, 
-	KEY_F12, 
-	KEY_CAPSLOCKTOGGLE, 
-	KEY_NUMLOCKTOGGLE, 
-	KEY_LAST, 
-	KEY_SCROLLLOCKTOGGLE, 
-	KEY_COUNT, 
-	KEY_XBUTTON_A, 
-	KEY_XBUTTON_B, 
-	KEY_XBUTTON_X, 
-	KEY_XBUTTON_Y, 
-	KEY_XBUTTON_LEFT_SHOULDER, 
-	KEY_XBUTTON_RIGHT_SHOULDER, 
-	KEY_XBUTTON_BACK, 
-	KEY_XBUTTON_START, 
-	KEY_XBUTTON_STICK1, 
-	KEY_XBUTTON_STICK2, 
-	KEY_XBUTTON_UP, 
-	KEY_XBUTTON_RIGHT, 
-	KEY_XBUTTON_DOWN, 
-	KEY_XBUTTON_LEFT, 
-	KEY_XSTICK1_RIGHT, 
-	KEY_XSTICK1_LEFT, 
-	KEY_XSTICK1_DOWN, 
-	KEY_XSTICK1_UP, 
-	KEY_XBUTTON_LTRIGGER, 
-	KEY_XBUTTON_RTRIGGER, 
-	KEY_XSTICK2_RIGHT, 
-	KEY_XSTICK2_LEFT, 
-	KEY_XSTICK2_DOWN, 
-	KEY_XSTICK2_UP, 
-	MOUSE_FIRST, First mouse button
-	MOUSE_LEFT, Left mouse button
-	MOUSE_RIGHT, Right mouse button
-	MOUSE_MIDDLE, Middle mouse button, aka the wheel press
-	MOUSE_4, Mouse 4 button ( Sometimes, mouse wheel tilt left )
-	MOUSE_5, Mouse 5 button ( Sometimes, mouse wheel tilt right )
-	MOUSE_WHEEL_UP, Mouse wheel scroll up
-	MOUSE_WHEEL_DOWN, Mouse wheel scroll down
-	MOUSE_LAST, Last mouse button
-	MOUSE_COUNT, Mouse button count
-	JOYSTICK_FIRST, 
-	JOYSTICK_FIRST_BUTTON, Joystick buttons are in this range, but don't have individual enum names.
-	JOYSTICK_LAST_BUTTON, Joystick buttons are in this range, but don't have individual enum names.
-	JOYSTICK_FIRST_POV_BUTTON, Joystick POV buttons are in this range, but don't have individual enum names.
-	JOYSTICK_LAST_POV_BUTTON, Joystick POV buttons are in this range, but don't have individual enum names.
-	JOYSTICK_FIRST_AXIS_BUTTON, Joystick axis buttons are in this range, but don't have individual enum names.
-	JOYSTICK_LAST_AXIS_BUTTON, Joystick axis buttons are in this range, but don't have individual enum names.
-	JOYSTICK_LAST, 
+	VALUE BUTTON_CODE_INVALID -1, 
+	VALUE BUTTON_CODE_NONE 
+	VALUE BUTTON_CODE_LAST 
+	VALUE BUTTON_CODE_COUNT 
+	VALUE KEY_FIRST 
+	VALUE KEY_NONE 
+	VALUE KEY_0, #Normal number 0 key
+	VALUE KEY_1, #Normal number 1 key
+	VALUE KEY_2, #Normal number 2 key
+	VALUE KEY_3, #Normal number 3 key
+	VALUE KEY_4, #Normal number 4 key
+	VALUE KEY_5, #Normal number 5 key
+	VALUE KEY_6, #Normal number 6 key
+	VALUE KEY_7, #Normal number 7 key
+	VALUE KEY_8, #Normal number 8 key
+	VALUE KEY_9, #Normal number 9 key
+	VALUE KEY_A 
+	VALUE KEY_B 
+	VALUE KEY_C 
+	VALUE KEY_D 
+	VALUE KEY_E 
+	VALUE KEY_F 
+	VALUE KEY_G 
+	VALUE KEY_H 
+	VALUE KEY_I 
+	VALUE KEY_J 
+	VALUE KEY_K 
+	VALUE KEY_L 
+	VALUE KEY_M 
+	VALUE KEY_N 
+	VALUE KEY_O 
+	VALUE KEY_P 
+	VALUE KEY_Q 
+	VALUE KEY_R 
+	VALUE KEY_S 
+	VALUE KEY_T 
+	VALUE KEY_U 
+	VALUE KEY_V 
+	VALUE KEY_W 
+	VALUE KEY_X 
+	VALUE KEY_Y 
+	VALUE KEY_Z 
+	VALUE KEY_PAD_0, #Keypad number 0 key
+	VALUE KEY_PAD_1, #Keypad number 1 key
+	VALUE KEY_PAD_2, #Keypad number 2 key
+	VALUE KEY_PAD_3, #Keypad number 3 key
+	VALUE KEY_PAD_4, #Keypad number 4 key
+	VALUE KEY_PAD_5, #Keypad number 5 key
+	VALUE KEY_PAD_6, #Keypad number 6 key
+	VALUE KEY_PAD_7, #Keypad number 7 key
+	VALUE KEY_PAD_8, #Keypad number 8 key
+	VALUE KEY_PAD_9, #Keypad number 9 key
+	VALUE KEY_PAD_DIVIDE, #Keypad division/slash key (/)
+	VALUE KEY_PAD_MULTIPLY, #Keypad asterisk key (*)
+	VALUE KEY_PAD_MINUS, #Keypad minus key
+	VALUE KEY_PAD_PLUS, #Keypad plus key
+	VALUE KEY_PAD_ENTER, #Keypad enter key
+	VALUE KEY_PAD_DECIMAL, #Keypad dot key (.)
+	VALUE KEY_LBRACKET 
+	VALUE KEY_RBRACKET 
+	VALUE KEY_SEMICOLON 
+	VALUE KEY_APOSTROPHE 
+	VALUE KEY_BACKQUOTE 
+	VALUE KEY_COMMA 
+	VALUE KEY_PERIOD 
+	VALUE KEY_SLASH 
+	VALUE KEY_BACKSLASH 
+	VALUE KEY_MINUS 
+	VALUE KEY_EQUAL 
+	VALUE KEY_ENTER 
+	VALUE KEY_SPACE 
+	VALUE KEY_BACKSPACE 
+	VALUE KEY_TAB 
+	VALUE KEY_CAPSLOCK 
+	VALUE KEY_NUMLOCK 
+	VALUE KEY_ESCAPE 
+	VALUE KEY_SCROLLLOCK 
+	VALUE KEY_INSERT 
+	VALUE KEY_DELETE 
+	VALUE KEY_HOME 
+	VALUE KEY_END 
+	VALUE KEY_PAGEUP 
+	VALUE KEY_PAGEDOWN 
+	VALUE KEY_BREAK 
+	VALUE KEY_LSHIFT, #The left Shift key, has been seen to be triggered by Right Shift in PANEL:OnKeyCodePressed
+	VALUE KEY_RSHIFT 
+	VALUE KEY_LALT 
+	VALUE KEY_RALT 
+	VALUE KEY_LCONTROL 
+	VALUE KEY_RCONTROL 
+	VALUE KEY_LWIN, #The left Windows key or the Command key on Mac OSX
+	VALUE KEY_RWIN, #The right Windows key or the Command key on Mac OSX
+	VALUE KEY_APP 
+	VALUE KEY_UP 
+	VALUE KEY_LEFT 
+	VALUE KEY_DOWN 
+	VALUE KEY_RIGHT 
+	VALUE KEY_F1 
+	VALUE KEY_F2 
+	VALUE KEY_F3 
+	VALUE KEY_F4 
+	VALUE KEY_F5 
+	VALUE KEY_F6 
+	VALUE KEY_F7 
+	VALUE KEY_F8 
+	VALUE KEY_F9 
+	VALUE KEY_F10 
+	VALUE KEY_F11 
+	VALUE KEY_F12 
+	VALUE KEY_CAPSLOCKTOGGLE 
+	VALUE KEY_NUMLOCKTOGGLE 
+	VALUE KEY_LAST 
+	VALUE KEY_SCROLLLOCKTOGGLE 
+	VALUE KEY_COUNT 
+	VALUE KEY_XBUTTON_A 
+	VALUE KEY_XBUTTON_B 
+	VALUE KEY_XBUTTON_X 
+	VALUE KEY_XBUTTON_Y 
+	VALUE KEY_XBUTTON_LEFT_SHOULDER 
+	VALUE KEY_XBUTTON_RIGHT_SHOULDER 
+	VALUE KEY_XBUTTON_BACK 
+	VALUE KEY_XBUTTON_START 
+	VALUE KEY_XBUTTON_STICK1 
+	VALUE KEY_XBUTTON_STICK2 
+	VALUE KEY_XBUTTON_UP 
+	VALUE KEY_XBUTTON_RIGHT 
+	VALUE KEY_XBUTTON_DOWN 
+	VALUE KEY_XBUTTON_LEFT 
+	VALUE KEY_XSTICK1_RIGHT 
+	VALUE KEY_XSTICK1_LEFT 
+	VALUE KEY_XSTICK1_DOWN 
+	VALUE KEY_XSTICK1_UP 
+	VALUE KEY_XBUTTON_LTRIGGER 
+	VALUE KEY_XBUTTON_RTRIGGER 
+	VALUE KEY_XSTICK2_RIGHT 
+	VALUE KEY_XSTICK2_LEFT 
+	VALUE KEY_XSTICK2_DOWN 
+	VALUE KEY_XSTICK2_UP 
+	VALUE MOUSE_FIRST, #First mouse button
+	VALUE MOUSE_LEFT, #Left mouse button
+	VALUE MOUSE_RIGHT, #Right mouse button
+	VALUE MOUSE_MIDDLE, #Middle mouse button, aka the wheel press
+	VALUE MOUSE_4, #Mouse 4 button ( Sometimes, mouse wheel tilt left )
+	VALUE MOUSE_5, #Mouse 5 button ( Sometimes, mouse wheel tilt right )
+	VALUE MOUSE_WHEEL_UP, #Mouse wheel scroll up
+	VALUE MOUSE_WHEEL_DOWN, #Mouse wheel scroll down
+	VALUE MOUSE_LAST, #Last mouse button
+	VALUE MOUSE_COUNT, #Mouse button count
+	VALUE JOYSTICK_FIRST 
+	VALUE JOYSTICK_FIRST_BUTTON, #Joystick buttons are in this range, but don't have individual enum names.
+	VALUE JOYSTICK_LAST_BUTTON, #Joystick buttons are in this range, but don't have individual enum names.
+	VALUE JOYSTICK_FIRST_POV_BUTTON, #Joystick POV buttons are in this range, but don't have individual enum names.
+	VALUE JOYSTICK_LAST_POV_BUTTON, #Joystick POV buttons are in this range, but don't have individual enum names.
+	VALUE JOYSTICK_FIRST_AXIS_BUTTON, #Joystick axis buttons are in this range, but don't have individual enum names.
+	VALUE JOYSTICK_LAST_AXIS_BUTTON, #Joystick axis buttons are in this range, but don't have individual enum names.
+	VALUE JOYSTICK_LAST 
 }
 
 ENUM KEY
 {
-	KEY_FIRST, 
-	KEY_NONE, 
-	KEY_0, Normal number 0 key
-	KEY_1, Normal number 1 key
-	KEY_2, Normal number 2 key
-	KEY_3, Normal number 3 key
-	KEY_4, Normal number 4 key
-	KEY_5, Normal number 5 key
-	KEY_6, Normal number 6 key
-	KEY_7, Normal number 7 key
-	KEY_8, Normal number 8 key
-	KEY_9, Normal number 9 key
-	KEY_A, 
-	KEY_B, 
-	KEY_C, 
-	KEY_D, 
-	KEY_E, 
-	KEY_F, 
-	KEY_G, 
-	KEY_H, 
-	KEY_I, 
-	KEY_J, 
-	KEY_K, 
-	KEY_L, 
-	KEY_M, 
-	KEY_N, 
-	KEY_O, 
-	KEY_P, 
-	KEY_Q, 
-	KEY_R, 
-	KEY_S, 
-	KEY_T, 
-	KEY_U, 
-	KEY_V, 
-	KEY_W, 
-	KEY_X, 
-	KEY_Y, 
-	KEY_Z, 
-	KEY_PAD_0, Keypad number 0 key
-	KEY_PAD_1, Keypad number 1 key
-	KEY_PAD_2, Keypad number 2 key
-	KEY_PAD_3, Keypad number 3 key
-	KEY_PAD_4, Keypad number 4 key
-	KEY_PAD_5, Keypad number 5 key
-	KEY_PAD_6, Keypad number 6 key
-	KEY_PAD_7, Keypad number 7 key
-	KEY_PAD_8, Keypad number 8 key
-	KEY_PAD_9, Keypad number 9 key
-	KEY_PAD_DIVIDE, Keypad division/slash key (/)
-	KEY_PAD_MULTIPLY, Keypad asterisk key (*)
-	KEY_PAD_MINUS, Keypad minus key
-	KEY_PAD_PLUS, Keypad plus key
-	KEY_PAD_ENTER, Keypad enter key
-	KEY_PAD_DECIMAL, Keypad dot key (.)
-	KEY_LBRACKET, 
-	KEY_RBRACKET, 
-	KEY_SEMICOLON, 
-	KEY_APOSTROPHE, 
-	KEY_BACKQUOTE, 
-	KEY_COMMA, 
-	KEY_PERIOD, 
-	KEY_SLASH, 
-	KEY_BACKSLASH, 
-	KEY_MINUS, 
-	KEY_EQUAL, 
-	KEY_ENTER, 
-	KEY_SPACE, 
-	KEY_BACKSPACE, 
-	KEY_TAB, 
-	KEY_CAPSLOCK, 
-	KEY_NUMLOCK, 
-	KEY_ESCAPE, 
-	KEY_SCROLLLOCK, 
-	KEY_INSERT, 
-	KEY_DELETE, 
-	KEY_HOME, 
-	KEY_END, 
-	KEY_PAGEUP, 
-	KEY_PAGEDOWN, 
-	KEY_BREAK, 
-	KEY_LSHIFT, The left Shift key, has been seen to be triggered by Right Shift in PANEL:OnKeyCodePressed
-	KEY_RSHIFT, 
-	KEY_LALT, 
-	KEY_RALT, 
-	KEY_LCONTROL, 
-	KEY_RCONTROL, 
-	KEY_LWIN, The left Windows key or the Command key on Mac OSX
-	KEY_RWIN, The right Windows key or the Command key on Mac OSX
-	KEY_APP, 
-	KEY_UP, 
-	KEY_LEFT, 
-	KEY_DOWN, 
-	KEY_RIGHT, 
-	KEY_F1, 
-	KEY_F2, 
-	KEY_F3, 
-	KEY_F4, 
-	KEY_F5, 
-	KEY_F6, 
-	KEY_F7, 
-	KEY_F8, 
-	KEY_F9, 
-	KEY_F10, 
-	KEY_F11, 
-	KEY_F12, 
-	KEY_CAPSLOCKTOGGLE, 
-	KEY_NUMLOCKTOGGLE, 
-	KEY_LAST, 
-	KEY_SCROLLLOCKTOGGLE, 
-	KEY_COUNT, 
-	KEY_XBUTTON_A, 
-	KEY_XBUTTON_B, 
-	KEY_XBUTTON_X, 
-	KEY_XBUTTON_Y, 
-	KEY_XBUTTON_LEFT_SHOULDER, 
-	KEY_XBUTTON_RIGHT_SHOULDER, 
-	KEY_XBUTTON_BACK, 
-	KEY_XBUTTON_START, 
-	KEY_XBUTTON_STICK1, 
-	KEY_XBUTTON_STICK2, 
-	KEY_XBUTTON_UP, 
-	KEY_XBUTTON_RIGHT, 
-	KEY_XBUTTON_DOWN, 
-	KEY_XBUTTON_LEFT, 
-	KEY_XSTICK1_RIGHT, 
-	KEY_XSTICK1_LEFT, 
-	KEY_XSTICK1_DOWN, 
-	KEY_XSTICK1_UP, 
-	KEY_XBUTTON_LTRIGGER, 
-	KEY_XBUTTON_RTRIGGER, 
-	KEY_XSTICK2_RIGHT, 
-	KEY_XSTICK2_LEFT, 
-	KEY_XSTICK2_DOWN, 
-	KEY_XSTICK2_UP, 
+	VALUE KEY_FIRST 
+	VALUE KEY_NONE 
+	VALUE KEY_0, #Normal number 0 key
+	VALUE KEY_1, #Normal number 1 key
+	VALUE KEY_2, #Normal number 2 key
+	VALUE KEY_3, #Normal number 3 key
+	VALUE KEY_4, #Normal number 4 key
+	VALUE KEY_5, #Normal number 5 key
+	VALUE KEY_6, #Normal number 6 key
+	VALUE KEY_7, #Normal number 7 key
+	VALUE KEY_8, #Normal number 8 key
+	VALUE KEY_9, #Normal number 9 key
+	VALUE KEY_A 
+	VALUE KEY_B 
+	VALUE KEY_C 
+	VALUE KEY_D 
+	VALUE KEY_E 
+	VALUE KEY_F 
+	VALUE KEY_G 
+	VALUE KEY_H 
+	VALUE KEY_I 
+	VALUE KEY_J 
+	VALUE KEY_K 
+	VALUE KEY_L 
+	VALUE KEY_M 
+	VALUE KEY_N 
+	VALUE KEY_O 
+	VALUE KEY_P 
+	VALUE KEY_Q 
+	VALUE KEY_R 
+	VALUE KEY_S 
+	VALUE KEY_T 
+	VALUE KEY_U 
+	VALUE KEY_V 
+	VALUE KEY_W 
+	VALUE KEY_X 
+	VALUE KEY_Y 
+	VALUE KEY_Z 
+	VALUE KEY_PAD_0, #Keypad number 0 key
+	VALUE KEY_PAD_1, #Keypad number 1 key
+	VALUE KEY_PAD_2, #Keypad number 2 key
+	VALUE KEY_PAD_3, #Keypad number 3 key
+	VALUE KEY_PAD_4, #Keypad number 4 key
+	VALUE KEY_PAD_5, #Keypad number 5 key
+	VALUE KEY_PAD_6, #Keypad number 6 key
+	VALUE KEY_PAD_7, #Keypad number 7 key
+	VALUE KEY_PAD_8, #Keypad number 8 key
+	VALUE KEY_PAD_9, #Keypad number 9 key
+	VALUE KEY_PAD_DIVIDE, #Keypad division/slash key (/)
+	VALUE KEY_PAD_MULTIPLY, #Keypad asterisk key (*)
+	VALUE KEY_PAD_MINUS, #Keypad minus key
+	VALUE KEY_PAD_PLUS, #Keypad plus key
+	VALUE KEY_PAD_ENTER, #Keypad enter key
+	VALUE KEY_PAD_DECIMAL, #Keypad dot key (.)
+	VALUE KEY_LBRACKET 
+	VALUE KEY_RBRACKET 
+	VALUE KEY_SEMICOLON 
+	VALUE KEY_APOSTROPHE 
+	VALUE KEY_BACKQUOTE 
+	VALUE KEY_COMMA 
+	VALUE KEY_PERIOD 
+	VALUE KEY_SLASH 
+	VALUE KEY_BACKSLASH 
+	VALUE KEY_MINUS 
+	VALUE KEY_EQUAL 
+	VALUE KEY_ENTER 
+	VALUE KEY_SPACE 
+	VALUE KEY_BACKSPACE 
+	VALUE KEY_TAB 
+	VALUE KEY_CAPSLOCK 
+	VALUE KEY_NUMLOCK 
+	VALUE KEY_ESCAPE 
+	VALUE KEY_SCROLLLOCK 
+	VALUE KEY_INSERT 
+	VALUE KEY_DELETE 
+	VALUE KEY_HOME 
+	VALUE KEY_END 
+	VALUE KEY_PAGEUP 
+	VALUE KEY_PAGEDOWN 
+	VALUE KEY_BREAK 
+	VALUE KEY_LSHIFT, #The left Shift key, has been seen to be triggered by Right Shift in PANEL:OnKeyCodePressed
+	VALUE KEY_RSHIFT 
+	VALUE KEY_LALT 
+	VALUE KEY_RALT 
+	VALUE KEY_LCONTROL 
+	VALUE KEY_RCONTROL 
+	VALUE KEY_LWIN, #The left Windows key or the Command key on Mac OSX
+	VALUE KEY_RWIN, #The right Windows key or the Command key on Mac OSX
+	VALUE KEY_APP 
+	VALUE KEY_UP 
+	VALUE KEY_LEFT 
+	VALUE KEY_DOWN 
+	VALUE KEY_RIGHT 
+	VALUE KEY_F1 
+	VALUE KEY_F2 
+	VALUE KEY_F3 
+	VALUE KEY_F4 
+	VALUE KEY_F5 
+	VALUE KEY_F6 
+	VALUE KEY_F7 
+	VALUE KEY_F8 
+	VALUE KEY_F9 
+	VALUE KEY_F10 
+	VALUE KEY_F11 
+	VALUE KEY_F12 
+	VALUE KEY_CAPSLOCKTOGGLE 
+	VALUE KEY_NUMLOCKTOGGLE 
+	VALUE KEY_LAST 
+	VALUE KEY_SCROLLLOCKTOGGLE 
+	VALUE KEY_COUNT 
+	VALUE KEY_XBUTTON_A 
+	VALUE KEY_XBUTTON_B 
+	VALUE KEY_XBUTTON_X 
+	VALUE KEY_XBUTTON_Y 
+	VALUE KEY_XBUTTON_LEFT_SHOULDER 
+	VALUE KEY_XBUTTON_RIGHT_SHOULDER 
+	VALUE KEY_XBUTTON_BACK 
+	VALUE KEY_XBUTTON_START 
+	VALUE KEY_XBUTTON_STICK1 
+	VALUE KEY_XBUTTON_STICK2 
+	VALUE KEY_XBUTTON_UP 
+	VALUE KEY_XBUTTON_RIGHT 
+	VALUE KEY_XBUTTON_DOWN 
+	VALUE KEY_XBUTTON_LEFT 
+	VALUE KEY_XSTICK1_RIGHT 
+	VALUE KEY_XSTICK1_LEFT 
+	VALUE KEY_XSTICK1_DOWN 
+	VALUE KEY_XSTICK1_UP 
+	VALUE KEY_XBUTTON_LTRIGGER 
+	VALUE KEY_XBUTTON_RTRIGGER 
+	VALUE KEY_XSTICK2_RIGHT 
+	VALUE KEY_XSTICK2_LEFT 
+	VALUE KEY_XSTICK2_DOWN 
+	VALUE KEY_XSTICK2_UP 
 }
 
 ENUM MOUSE
 {
-	MOUSE_FIRST, First mouse button
-	MOUSE_LEFT, Left mouse button
-	MOUSE_RIGHT, Right mouse button
-	MOUSE_MIDDLE, Middle mouse button, aka the wheel press
-	MOUSE_4, Mouse 4 button ( Sometimes, mouse wheel tilt left )
-	MOUSE_5, Mouse 5 button ( Sometimes, mouse wheel tilt right )
-	MOUSE_WHEEL_UP, Mouse wheel scroll up
-	MOUSE_WHEEL_DOWN, Mouse wheel scroll down
-	MOUSE_LAST, Last mouse button
-	MOUSE_COUNT, Mouse button count
+	VALUE MOUSE_FIRST, #First mouse button
+	VALUE MOUSE_LEFT, #Left mouse button
+	VALUE MOUSE_RIGHT, #Right mouse button
+	VALUE MOUSE_MIDDLE, #Middle mouse button, aka the wheel press
+	VALUE MOUSE_4, #Mouse 4 button ( Sometimes, mouse wheel tilt left )
+	VALUE MOUSE_5, #Mouse 5 button ( Sometimes, mouse wheel tilt right )
+	VALUE MOUSE_WHEEL_UP, #Mouse wheel scroll up
+	VALUE MOUSE_WHEEL_DOWN, #Mouse wheel scroll down
+	VALUE MOUSE_LAST, #Last mouse button
+	VALUE MOUSE_COUNT, #Mouse button count
 }
 
-ENUM JOYSTICK, Enumerations used by input.IsButtonDown.
+ENUM JOYSTICK, #Enumerations used by input.IsButtonDown.
 {
-	JOYSTICK_FIRST, 
-	JOYSTICK_FIRST_BUTTON, Joystick buttons are in this range, but don't have individual enum names.
-	JOYSTICK_LAST_BUTTON
-	JOYSTICK_FIRST_POV_BUTTON, Joystick POV buttons are in this range, but don't have individual enum names.
-	JOYSTICK_LAST_POV_BUTTON
-	JOYSTICK_FIRST_AXIS_BUTTON, Joystick axis buttons are in this range, but don't have individual enum names.
-	JOYSTICK_LAST_AXIS_BUTTON
-	JOYSTICK_LAST, 
+	VALUE JOYSTICK_FIRST 
+	VALUE JOYSTICK_FIRST_BUTTON, #Joystick buttons are in this range, but don't have individual enum names.
+	VALUE JOYSTICK_LAST_BUTTON
+	VALUE JOYSTICK_FIRST_POV_BUTTON, #Joystick POV buttons are in this range, but don't have individual enum names.
+	VALUE JOYSTICK_LAST_POV_BUTTON
+	VALUE JOYSTICK_FIRST_AXIS_BUTTON, #Joystick axis buttons are in this range, but don't have individual enum names.
+	VALUE JOYSTICK_LAST_AXIS_BUTTON
+	VALUE JOYSTICK_LAST 
 }
