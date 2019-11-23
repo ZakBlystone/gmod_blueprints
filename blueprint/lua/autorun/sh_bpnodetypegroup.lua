@@ -44,7 +44,7 @@ function meta:WriteToStream(stream)
 
 	assert(stream:IsUsingStringTable())
 	stream:WriteBits(self.entryType, 8)
-	stream:WriteString(self.name)
+	stream:WriteStr(self.name)
 	bpdata.WriteValue(self.params, stream)
 
 	local count = #self.entries
@@ -57,7 +57,7 @@ function meta:ReadFromStream(stream)
 
 	assert(stream:IsUsingStringTable())
 	self.entryType = stream:ReadBits(8)
-	self.name = stream:ReadString()
+	self.name = stream:ReadStr()
 	self.params = bpdata.ReadValue(stream)
 
 	local count = stream:ReadInt(false)

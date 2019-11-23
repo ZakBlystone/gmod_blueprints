@@ -43,6 +43,7 @@ function meta:SetName(name) self.name = name end
 function meta:SetCode(code) self.code = code end
 function meta:SetDisplayName(name) self.displayName = name end
 function meta:SetDescription(desc) self.desc = desc end
+function meta:SetNodeClass(class) self.nodeClass = class end
 function meta:SetNodeParam(key, value) self.nodeParams[key] = value end
 function meta:SetWarning(msg) self.warning = msg end
 function meta:GetRole() return self.role end
@@ -53,6 +54,7 @@ function meta:GetJumpSymbols() return self.jumpSymbols end
 function meta:GetLocals() return self.locals end
 function meta:GetDisplayName() return self.displayName end
 function meta:GetDescription() return self.desc end
+function meta:GetNodeClass() return self.nodeClass end
 function meta:GetNodeParam(key) return self.nodeParams[key] end
 function meta:GetRequiredMeta() return self.requiredMeta end
 
@@ -64,12 +66,12 @@ function meta:WriteToStream(stream)
 	assert(stream:IsUsingStringTable())
 	stream:WriteBits(self.flags, 8)
 	stream:WriteBits(self.role, 8)
-	stream:WriteString(self.name)
-	stream:WriteString(self.code)
-	stream:WriteString(self.displayName)
-	stream:WriteString(self.nodeClass)
-	stream:WriteString(self.warning)
-	stream:WriteString(self.desc)
+	stream:WriteStr(self.name)
+	stream:WriteStr(self.code)
+	stream:WriteStr(self.displayName)
+	stream:WriteStr(self.nodeClass)
+	stream:WriteStr(self.warning)
+	stream:WriteStr(self.desc)
 	bpdata.WriteValue(self.nodeParams, stream)
 	bpdata.WriteValue(self.requiredMeta, stream)
 	bpdata.WriteValue(self.pinRedirects, stream)
@@ -91,12 +93,12 @@ function meta:ReadFromStream(stream)
 	assert(stream:IsUsingStringTable())
 	self.flags = stream:ReadBits(8)
 	self.role = stream:ReadBits(8)
-	self.name = stream:ReadString()
-	self.code = stream:ReadString()
-	self.displayName = stream:ReadString()
-	self.nodeClass = stream:ReadString()
-	self.warning = stream:ReadString()
-	self.desc = stream:ReadString()
+	self.name = stream:ReadStr()
+	self.code = stream:ReadStr()
+	self.displayName = stream:ReadStr()
+	self.nodeClass = stream:ReadStr()
+	self.warning = stream:ReadStr()
+	self.desc = stream:ReadStr()
 	self.nodeParams = bpdata.ReadValue(stream)
 	self.requiredMeta = bpdata.ReadValue(stream)
 	self.pinRedirects = bpdata.ReadValue(stream)

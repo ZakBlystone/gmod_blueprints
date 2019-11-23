@@ -870,7 +870,7 @@ CLASS Entity, entity
 	{
 		DESC Returns a table of save values for an entity.
 		IN showAll, PN_Bool, #If set, shows all variables, not just the ones for save.
-		OUT PN_Any, PNF_Table, #A table containing all save values in key/value format. The value may be a sequential table (starting with 1) if the field in question is an array in engine.
+		OUT values, PN_Any, PNF_Table, #A table containing all save values in key/value format. The value may be a sequential table (starting with 1) if the field in question is an array in engine.
 	}
 	PURE GetSequence, SHARED
 	{
@@ -1300,7 +1300,7 @@ CLASS Entity, entity
 	PURE ObjectCaps, SHARED
 	{
 		DESC Returns the entity's capabilities as a bitfield. In the engine this function is mostly used to check the use type, the save/restore system and level transitions flags.
-		OUT PN_Number, #The bitfield, a combination of the FCAP_ flags.
+		OUT caps, PN_Number, #The bitfield, a combination of the FCAP_ flags.
 	}
 	FUNC PassesDamageFilter, SERVER
 	{
@@ -1941,7 +1941,7 @@ CLASS Entity, entity
 		DESC Sets a save value for an entity.
 		IN name, PN_String, #Name of the save value to set
 		IN value, PN_Any, #Value to set
-		OUT PN_Bool, #Key successfully set
+		OUT key, PN_Bool, #Key successfully set
 	}
 	FUNC SetSequence, SHARED
 	{

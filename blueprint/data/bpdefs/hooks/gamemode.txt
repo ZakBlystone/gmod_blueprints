@@ -527,7 +527,7 @@ HOOKS GM
 	{
 		DESC Called before all the translucent entities are drawn.
 		IN isDrawingDepth, PN_Bool, #Whether the current draw is writing depth.
-		IN isDrawSkybox, PN_Bool #Whether the current draw is drawing the skybox.
+		IN isDrawSkybox, PN_Bool, #Whether the current draw is drawing the skybox.
 		OUT preventRender, PN_Bool, #Return true to prevent translucent renderables from drawing.
 	}
 	HOOK PreDrawViewModel, CLIENT

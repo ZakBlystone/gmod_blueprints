@@ -40,6 +40,8 @@ function meta:SetDir(dir) self.dir = dir return self end
 function meta:SetName(name) self.name = name return self end
 function meta:SetDisplayName(name) self.displayName = name return self end
 function meta:SetInformedType(type) self.informed = type return self end
+function meta:SetDefault(def) self.default = def return self end
+function meta:GetDefault() return self.default end
 function meta:GetDescription() return self.desc or self:GetDisplayName() end
 
 function meta:GetInformedType() return self.informed end
@@ -78,8 +80,9 @@ function meta:WriteToStream(stream)
 	assert(stream:IsUsingStringTable())
 	self.type:WriteToStream(stream)
 	stream:WriteBits(self.dir, 8)
-	stream:WriteString(self.name)
-	stream:WriteString(self.desc)
+	stream:WriteStr(self.name)
+	stream:WriteStr(self.desc)
+	stream:WriteStr(self.default)
 
 end
 
@@ -88,8 +91,9 @@ function meta:ReadFromStream(stream)
 	assert(stream:IsUsingStringTable())
 	self.type = bppintype.New():ReadFromStream(stream)
 	self.dir = stream:ReadBits(8)
-	self.name = stream:ReadString()
-	self.desc = stream:ReadString()
+	self.name = stream:ReadStr()
+	self.desc = stream:ReadStr()
+	self.default = stream:ReadStr()
 
 end
 

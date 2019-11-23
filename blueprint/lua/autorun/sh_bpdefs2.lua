@@ -9,6 +9,20 @@ module("bpdefs", package.seeall, bpcommon.rescope(bpschema))
 
 local pinTypeLookup = {}
 local pinFlagLookup = {}
+local nodeGroups = {}
+
+local roleLookup = {
+	["SERVER"] = ROLE_Server,
+	["CLIENT"] = ROLE_Client,
+	["SHARED"] = ROLE_Shared,
+}
+
+local nodetypeLookup = {
+	["FUNC"] = NT_Function,
+	["PURE"] = NT_Pure,
+	["SPECIAL"] = NT_Special,
+	["EVENT"] = NT_Event,
+}
 
 for k,v in pairs(bpschema) do
 	if k:sub(1,3) == "PN_" then pinTypeLookup[k] = v end
@@ -23,129 +37,89 @@ local function EnumerateDefs( base, output, search )
 
 end
 
-local literalBlocks = {
+local literalKeywords = {
+	["DISPLAY"] = true,
 	["CODE"] = true,
 	["DESC"] = true,
 	["WARN"] = true,
 }
 
-local function FixupSeparator(char, args, startPos, endPos)
-
-	startPos = startPos or 1
-	endPos = endPos or #args
-
-	local pattern = "[^" .. char .. "]+"
-	local out = {}
-	for i=startPos, endPos do
-		for a in string.gmatch(args[i], pattern) do
-			table.insert(out, a)
-		end
-	end
-	return out, #out ~= #args
-
-end
-
-local function ParsePin(args, literalInline)
-
-	local desc = nil
-	if literalInline ~= 0 then 
-		desc = args[literalInline]
-		while #args >= literalInline do table.remove(args) end
-	end
-
-	local dir = args[1] == "IN" and PD_In or PD_Out
-	local name = args[2]
-	local type = pinTypeLookup[ args[3] ]
-	local flags = 0
-	local ex = args[5]
-	local default = nil
-	if string.find(name, "=") then
-		local t = string.Explode("=", name)
-		name = t[1]:Trim()
-		default = t[2]:Trim()
-	end
-
-	if args[4] then
-		for _, fl in pairs(string.Explode("|", args[4])) do
-			flags = bit.bor(flags, pinFlagLookup[fl] or 0)
-		end
-	end
-
-	local pinType = bppintype.New( type, flags, ex )
-	local pin = bppin.New( dir, name, pinType, desc )
-	return pin
-
-end
+local blockHandlers = {}
 
 local function ParseLine(line, state)
 
-	local closed = false
-	local wasLiteralBlock = false
-	if line[1] == "{" then 
+	if line == "" then return end
+
+	local keyword, args, literal = string.match(line, "(%w+) ([^#]*),-%s-#*(.*)")
+	keyword = keyword or line
+
+	if literal == "" then literal = nil end	
+	if line[1] == "{" then
+
+		if state.openLiteralBlock then
+			state.openLiteralBlock = false
+			state.literalBlock = true
+		else
+			table.insert(state.parsed, {
+				level = state.level,
+				opener = true,
+			})
+		end
 		state.level = state.level + 1
-		if state.literalLine == 1 then state.literalBlock = true end
-		return 
+		return
+
+	elseif line[1] == "}" then
+
+		state.level = state.level - 1 
+		if state.literalBlock then
+			table.insert(state.parsed, {
+				level = state.level,
+				tuple = {state.literalInstigator, state.literal}
+			})
+		else
+			table.insert(state.parsed, {
+				level = state.level,
+				closer = true,
+			})
+		end
+		state.openLiteralBlock = false
+		state.literalBlock = false
+		return
+
 	end
 
-	local literalInline = 0
-	local args = nil
-	if line[1] == "}" then 
-		closed = true
-		wasLiteralBlock = state.literalBlock
-		state.level = state.level - 1 
-		state.literalBlock = false 
+	if state.literalBlock then
+		state.literal = state.literal:Trim() .. "\n" .. line
+		return
+	end
+
+	local tuple = nil
+	if literalKeywords[keyword] then
+
+		state.literal = line:sub(keyword:len()+1, -1):Trim()
+		state.openLiteralBlock = true
+		state.literalInstigator = keyword
+
+		if state.literal == "" then return end
+		tuple = {keyword, state.literal}
+
 	else
 
-		state.literalLine = 0
-		if not state.literalBlock then
-			args = {}
-			local i = 1
-			for tla in string.gmatch(line, "[^%s]+") do
-				table.insert(args, tla)
-				if i == 1 and literalBlocks[tla] then state.literalLine = i end
-				i = i + 1
-			end
+		if args then
+			tuple = string.Explode("%s*,%s*", args, true)
+			table.insert(tuple, 1, keyword)
+			if tuple[#tuple] == "" then table.remove(tuple) end
 		else
-			state.literal = state.literal:Trim() .. "\n" .. line
-			return
+			tuple = {keyword}
 		end
 
-		if state.literalLine ~= 0 then
-			state.literalInstigator = args[state.literalLine]
-			state.literal = table.concat(args, " ", state.literalLine+1)
-			local args2 = {}
-			for i=1, state.literalLine do table.insert(args2, args[i]) end
-			table.insert(args2, state.literal)
-			if state.literal:Trim() == "" then return end
-			args = args2
-		else
-			literalInline = 0
-			for i=1, #args do
-				if args[i][1] == "#" then 
-					literalInline = i
-					args[i] = args[i]:sub(2,-1)
-				end
-			end
-			if literalInline ~= 0 then
-				local literal = table.concat(args, " ", literalInline)
-				args = FixupSeparator(',', args, 1, literalInline-1)
-				table.insert(args, literal)
-			else
-				args = FixupSeparator(',', args)
-			end
-		end
 	end
 
-	if closed and state.literalInstigator and wasLiteralBlock then
-		args = {state.literalInstigator, state.literal}
-	end
-
-	if args then
-		table.insert(state.parsed, {
-			level = state.level,
-			args = args,
-		})
-	end
+	table.insert(state.parsed, {
+		level = state.level,
+		tuple = tuple,
+		literal = literal,
+	})
 
 end
 
@@ -160,11 +134,45 @@ local function ParseDefinitionFile( filePath, search )
 		ParseLine(line:Trim(), state)
 	end
 
-	for k,v in pairs(state.parsed) do
+	local function GetBlockHandler(block)
+		local handlers = blockHandlers[block.level] or {}
+		local handler = handlers[block.tuple[1]]
+		return handler
+	end
 
-		--print(string.rep("  ", v.level) .. table.concat(v.args, " ~~ "))
+	local blockStack = {}
+	for i=1, #state.parsed do
+
+		local block = state.parsed[i]
+		local prevBlock = state.parsed[i-1]
+		local nextBlock = state.parsed[i+1]
+		if block.opener then
+			local h = GetBlockHandler(prevBlock)
+			if h then h.open(prevBlock, blockStack[#blockStack]) end
+			table.insert(blockStack, prevBlock)
+		elseif block.closer then
+			local top = blockStack[#blockStack]
+			local h = GetBlockHandler(top)
+			if h then h.close(top, blockStack[#blockStack-1]) end
+			table.remove(blockStack)
+		elseif block ~= blockStack[#blockStack] and (nextBlock == nil or not nextBlock.opener) then
+			local top = blockStack[#blockStack]
+			local h = GetBlockHandler(top)
+			if h then h.value(top, block) end
+		end
 
 	end
+
+end
+
+local function RegisterBlock(keyword, level, open, value, close)
+
+	blockHandlers[level] = blockHandlers[level] or {}
+	blockHandlers[level][keyword] = {
+		open = open,
+		value = value or function() end,
+		close = close or function() end,
+	}
 
 end
 
@@ -177,12 +185,127 @@ function LoadAndParseDefs()
 
 	for k,v in pairs(foundDefs) do
 		ParseDefinitionFile(v[1], v[2])
+		--break
 	end
 
 	bpcommon.ProfileEnd()
 
 end
 
+local function ParsePin(t)
+
+	local args = t.tuple
+	local desc = t.literal
+	local dir = args[1] == "IN" and PD_In or PD_Out
+	local name = args[2]
+	local type = pinTypeLookup[ args[3] ]
+	local flags = 0
+	local ex = args[5]
+	local default = nil
+	if string.find(name, "=") then
+		local t = string.Explode("=", name)
+		name = t[1]:Trim()
+		default = t[2]:Trim()
+	end
+
+	if type == nil then error("NO TYPE FOR: " .. tostring(args[3])) end
+
+	if args[4] then
+		for _, fl in pairs(string.Explode("|", args[4])) do
+			flags = bit.bor(flags, pinFlagLookup[fl] or 0)
+		end
+	end
+
+	local pinType = bppintype.New( type, flags, ex )
+	local pin = bppin.New( dir, name, pinType, desc )
+	if default then pin:SetDefault(default) end
+	return pin
+
+end
+
+local function ParseNodeValue(nodeType, v)
+	local key = v.tuple[1]
+	if key == "CLASS" then nodeType:SetNodeClass(v.tuple[2]) end
+	if key == "CODE" then nodeType:SetCode(v.literal) end
+	if key == "COMPACT" then nodeType:AddFlag(NTF_Compact) end
+	if key == "DEPRECATED" then nodeType:AddFlag(NTF_Deprecated) end
+	if key == "DESC" then nodeType:SetDescription(v.literal) end
+	if key == "DISPLAY" then nodeType:SetDisplayName(v.literal) end
+	if key == "INFORM" then for i=2, #v.tuple do nodeType:AddInform(v.tuple[i]) end end
+	if key == "JUMP" then nodeType:AddJumpSymbol(v.tuple[2]) end
+	if key == "LATENT" then nodeType:AddFlag(NTF_Latent) end
+	if key == "LOCAL" then nodeType:AddLocal(v.tuple[2]) end
+	if key == "METATABLE" then nodeType:AddRequiredMeta(v.tuple[2]) end
+	if key == "NOHOOK" then nodeType:AddFlag(NTF_NotHook) end
+	if key == "PARAM" then nodeType:SetNodeParam(v.tuple[2], v.tuple[3]) end
+	if key == "PROTECTED" then nodeType:AddFlag(NTF_Protected) end
+	if key == "REDIRECTPIN" then nodeType:AddPinRedirect(v.tuple[2], v.tuple[3]) end
+	if key == "REQUIREMETA" then nodeType:AddRequiredMeta(v.tuple[2]) end
+	if key == "TBD" then nodeType.TBD = true end
+	if key == "WARN" then nodeType:SetWarning(v.literal) end
+	if key == "IN" or key == "OUT" or key == "PIN" then nodeType:AddPin( ParsePin(v) ) end
+end
+
+RegisterBlock("HOOKS", 0, function(block, parent)
+
+	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_HOOKS)
+	block.group:SetName( block.tuple[2] )
+
+	table.insert(nodeGroups, block.group)
+
+end)
+RegisterBlock("LIB", 0, function(block, parent)
+
+	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_LIB)
+	block.group:SetName( block.tuple[2] )
+
+	table.insert(nodeGroups, block.group)
+
+end)
+RegisterBlock("CLASS", 0, function(block, parent)
+
+	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_CLASS)
+	block.group:SetName( block.tuple[2] )
+
+	if block.tuple[3] then block.group:SetParam("typeName", block.tuple[2]) end
+	if block.tuple[4] then block.group:SetParam("pinTypeOverride", pinTypeLookup[block.tuple[2]]) end
+
+	table.insert(nodeGroups, block.group)
+
+end)
+
+local function RegisterNodeBlock(name, type)
+
+	RegisterBlock(name, 1,
+	function(block, parent)
+		block.type = bpnodetype.New()
+		block.type:SetType(type)
+		block.type:SetName(block.tuple[2])
+		block.type:SetRole(roleLookup[ block.tuple[3] ])
+	end,
+	function(block, value) ParseNodeValue(block.type, value) end,
+	function(block, parent)
+		if not block.type.TBD then
+			parent.group:Add(block.type)
+		end
+	end)
+
+end
+
+RegisterNodeBlock("HOOK", NT_Event)
+RegisterNodeBlock("PURE", NT_Pure)
+RegisterNodeBlock("FUNC", NT_Func)
+RegisterNodeBlock("SPECIAL", NT_Special)
+
 if SERVER then
+	nodeGroups = {}
 	LoadAndParseDefs()
+
+	local stream = bpdata.OutStream(false, true, true)
+	stream:UseStringTable()
+	stream:WriteInt(#nodeGroups, false)
+	for i=1, #nodeGroups do
+		nodeGroups[i]:WriteToStream(stream)
+	end
+	stream:WriteToFile("blueprints/newpack.txt", true, false)
 end

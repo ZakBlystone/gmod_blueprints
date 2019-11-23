@@ -83,7 +83,7 @@ function meta:WriteToStream(stream)
 	assert(stream:IsUsingStringTable())
 	stream:WriteBits(self.basetype, 8)
 	stream:WriteBits(self.flags, 8)
-	stream:WriteString(self.subtype)
+	stream:WriteStr(self.subtype)
 	return self
 
 end
@@ -93,7 +93,7 @@ function meta:ReadFromStream(stream)
 	assert(stream:IsUsingStringTable())
 	self.basetype = stream:ReadBits(8)
 	self.flags = stream:ReadBits(8)
-	self.subtype = stream:ReadString()
+	self.subtype = stream:ReadStr()
 	return self
 
 end
