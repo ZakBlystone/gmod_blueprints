@@ -35,6 +35,14 @@ PNF_Nullable = 2
 PNF_Bitfield = 4
 PNF_All = 7
 
+NTF_None = 0
+NTF_Deprecated = 1
+NTF_NotHook = 2
+NTF_Latent = 4
+NTF_Protected = 8
+NTF_Compact = 16
+NTF_Returns = 32
+
 GT_Event = 0
 GT_Function = 1
 

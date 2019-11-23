@@ -238,6 +238,10 @@ function OUT:UseStringTable()
 	self.stringTable = bpstringtable.New()
 end
 
+function OUT:IsUsingStringTable()
+	return self.stringTable ~= nil
+end
+
 function OUT:GetString(compressed, base64encoded)
 	local str = nil
 	if self.bitstream then
@@ -346,6 +350,10 @@ end
 
 function IN:UseStringTable()
 	self.stringTable = bpstringtable.New()
+end
+
+function IN:IsUsingStringTable()
+	return self.stringTable ~= nil
 end
 
 function IN:Reset()

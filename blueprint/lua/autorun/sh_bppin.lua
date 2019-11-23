@@ -73,6 +73,26 @@ function meta:GetDefault(...) return self:GetType():GetDefault(...) end
 function meta:GetFlags(...) return self:GetType():GetFlags(...) end
 function meta:HasFlag(...) return self:GetType():HasFlag(...) end
 
+function meta:WriteToStream(stream)
+
+	assert(stream:IsUsingStringTable())
+	self.type:WriteToStream(stream)
+	stream:WriteBits(self.dir, 8)
+	stream:WriteString(self.name)
+	stream:WriteString(self.desc)
+
+end
+
+function meta:ReadFromStream(stream)
+
+	assert(stream:IsUsingStringTable())
+	self.type = bppintype.New():ReadFromStream(stream)
+	self.dir = stream:ReadBits(8)
+	self.name = stream:ReadString()
+	self.desc = stream:ReadString()
+
+end
+
 function meta:ToString(printTypeInfo, printDir)
 	local str = self:GetName()
 	if printDir then str = str .. " (" .. (self:GetDir() == bpschema.PD_In and "IN" or "OUT") .. ")" end
