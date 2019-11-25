@@ -69,9 +69,9 @@ function NODE:GetInforms()
 
 end
 
-function NODE:GetMeta()
+function NODE:GetFlags()
 
-	return {hidePinNames = true}
+	return bit.bor(self.BaseClass.GetFlags(self), NTF_HidePinNames)
 
 end
 

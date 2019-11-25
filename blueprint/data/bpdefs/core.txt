@@ -1,5 +1,6 @@
 HOOKS CORE
 {
+	REDIRECTNODE EntityFireBullets, CORE_EntityFireBullets
 	HOOK Init, SHARED
 	{
 		DESC Called when the blueprint is created
@@ -9,10 +10,39 @@ HOOKS CORE
 	{
 		DESC Called when the blueprint is shut down
 		NOHOOK
-	}	
+	}
+	EVENT EntityFireBullets, SHARED
+	{
+		DEPRECATED
+		OUT Entity, PN_Ref, PNF_None, Entity
+		OUT Attacker, PN_Ref, PNF_None, Entity
+		OUT Damage, PN_Number
+		OUT Count, PN_Number
+		OUT Source, PN_Vector
+		OUT Direction, PN_Vector
+		CODE
+		{
+			#2 = arg[1]
+			#3 = arg[2].Attacker
+			#4 = arg[2].Damage
+			#5 = arg[2].Num
+			#6 = arg[2].Src
+			#7 = arg[2].Dir
+		}
+	}
 }
 LIB CORE
 {
+	REDIRECTNODE Pin, CORE_Pin
+	PURE Pin, SHARED
+	{
+		IN In, PN_Any
+		OUT Out, PN_Any
+		INFORM 1,2
+		COMPACT
+		CODE #1 = $1
+		COLLAPSE
+	}
 	SPECIAL Sequence, SHARED
 	{
 		REDIRECTPIN 1, Out_1

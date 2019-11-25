@@ -650,7 +650,7 @@ function CompileNodeFunction(cs, nodeID)
 	end
 
 	pushi()
-	--printi("COMPILE FUNC: " .. nodeType.name)
+	--printi("COMPILE FUNC: " .. nodeType:GetName())
 
 	pushi()
 
@@ -687,14 +687,15 @@ function CompileMetaTableLookup(cs)
 		local baseType = t:GetBaseType()
 		if baseType == PN_Ref then
 
-			local class = bpdefs.GetClass(t)
+			local class = bpdefs.Get():GetClass(t)
 			table.insert(tables, class.name)
 
 		elseif baseType == PN_Struct then
 
-			local struct = bpdefs.GetStruct(t)
-			if struct ~= nil and struct.metatable then
-				table.insert(tables, struct.metatable)
+			local struct = bpdefs.Get():GetStruct(t)
+			local metaTable = struct and struct:GetMetaTable() or nil
+			if metaTable then
+				table.insert(tables, metaTable)
 			end
 
 		elseif baseType == PN_Vector then
@@ -716,7 +717,7 @@ function CompileMetaTableLookup(cs)
 	-- Some nodes require access to additional metatables, process them here
 	for _, graph in cs.module:Graphs() do
 		for _, node in graph:Nodes() do
-			local rm = node:GetMeta().requiredMeta
+			local rm = node:GetRequiredMeta()
 			if not rm then continue end
 			for _, m in pairs(rm) do
 				if not table.HasValue(tables, m) then table.insert(tables, m) end

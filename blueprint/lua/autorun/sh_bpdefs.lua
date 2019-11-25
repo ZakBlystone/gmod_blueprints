@@ -1,10 +1,12 @@
+if true then return end
+
 AddCSLuaFile()
 
 print("LOADED BPDEFS")
 
 include("sh_bptransfer.lua")
 include("sh_bpcommon.lua")
-include("sh_bpstruct.lua")
+include("sh_bpdefpack.lua")
 
 module("bpdefs", package.seeall, bpcommon.rescope(bpschema))
 

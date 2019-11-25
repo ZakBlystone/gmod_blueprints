@@ -6,11 +6,25 @@ include("sh_bpnodetype.lua")
 
 module("bpnodetypegroup", package.seeall, bpcommon.rescope(bpschema))
 
-TYPE_CLASS = 0
-TYPE_LIB = 1
-TYPE_HOOKS = 2
-TYPE_STRUCTS = 3
-TYPE_CALLBACKS = 4
+TYPE_Class = 0
+TYPE_Lib = 1
+TYPE_Hooks = 2
+TYPE_Structs = 3
+TYPE_Callbacks = 4
+
+GroupTypeNames = {
+	[TYPE_Class] = "Class",
+	[TYPE_Lib] = "Lib",
+	[TYPE_Hooks] = "Hooks",
+	[TYPE_Structs] = "Structs",
+	[TYPE_Callbacks] = "Callbacks",
+}
+
+local GroupContexts = {
+	[TYPE_Class] = bpnodetype.NC_Class,
+	[TYPE_Lib] = bpnodetype.NC_Lib,
+	[TYPE_Hooks] = bpnodetype.NC_Hook,
+}
 
 local meta = {}
 meta.__index = meta
@@ -32,11 +46,20 @@ function meta:GetName() return self.name end
 function meta:SetParam(key, value) self.params[key] = value end
 function meta:GetParam(key) return self.params[key] end
 
+function meta:GetType() return self.entryType end
 function meta:GetEntries() return self.entries end
 
-function meta:Add(entry)
+function meta:NewEntry()
 
+	local entry = bpnodetype.New(GroupContexts[self:GetType()], self)
 	table.insert(self.entries, entry)
+	return entry
+
+end
+
+function meta:RemoveEntry( entry )
+
+	table.RemoveByValue(self.entries, entry)
 
 end
 
@@ -51,6 +74,8 @@ function meta:WriteToStream(stream)
 	stream:WriteInt(count, false)
 	for i=1, count do self.entries[i]:WriteToStream(stream) end
 
+	return self
+
 end
 
 function meta:ReadFromStream(stream)
@@ -61,13 +86,20 @@ function meta:ReadFromStream(stream)
 	self.params = bpdata.ReadValue(stream)
 
 	local count = stream:ReadInt(false)
-	for i=1, count do table.insert(self.entries, bpnodetype.New():ReadFromStream(stream)) end
+
+	if self.entryType == TYPE_STRUCTS then
+		for i=1, count do table.insert(self.entries, bpstruct.New():ReadFromStream(stream)) end
+	else
+		for i=1, count do self:NewEntry():ReadFromStream(stream) end
+	end
+
+	return self
 
 end
 
 function meta:ToString()
 
-	return self:GetName() .. " - " .. #self.entries .. " nodes."
+	return self:GetName() .. "[" .. GroupTypeNames[self:GetType()] .. "] - " .. #self.entries .. " nodes."
 
 end
 

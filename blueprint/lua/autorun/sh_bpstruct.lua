@@ -57,6 +57,12 @@ function meta:SetMetaTable(tableName)
 
 end
 
+function meta:GetMetaTable()
+
+	return self.metaTable
+
+end
+
 function meta:RemapName(old, new)
 
 	self.nameMap[old] = new
@@ -71,24 +77,22 @@ function meta:MarkAsCustom()
 
 end
 
-function meta:MakerNodeType( pinTypeOverride )
+function meta:MakerNodeType()
 
-	local ntype = { pins = {} }
-	ntype.name = "Make" .. self:GetName()
-	ntype.displayName = ntype.name
-	ntype.type = NT_Pure
-	ntype.desc = self.desc or "Makes a " .. self:GetName() .. " structure"
-	ntype.code = ""
-	ntype.defaults = {}
-	ntype.category = self:GetName()
-	ntype.isStruct = true
-	ntype.custom = self.custom
-	ntype.meta = {}
+	local ntype = bpnodetype.New()
+	ntype:SetName("Make" .. self:GetName())
+	ntype:SetDisplayName("Make" .. self:GetName())
+	ntype:SetCodeType(NT_Pure)
+	ntype:SetDescription(self.desc or "Makes a " .. self:GetName() .. " structure")
+	ntype:SetCategory(self:GetName())
+	ntype:SetContext(bpnodetype.NC_Struct)
 
-	if pinTypeOverride then 
-		table.insert(ntype.pins, MakePin(PD_Out, self:GetName(), pinTypeOverride, PNF_None))
+	if self.custom then ntype:AddFlag(NTF_Custom) end
+
+	if self.pinTypeOverride then
+		ntype:AddPin( MakePin(PD_Out, self:GetName(), self.pinTypeOverride, PNF_None) )
 	else
-		table.insert(ntype.pins, MakePin(
+		ntype:AddPin(MakePin(
 			PD_Out,
 			self:GetName(),
 			PN_Struct, PNF_None, self:GetName()
@@ -96,10 +100,7 @@ function meta:MakerNodeType( pinTypeOverride )
 	end
 
 	for _, pin in self.pins:Items() do
-
-		table.insert(ntype.pins, pin:CreatePin(PD_In))
-		ntype.defaults[#ntype.pins - 1] = pin:GetDefaultValue()
-
+		ntype:AddPin( pin:CreatePin(PD_In) )
 	end
 
 	local ret, arg = PinRetArg( ntype, function(s,pin)
@@ -107,36 +108,35 @@ function meta:MakerNodeType( pinTypeOverride )
 		return "\n [\"" .. (self.invNameMap[name] or name) .. "\"] = " .. s
 	end)
 	local argt = "{ " .. arg .. "\n}"
-	ntype.code = ret .. " = "
-	if self.metaTable then ntype.code = ntype.code .. "setmetatable(" end
-	ntype.code = ntype.code .. argt
-	if self.metaTable then ntype.code = ntype.code .. ", " .. self.metaTable .. "_)" end
+	local code = ret .. " = "
+	if self.metaTable then code = code .. "setmetatable(" end
+	code = code .. argt
+	if self.metaTable then code = code .. ", " .. self.metaTable .. "_)" end
 
-	for _, pin in pairs(ntype.pins) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
+	ntype:SetCode(code)
 
-	ConfigureNodeType(ntype)
+	for _, pin in pairs(ntype:GetPins()) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
+
 	return ntype
 
 end
 
-function meta:BreakerNodeType( pinTypeOverride )
+function meta:BreakerNodeType()
 
-	local ntype = { pins = {} }
-	ntype.name = "Break" .. self:GetName()
-	ntype.displayName = ntype.name
-	ntype.type = NT_Pure
-	ntype.desc = self.desc or "Returns components of a " .. self:GetName() .. " structure"
-	ntype.code = ""
-	ntype.defaults = {}
-	ntype.category = self:GetName()
-	ntype.isStruct = true
-	ntype.custom = self.custom
-	ntype.meta = {}
+	local ntype = bpnodetype.New()
+	ntype:SetName("Break" .. self:GetName())
+	ntype:SetDisplayName("Break" .. self:GetName())
+	ntype:SetCodeType(NT_Pure)
+	ntype:SetDescription(self.desc or "Returns components of a " .. self:GetName() .. " structure")
+	ntype:SetCategory(self:GetName())
+	ntype:SetContext(bpnodetype.NC_Struct)
 
-	if pinTypeOverride then 
-		table.insert(ntype.pins, MakePin(PD_In, self:GetName(), pinTypeOverride, PNF_None))
+	if self.custom then ntype:AddFlag(NTF_Custom) end
+
+	if self.pinTypeOverride then
+		ntype:AddPin( MakePin(PD_In, self:GetName(), self.pinTypeOverride, PNF_None) )
 	else
-		table.insert(ntype.pins, MakePin(
+		ntype:AddPin(MakePin(
 			PD_In,
 			self:GetName(),
 			PN_Struct, PNF_None, self:GetName()
@@ -144,10 +144,7 @@ function meta:BreakerNodeType( pinTypeOverride )
 	end
 
 	for _, pin in self.pins:Items() do
-
-		table.insert(ntype.pins, pin:CreatePin(PD_Out))
-		ntype.defaults[#ntype.pins - 1] = pin:GetDefaultValue()
-
+		ntype:AddPin( pin:CreatePin(PD_Out) )
 	end
 
 	local ret, arg = PinRetArg( ntype, nil, function(s,pin)
@@ -155,11 +152,11 @@ function meta:BreakerNodeType( pinTypeOverride )
 		return "\n" .. s .. " = $1[\"" .. (self.invNameMap[name] or name) .. "\"]"
 	end, "")
 	if ret[1] == '\n' then ret = ret:sub(2,-1) end
-	ntype.code = ret
 
-	for _, pin in pairs(ntype.pins) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
+	ntype:SetCode(ret)
 
-	ConfigureNodeType(ntype)
+	for _, pin in pairs(ntype:GetPins()) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
+
 	return ntype
 
 end
@@ -174,6 +171,7 @@ function meta:WriteToStream(stream, mode, version)
 	bpdata.WriteValue(self.nameMap, stream)
 	bpdata.WriteValue(self.invNameMap, stream)
 	bpdata.WriteValue(self.metaTable, stream)
+	return self
 
 end
 
@@ -183,6 +181,7 @@ function meta:ReadFromStream(stream, mode, version)
 	self.nameMap = bpdata.ReadValue(stream)
 	self.invNameMap = bpdata.ReadValue(stream)
 	self.metaTable = bpdata.ReadValue(stream)
+	return self
 
 end
 

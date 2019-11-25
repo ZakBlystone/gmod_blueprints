@@ -26,68 +26,6 @@ module("bpnodedef", package.seeall, bpcommon.rescope(bpschema))
 -- jumpSymbols = {} are jump vectors to generate for use in code
 -- locals = {} are node-local variables to use in code
 
-NodePinRedirectors = {}
-NodeRedirectors = {}
-NodeTypes = {
-	["Pin"] = PURE {
-		pins = { 
-			MakePin( PD_In, "", PN_Any ),
-			MakePin( PD_Out, "", PN_Any ),
-		},
-		meta = {
-			informs = {1,2},
-			compact = true,
-		},
-		code = "#1 = $1",
-		collapse = true,
-	},
-	["EntityFireBullets"] = EVENT {
-		deprecated = true,
-		pins = {
-			MakePin( PD_Out, "entity", PN_Ref, PNF_None, "Entity" ),
-			MakePin( PD_Out, "attacker", PN_Ref, PNF_None, "Entity" ),
-			MakePin( PD_Out, "damage", PN_Number, PNF_None ),
-			MakePin( PD_Out, "count", PN_Number, PNF_None ),
-			MakePin( PD_Out, "source", PN_Vector, PNF_None ),
-			MakePin( PD_Out, "direction", PN_Vector, PNF_None ),
-		},
-		meta = {},
-		hook = "EntityFireBullets",
-		code = [[
-			#2 = arg[1]
-			#3 = arg[2].Attacker
-			#4 = arg[2].Damage
-			#5 = arg[2].Num
-			#6 = arg[2].Src
-			#7 = arg[2].Dir
-		]],
-	},
-}
-
-for k,v in pairs(NodeTypes) do
-	if type(v) == "string" then
-		local nodeRedirect = nil
-		local pinRedirects = {}
-		local args = string.Explode(",", v)
-		for _, arg in pairs(args) do
-			nodeRedirect = nodeRedirect or arg
-			for a,b in arg:gmatch("([%w_]+)=([%w_]+)") do
-				pinRedirects[a] = b
-			end
-		end
-
-		NodeRedirectors[k] = nodeRedirect:gsub("[:.]", "_")
-		NodePinRedirectors[k] = pinRedirects
-		NodePinRedirectors[NodeRedirectors[k]] = pinRedirects
-		NodeTypes[k] = nil
-		print("NODE REDIRECT: " .. k .. " -> " .. tostring(NodeRedirectors[k]))
-	end
-end
-
-for k,v in pairs(NodeTypes) do 
-	v.name = k
-end
-
 function InstallDefs()
 	if bpdefs == nil then return end
 
@@ -110,4 +48,4 @@ function InstallDefs()
 	print("Done.")
 end
 
-InstallDefs()
+--InstallDefs()

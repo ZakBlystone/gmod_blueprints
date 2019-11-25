@@ -192,7 +192,7 @@ end
 function meta:GetNodeTypes( graphID )
 
 	local types = {}
-	local base = NodeTypes
+	local base = bpdefs.Get():GetNodeTypes()
 
 	for id, v in self:Variables() do
 
@@ -275,22 +275,22 @@ end
 function meta:RequestGraphForEvent( nodeType )
 
 	for _, graph in self:Graphs() do
-		if graph:GetName() == nodeType.hook then return end
+		if graph:GetName() == nodeType:GetDisplayName() then return end
 	end
 
-	local id, graph = self:NewGraph(nodeType.hook, NT_Function)
+	local id, graph = self:NewGraph(nodeType:GetDisplayName(), NT_Function)
 	graph:SetFlag(bpgraph.FL_LOCK_PINS)
 	graph:SetFlag(bpgraph.FL_LOCK_NAME)
 	graph:SetFlag(bpgraph.FL_HOOK)
 
-	if nodeType.role == ROLE_Server or nodeType.role == ROLE_Shared then
+	if nodeType:GetRole() == ROLE_Server or nodeType:GetRole() == ROLE_Shared then
 		graph:SetFlag(bpgraph.FL_ROLE_SERVER)
 	end
-	if nodeType.role == ROLE_Client or nodeType.role == ROLE_Shared then
+	if nodeType:GetRole() == ROLE_Client or nodeType:GetRole() == ROLE_Shared then
 		graph:SetFlag(bpgraph.FL_ROLE_CLIENT)
 	end
 
-	for k,v in pairs(nodeType.pins) do
+	for k,v in pairs(nodeType:GetPins()) do
 
 		if v:IsType(PN_Exec) then continue end
 		if v:IsOut() then

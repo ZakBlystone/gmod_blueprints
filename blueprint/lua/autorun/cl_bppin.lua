@@ -94,8 +94,7 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self:SetSize(10,10)
 
 	local shift_up = 2
-	local meta = self.node:GetMeta()
-	if not meta.compact and not meta.hidePinNames then
+	if not self.node:HasFlag(NTF_Compact) and not self.node:HasFlag(NTF_HidePinNames) then
 
 		self.label = vgui.Create("DLabel", self)
 		--self.label:SetFont("DermaDefaultBold")
@@ -158,7 +157,7 @@ function PANEL:InitLiteral()
 					self.comboBox:SetPos( 15, -shift_up )
 				end
 
-				local enum = bpdefs.GetEnum( self.pinType )
+				local enum = bpdefs.Get():GetEnum( self.pinType )
 				if enum == nil then
 					ErrorNoHalt("NO ENUM FOR " .. tostring( self.pinType ))
 				else

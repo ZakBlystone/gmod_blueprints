@@ -41,7 +41,6 @@ function meta:SetName(name) self.name = name return self end
 function meta:SetDisplayName(name) self.displayName = name return self end
 function meta:SetInformedType(type) self.informed = type return self end
 function meta:SetDefault(def) self.default = def return self end
-function meta:GetDefault() return self.default end
 function meta:GetDescription() return self.desc or self:GetDisplayName() end
 
 function meta:GetInformedType() return self.informed end
@@ -71,7 +70,7 @@ function meta:GetSubType(...) return self:GetType():GetSubType() end
 function meta:GetColor(...) return self:GetType():GetColor(...) end
 function meta:GetTypeName(...) return self:GetType():GetTypeName(...) end
 function meta:GetLiteralType(...) return self:GetType():GetLiteralType(...) end
-function meta:GetDefault(...) return self:GetType():GetDefault(...) end
+function meta:GetDefault(...) return self.default or self:GetType():GetDefault(...) end
 function meta:GetFlags(...) return self:GetType():GetFlags(...) end
 function meta:HasFlag(...) return self:GetType():HasFlag(...) end
 
@@ -83,6 +82,7 @@ function meta:WriteToStream(stream)
 	stream:WriteStr(self.name)
 	stream:WriteStr(self.desc)
 	stream:WriteStr(self.default)
+	return self
 
 end
 
@@ -94,6 +94,7 @@ function meta:ReadFromStream(stream)
 	self.name = stream:ReadStr()
 	self.desc = stream:ReadStr()
 	self.default = stream:ReadStr()
+	return self
 
 end
 

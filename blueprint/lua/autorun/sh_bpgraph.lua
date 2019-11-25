@@ -264,18 +264,16 @@ function meta:GetFunctionType()
 
 	if self.type ~= GT_Function then return end
 
-	local pins = {}
+	local ntype = bpnodetype.New()
+	ntype:AddFlag(NTF_Custom)
+	ntype:SetCodeType(NT_Function)
+	ntype:SetDisplayName(self:GetName())
+	ntype:SetGraphThunk(self.id)
 
-	for id, var in self.inputs:Items() do table.insert(pins, var:CreatePin( PD_In )) end
-	for id, var in self.outputs:Items() do table.insert(pins, var:CreatePin( PD_Out )) end
+	for id, var in self.inputs:Items() do ntype:AddPin( var:CreatePin( PD_In ) ) end
+	for id, var in self.outputs:Items() do ntype:AddPin( var:CreatePin( PD_Out ) ) end
 
-	return FUNCTION {
-		pins = pins,
-		displayName = self:GetName(),
-		custom = true,
-		graphThunk = self.id,
-		meta = {},
-	}
+	return ntype
 
 end
 
@@ -288,31 +286,29 @@ end
 
 function meta:CreateFunctionNodeTypes( output )
 
-	local inPins = { MakePin( PD_Out, "Exec", PN_Exec ) }
-	local outPins = { MakePin( PD_In, "Exec", PN_Exec ) }
-
-	for id, var in self.inputs:Items() do table.insert(inPins, var:CreatePin( PD_Out )) end
-	for id, var in self.outputs:Items() do table.insert(outPins, var:CreatePin( PD_In )) end
-
 	local role = nil
 	if self:HasFlag(FL_ROLE_CLIENT) and self:HasFlag(FL_ROLE_SERVER) then role = ROLE_Shared
 	elseif self:HasFlag(FL_ROLE_SERVER) then role = ROLE_Server
 	elseif self:HasFlag(FL_ROLE_CLIENT) then role = ROLE_Client end
 
-	output["__Entry"] = FUNC_INPUT {
-		pins = inPins,
-		displayName = self:GetName(),
-		name = "__Entry",
-		role = role,
-		meta = {noDelete = true},
-	}
+	local entry = bpnodetype.New()
+	local exit = bpnodetype.New()
 
-	output["__Exit"] = FUNC_OUTPUT {
-		pins = outPins,
-		displayName = "Return",
-		name = "__Exit",
-		meta = {},
-	}
+	for id, var in self.inputs:Items() do entry:AddPin( var:CreatePin( PD_Out ) ) end
+	for id, var in self.outputs:Items() do exit:AddPin( var:CreatePin( PD_In ) ) end
+
+	entry:SetCodeType(NT_FuncInput)
+	entry:SetDisplayName(self:GetName())
+	entry:SetName("__Entry")
+	entry:SetRole(role)
+	entry:AddFlag(NTF_NoDelete)
+
+	exit:SetCodeType(NT_FuncOutput)
+	exit:SetDisplayName("Return")
+	exit:SetName("__Exit")
+
+	output["__Entry"] = entry
+	output["__Exit"] = exit
 
 end
 
@@ -612,7 +608,7 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
 	if p0:GetDir() == p1:GetDir() then return false, "Can't connect " .. (p0:IsOut() and "m/m" or "f/f") .. " pins" end
 
-	if self:GetNode(nodeID0):GetTypeName() == "Pin" or self:GetNode(nodeID1):GetTypeName() == "Pin" then return true end
+	if self:GetNode(nodeID0):GetTypeName() == "CORE_Pin" or self:GetNode(nodeID1):GetTypeName() == "CORE_Pin" then return true end
 
 	if p0:HasFlag(PNF_Table) ~= p1:HasFlag(PNF_Table) then return false, "Can't connect table to non-table pin" end
 
@@ -681,7 +677,9 @@ end
 function meta:AddNode(nodeTypeName, ...)
 
 	local nodeType = self:GetNodeTypes()[nodeTypeName]
-	if nodeType.type == NT_Event and nodeType.returns then
+	if nodeType == nil then error("Node type node found: " .. nodeTypeName) end
+
+	if nodeType:GetCodeType() == NT_Event and nodeType:ReturnsValues() then
 		self.module:RequestGraphForEvent(nodeType)
 		return
 	end
@@ -782,7 +780,7 @@ function meta:CollapseRerouteNodes()
 	self.suppressInformWalk = true
 
 	for _, node in self:Nodes(true) do
-		if node:GetType().collapse then
+		if node:GetType():HasFlag(NTF_Collapse) then
 			self:CollapseSingleRerouteNode( node.id )
 		end
 	end
@@ -861,13 +859,6 @@ function meta:ResolveConnectionMeta()
 
 	if self.connectionMeta ~= nil then
 
-		for _, c in pairs(self.connectionMeta) do
-			local rdir = NodePinRedirectors[c[1]]
-			if rdir then c[2] = rdir[c[2]] or c[2] end
-			local rdir = NodePinRedirectors[c[3]]
-			if rdir then c[4] = rdir[c[4]] or c[4] end
-		end
-
 		print("Resolving connection meta...")
 		for i, c in self:Connections(true) do
 			local meta = self.connectionMeta[i]
@@ -875,20 +866,25 @@ function meta:ResolveConnectionMeta()
 			local nt1 = self:GetNode(c[3])
 			local pin0 = nt0:GetPin(c[2])
 			local pin1 = nt1:GetPin(c[4])
+			local ignorePin0 = false
+			local ignorePin1 = false
 
 			meta[2] = nt0:RemapPin(meta[2])
 			meta[4] = nt1:RemapPin(meta[4])
 
+			--if nt0:GetTypeName() == "CORE_Pin" then ignorePin0 = true end
+			--if nt1:GetTypeName() == "CORE_Pin" then ignorePin1 = true end
+
 			--print("Check Connection: " .. nt0:ToString(c[2]) .. " -> " .. nt1:ToString(c[4]))
 
 			if meta == nil then continue end
-			if pin0 == nil or pin0:GetName():lower() ~= meta[2]:lower() then
+			if (pin0 == nil or pin0:GetName():lower() ~= meta[2]:lower()) and not ignorePin0 then
 				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")
 				c[2] = nt0:FindPin( PD_Out, meta[2] )
 				MsgC( c[2] ~= nil and Color(100,255,100) or Color(255,100,100), c[2] ~= nil and " Resolved\n" or " Not resolved\n" )
 			end
 
-			if pin1 == nil or pin1:GetName():lower() ~= meta[4]:lower() then
+			if (pin1 == nil or pin1:GetName():lower() ~= meta[4]:lower()) and not ignorePin1 then
 				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
 				c[4] = nt0:FindPin( PD_In, meta[4] )
 				MsgC( c[4] ~= nil and Color(100,255,100) or Color(255,100,100), c[4] ~= nil and " Resolved\n" or " Not resolved\n" )

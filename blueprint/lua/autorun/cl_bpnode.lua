@@ -13,7 +13,6 @@ local function calculateNodeSize(vnode)
 
 	local name = vnode:GetDisplayName()
 	local node = vnode.node
-	local meta = node:GetMeta()
 
 	surface.SetFont( "Default" )
 	local inPinWidth = 0
@@ -35,13 +34,13 @@ local function calculateNodeSize(vnode)
 		if v:IsOut() then outPinWidth = math.max(surface.GetTextSize( v:GetName() ) + padPin, outPinWidth) end
 	end
 
-	if meta.compact then
+	if node:HasFlag(NTF_Compact) then
 		surface.SetFont("HudHintTextLarge")
 		local titleWidth = surface.GetTextSize( name )
 		width = math.max(titleWidth+60, 0)
 		headHeight = 15
 
-		if node:GetTypeName() == "Pin" then
+		if node:GetTypeName() == "CORE_Pin" then
 			width = 40
 		end
 	else
@@ -61,8 +60,7 @@ local function pinLocation(vnode, dir, id)
 	local x = 0
 	local y = 15
 	local w, h = calculateNodeSize(vnode)
-	local meta = vnode.node:GetMeta()
-	if meta.compact then y = -4 end
+	if vnode.node:HasFlag(NTF_Compact) then y = -4 end
 	if dir == PD_In then
 		return x, y + id * 15
 	else
@@ -240,8 +238,6 @@ function PANEL:Paint(w, h)
 
 	if not self.node then return end
 	local node = self.node
-	local meta = node:GetMeta()
-
 	local inset = self.inset
 	if self:HasFocus() then
 		draw.RoundedBox(8, 0, 0, w, h, Color(200,150,80,255))
@@ -259,23 +255,23 @@ function PANEL:Paint(w, h)
 	draw.RoundedBox(6, inset, inset, w - inset*2, h - inset*2, Color(20,20,20,255))
 
 
-	if not meta.compact then draw.RoundedBox(6, inset, inset, w - inset * 2, 18, Color(ntc.r,ntc.g,ntc.b,180)) end
-	if meta.role then
-		if meta.role == ROLE_Shared and false then
-			draw.RoundedBox(2, inset + w - 30, inset, 9, 18, Color(20,160,255,255))
-			draw.RoundedBox(2, inset + w - 30, inset + 9, 10, 9, Color(255,160,20,255))
-		elseif meta.role == ROLE_Server then
-			draw.RoundedBox(2, inset + w - 30, inset, 10, 18, Color(20,160,255,255))
-		elseif meta.role == ROLE_Client then
-			draw.RoundedBox(2, inset + w - 30, inset, 10, 18, Color(255,160,20,255))
-		end
+	if not node:HasFlag(NTF_Compact) then draw.RoundedBox(6, inset, inset, w - inset * 2, 18, Color(ntc.r,ntc.g,ntc.b,180)) end
+	local role = node:GetRole()
+
+	if role == ROLE_Shared and false then
+		draw.RoundedBox(2, inset + w - 30, inset, 9, 18, Color(20,160,255,255))
+		draw.RoundedBox(2, inset + w - 30, inset + 9, 10, 9, Color(255,160,20,255))
+	elseif role == ROLE_Server then
+		draw.RoundedBox(2, inset + w - 30, inset, 10, 18, Color(20,160,255,255))
+	elseif role == ROLE_Client then
+		draw.RoundedBox(2, inset + w - 30, inset, 10, 18, Color(255,160,20,255))
 	end
 
-	if not meta.compact then
+	if not node:HasFlag(NTF_Compact) then
 		draw.SimpleText(self:GetDisplayName(), "Trebuchet18", inset + 4, inset)
 	else
 		-- HACK
-		if node:GetTypeName() ~= "Pin" then
+		if node:GetTypeName() ~= "CORE_Pin" then
 			draw.SimpleText(self:GetDisplayName(), "HudHintTextLarge", w/2, h/2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 	end
@@ -344,7 +340,7 @@ function PANEL:OnKeyCodePressed( code )
 	if self.vgraph:GetIsLocked() then return end
 
 	if code == KEY_DELETE then
-		if self.node:GetMeta().noDelete then return end
+		if self.node:HasFlag(NTF_NoDelete) then return end
 		self.graph:RemoveNode(self.node.id)
 	end
 

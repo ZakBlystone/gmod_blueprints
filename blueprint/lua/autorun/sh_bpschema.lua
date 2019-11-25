@@ -41,7 +41,10 @@ NTF_NotHook = 2
 NTF_Latent = 4
 NTF_Protected = 8
 NTF_Compact = 16
-NTF_Returns = 32
+NTF_Custom = 32
+NTF_NoDelete = 64
+NTF_Collapse = 128
+NTF_HidePinNames = 256
 
 GT_Event = 0
 GT_Function = 1
@@ -56,9 +59,9 @@ RM_None = 0
 RM_Replicated = 1
 RM_RepNotify = 2
 
-ROLE_Server = 0
-ROLE_Client = 1
-ROLE_Shared = 2
+ROLE_Shared = 0
+ROLE_Server = 1
+ROLE_Client = 2
 
 NodeTypeColors = {
 	[NT_Pure] = Color(60,150,60),
@@ -146,24 +149,14 @@ function MakePin(dir, name, pintype, flags, ex, desc)
 	)
 end
 
-function ConfigureNodeType(t)
-
-	if t.type == NT_Function then
-		table.insert(t.pins, 1, MakePin( PD_Out, "Thru", PN_Exec ))
-		table.insert(t.pins, 1, MakePin( PD_In, "Exec", PN_Exec ))
-	elseif t.type == NT_Event then
-		table.insert(t.pins, 1, MakePin( PD_Out, "Exec", PN_Exec ))
-	end
-
-end
-
 function PinRetArg( nodeType, infmt, outfmt, concat )
 
 	concat = concat or ","
 	--print(nodeType.name)
-	local base = (nodeType.type == NT_Event) and 2 or 1
+	local base = (nodeType:GetCodeType() == NT_Event) and 2 or 1
 	local pins = {[PD_In] = {}, [PD_Out] = {}}
-	for k,v in pairs(nodeType.pins) do
+	for k,v in pairs(nodeType:GetPins()) do
+		if v:GetBaseType() == PN_Exec then continue end
 		local dir = v:GetDir()
 		local num = (base+#pins[dir])
 		local s = (dir == PD_In and "$" or "#") .. num
@@ -178,57 +171,13 @@ function PinRetArg( nodeType, infmt, outfmt, concat )
 
 end
 
-function PURE(t) 
-	t.pins = t.pins or {}
-	t.type = NT_Pure
-	ConfigureNodeType(t)
-	return t 
-end
-
-function FUNCTION(t) 
-	t.pins = t.pins or {}
-	t.type = NT_Function
-	ConfigureNodeType(t)
-	return t
-end
-
-function EVENT(t)
-	t.pins = t.pins or {}
-	t.type = NT_Event
-	ConfigureNodeType(t)
-	return t 
-end
-
-function SPECIAL(t)
-	t.pins = t.pins or {}
-	t.type = NT_Special
-	ConfigureNodeType(t)
-	return t
-end
-
-function FUNC_INPUT(t)
-	t.pins = t.pins or {}
-	t.type = NT_FuncInput
-	t.hidden = true
-	ConfigureNodeType(t)
-	return t
-end
-
-function FUNC_OUTPUT(t)
-	t.pins = t.pins or {}
-	t.type = NT_FuncOutput
-	ConfigureNodeType(t)
-	return t
-end
-
 function FindMatchingPin(ntype, pf)
-	local m = ntype.meta
-	local informs = m and m.informs or nil
+	local informs = ntype:GetInforms()
 	local ignoreNullable = bit.band( PNF_All, bit.bnot( PNF_Nullable ) )
-	for id, pin in pairs(ntype.pins) do
+	for id, pin in pairs(ntype:GetPins()) do
 		local sameType = pin:GetType():Equal(pf:GetType(), 0)
 		local sameFlags = pin:GetFlags(ignoreNullable) == pf:GetFlags(ignoreNullable)
 		local tableMatch = informs ~= nil and #informs > 0 and pin:HasFlag(PNF_Table) and pf:HasFlag(PNF_Table) and pin:IsType(PN_Any)
-		if pin:GetDir() ~= pf:GetDir() and ntype.name == "Pin" or ((sameType and sameFlags) or tableMatch) then return id end
+		if pin:GetDir() ~= pf:GetDir() and ntype:GetName() == "CORE_Pin" or ((sameType and sameFlags) or tableMatch) then return id end
 	end
 end

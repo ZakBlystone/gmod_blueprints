@@ -2,21 +2,22 @@ if SERVER then AddCSLuaFile() return end
 
 include("sh_bpschema.lua")
 include("sh_bpnodedef.lua")
+include("sh_bpnodetype.lua")
 
-module("bpuicreatemenu", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
+module("bpuicreatemenu", package.seeall, bpcommon.rescope(bpschema, bpnodedef, bpnodetype))
 
 
 local PANEL = {}
 
 local function DisplayName(nodeType)
-	return nodeType.displayName or nodeType.name
+	return nodeType:GetDisplayName()
 end
 
 local function NodeIcon(nodeType)
-	if not nodeType.meta then print("NO META FOR: " .. nodeType.name) end
-	if nodeType.meta.role == ROLE_Server then return "icon16/bullet_blue.png" end
-	if nodeType.meta.role == ROLE_Client then return "icon16/bullet_orange.png" end
-	if nodeType.meta.role == ROLE_Shared then return "icon16/bullet_purple.png" end
+	local role = nodeType:GetRole()
+	if role == ROLE_Server then return "icon16/bullet_blue.png" end
+	if role == ROLE_Client then return "icon16/bullet_orange.png" end
+	if role == ROLE_Shared then return "icon16/bullet_purple.png" end
 	return "icon16/bullet_white.png"
 end
 
@@ -71,9 +72,9 @@ function PANEL:Init()
 	
 	local function inserter( list )
 		return function( name, nodeType )
-			local c = NodeTypeColors[nodeType.type]
+			local c = NodeTypeColors[nodeType:GetType()]
 			local cx = Color(c.r/2, c.g/2, c.b/2, 255)
-			local item = list:AddItem( nodeType.displayName or name )
+			local item = list:AddItem( nodeType:GetDisplayName() or name )
 			item:SetFont("DermaDefaultBold")
 			item:SetColor( Color(255,255,255) )
 			item.DoClick = function()
@@ -107,8 +108,9 @@ function PANEL:Init()
 		table.insert(self.timers, { t = self.nextTimer, f = function()
 			local node = addTreeNode(p, DisplayName(nodeType), NodeIcon(nodeType), expanded)
 			node.InternalDoClick = function() treeItemClick(nodeType) end
-			if nodeType.desc and nodeType.desc ~= "" then
-				node:SetTooltip(nodeType.desc)
+			local desc = nodeType:GetDescription()
+			if desc and desc ~= "" then
+				node:SetTooltip(desc)
 			end
 		end })
 		self.nextTimer = self.nextTimer + 0.001
@@ -122,26 +124,28 @@ function PANEL:Init()
 			makeCat(p, "Libs", "icon16/brick.png")
 			makeCat(p, "Hooks", "icon16/connect.png")
 			makeCat(p, "Structs", "icon16/table.png")
-			if nodeType.deprecated then return end
-			if nodeType.isHook then
+			local context = nodeType:GetContext()
+			local category = nodeType:GetCategory()
+			if nodeType:HasFlag(NTF_Deprecated) then return end
+			if context == NC_Hook then
 				p = makeCat(p, "Hooks", "icon16/connect.png")
-				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png") end
+				if category then p = makeCat(p, category, "icon16/bullet_go.png") end
 				addTreeBPNode(p, nodeType, expanded)
-			elseif nodeType.isClass then
+			elseif context == NC_Class then
 				p = makeCat(p, "Classes", "icon16/bricks.png")
-				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png") end
+				if category then p = makeCat(p, category, "icon16/bullet_go.png") end
 				addTreeBPNode(p, nodeType, expanded)
-			elseif nodeType.isLib then
+			elseif context == NC_Lib then
 				p = makeCat(p, "Libs", "icon16/brick.png")
-				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png") end
+				if category then p = makeCat(p, category, "icon16/bullet_go.png") end
 				addTreeBPNode(p, nodeType, expanded)
-			elseif nodeType.isStruct then
+			elseif context == NC_Struct then
 				p = makeCat(p, "Structs", "icon16/table.png")
-				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png", true) end
+				if category then p = makeCat(p, category, "icon16/bullet_go.png", true) end
 				addTreeBPNode(p, nodeType, expanded)
 			else
 				p = makeCat(p, "Other")
-				if nodeType.category then p = makeCat(p, nodeType.category, "icon16/bullet_go.png") end
+				if category then p = makeCat(p, category, "icon16/bullet_go.png") end
 				addTreeBPNode(p, nodeType, expanded)
 			end
 		end

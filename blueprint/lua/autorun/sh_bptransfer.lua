@@ -90,7 +90,7 @@ end
 
 function meta:Update()
 
-	if self.current == nil then
+	if self.current == nil and self.filePendingAck == nil then
 		if self.pending[1] then
 			self:StartFile(self.pending[1])
 		else
@@ -124,6 +124,7 @@ end
 
 function meta:OnRemoteFinished(entry)
 
+	self:CloseFile()
 	self.current = nil
 
 	hook.Call("BPTransferRemoteReceived", nil, self, entry)
@@ -242,10 +243,23 @@ function meta:Send()
 
 end
 
+function meta:CloseFile()
+
+	if self.current ~= nil then
+		if self.current.file ~= nil then
+			self.current.file:Close()
+			self.current.file = nil
+		end
+	end
+
+end
+
 function meta:Cancel(msg)
 
 	hook.Call("BPTransferStopped", nil, self, msg)
 	print("Transfer cancelled: " .. self:GetName() .. " [" .. tostring(self) .. "] reason: " .. tostring(msg))
+
+	self:CloseFile()
 
 	self.state = STATE_Idle
 	self.current = nil
@@ -408,7 +422,7 @@ elseif CLIENT then
 
 		local ft = FrameTime()
 		hudAlpha = hudAlpha + (hudTargetAlpha - hudAlpha) * (1 - math.exp(ft * -5))
-		hudData.progressLerp = hudData.progressLerp + (hudData.progress - hudData.progressLerp) * (1 - math.exp(ft * -8))
+		hudData.progressLerp = hudData.progressLerp + (hudData.progress - hudData.progressLerp) * (1 - math.exp(ft * -3))
 
 		local alpha = hudAlpha
 		local width = ScreenScale(300)

@@ -58,30 +58,28 @@ end
 
 function meta:GetterNodeType()
 
-	return PURE {
-		pins = {
-			MakePin(PD_Out, "value", self.pintype),
-		},
-		code = "#1 = __self.__" .. self:GetName(),
-		meta = {compact = true},
-		custom = true,
-		displayName = "Get" .. self:GetName(),
-	}
+	local ntype = bpnodetype.New()
+	ntype:AddFlag( NTF_Compact )
+	ntype:AddFlag( NTF_Custom )
+	ntype:AddPin( MakePin(PD_Out, "value", self.pintype) )
+	ntype:SetCodeType( NT_Pure )
+	ntype:SetCode( "#1 = __self.__" .. self:GetName() )
+	ntype:SetDisplayName( "Get" .. self:GetName() )
+	return ntype
 
 end
 
 function meta:SetterNodeType()
 
-	return FUNCTION {
-		pins = {
-			MakePin(PD_In, "value", self.pintype),
-			MakePin(PD_Out, "value", self.pintype),
-		},
-		code = "__self.__" .. self:GetName() .. " = $1 #1 = $1",
-		meta = {compact = true},
-		custom = true,
-		displayName = "Set" .. self:GetName(),
-	}
+	local ntype = bpnodetype.New()
+	ntype:AddFlag( NTF_Compact )
+	ntype:AddFlag( NTF_Custom )
+	ntype:AddPin( MakePin(PD_In, "value", self.pintype) )
+	ntype:AddPin( MakePin(PD_Out, "value", self.pintype) )
+	ntype:SetCodeType( NT_Function )
+	ntype:SetCode( "__self.__" .. self:GetName() .. " = $1 #1 = $1" )
+	ntype:SetDisplayName( "Set" .. self:GetName() )
+	return ntype
 
 end
 

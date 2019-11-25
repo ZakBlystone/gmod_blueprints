@@ -68,7 +68,7 @@ end
 
 function NODE:GetOperator()
 
-	return self:GetType().params["operator"]
+	return self:GetType():GetNodeParam("operator")
 
 end
 

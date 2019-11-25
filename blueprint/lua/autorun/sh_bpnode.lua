@@ -33,7 +33,7 @@ function meta:PostInit()
 	self.x = math.Round(self.x / 15) * 15
 	self.y = math.Round(self.y / 15) * 15
 
-	self.nodeType = NodeRedirectors[self.nodeType] or self.nodeType
+	self.nodeType = bpdefs:Get():RemapNodeType(self.nodeType)
 
 	local ntype = self:GetType()
 	if ntype == nil then 
@@ -63,15 +63,14 @@ end
 function meta:SetLiteralDefaults()
 
 	local ntype = self:GetType()
-	local defaults = ntype.defaults or {}
 
 	local base = self:GetCodeType() == NT_Function and -1 or 0
 	for pinID, pin, pos in self:SidePins(PD_In) do
-		local default = defaults[base+pos]
+		local default = pin:GetDefault()
 		local literal = pin:GetLiteralType()
 		if literal then
 			if self:GetLiteral(pinID) == nil then
-				self:SetLiteral(pinID, default or pin:GetDefault())
+				self:SetLiteral(pinID, default)
 			end
 		end
 	end
@@ -183,7 +182,7 @@ end
 
 function meta:GeneratePins(pins)
 
-	table.Add(pins, table.Copy(self:GetType().pins))
+	table.Add(pins, table.Copy(self:GetType():GetPins()))
 	if self.data.codeTypeOverride == NT_Pure and pins[1]:IsType(PN_Exec) then
 		table.remove(pins, 1)
 		table.remove(pins, 1)
@@ -293,24 +292,13 @@ end
 
 function meta:GetCodeType()
 
-	return self.data.codeTypeOverride or self:GetType().type
+	return self.data.codeTypeOverride or self:GetType():GetCodeType()
 
 end
 
 function meta:GetTypeName() return self.nodeType end
 function meta:GetPos() return self.x, self.y end
-
-function meta:RemapPin(name)
-
-	local redirects = self:GetType().pinRedirects
-	local mapTo = redirects and redirects[name]
-	if mapTo then
-		print("Remap Pin: " .. name .. " -> " .. mapTo)
-		return mapTo
-	end
-	return name
-
-end
+function meta:RemapPin(name) return self:GetType():RemapPin(name) end
 
 function meta:ConvertType(t)
 
@@ -342,22 +330,19 @@ function meta:GetOptions(tab)
 
 end
 
+function meta:GetRole() return self:GetType():GetRole() end
 function meta:GetPins() return self.pinCache end
-function meta:GetCode() return self:GetType().code end
-function meta:GetJumpSymbols() return self:GetType().jumpSymbols or {} end
-function meta:GetLocals() return self:GetType().locals or {} end
-function meta:GetMeta() return self:GetType().meta or {} end
-function meta:GetGraphThunk() return self:GetType().graphThunk end
-function meta:GetHook() return self:GetType().hook end
-function meta:GetInforms() return self:GetType().meta.informs or {} end
-function meta:GetDescription() return self:GetType().desc end
-
-function meta:GetDisplayName()
-
-	local ntype = self:GetType()
-	return ntype.displayName or ntype.name
-
-end
+function meta:GetCode() return self:GetType():GetCode() end
+function meta:GetJumpSymbols() return self:GetType():GetJumpSymbols() end
+function meta:GetLocals() return self:GetType():GetLocals() end
+function meta:GetGraphThunk() return self:GetType():GetGraphThunk() end
+function meta:GetHook() return self:GetType():GetHook() end
+function meta:GetInforms() return self:GetType():GetInforms() end
+function meta:GetDescription() return self:GetType():GetDescription() end
+function meta:GetFlags() return self:GetType():GetFlags() end
+function meta:HasFlag(fl) return bit.band(self:GetFlags(), fl) ~= 0 end
+function meta:GetDisplayName() return self:GetType():GetDisplayName() end
+function meta:GetRequiredMeta() return self:GetType():GetRequiredMeta() end
 
 function meta:GetGraph() return self.graph end
 function meta:GetModule() return self:GetGraph():GetModule() end
