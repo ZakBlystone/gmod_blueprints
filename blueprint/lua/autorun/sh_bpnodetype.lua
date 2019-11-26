@@ -124,9 +124,9 @@ function meta:GetPins()
 	--HACK
 	local count = 0
 	for k,v in pairs(pins) do
-		if v:GetDir() == PD_In then count = count + 1 end
+		count = count + 1
 	end
-	if count == 1 and self:GetCodeType() == NT_Pure then
+	if count <= 2 and self:GetCodeType() == NT_Pure then
 		self:AddFlag(NTF_Compact)
 	end
 
