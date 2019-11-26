@@ -36,36 +36,42 @@ STRUCT RenderModelSettings
 	PIN pos, PN_Vector, #Position to draw the model at
 	PIN angle, PN_Angles, #Angles to draw the model at
 }
-STRUCT TranslateHandsResult, For use with player_manager.TranslatePlayerHands
+STRUCT TranslateHandsResult
 {
+	DESC For use with player_manager.TranslatePlayerHands
 	PIN model, PN_String, #Model of hands
 	PIN skin, PN_Number, #Skin of hands
 	PIN body, PN_String, #Bodygroups of hands
 }
-STRUCT ParticleAttachment, For use with Entity:CreateParticleSystem
+STRUCT ParticleAttachment
 {
+	DESC For use with Entity:CreateParticleSystem
 	PIN attachtype=PATTACH_ABSORIGIN, PN_Enum, PNF_Nullable, PATTACH, #The particle attach type
 	PIN entity, PN_Ref, PNF_Nullable, Entity, #The parent entity
 	PIN position, PN_Vector, PNF_Nullable, #The offset position
 }
-STRUCT AnimInfo, For use with Entity:GetAnimInfo
+STRUCT AnimInfo
 {
+	DESC For use with Entity:GetAnimInfo
 	PIN flags=0, PN_Number, #Animation flags
 	PIN fps=0, PN_Number, #Frame rate
 	PIN label, PN_String, #Name of animation
 	PIN numframes=0, PN_Number, #Number of frames in the animation
 }
-STRUCT SubModel, For use with Entity:GetSubModels
+STRUCT SubModel
 {
+	DESC For use with Entity:GetSubModels
 	PIN name, PN_String, #Name of submodel
 	PIN id, PN_Number, #ID of submodel
 }
-STRUCT Convex, For use with Entity:PhysicsInitConvex and Entity:PhysicsInitMultiConvex
+STRUCT Convex
 {
+	DESC For use with Entity:PhysicsInitConvex and Entity:PhysicsInitMultiConvex
 	PIN vertices, PN_Vector, PNF_Table, #Vertices for convex mesh
 }
-STRUCT NavExtent, For use with CNavArea:GetExtentInfo
+STRUCT NavExtent
 {
+	DESC For use with CNavArea:GetExtentInfo
 	Vector hi Vector lo number SizeX number SizeY number SizeZ
 	PIN hi, PN_Vector
 	PIN lo, PN_Vector
@@ -73,19 +79,22 @@ STRUCT NavExtent, For use with CNavArea:GetExtentInfo
 	PIN SizeY, PN_Number
 	PIN SizeZ, PN_Number
 }
-STRUCT VectorDist, For use with NextBot:FindSpots
+STRUCT VectorDist
 {
+	DESC For use with NextBot:FindSpots
 	PIN vector, PN_Vector
 	PIN distance, PN_Number	
 }
-STRUCT CursorData, For use with PathFollower:GetCursorData
+STRUCT CursorData
 {
+	DESC For use with PathFollower:GetCursorData
 	PIN curvature, PN_Number
 	PIN forward, PN_Vector
 	PIN pos, PN_Vector
 }
-STRUCT ShadowParams, For use with PhysObj:ComputeShadowControl
+STRUCT ShadowParams
 {
+	DESC For use with PhysObj:ComputeShadowControl
 	NAME secondstoarrive, secondsToArrive
 	NAME angle, angles
 	NAME maxangular, maxAngular
@@ -106,15 +115,17 @@ STRUCT ShadowParams, For use with PhysObj:ComputeShadowControl
 	PIN teleportdistance=200, PN_Number, #If it's further away than this it'll teleport ( Set to 0 to not teleport )
 	PIN deltatime, PN_Number, #The deltatime it should use
 }
-STRUCT DuplicatorData, For use with duplicator.Copy
+STRUCT DuplicatorData
 {
+	DESC For use with duplicator.Copy
 	PIN Entities, PN_Ref, PNF_Table, Entity
 	PIN Constraints, PN_Ref, PNF_Table, Entity
 	PIN Mins, PN_Vector
 	PIN Maxs, PN_Vector
 }
-STRUCT AddonInfo, For use with engine.GetAddons
+STRUCT AddonInfo
 {
+	DESC For use with engine.GetAddons
 	PIN downloaded, PN_Bool
 	PIN models, PN_Number
 	PIN title, PN_String
@@ -122,8 +133,9 @@ STRUCT AddonInfo, For use with engine.GetAddons
 	PIN mounted, PN_Bool
 	PIN wsid, PN_Number
 }
-STRUCT GamemodeInfo, For use with engine.GetGamemodes
+STRUCT GamemodeInfo
 {
+	DESC For use with engine.GetGamemodes
 	NAME workshopid, workshopID
 	NAME menusystem, menuSystem
 	PIN title, PN_String
@@ -132,8 +144,9 @@ STRUCT GamemodeInfo, For use with engine.GetGamemodes
 	PIN maps, PN_String
 	PIN name, PN_String
 }
-STRUCT GameInfo, For use with engine.GetGames
+STRUCT GameInfo
 {
+	DESC For use with engine.GetGames
 	PIN depot, PN_Number
 	PIN title, PN_String
 	PIN owned, PN_Bool
@@ -141,8 +154,9 @@ STRUCT GameInfo, For use with engine.GetGames
 	PIN mounted, PN_Bool
 	PIN installed, PN_Bool
 }
-STRUCT AmmoData, Table structure that describes a Source Engine ammo type.
+STRUCT AmmoData
 {
+	DESC Table structure that describes a Source Engine ammo type.
 	NAME dmgtype, damageType
 	NAME maxsplash, maxSplash
 	NAME minsplash, minSplash
@@ -160,8 +174,9 @@ STRUCT AmmoData, Table structure that describes a Source Engine ammo type.
 	PIN maxcarry=9999, PN_Number, #Maximum amount of ammo of this type the player should be able to carry in reserve.
 	PIN flags=0, PN_Enum, PNF_Bitfield, AMMO, #Flags for the ammo type
 }
-STRUCT AngPos, Table used by various functions, such as Entity:GetAttachment.
+STRUCT AngPos
 {
+	DESC Table used by various functions, such as Entity:GetAttachment.
 	NAME Ang, angle
 	NAME Pos, pos
 	PIN Ang, PN_Angles, #Angle
@@ -171,19 +186,22 @@ STRUCT AnimationData
 {
 	
 }
-STRUCT AttachmentData, Table returned by Entity:GetAttachments.
+STRUCT AttachmentData
 {
+	DESC Table returned by Entity:GetAttachments.
 	PIN id, PN_Number, #Index of the attachment
 	PIN name, PN_String, #Name of the attachment
 }
-STRUCT BodyGroupData, Table returned by Entity:GetBodyGroups.
+STRUCT BodyGroupData
 {
+	DESC Table returned by Entity:GetBodyGroups.
 	PIN id, PN_Number, #Index of the body group
 	PIN name, PN_String, #Name of the body group
 	PIN num, PN_Number, #Amount of subgroups
 }
-STRUCT BoneManipulationData, Structure used for storing/restoring bone manipulations.
+STRUCT BoneManipulationData
 {
+	DESC Structure used for storing/restoring bone manipulations.
 	NAME s, scale
 	NAME a, angles
 	NAME p, pos
@@ -214,15 +232,17 @@ STRUCT Bullet
 	PIN Src, PN_Vector, PNF_Nullable, #The position to fire the bullets from
 	PIN IgnoreEntity, PN_Ref, PNF_Nullable, Entity, #The entity that the bullet will ignore when it will be shot.
 }
-STRUCT CamDataOrtho, For use with CamData
+STRUCT CamDataOrtho
 {
+	DESC For use with CamData
 	PIN left, PN_Number
 	PIN right, PN_Number
 	PIN top, PN_Number
 	PIN bottom, PN_Number
 }
-STRUCT CamData, Table structure used GM:CalcView and GM:CalcVehicleView hook.
+STRUCT CamData
 {
+	DESC Table structure used GM:CalcView and GM:CalcVehicleView hook.
 	NAME znear, zNear
 	NAME zfar, zFar
 	NAME drawviewer, drawViewer
@@ -234,8 +254,9 @@ STRUCT CamData, Table structure used GM:CalcView and GM:CalcVehicleView hook.
 	PIN drawviewer=false, PN_Bool, #Set true to draw local players player model.
 	PIN ortho, PN_Struct, PNF_Nullable, CamDataOrtho
 }
-STRUCT CollisionData, Passed as argument of ENTITY:PhysicsCollide.
+STRUCT CollisionData
 {
+	DESC Passed as argument of ENTITY:PhysicsCollide.
 	PIN HitPos, PN_Vector, #The collision position
 	PIN HitEntity, PN_Ref, PNF_None, Entity, #The other collision entity
 	PIN OurOldVelocity, PN_Vector, #The entity's velocity before the collision
@@ -266,8 +287,9 @@ STRUCT CreationMenus
 	PIN Order, PN_Number, #The order in which a tab will be displayed relative to the other tabs.
 	PIN Tooltip, PN_String, #The tooltip to be shown with the tab.
 }
-STRUCT DateData, Table returned by os.date and used by os.time.
+STRUCT DateData
 {
+	DESC Table returned by os.date and used by os.time.
 	PIN day, PN_Number, #Day of the month
 	PIN hour, PN_Number, #Hour
 	PIN isdst, PN_Bool, #Daylight saving enabled
@@ -278,8 +300,9 @@ STRUCT DateData, Table returned by os.date and used by os.time.
 	PIN yday, PN_Number, #Day of the year
 	PIN year, PN_Number, #Year
 }
-STRUCT EmitSoundInfo, Passed as argument of GM:EntityEmitSound.
+STRUCT EmitSoundInfo
 {
+	DESC Passed as argument of GM:EntityEmitSound.
 	NAME SoundName, name
 	NAME OriginalSoundName, original
 	NAME SoundTime, time
@@ -296,8 +319,9 @@ STRUCT EmitSoundInfo, Passed as argument of GM:EntityEmitSound.
 	PIN Entity, PN_Ref, PNF_Nullable, Entity, #The entity that played the sound.
 	PIN Pos, PN_Vector, PNF_Nullable, #The origin of the played sound.
 }
-STRUCT ENT, Information about the ENT structure.
+STRUCT ENT
 {
+	DESC Information about the ENT structure.
 	PIN Base, PN_String, #The base entity to derive from. This must be a valid Lua entity
 	PIN Type, PN_String, #Type of the entity. This must be one of these: anim, brush, point, ai, nextbot, filter
 	PIN ClassName, PN_String, #Entity class name of the entity (File or folder name of your entity). This is set automatically after the entity file is loaded.
@@ -338,8 +362,9 @@ STRUCT HTTPRequest
 	PIN body, PN_String, PNF_Nullable, #Body string for POST data.
 	PIN type, PN_String, PNF_Nullable, #Content type for body.
 }
-STRUCT HullTrace, Table used by util.TraceHull.
+STRUCT HullTrace
 {
+	DESC Table used by util.TraceHull.
 	PIN start, PN_Vector, #The start position of the trace
 	PIN endpos, PN_Vector, #The end position of the trace
 	PIN mins, PN_Vector, #The 3D vector local to the start/endpos with the lowest (often negative) values. This will represent the corner with the lower bounds of the box.
@@ -350,8 +375,9 @@ STRUCT HullTrace, Table used by util.TraceHull.
 	PIN ignoreworld=false, PN_Bool, #Should the trace ignore world or not.
 	PIN output, PN_Struct, PNF_Nullable, TraceResult, #If set, the trace result will be written to the supplied table instead of returning a new table
 }
-STRUCT LocalLight, Table structure used for render.SetLocalModelLights.
+STRUCT LocalLight
 {
+	DESC Table structure used for render.SetLocalModelLights.
 	PIN type=MATERIAL_LIGHT_POINT, PN_Enum, PNF_None, MATERIAL_LIGHT, #The type of the light source
 	PIN color, PN_Vector, PNF_Nullable, #The color of the light source (x is red, y is green, z is blue) Values are not restricted to a specific range, higher values will result in a brighter light.
 	PIN pos, PN_Vector, PNF_Nullable, #The origin of the light in world coordinates.
@@ -411,8 +437,9 @@ STRUCT OperatingParams
 	PIN steeringAngle, PN_Number, #Steering angle
 	PIN wheelsInContact, PN_Number, #Wheels on ground
 }
-STRUCT PathSegment, Structure represents a path segment, returned by PathFollower:GetCurrentGoal, PathFollower:FirstSegment and PathFollower:LastSegment.
+STRUCT PathSegment
 {
+	DESC Structure represents a path segment, returned by PathFollower:GetCurrentGoal, PathFollower:FirstSegment and PathFollower:LastSegment.
 	PIN area, PN_Ref, PNF_None, CNavArea, #The navmesh area this segment occupies.
 	PIN curvature, PN_Number
 	PIN distanceFromStart, PN_Number, #Distance of this segment from the start of the path.
@@ -425,8 +452,9 @@ STRUCT PathSegment, Structure represents a path segment, returned by PathFollowe
 	PIN pos, PN_Vector, #The position of the end of this segment.
 	PIN type, PN_Number, #The movement type of this segment, indicating how bots are expected to move along this segment.
 }
-STRUCT PhysEnvPerformanceSettings, Table used by physenv.SetPerformanceSettings.
+STRUCT PhysEnvPerformanceSettings
 {
+	DESC Table used by physenv.SetPerformanceSettings.
 	PIN LookAheadTimeObjectsVsObject, PN_Number, #Maximum amount of seconds to precalculate collisions with objects.
 	PIN LookAheadTimeObjectsVsWorld, PN_Number, #Maximum amount of seconds to precalculate collisions with world.
 	PIN MaxAngularVelocity, PN_Number, #Maximum rotation velocity.
@@ -436,8 +464,9 @@ STRUCT PhysEnvPerformanceSettings, Table used by physenv.SetPerformanceSettings.
 	PIN MaxVelocity, PN_Number, #Maximum speed of an object.
 	PIN MinFrictionMass, PN_Number, #Minimum mass of an object to be affected by friction.
 }
-STRUCT PropertyAdd, TODO: Very incomplete, properties are complicated
+STRUCT PropertyAdd
 {
+	DESC TODO: Very incomplete, properties are complicated
 	WARN Very incomplete
 	PIN Type=simple, PN_String, #Can be set to "toggle" to make this property a toggle property.
 	PIN MenuLabel, PN_String, #Label to show on opened menu.
@@ -445,8 +474,9 @@ STRUCT PropertyAdd, TODO: Very incomplete, properties are complicated
 	PIN Order, PN_Number, #Where in the list should the property be positioned, relative to other properties.
 	PIN PrependSpacer=false, PN_Bool, #Whether to add a spacer before this property.
 }
-STRUCT RenderCamData, Used for cam.Start.
+STRUCT RenderCamData
 {
+	DESC Used for cam.Start.
 	PIN x, PN_Number, #The x position of the view port
 	PIN y, PN_Number, #The y position of the view port
 	PIN w, PN_Number, #The width of the view port
@@ -463,8 +493,9 @@ STRUCT RenderCamData, Used for cam.Start.
 	PIN offcenter, PN_Struct, CamDataOrtho
 	PIN ortho, PN_Struct, CamDataOrtho
 }
-STRUCT RenderCaptureData, Used for render.Capture.
+STRUCT RenderCaptureData
 {
+	DESC Used for render.Capture.
 	PIN format=png, PN_String, #Format of the capture. Valid formats are: jpeg, png
 	PIN x, PN_Number, #X coordinate of the capture origin
 	PIN y, PN_Number, #Y coordinate of the capture origin
@@ -473,8 +504,9 @@ STRUCT RenderCaptureData, Used for render.Capture.
 	PIN quality=10, PN_Number, #The quality of the capture. Affects jpeg only.
 	PIN alpha=true, PN_Bool, #Set to false to capture an image with alpha channel set to fully opaque. Affects png only.
 }
-STRUCT SequenceInfo, Used by Entity:GetSequenceInfo.
+STRUCT SequenceInfo
 {
+	DESC Used by Entity:GetSequenceInfo.
 	PIN label, PN_String, #Name of the sequence.
 	PIN activityname, PN_String, #Name of the activity this sequence is attached to.
 	PIN activity, PN_Enum, PNF_None, ACT, #The activity ID associated with this sequence.
@@ -495,8 +527,9 @@ STRUCT SequenceInfo, Used by Entity:GetSequenceInfo.
 	PIN cycleposeindex, PN_Number, #If non 0, index of pose parameter to be used as cycle index. This means that the sequence playback will be controlled by a pose parameter.
 	PIN anims, PN_Number, PNF_Table, #A 1-based array of all animationIDs associated with this sequence. For use with Entity:GetAnimInfo.
 }
-STRUCT SoundData, Table used in sound.Add and sound.GetProperties.
+STRUCT SoundData
 {
+	DESC Table used in sound.Add and sound.GetProperties.
 	PIN channel, PN_Enum, PNF_None, CHAN, #The sound channel to play in. See CHAN_ Enums
 	PIN name, PN_String, #The name of the sound.
 	PIN level=75, PN_Number, #The soundlevel of the sound in dB
@@ -504,14 +537,16 @@ STRUCT SoundData, Table used in sound.Add and sound.GetProperties.
 	PIN volume=1, PN_Number, #The volume of the sound as a decimal between 0 and 1. Can be a table of two numbers, a minimum and a maximum value.
 	PIN pitch=100, PN_Number, #The pitch of the sound. Can be a table of two numbers, a minimum and a maximum value.
 }
-STRUCT ToScreenData, Table returned by Vector:ToScreen.
+STRUCT ToScreenData
 {
+	DESC Table returned by Vector:ToScreen.
 	PIN x, PN_Number, #The x coordinate on the players screen
 	PIN y, PN_Number, #The y coordinate on the players screen
 	PIN visible, PN_Bool, #The coordinate is not behind the player
 }
-STRUCT Trace, Table structure used for util.TraceLine.
+STRUCT Trace
 {
+	DESC Table structure used for util.TraceLine.
 	PIN start, PN_Vector, #The start position of the trace
 	PIN endpos, PN_Vector, #The end position of the trace
 	PIN filter, PN_Ref, PNF_Table|PNF_Nullable, Entity, #Things the trace should not hit.
@@ -519,8 +554,9 @@ STRUCT Trace, Table structure used for util.TraceLine.
 	PIN collisiongroup=COLLISION_GROUP_NONE, PN_Enum, PNF_None, COLLISION_GROUP, #This determines what the trace should hit in regards to the entity's collision group.
 	PIN ignoreworld=false, PN_Bool, #Should the trace ignore world or not
 }
-STRUCT TraceResult, Table structure used as trace result.
+STRUCT TraceResult
 {
+	DESC Table structure used as trace result.
 	PIN Entity, PN_Ref, PNF_Nullable, Entity, #The entity hit by the trace.
 	PIN Fraction=1, PN_Number, #This indicates the how much of your trace length was used from 0-1
 	PIN FractionLeftSolid=0, PN_Number, #Given the trace started in a solid enviroment, this will return at what distance the trace left the solid from 0-1. Doesn't work if the trace hit a non-worldspawn entity.
@@ -545,16 +581,18 @@ STRUCT TraceResult, Table structure used as trace result.
 	PIN DispFlags, PN_Enum, PNF_Bitfield, DISPSURF, #The displacement flags of the hit surface.
 	PIN Contents, PN_Enum, PNF_Bitfield, CONTENTS, #The contents of the hit surface.
 }
-STRUCT Undo, Table structure used by undo.Do_Undo.
+STRUCT Undo
 {
+	DESC Table structure used by undo.Do_Undo.
 	PIN Owner, PN_Ref, PNF_None, Player, #The player responsible who owns the undo
 	PIN Name, PN_String, #The name of the text to report to the player
 	PIN Entities, PN_Ref, PNF_Table, Entity, #A table of entities to be removed by the undo
 	PIN Functions, PN_Func, PNF_Table, VOID, #A table of {function_to_call, func_arg2, func_arg3}
 	PIN CustomUndoText, PN_String, PNF_Nullable, #A custom undo text to show the client
 }
-STRUCT VehicleParamsAxle, The structure used by VehicleParams structure.
+STRUCT VehicleParamsAxle
 {
+	DESC The structure used by VehicleParams structure.
 	PIN brakeFactor, PN_Number
 	PIN offset, PN_Vector
 	PIN raytraceCenterOffset, PN_Vector
@@ -577,8 +615,9 @@ STRUCT VehicleParamsAxle, The structure used by VehicleParams structure.
 	PIN wheels_skidMaterialIndex, PN_Number, #Material index of skid material of the wheels. Upon skidding ( pressing Space and sliding the vehicle ), the wheels will be set to this material.
 	PIN wheels_springAdditionalLength, PN_Number
 }
-STRUCT VehicleParamsBody, The structure used by VehicleParams structure.
+STRUCT VehicleParamsBody
 {
+	DESC The structure used by VehicleParams structure.
 	PIN addGravity, PN_Number, #Additional gravity to be applied to the vehicle
 	PIN counterTorqueFactor, PN_Number
 	PIN keepUprightTorque, PN_Number
@@ -588,8 +627,9 @@ STRUCT VehicleParamsBody, The structure used by VehicleParams structure.
 	PIN tiltForce, PN_Number
 	PIN tiltForceHeight, PN_Number
 }
-STRUCT VehicleParamsEngine, The structure used by VehicleParams structure.
+STRUCT VehicleParamsEngine
 {
+	DESC The structure used by VehicleParams structure.
 	PIN autobrakeSpeedFactor, PN_Number
 	PIN autobrakeSpeedGain, PN_Number
 	PIN axleRatio, PN_Number, #This acts as the final ratio of the gearbox. It's like a master coefficient of the gearbox.
@@ -609,8 +649,9 @@ STRUCT VehicleParamsEngine, The structure used by VehicleParams structure.
 	PIN throttleTime, PN_Number
 	PIN torqueBoost, PN_Number
 }
-STRUCT VehicleParamsSteering, The structure used by VehicleParams structure.
+STRUCT VehicleParamsSteering
 {
+	DESC The structure used by VehicleParams structure.
 	PIN boostSteeringRateFactor, PN_Number
 	PIN boostSteeringRestRateFactor, PN_Number
 	PIN brakeSteeringRateFactor, PN_Number
@@ -631,8 +672,9 @@ STRUCT VehicleParamsSteering, The structure used by VehicleParams structure.
 	PIN turnThrottleReduceFast, PN_Number
 	PIN turnThrottleReduceSlow, PN_Number
 }
-STRUCT VehicleParams, The structure used by Vehicle:SetVehicleParams and Vehicle:GetVehicleParams.
+STRUCT VehicleParams
 {
+	DESC The structure used by Vehicle:SetVehicleParams and Vehicle:GetVehicleParams.
 	PIN wheelsPerAxle, PN_Number, #Wheels per axle
 	PIN axleCount, PN_Number, #Number of axles
 	PIN axles, PN_Struct, PNF_Table, VehicleParamsAxle, #A table of VehicleParamsAxle structure tables.
@@ -640,8 +682,9 @@ STRUCT VehicleParams, The structure used by Vehicle:SetVehicleParams and Vehicle
 	PIN engine, PN_Struct, PNF_None, VehicleParamsEngine
 	PIN steering, PN_Struct, PNF_None, VehicleParamsSteering
 }
-STRUCT VideoData, Table used by video.Record.
+STRUCT VideoData
 {
+	DESC Table used by video.Record.
 	PIN container=webm, PN_String, #The video container format.
 	PIN video=theora, PN_String, #The video codec.
 	PIN audio=vorbis, PN_String, #The audio codec.
@@ -653,8 +696,9 @@ STRUCT VideoData, Table used by video.Record.
 	PIN width, PN_Number, #The videos width
 	PIN height, PN_Number, #The videos height
 }
-STRUCT ViewData, Table structure used for render.RenderView.
+STRUCT ViewData
 {
+	DESC Table structure used for render.RenderView.
 	NAME aspectratio, aspectRatio
 	NAME drawhud, drawHUD
 	NAME drawmonitors, drawMonitors

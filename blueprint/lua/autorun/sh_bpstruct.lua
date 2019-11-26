@@ -39,6 +39,12 @@ function meta:NewPin(name, type, default, flags, ex, desc)
 
 end
 
+function meta:SetPinTypeOverride(override)
+
+	self.pinTypeOverride = override
+
+end
+
 function meta:SetName(name)
 
 	self.name = name

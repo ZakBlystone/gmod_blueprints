@@ -1,15 +1,19 @@
 if SERVER then AddCSLuaFile() end
 
+include("sh_bpcompile.lua")
 include("sh_bpmodule.lua")
 
-module("bpnet", package.seeall)
+module("bpnet", package.seeall, bpcommon.rescope(bpcompile))
 
-local CMD_Upload = 1
-local CMD_Download = 2
-local CMD_Error = 3
-local CMD_Install = 4
-local CMD_Uninstall = 5
+local CMD_Upload = 0
+local CMD_Download = 1
+local CMD_Error = 2
+local CMD_Install = 3
+local CMD_Uninstall = 4
+local CMD_Instantiate = 5
 ClientModules = ClientModules or {}
+
+local CompileFlags = CF_Default
 
 local function PlayerKey(ply)
 	return ply:AccountID() or "singleplayer"
@@ -114,7 +118,7 @@ if SERVER then
 
 			local mod = bpmodule.New()
 			mod:NetRecv()
-			mod:Compile()
+			mod:Compile(CompileFlags)
 			SetPlayerModule( ply, mod )
 			SavePlayerBlueprint( ply )
 			print("Executing blueprint on server...")
@@ -162,7 +166,7 @@ else
 
 			local mod = bpmodule.New()
 			mod:NetRecv()
-			mod:Compile()
+			mod:Compile(CompileFlags)
 
 			local uid = bpcommon.GUIDToString( mod.uniqueID )
 			if ClientModules[uid] ~= nil then
@@ -204,7 +208,7 @@ else
 
 	function SendModule( mod )
 
-		mod:Compile()
+		mod:Compile(CompileFlags)
 
 		net.Start("bpservercmd")
 		net.WriteUInt(CMD_Upload, 4)

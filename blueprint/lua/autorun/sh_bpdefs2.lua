@@ -284,9 +284,10 @@ end
 RegisterBlock("STRUCT", 0, function(block, parent)
 
 	local name = block.tuple[2]
-	local desc = block.literal
+	local pinTypeOverride = pinTypeLookup[ block.tuple[3] ]
 	block.struct = bpstruct.New()
 	block.struct:SetName(name)
+	block.struct:SetPinTypeOverride(pinTypeOverride)
 	block.struct.pins:PreserveNames(true)
 
 	defpack:AddStruct(block.struct)
@@ -365,8 +366,8 @@ RegisterBlock("CLASS", 0, function(block, parent)
 	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_Class)
 	block.group:SetName( block.tuple[2] )
 
-	if block.tuple[3] then block.group:SetParam("typeName", block.tuple[2]) end
-	if block.tuple[4] then block.group:SetParam("pinTypeOverride", pinTypeLookup[block.tuple[2]]) end
+	if block.tuple[3] then block.group:SetParam("typeName", block.tuple[3]) end
+	if block.tuple[4] then block.group:SetParam("pinTypeOverride", pinTypeLookup[block.tuple[4]]) end
 
 	defpack:AddNodeGroup(block.group)
 

@@ -34,7 +34,7 @@ local function SortedFilteredNodeList( graph, filter, res )
 end
 
 local function FilterByType( filterType ) return function(n) 
-		return n.type == filterType 
+		return n:GetCodeType() == filterType 
 	end 
 end
 
@@ -236,7 +236,7 @@ function PANEL:Setup( graph, pinFilter )
 	makeSearchPage("Entity", "Entity nodes", "icon16/bricks.png", AndFilter(baseFilter, FilterByPinType(entityType)), true)
 	makeSearchPage("Player", "Player nodes", "icon16/user.png", AndFilter(baseFilter, FilterByPinType(playerType)), true)
 	makeSearchPage("Special", "Special nodes", "icon16/plugin.png", OrFilter( FilterByType(NT_Special), FilterByPinType(anyType) ), true)
-	makeSearchPage("Custom", "User created nodes", "icon16/wrench.png", AndFilter(baseFilter, function(n) return n.custom == true end), true)
+	makeSearchPage("Custom", "User created nodes", "icon16/wrench.png", AndFilter(baseFilter, function(n) return n:HasFlag(NTF_Custom) end), true)
 
 end
 
