@@ -517,7 +517,7 @@ function meta:GetSingleton()
 
 end
 
-function meta:Compile(compileErrorHandler, flags)
+function meta:Compile(flags, compileErrorHandler)
 
 	local ok, res = false, nil
 	if compileErrorHandler then
