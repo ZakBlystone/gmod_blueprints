@@ -480,7 +480,7 @@ function PANEL:OpenContext( pinFilter )
 
 		x, y = self.canvas:ScreenToLocal(px, py)
 
-		local nodeID, node = self.graph:AddNode(nodeType.name, x - canvasFix, y - canvasFix)
+		local nodeID, node = self.graph:AddNode(nodeType:GetName(), x - canvasFix, y - canvasFix)
 		self:ConnectNodeToGrabbedPin( node )
 
 	end
@@ -558,7 +558,7 @@ function PANEL:OnMouseReleased( mouse )
 
 				x, y = self.canvas:ScreenToLocal(gui.MouseX(), gui.MouseY())
 
-				local nodeID, node = self.graph:AddNode("Pin", x - canvasFix, y - canvasFix)
+				local nodeID, node = self.graph:AddNode("CORE_Pin", x - canvasFix, y - canvasFix)
 				self:ConnectNodeToGrabbedPin( node )
 				self.grabbedPin = nil
 

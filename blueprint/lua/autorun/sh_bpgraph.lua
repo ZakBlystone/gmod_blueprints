@@ -872,8 +872,9 @@ function meta:ResolveConnectionMeta()
 			meta[2] = nt0:RemapPin(meta[2])
 			meta[4] = nt1:RemapPin(meta[4])
 
-			--if nt0:GetTypeName() == "CORE_Pin" then ignorePin0 = true end
-			--if nt1:GetTypeName() == "CORE_Pin" then ignorePin1 = true end
+			-- Reroute pins don't require fixup
+			if nt0:GetTypeName() == "CORE_Pin" then ignorePin0 = true end
+			if nt1:GetTypeName() == "CORE_Pin" then ignorePin1 = true end
 
 			--print("Check Connection: " .. nt0:ToString(c[2]) .. " -> " .. nt1:ToString(c[4]))
 

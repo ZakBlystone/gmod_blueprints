@@ -85,11 +85,11 @@ ENUM PLAYERANIMEVENT
 
 ENUM SCREENFADE, #Enumerations used by Player:ScreenFade.
 {
-	SCREENFADE.IN, Fade out after the hold time has passed
-	SCREENFADE.OUT, Fade in, hold time passes, disappear
-	SCREENFADE.MODULATE, With white color, turns the screen black
-	SCREENFADE.STAYOUT, No effects, never disappear
-	SCREENFADE.PURGE, Appear, Disappear, no effects
+	VALUE SCREENFADE.IN, Fade out after the hold time has passed
+	VALUE SCREENFADE.OUT, Fade in, hold time passes, disappear
+	VALUE SCREENFADE.MODULATE, With white color, turns the screen black
+	VALUE SCREENFADE.STAYOUT, No effects, never disappear
+	VALUE SCREENFADE.PURGE, Appear, Disappear, no effects
 }
 
 ENUM TEAM, #Default defined teams in Garry's Mod. This does not include any custom teams created in custom gamemodes. Enumerations to use with Player:Team

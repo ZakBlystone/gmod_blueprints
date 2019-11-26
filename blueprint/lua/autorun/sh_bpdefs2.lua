@@ -39,6 +39,36 @@ local function EnumerateDefs( base, output, search )
 
 end
 
+local function CreateReducedEnumKeys( enum )
+
+	local blacklist = {
+		"LAST",
+		"FIRST",
+		"ALL",
+	}
+
+	local blacklisted = {}
+	if #enum.entries == 0 then print("Enum has no entries: " .. enum.name) return end
+
+	local common = enum.entries[1].key
+	for k,v in pairs(enum.entries) do
+		for _, b in pairs(blacklist) do
+			if v.key:sub(0, b:len()) == b then blacklisted[v.key] = true break end
+		end
+		if blacklisted[v.key] then continue end
+
+		while common:len() > 0 and v.key:sub(0, common:len()) ~= common do
+			common = common:sub(0,-2)
+		end
+	end
+
+	local commonLen = common:len()
+	for k,v in pairs(enum.entries) do
+		v.shortkey = blacklisted[v.key] and v.key or v.key:sub(commonLen+1, -1)
+	end
+
+end
+
 local literalKeywords = {
 	["DISPLAY"] = true,
 	["CODE"] = true,
@@ -132,7 +162,7 @@ local function ParseDefinitionFile( filePath, search )
 	local state = { level = 0, literalLine = 0, literalInstigator = nil, literal = nil, parsed = {} }
 	local str = file.Read( filePath, search )
 	if str == nil then error("Failed to read file: " .. tostring(filePath)) end
-	
+
 	local lines = string.Explode("\n", str)
 	for _, line in pairs(lines) do
 		ParseLine(line:Trim(), state)
@@ -300,6 +330,11 @@ function(block, value)
 		})
 		block.enum.lookup[value.tuple[2]] = #block.enum.entries
 	end
+
+end,
+function(block, parent)
+
+	CreateReducedEnumKeys( block.enum )
 
 end)
 

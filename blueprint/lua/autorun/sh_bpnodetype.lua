@@ -85,18 +85,6 @@ end
 
 function meta:GetPins()
 	local pins = {}
-	table.Add(pins, self.pins)
-
-	if self:GetCodeType() == NT_Function then
-		table.insert(pins, 1, PIN_OUTPUT_THRU)
-		table.insert(pins, 1, PIN_INPUT_EXEC)
-	elseif self:GetCodeType() == NT_Event then
-		table.insert(pins, 1, PIN_OUTPUT_EXEC)
-	elseif self:GetCodeType() == NT_FuncInput then
-		table.insert(pins, 1, PIN_OUTPUT_EXEC)
-	elseif self:GetCodeType() == NT_FuncOutput then
-		table.insert(pins, 1, PIN_INPUT_EXEC)
-	end
 
 	if self:GetContext() == NC_Class and self.group then
 
@@ -118,6 +106,19 @@ function meta:GetPins()
 			))
 		end
 
+	end
+
+	table.Add(pins, self.pins)
+
+	if self:GetCodeType() == NT_Function then
+		table.insert(pins, 1, PIN_OUTPUT_THRU)
+		table.insert(pins, 1, PIN_INPUT_EXEC)
+	elseif self:GetCodeType() == NT_Event then
+		table.insert(pins, 1, PIN_OUTPUT_EXEC)
+	elseif self:GetCodeType() == NT_FuncInput then
+		table.insert(pins, 1, PIN_OUTPUT_EXEC)
+	elseif self:GetCodeType() == NT_FuncOutput then
+		table.insert(pins, 1, PIN_INPUT_EXEC)
 	end
 
 	--HACK
