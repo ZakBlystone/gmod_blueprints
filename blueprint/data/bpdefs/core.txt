@@ -11,7 +11,7 @@ HOOKS CORE
 		DESC Called when the blueprint is shut down
 		NOHOOK
 	}
-	EVENT EntityFireBullets, SHARED
+	HOOK EntityFireBullets, SHARED
 	{
 		DEPRECATED
 		OUT Entity, PN_Ref, PNF_None, Entity

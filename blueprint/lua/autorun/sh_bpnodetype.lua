@@ -77,7 +77,7 @@ function meta:GetGroup() return self.group end
 function meta:ReturnsValues()
 
 	for k,v in pairs(self.pins) do
-		if v:GetDir() == PD_Out and v:GetBaseType() ~= PN_Exec then return true end
+		if v:GetDir() == PD_In and v:GetBaseType() ~= PN_Exec then return true end
 	end
 	return false
 

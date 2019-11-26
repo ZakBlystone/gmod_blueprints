@@ -294,9 +294,9 @@ function meta:RequestGraphForEvent( nodeType )
 
 		if v:IsType(PN_Exec) then continue end
 		if v:IsOut() then
-			graph.outputs:Add(bpvariable.New( v:GetBaseType(), nil, v:GetFlags(), v:GetSubType() ), v:GetName())
-		else
 			graph.inputs:Add(bpvariable.New( v:GetBaseType(), nil, v:GetFlags(), v:GetSubType() ), v:GetName())
+		else
+			graph.outputs:Add(bpvariable.New( v:GetBaseType(), nil, v:GetFlags(), v:GetSubType() ), v:GetName())
 		end
 
 	end

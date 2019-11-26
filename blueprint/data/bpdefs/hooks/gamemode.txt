@@ -3,195 +3,195 @@ HOOKS GM
 	HOOK AcceptInput, SERVER
 	{
 		DESC Called when a map I/O event occurs.
-		IN ent, PN_Ref, PNF_None, Entity, #Entity that receives the input
-		IN input, PN_String, #The input name. Not guaranteed to be a valid input on the entity.
-		IN activator, PN_Ref, PNF_None, Entity, #Activator of the input
-		IN caller, PN_Ref, PNF_None, Entity, #Caller of the input
-		IN value, PN_Any, PNF_None, #Data provided with the input
-		OUT override, PN_Bool, #Return true to prevent this input from being processed.
+		OUT ent, PN_Ref, PNF_None, Entity, #Entity that receives the input
+		OUT input, PN_String, #The input name. Not guaranteed to be a valid input on the entity.
+		OUT activator, PN_Ref, PNF_None, Entity, #Activator of the input
+		OUT caller, PN_Ref, PNF_None, Entity, #Caller of the input
+		OUT value, PN_Any, PNF_None, #Data provided with the input
+		IN override, PN_Bool, #Return true to prevent this input from being processed.
 	}
 	HOOK AdjustMouseSensitivity, CLIENT
 	{
 		DESC Allows you to adjust the mouse sensitivity.
-		IN defaultSensitivity, PN_Number, #The old sensitivity. In general it will be 0, which is equivalent to a sensitivity of 1.
-		OUT newSensitivity=-1, PN_Number, #A fraction of the normal sensitivity (0.5 would be half as sensitive), return -1 to not override.
+		OUT defaultSensitivity, PN_Number, #The old sensitivity. In general it will be 0, which is equivalent to a sensitivity of 1.
+		IN newSensitivity=-1, PN_Number, #A fraction of the normal sensitivity (0.5 would be half as sensitive), return -1 to not override.
 	}
 	HOOK AllowPlayerPickup, SERVER
 	{
 		DESC Called when a player tries to pick up something using the "use" key, return to override.
-		IN player, PN_Ref, PNF_None, Player, #The player trying to pick up something.
-		IN entity, PN_Ref, PNF_None, Entity, #The Entity the player attempted to pick up.
-		OUT allow=true, PN_Bool, #Allow the player to pick up the entity or not.
+		OUT player, PN_Ref, PNF_None, Player, #The player trying to pick up something.
+		OUT entity, PN_Ref, PNF_None, Entity, #The Entity the player attempted to pick up.
+		IN allow=true, PN_Bool, #Allow the player to pick up the entity or not.
 	}
 	HOOK CalcMainActivity, SHARED
 	{
 		DESC This hook is used to calculate animations for a player.
-		IN player, PN_Ref, PNF_None, Player, #The player to apply the animation.
-		IN velocity, PN_Vector, #The velocity of the player.
-		OUT act, PN_Enum, PNF_None, ACT, #The activity the player should use.
-		OUT sequence, PN_Number, PNF_Nullable, #Sequence for the player to use. This takes precedence over the activity
+		OUT player, PN_Ref, PNF_None, Player, #The player to apply the animation.
+		OUT velocity, PN_Vector, #The velocity of the player.
+		IN act, PN_Enum, PNF_None, ACT, #The activity the player should use.
+		IN sequence, PN_Number, PNF_Nullable, #Sequence for the player to use. This takes precedence over the activity
 	}
 	HOOK CalcVehicleView, CLIENT
 	{
 		DESC Called from GM:CalcView when player is in driving a vehicle.
-		IN vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle the player is driving
-		IN player, PN_Ref, PNF_None, Player, #The vehicle driver
-		IN view, PN_Struct, PNF_None, CamData, #The view data containing players FOV, view position and angles
-		OUT view, PN_Struct, PNF_None, CamData, #The modified view table containing new values
+		OUT vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle the player is driving
+		OUT player, PN_Ref, PNF_None, Player, #The vehicle driver
+		OUT view, PN_Struct, PNF_None, CamData, #The view data containing players FOV, view position and angles
+		IN view, PN_Struct, PNF_None, CamData, #The modified view table containing new values
 	}
 	HOOK CalcView, CLIENT
 	{
 		DESC Allows override of the default view.
-		IN player, PN_Ref, PNF_None, Player, #The local player.
-		IN origin, PN_Vector, #The player's view position.
-		IN angles, PN_Angles, #The player's view angles.
-		IN fov, PN_Number, #Field of view.
-		IN znear, PN_Number, #Distance to near clipping plane.
-		IN zfar, PN_Number, #Distance to far clipping plane.
-		OUT result, PN_Struct, PNF_None, CamData, #View data table.
+		OUT player, PN_Ref, PNF_None, Player, #The local player.
+		OUT origin, PN_Vector, #The player's view position.
+		OUT angles, PN_Angles, #The player's view angles.
+		OUT fov, PN_Number, #Field of view.
+		OUT znear, PN_Number, #Distance to near clipping plane.
+		OUT zfar, PN_Number, #Distance to far clipping plane.
+		IN result, PN_Struct, PNF_None, CamData, #View data table.
 	}
 	HOOK CalcViewModelView, CLIENT
 	{
 		DESC Allows overriding the position and angle of the viewmodel.
-		IN weapon, PN_Ref, PNF_None, Weapon, #The weapon entity.
-		IN viewModel, PN_Ref, PNF_None, Entity, #The weapon entity.
-		IN oldPos, PN_Vector, #Original position (before viewmodel bobbing and swaying)
-		IN oldAngle, PN_Angles, #Original angle (before viewmodel bobbing and swaying)
-		IN pos, PN_Vector, #Current position
-		IN angle, PN_Angles, #Current angle
-		OUT newPos, PN_Vector, #New position
-		OUT newAngle, PN_Angles, #New position
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon entity.
+		OUT viewModel, PN_Ref, PNF_None, Entity, #The weapon entity.
+		OUT oldPos, PN_Vector, #Original position (before viewmodel bobbing and swaying)
+		OUT oldAngle, PN_Angles, #Original angle (before viewmodel bobbing and swaying)
+		OUT pos, PN_Vector, #Current position
+		OUT angle, PN_Angles, #Current angle
+		IN newPos, PN_Vector, #New position
+		IN newAngle, PN_Angles, #New position
 	}
 	HOOK CanExitVehicle, SERVER
 	{
 		DESC Determines if the player can exit the vehicle.
-		IN vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle entity.
-		IN player, PN_Ref, PNF_None, Player, #The player.
-		OUT canExit, PN_Bool, #True if the player can exit the vehicle.
+		OUT vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle entity.
+		OUT player, PN_Ref, PNF_None, Player, #The player.
+		IN canExit, PN_Bool, #True if the player can exit the vehicle.
 	}
 	HOOK CanPlayerEnterVehicle, SERVER
 	{
 		DESC Determines whether or not the player can enter the vehicle.
-		IN player, PN_Ref, PNF_None, Player, #The player.
-		IN vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle.
-		IN role, PN_Number, #The role.
-		OUT canEnter, PN_Bool, #False if the player is not allowed to enter the vehicle.
+		OUT player, PN_Ref, PNF_None, Player, #The player.
+		OUT vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle.
+		OUT role, PN_Number, #The role.
+		IN canEnter, PN_Bool, #False if the player is not allowed to enter the vehicle.
 	}
 	HOOK CanPlayerSuicide, SERVER
 	{
 		DESC Determines if the player can kill themselves using the concommands "kill" or "explode".
-		IN player, PN_Ref, PNF_None, Player, #The player.
-		OUT canSuicide, PN_Bool, #True if they can suicide.
+		OUT player, PN_Ref, PNF_None, Player, #The player.
+		IN canSuicide, PN_Bool, #True if they can suicide.
 	}
 	HOOK CanPlayerUnfreeze, SERVER
 	{
 		DESC Determines if the player can unfreeze the entity.
-		IN player, PN_Ref, PNF_None, Player, #The player.
-		IN entity, PN_Ref, PNF_None, Entity, #The entity.
-		IN phys, PN_Ref, PNF_None, PhysObj, #The physics object of the entity.
-		OUT canUnfreeze, PN_Bool, #True if they can unfreeze.
+		OUT player, PN_Ref, PNF_None, Player, #The player.
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity.
+		OUT phys, PN_Ref, PNF_None, PhysObj, #The physics object of the entity.
+		IN canUnfreeze, PN_Bool, #True if they can unfreeze.
 	}
 	HOOK ChatText, CLIENT
 	{
 		DESC Called when a message is printed to the chat box. Note, that this isn't working with player messages even though there are arguments for it.
-		IN index, PN_Number, #The index of the player.
-		IN name, PN_String, #The name of the player.
-		IN text, PN_String, #The text that is being sent.
-		IN type, PN_String, #Chat filter type.
-		OUT suppress=false, PN_Bool, #Return true to suppress the chat message
+		OUT index, PN_Number, #The index of the player.
+		OUT name, PN_String, #The name of the player.
+		OUT text, PN_String, #The text that is being sent.
+		OUT type, PN_String, #Chat filter type.
+		IN suppress=false, PN_Bool, #Return true to suppress the chat message
 	}
 	HOOK CreateClientsideRagdoll, CLIENT
 	{
 		DESC Called whenever an entity becomes a clientside ragdoll.
-		IN entity, PN_Ref, PNF_None, Entity, #The Entity that created the ragdoll
-		IN ragdoll, PN_Ref, PNF_None, Entity, #The ragdoll being created.
+		OUT entity, PN_Ref, PNF_None, Entity, #The Entity that created the ragdoll
+		OUT ragdoll, PN_Ref, PNF_None, Entity, #The ragdoll being created.
 	}
 	HOOK CreateEntityRagdoll, SERVER
 	{
 		DESC Called when a serverside ragdoll of an entity has been created.
-		IN entity, PN_Ref, PNF_None, Entity, #Entity that owns the ragdoll
-		IN ragdoll, PN_Ref, PNF_None, Entity, #The ragdoll entity
+		OUT entity, PN_Ref, PNF_None, Entity, #Entity that owns the ragdoll
+		OUT ragdoll, PN_Ref, PNF_None, Entity, #The ragdoll entity
 	}
 	HOOK CreateMove, CLIENT
 	{
 		DESC Allows you to change the players movements before they're sent to the server.
-		IN cmd, PN_Ref, PNF_None, CUserCmd, #The User Command data
-		OUT disableDefaultMovement, PN_Bool, #Return true to: Disable Sandbox C menu "screen clicking", Disable Teammate nocollide (verification required), Prevent calling of C_BaseHLPlayer::CreateMove & subsequently C_BasePlayer::CreateMove
+		OUT cmd, PN_Ref, PNF_None, CUserCmd, #The User Command data
+		IN disableDefaultMovement, PN_Bool, #Return true to: Disable Sandbox C menu "screen clicking", Disable Teammate nocollide (verification required), Prevent calling of C_BaseHLPlayer::CreateMove & subsequently C_BasePlayer::CreateMove
 	}
 	HOOK EntityEmitSound, SHARED
 	{
-		IN data, PN_Struct, PNF_None, EmitSoundInfo, #Information about the played sound. Changes done to this table can be applied by returning true from this hook.
-		OUT playSound=true, PN_Bool
+		OUT data, PN_Struct, PNF_None, EmitSoundInfo, #Information about the played sound. Changes done to this table can be applied by returning true from this hook.
+		IN playSound=true, PN_Bool
 	}
 	HOOK EntityFireBullets, SHARED
 	{
-		IN entity, PN_Ref, PNF_None, Entity, #The entity that fired the bullet
-		IN data, PN_Struct, PNF_None, Bullet, #The bullet data
-		OUT fireBullet=true, PN_Bool
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that fired the bullet
+		OUT data, PN_Struct, PNF_None, Bullet, #The bullet data
+		IN fireBullet=true, PN_Bool
 	}
 	HOOK EntityRemoved, SHARED
 	{
-		IN entity, PN_Ref, PNF_None, Entity, #Entity being removed
+		OUT entity, PN_Ref, PNF_None, Entity, #Entity being removed
 	}
 	HOOK EntityTakeDamage, SERVER
 	{
-		IN target, PN_Ref, PNF_None, Entity, #The entity taking damage
-		IN damage, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info
-		OUT blockDamage=false, PN_Bool, #Block damage
+		OUT target, PN_Ref, PNF_None, Entity, #The entity taking damage
+		OUT damage, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info
+		IN blockDamage=false, PN_Bool, #Block damage
 	}
 	HOOK FinishMove, SHARED
 	{
 		DESC Called after GM:Move, applies all the changes from the CMoveData to the player.
-		IN player, PN_Ref, PNF_None, Player, #Player
-		IN move, PN_Ref, PNF_None, CMoveData, #Movement data
-		OUT override, PN_Bool, #Return true to suppress default engine action
+		OUT player, PN_Ref, PNF_None, Player, #Player
+		OUT move, PN_Ref, PNF_None, CMoveData, #Movement data
+		IN override, PN_Bool, #Return true to suppress default engine action
 	}
 	HOOK GetFallDamage, SERVER
 	{
 		DESC Called when a player takes damage from falling, allows to override the damage.
-		IN player, PN_Ref, PNF_None, Player, #The player
-		IN speed, PN_Number, #The fall speed
-		OUT damage, PN_Number, #New fall damage
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		OUT speed, PN_Number, #The fall speed
+		IN damage, PN_Number, #New fall damage
 	}
 	HOOK GetTeamColor, CLIENT
 	{
 		DESC Returns the color for the given entity's team. This is used in chat and deathnotice text.
-		IN entity, PN_Ref, PNF_None, Entity, #Entity
-		OUT color, PN_Color, PNF_None, #Team Color
+		OUT entity, PN_Ref, PNF_None, Entity, #Entity
+		IN color, PN_Color, PNF_None, #Team Color
 	}
 	HOOK GetNumTeamColor, CLIENT
 	{
 		DESC Returns the team color for the given team index.
-		IN team, PN_Number, #Team index
-		OUT color, PN_Color, PNF_None, #Team Color
+		OUT team, PN_Number, #Team index
+		IN color, PN_Color, PNF_None, #Team Color
 	}
 	HOOK GravGunDropped, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
-		IN entity, PN_Ref, PNF_None, Entity, #The entity that has been dropped
+		OUT player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that has been dropped
 	}
 	HOOK GravGunOnPickedUp, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
-		IN entity, PN_Ref, PNF_None, Entity, #The entity that has been picked up by the gravity gun
+		OUT player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that has been picked up by the gravity gun
 	}
 	HOOK GravGunPickupAllowed, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
-		IN entity, PN_Ref, PNF_None, Entity, #The entity the player is attempting to pick up
-		OUT allow=true, PN_Bool, #Return true to allow entity pick up
+		OUT player, PN_Ref, PNF_None, Player, #Player who is wielding the gravity gun
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity the player is attempting to pick up
+		IN allow=true, PN_Bool, #Return true to allow entity pick up
 	}
 	HOOK GravGunPunt, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player wielding the gravity gun
-		IN entity, PN_Ref, PNF_None, Entity, #The entity the player is attempting to punt
-		OUT allow=true, PN_Bool, #Return true to allow and false to disallow.
+		OUT player, PN_Ref, PNF_None, Player, #The player wielding the gravity gun
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity the player is attempting to punt
+		IN allow=true, PN_Bool, #Return true to allow and false to disallow.
 	}
 	HOOK HUDAmmoPickedUp, CLIENT
 	{
 		DESC Called when the HOOK has, client picked up ammo. Override to disable default HUD notification.
-		IN itemName, PN_String, #Name of the item (ammo) picked up
-		IN amount, PN_Number, #Amount of the item (ammo) picked up
+		OUT itemName, PN_String, #Name of the item (ammo) picked up
+		OUT amount, PN_Number, #Amount of the item (ammo) picked up
 	}
 	HOOK HUDDrawPickupHistory, CLIENT
 	{
@@ -208,7 +208,7 @@ HOOKS GM
 	HOOK HUDItemPickedUp, CLIENT
 	{
 		DESC Called when a weapon has been picked up. Override to disable the default HUD notification.
-		IN itemName, PN_String, #Name of the picked up item
+		OUT itemName, PN_String, #Name of the picked up item
 	}
 	HOOK HUDPaint, CLIENT
 	{
@@ -221,222 +221,222 @@ HOOKS GM
 	HOOK HUDShouldDraw, CLIENT
 	{
 		DESC Called when the Gamemode is about to draw a given element on the client's HUD (heads-up display).
-		IN name, PN_String, #The name of the HUD element. You can find a full list of HUD elements for this hook here.
-		OUT draw=true, PN_Bool, #Return false to prevent the given element from being drawn on the client's screen.
+		OUT name, PN_String, #The name of the HUD element. You can find a full list of HUD elements for this hook here.
+		IN draw=true, PN_Bool, #Return false to prevent the given element from being drawn on the client's screen.
 	}
 	HOOK HUDWeaponPickedUp, CLIENT
 	{
 		DESC Called when a weapon has been picked up. Override to disable the default HUD notification.
-		IN weapon, PN_Ref, PNF_None, Weapon, #The picked up weapon
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The picked up weapon
 	}
 	HOOK InputMouseApply, CLIENT
 	{
 		DESC Allows you to modify the supplied User Command with mouse input. This could be used to make moving the mouse do funky things to view angles.
-		IN cmd, PN_Ref, PNF_None, CUserCmd, #User command
-		IN x, PN_Number, #The amount of mouse movement across the X axis this frame
-		IN y, PN_Number, #The amount of mouse movement across the Y axis this frame
-		IN angle, PN_Angles, #The current view angle
-		OUT modified, PN_Bool, #Return true if we modified something
+		OUT cmd, PN_Ref, PNF_None, CUserCmd, #User command
+		OUT x, PN_Number, #The amount of mouse movement across the X axis this frame
+		OUT y, PN_Number, #The amount of mouse movement across the Y axis this frame
+		OUT angle, PN_Angles, #The current view angle
+		IN modified, PN_Bool, #Return true if we modified something
 	}
 	HOOK KeyPress, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player pressing the key. If running client-side, this will always be LocalPlayer
-		IN key, PN_Enum, PNF_None, IN, #The key that the player pressed using IN_ Enums.
+		OUT player, PN_Ref, PNF_None, Player, #The player pressing the key. If running client-side, this will always be LocalPlayer
+		OUT key, PN_Enum, PNF_None, OUT, #The key that the player pressed using OUT_ Enums.
 	}
 	HOOK KeyRelease, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player releasing the key. If running client-side, this will always be LocalPlayer
-		IN key, PN_Enum, PNF_None, IN, #The key that the player released using IN_ Enums.
+		OUT player, PN_Ref, PNF_None, Player, #The player releasing the key. If running client-side, this will always be LocalPlayer
+		OUT key, PN_Enum, PNF_None, OUT, #The key that the player released using OUT_ Enums.
 	}
 	HOOK Move, SHARED
 	{
 		DESC The Move hook is called for you to manipulate the player's MoveData. You shouldn't adjust the player's position in any way in the move hook. This is because due to prediction errors, the netcode might run the move hook multiple times as packets arrive late. Therefore you should only adjust the movedata construct in this hook.
-		IN player, PN_Ref, PNF_None, Player, #Player
-		IN move, PN_Ref, PNF_None, CMoveData, #Movement information
-		OUT override, PN_Bool, #Return true to suppress default engine action
+		OUT player, PN_Ref, PNF_None, Player, #Player
+		OUT move, PN_Ref, PNF_None, CMoveData, #Movement information
+		IN override, PN_Bool, #Return true to suppress default engine action
 	}
 	HOOK OnDamagedByExplosion, SERVER
 	{
 		DESC Called when a player has been hurt by an explosion. Override to disable default sound effect.
-		IN player, PN_Ref, PNF_None, Player, #Player who has been hurt
-		IN damage, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info from explsion
+		OUT player, PN_Ref, PNF_None, Player, #Player who has been hurt
+		OUT damage, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info from explsion
 	}
 	HOOK OnEntityCreated, SHARED
 	{
 		DESC Called when the entity is created.
-		IN entity, PN_Ref, PNF_None, Entity, #The entity
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity
 	}
 	HOOK OnNPCKilled, SERVER
 	{
 		DESC Called whenever an NPC is killed.
-		IN npc, PN_Ref, PNF_None, NPC, #The killed NPC
-		IN attacker, PN_Ref, PNF_None, Entity, #The NPCs attacker, the entity that gets the kill credit, for example a player or an NPC.
-		IN inflictor, PN_Ref, PNF_None, Entity, #Death inflictor. The entity that did the killing. Not necessarily a weapon.
+		OUT npc, PN_Ref, PNF_None, NPC, #The killed NPC
+		OUT attacker, PN_Ref, PNF_None, Entity, #The NPCs attacker, the entity that gets the kill credit, for example a player or an NPC.
+		OUT inflictor, PN_Ref, PNF_None, Entity, #Death inflictor. The entity that did the killing. Not necessarily a weapon.
 	}
 	HOOK OnPlayerHitGround, SHARED
 	{
 		DESC Called when a player makes contact with the ground.
-		IN player, PN_Ref, PNF_None, Player, #Player
-		IN inWater, PN_Bool, #Did the player land in water?
-		IN onFloater, PN_Bool, #Did the player land on an object floating in the water?
-		IN speed, PN_Number, #The speed at which the player hit the ground
-		OUT suppress=false, PN_Bool, #Return true to suppress default action
+		OUT player, PN_Ref, PNF_None, Player, #Player
+		OUT inWater, PN_Bool, #Did the player land in water?
+		OUT onFloater, PN_Bool, #Did the player land on an object floating in the water?
+		OUT speed, PN_Number, #The speed at which the player hit the ground
+		IN suppress=false, PN_Bool, #Return true to suppress default action
 	}
 	HOOK PhysgunDrop, SHARED
 	{
 		DESC Called when a player drops an entity with the Physgun.
-		IN player, PN_Ref, PNF_None, Player, #The player who dropped an entitiy
-		IN entity, PN_Ref, PNF_None, Entity, #The dropped entity
+		OUT player, PN_Ref, PNF_None, Player, #The player who dropped an entitiy
+		OUT entity, PN_Ref, PNF_None, Entity, #The dropped entity
 	}
 	HOOK PhysgunPickup, SHARED
 	{
 		DESC Called when a player drops an entity with the Physgun.
-		IN player, PN_Ref, PNF_None, Player, #The player that is picking up using the Physics Gun.
-		IN entity, PN_Ref, PNF_None, Entity, #The entity that is being picked up.
-		OUT allow=true, PN_Bool, #Returns whether the player can pick up the entity or not.
+		OUT player, PN_Ref, PNF_None, Player, #The player that is picking up using the Physics Gun.
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that is being picked up.
+		IN allow=true, PN_Bool, #Returns whether the player can pick up the entity or not.
 	}
 	HOOK PlayerButtonDown, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #Player who pressed the button
-		IN button, PN_Enum, PNF_None, BUTTON_CODE, #The button
+		OUT player, PN_Ref, PNF_None, Player, #Player who pressed the button
+		OUT button, PN_Enum, PNF_None, BUTTON_CODE, #The button
 	}
 	HOOK PlayerButtonUp, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #Player who released the button
-		IN button, PN_Enum, PNF_None, BUTTON_CODE, #The button
+		OUT player, PN_Ref, PNF_None, Player, #Player who released the button
+		OUT button, PN_Enum, PNF_None, BUTTON_CODE, #The button
 	}
 	HOOK PlayerDeath, SERVER
 	{
-		IN victim, PN_Ref, PNF_None, Player, #The player who died
-		IN inflictor, PN_Ref, PNF_None, Entity, #Item used to kill victim
-		IN attacker, PN_Ref, PNF_None, Entity, #Player or entity that killed the victim
+		OUT victim, PN_Ref, PNF_None, Player, #The player who died
+		OUT inflictor, PN_Ref, PNF_None, Entity, #Item used to kill victim
+		OUT attacker, PN_Ref, PNF_None, Entity, #Player or entity that killed the victim
 	}
 	HOOK PlayerDeathSound, SERVER
 	{
-		OUT mute=false, PN_Bool, #Mute death sound
+		IN mute=false, PN_Bool, #Mute death sound
 	}
 	HOOK PlayerDeathThink, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player affected in the hook.
-		OUT allowSpawn=true, PN_Bool, #Allow spawn
+		OUT player, PN_Ref, PNF_None, Player, #The player affected in the hook.
+		IN allowSpawn=true, PN_Bool, #Allow spawn
 	}
 	HOOK PlayerDisconnected, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player
+		OUT player, PN_Ref, PNF_None, Player
 	}
 	HOOK PlayerEnteredVehicle, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #Player who entered vehicle
-		IN vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player entered
-		IN role, PN_Number
+		OUT player, PN_Ref, PNF_None, Player, #Player who entered vehicle
+		OUT vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player entered
+		OUT role, PN_Number
 	}
 	HOOK PlayerFootstep, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #The stepping player
-		IN pos, PN_Vector, #The position of the step
-		IN foot, PN_Number, #Foot that is stepped. 0 for left, 1 for right
-		IN sound, PN_String, #Sound that is going to play
-		IN volume, PN_Number, #Volume of the footstep
-		IN filter, PN_Ref, PNF_None, CRecipientFilter, #The Recipient filter of players who can hear the footstep
-		OUT muteSound=false, PN_Bool, #Prevent default step sound
+		OUT player, PN_Ref, PNF_None, Player, #The stepping player
+		OUT pos, PN_Vector, #The position of the step
+		OUT foot, PN_Number, #Foot that is stepped. 0 for left, 1 for right
+		OUT sound, PN_String, #Sound that is going to play
+		OUT volume, PN_Number, #Volume of the footstep
+		OUT filter, PN_Ref, PNF_None, CRecipientFilter, #The Recipient filter of players who can hear the footstep
+		IN muteSound=false, PN_Bool, #Prevent default step sound
 	}
 	HOOK PlayerFrozeObject, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #Player who has frozen an object
-		IN entity, PN_Ref, PNF_None, Entity, #The frozen object
-		IN physObj, PN_Ref, PNF_None, PhysObj, #The frozen physics object of the frozen entity ( For ragdolls )
+		OUT player, PN_Ref, PNF_None, Player, #Player who has frozen an object
+		OUT entity, PN_Ref, PNF_None, Entity, #The frozen object
+		OUT physObj, PN_Ref, PNF_None, PhysObj, #The frozen physics object of the frozen entity ( For ragdolls )
 	}
 	HOOK PlayerHurt, SERVER
 	{
-		IN victim, PN_Ref, PNF_None, Player, #Victim
-		IN attacker, PN_Ref, PNF_None, Entity, #Attacker Entity
-		IN healthRemaining, PN_Number, #Remaining Health
-		IN damageTaken, PN_Number, #Damage Taken
+		OUT victim, PN_Ref, PNF_None, Player, #Victim
+		OUT attacker, PN_Ref, PNF_None, Entity, #Attacker Entity
+		OUT healthRemaining, PN_Number, #Remaining Health
+		OUT damageTaken, PN_Number, #Damage Taken
 	}
 	HOOK PlayerInitialSpawn, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player who spawned.
-		IN transition, PN_Bool, #If true, the player just spawned from a map transition.
+		OUT player, PN_Ref, PNF_None, Player, #The player who spawned.
+		OUT transition, PN_Bool, #If true, the player just spawned from a map transition.
 	}
 	HOOK PlayerLeaveVehicle, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #Player who left a vehicle
-		IN vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player left
+		OUT player, PN_Ref, PNF_None, Player, #Player who left a vehicle
+		OUT vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player left
 	}
 	HOOK PlayerLoadout, SERVER
 	{
 		DESC Called to give players the default set of weapons.
-		IN player, PN_Ref, PNF_None, Player, #Player to give weapons to.
+		OUT player, PN_Ref, PNF_None, Player, #Player to give weapons to.
 	}
 	HOOK PlayerPostThink, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player
+		OUT player, PN_Ref, PNF_None, Player, #The player
 	}
 	HOOK PlayerSay, SERVER
 	{
 		DESC Called when a player dispatched a chat message.
-		IN sender, PN_Ref, PNF_None, Player, #The player which sent the message.
-		IN text, PN_String, #The message's content
-		IN teamChat, PN_Bool, #Is team chat?
-		OUT replace, PN_String, #What to show instead of original text.
+		OUT sender, PN_Ref, PNF_None, Player, #The player which sent the message.
+		OUT text, PN_String, #The message's content
+		OUT teamChat, PN_Bool, #Is team chat?
+		IN replace, PN_String, #What to show instead of original text.
 	}
 	HOOK PlayerSelectSpawn, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player who needs a spawn point
-		IN transition, PN_Bool, #If true, the player just spawned from a map transition. You probably want to not return an entity for that case to not override player's position.
-		OUT spawnpoint, PN_Ref, PNF_None, Entity, #The spawnpoint entity to spawn the player at
+		OUT player, PN_Ref, PNF_None, Player, #The player who needs a spawn point
+		OUT transition, PN_Bool, #If true, the player just spawned from a map transition. You probably want to not return an entity for that case to not override player's position.
+		IN spawnpoint, PN_Ref, PNF_None, Entity, #The spawnpoint entity to spawn the player at
 	}
 	HOOK PlayerSelectTeamSpawn, SERVER
 	{
-		IN team, PN_Number, #Players team
-		IN player, PN_Ref, PNF_None, Player, #The player
-		OUT spawnpoint, PN_Ref, PNF_None, Entity, #The entity to use as a spawn point.
+		OUT team, PN_Number, #Players team
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		IN spawnpoint, PN_Ref, PNF_None, Entity, #The entity to use as a spawn point.
 	}
 	HOOK PlayerSetHandsModel, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player whose hands needs a model set
-		IN hands, PN_Ref, PNF_None, Entity, #The hands to set model of
+		OUT player, PN_Ref, PNF_None, Player, #The player whose hands needs a model set
+		OUT hands, PN_Ref, PNF_None, Entity, #The hands to set model of
 	}
 	HOOK PlayerSetModel, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player being chosen.
+		OUT player, PN_Ref, PNF_None, Player, #The player being chosen.
 	}
 	HOOK PlayerSpawn, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player who spawned.
-		IN transition, PN_Bool, #If true, the player just spawned from a map transition. You probably want to not touch player's weapons if this is set to true from this hook.
+		OUT player, PN_Ref, PNF_None, Player, #The player who spawned.
+		OUT transition, PN_Bool, #If true, the player just spawned from a map transition. You probably want to not touch player's weapons if this is set to true from this hook.
 	}
 	HOOK PlayerSwitchFlashlight, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player who attempts to change their flashlight state.
-		IN enabled, PN_Bool, #The new state the player requested, true for on, false for off.
-		OUT allow=true, PN_Bool, #Can toggle the flashlight or not
+		OUT player, PN_Ref, PNF_None, Player, #The player who attempts to change their flashlight state.
+		OUT enabled, PN_Bool, #The new state the player requested, true for on, false for off.
+		IN allow=true, PN_Bool, #Can toggle the flashlight or not
 	}
 	HOOK PlayerSwitchWeapon, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player switching weapons.
-		IN oldWeapon, PN_Ref, PNF_None, Weapon, #The previous weapon. Will be NULL if the previous weapon was removed or the player is switching from nothing.
-		IN newWeapon, PN_Ref, PNF_None, Weapon, #The weapon the player switched to. Will be NULL if the player is switching to nothing.
-		OUT suppress=false, PN_Bool, #Return true to prevent weapon switch
+		OUT player, PN_Ref, PNF_None, Player, #The player switching weapons.
+		OUT oldWeapon, PN_Ref, PNF_None, Weapon, #The previous weapon. Will be NULL if the previous weapon was removed or the player is switching from nothing.
+		OUT newWeapon, PN_Ref, PNF_None, Weapon, #The weapon the player switched to. Will be NULL if the player is switching to nothing.
+		IN suppress=false, PN_Bool, #Return true to prevent weapon switch
 	}
 	HOOK PlayerTick, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player
-		IN moveData, PN_Ref, PNF_None, CMoveData, #The current movedata for the player.
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		OUT moveData, PN_Ref, PNF_None, CMoveData, #The current movedata for the player.
 	}
 	HOOK PlayerTraceAttack, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player that has been hit
-		IN damage, PN_Ref, PNF_None, CTakeDamageInfo, #The damage info of the bullet
-		IN dir, PN_Vector, #Normalized vector direction of the bullet's path
-		IN trace, PN_Struct, PNF_None, TraceResult, #The trace of the bullet's path
-		OUT override=false, PN_Bool, #Override engine handling
+		OUT player, PN_Ref, PNF_None, Player, #The player that has been hit
+		OUT damage, PN_Ref, PNF_None, CTakeDamageInfo, #The damage info of the bullet
+		OUT dir, PN_Vector, #Normalized vector direction of the bullet's path
+		OUT trace, PN_Struct, PNF_None, TraceResult, #The trace of the bullet's path
+		IN override=false, PN_Bool, #Override engine handling
 	}
 	HOOK PlayerUse, SERVER
 	{
-		IN player, PN_Ref, PNF_None, Player, #The player pressing the "use" key.
-		IN entity, PN_Ref, PNF_None, Entity, #The entity which the player is looking at / activating USE on.
-		OUT allowUse=true, PN_Bool, #Return false if the player is not allowed to USE the entity.
+		OUT player, PN_Ref, PNF_None, Player, #The player pressing the "use" key.
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity which the player is looking at / activating USE on.
+		IN allowUse=true, PN_Bool, #Return false if the player is not allowed to USE the entity.
 	}
 	HOOK PostDraw2DSkyBox, CLIENT
 	{
@@ -453,16 +453,16 @@ HOOKS GM
 	HOOK PostDrawOpaqueRenderables, CLIENT
 	{
 		DESC Called after drawing opaque entities.
-		IN drawingDepth, PN_Bool, #Whether the current draw is writing depth.
-		IN drawingSkybox, PN_Bool, #Whether the current draw is drawing the skybox.
+		OUT drawingDepth, PN_Bool, #Whether the current draw is writing depth.
+		OUT drawingSkybox, PN_Bool, #Whether the current draw is drawing the skybox.
 	}
 	HOOK PostDrawPlayerHands, CLIENT
 	{
 		DESC Called after the player hands are drawn.
-		IN hands, PN_Ref, PNF_None, Entity, #This is the gmod_hands entity.
-		IN viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity.
-		IN player, PN_Ref, PNF_None, Player, #The the owner of the view model.
-		IN weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
+		OUT hands, PN_Ref, PNF_None, Entity, #This is the gmod_hands entity.
+		OUT viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity.
+		OUT player, PN_Ref, PNF_None, Player, #The the owner of the view model.
+		OUT weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
 	}
 	HOOK PostDrawSkyBox, CLIENT
 	{
@@ -471,20 +471,20 @@ HOOKS GM
 	HOOK PostDrawTranslucentRenderables, CLIENT
 	{
 		DESC Called after all translucent entities are drawn.
-		IN drawingDepth, PN_Bool, #Whether the current draw is writing depth.
-		IN drawingSkybox, PN_Bool, #Whether the current draw is drawing the skybox.		
+		OUT drawingDepth, PN_Bool, #Whether the current draw is writing depth.
+		OUT drawingSkybox, PN_Bool, #Whether the current draw is drawing the skybox.		
 	}
 	HOOK PostDrawViewModel, CLIENT
 	{
 		DESC Called after view model is drawn.
-		IN viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity.
-		IN player, PN_Ref, PNF_None, Player, #The the owner of the view model.
-		IN weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
+		OUT viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity.
+		OUT player, PN_Ref, PNF_None, Player, #The the owner of the view model.
+		OUT weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
 	}
 	HOOK PostPlayerDraw, CLIENT
 	{
 		DESC Called after the player was drawn.
-		IN player, PN_Ref, PNF_None, Player, #The player that was drawn.
+		OUT player, PN_Ref, PNF_None, Player, #The player that was drawn.
 	}
 	HOOK PreCleanupMap, SHARED
 	{
@@ -505,55 +505,55 @@ HOOKS GM
 	HOOK PreDrawOpaqueRenderables, CLIENT
 	{
 		DESC Called before all opaque entities are drawn.
-		IN isDrawingDepth, PN_Bool, #Whether the current draw is writing depth.
-		IN isDrawSkybox, PN_Bool, #Whether the current draw is drawing the skybox.
-		OUT preventOpaqueRenderables=false, PN_Bool, #Return true to prevent opaque renderables from drawing.
+		OUT isDrawingDepth, PN_Bool, #Whether the current draw is writing depth.
+		OUT isDrawSkybox, PN_Bool, #Whether the current draw is drawing the skybox.
+		IN preventOpaqueRenderables=false, PN_Bool, #Return true to prevent opaque renderables from drawing.
 	}
 	HOOK PreDrawPlayerHands, CLIENT
 	{
 		DESC Called before the player hands are drawn.
-		IN hands, PN_Ref, PNF_None, Entity, #This is the gmod_hands entity before it is drawn.
-		IN viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity before it is drawn.
-		IN player, PN_Ref, PNF_None, Player, #The the owner of the view model.
-		IN weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
-		OUT preventRender, PN_Bool, #Return true to prevent the viewmodel hands from rendering
+		OUT hands, PN_Ref, PNF_None, Entity, #This is the gmod_hands entity before it is drawn.
+		OUT viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity before it is drawn.
+		OUT player, PN_Ref, PNF_None, Player, #The the owner of the view model.
+		OUT weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
+		IN preventRender, PN_Bool, #Return true to prevent the viewmodel hands from rendering
 	}
 	HOOK PreDrawSkyBox, CLIENT
 	{
 		DESC Called before the sky box is drawn.
-		OUT disableSkybox, PN_Bool, #Return true to disable skybox drawing (both 2D and 3D skybox)
+		IN disableSkybox, PN_Bool, #Return true to disable skybox drawing (both 2D and 3D skybox)
 	}
 	HOOK PreDrawTranslucentRenderables, CLIENT
 	{
 		DESC Called before all the translucent entities are drawn.
-		IN isDrawingDepth, PN_Bool, #Whether the current draw is writing depth.
-		IN isDrawSkybox, PN_Bool, #Whether the current draw is drawing the skybox.
-		OUT preventRender, PN_Bool, #Return true to prevent translucent renderables from drawing.
+		OUT isDrawingDepth, PN_Bool, #Whether the current draw is writing depth.
+		OUT isDrawSkybox, PN_Bool, #Whether the current draw is drawing the skybox.
+		IN preventRender, PN_Bool, #Return true to prevent translucent renderables from drawing.
 	}
 	HOOK PreDrawViewModel, CLIENT
 	{
 		DESC Called before the view model has been drawn. This hook by default also calls this on weapons.
-		IN viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity before it is drawn.
-		IN player, PN_Ref, PNF_None, Player, #The the owner of the view model.
-		IN weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
-		OUT preventRender, PN_Bool, #Return true to prevent the default view model rendering.
+		OUT viewModel, PN_Ref, PNF_None, Entity, #This is the view model entity before it is drawn.
+		OUT player, PN_Ref, PNF_None, Player, #The the owner of the view model.
+		OUT weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
+		IN preventRender, PN_Bool, #Return true to prevent the default view model rendering.
 	}
 	HOOK PrePlayerDraw, CLIENT
 	{
 		DESC Called before the player is drawn.
-		IN player, PN_Ref, PNF_None, Player, #The player that is about to be drawn.
-		OUT preventRender, PN_Bool, #Prevent default player rendering. Return true to hide the player.
+		OUT player, PN_Ref, PNF_None, Player, #The player that is about to be drawn.
+		IN preventRender, PN_Bool, #Prevent default player rendering. Return true to hide the player.
 	}
 	HOOK PreRender, CLIENT
 	{
 		DESC Called before the renderer is about to start rendering the next frame.
-		OUT preventRender, PN_Bool, #Return true to prevent all rendering. This can make the whole game stop rendering anything.
+		IN preventRender, PN_Bool, #Return true to prevent all rendering. This can make the whole game stop rendering anything.
 	}
 	HOOK PropBreak, SHARED
 	{
 		DESC Called when a prop has been destroyed.
-		IN attacker, PN_Ref, PNF_None, Player, #The person who broke the prop.
-		IN prop, PN_Ref, PNF_None, Entity, #The entity that has been broken by the attacker.
+		OUT attacker, PN_Ref, PNF_None, Player, #The person who broke the prop.
+		OUT prop, PN_Ref, PNF_None, Entity, #The entity that has been broken by the attacker.
 	}
 	HOOK RenderScreenspaceEffects, CLIENT
 	{
@@ -562,27 +562,27 @@ HOOKS GM
 	HOOK SetupMove, SHARED
 	{
 		DESC SetupMove is called before the engine process movements. This allows us to override the players movement.
-		IN player, PN_Ref, PNF_None, Player, #The player whose movement we are about to process
-		IN move, PN_Ref, PNF_None, CMoveData, #The move data to override/use
-		IN command, PN_Ref, PNF_None, CUserCmd, #The command data
+		OUT player, PN_Ref, PNF_None, Player, #The player whose movement we are about to process
+		OUT move, PN_Ref, PNF_None, CMoveData, #The move data to override/use
+		OUT command, PN_Ref, PNF_None, CUserCmd, #The command data
 	}
 	HOOK SetupPlayerVisibility, SERVER
 	{
 		DESC Allows you to add extra positions to the player's PVS. This is the place to call AddOriginToPVS.
-		IN player, PN_Ref, PNF_None, Player, #The player
-		IN viewEntity, PN_Ref, PNF_None, Entity, #Players Player:GetViewEntity
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		OUT viewEntity, PN_Ref, PNF_None, Entity, #Players Player:GetViewEntity
 	}
 	HOOK ShouldDrawLocalPlayer, CLIENT
 	{
 		DESC Called to determine if the LocalPlayer should be drawn.
-		IN player, PN_Ref, PNF_None, Player, #The player
-		OUT drawPlayer=true, PN_Bool, #True to draw the player, false to hide.
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		IN drawPlayer=true, PN_Bool, #True to draw the player, false to hide.
 	}
 	HOOK StartCommand, SHARED
 	{
 		DESC Allows you to change the players inputs before they are processed by the server.
-		IN player, PN_Ref, PNF_None, Player, #The player
-		IN command, PN_Ref, PNF_None, CUserCmd, #The player
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		OUT command, PN_Ref, PNF_None, CUserCmd, #The player
 	}
 	HOOK Think, SHARED
 	{
@@ -595,19 +595,19 @@ HOOKS GM
 	HOOK UpdateAnimation, SHARED
 	{
 		DESC Animation updates (pose params etc) should be done here.
-		IN player, PN_Ref, PNF_None, Player, #The player to update the animation info for.
-		IN velocity, PN_Vector, #The player's velocity.
-		IN maxSeqGroundSpeed, PN_Number, #Speed of the animation - used for playback rate scaling.
+		OUT player, PN_Ref, PNF_None, Player, #The player to update the animation info for.
+		OUT velocity, PN_Vector, #The player's velocity.
+		OUT maxSeqGroundSpeed, PN_Number, #Speed of the animation - used for playback rate scaling.
 	}
 	HOOK VehicleMove, SHARED
 	{
-		IN player, PN_Ref, PNF_None, Player, #Player who is driving the vehicle
-		IN vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle being driven
-		IN moveData, PN_Ref, PNF_None, CMoveData, #Move data
+		OUT player, PN_Ref, PNF_None, Player, #Player who is driving the vehicle
+		OUT vehicle, PN_Ref, PNF_None, Vehicle, #The vehicle being driven
+		OUT moveData, PN_Ref, PNF_None, CMoveData, #Move data
 	}
 	HOOK WeaponEquip, SERVER
 	{
-		IN weapon, PN_Ref, PNF_None, Weapon, #The equipped weapon.
-		IN owner, PN_Ref, PNF_None, Player, #The player that is picking up the weapon.
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The equipped weapon.
+		OUT owner, PN_Ref, PNF_None, Player, #The player that is picking up the weapon.
 	}
 }
