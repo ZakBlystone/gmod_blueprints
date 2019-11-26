@@ -219,7 +219,8 @@ function PANEL:Setup( graph, pinFilter )
 
 		baseFilter = function(ntype)
 			local pin = FindMatchingPin(ntype, pf)
-			return pin ~= nil and ntype.pins[pin]:GetDir() ~= pf:GetDir()
+			local fpin = pin ~= nil and ntype:GetPins()[pin] or nil
+			return fpin ~= nil and fpin:GetDir() ~= pf:GetDir()
 		end
 
 	end

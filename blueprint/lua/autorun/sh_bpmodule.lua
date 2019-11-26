@@ -517,15 +517,15 @@ function meta:GetSingleton()
 
 end
 
-function meta:Compile(compileErrorHandler)
+function meta:Compile(compileErrorHandler, flags)
 
 	local ok, res = false, nil
 	if compileErrorHandler then
 		ok, res = xpcall(bpcompile.Compile, function(err)
 			if compileErrorHandler then compileErrorHandler(self, debug.traceback()) return end
-		end, self)
+		end, self, flags)
 	else
-		ok, res = true, bpcompile.Compile(self)
+		ok, res = true, bpcompile.Compile(self, flags)
 	end
 
 	if ok then

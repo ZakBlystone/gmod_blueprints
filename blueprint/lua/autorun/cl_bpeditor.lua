@@ -99,6 +99,12 @@ function PANEL:Init()
 				SaveFunc( LastSavedFile )
 			end
 		end},
+		{"Export Script to Clipboard", function()
+
+			local str = bpcompile.Compile(self.module, bit.bor(bpcompile.CF_Standalone, bpcompile.CF_CodeString))
+			SetClipboardText(str)
+
+		end},
 		{"Asset Browser", function()
 
 			RunConsoleCommand("pac_asset_browser")

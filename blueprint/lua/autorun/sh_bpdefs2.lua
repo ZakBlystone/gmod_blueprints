@@ -383,7 +383,7 @@ local function RegisterNodeBlock(name, codeType)
 	end,
 	function(block, value) ParseNodeValue(block.type, value) end,
 	function(block, parent)
-		if block.type.TBD then
+		if block.type.TBD or block.type:HasFlag(NTF_Protected) then --for now, protected nodes don't exist
 			parent.group:RemoveEntry(block.type)
 		end
 	end)
@@ -460,6 +460,10 @@ else
 		end
 	end)
 end
+
+bptransfer.RegisterTag("defs2", {
+	status = "Downloading Blueprint Definitions",
+})
 
 function Ready()
 	return ready

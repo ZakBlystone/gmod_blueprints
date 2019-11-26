@@ -8,6 +8,15 @@ include("sh_bpmodule.lua")
 
 module("bpcompile", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
 
+CF_None = 0
+CF_Standalone = 1
+CF_Comments = 2
+CF_Debug = 4
+CF_ILP = 8
+CF_CodeString = 16
+
+CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
+
 -- Some print utilities that I never fully used
 indent = 0
 function printi(...)
@@ -854,7 +863,12 @@ function CompileCodeSegment(cs)
 
 	cs.begin(CTX_Code)
 
+	if bit.band(cs.flags, CF_Standalone) ~= 0 then
+		cs.emit("AddCSLuaFile()")
+	end
+
 	cs.emitContext( CTX_MetaTables )
+	cs.emit("local __guid = \"" .. bpcommon.GUIDToString(cs.module:GetUID(), true) .. "\"")
 	cs.emit("local __self = nil")
 
 	-- debugging and infinite-loop-protection
@@ -889,6 +903,7 @@ function CompileCodeSegment(cs)
 	cs.emit("local meta = BLUEPRINT_OVERRIDE_META or {}")
 	cs.emit("if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end")
 	cs.emit("__bpm.meta = meta")
+	cs.emit("__bpm.guid = __guid")
 	cs.emit("__bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end")
 
 	-- delay manager (so that delays can be cancelled when a module is unloaded)
@@ -941,6 +956,23 @@ function CompileCodeSegment(cs)
 
 	-- assign local to _G.__BPMODULE so we can grab it from RunString
 	cs.emit("__BPMODULE = __bpm")
+
+	if bit.band(cs.flags, CF_Standalone) ~= 0 then
+
+		cs.emit("local instance = __bpm.new()")
+		cs.emit([[
+if instance.CORE_Init then instance:CORE_Init() end
+local bpm = instance.__bpm
+
+for k,v in pairs(bpm.events) do
+	if not v.hook or type(meta[k]) ~= "function" then continue end
+	local function call(...) return instance[k](instance, ...) end
+	local key = "bphook_" .. __guid
+	hook.Add(v.hook, key, call)
+end
+		]])
+
+	end
 
 
 	cs.finish()
@@ -1118,14 +1150,17 @@ function CompileGraph(cs, graph)
 
 end
 
-function Compile(mod)
+function Compile(mod, flags)
 
 	print("COMPILING MODULE...")
 
 	local start = os.clock()
 
+	flags = flags or CF_Default
+
 	-- compiler state
 	local cs = {
+		flags = flags,
 		module = mod,
 		compiledNodes = {},
 		graphs = {},
@@ -1134,9 +1169,9 @@ function Compile(mod)
 		contexts = {},
 		current_context = nil,
 		buffer = "",
-		debug = true,
-		debugcomments = true,
-		ilp = true,
+		debug = bit.band(flags, CF_Debug) ~= 0,
+		debugcomments = bit.band(flags, CF_Comments) ~= 0,
+		ilp = bit.band(flags, CF_ILP) ~= 0,
 		ilpmax = 10000,
 		ilpmaxh = 4,
 		times = {},
@@ -1210,6 +1245,9 @@ function Compile(mod)
 
 	-- write compiled output to file for debugging
 	file.Write("blueprints/last_compile.txt", cs.compiled)
+
+	-- if set, just return the compiled string, don't try to run the module
+	if bit.band(cs.flags, CF_CodeString) ~= 0 then return cs.compiled end
 
 	-- run the code and grab the __BPMODULE global
 	RunString(cs.compiled, "")
