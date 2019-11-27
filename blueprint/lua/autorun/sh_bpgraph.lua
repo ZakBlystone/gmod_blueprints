@@ -477,7 +477,7 @@ function meta:WalkInforms()
 			end, visited)
 			local pinType = nil
 			for _,c in pairs(connections) do
-				if c[1] == v.id then pinType = self:GetNode(c[1]):GetPin(c[2]):GetType(true) end
+				if not self:GetNode(c[1]):IsInformPin(c[2]) then pinType = self:GetNode(c[1]):GetPin(c[2]):GetType(true) end
 				--print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
 				self:GetNode(c[3]):SetInform(pinType)
 			end
@@ -492,7 +492,7 @@ function meta:WalkInforms()
 			end, visited)
 			local pinType = nil
 			for _,c in pairs(connections) do
-				if c[3] == v.id then pinType = self:GetNode(c[3]):GetPin(c[4]):GetType(true) end
+				if not self:GetNode(c[3]):IsInformPin(c[4]) then pinType = self:GetNode(c[3]):GetPin(c[4]):GetType(true) end
 				--print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
 				self:GetNode(c[1]):SetInform(pinType)
 			end
