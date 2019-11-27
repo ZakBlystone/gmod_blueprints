@@ -174,10 +174,19 @@ end
 function FindMatchingPin(ntype, pf)
 	local informs = ntype:GetInforms()
 	local ignoreNullable = bit.band( PNF_All, bit.bnot( PNF_Nullable ) )
-	for id, pin in pairs(ntype:GetPins()) do
+	local pins = ntype:GetPins()
+
+	local nodeClass = ntype:GetNodeClass()
+	if nodeClass ~= nil then
+		local node = bpnode.New(ntype)
+		node:PostInit()
+		pins = node:GetPins()
+	end
+
+	for id, pin in pairs(pins) do
 		local sameType = pin:GetType():Equal(pf:GetType(), 0)
 		local sameFlags = pin:GetFlags(ignoreNullable) == pf:GetFlags(ignoreNullable)
 		local tableMatch = informs ~= nil and #informs > 0 and pin:HasFlag(PNF_Table) and pf:HasFlag(PNF_Table) and pin:IsType(PN_Any)
-		if pin:GetDir() ~= pf:GetDir() and ntype:GetName() == "CORE_Pin" or ((sameType and sameFlags) or tableMatch) then return id end
+		if pin:GetDir() ~= pf:GetDir() and (ntype:GetName() == "CORE_Pin" or ((sameType and sameFlags) or tableMatch)) then return id, pin end
 	end
 end

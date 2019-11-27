@@ -16,6 +16,10 @@ meta.__tostring = function(self) return self:ToString() end
 
 function meta:Init(nodeType, x, y, literals)
 
+	if type(nodeType) == "table" then
+		self.nodeTypeObject = nodeType
+	end
+
 	self.nodeType = nodeType or "invalid"
 	self.x = x or 0
 	self.y = y or 0
@@ -33,18 +37,22 @@ function meta:PostInit()
 	self.x = math.Round(self.x / 15) * 15
 	self.y = math.Round(self.y / 15) * 15
 
-	self.nodeType = bpdefs:Get():RemapNodeType(self.nodeType)
+	local ntype = self.nodeTypeObject
+	if not self.nodeTypeObject then
+		self.nodeType = bpdefs:Get():RemapNodeType(self.nodeType)
 
-	local ntype = self:GetType()
-	if ntype == nil then 
-		if self.nodeType ~= "invalid" then print("Node type not found for: " .. self.nodeType) end
-		return false
+		ntype = self:GetType()
+		if ntype == nil then 
+			if self.nodeType ~= "invalid" then print("Node type not found for: " .. self.nodeType) end
+			return false
+		end
 	end
 
+	local nodeClass = ntype:GetNodeClass()
 	if ntype.nodeClass then
-		local class = bpnodeclasses.Get(ntype.nodeClass)
-		if class == nil then error("Failed to get class: " .. ntype.nodeClass) end
-		if ntype.nodeClass and class ~= nil then
+		local class = bpnodeclasses.Get(nodeClass)
+		if class == nil then error("Failed to get class: " .. nodeClass) end
+		if nodeClass and class ~= nil then
 			local base = getmetatable(self)
 			local meta = table.Copy(class)
 			table.Inherit(meta, base)
@@ -90,19 +98,28 @@ end
 function meta:ToString(pinID)
 
 	local ntype = self:GetType()
-	if not ntype then return self.graph:GetName() .. ":" .. "<unknown>" end
-	local str = self.graph:GetName() .. "." .. ntype.name
-	if pinID then
-		local p = self:GetPin(pinID)
-		if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end
-		if p then str = str .. "." .. p:ToString(true,true) end
+	local str = nil
+
+	if not ntype then 
+		str = "<unknown>"
+	else
+		str = ntype:GetName()
+		if pinID then
+			local p = self:GetPin(pinID)
+			if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end
+			if p then str = str .. "." .. p:ToString(true,true) end
+		end
 	end
+
+	if self.graph then str = self.graph:GetName() .. ":" .. str end
+
 	return str
 
 end
 
 function meta:IsPinConnected( pinID )
 
+	if self.graph == nil then return false end
 	return self.graph:IsPinConnected( self.id, pinID )
 
 end
@@ -170,12 +187,14 @@ end
 
 function meta:PreModify()
 
+	if not self.graph then return end
 	self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
 
 end
 
 function meta:PostModify()
 
+	if not self.graph then return end
 	self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
 
 end
@@ -268,6 +287,8 @@ function meta:SetLiteral(pinID, value)
 
 	value = tostring(value)
 	self.literals[pinID] = value
+	
+	if self.graph == nil then return end
 	self.graph:FireListeners(bpgraph.CB_PIN_EDITLITERAL, self.id, pinID, value)
 
 end
@@ -282,6 +303,8 @@ function meta:RemoveInvalidLiterals()
 end
 
 function meta:GetType()
+
+	if self.nodeTypeObject then return self.nodeTypeObject end
 
 	local nodeTypes = self.graph:GetNodeTypes()
 	local ntype = nodeTypes[ self.nodeType ]
@@ -355,6 +378,7 @@ function meta:Move(x, y)
 	self.x = x
 	self.y = y
 
+	if self.graph == nil then return end
 	self.graph:FireListeners(bpgraph.CB_NODE_MOVE, self.id, x, y)
 
 end
