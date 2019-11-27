@@ -71,7 +71,7 @@ end
 
 function NODE:GetFlags()
 
-	return bit.bor(self.BaseClass.GetFlags(self), NTF_HidePinNames)
+	return bit.bor(self.BaseClass.GetFlags(self), bpschema.NTF_HidePinNames)
 
 end
 
@@ -83,6 +83,7 @@ function NODE:GetCode()
 		code = code .. "$" .. pos .. ", "
 	end
 	code = code .. "}"
+
 	return code
 
 end

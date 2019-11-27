@@ -45,6 +45,12 @@ function meta:SetPinTypeOverride(override)
 
 end
 
+function meta:GetPinTypeOverride()
+
+	return self.pinTypeOverride
+
+end
+
 function meta:SetName(name)
 
 	self.name = name

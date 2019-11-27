@@ -106,7 +106,7 @@ function RequestVarSpec( module, callback, parent )
 	end
 
 	for k, v in pairs(bpdefs.Get():GetStructs()) do
-		if v:GetParam("pinTypeOverride") then continue end
+		if v:GetPinTypeOverride() then continue end
 		Combo:AddChoice( v.name, {PN_Struct, v.name} )
 	end
 

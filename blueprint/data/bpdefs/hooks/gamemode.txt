@@ -241,12 +241,12 @@ HOOKS GM
 	HOOK KeyPress, SHARED
 	{
 		OUT player, PN_Ref, PNF_None, Player, #The player pressing the key. If running client-side, this will always be LocalPlayer
-		OUT key, PN_Enum, PNF_None, OUT, #The key that the player pressed using OUT_ Enums.
+		OUT key, PN_Enum, PNF_None, IN, #The key that the player pressed using IN_ Enums.
 	}
 	HOOK KeyRelease, SHARED
 	{
 		OUT player, PN_Ref, PNF_None, Player, #The player releasing the key. If running client-side, this will always be LocalPlayer
-		OUT key, PN_Enum, PNF_None, OUT, #The key that the player released using OUT_ Enums.
+		OUT key, PN_Enum, PNF_None, IN, #The key that the player released using IN_ Enums.
 	}
 	HOOK Move, SHARED
 	{

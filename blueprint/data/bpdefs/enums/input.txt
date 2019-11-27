@@ -1,30 +1,30 @@
 ENUM IN
 {
-	VALUE IN_ATTACK +attack bound key ( Default: Left Mouse Button )
-	VALUE IN_JUMP +jump bound key ( Default: Space )
-	VALUE IN_DUCK +duck bound key ( Default: CTRL )
-	VALUE IN_FORWARD +forward bound key ( Default: W )
-	VALUE IN_BACK +back bound key ( Default: S )
-	VALUE IN_USE +use bound key ( Default: E )
-	VALUE IN_CANCEL 
-	VALUE IN_LEFT +left bound key ( Look left )
-	VALUE IN_RIGHT +right bound key ( Look right )
-	VALUE IN_MOVELEFT +moveleft bound key ( Default: A )
-	VALUE IN_MOVERIGHT +moveright bound key ( Default: D )
-	VALUE IN_ATTACK2 +attack2 bound key ( Default: Right Mouse Button )
-	VALUE IN_RUN 
-	VALUE IN_RELOAD +reload bound key ( Default: R )
-	VALUE IN_ALT1 +alt1 bound key
-	VALUE IN_ALT2 +alt2 bound key
-	VALUE IN_SCORE +showscores bound key ( Default: Tab )
-	VALUE IN_SPEED +speed bound key ( Default: Shift )
-	VALUE IN_WALK +walk bound key ( Slow walk )
-	VALUE IN_ZOOM +zoom bound key ( Suit Zoom )
+	VALUE IN_ATTACK, #+attack bound key ( Default: Left Mouse Button )
+	VALUE IN_JUMP, #+jump bound key ( Default: Space )
+	VALUE IN_DUCK, #+duck bound key ( Default: CTRL )
+	VALUE IN_FORWARD, #+forward bound key ( Default: W )
+	VALUE IN_BACK, #+back bound key ( Default: S )
+	VALUE IN_USE, #+use bound key ( Default: E )
+	VALUE IN_CANCEL,
+	VALUE IN_LEFT, #+left bound key ( Look left )
+	VALUE IN_RIGHT, #+right bound key ( Look right )
+	VALUE IN_MOVELEFT, #+moveleft bound key ( Default: A )
+	VALUE IN_MOVERIGHT, #+moveright bound key ( Default: D )
+	VALUE IN_ATTACK2, #+attack2 bound key ( Default: Right Mouse Button )
+	VALUE IN_RUN,
+	VALUE IN_RELOAD, #+reload bound key ( Default: R )
+	VALUE IN_ALT1, #+alt1 bound key
+	VALUE IN_ALT2, #+alt2 bound key
+	VALUE IN_SCORE, #+showscores bound key ( Default: Tab )
+	VALUE IN_SPEED, #+speed bound key ( Default: Shift )
+	VALUE IN_WALK, #+walk bound key ( Slow walk )
+	VALUE IN_ZOOM, #+zoom bound key ( Suit Zoom )
 	VALUE IN_WEAPON1, #For use in weapons. Set in the physgun when scrolling an object away from you.
 	VALUE IN_WEAPON2, #For use in weapons. Set in the physgun when scrolling an object towards you.
-	VALUE IN_BULLRUSH 
-	VALUE IN_GRENADE1 +grenade1 bound key
-	VALUE IN_GRENADE2 +grenade2 bound key
+	VALUE IN_BULLRUSH,
+	VALUE IN_GRENADE1, #+grenade1 bound key
+	VALUE IN_GRENADE2, #+grenade2 bound key
 }
 
 ENUM BUTTON_CODE
