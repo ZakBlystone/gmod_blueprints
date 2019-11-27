@@ -48,7 +48,7 @@ function PANEL:Init()
 			graph:AddNode("CORE_Init", 120, 100)
 			graph:AddNode("GM_Think", 120, 300)
 			graph:AddNode("CORE_Shutdown", 120, 500)
-		end},
+		end, nil, "icon16/asterisk_yellow.png"},
 		{"Save", function()
 
 			if LastSavedFile ~= nil then
@@ -73,7 +73,7 @@ function PANEL:Init()
 			end
 
 			Derma_StringRequest( "Save Blueprint", "What filename though?", "", SaveFunc, function( text ) end )
-		end},
+		end, nil, "icon16/disk.png"},
 		{"Load", function()
 			Derma_StringRequest(
 				"Load Blueprint",
@@ -91,25 +91,25 @@ function PANEL:Init()
 				end,
 				function( text ) end
 			)
-		end},
+		end, nil, "icon16/folder.png"},
 		{"Compile and upload", function()
 			bpnet.SendModule( self.module )
 
 			if LastSavedFile then
 				SaveFunc( LastSavedFile )
 			end
-		end},
+		end, Color(80,180,80), "icon16/server_go.png"},
 		{"Export Script to Clipboard", function()
 
 			local str = bpcompile.Compile(self.module, bit.bor(bpcompile.CF_Standalone, bpcompile.CF_CodeString))
 			SetClipboardText(str)
 
-		end},
+		end, nil, "icon16/page_code.png"},
 		{"Asset Browser", function()
 
 			RunConsoleCommand("pac_asset_browser")
 
-		end},
+		end, nil, "icon16/zoom.png"},
 	}
 
 	self.callback = function(...)
@@ -146,23 +146,45 @@ function PANEL:Init()
 
 	self.Menu = vgui.Create("DPanel", self)
 	self.Menu:Dock( TOP )
-	self.Menu:SetBackgroundColor( Color(80,80,80) )
+	self.Menu:SetBackgroundColor( Color(60,60,60) )
 
-	local optX = 0
-	for k,v in pairs(MenuOptions) do
-		local opt = vgui.Create("DButton", self.Menu)
-		opt:SetPos(optX, 0)
-		opt:SetText(v[1])
-		opt:SizeToContentsX()
-		opt:SetWide( opt:GetWide() + 10 )
-		opt:SetTall( 25 )
-		opt.DoClick = function(btn)
-			self:RunCommand( v[2] )
+	pcall( function()
+
+		local optX = 2
+		for k,v in pairs(MenuOptions) do
+			local textColor = Color(240,240,240)
+			local color = v[3] or Color(80,80,80)
+			local opt = vgui.Create("DButton", self.Menu)
+			local text = v[1]
+			if v[4] then text = "    " .. text end
+			opt:SetPos(optX, 2)
+			opt:SetFont("DermaDefaultBold")
+			opt:SetText(text)
+			opt:SizeToContentsX()
+			opt:SetWide( opt:GetWide() + 10 )
+			if v[4] then opt:SetIcon(v[4]) opt:SetWide( opt:GetWide() + 24 ) end
+			opt:SetTall( 25 )
+			opt:SetTextColor(textColor)
+			opt.Paint = function(btn, w, h)
+				local col = color
+
+				if btn.Hovered then col = Color(200,100,50) end
+				if btn:IsDown() then col = Color(50,170,200) end
+
+				local bgColor = Color(col.r + 20, col.g + 20, col.b + 20)
+				draw.RoundedBox( 2, 0, 0, w, h, bgColor )
+				draw.RoundedBox( 2, 1, 1, w-2, h-2, col )
+			end
+			opt.DoClick = function(btn)
+				self:RunCommand( v[2] )
+			end
+			optX = optX + opt:GetWide() + 2
 		end
-		optX = optX + opt:GetWide() + 2
-	end
+
+	end)
 
 	self.Menu:SizeToChildren( true, true )
+	self.Menu:SetTall(self.Menu:GetTall() + 2)
 
 	self.Status = vgui.Create("DPanel", self)
 	self.Status:Dock( BOTTOM )
