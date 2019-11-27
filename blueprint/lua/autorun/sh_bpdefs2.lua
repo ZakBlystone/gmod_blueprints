@@ -427,7 +427,11 @@ local function LoadDefinitionPack(data)
 
 end
 
-if SERVER then
+if game.SinglePlayer() then
+	LoadAndParseDefs()
+	defpack:PostInit()
+	ready = true
+elseif SERVER then
 	bpcommon.ProfileStart("parse definitions")
 	LoadAndParseDefs()
 
@@ -447,6 +451,7 @@ if SERVER then
 		state:AddFile(DEFPACK_LOCATION, "defs2")
 	end)
 else
+
 	hook.Add("BPTransferRequest", "downloadDefs", function(state, data)
 		if data.tag == "defs2" then
 			ready = false
