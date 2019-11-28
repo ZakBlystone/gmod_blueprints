@@ -5,24 +5,7 @@ include("sh_bppintype.lua")
 
 module("bppin", package.seeall)
 
-local meta = {}
-meta.__index = function(self, k)
-	if k == 1 then print("Accessed[1], use :GetDir") print(debug.traceback()) return self:GetDir() end
-	if k == 2 then print("Accessed[2], use :GetBaseType") print(debug.traceback()) return self:GetType():GetBaseType() end
-	if k == 3 then print("Accessed[3], use :GetName") print(debug.traceback()) return self:GetName() end
-	if k == 4 then print("Accessed[4], use :GetFlags") print(debug.traceback()) return self:GetType():GetFlags() end
-	if k == 5 then print("Accessed[5], use :GetSubType") print(debug.traceback()) return self:GetType():GetSubType() end
-	return meta[k]
-end
-
-meta.__newindex = function(self, k, v)
-	if k == 1 then print("Set[1], use :SetDir") print(debug.traceback()) self:SetDir(v) end
-	if k == 2 then error("Tried to set type!!!") end
-	if k == 3 then print("Set[3], use :SetName") print(debug.traceback()) self:SetName(v) end
-	if k == 4 then error("Tried to set flags!!!") end
-	if k == 5 then error("Tried to set subtype!!!") end
-	rawset(self, k, v)
-end
+local meta = bpcommon.MetaTable("bppin")
 
 meta.__tostring = function(self)
 	return self:ToString(true, true)
@@ -64,15 +47,12 @@ end
 
 function meta:IsIn() return self:GetDir() == bpschema.PD_In end
 function meta:IsOut() return self:GetDir() == bpschema.PD_Out end
-function meta:IsType(...) return self:GetType():IsType(...) end
-function meta:GetBaseType(...) return self:GetType():GetBaseType() end
-function meta:GetSubType(...) return self:GetType():GetSubType() end
-function meta:GetColor(...) return self:GetType():GetColor(...) end
-function meta:GetTypeName(...) return self:GetType():GetTypeName(...) end
-function meta:GetLiteralType(...) return self:GetType():GetLiteralType(...) end
 function meta:GetDefault(...) return self.default or self:GetType():GetDefault(...) end
-function meta:GetFlags(...) return self:GetType():GetFlags(...) end
-function meta:HasFlag(...) return self:GetType():HasFlag(...) end
+
+-- Funky colors!
+--[[function meta:GetColor()
+	return HSVToColor(math.fmod((self:GetBaseType() + CurTime()) * 80, 360), .75, 1)
+end]]
 
 function meta:WriteToStream(stream)
 
@@ -105,6 +85,6 @@ function meta:ToString(printTypeInfo, printDir)
 	return str
 end
 
-function New(...)
-	return setmetatable({}, meta):Init(...)
-end
+bpcommon.ForwardMetaCallsVia(meta, "bppintype", "GetType")
+
+function New(...) return bpcommon.MakeInstance(meta, ...) end

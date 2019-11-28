@@ -23,8 +23,7 @@ local STATE_Idle = 0
 local STATE_Active = 1
 local STATE_AwaitAck = 2
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bptransfer")
 
 function meta:Init( player )
 
@@ -267,9 +266,7 @@ function meta:Cancel(msg)
 
 end
 
-local function TransferState(...)
-	return setmetatable({}, meta):Init(...)
-end
+local function TransferState(...) return bpcommon.MakeInstance(meta, ...) end
 
 function GetState(ply)
 	return G_TransferPlayerStates[ply]

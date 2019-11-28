@@ -7,8 +7,7 @@ include("sh_bpstruct.lua")
 
 module("bpdefpack", package.seeall, bpcommon.rescope(bpschema))
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bpdefpack")
 meta.__tostring = function(self) return self:ToString() end
 
 function meta:Init()
@@ -216,6 +215,6 @@ end
 
 function New(...)
 
-	return setmetatable({}, meta):Init(...)
+	return bpcommon.MakeInstance(meta, ...)
 
 end

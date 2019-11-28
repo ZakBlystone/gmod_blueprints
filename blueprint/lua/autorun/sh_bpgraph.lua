@@ -31,14 +31,14 @@ FL_HOOK = 4
 FL_ROLE_SERVER = 8
 FL_ROLE_CLIENT = 16
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bpgraph")
 
 New = nil
 
 bpcommon.CreateIndexableListIterators(meta, "nodes")
 bpcommon.CreateIndexableListIterators(meta, "inputs")
 bpcommon.CreateIndexableListIterators(meta, "outputs")
+bpcommon.AddFlagAccessors(meta)
 
 function meta:Init(module, type)
 
@@ -51,6 +51,8 @@ function meta:Init(module, type)
 	self.flags = FL_NONE
 	self.type = type or GT_Event
 	self.module = module
+
+	-- Create lists for graph elements
 	self.deferredNodes = bplist.New():Constructor(self.nodeConstructor)
 	self.nodes = bplist.New():Constructor(self.nodeConstructor)
 	self.inputs = bplist.New():NamedItems("Inputs"):Constructor(bpvariable.New)
@@ -58,6 +60,7 @@ function meta:Init(module, type)
 	self.connections = {}
 	self.heldConnections = {}
 
+	-- Listen for changes in the input variable list (function graph)
 	self.inputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
@@ -72,6 +75,7 @@ function meta:Init(module, type)
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
+	-- Listen for changes in the output variable list (function graph)
 	self.outputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
@@ -86,11 +90,14 @@ function meta:Init(module, type)
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
+	-- Listen for changes in the node list
 	self.nodes:AddListener(function(cb, id)
 
 		if cb == bplist.CB_ADD then
 			self:FireListeners(CB_NODE_ADD, id)
 		elseif cb == bplist.CB_REMOVE then
+
+			-- Remove connections to the node that is being removed
 			for i, c in self:Connections() do
 				if c[1] == id or c[3] == id then
 					self:RemoveConnectionID(i)
@@ -110,6 +117,7 @@ end
 
 function meta:PostInit()
 
+	-- Function graphs add entry and exit nodes on creation
 	if self.type == GT_Function then
 
 		self:AddNode("__Entry", 0, 200)
@@ -123,10 +131,6 @@ function meta:PostInit()
 
 end
 
-function meta:SetFlag(fl) self.flags = bit.bor(self.flags, fl) end
-function meta:HasFlag(fl) return bit.band(self.flags, fl) ~= 0 end
-function meta:ClearFlag(fl) self.flags = bit.band(self.flags, bit.bnot(fl)) end
-function meta:GetFlags() return self.flags end
 function meta:CanRename() return not self:HasFlag(FL_LOCK_NAME) end
 
 function meta:PreModifyNode( node, action, subaction )
@@ -992,6 +996,4 @@ function meta:CreateTestGraph()
 
 end
 
-New = function(...)
-	return setmetatable({}, meta):Init(...)
-end
+New = function(...) return bpcommon.MakeInstance(meta, ...) end

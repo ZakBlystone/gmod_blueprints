@@ -297,6 +297,9 @@ function PANEL:DrawConnection(connection)
 	local avpin = a:GetPin( apin )
 	local bvpin = b:GetPin( bpin )
 
+	local arpin = graph:GetNode(connection[1]):GetPin(apin)
+	local brpin = graph:GetNode(connection[3]):GetPin(bpin)
+
 	local ax, ay = self:PinPos(avpin)
 	local bx, by = self:PinPos(bvpin)
 
@@ -306,8 +309,8 @@ function PANEL:DrawConnection(connection)
 	if apintype == nil or bpintype == nil then return end
 
 	self:DrawHermite( ax, ay, bx, by, 
-		apintype:GetColor(), 
-		bpintype:GetColor()
+		arpin:GetColor(), 
+		brpin:GetColor()
 	)
 
 end

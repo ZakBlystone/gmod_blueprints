@@ -26,8 +26,7 @@ local GroupContexts = {
 	[TYPE_Hooks] = bpnodetype.NC_Hook,
 }
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bpnodetypegroup")
 meta.__tostring = function(self) return self:ToString() end
 
 function meta:Init(entryType)
@@ -103,8 +102,4 @@ function meta:ToString()
 
 end
 
-function New(...)
-
-	return setmetatable({}, meta):Init(...)
-
-end
+function New(...) return bpcommon.MakeInstance(meta, ...) end

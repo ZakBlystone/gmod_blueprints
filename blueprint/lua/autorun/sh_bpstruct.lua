@@ -6,8 +6,7 @@ include("sh_bpvariable.lua")
 
 module("bpstruct", package.seeall, bpcommon.rescope(bpschema))
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bpstruct")
 
 function meta:Init()
 
@@ -197,8 +196,4 @@ function meta:ReadFromStream(stream, mode, version)
 
 end
 
-function New(...)
-
-	return setmetatable({}, meta):Init(...)
-
-end
+function New(...) return bpcommon.MakeInstance(meta, ...) end

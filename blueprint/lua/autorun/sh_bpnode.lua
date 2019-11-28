@@ -3,6 +3,7 @@ AddCSLuaFile()
 include("sh_bpcommon.lua")
 include("sh_bpschema.lua")
 include("sh_bpnodeclasses.lua")
+include("sh_bpnodetype.lua")
 
 module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef))
 
@@ -10,8 +11,7 @@ bpcommon.CallbackList({
 	"NODE_PINS_UPDATED",
 })
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bpnode")
 meta.__tostring = function(self) return self:ToString() end
 
 function meta:Init(nodeType, x, y, literals)
@@ -353,19 +353,9 @@ function meta:GetOptions(tab)
 
 end
 
-function meta:GetRole() return self:GetType():GetRole() end
 function meta:GetPins() return self.pinCache end
-function meta:GetCode() return self:GetType():GetCode() end
-function meta:GetJumpSymbols() return self:GetType():GetJumpSymbols() end
-function meta:GetLocals() return self:GetType():GetLocals() end
-function meta:GetGraphThunk() return self:GetType():GetGraphThunk() end
-function meta:GetHook() return self:GetType():GetHook() end
-function meta:GetInforms() return self:GetType():GetInforms() end
-function meta:GetDescription() return self:GetType():GetDescription() end
 function meta:GetFlags() return self:GetType():GetFlags() end
 function meta:HasFlag(fl) return bit.band(self:GetFlags(), fl) ~= 0 end
-function meta:GetDisplayName() return self:GetType():GetDisplayName() end
-function meta:GetRequiredMeta() return self:GetType():GetRequiredMeta() end
 
 function meta:GetGraph() return self.graph end
 function meta:GetModule() return self:GetGraph():GetModule() end
@@ -407,8 +397,6 @@ function meta:ReadFromStream(stream, mode, version)
 
 end
 
-function New(...)
+bpcommon.ForwardMetaCallsVia(meta, "bpnodetype", "GetType")
 
-	return setmetatable({}, meta):Init(...)
-
-end
+function New(...) return bpcommon.MakeInstance(meta, ...) end

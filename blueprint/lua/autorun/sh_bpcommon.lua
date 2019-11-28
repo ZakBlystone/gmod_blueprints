@@ -1,5 +1,7 @@
 AddCSLuaFile()
 
+G_BPMetaRegistry = G_BPMetaRegistry or {}
+
 module("bpcommon", package.seeall)
 
 file.CreateDir("blueprints")
@@ -220,6 +222,65 @@ function CreateIndexableListIterators(meta, variable)
 	meta["Remove" .. varName] = function(self, ...)
 		return self[variable]:Remove(...)
 	end
+
+end
+
+function MetaTable(name)
+
+	G_BPMetaRegistry[name] = G_BPMetaRegistry[name] or {}
+	local mt = G_BPMetaRegistry[name]
+	mt.__index = mt
+	return mt
+
+end
+
+function FindMetaTable(name)
+
+	return G_BPMetaRegistry[name]
+
+end
+
+function MakeInstance(meta, ...)
+
+	if type(meta) == "string" then meta = G_BPMetaRegistry[name] end
+	return setmetatable({}, meta):Init(...)
+
+end
+
+function ForwardMetaCallsVia(meta, target, getter)
+
+	target = FindMetaTable(target)
+	if target == nil then error("Couldn't find metatable: " .. tostring(target)) end
+
+	for k,v in pairs(target) do
+		if type(v) == "function" and k[1] ~= "_" and meta[k] == nil then
+			meta[k] = function(self, ...)
+				local o = self[getter](self)
+				return o[k](o, ...)
+			end
+		end
+	end
+
+end
+
+-- Adds accessors to metatable for accessing bitflags
+function AddFlagAccessors(meta, readOnly, var)
+
+	var = var or "flags"
+	local key = Camelize(var)
+	local singular = GetSingular(key)
+	local getter = "Get" .. key
+	if not readOnly then
+		meta["Set" .. key] = function(self, fl) self[var] = fl end
+		meta["Set" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) end
+		meta["Add" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) end
+		meta["Clear" .. singular] = function(self, fl) self[var] = bit.band(self[var], bit.bnot(fl)) end
+	end
+
+	meta["Has" .. singular] = function(self, fl) return bit.band(self[getter](self), fl) ~= 0 end
+	meta[getter] = function(self) return self[var] end
+
+	return meta
 
 end
 

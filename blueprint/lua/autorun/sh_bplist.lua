@@ -15,7 +15,7 @@ MODIFY_ADD = 0
 MODIFY_REMOVE = 1
 MODIFY_RENAME = 2
 
-local meta = {}
+local meta = bpcommon.MetaTable("bplist")
 meta.__index = meta
 
 function meta:Init(...)
@@ -297,8 +297,4 @@ function meta:GetTable()
 
 end
 
-function New()
-
-	return setmetatable({}, meta):Init()
-
-end
+function New(...) return bpcommon.MakeInstance(meta, ...) end

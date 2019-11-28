@@ -6,8 +6,7 @@ module("bpstringtable", package.seeall)
 
 local INVALID_STRING = 0
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bpstringtable")
 
 function meta:Init()
 	self.strings = {}
@@ -79,6 +78,4 @@ function meta:ReadFromStream(stream)
 
 end
 
-function New(...)
-	return setmetatable({}, meta):Init(...)
-end
+function New(...) return bpcommon.MakeInstance(meta, ...) end

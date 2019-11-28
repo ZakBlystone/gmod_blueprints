@@ -11,8 +11,10 @@ NC_Lib = 1
 NC_Hook = 2
 NC_Struct = 3
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bpnodetype")
+
+bpcommon.AddFlagAccessors(meta)
+
 meta.__tostring = function(self) return self:ToString() end
 
 local PIN_INPUT_EXEC = MakePin( PD_In, "Exec", PN_Exec )
@@ -285,8 +287,4 @@ function meta:ToString()
 
 end
 
-function New(...)
-
-	return setmetatable({}, meta):Init(...)
-
-end
+function New(...) return bpcommon.MakeInstance(meta, ...) end

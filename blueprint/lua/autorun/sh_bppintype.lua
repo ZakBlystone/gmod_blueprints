@@ -4,8 +4,7 @@ include("sh_bpcommon.lua")
 
 module("bppintype", package.seeall)
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bppintype")
 meta.__tostring = function(self)
 	return self:ToString()
 end
@@ -98,6 +97,4 @@ function meta:ReadFromStream(stream)
 
 end
 
-function New(...)
-	return setmetatable({}, meta):Init(...)
-end
+function New(...) return bpcommon.MakeInstance(meta, ...) end

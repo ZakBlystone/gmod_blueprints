@@ -56,7 +56,7 @@ function PANEL:Setup(graph, node, pin, pinID)
 	self.eprint = false
 	self.pinSpot.Paint = function(pinspot,w,h)
 
-		surface.SetDrawColor( self.pinType:GetColor() )
+		surface.SetDrawColor( self.pin:GetColor() )
 		surface.DrawRect(0,0,w,h)
 		surface.SetDrawColor( Color(0,0,0,255) )
 
