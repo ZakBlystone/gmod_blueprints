@@ -57,3 +57,30 @@ function EditStructParams( struct )
 	window:MakePopup()
 
 end
+
+function EditEventParams( event )
+
+	local width = 500
+
+	local window = vgui.Create( "DFrame" )
+	window:SetTitle( "Edit Struct Pins" )
+	window:SetDraggable( true )
+	window:ShowCloseButton( true )
+
+	local pins = StructVarList( event.module, window, event.pins, "Pins" )
+	pins:Dock( FILL )
+
+	window.OnFocusChanged = function(self, gained)
+		timer.Simple(.1, function()
+			if not (gained or vgui.FocusedHasParent(window)) then
+				self:Close()
+			end
+		end)
+	end
+
+	window:SetSize( 500, 400 )
+	window:Center()
+
+	window:MakePopup()
+
+end

@@ -36,6 +36,7 @@ function meta:Init(context, group)
 	self.pinRedirects = {}
 	self.jumpSymbols = {}
 	self.locals = {}
+	self.globals = {}
 	self.informs = {}
 	self.pins = {}
 	self.warning = nil
@@ -50,6 +51,7 @@ function meta:AddRequiredMeta(meta) table.insert(self.requiredMeta, meta) end
 function meta:AddPinRedirect(fromName, toName) self.pinRedirects[fromName] = toName end
 function meta:AddJumpSymbol(name) table.insert(self.jumpSymbols, name) end
 function meta:AddLocal(name) table.insert(self.locals, name) end
+function meta:AddGlobal(name) table.insert(self.globals, name) end
 function meta:AddInform(pinID) table.insert(self.informs, pinID) end
 function meta:SetRole(role) self.role = role end
 function meta:SetCodeType(codeType) self.codeType = codeType end
@@ -68,6 +70,7 @@ function meta:GetRole() return self.role end
 function meta:GetCodeType() return self.codeType end
 function meta:GetJumpSymbols() return self.jumpSymbols end
 function meta:GetLocals() return self.locals end
+function meta:GetGlobals() return self.globals end
 function meta:GetInforms() return self.informs end
 function meta:GetDescription() return self.desc end
 function meta:GetGraphThunk() return self.graphThunk end
@@ -241,6 +244,7 @@ function meta:WriteToStream(stream)
 	bpdata.WriteValue(self.pinRedirects, stream)
 	bpdata.WriteValue(self.jumpSymbols, stream)
 	bpdata.WriteValue(self.locals, stream)
+	bpdata.WriteValue(self.globals, stream)
 	bpdata.WriteValue(self.informs, stream)
 
 	stream:WriteBits(#self.pins, 8)
@@ -270,6 +274,7 @@ function meta:ReadFromStream(stream)
 	self.pinRedirects = bpdata.ReadValue(stream)
 	self.jumpSymbols = bpdata.ReadValue(stream)
 	self.locals = bpdata.ReadValue(stream)
+	self.globals = bpdata.ReadValue(stream)
 	self.informs = bpdata.ReadValue(stream)
 
 	local numPins = stream:ReadBits(8)

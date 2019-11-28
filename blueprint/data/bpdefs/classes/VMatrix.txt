@@ -204,7 +204,7 @@ CLASS VMatrix
 		DESC Transforms the input vector by this matrix, including position
 		IN position, PN_Vector, #Vector to transform
 		OUT out, PN_Vector, #Transformed vector
-		CODE $1 * $2
+		CODE #1 = $1 * $2
 	}
 	PURE TransformNormal, SHARED
 	{

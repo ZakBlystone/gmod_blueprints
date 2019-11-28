@@ -217,6 +217,21 @@ function EnumerateGraphVars(cs, uniqueKeys)
 
 		end
 
+		-- some nodetypes have local variables exclusive to themselves
+		for _, l in pairs(node:GetGlobals()) do
+
+			local key = bpcommon.CreateUniqueKey(unique, "local_" .. node:GetTypeName() .. "_v_" .. l)
+
+			table.insert(cs.vars, {
+				var = key,
+				localvar = l,
+				node = nodeID,
+				graph = cs.graph.id,
+				keyAsGlobal = true,
+			})
+
+		end
+
 		-- unconnected pins can contain literals, make internal variables for them
 		for pinID, pin in node:SidePins(PD_In) do
 			local pinType = cs.graph:GetPinType( nodeID, pinID )
@@ -303,7 +318,7 @@ function GetVarCode(cs, var, jump)
 	local s = ""
 	if jump and var.jump then s = "goto jmp_" end
 	if var.literal then return s .. var.var end
-	if var.global or var.isFunc then return "__self." .. var.var end
+	if var.global or var.isFunc or var.keyAsGlobal then return "__self." .. var.var end
 	return s .. var.var
 
 end
@@ -345,12 +360,14 @@ function CompileVars(cs, code, inVars, outVars, nodeID)
 		outBase = 1
 	end
 
+
 	--printi("Compile Code: '" .. code .. "': " .. #inVars .. " " .. #outVars)
 
 	-- replace macros
 	str = string.Replace( str, "@graph", "graph_" .. cs.graph.id .. "_entry" )
 	str = string.Replace( str, "!node", tostring(nodeID))
 	str = string.Replace( str, "!graph", tostring(cs.graph.id))
+	str = string.Replace( str, "!module", tostring(cs.guidString))
 
 	-- replace input pin codes
 	str = str:gsub("$(%d+)", function(x) return GetVarCode(cs, inVars[tonumber(x) + inBase]) end)
@@ -361,6 +378,12 @@ function CompileVars(cs, code, inVars, outVars, nodeID)
 
 	local lmap = {}
 	for k,v in pairs(node:GetLocals()) do
+		local var = FindLocalVarForNode(cs, nodeID, v)
+		if var == nil then error("Failed to find internal variable: " .. tostring(v)) end
+		lmap[v] = var
+	end
+
+	for k,v in pairs(node:GetGlobals()) do
 		local var = FindLocalVarForNode(cs, nodeID, v)
 		if var == nil then error("Failed to find internal variable: " .. tostring(v)) end
 		lmap[v] = var
@@ -787,6 +810,9 @@ function CompileGlobalVarListing(cs)
 		if not v.literal and v.global then
 			cs.emit("instance." .. v.var .. " = nil")
 		end
+		if v.localvar and v.keyAsGlobal then
+			cs.emit("instance." .. v.var .. " = nil")
+		end
 	end
 
 	for id, var in cs.module:Variables() do
@@ -806,7 +832,7 @@ function CompileGraphVarListing(cs)
 
 	for k, v in pairs(cs.vars) do
 		if v.graph ~= cs.graph.id then continue end
-		if not v.literal and not v.global and not v.isFunc then
+		if not v.literal and not v.global and not v.isFunc and not v.keyAsGlobal then
 			cs.emit("local " .. v.var .. " = nil")
 		end
 	end
@@ -867,6 +893,9 @@ function CompileCodeSegment(cs)
 		cs.emit("AddCSLuaFile()")
 	end
 
+	--cs.emit("if SERVER then util.AddNetworkString(\"bphandshake\") end")
+	--cs.emit("if SERVER then util.AddNetworkString(\"bpmessage\") end\n")
+
 	cs.emitContext( CTX_MetaTables )
 	cs.emit("local __guid = \"" .. bpcommon.GUIDToString(cs.module:GetUID(), true) .. "\"")
 	cs.emit("local __self = nil")
@@ -904,6 +933,7 @@ function CompileCodeSegment(cs)
 	cs.emit("if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end")
 	cs.emit("__bpm.meta = meta")
 	cs.emit("__bpm.guid = __guid")
+	cs.emit("__bpm.hexBytes = function(str) return str:gsub(\"%w%w\", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end")
 	cs.emit("__bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end")
 
 	-- delay manager (so that delays can be cancelled when a module is unloaded)
@@ -944,6 +974,9 @@ function CompileCodeSegment(cs)
 	cs.emitContext( CTX_Vars .. "global", 1 )
 	cs.emit("\tinstance.delays = {}")
 	cs.emit("\tinstance.__bpm = __bpm")
+	if bit.band(cs.flags, CF_Standalone) ~= 0 then
+		cs.emit("\tinstance.__guid = __guid")
+	end
 	cs.emit("\treturn instance")
 	cs.emit("end")
 
@@ -967,7 +1000,7 @@ local bpm = instance.__bpm
 for k,v in pairs(bpm.events) do
 	if not v.hook or type(meta[k]) ~= "function" then continue end
 	local function call(...) return instance[k](instance, ...) end
-	local key = "bphook_" .. __guid
+	local key = "bphook_" .. instance.__guid
 	hook.Add(v.hook, key, call)
 end
 		]])
@@ -1176,6 +1209,7 @@ function Compile(mod, flags)
 		ilpmaxh = 4,
 		times = {},
 		profile = false,
+		guidString = bpcommon.GUIDToString(mod:GetUID(), true),
 	}
 
 	-- context control functions

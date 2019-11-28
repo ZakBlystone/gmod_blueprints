@@ -6,7 +6,12 @@ LIB UTIL
 		OUT Forward, PN_Vector
 		OUT Right, PN_Vector
 		OUT Up, PN_Vector
-		CODE #1 = $1:Forward() #2 = $1:Right() #3 = $1:Up()
+		CODE 
+		{
+			#1 = $1:Forward()
+			#2 = $1:Right()
+			#3 = $1:Up()
+		}
 		COMPACT false
 	}
 	FUNC SetEntityValue, SHARED
@@ -14,7 +19,12 @@ LIB UTIL
 		IN Entity, PN_Ref, PNF_None, Entity
 		IN Key, PN_String
 		IN Value, PN_Any
-		CODE if IsValid($1) then $1[\"bp_!graph_\" .. $2] = $3 end
+		CODE
+		{
+			if IsValid($1) then 
+				$1["!module_" .. $2] = $3 
+			end
+		}
 	}
 	PURE GetEntityValue, SHARED
 	{
@@ -22,13 +32,25 @@ LIB UTIL
 		IN Key, PN_String
 		OUT HasValue, PN_Bool
 		OUT Value, PN_Any
-		CODE if IsValid($1) then #1 = $1[\"bp_!graph_\" .. $2] ~= nil #2 = $1[\"bp_!graph_\" .. $2] else #1 = false #2 = nil end
+		CODE 
+		{
+			if IsValid($1) then 
+				#1 = $1["!module_" .. $2] ~= nil #2 = $1["!module_" .. $2] 
+			else 
+				#1 = false #2 = nil 
+			end
+		}
 	}
 	FUNC ClearEntityValue, SHARED
 	{
 		IN Entity, PN_Ref, PNF_None, Entity
 		IN Key, PN_String
-		CODE if IsValid($1) then $1[\"bp_!graph_\" .. $2] = nil end
+		CODE 
+		{
+			if IsValid($1) then 
+				$1["!module_" .. $2] = nil 
+			end
+		}
 	}
 	PURE GetKeyValue, SHARED
 	{
@@ -71,6 +93,33 @@ LIB UTIL
 			%ent:Spawn()
 			%ent:SetKeyValue("iMagnitude", $3)
 			%ent:Fire("Explode")
+		}
+	}
+	PURE TCLerp, SHARED
+	{
+		DESC Time corrected lerp, interpolates between A and B consistently regardless of framerate
+		IN A, PN_Number, #Interpolate from this
+		IN B, PN_Number, #Interpolate to this
+		IN Rate = 1, PN_Number, #How fast to interpolate
+		OUT Result, PN_Number
+		CODE
+		{
+			#1 = Lerp(1 - math.exp(FrameTime() * -$3), $1, $2)
+		}
+	}
+	FUNC AutoLerp, SHARED
+	{
+		DESC Automatically lerps toward the target value each time the function is called
+		IN Target, PN_Number, #Target value to interpolate to
+		IN Rate, PN_Number, #How fast to interpolate
+		IN Reset, PN_Bool, #Reset internal lerped value to target
+		OUT Value, PN_Number
+		GLOBAL current
+		CODE
+		{
+			if %current == nil or $3 then %current = $1 end
+			%current = Lerp(1 - math.exp(FrameTime() * -$2), %current, $1)
+			#1 = %current
 		}
 	}
 }

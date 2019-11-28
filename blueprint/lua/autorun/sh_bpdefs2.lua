@@ -270,6 +270,7 @@ local function ParseNodeValue(nodeType, v)
 	if key == "JUMP" then nodeType:AddJumpSymbol(v.tuple[2]) end
 	if key == "LATENT" then nodeType:AddFlag(NTF_Latent) end
 	if key == "LOCAL" then nodeType:AddLocal(v.tuple[2]) end
+	if key == "GLOBAL" then nodeType:AddGlobal(v.tuple[2]) end
 	if key == "METATABLE" then nodeType:AddRequiredMeta(v.tuple[2]) end
 	if key == "NOHOOK" then nodeType:AddFlag(NTF_NotHook) end
 	if key == "PARAM" then nodeType:SetNodeParam(v.tuple[2], v.tuple[3]) end

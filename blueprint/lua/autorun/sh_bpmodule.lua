@@ -7,6 +7,7 @@ include("sh_bpdata.lua")
 include("sh_bpgraph.lua")
 include("sh_bpvariable.lua")
 include("sh_bpstruct.lua")
+include("sh_bpevent.lua")
 include("sh_bplist.lua")
 
 module("bpmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef)) --bpnodedef is temporary
@@ -29,10 +30,9 @@ GRAPH_NODETYPE_ACTIONS = {
 
 
 fmtMagic = 0x42504D30
-fmtVersion = 2
+fmtVersion = 3
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bpmodule")
 
 nextModuleID = nextModuleID or 0
 activeModules = activeModules or {}
@@ -40,6 +40,7 @@ activeModules = activeModules or {}
 bpcommon.CreateIndexableListIterators(meta, "graphs")
 bpcommon.CreateIndexableListIterators(meta, "variables")
 bpcommon.CreateIndexableListIterators(meta, "structs")
+bpcommon.CreateIndexableListIterators(meta, "events")
 
 function meta:Init(type)
 
@@ -54,10 +55,17 @@ function meta:Init(type)
 		return struct
 	end
 
+	self.eventConstructor = function(...)
+		local event = bpevent.New(...)
+		event.module = self
+		return event
+	end
+
 	self.version = fmtVersion
 	self.graphs = bplist.New():NamedItems("Graph"):Constructor(self.graphConstructor)
 	self.structs = bplist.New():NamedItems("Struct"):Constructor(self.structConstructor)
 	self.variables = bplist.New():NamedItems("Var"):Constructor(bpvariable.New)
+	self.events = bplist.New():NamedItems("Event"):Constructor(self.eventConstructor)
 	self.id = nextModuleID
 	self.type = self.type or MT_Game
 	self.revision = 1
@@ -104,6 +112,28 @@ function meta:Init(type)
 			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_RENAME, action )
 			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
 			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+		end
+
+	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+
+	self.events:AddListener(function(cb, id)
+		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__Event" .. id, "__EventCall" .. id}) end
+		self:RecacheNodeTypes()
+	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
+
+	self.events:AddListener(function(cb, action, id, graph)
+
+		if action ~= bplist.MODIFY_RENAME then return end
+		if cb == bplist.CB_PREMODIFY then
+			self:PreModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+		elseif cb == bplist.CB_POSTMODIFY then
+			self:PostModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -189,6 +219,22 @@ function meta:GetUID()
 
 end
 
+function meta:NodeTypeInUse( nodeType )
+
+	for id, v in self:Graphs() do
+
+		for _, node in v:Nodes() do
+
+			if node:GetTypeName() == nodeType then return true end
+
+		end
+
+	end
+
+	return false
+
+end
+
 function meta:GetNodeTypes( graphID )
 
 	local types = {}
@@ -216,6 +262,13 @@ function meta:GetNodeTypes( graphID )
 
 		types["__Make" .. id] = v:MakerNodeType()
 		types["__Break" .. id] = v:BreakerNodeType()
+
+	end
+
+	for id, v in self:Events() do
+
+		types["__EventCall" .. id] = v:CallNodeType()
+		types["__Event" .. id] = v:EventNodeType()
 
 	end
 
@@ -361,6 +414,7 @@ function meta:WriteToStream(stream, mode)
 	Profile("write-variables", self.variables.WriteToStream, self.variables, stream, mode, fmtVersion)
 	Profile("write-graphs", self.graphs.WriteToStream, self.graphs, stream, mode, fmtVersion)
 	Profile("write-structs", self.structs.WriteToStream, self.structs, stream, mode, fmtVersion)
+	Profile("write-events", self.events.WriteToStream, self.events, stream, mode, fmtVersion)
 
 end
 
@@ -383,6 +437,10 @@ function meta:ReadFromStream(stream, mode)
 	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
 	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
 	Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version)
+
+	if version >= 3 then
+		Profile("read-events", self.events.ReadFromStream, self.events, stream, mode, version)
+	end
 
 	for _, graph in self:Graphs() do
 		graph:CreateDeferredData()
@@ -564,6 +622,12 @@ function meta:SetErrorHandler(errorHandler)
 	if self:IsValid() then
 		self:AttachErrorHandler()
 	end
+
+end
+
+function meta:ToString()
+
+	return GUIDToString(self:GetUID())
 
 end
 

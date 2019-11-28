@@ -205,11 +205,15 @@ function PANEL:Init()
 
 	local menu = vgui.Create("DVerticalDivider", self.Content)
 	menu:SetTopHeight(300)
+	local topSplit = vgui.Create("DVerticalDivider", menu)
+	topSplit:SetTopHeight(200)
+	local bottomSplit = vgui.Create("DVerticalDivider", menu)
+	bottomSplit:SetTopHeight(200)
 
 	self.Content:SetLeft(menu)
 	self.Content:Dock( FILL )
 
-	self.GraphList = vgui.Create("BPListView", menu)
+	self.GraphList = vgui.Create("BPListView", topSplit)
 	self.GraphList:SetText("Graphs")
 	self.GraphList.HandleAddItem = function(list)
 
@@ -246,10 +250,7 @@ function PANEL:Init()
 		end
 	end
 
-	local submenu = vgui.Create("DVerticalDivider", menu)
-	submenu:SetTopHeight(200)
-
-	self.VarList = vgui.Create("BPListView", submenu)
+	self.VarList = vgui.Create("BPListView", bottomSplit)
 	self.VarList:SetText("Variables")
 	self.VarList.HandleAddItem = function(list)
 		print("TYPE: " .. type(self.module))
@@ -266,7 +267,7 @@ function PANEL:Init()
 		end
 	end
 
-	self.StructList = vgui.Create("BPListView", submenu)
+	self.StructList = vgui.Create("BPListView", bottomSplit)
 	self.StructList:SetText("Structs")
 	self.StructList.HandleAddItem = function(pnl, list)
 		local itemID, item = list:Construct()
@@ -281,10 +282,27 @@ function PANEL:Init()
 		})
 	end
 
-	menu:SetTop(self.GraphList)
-	menu:SetBottom(submenu)
-	submenu:SetTop(self.VarList)
-	submenu:SetBottom(self.StructList)
+	self.EventList = vgui.Create("BPListView", bottomSplit)
+	self.EventList:SetText("Events")
+	self.EventList.HandleAddItem = function(pnl, list)
+		local itemID, item = list:Construct()
+		pnl:Rename(itemID)
+	end
+	local prev = self.EventList.PopulateMenuItems
+	self.EventList.PopulateMenuItems = function(pnl, items, id)
+		prev(pnl, items, id)
+		table.insert(items, {
+			name = "Edit Pins",
+			func = function() self:EditEventPins(id) end,
+		})
+	end
+
+	menu:SetTop(topSplit)
+	menu:SetBottom(bottomSplit)
+	topSplit:SetTop(self.GraphList)
+	topSplit:SetBottom(self.VarList)
+	bottomSplit:SetTop(self.StructList)
+	bottomSplit:SetBottom(self.EventList)
 
 	self.vvars = {}
 	self.vgraphs = {}
@@ -300,6 +318,12 @@ end
 function PANEL:EditStructPins( id )
 
 	bpuistructeditmenu.EditStructParams( self.module:GetStruct(id) )
+
+end
+
+function PANEL:EditEventPins( id )
+
+	bpuistructeditmenu.EditEventParams( self.module:GetEvent(id) )
 
 end
 
@@ -391,6 +415,7 @@ function PANEL:SetModule( mod )
 	self.VarList:SetList( self.module.variables )
 	self.GraphList:SetList( self.module.graphs )
 	self.StructList:SetList( self.module.structs )
+	self.EventList:SetList( self.module.events )
 	self.module:AddListener(self.callback, bpmodule.CB_ALL)
 
 end

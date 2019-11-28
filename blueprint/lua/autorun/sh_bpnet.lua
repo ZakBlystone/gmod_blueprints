@@ -121,7 +121,7 @@ if SERVER then
 			mod:Compile(CompileFlags)
 			SetPlayerModule( ply, mod )
 			SavePlayerBlueprint( ply )
-			print("Executing blueprint on server...")
+			print("Executing " .. ply:Nick() .. "'s blueprint on server: " .. mod:ToString())
 
 		elseif cmd == CMD_Download then
 
