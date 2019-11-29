@@ -4,83 +4,12 @@ include("cl_bpgraphnode.lua")
 
 module("bpuigraph2", package.seeall, bpcommon.rescope(bpgraph, bpschema, bpnodedef))
 
--- NODE TOOLS
-local function pinCount(nodeType, dir)
-
-	local t = dir == PD_In and nodeType.pinlayout.inputs or nodeType.pinlayout.outputs
-	return #t
-
-end
-
-local function getLayoutPin(nodeType, dir, id)
-
-	local t = dir == PD_In and nodeType.pinlayout.inputs or nodeType.pinlayout.outputs
-	return t[id]
-
-end
-
-local function calculateNodeSize(pnl, nodeType)
-
-	surface.SetFont( "Default" )
-	local name = pnl:GetDisplayName(nodeType)
-	local inPinWidth = 0
-	local outPinWidth = 0
-	local padPin = 50
-
-	local maxVertical = math.max(#nodeType.pinlayout.inputs, #nodeType.pinlayout.outputs)
-	local width = 0
-	local headHeight = 30
-	
-
-	local expand = false
-	for k,v in pairs(nodeType.pins) do
-		if (v[2] == PN_String or v[2] == PN_Enum) and v[1] == PD_In then
-			expand = true
-		end
-		if v[1] == PD_In then inPinWidth = math.max(surface.GetTextSize( v[3] ) + padPin, inPinWidth) end
-		if v[1] == PD_Out then outPinWidth = math.max(surface.GetTextSize( v[3] ) + padPin, outPinWidth) end
-	end
-
-	if nodeType.compact then
-		surface.SetFont("HudHintTextLarge")
-		local titleWidth = surface.GetTextSize( name )
-		width = math.max(titleWidth+60, 0)
-		headHeight = 15
-
-		if nodeType.name == "Pin" then
-			width = 40
-		end
-	else
-		surface.SetFont( "Trebuchet18" )
-		local titleWidth = surface.GetTextSize( name )
-		width = math.max(inPinWidth + outPinWidth, math.max(100, titleWidth+20))
-	end
-
-	if expand then width = width + 50 end
-
-	return width, headHeight + maxVertical * 15
-
-end
-
-local function pinLocation(pnl, node, id, pin)
-
-	local nodeType = node:GetType()
-	local x, y = node:GetPos()
-	local w, h = calculateNodeSize(pnl, nodeType)
-	local p = nodeType.pinlookup[id]
-	
-	y = y + 15
-
-	if nodeType.compact then y = y - 15 end
-	if pin[1] == PD_In then
-		return x, y + p[2] * 15
-	else
-		return x + w, y + p[2] * 15
-	end
-
-end
-
 local PANEL = {}
+local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
+	["$basetexture"] = "dev/dev_measuregeneric01b",
+	["$vertexcolor"] = 1,
+	["$vertexalpha"] = 1,
+})
 
 AccessorFunc( PANEL, "m_bIsLocked",	"IsLocked", FORCE_BOOL )
 
@@ -140,9 +69,15 @@ end
 
 function PANEL:NodeAdded( id )
 
+	local vnode = bpuigraphnode.New( self.graph:GetNode(id), self.graph )
+	table.insert(self.nodes, vnode)
+
 end
 
-function PANEL:NodeRemoved( id ) end
+function PANEL:NodeRemoved( id )
+
+end
+
 function PANEL:NodeMove( id, x, y ) end
 function PANEL:ConnectionAdded( id ) end
 function PANEL:ConnectionRemoved( id ) end
@@ -158,7 +93,7 @@ function PANEL:SetGraph( graph )
 
 	graph:AddListener(self.callback, bpgraph.CB_ALL)
 
-	for id in self.graph:NodeIDs() do self:NodeAdded(id) end
+	self:CreateAllNodes()
 
 end
 
@@ -216,81 +151,14 @@ function PANEL:DrawPin( node, pinID )
 
 end
 
-function PANEL:DrawNode( node )
+function PANEL:DrawNodes() 
 
-	local ntype = node:GetType()
-	local w,h = calculateNodeSize( self, ntype )
-	local x,y = node:GetPos()
-
-	local ntc = NodeTypeColors[ ntype.type ]
-	draw.RoundedBox(6, x, y, w, h, Color(20,20,20,255))
-
-	if not ntype.compact then draw.RoundedBox(6, x, y, w, 18, Color(ntc.r,ntc.g,ntc.b,180)) end
-
-	if not ntype.compact then
-		draw.SimpleText(self:GetDisplayName(ntype), "Trebuchet18", x+4, y)
-	else
-		-- HACK
-		if ntype.name ~= "Pin" then
-			draw.SimpleText(self:GetDisplayName(ntype), "HudHintTextLarge", x+w/2, y+h/2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-		end
-	end
-
-	for k,v in pairs(ntype.pins) do
-		self:DrawPin(node, k)
+	for _, vnode in pairs(self.nodes) do
+		vnode:Draw()
 	end
 
 end
-
-function PANEL:DrawNodes()
-
-	for _, node in self.graph:Nodes() do
-		self:DrawNode( node )
-	end
-
-end
-
-function PANEL:DrawConnections()
-
-	for _, connection in self.graph:Connections() do
-		self:DrawConnection(connection)
-	end
-
-end
-
-function PANEL:DrawGrid(spacing, color)
-
-	local minx = 9999
-	local miny = 9999
-	local maxx = -9999
-	local maxy = -9999
-
-	for _, node in self.graph:Nodes() do
-		local ntype = node:GetType()
-		local nw, nh = calculateNodeSize( self, ntype )
-		local nx, ny = node:GetPos()
-		minx = math.min(nx,minx)
-		miny = math.min(ny,miny)
-		maxx = math.max(nx+nw,maxx)
-		maxy = math.max(ny+nh,maxy)
-	end
-
-	local x,y = minx,miny
-	local w,h = maxx - minx, maxy - miny --self:GetSize()
-
-	local scrollX = 0--math.fmod(x, spacing)
-	local scrollY = 0--math.fmod(y, spacing)
-
-	surface.SetDrawColor(color)
-	for xoff = minx, maxx, spacing do
-		surface.DrawRect(scrollX + xoff,miny,2,h)
-	end
-
-	for yoff = miny, maxy, spacing do
-		surface.DrawRect(minx,scrollY + yoff,w,2)
-	end
-
-end
+function PANEL:DrawConnections() end
 
 function PANEL:InitRenderer()
 
@@ -302,6 +170,14 @@ end
 function PANEL:PostAutoRefresh()
 
 	self:InitRenderer()
+	self:CreateAllNodes()
+
+end
+
+function PANEL:CreateAllNodes()
+	
+	self.nodes = {}
+	for id in self.graph:NodeIDs() do self:NodeAdded(id) end
 
 end
 
@@ -316,12 +192,47 @@ function PANEL:OnMouseWheeled( delta )
 	local x1,y1 = self.renderer:PointToWorld(mousex, mousey)
 	local sx, sy = self.renderer:GetScroll()
 	self.renderer:SetScroll(sx + (x1-x0),sy + (y1-y0))
+
+end
+
+function PANEL:DrawGrid( material, pixelGridUnits, textureGridDivisions )
+
+	local size = 400000
+	local texture = material:GetTexture("$basetexture")
+	local tw = texture:GetMappingWidth()
+	local th = texture:GetMappingHeight()
+
+	local scale = (tw/pixelGridUnits) / textureGridDivisions
+
+	local u0, v0 = 0,0
+	local u1, v1 = (size*2 / tw) * scale, (size*2 / th) * scale
+
+	u0 = u0 - (u1 % 1)
+	v0 = v0 - (v1 % 1)
+
+	local du = 0.5 / tw
+	local dv = 0.5 / th
+	u0, v0 = ( u0 - du ) / ( 1 - 2 * du ), ( v0 - dv ) / ( 1 - 2 * dv )
+	u1, v1 = ( u1 - du ) / ( 1 - 2 * du ), ( v1 - dv ) / ( 1 - 2 * dv )
+
+	surface.SetMaterial(material)
+	surface.DrawTexturedRectUV( -size, -size, size*2, size*2, u0, v0, u1, v1 )
+
 end
 
 function PANEL:Draw2D()
 
+	surface.SetDrawColor(Color(80,80,80,255))
+	self:DrawGrid(BGMaterial, 15, 2)
+
+	surface.SetDrawColor(Color(150,150,150,80))
+	self:DrawGrid(BGMaterial, 15, 8)
+
 	self:DrawConnections()
 	self:DrawNodes()
+
+	surface.SetDrawColor(Color(255,100,0))
+	surface.DrawTexturedRectUV( 30, 0, 16, 16, 0, 0, 1, 1 )
 
 end
 

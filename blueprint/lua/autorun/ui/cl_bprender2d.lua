@@ -175,8 +175,11 @@ function meta:Draw(x,y,w,h)
 	cam.Start3D( self.offset, self.angle, self.fov, vx,vy,vw,vh, 1, 10000 )
 
 	render.SuppressEngineLighting( true )
-	render.PushFilterMag( TEXFILTER.ANISOTROPIC )
-	render.PushFilterMin( TEXFILTER.ANISOTROPIC )
+	--render.PushFilterMag( TEXFILTER.ANISOTROPIC )
+	--render.PushFilterMin( TEXFILTER.ANISOTROPIC )
+
+	render.PushFilterMag( TEXFILTER.NONE )
+	render.PushFilterMin( TEXFILTER.NONE )
 
 	local b,e = pcall(function()
 

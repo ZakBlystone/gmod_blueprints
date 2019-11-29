@@ -382,7 +382,7 @@ function PANEL:GraphAdded( id )
 
 	--print("GRAPH ADDED: " .. id)
 	local graph = self.module:GetGraph(id)
-	local vgraph = vgui.Create("BPGraph", self.Content)
+	local vgraph = vgui.Create("BPGraph2", self.Content)
 
 	vgraph:SetGraph( graph )
 	vgraph:SetVisible(false)
