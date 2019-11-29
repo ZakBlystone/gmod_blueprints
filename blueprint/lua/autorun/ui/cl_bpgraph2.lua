@@ -249,11 +249,13 @@ function PANEL:OnMouseWheeled( delta )
 	local mousex = math.Clamp( gui.MouseX()-x, 1, ScrW() - 1 )
 	local mousey = math.Clamp( gui.MouseY()-y, 1, ScrH() - 1 )
 	local x0,y0 = self.renderer:PointToWorld(mousex, mousey)
-	self.renderer:SetZoom( self.renderer:GetZoom() + delta * 2 )
+	self.renderer:SetZoom( math.Clamp(self.renderer:GetZoom() + delta * 8, -8, 80) )
 	self.renderer:Calculate()
 	local x1,y1 = self.renderer:PointToWorld(mousex, mousey)
 	local sx, sy = self.renderer:GetScroll()
 	self.renderer:SetScroll(sx + (x1-x0),sy + (y1-y0))
+
+	print(self.renderer:GetZoom())
 
 end
 
@@ -403,8 +405,8 @@ end
 
 function PANEL:UpdateScroll()
 	local x, y = self:LocalToScreen(0,0)
-	local mousex = math.Clamp( gui.MouseX()-x, 1, ScrW() - 1 )
-	local mousey = math.Clamp( gui.MouseY()-y, 1, ScrH() - 1 )
+	local mousex = gui.MouseX()-x
+	local mousey = gui.MouseY()-y
 	local lock = false
 
 	if self.Dragging then

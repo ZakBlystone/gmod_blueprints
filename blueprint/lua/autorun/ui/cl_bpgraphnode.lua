@@ -236,7 +236,7 @@ end
 
 function meta:Draw(xOffset, yOffset)
 
-	self:Invalidate(true)
+	--self:Invalidate(true)
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
