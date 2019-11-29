@@ -70,11 +70,13 @@ end
 function PANEL:NodeAdded( id )
 
 	local vnode = bpuigraphnode.New( self.graph:GetNode(id), self.graph )
-	table.insert(self.nodes, vnode)
+	self.nodes[id] = vnode
 
 end
 
 function PANEL:NodeRemoved( id )
+
+	self.nodes[id] = nil
 
 end
 
@@ -100,23 +102,27 @@ end
 function PANEL:DrawConnection(connection)
 
 	local graph = self.graph
-	local a = graph:GetNode(connection[1])
+	local a = self.nodes[connection[1]]
 	local apin = connection[2]
-	local b = graph:GetNode(connection[3])
+	local b = self.nodes[connection[3]]
 	local bpin = connection[4]
 
-	local avpin = a:GetPin( apin )
-	local bvpin = b:GetPin( bpin )
+	if a == nil or b == nil then print("Invalid connection") return end
 
-	local ax, ay = pinLocation(self, a, apin, avpin)
-	local bx, by = pinLocation(self, b, bpin, bvpin)
+	local avpin = a:GetVPins()[apin]
+	local bvpin = b:GetVPins()[bpin]
 
-	local apintype = graph:GetPinType( connection[1], connection[2] )
-	local bpintype = graph:GetPinType( connection[3], connection[4] )
+	if avpin == nil or bvpin == nil then print("Invalid connection pin") return end
+
+	local ax, ay = a:GetPinSpotLocation(apin)
+	local bx, by = b:GetPinSpotLocation(bpin)
+
+	local apintype = avpin:GetPin()
+	local bpintype = avpin:GetPin()
 
 	bprenderutils.DrawHermite( ax, ay, bx, by, 
-		NodePinColors[ apintype ], 
-		NodePinColors[ bpintype ] 
+		apintype:GetColor(), 
+		bpintype:GetColor()
 	)
 
 end
@@ -158,7 +164,13 @@ function PANEL:DrawNodes()
 	end
 
 end
-function PANEL:DrawConnections() end
+function PANEL:DrawConnections()
+
+	for _, connection in self.graph:Connections() do
+		self:DrawConnection(connection)
+	end
+
+end
 
 function PANEL:InitRenderer()
 
@@ -231,8 +243,9 @@ function PANEL:Draw2D()
 	self:DrawConnections()
 	self:DrawNodes()
 
+	surface.SetMaterial(BGMaterial)
 	surface.SetDrawColor(Color(255,100,0))
-	surface.DrawTexturedRectUV( 30, 0, 16, 16, 0, 0, 1, 1 )
+	surface.DrawTexturedRectUV( 0, 0, 15, 15, 0, 0, 1, 1 )
 
 end
 
@@ -292,7 +305,7 @@ function PANEL:OpenContext()
 
 		x, y = self:ScreenToLocal(x, y)
 
-		self.graph:AddNode(nodeType.name, x, y)
+		self.graph:AddNode(nodeType:GetName(), x, y)
 	end
 	--createMenu:SetKeyboardInputEnabled(true)
 	--createMenu:SetMouseInputEnabled(true)

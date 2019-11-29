@@ -10,6 +10,10 @@ module("bpuigraphnode", package.seeall, bpcommon.rescope(bpgraph, bpschema, bpno
 
 local meta = bpcommon.MetaTable("bpuigraphnode")
 
+local NODE_HEADER_HEIGHT = 30
+local NODE_FOOTER_HEIGHT = 10
+local PIN_SPACING = 3
+
 function meta:Init(node, graph, editor)
 
 	self.editor = editor
@@ -18,8 +22,8 @@ function meta:Init(node, graph, editor)
 	self.width = 0
 	self.height = 0
 	self.pins = {}
-	self:CalculateSize()
 	self:CreatePins()
+	self:CalculateSize()
 	return self
 
 end
@@ -30,30 +34,40 @@ function meta:CalculateSize()
 	local name = self.node:GetDisplayName()
 
 	surface.SetFont( "Default" )
-	local inset = 0
 	local inPinWidth = 0
 	local outPinWidth = 0
 	local padPin = 50
 
-	local maxVertical = math.max(node:GetNumSidePins(PD_In), node:GetNumSidePins(PD_Out))
+	local totalPinHeightIn = 0
+	local totalPinHeightOut = 0
+	local maxPinWidthIn = 0
+	local maxPinWidthOut = 0
 	local width = 0
-	local headHeight = 30
+	local headHeight = NODE_HEADER_HEIGHT
+	local footHeight = NODE_FOOTER_HEIGHT
 
-	local expand = false
-	for k,v in pairs(node:GetPins()) do
-		local baseType = v:GetBaseType()
-		if (baseType == PN_String or baseType == PN_Enum) and v:IsIn() and not node:IsPinConnected(k) then
-			expand = true
-		end
-		if v:IsIn() then inPinWidth = math.max(surface.GetTextSize( v:GetName() ) + padPin, inPinWidth) end
-		if v:IsOut() then outPinWidth = math.max(surface.GetTextSize( v:GetName() ) + padPin, outPinWidth) end
+	for pinID, pin, pos in node:SidePins(PD_In) do
+		local vpin = self.pins[pinID]
+		local w,h = vpin:GetSize()
+		maxPinWidthIn = math.max(maxPinWidthIn, w)
+		totalPinHeightIn = totalPinHeightIn + h + PIN_SPACING
 	end
+	if totalPinHeightIn ~= 0 then totalPinHeightIn = totalPinHeightIn - PIN_SPACING end
+
+	for pinID, pin, pos in node:SidePins(PD_Out) do
+		local vpin = self.pins[pinID]
+		local w,h = vpin:GetSize()
+		maxPinWidthOut = math.max(maxPinWidthOut, w)
+		totalPinHeightOut = totalPinHeightOut + h + PIN_SPACING
+	end
+	if totalPinHeightOut ~= 0 then totalPinHeightOut = totalPinHeightOut - PIN_SPACING end
 
 	if node:HasFlag(NTF_Compact) then
 		surface.SetFont("HudHintTextLarge")
 		local titleWidth = surface.GetTextSize( name )
-		width = math.max(titleWidth+60, 0)
+		width = math.max(titleWidth+40, 0)
 		headHeight = 15
+		footHeight = 4
 
 		if node:GetTypeName() == "CORE_Pin" then
 			width = 40
@@ -64,10 +78,8 @@ function meta:CalculateSize()
 		width = math.max(inPinWidth + outPinWidth, math.max(100, titleWidth+20))
 	end
 
-	if expand then width = width + 50 end
-
-	self.width = width
-	self.height = headHeight + maxVertical * 15 + inset * 2
+	self.width = math.max(width, maxPinWidthIn + maxPinWidthOut)
+	self.height = footHeight + headHeight + math.max(totalPinHeightIn, totalPinHeightOut)
 
 end
 
@@ -77,9 +89,10 @@ function meta:CalculatePinLocation(vpin)
 	local id = vpin:GetSideIndex()
 	local dir = pin:GetDir()
 	local w,h = vpin:GetSize()
+	local ox, oy = vpin:GetHotspotOffset()
 	local x = 0
-	local y = 15
-	if self.node:HasFlag(NTF_Compact) then y = -4 end
+	local y = 10
+	if self.node:HasFlag(NTF_Compact) then y = -5 end
 	if dir == PD_In then
 		return x, y + id * 15
 	else
@@ -101,16 +114,37 @@ function meta:CreatePins()
 		self.pins[pinID] = bpuigraphpin.New(self, self.editor, pinID, pos)
 	end
 
-	self:LayoutPins()
-
 end
 
 function meta:LayoutPins()
 
-	for _, vpin in pairs(self.pins) do
+	local function LayoutSide(s)
+		local y = NODE_HEADER_HEIGHT
+		if self.node:HasFlag(NTF_Compact) then y = 10 end
+
+		local node = self.node
+		for pinID, pin, pos in node:SidePins(s) do
+			local vpin = self.pins[pinID]
+			local w,h = vpin:GetSize()
+			vpin:SetPos(s == PD_In and 0 or (self.width - w), y)
+			y = y + h + PIN_SPACING
+		end
+	end
+
+	LayoutSide(PD_In)
+	LayoutSide(PD_Out)
+
+
+	--[[for _, vpin in pairs(self.pins) do
 		local x,y = self:CalculatePinLocation(vpin)
 		vpin:SetPos(x,y)
-	end
+	end]]
+
+end
+
+function meta:GetVPins()
+
+	return self.pins
 
 end
 
@@ -136,13 +170,31 @@ function meta:DrawPins(xOffset, yOffset)
 
 	local x,y = self:GetPos()
 
+	self:LayoutPins()
+
 	for k,v in pairs(self.pins) do
 		v:Draw(x, y)
 	end
 
 end
 
+function meta:GetPinSpotLocation(pinID)
+
+	local x,y = self:GetPos()
+	local vpin = self.pins[pinID]
+	if not vpin then return x,y end
+
+
+	local px, py = vpin:GetPos()
+	local ox, oy = vpin:GetHotspotOffset()
+
+	return x + ox + px, y + py + oy
+
+end
+
 function meta:Draw(xOffset, yOffset)
+
+	self:CalculateSize()
 
 	local x,y = self:GetPos()
 	local w,h = self.width, self.height
@@ -165,7 +217,7 @@ function meta:Draw(xOffset, yOffset)
 
 
 	local ntc = NodeTypeColors[ node:GetCodeType() ]
-	draw.RoundedBox(6, x, y, w, h, Color(20,20,20,255))
+	draw.RoundedBox(6, x, y, w, h, Color(20,20,20,230))
 
 
 	if not node:HasFlag(NTF_Compact) then draw.RoundedBox(6, x, y, w, 18, Color(ntc.r,ntc.g,ntc.b,180)) end
@@ -180,6 +232,9 @@ function meta:Draw(xOffset, yOffset)
 		draw.RoundedBox(2, x + w - 30, y, 10, 18, Color(255,160,20,255))
 	end
 
+	render.PushFilterMag( TEXFILTER.LINEAR )
+	render.PushFilterMin( TEXFILTER.LINEAR )
+
 	if not node:HasFlag(NTF_Compact) then
 		draw.SimpleText(node:GetDisplayName(), "Trebuchet18", x + 4, y)
 	else
@@ -188,6 +243,9 @@ function meta:Draw(xOffset, yOffset)
 			draw.SimpleText(node:GetDisplayName(), "HudHintTextLarge", x + w/2, y + h/2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 		end
 	end
+
+	render.PopFilterMag()
+	render.PopFilterMin()
 
 	self:DrawPins(x,y)
 

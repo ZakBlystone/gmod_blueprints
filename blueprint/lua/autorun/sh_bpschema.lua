@@ -122,6 +122,7 @@ NodeLiteralTypes = {
 	[PN_Number] = "number",
 	[PN_String] = "string",
 	[PN_Enum] = "enum",
+	[PN_Vector] = "vector",
 }
 
 Defaults = {

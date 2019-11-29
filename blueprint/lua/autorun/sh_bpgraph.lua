@@ -687,7 +687,7 @@ end
 function meta:AddNode(nodeTypeName, ...)
 
 	local nodeType = self:GetNodeTypes()[nodeTypeName]
-	if nodeType == nil then error("Node type node found: " .. nodeTypeName) end
+	if nodeType == nil then error("Node type not found: " .. nodeTypeName) end
 
 	if nodeType:GetCodeType() == NT_Event and self.module:NodeTypeInUse(nodeTypeName) then
 		return
