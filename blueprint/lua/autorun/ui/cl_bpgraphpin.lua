@@ -9,22 +9,25 @@ module("bpuigraphpin", package.seeall, bpcommon.rescope(bpgraph, bpschema, bpnod
 
 local meta = bpcommon.MetaTable("bpuigraphpin")
 
-local TEXT_OFFSET = 4
+local TEXT_OFFSET = 8
 local LITERAL_OFFSET = 10
-local LITERAL_HEIGHT = 12
-local PIN_SIZE = 12
+local LITERAL_HEIGHT = 24
+local PIN_SIZE = 24
 
 function meta:Init(vnode, editor, pinID, sideIndex)
 
 	self.x = 0
 	self.y = 0
+	self.currentPinType = nil
 	self.pinID = pinID
 	self.vnode = vnode
 	self.pin = vnode:GetNode():GetPin(pinID)
 	self.sideIndex = sideIndex
-	self.font = "TargetID"
-	self.titlePos = 0
-	self.literalPos = 0
+	self.font = "NodePinFont"
+	self.titlePos = nil
+	self.literalPos = nil
+	self.cacheWidth = nil
+	self.cacheHeight = nil
 
 	return self
 
@@ -62,11 +65,11 @@ function meta:GetLiteralSize()
 	local h = LITERAL_HEIGHT
 	local literalType = self.pin:GetLiteralType()
 	if literalType then
-		if literalType == "enum" then return 100, h end
-		if literalType == "string" then return 100, h end
-		if literalType == "number" then return 50, h end
+		if literalType == "enum" then return 200, h end
+		if literalType == "string" then return 200, h end
+		if literalType == "number" then return 80, h end
 		if literalType == "bool" then return h, h end
-		if literalType == "vector" then return 100, h end
+		--if literalType == "vector" then return 100, h end
 	end
 	return 0, h
 
@@ -83,7 +86,20 @@ function meta:ShouldDrawLiteral()
 
 end
 
+function meta:Invalidate()
+
+	self.cacheWidth = nil
+	self.cacheHeight = nil
+	self.titlePos = nil
+	self.literalPos = nil
+
+end
+
 function meta:GetSize()
+
+	if self.cacheWidth and self.cacheHeight then 
+		return self.cacheWidth, self.cacheHeight 
+	end
 
 	local width = PIN_SIZE
 	local height = PIN_SIZE
@@ -102,11 +118,16 @@ function meta:GetSize()
 		height = math.max(height, lh)
 	end
 
+	self.cacheWidth = width
+	self.cacheHeight = height
+
 	return width, height
 
 end
 
 function meta:Layout()
+
+	if self.titlePos and self.literalPos then return end
 
 	local node = self.vnode:GetNode()
 	local w,h = self:GetSize()
@@ -170,6 +191,10 @@ function meta:DrawLiteral(x, y, str)
 			surface.SetDrawColor( Color(50,50,50,255) )
 			surface.DrawRect(x + self.literalPos,y,w,h)
 
+			if literalType == "bool" then
+				literal = (literal == "true") and "X" or ""
+			end
+
 			draw.SimpleText(literal, font, x + self.literalPos, y+PIN_SIZE/2, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 		end
 	end
@@ -182,14 +207,28 @@ end
 function meta:DrawHotspot(x,y)
 
 	local ox, oy = self:GetHotspotOffset()
+	local isTable = self.pin:HasFlag(PNF_Table)
 
 	surface.SetDrawColor( self.pin:GetColor() )
 	surface.DrawRect(x+ox-PIN_SIZE/2,y+oy-PIN_SIZE/2,PIN_SIZE,PIN_SIZE)
 	surface.SetDrawColor( Color(0,0,0,255) )
 
+	if isTable then
+		surface.DrawRect(x+ox - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
+		surface.DrawRect(x+ox+PIN_SIZE*.25 - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
+		surface.DrawRect(x+ox-PIN_SIZE*.25 - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
+	end
+
 end
 
 function meta:Draw(xOffset, yOffset)
+
+	if self.currentPinType == nil or not self.currentPinType:Equal(self.pin:GetType()) then
+		self:Invalidate()
+		self.currentPinType = table.Copy( self.pin:GetType() )
+		self.vnode:Invalidate()
+		--print("PIN TYPE CHANGED")
+	end
 
 	self:Layout()
 
@@ -200,6 +239,10 @@ function meta:Draw(xOffset, yOffset)
 	local font = self.font
 
 	self:DrawHotspot(x,y)
+
+	--render.PushFilterMag( TEXFILTER.LINEAR )
+	--render.PushFilterMin( TEXFILTER.LINEAR )
+
 	if not self:IsConnected() then self:DrawLiteral(x,y) end
 
 	--surface.SetDrawColor( Color(255,100,200,80) )
@@ -210,9 +253,6 @@ function meta:Draw(xOffset, yOffset)
 	local title = self.pin:GetDisplayName()
 	local titleWidth = surface.GetTextSize( title )
 
-	render.PushFilterMag( TEXFILTER.LINEAR )
-	render.PushFilterMin( TEXFILTER.LINEAR )
-
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
 		if self.pin:IsIn() then
 			draw.SimpleText(title, font, x + self.titlePos, y+PIN_SIZE/2, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
@@ -221,8 +261,8 @@ function meta:Draw(xOffset, yOffset)
 		end
 	end
 
-	render.PopFilterMag()
-	render.PopFilterMin()
+	--render.PopFilterMag()
+	--render.PopFilterMin()
 
 end
 

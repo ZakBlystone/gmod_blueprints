@@ -386,6 +386,7 @@ function PANEL:GraphAdded( id )
 
 	vgraph:SetGraph( graph )
 	vgraph:SetVisible(false)
+	vgraph:CenterToOrigin()
 	self.vgraphs[id] = vgraph
 
 end

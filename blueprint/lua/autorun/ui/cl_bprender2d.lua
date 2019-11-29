@@ -161,6 +161,8 @@ function meta:Draw(x,y,w,h)
 	local vx,vy,vw,vh = unpack(self.viewport)
 
 	-- De-compensate for panel shenanigans
+	local OldDrawLine = surface.DrawLine
+	surface.DrawLine = function(x0,y0,x1,y1) OldDrawLine(x0-rx,y0-ry,x1-rx,y1-ry) end
 	local OldSetTextPos = surface.SetTextPos
 	surface.SetTextPos = function(x,y) OldSetTextPos(x-rx, y-ry) end
 	local OldDrawRect = surface.DrawRect
@@ -199,6 +201,7 @@ function meta:Draw(x,y,w,h)
 	render.SuppressEngineLighting( false )
 	cam.End3D()
 
+	surface.DrawLine = OldDrawLine
 	surface.SetTextPos = OldSetTextPos
 	surface.DrawRect = OldDrawRect
 	surface.DrawTexturedRect = OldDrawTexturedRect

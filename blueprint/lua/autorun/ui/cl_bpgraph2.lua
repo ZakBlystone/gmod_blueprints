@@ -64,6 +64,7 @@ function PANEL:OnGraphCallback( cb, ... )
 	if cb == CB_CONNECTION_ADD then return self:ConnectionAdded(...) end
 	if cb == CB_CONNECTION_REMOVE then return self:ConnectionRemoved(...) end
 	if cb == CB_GRAPH_CLEAR then return self:GraphCleared(...) end
+	if cb == CB_POSTMODIFY_NODE then return self:PostModifyNode(...) end
 
 end
 
@@ -84,6 +85,13 @@ function PANEL:NodeMove( id, x, y ) end
 function PANEL:ConnectionAdded( id ) end
 function PANEL:ConnectionRemoved( id ) end
 function PANEL:GraphCleared() end
+function PANEL:PostModifyNode( id, action )
+
+	if self.nodes[id] ~= nil then
+		self.nodes[id]:Invalidate(true)
+	end
+
+end
 
 function PANEL:SetGraph( graph )
 
@@ -96,6 +104,7 @@ function PANEL:SetGraph( graph )
 	graph:AddListener(self.callback, bpgraph.CB_ALL)
 
 	self:CreateAllNodes()
+	self:CenterToOrigin()
 
 end
 
@@ -118,7 +127,7 @@ function PANEL:DrawConnection(connection)
 	local bx, by = b:GetPinSpotLocation(bpin)
 
 	local apintype = avpin:GetPin()
-	local bpintype = avpin:GetPin()
+	local bpintype = bvpin:GetPin()
 
 	bprenderutils.DrawHermite( ax, ay, bx, by, 
 		apintype:GetColor(), 
@@ -157,10 +166,16 @@ function PANEL:DrawPin( node, pinID )
 
 end
 
+function PANEL:DrawNode(vnode)
+
+	vnode:Draw()
+
+end
+
 function PANEL:DrawNodes() 
 
 	for _, vnode in pairs(self.nodes) do
-		vnode:Draw()
+		self:DrawNode(vnode)
 	end
 
 end
@@ -177,12 +192,19 @@ function PANEL:InitRenderer()
 	self.renderer = bprender2d.New(self)
 	self.renderer.Draw2D = function(renderer) self:Draw2D() end
 
+	local x, y = self:LocalToScreen(0,0)
+	local w, h = self:GetSize()
+
+	self.renderer:ViewCalculate(x,y,w,h)
+	self.renderer:SetZoom( 16 )
+
 end
 
 function PANEL:PostAutoRefresh()
 
 	self:InitRenderer()
 	self:CreateAllNodes()
+	self:CenterToOrigin()
 
 end
 
@@ -193,13 +215,41 @@ function PANEL:CreateAllNodes()
 
 end
 
+function PANEL:CenterToOrigin()
+
+	self.pendingCenterToOrigin = true
+
+end
+
+function PANEL:ViewCalculate()
+
+	local x, y = self:LocalToScreen(0,0)
+	local w, h = self:GetSize()
+
+	self.renderer:ViewCalculate(x,y,w,h)
+
+end
+
+function PANEL:DoCenterToOrigin()
+
+	print(self:GetSize())
+
+	self:ViewCalculate()
+	self.renderer:SetScroll(0,0)
+	self.renderer:Calculate()
+	local x,y = self.renderer:PointToWorld(0,0)
+	self.renderer:SetScroll(x,y)
+	self.renderer:Calculate()
+
+end
+
 function PANEL:OnMouseWheeled( delta )
 
 	local x, y = self:LocalToScreen(0,0)
 	local mousex = math.Clamp( gui.MouseX()-x, 1, ScrW() - 1 )
 	local mousey = math.Clamp( gui.MouseY()-y, 1, ScrH() - 1 )
 	local x0,y0 = self.renderer:PointToWorld(mousex, mousey)
-	self.renderer:SetZoom( self.renderer:GetZoom() + delta )
+	self.renderer:SetZoom( self.renderer:GetZoom() + delta * 2 )
 	self.renderer:Calculate()
 	local x1,y1 = self.renderer:PointToWorld(mousex, mousey)
 	local sx, sy = self.renderer:GetScroll()
@@ -244,8 +294,24 @@ function PANEL:Draw2D()
 	self:DrawNodes()
 
 	surface.SetMaterial(BGMaterial)
-	surface.SetDrawColor(Color(255,100,0))
+	surface.SetDrawColor(Color(255,255,255))
 	surface.DrawTexturedRectUV( 0, 0, 15, 15, 0, 0, 1, 1 )
+
+end
+
+function PANEL:PerformLayout()
+
+	local w,h = self:GetSize()
+
+	-- Sometimes the panel hasn't been sized yet, so wait until it is
+	if w > 100 or h > 100 then
+
+		if self.pendingCenterToOrigin then
+			self:DoCenterToOrigin()
+			self.pendingCenterToOrigin = false
+		end
+
+	end
 
 end
 
@@ -304,6 +370,7 @@ function PANEL:OpenContext()
 	createMenu.OnNodeTypeSelected = function( menu, nodeType )
 
 		x, y = self:ScreenToLocal(x, y)
+		x, y = self.renderer:PointToWorld(x, y)
 
 		self.graph:AddNode(nodeType:GetName(), x, y)
 	end

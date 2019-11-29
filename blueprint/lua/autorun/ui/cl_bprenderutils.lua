@@ -13,6 +13,11 @@ function ClosestDistanceToCubicHermite(k, p0, p1, m0, m1)
 
 end
 
+local vsamples = {}
+for i=1, 100 do table.insert(vsamples, 
+	{Vector(0,0,0), Color(0,0,0,0)}
+) end
+
 function DrawHermite(x0,y0,x1,y1,c0,c1,samples)
 
 	--[[if x0 < 0 and x1 < 0 then return end
@@ -20,31 +25,10 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,samples)
 	if y0 < 0 and y1 < 0 then return end
 	if y0 > h and y1 > h then return end]]
 
-	--print(x0)
-
-	--[[render.SetMaterial(Material("cable/physbeam"))
-	--render.SetColorMaterial()
-	render.SetColorModulation(255,255,255)
-	local positions = {
-		Vector(0,0,0),
-		Vector(w - 50,h - 50,0),
-	}
-
-	--render.DrawSprite( positions[1], 10, 10, Color( 255, 255, 255 ) )
-	render.StartBeam(#positions)
-	local dist = 0
-	local prev = positions[1]
-	for i=1, #positions do
-		local curr = positions[i]
-		dist = dist + curr:Distance(prev)
-		render.AddBeam(curr, 20, dist/100, Color(255,255,255))
-		prev = curr
-	end
-	render.EndBeam()]]
-
+	local width = 4
 	local px = x0
 	local py = y0
-	local positions = {}
+	local positions = vsamples
 
 	samples = samples or 20
 
@@ -54,26 +38,20 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,samples)
 	local d = math.sqrt(math.max(dx*dx, 8000), dy*dy) * 2
 	d = math.min(d, 400)
 
-	table.insert(positions, {Vector(x0,y0,0), c0})
+	positions[1][1]:SetUnpacked(x0,y0,0)
+	positions[1][2] = c0
 
 	for i=1, samples do
 
 		local t = i/samples
 
-		t = CubicHermite(0, 1, .01, .01, t)
-
-		local c = Color(
-			Lerp(t, c0.r, c1.r),
-			Lerp(t, c0.g, c1.g), 
-			Lerp(t, c0.b, c1.b), 
-		c0.a)
+		t = 1 - (.5 + math.cos(t * math.pi) * .5)
 
 		local x = CubicHermite(x0, x1, d, d, t)
 		local y = CubicHermite(y0, y1, 0, 0, t)
-		x = math.Round(x)
-		y = math.Round(y)
 
-		table.insert(positions, {Vector(x,y,0), c})
+		positions[i+1][1]:SetUnpacked(x,y,0)
+		positions[i+1][2]:SetUnpacked(Lerp(t, c0.r, c1.r), Lerp(t, c0.g, c1.g), Lerp(t, c0.b, c1.b), c0.a)
 
 		px = x
 		py = y
@@ -82,14 +60,14 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,samples)
 
 	--render.SetMaterial(Material("cable/smoke.vmt"))
 	render.SetColorMaterial()
-	render.StartBeam(#positions)
+	render.StartBeam(samples+1)
 	local t = CurTime()
 	local dist = 0
 	local prev = positions[1][1]
-	for i=1, #positions do
+	for i=1, samples+1 do
 		local curr = positions[i][1]
 		dist = dist + curr:Distance(prev)
-		render.AddBeam(curr, 2, dist/30 - t, positions[i][2])
+		render.AddBeam(curr, width, dist/30 - t, positions[i][2])
 		prev = curr
 	end
 	render.EndBeam()
