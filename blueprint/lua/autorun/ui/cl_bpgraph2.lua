@@ -111,6 +111,7 @@ end
 
 function PANEL:DrawConnection(connection)
 
+	local pw, ph = self:GetSize()
 	local graph = self.graph
 	local a = self.nodes[connection[1]]
 	local apin = connection[2]
@@ -119,13 +120,22 @@ function PANEL:DrawConnection(connection)
 
 	if a == nil or b == nil then print("Invalid connection") return end
 
+	local ax, ay = a:GetPinSpotLocation(apin)
+	local bx, by = b:GetPinSpotLocation(bpin)
+
+	local x0,y0 = self.renderer:PointToScreen(ax,ay)
+	local x1,y1 = self.renderer:PointToScreen(bx,by)
+
+	local minX,maxX = math.min(x0,x1), math.max(x0,x1)
+	local minY,maxY = math.min(y0,y1), math.max(y0,y1)
+
+	if maxX < 0 or maxY < 0 then return false end
+	if minX > pw or minY > ph then return false end
+
 	local avpin = a:GetVPins()[apin]
 	local bvpin = b:GetVPins()[bpin]
 
 	if avpin == nil or bvpin == nil then print("Invalid connection pin") return end
-
-	local ax, ay = a:GetPinSpotLocation(apin)
-	local bx, by = b:GetPinSpotLocation(bpin)
 
 	local apintype = avpin:GetPin()
 	local bpintype = bvpin:GetPin()
@@ -134,6 +144,8 @@ function PANEL:DrawConnection(connection)
 		apintype:GetColor(), 
 		bpintype:GetColor()
 	)
+
+	return true
 
 end
 
@@ -169,22 +181,36 @@ end
 
 function PANEL:DrawNode(vnode)
 
+	local pw, ph = self:GetSize()
+	local x,y = vnode:GetPos()
+	local w,h = vnode:GetSize()
+	local x0,y0 = self.renderer:PointToScreen(x,y)
+	local x1,y1 = self.renderer:PointToScreen(x+w,y+h)
+
+	if x0 > pw or y0 > ph then return false end
+	if x1 < 0 or y1 < 0 then return false end
+
 	vnode:Draw()
+	return true
 
 end
 
 function PANEL:DrawNodes() 
 
+	local nodesDrawn = 0
 	for _, vnode in pairs(self.nodes) do
-		self:DrawNode(vnode)
+		if self:DrawNode(vnode) then nodesDrawn = nodesDrawn + 1 end
 	end
+	--print("Nodes: " .. nodesDrawn)
 
 end
 function PANEL:DrawConnections()
 
+	local connectionsDrawn = 0
 	for _, connection in self.graph:Connections() do
-		self:DrawConnection(connection)
+		if self:DrawConnection(connection) then connectionsDrawn = connectionsDrawn + 1 end
 	end
+	--print("Connections: " .. connectionsDrawn)
 
 end
 
