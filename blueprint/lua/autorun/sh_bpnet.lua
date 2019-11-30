@@ -118,10 +118,19 @@ if SERVER then
 
 			local mod = bpmodule.New()
 			mod:NetRecv()
-			mod:Compile(CompileFlags)
-			SetPlayerModule( ply, mod )
-			SavePlayerBlueprint( ply )
-			print("Executing " .. ply:Nick() .. "'s blueprint on server: " .. mod:ToString())
+
+			local ok, res = mod:Compile(CompileFlags)
+			if ok then
+
+				SetPlayerModule( ply, mod )
+				SavePlayerBlueprint( ply )
+				print("Executing " .. ply:Nick() .. "'s blueprint on server: " .. mod:ToString())
+
+			else
+
+				print("Failed to execute " .. ply:NicK() .. "'s blueprint on server: " .. mod:ToString() .. " : " .. tostring(res))
+
+			end
 
 		elseif cmd == CMD_Download then
 
@@ -166,18 +175,26 @@ else
 
 			local mod = bpmodule.New()
 			mod:NetRecv()
-			mod:Compile(CompileFlags)
 
 			local uid = bpcommon.GUIDToString( mod.uniqueID )
-			if ClientModules[uid] ~= nil then
-				print("DISABLE PREVIOUS MODULE: " .. uid)
-				ClientModules[uid]:SetEnabled(false)
-			end
-			ClientModules[uid] = mod
-			mod:SetErrorHandler( ErrorHandler )
-			mod:SetEnabled(true)
+			local ok, res = mod:Compile(CompileFlags)
+			if ok then
 
-			print("INSTALL MODULE: " .. uid)
+				if ClientModules[uid] ~= nil then
+					print("DISABLE PREVIOUS MODULE: " .. uid)
+					ClientModules[uid]:SetEnabled(false)
+				end
+				ClientModules[uid] = mod
+				mod:SetErrorHandler( ErrorHandler )
+				mod:SetEnabled(true)
+
+				print("INSTALL MODULE: " .. uid)
+
+			else
+
+				print("UNABLE TO INSTALL MODULE: " .. uid .. " : " .. res)
+
+			end
 
 		elseif cmd == CMD_Uninstall then
 
