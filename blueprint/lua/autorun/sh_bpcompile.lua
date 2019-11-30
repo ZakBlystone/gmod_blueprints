@@ -1281,10 +1281,12 @@ function Compile(mod, flags)
 	file.Write("blueprints/last_compile.txt", cs.compiled)
 
 	-- if set, just return the compiled string, don't try to run the module
-	if bit.band(cs.flags, CF_CodeString) ~= 0 then return cs.compiled end
+	if bit.band(cs.flags, CF_CodeString) ~= 0 then return true, cs.compiled end
 
 	-- run the code and grab the __BPMODULE global
-	RunString(cs.compiled, "")
+	local errorString = RunString(cs.compiled, "", false)
+	if errorString then return false, errorString end
+
 	local x = __BPMODULE
 	__BPMODULE = nil
 
@@ -1309,7 +1311,7 @@ function Compile(mod, flags)
 
 	end
 
-	return x
+	return true, x
 
 end
 

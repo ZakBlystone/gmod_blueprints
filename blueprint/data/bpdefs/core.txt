@@ -133,6 +133,7 @@ LIB CORE
 	}
 	FUNC ChatPrintAll, SERVER
 	{
+		REQUIREMETA Player
 		DESC Sends a message to all players
 		IN Message, PN_String, #Message to send to all players
 		CODE for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $1) end

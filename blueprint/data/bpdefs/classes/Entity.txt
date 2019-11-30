@@ -651,7 +651,11 @@ CLASS Entity, entity
 	{
 		DESC Gets the model of given entity.
 		OUT model, PN_String, #The entity's model. Will be a filesystem path for most models. This will be nil for entities which cannot have models, such as point entities.
-		CODE #1 = Entity_.GetModel($1)\n#1 = #1 or ""
+		CODE
+		{
+			#1 = Entity_.GetModel($1)
+			#1 = #1 or ""
+		}
 	}
 	PURE GetModelBounds, SHARED
 	{

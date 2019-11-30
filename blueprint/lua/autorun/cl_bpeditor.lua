@@ -101,8 +101,12 @@ function PANEL:Init()
 		end, Color(80,180,80), "icon16/server_go.png"},
 		{"Export Script to Clipboard", function()
 
-			local str = bpcompile.Compile(self.module, bit.bor(bpcompile.CF_Standalone, bpcompile.CF_CodeString))
-			SetClipboardText(str)
+			local ok, str = bpcompile.Compile(self.module, bit.bor(bpcompile.CF_Standalone, bpcompile.CF_CodeString))
+			if ok then 
+				SetClipboardText(str)
+			else
+				error(str)
+			end
 
 		end, nil, "icon16/page_code.png"},
 		{"Asset Browser", function()
