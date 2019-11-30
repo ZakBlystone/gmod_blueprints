@@ -44,6 +44,7 @@ function PANEL:Init()
 
 	self.nodes = {}
 	self.titleText = "Blueprint"
+	self.zoomTime = 0
 	self:InitRenderer()
 
 end
@@ -243,19 +244,36 @@ function PANEL:DoCenterToOrigin()
 
 end
 
-function PANEL:OnMouseWheeled( delta )
+function PANEL:GetZoomLevel()
 
-	local x, y = self:LocalToScreen(0,0)
-	local mousex = math.Clamp( gui.MouseX()-x, 1, ScrW() - 1 )
-	local mousey = math.Clamp( gui.MouseY()-y, 1, ScrH() - 1 )
-	local x0,y0 = self.renderer:PointToWorld(mousex, mousey)
-	self.renderer:SetZoom( math.Clamp(self.renderer:GetZoom() + delta * 8, -8, 80) )
+	return ((self.renderer:GetZoom() - 16) / 8)
+
+end
+
+function PANEL:SetZoomLevel( zoomLevel, pivotX, pivotY )
+
+	zoomLevel = math.Clamp(zoomLevel, -3, 8)
+
+	local z = (zoomLevel * 8) + 16
+
+	local x0,y0 = self.renderer:PointToWorld(pivotX, pivotY)
+	self.renderer:SetZoom( z )
 	self.renderer:Calculate()
-	local x1,y1 = self.renderer:PointToWorld(mousex, mousey)
+	local x1,y1 = self.renderer:PointToWorld(pivotX, pivotY)
 	local sx, sy = self.renderer:GetScroll()
 	self.renderer:SetScroll(sx + (x1-x0),sy + (y1-y0))
 
-	print(self.renderer:GetZoom())
+	self.zoomTime = CurTime()
+
+end
+
+function PANEL:OnMouseWheeled( delta )
+
+	local x, y = self:LocalToScreen(0,0)
+	local mousex = gui.MouseX()-x
+	local mousey = gui.MouseY()-y
+
+	self:SetZoomLevel( self:GetZoomLevel() + delta, mousex, mousey )
 
 end
 
@@ -317,6 +335,29 @@ function PANEL:PerformLayout()
 
 end
 
+function PANEL:GetZoomString()
+
+	local zoom = self:GetZoomLevel()
+	if zoom > 0 then return "-" .. math.abs(zoom) end
+	return "+" .. math.abs(zoom)
+
+end
+
+function PANEL:PaintGraphTitle(w,h)
+
+	draw.SimpleText( self.graph:GetTitle(), "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+end
+
+function PANEL:PaintZoomIndicator(w,h)
+
+	local dt = 1 - (CurTime() - self.zoomTime) / 2
+	if dt < 0 then return end
+
+	draw.SimpleText( "Zoom: " .. self:GetZoomString(), "NodePinFont", 10, h - 30, Color( 255, 255, 255, 60 * dt ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+end
+
 function PANEL:Paint(w, h)
 
 	self:UpdateScroll()
@@ -325,7 +366,9 @@ function PANEL:Paint(w, h)
 
 	self.renderer:Draw(x,y,w,h)
 
-	draw.SimpleText( self.graph:GetTitle(), "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+	self:PaintGraphTitle(w,h)
+	self:PaintZoomIndicator(w,h)
+
 
 	return true
 
