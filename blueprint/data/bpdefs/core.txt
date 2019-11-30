@@ -210,6 +210,13 @@ LIB CORE
 		CODE #1 = __bpm.genericIsValid($1)
 		INFORM 1
 	}
+	PURE Nil, SHARED
+	{
+		OUT Value, PN_Any
+		CODE #1 = nil
+		INFORM 1
+		COMPACT
+	}
 	PURE IsNil, SHARED
 	{
 		IN Thing, PN_Any
