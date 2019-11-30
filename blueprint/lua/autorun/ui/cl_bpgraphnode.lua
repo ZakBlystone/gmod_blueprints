@@ -197,8 +197,9 @@ end
 function meta:GetPos()
 
 	local x,y = self.node:GetPos()
-	x = x * 2
-	y = y * 2
+	local scale = self.editor:GetCoordinateScaleFactor()
+	x = x * scale
+	y = y * scale
 	return x,y
 
 end

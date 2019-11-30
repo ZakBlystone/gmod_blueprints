@@ -5,11 +5,6 @@ include("cl_bpgraphnode.lua")
 module("bpuigraph2", package.seeall, bpcommon.rescope(bpgraph, bpschema, bpnodedef))
 
 local PANEL = {}
-local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
-	["$basetexture"] = "dev/dev_measuregeneric01b",
-	["$vertexcolor"] = 1,
-	["$vertexalpha"] = 1,
-})
 
 AccessorFunc( PANEL, "m_bIsLocked",	"IsLocked", FORCE_BOOL )
 
@@ -38,13 +33,16 @@ function PANEL:Init()
 	self:SetBackgroundColor( Color(40,40,40) )
 	self:NoClipping(true)
 
-	self.callback = function(...)
-		self:OnGraphCallback(...)
-	end
-
+	self.editor = bpgrapheditor.New( self )
+	self.painter = bpgraphpainter.New( self.editor, self )
 	self.nodes = {}
 	self.titleText = "Blueprint"
 	self.zoomTime = 0
+
+	self.callback = function(...)
+		self.editor:OnGraphCallback(...)
+	end
+
 	self:InitRenderer()
 
 end
@@ -57,160 +55,22 @@ function PANEL:OnRemove()
 
 end
 
-function PANEL:OnGraphCallback( cb, ... )
+function PANEL:GetGraph()
 
-	if cb == CB_NODE_ADD then return self:NodeAdded(...) end
-	if cb == CB_NODE_REMOVE then return self:NodeRemoved(...) end
-	if cb == CB_NODE_MOVE then return self:NodeMove(...) end
-	if cb == CB_CONNECTION_ADD then return self:ConnectionAdded(...) end
-	if cb == CB_CONNECTION_REMOVE then return self:ConnectionRemoved(...) end
-	if cb == CB_GRAPH_CLEAR then return self:GraphCleared(...) end
-	if cb == CB_POSTMODIFY_NODE then return self:PostModifyNode(...) end
-
-end
-
-function PANEL:NodeAdded( id )
-
-	local vnode = bpuigraphnode.New( self.graph:GetNode(id), self.graph )
-	self.nodes[id] = vnode
-
-end
-
-function PANEL:NodeRemoved( id )
-
-	self.nodes[id] = nil
-
-end
-
-function PANEL:NodeMove( id, x, y ) end
-function PANEL:ConnectionAdded( id ) end
-function PANEL:ConnectionRemoved( id ) end
-function PANEL:GraphCleared() end
-function PANEL:PostModifyNode( id, action )
-
-	if self.nodes[id] ~= nil then
-		self.nodes[id]:Invalidate(true)
-	end
+	return self.graph
 
 end
 
 function PANEL:SetGraph( graph )
 
-	if self.graph then
-		self.graph:RemoveListener(self.callback)
-	end
+	if self.graph then self.graph:RemoveListener(self.callback) end
 
 	self.graph = graph
 
 	graph:AddListener(self.callback, bpgraph.CB_ALL)
 
-	self:CreateAllNodes()
+	self.editor:CreateAllNodes()
 	self:CenterToOrigin()
-
-end
-
-function PANEL:DrawConnection(connection)
-
-	local pw, ph = self:GetSize()
-	local graph = self.graph
-	local a = self.nodes[connection[1]]
-	local apin = connection[2]
-	local b = self.nodes[connection[3]]
-	local bpin = connection[4]
-
-	if a == nil or b == nil then print("Invalid connection") return end
-
-	local ax, ay = a:GetPinSpotLocation(apin)
-	local bx, by = b:GetPinSpotLocation(bpin)
-
-	local x0,y0 = self.renderer:PointToScreen(ax,ay)
-	local x1,y1 = self.renderer:PointToScreen(bx,by)
-
-	local minX,maxX = math.min(x0,x1), math.max(x0,x1)
-	local minY,maxY = math.min(y0,y1), math.max(y0,y1)
-
-	if maxX < 0 or maxY < 0 then return false end
-	if minX > pw or minY > ph then return false end
-
-	local avpin = a:GetVPins()[apin]
-	local bvpin = b:GetVPins()[bpin]
-
-	if avpin == nil or bvpin == nil then print("Invalid connection pin") return end
-
-	local apintype = avpin:GetPin()
-	local bpintype = bvpin:GetPin()
-
-	bprenderutils.DrawHermite( ax, ay, bx, by, 
-		apintype:GetColor(), 
-		bpintype:GetColor()
-	)
-
-	return true
-
-end
-
-function PANEL:GetDisplayName( nodeType )
-
-	local name = nodeType.displayName or nodeType.name
-	local sub = string.find(name, "[:.]")
-	if sub then
-		name = name:sub(sub+1, -1)
-	end
-	return name
-
-end
-
-function PANEL:DrawPin( node, pinID )
-
-	local ntype = node:GetType()
-	local pin = node:GetPin(pinID)
-	local x, y = pinLocation(self, node, pinID, pin)
-
-	local ptc = NodePinColors[ pin[2] ]
-	draw.RoundedBox(1, pin[1] == PD_In and x or x-10, y-5, 10, 10, ptc)
-
-	if not ntype.compact then
-		if pin[1] == PD_In then
-			draw.SimpleText(pin[3], "Default", x+15, y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-		else
-			draw.SimpleText(pin[3], "Default", x-15, y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-		end
-	end
-
-end
-
-function PANEL:DrawNode(vnode)
-
-	local pw, ph = self:GetSize()
-	local x,y = vnode:GetPos()
-	local w,h = vnode:GetSize()
-	local x0,y0 = self.renderer:PointToScreen(x,y)
-	local x1,y1 = self.renderer:PointToScreen(x+w,y+h)
-
-	if x0 > pw or y0 > ph then return false end
-	if x1 < 0 or y1 < 0 then return false end
-
-	vnode:Draw()
-	return true
-
-end
-
-function PANEL:DrawNodes() 
-
-	local nodesDrawn = 0
-	for _, vnode in pairs(self.nodes) do
-		if self:DrawNode(vnode) then nodesDrawn = nodesDrawn + 1 end
-	end
-	--print("Nodes: " .. nodesDrawn)
-
-end
-function PANEL:DrawConnections()
-
-	local connectionsDrawn = 0
-	for _, connection in self.graph:Connections() do
-		if self:DrawConnection(connection) then connectionsDrawn = connectionsDrawn + 1 end
-	end
-	--print("Connections: " .. connectionsDrawn)
 
 end
 
@@ -227,18 +87,17 @@ function PANEL:InitRenderer()
 
 end
 
-function PANEL:PostAutoRefresh()
+function PANEL:GetRenderer()
 
-	self:InitRenderer()
-	self:CreateAllNodes()
-	self:CenterToOrigin()
+	return self.renderer
 
 end
 
-function PANEL:CreateAllNodes()
-	
-	self.nodes = {}
-	for id in self.graph:NodeIDs() do self:NodeAdded(id) end
+function PANEL:PostAutoRefresh()
+
+	self:InitRenderer()
+	self:CenterToOrigin()
+	self.editor:CreateAllNodes()
 
 end
 
@@ -303,45 +162,9 @@ function PANEL:OnMouseWheeled( delta )
 
 end
 
-function PANEL:DrawGrid( material, pixelGridUnits, textureGridDivisions )
-
-	local size = 400000
-	local texture = material:GetTexture("$basetexture")
-	local tw = texture:GetMappingWidth()
-	local th = texture:GetMappingHeight()
-
-	local scale = (tw/pixelGridUnits) / textureGridDivisions
-
-	local u0, v0 = 0,0
-	local u1, v1 = (size*2 / tw) * scale, (size*2 / th) * scale
-
-	u0 = u0 - (u1 % 1)
-	v0 = v0 - (v1 % 1)
-
-	local du = 0.5 / tw
-	local dv = 0.5 / th
-	u0, v0 = ( u0 - du ) / ( 1 - 2 * du ), ( v0 - dv ) / ( 1 - 2 * dv )
-	u1, v1 = ( u1 - du ) / ( 1 - 2 * du ), ( v1 - dv ) / ( 1 - 2 * dv )
-
-	surface.SetMaterial(material)
-	surface.DrawTexturedRectUV( -size, -size, size*2, size*2, u0, v0, u1, v1 )
-
-end
-
 function PANEL:Draw2D()
 
-	surface.SetDrawColor(Color(80,80,80,255))
-	self:DrawGrid(BGMaterial, 15, 2)
-
-	surface.SetDrawColor(Color(150,150,150,80))
-	self:DrawGrid(BGMaterial, 15, 8)
-
-	self:DrawConnections()
-	self:DrawNodes()
-
-	surface.SetMaterial(BGMaterial)
-	surface.SetDrawColor(Color(255,255,255))
-	surface.DrawTexturedRectUV( 0, 0, 15, 15, 0, 0, 1, 1 )
+	self.painter:Draw(self:GetSize())
 
 end
 
@@ -361,29 +184,6 @@ function PANEL:PerformLayout()
 
 end
 
-function PANEL:GetZoomString()
-
-	local zoom = self:GetZoomLevel()
-	if zoom > 0 then return "-" .. math.abs(zoom) end
-	return "+" .. math.abs(zoom)
-
-end
-
-function PANEL:PaintGraphTitle(w,h)
-
-	draw.SimpleText( self.graph:GetTitle(), "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-
-end
-
-function PANEL:PaintZoomIndicator(w,h)
-
-	local dt = 1 - (CurTime() - self.zoomTime) / 2
-	if dt < 0 then return end
-
-	draw.SimpleText( "Zoom: " .. self:GetZoomString(), "NodePinFont", 10, h - 30, Color( 255, 255, 255, 60 * dt ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-
-end
-
 function PANEL:Paint(w, h)
 
 	self:UpdateScroll()
@@ -391,9 +191,7 @@ function PANEL:Paint(w, h)
 	local x, y = self:LocalToScreen(0,0)
 
 	self.renderer:Draw(x,y,w,h)
-
-	self:PaintGraphTitle(w,h)
-	self:PaintZoomIndicator(w,h)
+	self.painter:DrawOverlay(self:GetSize())
 
 
 	return true
@@ -414,65 +212,14 @@ function PANEL:Think()
 
 end
 
-function PANEL:OpenContext()
-
-	if self:GetIsLocked() then return end
-
-	self:CloseContext()
-	--self.menu = DermaMenu( false, self )
-
-	local x, y = gui.MouseX(), gui.MouseY()
-
-
-	local createMenu = vgui.Create("BPCreateMenu")
-
-	if x + createMenu:GetWide() > ScrW() then
-		x = ScrW() - createMenu:GetWide()
-	end
-
-	if y + createMenu:GetTall() > ScrH() then
-		y = ScrH() - createMenu:GetTall()
-	end
-
-	createMenu:SetPos(x,y)
-	createMenu:SetVisible( true )
-	createMenu:MakePopup()
-	createMenu:Setup( self.graph )
-	createMenu.OnNodeTypeSelected = function( menu, nodeType )
-
-		x, y = self:ScreenToLocal(x, y)
-		x, y = self.renderer:PointToWorld(x, y)
-
-		self.graph:AddNode(nodeType:GetName(), x, y)
-	end
-	--createMenu:SetKeyboardInputEnabled(true)
-	--createMenu:SetMouseInputEnabled(true)
-
-	self.menu = createMenu
-
-	--self.menu:AddPanel(createMenu)
-	
-
-	--self.menu:SetMinimumWidth( 300 )
-	--self.menu:Open( x, y, false, self )
-
-end
-
-function PANEL:CloseContext()
-
-	if ( IsValid( self.menu ) ) then
-		self.menu:Remove()
-	end
-
-end
-
 function PANEL:OnRemove()
 
-	self:CloseContext()
+	self.editor:Cleanup()
 
 end
 
 function PANEL:UpdateScroll()
+
 	local x, y = self:LocalToScreen(0,0)
 	local mousex = gui.MouseX()-x
 	local mousey = gui.MouseY()-y
@@ -492,17 +239,22 @@ function PANEL:UpdateScroll()
 		self.mouseDelta[2] = mousey
 
 	end
+
 end
 
 function PANEL:OnMousePressed( mouse )
 
-	self:CloseContext()
+	self.editor:CloseCreationContext()
+
+	local x, y = self:LocalToScreen(0,0)
+	local mx = gui.MouseX()-x
+	local my = gui.MouseY()-y
+
+	if mouse == MOUSE_LEFT then if self.editor:LeftMouse(mx,my,true) then return true end end
+	if mouse == MOUSE_RIGHT then if self.editor:RightMouse(mx,my,true) then return true end end
 
 	if mouse ~= MOUSE_RIGHT then return end
 
-	print("RIGHT PRESS: " .. RealTime())
-
-	local x, y = self:LocalToScreen(0,0)
 	local scrollX, scrollY = self.renderer:GetScroll()
 
 	self.PressTimeout = RealTime()
@@ -514,18 +266,14 @@ end
 
 function PANEL:OnMouseReleased( mouse )
 
-	if mouse == MOUSE_LEFT then
-		if self.grabbedPin then
-			self.rerouteConnection = false
-			self.grabbedPin = nil
-		end
-	end
+	if mouse == MOUSE_LEFT then self.editor:LeftMouse(mx,my,false) end
+	if mouse == MOUSE_RIGHT then self.editor:RightMouse(mx,my,false) end
 
 	if mouse ~= MOUSE_RIGHT then return end
 
 	if RealTime() - (self.LastRelease or 0) < 0.2 then print("DEBOUNCED") self.Dragging = false return end
 	if RealTime() - self.PressTimeout < 0.2 then
-		self:OpenContext()
+		self.editor:OpenCreationContext()
 	end
 
 	self.Dragging = false

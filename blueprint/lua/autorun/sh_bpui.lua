@@ -5,6 +5,8 @@ include("ui/cl_bprender2d.lua")
 include("ui/cl_bpgraph2.lua")
 include("ui/cl_bpgraphnode.lua")
 include("ui/cl_bpgraphpin.lua")
+include("ui/cl_bpgrapheditor.lua")
+include("ui/cl_bpgraphpainter.lua")
 
 if SERVER then
 
