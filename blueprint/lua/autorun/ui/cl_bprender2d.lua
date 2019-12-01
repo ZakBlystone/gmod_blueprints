@@ -173,7 +173,7 @@ function meta:Draw(x,y,w,h)
 	local OldDrawTexturedRectUV = surface.DrawTexturedRectUV
 	surface.DrawTexturedRectUV = function(x,y,...) OldDrawTexturedRectUV(x-rx, y-ry,...) end
 
-	cam.Start3D( self.offset, self.angle, self.fov, vx,vy,vw,vh, 1, 10000 )
+	cam.Start3D( self.offset, self.angle, self.fov, vx,vy,vw,vh, 1, 20000 )
 
 	render.SuppressEngineLighting( true )
 	--render.PushFilterMag( TEXFILTER.ANISOTROPIC )

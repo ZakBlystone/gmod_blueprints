@@ -14,7 +14,14 @@ function meta:Init( vgraph )
 	self.leftMouseStart = nil
 	self.dragSelecting = false
 	self.grabLock = nil
+	self.graphCopy = nil
 	return self
+
+end
+
+function meta:GetGraphCopy()
+
+	return self.graphCopy
 
 end
 
@@ -221,11 +228,28 @@ function meta:TakeGrabbedPin()
 
 end
 
+function meta:PasteGraph()
+
+	if self.graphCopy == nil then return false end
+
+	local scaleFactor = self:GetCoordinateScaleFactor()
+	local copy = self.graphCopy
+	local mx, my = self:PointToWorld(self.vgraph:GetMousePos())
+
+	self:GetGraph():AddSubGraph( copy.subGraph, (mx - copy.x) / scaleFactor, (my - copy.y) / scaleFactor )
+
+	self.graphCopy = nil
+	return true
+
+end
+
 function meta:LeftMouse(x,y,pressed)
 
 	local wx, wy = self:PointToWorld(x,y)
 
 	if pressed then
+
+		if self:PasteGraph() then return true end
 
 		self:ResetGrabbedPin()
 		self.leftMouseStart = {self:PointToWorld( x,y )}
@@ -281,6 +305,11 @@ function meta:RightMouse(x,y,pressed)
 	local wx, wy = self:PointToWorld(x,y)
 
 	if pressed then
+		if self.graphCopy ~= nil then
+			self.graphCopy = nil
+			return true
+		end
+
 		local vnode, alreadySelected = self:TryGetNode(wx, wy)
 		if vnode ~= nil then
 			self:OpenNodeContext(vnode)
@@ -307,6 +336,43 @@ function meta:KeyPress( code )
 			end
 		end
 		self:ClearSelection()
+	end
+
+	if input.IsKeyDown( KEY_LCONTROL ) then
+
+		if code == KEY_C then
+			local selected = self:GetSelectedNodes()
+			local selectedIDs = {}
+			for k,v in pairs(selected) do table.insert(selectedIDs, v:GetNode().id) end
+
+			if #selectedIDs == 0 then
+				print("Tried copy, but no nodes selected")
+				self.graphCopy = nil 
+				return 
+			end
+
+			local subGraph = self:GetGraph():CreateSubGraph( selectedIDs )
+			local nodeSet = bpgraphnodeset.New( subGraph, self )
+			nodeSet:CreateAllNodes()
+
+			local painter = bpgraphpainter.New( subGraph, nodeSet, self.vgraph )
+
+			local x, y = self:PointToWorld( self.vgraph:GetMousePos() )
+
+			x = math.Round(x / 15) * 15
+			y = math.Round(y / 15) * 15
+
+			self.graphCopy = {
+				subGraph = subGraph,
+				painter = painter,
+				nodeSet = nodeSet,
+				x = x,
+				y = y,
+			}
+
+			print("COPIED GRAPH")
+		end
+
 	end
 
 end

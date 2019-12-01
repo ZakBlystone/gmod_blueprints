@@ -20,9 +20,12 @@ function meta:GetVNodes() return self.vnodes end
 function meta:CreateAllNodes()
 
 	if self:GetGraph() == nil then return end
+	local count = 0
 
 	self.vnodes = {}
-	for id in self:GetGraph():NodeIDs() do self:NodeAdded(id) end
+	for id in self:GetGraph():NodeIDs() do self:NodeAdded(id) count = count + 1 end
+
+	print("Created " .. count .. " VNodes")
 
 end
 

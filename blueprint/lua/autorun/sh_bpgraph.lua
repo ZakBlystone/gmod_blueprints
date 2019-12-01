@@ -684,14 +684,26 @@ function meta:Clear()
 
 end
 
+function meta:CanAddNode(nodeType)
+
+	if nodeType:GetCodeType() == NT_Event and self.module:NodeTypeInUse(nodeType:GetName()) then
+		return false
+	end
+
+	for _, node in self:Nodes() do
+		if node:GetTypeName() == "__Entry" and nodeType:GetName() == "__Entry" then return false end
+	end
+
+	return true
+
+end
+
 function meta:AddNode(nodeTypeName, ...)
 
 	local nodeType = self:GetNodeTypes()[nodeTypeName]
 	if nodeType == nil then error("Node type not found: " .. nodeTypeName) end
 
-	if nodeType:GetCodeType() == NT_Event and self.module:NodeTypeInUse(nodeTypeName) then
-		return
-	end
+	if not self:CanAddNode(nodeType) then return end
 
 	if nodeType:GetCodeType() == NT_Event and nodeType:ReturnsValues() then
 		self.module:RequestGraphForEvent(nodeType)
@@ -967,6 +979,81 @@ function meta:CopyInto(other)
 	end)
 
 	return other
+
+end
+
+function meta:CreateSubGraph(subNodeIds)
+
+	local copy = self:CopyInto( New() )
+	local hold = {}
+
+	for i, c in self:Connections() do
+		table.insert(hold, c)
+	end
+
+	copy:CacheNodeTypes()
+	copy:RemoveNodeIf( function(node) return not table.HasValue(subNodeIds, node.id) end )
+	copy:WalkInforms()
+	copy:RemoveInvalidConnections()
+
+	local severedPins = {}
+	for k,v in pairs(hold) do
+
+		if table.HasValue(subNodeIds, v[1]) and not table.HasValue(subNodeIds, v[3]) then
+			table.insert(severedPins, {v[1], v[2]})
+		end
+
+		if not table.HasValue(subNodeIds, v[1]) and table.HasValue(subNodeIds, v[3]) then
+			table.insert(severedPins, {v[3], v[4]})
+		end
+
+	end
+
+	copy.severedPins = severedPins
+
+	return copy
+
+end
+
+function meta:AddSubGraph( subgraph, x, y )
+
+	local connectionRemap = {}
+	local copy = subgraph:CopyInto( New() )
+	local nodeCount = 0
+	local connectionCount = 0
+
+	for id, node in copy:Nodes() do
+
+		if self:CanAddNode(node:GetType()) then
+
+			local nx, ny = node:GetPos()
+			node:Move(nx + x, ny + y)
+			node.id = nil
+			node.BaseClass = bpcommon.MetaTable("bpnode")
+			local newID = self.nodes:Add( node )
+			node.graph = self
+			connectionRemap[id] = newID
+			nodeCount = nodeCount + 1
+
+		end
+
+	end
+
+	for _, c in copy:Connections() do
+
+		connectionCount = connectionCount + 1
+		local nodeID0 = connectionRemap[c[1]]
+		local nodeID1 = connectionRemap[c[3]]
+		local pinID0 = c[2]
+		local pinID1 = c[4]
+
+		if nodeID0 and nodeID1 then
+			self:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
+		end
+
+	end
+
+	print("Added " .. nodeCount .. " nodes and " .. connectionCount .. " connections.")
 
 end
 

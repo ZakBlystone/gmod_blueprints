@@ -288,11 +288,14 @@ function meta:Draw(xOffset, yOffset, alpha)
 
 	self:Layout()
 
-	local x,y = self.x + xOffset, self.y + yOffset
+	local x,y = self:GetPos()
 	local w,h = self:GetSize()
 	local ox, oy = self:GetHotspotOffset()
 	local node = self.vnode:GetNode()
 	local font = self.font
+
+	x = x + xOffset
+	y = y + yOffset
 
 	self:DrawHotspot(x,y,alpha)
 

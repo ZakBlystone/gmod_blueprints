@@ -19,7 +19,7 @@ local NODE_COMPACT_HEADER_SPACING = 0
 local NODE_COMPACT_HEADER_HEIGHT = 20
 local NODE_COMPACT_FOOTER_HEIGHT = 20
 local PIN_SPACING = 8
-local PIN_EDGE_SPACING = 4
+local PIN_EDGE_SPACING = 8
 
 function meta:Init(node, graph, editor)
 

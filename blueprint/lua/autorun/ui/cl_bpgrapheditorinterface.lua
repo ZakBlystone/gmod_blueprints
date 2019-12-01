@@ -182,6 +182,14 @@ function meta:Draw(w,h)
 	-- Draw graph here
 	self.graphPainter:Draw()
 
+	local copyInfo = self:GetEditor():GetGraphCopy()
+	if copyInfo then
+		local mx, my = self:PointToWorld(self:GetVGraph():GetMousePos())
+		mx = math.Round(mx / 15) * 15
+		my = math.Round(my / 15) * 15
+		copyInfo.painter:Draw(mx - copyInfo.x, my - copyInfo.y, .5)
+	end
+
 	self:DrawGrabbedLine()
 
 	surface.SetMaterial(BGMaterial)
