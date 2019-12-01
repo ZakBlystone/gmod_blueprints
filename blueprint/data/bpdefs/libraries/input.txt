@@ -15,18 +15,18 @@ LIB input
 	{
 		DESC Gets the button code from a button name. This is opposite of input.GetKeyName.
 		IN button, PN_String, #The internal button name, such as "e" or "shift".
-		OUT code, PN_Enum, PNF_None, BUTTON, #The button code, see BUTTON_CODE_ Enums.
+		OUT code, PN_Enum, PNF_None, BUTTON_CODE, #The button code, see BUTTON_CODE_ Enums.
 	}
 	PURE GetKeyName, CLIENT
 	{
 		DESC Gets the button name from a numeric button code. The name needs to be translated with language.GetPhrase before being displayed.
-		IN button, PN_Enum, PNF_None, BUTTON, #The button, see BUTTON_CODE_ Enums.
+		IN button, PN_Enum, PNF_None, BUTTON_CODE, #The button, see BUTTON_CODE_ Enums.
 		OUT name, PN_String, #Button name.
 	}
 	PURE IsButtonDown, CLIENT
 	{
 		DESC Gets whether the specified button code is down.
-		IN button, PN_Enum, PNF_None, BUTTON, #The button, valid values are in the range of BUTTON_CODE_ Enums.
+		IN button, PN_Enum, PNF_None, BUTTON_CODE, #The button, valid values are in the range of BUTTON_CODE_ Enums.
 		OUT down, PN_Bool, #Is the button down
 	}
 	PURE IsControlDown, CLIENT
@@ -66,7 +66,7 @@ LIB input
 	PURE LookupKeyBinding, CLIENT
 	{
 		DESC Returns the bind string that the given key is bound to.
-		IN key, PN_Enum, PNF_None, BUTTON, #Key from BUTTON_CODE_ Enums
+		IN key, PN_Enum, PNF_None, BUTTON_CODE, #Key from BUTTON_CODE_ Enums
 		OUT binding, PN_String, #The bind string of the given key.
 	}
 	FUNC SelectWeapon, CLIENT

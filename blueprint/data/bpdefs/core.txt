@@ -138,12 +138,12 @@ LIB CORE
 		IN Message, PN_String, #Message to send to all players
 		CODE for _, pl in pairs(player.GetAll()) do Player_.ChatPrint(pl, $1) end
 	}
-	SPECIAL Client, SHARED
+	PURE Client, SHARED
 	{
-		OUT IsServer, PN_Bool
+		OUT IsClient, PN_Bool
 		CODE #1 = CLIENT
 	}
-	SPECIAL Server, SHARED
+	PURE Server, SHARED
 	{
 		OUT IsServer, PN_Bool
 		CODE #1 = SERVER

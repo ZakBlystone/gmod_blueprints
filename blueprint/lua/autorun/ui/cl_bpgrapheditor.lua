@@ -1,5 +1,7 @@
 if SERVER then AddCSLuaFile() return end
 
+G_BPGraphEditorCopyState = nil
+
 module("bpgrapheditor", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
 local meta = bpcommon.MetaTable("bpgrapheditor")
@@ -14,14 +16,19 @@ function meta:Init( vgraph )
 	self.leftMouseStart = nil
 	self.dragSelecting = false
 	self.grabLock = nil
-	self.graphCopy = nil
+
+	-- HACK!!!!
+	if G_BPGraphEditorCopyState ~= nil then
+		G_BPGraphEditorCopyState.painter.vgraph = vgraph
+	end
+
 	return self
 
 end
 
 function meta:GetGraphCopy()
 
-	return self.graphCopy
+	return G_BPGraphEditorCopyState
 
 end
 
@@ -230,15 +237,15 @@ end
 
 function meta:PasteGraph()
 
-	if self.graphCopy == nil then return false end
+	if G_BPGraphEditorCopyState == nil then return false end
 
 	local scaleFactor = self:GetCoordinateScaleFactor()
-	local copy = self.graphCopy
+	local copy = G_BPGraphEditorCopyState
 	local mx, my = self:PointToWorld(self.vgraph:GetMousePos())
 
 	self:GetGraph():AddSubGraph( copy.subGraph, (mx - copy.x) / scaleFactor, (my - copy.y) / scaleFactor )
 
-	self.graphCopy = nil
+	G_BPGraphEditorCopyState = nil
 	return true
 
 end
@@ -305,8 +312,8 @@ function meta:RightMouse(x,y,pressed)
 	local wx, wy = self:PointToWorld(x,y)
 
 	if pressed then
-		if self.graphCopy ~= nil then
-			self.graphCopy = nil
+		if G_BPGraphEditorCopyState ~= nil then
+			G_BPGraphEditorCopyState = nil
 			return true
 		end
 
@@ -347,12 +354,12 @@ function meta:KeyPress( code )
 
 			if #selectedIDs == 0 then
 				print("Tried copy, but no nodes selected")
-				self.graphCopy = nil 
+				G_BPGraphEditorCopyState = nil 
 				return 
 			end
 
 			local subGraph = self:GetGraph():CreateSubGraph( selectedIDs )
-			local nodeSet = bpgraphnodeset.New( subGraph, self )
+			local nodeSet = bpgraphnodeset.New( subGraph )
 			nodeSet:CreateAllNodes()
 
 			local painter = bpgraphpainter.New( subGraph, nodeSet, self.vgraph )
@@ -362,7 +369,7 @@ function meta:KeyPress( code )
 			x = math.Round(x / 15) * 15
 			y = math.Round(y / 15) * 15
 
-			self.graphCopy = {
+			G_BPGraphEditorCopyState = {
 				subGraph = subGraph,
 				painter = painter,
 				nodeSet = nodeSet,

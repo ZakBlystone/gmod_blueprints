@@ -52,8 +52,8 @@ LIB draw
 		IN x, PN_Number, PNF_Nullable, #The X Coordinate.
 		IN y, PN_Number, PNF_Nullable, #The Y Coordinate.
 		IN color, PN_Color, PNF_Nullable, #The color of the text. Uses the Color structure.
-		IN xAlign, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the X coordinate using TEXT_ALIGN_ Enums.
-		IN yAlign, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the Y coordinate using TEXT_ALIGN_ Enums.
+		IN xAlign=TEXT_ALIGN_LEFT, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the X coordinate using TEXT_ALIGN_ Enums.
+		IN yAlign=TEXT_ALIGN_TOP, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the Y coordinate using TEXT_ALIGN_ Enums.
 		OUT width, PN_Number, #The width of the text. Same value as if you were calling surface.GetTextSize.
 		OUT height, PN_Number, #The height of the text. Same value as if you were calling surface.GetTextSize.
 	}
@@ -65,8 +65,8 @@ LIB draw
 		IN x, PN_Number, PNF_Nullable, #The X Coordinate.
 		IN y, PN_Number, PNF_Nullable, #The Y Coordinate.
 		IN color, PN_Color, PNF_Nullable, #The color of the text. Uses the Color structure.
-		IN xAlign, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the X Coordinate using TEXT_ALIGN_ Enums.
-		IN yAlign, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the Y Coordinate using TEXT_ALIGN_ Enums.
+		IN xAlign=TEXT_ALIGN_LEFT, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the X Coordinate using TEXT_ALIGN_ Enums.
+		IN yAlign=TEXT_ALIGN_TOP, PN_Enum, PNF_Nullable, TEXT_ALIGN, #The alignment of the Y Coordinate using TEXT_ALIGN_ Enums.
 		IN outlinewidth, PN_Number, #Width of the outline.
 		IN outlinecolor, PN_Color, PNF_Nullable, #Color of the outline. Uses the Color structure.
 		OUT width, PN_Number, #The width of the text. Same value as if you were calling surface.GetTextSize.
