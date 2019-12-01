@@ -256,8 +256,6 @@ end
 
 function meta:Draw(xOffset, yOffset, alpha)
 
-	self:Invalidate(true)
-
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
 
@@ -265,8 +263,9 @@ function meta:Draw(xOffset, yOffset, alpha)
 	y = y + yOffset
 
 	local node = self.node
-	local outline = 4
-	if self:IsSelected() then
+	local outline = 8
+	local selected = self:IsSelected()
+	if selected then
 		draw.RoundedBox(16, x-outline, y-outline, w+outline*2, h+outline*2, Color(200,150,80,255*alpha))
 	end
 
@@ -281,12 +280,12 @@ function meta:Draw(xOffset, yOffset, alpha)
 	local ntc = NodeTypeColors[ node:GetCodeType() ]
 	local isCompact = node:HasFlag(NTF_Compact)
 	local offset = isCompact and 0 or NODE_HEADER_HEIGHT
-	draw.RoundedBoxEx(12, x, y + offset, w, h - offset, Color(20,20,20,230*alpha), isCompact, isCompact, true, true)
+	draw.RoundedBoxEx(12, x, y + offset, w, h - offset, Color(20,20,20,(selected and 252 or 230)*alpha), isCompact, isCompact, true, true)
 
 
 	if not isCompact then 
-		draw.RoundedBoxEx(12, x, y, w, NODE_HEADER_HEIGHT, Color(ntc.r,ntc.g,ntc.b,180*alpha), true, true)
-		surface.SetDrawColor(Color(ntc.r,ntc.g,ntc.b,50))
+		draw.RoundedBoxEx(12, x, y, w, NODE_HEADER_HEIGHT, Color(ntc.r,ntc.g,ntc.b,255*alpha), true, true)
+		surface.SetDrawColor(Color(ntc.r/2,ntc.g/2,ntc.b/2,255*alpha))
 		surface.DrawRect(x,y + NODE_HEADER_HEIGHT,w,2)
 	end
 	local role = node:GetRole()

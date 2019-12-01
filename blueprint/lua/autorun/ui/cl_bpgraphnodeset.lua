@@ -45,6 +45,7 @@ end
 function meta:PostModifyNode( id, action )
 
 	if self.vnodes[id] ~= nil then
+		self.vnodes[id]:CreatePins()
 		self.vnodes[id]:Invalidate(true)
 	end
 

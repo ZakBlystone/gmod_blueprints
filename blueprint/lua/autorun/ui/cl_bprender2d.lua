@@ -2,8 +2,7 @@ if SERVER then AddCSLuaFile() return end
 
 module("bprender2d", package.seeall, bpcommon.rescope(bpgraph, bpschema, bpnodedef))
 
-local meta = {}
-meta.__index = meta
+local meta = bpcommon.MetaTable("bprender2d")
 
 function meta:Init(parent)
 
@@ -187,8 +186,8 @@ function meta:Draw(x,y,w,h)
 
 		self:Draw2D()
 
-		local mx,my = self:PointToWorld(gui.MouseX() - rx, gui.MouseY() - ry)
-		self:DebugPoint(Vector(mx,my,0))
+		--local mx,my = self:PointToWorld(gui.MouseX() - rx, gui.MouseY() - ry)
+		--self:DebugPoint(Vector(mx,my,0))
 
 		--draw.SimpleText("<-origin", "Trebuchet18", 0, 0)
 
@@ -213,6 +212,4 @@ function meta:Draw(x,y,w,h)
 
 end
 
-function New(...)
-	return setmetatable({}, meta):Init(parent)
-end
+function New(...) return bpcommon.MakeInstance(meta, ...) end

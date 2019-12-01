@@ -27,6 +27,7 @@ end
 function meta:Cleanup()
 
 	self:CloseCreationContext()
+	self:CloseNodeContext()
 
 end
 
@@ -276,6 +277,16 @@ end
 
 function meta:RightMouse(x,y,pressed)
 
+	local wx, wy = self:PointToWorld(x,y)
+
+	if pressed then
+		local vnode, alreadySelected = self:TryGetNode(wx, wy)
+		if vnode ~= nil then
+			self:OpenNodeContext(vnode)
+			return true
+		end
+	end
+
 end
 
 function meta:MiddleMouse(x,y,pressed)
@@ -334,6 +345,35 @@ function meta:EditPinLiteral(vnode, vpin)
 	if literalType == "bool" then
 		node:SetLiteral(pinID, value == "true" and "false" or "true")
 	end
+
+end
+
+function meta:CloseNodeContext()
+
+	if IsValid( self.nodeMenu ) then
+		self.nodeMenu:Remove()
+	end
+
+end
+
+function meta:OpenNodeContext(vnode)
+
+	local options = {}
+	local node = vnode:GetNode()
+	local x,y = self.vgraph:GetMousePos(true)
+	node:GetOptions(options)
+
+	if #options == 0 then return end
+
+	self:CloseNodeContext()
+	self.nodeMenu = DermaMenu( false, self.vgraph )
+
+	for k,v in pairs(options) do
+		self.nodeMenu:AddOption( v[1], v[2] )
+	end
+
+	self.nodeMenu:SetMinimumWidth( 100 )
+	self.nodeMenu:Open( x, y, false, self.vgraph )
 
 end
 

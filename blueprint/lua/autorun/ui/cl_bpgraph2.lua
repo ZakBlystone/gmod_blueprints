@@ -226,6 +226,10 @@ function PANEL:Think()
 
 	self.editor:Think()
 
+	if bit.band(self.mouseDragging, MD_Left) ~= 0 and not input.IsMouseDown(MOUSE_LEFT) then
+		self:OnMouseReleased(MOUSE_LEFT)
+	end
+
 end
 
 function PANEL:OnRemove()
@@ -258,9 +262,11 @@ function PANEL:UpdateScroll()
 
 end
 
-function PANEL:GetMousePos()
+function PANEL:GetMousePos(screen)
 
 	local x, y = self:LocalToScreen(0,0)
+	if screen then x = 0 y = 0 end
+
 	local mx = gui.MouseX()-x
 	local my = gui.MouseY()-y
 	return mx, my
@@ -300,6 +306,10 @@ function PANEL:OnMouseReleased( mouse )
 	if self.editor == nil then return end
 
 	local mx, my = self:GetMousePos()
+
+	if mouse == MOUSE_LEFT then self.mouseDragging = bit.band(self.mouseDragging, bit.bnot(MD_Left)) end
+	if mouse == MOUSE_RIGHT then self.mouseDragging = bit.band(self.mouseDragging, bit.bnot(MD_Right)) end
+	if mouse == MOUSE_MIDDLE then self.mouseDragging = bit.band(self.mouseDragging, bit.bnot(MD_Middle)) end
 
 	if mouse == MOUSE_LEFT then self.editor:LeftMouse(mx,my,false) end
 	if mouse == MOUSE_RIGHT then self.editor:RightMouse(mx,my,false) end
