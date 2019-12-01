@@ -285,6 +285,13 @@ function meta:SetLiteral(pinID, value)
 	if pinID < 1 or pinID > #pins then return end
 	if pins[pinID]:IsOut() or pins[pinID]:IsType(PN_Exec) then return end
 
+	local literalType = pins[pinID]:GetLiteralType()
+	if literalType == "number" then
+		if not tonumber(value) then
+			value = 0
+		end
+	end
+
 	value = tostring(value)
 	self.literals[pinID] = value
 	

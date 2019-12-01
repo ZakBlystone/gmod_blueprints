@@ -28,6 +28,7 @@ function meta:Cleanup()
 
 	self:CloseCreationContext()
 	self:CloseNodeContext()
+	self:CloseEnumContext()
 
 end
 
@@ -344,15 +345,48 @@ function meta:EditPinLiteral(vnode, vpin)
 
 	if literalType == "bool" then
 		node:SetLiteral(pinID, value == "true" and "false" or "true")
+	elseif literalType == "string" then
+		bptextliteraledit.EditPinLiteral(vpin)
+	elseif literalType == "number" then
+		bptextliteraledit.EditPinLiteral(vpin)
+	elseif literalType == "enum" then
+		self:OpenEnumContext(node, pin, pinID, value)
 	end
+
+end
+
+function meta:CloseEnumContext()
+
+	if IsValid( self.enumContextMenu ) then self.enumContextMenu:Remove() end
+
+end
+
+function meta:OpenEnumContext(node, pin, pinID, value)
+
+	local x,y = self.vgraph:GetMousePos(true)
+
+	self:CloseEnumContext()
+	self.enumContextMenu = DermaMenu( false, self.vgraph )
+
+	local enum = bpdefs.Get():GetEnum( pin )
+	if enum == nil then
+		ErrorNoHalt("NO ENUM FOR " .. tostring( self.pinType ))
+	else
+		for k, entry in pairs(enum.entries) do
+			self.enumContextMenu:AddOption( entry.shortkey, function()
+				node:SetLiteral(pinID, entry.key)
+			end )
+		end
+	end
+
+	self.enumContextMenu:SetMinimumWidth( 100 )
+	self.enumContextMenu:Open( x, y, false, self.vgraph )
 
 end
 
 function meta:CloseNodeContext()
 
-	if IsValid( self.nodeMenu ) then
-		self.nodeMenu:Remove()
-	end
+	if IsValid( self.nodeMenu ) then self.nodeMenu:Remove() end
 
 end
 

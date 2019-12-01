@@ -233,6 +233,12 @@ function meta:DrawLiteral(x, y, alpha)
 
 			if literalType == "bool" then
 				literal = (literal == "true") and "X" or ""
+			elseif literalType == "enum" then
+				local enum = bpdefs.Get():GetEnum( self:GetPin() )
+				if enum then
+					local key = enum.lookup[literal]
+					if key then literal = enum.entries[key].shortkey end
+				end
 			end
 
 			draw.SimpleText(literal, font, x + self.literalPos, y+PIN_SIZE/2, Color(255,255,255,255*alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)

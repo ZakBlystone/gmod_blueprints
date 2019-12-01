@@ -9,6 +9,7 @@ include("ui/cl_bpgrapheditor.lua")
 include("ui/cl_bpgraphpainter.lua")
 include("ui/cl_bpgraphnodeset.lua")
 include("ui/cl_bpgrapheditorinterface.lua")
+include("ui/cl_bptextliteraledit.lua")
 
 if SERVER then
 
