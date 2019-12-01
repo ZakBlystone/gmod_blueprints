@@ -26,10 +26,16 @@ surface.CreateFont( "GraphTitle", {
 	outline = false,
 } )
 
+local MD_None = 0
+local MD_Left = 1
+local MD_Right = 2
+local MD_Middle = 4
+
 function PANEL:Init()
 
 	self.AllowAutoRefresh = true
 	self:SetMouseInputEnabled( true )
+	self:SetKeyboardInputEnabled( true )
 	self:SetBackgroundColor( Color(40,40,40) )
 	self:NoClipping(true)
 
@@ -38,6 +44,7 @@ function PANEL:Init()
 	self.nodes = {}
 	self.titleText = "Blueprint"
 	self.zoomTime = 0
+	self.mouseDragging = 0
 
 	self.callback = function(...)
 		self.editor:OnGraphCallback(...)
@@ -210,6 +217,8 @@ end
 
 function PANEL:Think()
 
+	self.editor:Think()
+
 end
 
 function PANEL:OnRemove()
@@ -242,13 +251,26 @@ function PANEL:UpdateScroll()
 
 end
 
-function PANEL:OnMousePressed( mouse )
-
-	self.editor:CloseCreationContext()
+function PANEL:GetMousePos()
 
 	local x, y = self:LocalToScreen(0,0)
 	local mx = gui.MouseX()-x
 	local my = gui.MouseY()-y
+	return mx, my
+
+end
+
+function PANEL:OnMousePressed( mouse )
+
+	self.editor:CloseCreationContext()
+
+	self:RequestFocus()
+
+	local mx, my = self:GetMousePos()
+
+	if mouse == MOUSE_LEFT then self.mouseDragging = bit.bor(self.mouseDragging, MD_Left) end
+	if mouse == MOUSE_RIGHT then self.mouseDragging = bit.bor(self.mouseDragging, MD_Right) end
+	if mouse == MOUSE_MIDDLE then self.mouseDragging = bit.bor(self.mouseDragging, MD_Middle) end
 
 	if mouse == MOUSE_LEFT then if self.editor:LeftMouse(mx,my,true) then return true end end
 	if mouse == MOUSE_RIGHT then if self.editor:RightMouse(mx,my,true) then return true end end
@@ -259,12 +281,14 @@ function PANEL:OnMousePressed( mouse )
 
 	self.PressTimeout = RealTime()
 	self.Dragging = true
-	self.mouseDelta = { gui.MouseX()-x, gui.MouseY()-y }
+	self.mouseDelta = { mx, my }
 	self:MouseCapture( true )
 
 end
 
 function PANEL:OnMouseReleased( mouse )
+
+	local mx, my = self:GetMousePos()
 
 	if mouse == MOUSE_LEFT then self.editor:LeftMouse(mx,my,false) end
 	if mouse == MOUSE_RIGHT then self.editor:RightMouse(mx,my,false) end
@@ -279,6 +303,20 @@ function PANEL:OnMouseReleased( mouse )
 	self.Dragging = false
 	self.LastRelease = RealTime()
 	self:MouseCapture( false )
+
+end
+
+function PANEL:OnKeyCodePressed( code )
+
+	print("KEYCODE: " .. tostring(code))
+
+	self.editor:KeyPress(code)
+
+end
+
+function PANEL:OnKeyCodeReleased( code )
+
+	self.editor:KeyRelease(code)
 
 end
 

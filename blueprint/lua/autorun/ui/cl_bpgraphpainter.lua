@@ -63,6 +63,30 @@ function meta:DrawConnection(connection)
 
 end
 
+function meta:DrawGrabbedLine()
+
+	local editor = self:GetEditor()
+	local pin = editor:GetGrabbedPin()
+	if pin == nil then return end
+
+	local mx, my = editor:GetGrabbedPinPos()
+	local ax,ay = pin:GetVNode():GetPinSpotLocation(pin:GetPinID())
+	local apintype = pin:GetPin()
+
+	if apintype:IsOut() then
+		bprenderutils.DrawHermite( ax, ay, mx, my, 
+			apintype:GetColor(),
+			Color(255,255,255)
+		)
+	else
+		bprenderutils.DrawHermite( mx, my, ax, ay, 
+			Color(255,255,255),
+			apintype:GetColor()
+		)
+	end
+
+end
+
 function meta:GetDisplayName( nodeType )
 
 	local name = nodeType.displayName or nodeType.name
@@ -169,10 +193,25 @@ function meta:Draw(w,h)
 
 	self:DrawConnections()
 	self:DrawNodes()
+	self:DrawGrabbedLine()
 
 	surface.SetMaterial(BGMaterial)
 	surface.SetDrawColor(Color(255,255,255))
 	surface.DrawTexturedRectUV( 0, 0, 15, 15, 0, 0, 1, 1 )
+
+	local editor = self:GetEditor()
+	if editor:IsDragSelecting() then
+		local border = 4
+		local x,y,w,h = editor:GetSelectionRect()
+		surface.SetDrawColor(Color(120,150,255,20))
+		surface.DrawRect(x,y,w,h)
+
+		surface.SetDrawColor(Color(255,255,255,40))
+		surface.DrawRect(x,y,w,border)
+		surface.DrawRect(x+border,y+h-border,w-border,border)
+		surface.DrawRect(x,y+border,border,h-border)
+		surface.DrawRect(x+w-border,y+border,border,h-border)
+	end
 
 end
 

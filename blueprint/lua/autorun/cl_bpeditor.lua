@@ -339,8 +339,10 @@ function PANEL:Think()
 
 	for id, vgraph in pairs( self.vgraphs ) do
 		if id == selectedGraphID then
-			vgraph:SetVisible(true)
-			self.Content:SetRight( vgraph )
+			if not vgraph:IsVisible() then
+				vgraph:SetVisible(true)
+				self.Content:SetRight( vgraph )
+			end
 		else
 			vgraph:SetVisible(false)
 		end

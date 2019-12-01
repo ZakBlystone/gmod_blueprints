@@ -13,6 +13,8 @@ local TEXT_OFFSET = 8
 local LITERAL_OFFSET = 10
 local LITERAL_HEIGHT = 24
 local PIN_SIZE = 24
+local PIN_HITBOX_EXPAND = 8
+local PIN_LITERAL_HITBOX_EXPAND = 8
 
 function meta:Init(vnode, editor, pinID, sideIndex)
 
@@ -33,9 +35,21 @@ function meta:Init(vnode, editor, pinID, sideIndex)
 
 end
 
+function meta:GetVNode()
+
+	return self.vnode
+
+end
+
 function meta:GetSideIndex()
 
 	return self.sideIndex
+
+end
+
+function meta:GetPinID()
+
+	return self.pinID
 
 end
 
@@ -169,6 +183,32 @@ function meta:GetHotspotOffset()
 
 end
 
+function meta:GetHitBox()
+
+	local nx,ny = self.vnode:GetPos()
+	local x,y = self:GetPos()
+	local w,h = PIN_SIZE, PIN_SIZE
+	local hx,hy = self:GetHotspotOffset()
+	local ex = PIN_HITBOX_EXPAND
+	return nx+x+hx-PIN_SIZE/2-ex/2,ny+y+hy-PIN_SIZE/2-ex/2,w+ex,h+ex
+
+end
+
+function meta:GetLiteralHitBox()
+
+	if self:ShouldDrawLiteral() then
+		local ex = PIN_LITERAL_HITBOX_EXPAND
+		local nx,ny = self.vnode:GetPos()
+		local x,y = self:GetPos()
+		local lw, lh = self:GetLiteralSize()
+
+		return x+nx+self.literalPos-ex/2,y+ny-ex/2,lw+ex,lh+ex
+	end
+
+	return 0,0,0,0
+
+end
+
 function meta:IsConnected()
 
 	local node = self.vnode:GetNode()
@@ -185,10 +225,10 @@ function meta:DrawLiteral(x, y, str)
 		local literalType = self.pin:GetLiteralType()
 		if literalType then
 			self.literalType = literalType
-			local literal = node:GetLiteral(self.pinID) or ""
+			local literal = node:GetLiteral(self.pinID) or "!!!UNASSIGNED LITERAL!!!"
 
 			local w, h = self:GetLiteralSize()
-			surface.SetDrawColor( Color(50,50,50,255) )
+			surface.SetDrawColor( Color(50,50,50,150) )
 			surface.DrawRect(x + self.literalPos,y,w,h)
 
 			if literalType == "bool" then
@@ -221,6 +261,14 @@ function meta:DrawHotspot(x,y)
 
 end
 
+function meta:DrawHitBox()
+
+	surface.SetDrawColor( Color(255,100,200,80) )
+	local hx,hy,hw,hh = self:GetLiteralHitBox()
+	surface.DrawRect(hx,hy,hw,hh)
+
+end
+
 function meta:Draw(xOffset, yOffset)
 
 	if self.currentPinType == nil or not self.currentPinType:Equal(self.pin:GetType()) then
@@ -245,8 +293,7 @@ function meta:Draw(xOffset, yOffset)
 
 	if not self:IsConnected() then self:DrawLiteral(x,y) end
 
-	--surface.SetDrawColor( Color(255,100,200,80) )
-	--surface.DrawRect(x,y,w,h)
+	--self:DrawHitBox()
 
 	surface.SetFont( font )
 

@@ -19,6 +19,7 @@ local NODE_COMPACT_HEADER_SPACING = 0
 local NODE_COMPACT_HEADER_HEIGHT = 20
 local NODE_COMPACT_FOOTER_HEIGHT = 20
 local PIN_SPACING = 8
+local PIN_EDGE_SPACING = 4
 
 function meta:Init(node, graph, editor)
 
@@ -73,7 +74,7 @@ function meta:GetSize()
 	for pinID, pin, pos in node:SidePins(PD_In) do
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
-		maxPinWidthIn = math.max(maxPinWidthIn, w)
+		maxPinWidthIn = math.max(maxPinWidthIn, w + PIN_EDGE_SPACING)
 		totalPinHeightIn = totalPinHeightIn + h + PIN_SPACING
 	end
 	if totalPinHeightIn ~= 0 then totalPinHeightIn = totalPinHeightIn - PIN_SPACING end
@@ -81,7 +82,7 @@ function meta:GetSize()
 	for pinID, pin, pos in node:SidePins(PD_Out) do
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
-		maxPinWidthOut = math.max(maxPinWidthOut, w)
+		maxPinWidthOut = math.max(maxPinWidthOut, w + PIN_EDGE_SPACING)
 		totalPinHeightOut = totalPinHeightOut + h + PIN_SPACING
 	end
 	if totalPinHeightOut ~= 0 then totalPinHeightOut = totalPinHeightOut - PIN_SPACING end
@@ -155,7 +156,7 @@ function meta:LayoutPins()
 		for pinID, pin, pos in node:SidePins(s) do
 			local vpin = self.pins[pinID]
 			local w,h = vpin:GetSize()
-			vpin:SetPos(s == PD_In and 0 or (nw - w), y)
+			vpin:SetPos(s == PD_In and PIN_EDGE_SPACING or (nw - w - PIN_EDGE_SPACING), y)
 			y = y + h + PIN_SPACING
 		end
 	end
@@ -179,6 +180,12 @@ function meta:GetDisplayName()
 		name = name:sub(sub+1, -1)
 	end
 	return name
+
+end
+
+function meta:GetVPin(pinID)
+
+	return self.pins[pinID]
 
 end
 
@@ -206,7 +213,15 @@ end
 
 function meta:IsSelected()
 
-	return false
+	return self.editor:IsNodeSelected(self)
+
+end
+
+function meta:GetHitBox()
+
+	local x,y = self:GetPos()
+	local w,h = self:GetSize()
+	return x,y,w,h
 
 end
 
@@ -237,7 +252,7 @@ end
 
 function meta:Draw(xOffset, yOffset)
 
-	--self:Invalidate(true)
+	self:Invalidate(true)
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()

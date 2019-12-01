@@ -8,6 +8,11 @@ function meta:Init( vgraph )
 
 	self.vgraph = vgraph
 	self.vnodes = {}
+	self.selectedNodes = {}
+	self.storedNodeOffsets = {}
+	self.leftMouseStart = nil
+	self.dragSelecting = false
+	self.grabLock = nil
 	return self
 
 end
@@ -17,6 +22,19 @@ function meta:Cleanup()
 	self:CloseCreationContext()
 
 end
+
+function meta:GetSelectedNodes()
+
+	local selection = {}
+	for k,v in pairs(self.selectedNodes) do
+		selection[k:GetNode().id] = k
+	end
+	return selection
+
+end
+function meta:ClearSelection() self.selectedNodes = {} end
+function meta:SelectNode(vnode) self.selectedNodes[vnode] = true end
+function meta:IsNodeSelected(vnode) return self.selectedNodes[vnode] == true end
 
 function meta:GetCoordinateScaleFactor() return 2 end
 function meta:GetVNodes() return self.vnodes end
@@ -71,7 +89,203 @@ function meta:IsLocked() return self.vgraph:GetIsLocked() end
 function meta:PointToWorld(x,y) return self.vgraph:GetRenderer():PointToWorld(x,y) end
 function meta:PointToScreen(x,y) return self.vgraph:GetRenderer():PointToScreen(x,y) end
 
+function meta:GetSelectionRect()
+
+	if self.leftMouseStart then
+		local x0,y0 = unpack(self.leftMouseStart)
+		local x1,y1 = self:PointToWorld( self.vgraph:GetMousePos() )
+		if x0 > x1 then t = x1 x1 = x0 x0 = t end
+		if y0 > y1 then t = y1 y1 = y0 y0 = t end
+		return x0, y0, x1-x0, y1-y0
+	else
+		return 0,0,0,0
+	end
+
+end
+
+function meta:ResetGrabbedPin()
+
+	self.grabPin = nil
+	self.grabLock = nil
+
+end
+
+function meta:GetGrabbedPin()
+
+	return self.grabPin
+
+end
+
+function meta:GetGrabbedPinPos()
+
+	if self.grabLock then return unpack(self.grabLock) end
+	return self:PointToWorld( self.vgraph:GetMousePos() )
+
+end
+
+function meta:LockGrabbedPinPos()
+
+	if not self:GetGrabbedPin() then return end
+	self.grabLock = {self:GetGrabbedPinPos()}
+
+end
+
+function meta:UnlockGrabbedPinPos()
+
+	self.grabLock = nil
+
+end
+
+function meta:IsDragSelecting() return self.dragSelecting end
+
+function meta:UpdateDragSelection()
+
+	local x,y,w,h = self:GetSelectionRect()
+	self:ClearSelection()
+	for k,v in pairs(self.vnodes) do
+		if self:TestRectInclusive(v,x,y,w,h) then
+			self:SelectNode(v)
+		end
+	end
+
+end
+
+function meta:BeginMovingNodes()
+
+	local x0, y0 = unpack(self.leftMouseStart)
+	self.movingNodes = true
+	self.storedNodeOffsets = {}
+	for k, v in pairs(self:GetSelectedNodes()) do
+		local nx, ny = v:GetPos()
+		self.storedNodeOffsets[k] = {nx-x0, ny-y0}
+	end
+
+end
+
+function meta:TryGetNode(x,y)
+
+	for k,v in pairs(self.vnodes) do
+		if self:TestPoint(v, x, y) then
+			if self:IsNodeSelected(v) then
+				return v, true
+			else
+				return v, false
+			end
+		end
+	end
+	return nil, false
+
+end
+
+function meta:TryGetNodePin(node,x,y)
+
+	for k,v in pairs(node:GetVPins()) do
+		if self:TestPoint(v, x, y) then
+			return v, false
+		end
+
+		if self:TestPoint(v, x, y, "GetLiteralHitBox") then
+			return v, true
+		end
+	end
+
+end
+
+function meta:TryGetPin(x,y)
+
+	local node = self:TryGetNode(x,y)
+	local pin = node and self:TryGetNodePin(node,x,y) or nil
+	return pin
+
+end
+
+function meta:ConnectPins(vpin0, vpin1)
+
+	local nodeID0 = vpin0:GetVNode():GetNode().id
+	local nodeID1 = vpin1:GetVNode():GetNode().id
+	local pinID0 = vpin0:GetPinID()
+	local pinID1 = vpin1:GetPinID()
+	self:GetGraph():ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
+
+end
+
+function meta:TakeGrabbedPin()
+
+	local nodeID = self.grabPin:GetVNode():GetNode().id
+	local pinID = self.grabPin:GetPinID()
+	local graph = self:GetGraph()
+	for k,v in graph:Connections() do
+
+		if v[1] == nodeID and v[2] == pinID then
+
+			self.grabPin = self.vnodes[v[3]]:GetVPin(v[4])
+			graph:RemoveConnectionID(k)
+			break
+
+		elseif v[3] == nodeID and v[4] == pinID then
+
+			self.grabPin = self.vnodes[v[1]]:GetVPin(v[2])
+			graph:RemoveConnectionID(k)
+			break
+
+		end
+
+	end
+
+end
+
 function meta:LeftMouse(x,y,pressed)
+
+	local wx, wy = self:PointToWorld(x,y)
+
+	if pressed then
+
+		self:ResetGrabbedPin()
+		self.leftMouseStart = {self:PointToWorld( x,y )}
+
+		local alreadySelected = false
+		local vnode, alreadySelected = self:TryGetNode(wx, wy)
+		if vnode == nil then
+			self:ClearSelection()
+			self.dragSelecting = true
+		else
+			local vpin, literal = self:TryGetNodePin(vnode, wx, wy)
+			if vpin then
+				if literal then
+					self:EditPinLiteral(vnode, vpin)
+				else
+					self.grabPin = vpin
+					if input.IsKeyDown( KEY_LCONTROL ) then
+						self:TakeGrabbedPin()
+					end
+				end
+			else
+				if not alreadySelected then
+					self:ClearSelection()
+					self:SelectNode(vnode)
+				end
+				self:BeginMovingNodes()
+			end
+		end
+
+	else
+
+		if self.grabPin then
+			local targetPin = self:TryGetPin(wx,wy)
+			if targetPin then
+				self:ConnectPins(self.grabPin, targetPin)
+			else
+				self:OpenCreationContext(self.grabPin:GetPin())
+				return
+			end
+		end
+
+		self.grabPin = nil
+		self.leftMouseStart = nil
+		self.dragSelecting = false
+		self.movingNodes = false
+
+	end
 
 end
 
@@ -79,15 +293,96 @@ function meta:RightMouse(x,y,pressed)
 
 end
 
-function meta:OpenCreationContext()
+function meta:MiddleMouse(x,y,pressed)
+
+end
+
+function meta:KeyPress( code )
+
+	print("KEY PRESSED: " .. code)
+
+	if self:IsLocked() then return end
+
+	if code == KEY_DELETE then
+		for k, v in pairs(self:GetSelectedNodes()) do
+			if not v:GetNode():HasFlag(NTF_NoDelete) then
+				self:GetGraph():RemoveNode(k)
+			end
+		end
+		self:ClearSelection()
+	end
+
+end
+
+function meta:KeyRelease( code )
+
+end
+
+function meta:Think()
+
+	if self:IsDragSelecting() then
+		self:UpdateDragSelection()
+	end
+
+	if self.movingNodes then
+		local scaleFactor = self:GetCoordinateScaleFactor()
+		local x0,y0 = unpack(self.leftMouseStart)
+		local x1,y1 = self:PointToWorld( self.vgraph:GetMousePos() )
+
+		for k,v in pairs(self.storedNodeOffsets) do
+			local ox, oy = unpack(v)
+			self.vnodes[k]:GetNode():Move( (x1 + ox) / scaleFactor, (y1 + oy) / scaleFactor )
+		end
+	end
+
+end
+
+function meta:EditPinLiteral(vnode, vpin)
+
+	local node = vnode:GetNode()
+	local pin = vpin:GetPin()
+	local pinID = vpin:GetPinID()
+	local literalType = pin:GetLiteralType()
+	local value = node:GetLiteral( pinID )
+
+	if literalType == "bool" then
+		node:SetLiteral(pinID, value == "true" and "false" or "true")
+	end
+
+end
+
+function meta:ConnectNodeToGrabbedPin( node )
+
+	if self.grabPin ~= nil and node ~= nil then
+
+		local grabbedNode = self.grabPin:GetVNode():GetNode()
+		local pf = self.grabPin:GetPin()
+		local match = FindMatchingPin(node:GetType(), pf)
+		if match ~= nil then
+			self:GetGraph():ConnectNodes(grabbedNode.id, self.grabPin:GetPinID(), node.id, match)
+		end
+
+		self.grabPin = nil
+
+	end
+
+end
+
+function meta:OpenCreationContext( pinFilter )
 
 	if self:IsLocked() then return end
 
 	self:CloseCreationContext()
+	self:LockGrabbedPinPos()
 	--self.menu = DermaMenu( false, self )
 
 	local x, y = gui.MouseX(), gui.MouseY()
+	local wx, wy = self:PointToWorld( self.vgraph:GetMousePos() )
 
+	local scaleFactor = self:GetCoordinateScaleFactor()
+
+	wx = wx / scaleFactor
+	wy = wy / scaleFactor
 
 	local createMenu = vgui.Create("BPCreateMenu")
 
@@ -102,17 +397,12 @@ function meta:OpenCreationContext()
 	createMenu:SetPos(x,y)
 	createMenu:SetVisible( true )
 	createMenu:MakePopup()
-	createMenu:Setup( self:GetGraph() )
+	createMenu:Setup( self:GetGraph(), pinFilter )
 	createMenu.OnNodeTypeSelected = function( menu, nodeType )
 
-		local scaleFactor = self:GetCoordinateScaleFactor()
-		x, y = self.vgraph:ScreenToLocal(x, y)
-		x, y = self:PointToWorld(x, y)
-
-		x = x / scaleFactor
-		y = y / scaleFactor
-
-		self:GetGraph():AddNode(nodeType:GetName(), x, y)
+		local nodeID, node = self:GetGraph():AddNode(nodeType:GetName(), wx, wy)
+		self:ConnectNodeToGrabbedPin( node )
+		self:ResetGrabbedPin()
 
 	end
 
@@ -120,12 +410,31 @@ function meta:OpenCreationContext()
 
 end
 
-
 function meta:CloseCreationContext()
 
 	if ( IsValid( self.menu ) ) then
 		self.menu:Remove()
 	end
+
+end
+
+function meta:TestRectInclusive(target,rx,ry,rw,rh,func)
+
+	func = func or "GetHitBox"
+	local x,y,w,h = target[func](target)
+	if rx + rw < x then return false end
+	if ry + rh < y then return false end
+	if rx > x + w then return false end
+	if ry > y + h then return false end
+	return true
+
+end
+
+function meta:TestPoint(target,px,py,func)
+
+	func = func or "GetHitBox"
+	local x,y,w,h = target[func](target)
+	return px > x and px < x+w and py > y and py < y + h
 
 end
 
