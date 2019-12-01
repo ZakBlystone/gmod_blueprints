@@ -16,7 +16,7 @@ local PIN_SIZE = 24
 local PIN_HITBOX_EXPAND = 8
 local PIN_LITERAL_HITBOX_EXPAND = 8
 
-function meta:Init(vnode, editor, pinID, sideIndex)
+function meta:Init(vnode, pinID, sideIndex)
 
 	self.x = 0
 	self.y = 0
@@ -217,7 +217,7 @@ function meta:IsConnected()
 
 end
 
-function meta:DrawLiteral(x, y, str)
+function meta:DrawLiteral(x, y, alpha)
 
 	local node = self.vnode:GetNode()
 	local font = self.font
@@ -228,14 +228,14 @@ function meta:DrawLiteral(x, y, str)
 			local literal = node:GetLiteral(self.pinID) or "!!!UNASSIGNED LITERAL!!!"
 
 			local w, h = self:GetLiteralSize()
-			surface.SetDrawColor( Color(50,50,50,150) )
+			surface.SetDrawColor( Color(50,50,50,150*alpha) )
 			surface.DrawRect(x + self.literalPos,y,w,h)
 
 			if literalType == "bool" then
 				literal = (literal == "true") and "X" or ""
 			end
 
-			draw.SimpleText(literal, font, x + self.literalPos, y+PIN_SIZE/2, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			draw.SimpleText(literal, font, x + self.literalPos, y+PIN_SIZE/2, Color(255,255,255,255*alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 		end
 	end
 
@@ -244,12 +244,14 @@ function meta:DrawLiteral(x, y, str)
 
 end
 
-function meta:DrawHotspot(x,y)
+function meta:DrawHotspot(x,y,alpha)
 
 	local ox, oy = self:GetHotspotOffset()
 	local isTable = self.pin:HasFlag(PNF_Table)
 
-	surface.SetDrawColor( self.pin:GetColor() )
+	local col = self.pin:GetColor()
+
+	surface.SetDrawColor( Color(col.r, col.g, col.b, 255 * alpha) )
 	surface.DrawRect(x+ox-PIN_SIZE/2,y+oy-PIN_SIZE/2,PIN_SIZE,PIN_SIZE)
 	surface.SetDrawColor( Color(0,0,0,255) )
 
@@ -269,7 +271,7 @@ function meta:DrawHitBox()
 
 end
 
-function meta:Draw(xOffset, yOffset)
+function meta:Draw(xOffset, yOffset, alpha)
 
 	if self.currentPinType == nil or not self.currentPinType:Equal(self.pin:GetType()) then
 		self:Invalidate()
@@ -286,12 +288,12 @@ function meta:Draw(xOffset, yOffset)
 	local node = self.vnode:GetNode()
 	local font = self.font
 
-	self:DrawHotspot(x,y)
+	self:DrawHotspot(x,y,alpha)
 
 	--render.PushFilterMag( TEXFILTER.LINEAR )
 	--render.PushFilterMin( TEXFILTER.LINEAR )
 
-	if not self:IsConnected() then self:DrawLiteral(x,y) end
+	if not self:IsConnected() then self:DrawLiteral(x,y,alpha) end
 
 	--self:DrawHitBox()
 
@@ -302,9 +304,9 @@ function meta:Draw(xOffset, yOffset)
 
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
 		if self.pin:IsIn() then
-			draw.SimpleText(title, font, x + self.titlePos, y+PIN_SIZE/2, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			draw.SimpleText(title, font, x + self.titlePos, y+PIN_SIZE/2, Color(255,255,255,255*alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 		else
-			draw.SimpleText(title, font, x + self.titlePos, y+PIN_SIZE/2, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			draw.SimpleText(title, font, x + self.titlePos, y+PIN_SIZE/2, Color(255,255,255,255*alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 		end
 	end
 

@@ -7,13 +7,20 @@ local meta = bpcommon.MetaTable("bpgrapheditor")
 function meta:Init( vgraph )
 
 	self.vgraph = vgraph
-	self.vnodes = {}
+	self.graph = vgraph:GetGraph()
+	self.nodeSet = bpgraphnodeset.New( self.graph, self )
 	self.selectedNodes = {}
 	self.storedNodeOffsets = {}
 	self.leftMouseStart = nil
 	self.dragSelecting = false
 	self.grabLock = nil
 	return self
+
+end
+
+function meta:GetGraph()
+
+	return self.graph
 
 end
 
@@ -36,9 +43,9 @@ function meta:ClearSelection() self.selectedNodes = {} end
 function meta:SelectNode(vnode) self.selectedNodes[vnode] = true end
 function meta:IsNodeSelected(vnode) return self.selectedNodes[vnode] == true end
 
+function meta:GetNodeSet() return self.nodeSet end
 function meta:GetCoordinateScaleFactor() return 2 end
-function meta:GetVNodes() return self.vnodes end
-function meta:GetGraph() return self.vgraph:GetGraph() end
+function meta:GetVNodes() return self.nodeSet:GetVNodes() end
 function meta:OnGraphCallback( cb, ... )
 
 	if cb == CB_NODE_ADD then return self:NodeAdded(...) end
@@ -51,38 +58,15 @@ function meta:OnGraphCallback( cb, ... )
 
 end
 
-function meta:CreateAllNodes()
-	
-	self.nodes = {}
-	for id in self:GetGraph():NodeIDs() do self:NodeAdded(id) end
-
-end
-
-function meta:NodeAdded( id )
-
-	local graph = self:GetGraph()
-	local vnode = bpuigraphnode.New( graph:GetNode(id), graph, self )
-	self.vnodes[id] = vnode
-
-end
-
-function meta:NodeRemoved( id )
-
-	self.vnodes[id] = nil
-
-end
+function meta:CreateAllNodes() self.nodeSet:CreateAllNodes() end
+function meta:NodeAdded( id ) self.nodeSet:NodeAdded(id) end
+function meta:NodeRemoved( id ) self.nodeSet:NodeRemoved(id) end
 
 function meta:NodeMove( id, x, y ) end
 function meta:ConnectionAdded( id ) end
 function meta:ConnectionRemoved( id ) end
 function meta:GraphCleared() end
-function meta:PostModifyNode( id, action )
-
-	if self.vnodes[id] ~= nil then
-		self.vnodes[id]:Invalidate(true)
-	end
-
-end
+function meta:PostModifyNode( id, action ) self.nodeSet:PostModifyNode(id, action) end
 
 function meta:IsLocked() return self.vgraph:GetIsLocked() end
 
@@ -142,7 +126,7 @@ function meta:UpdateDragSelection()
 
 	local x,y,w,h = self:GetSelectionRect()
 	self:ClearSelection()
-	for k,v in pairs(self.vnodes) do
+	for k,v in pairs(self:GetVNodes()) do
 		if self:TestRectInclusive(v,x,y,w,h) then
 			self:SelectNode(v)
 		end
@@ -164,7 +148,7 @@ end
 
 function meta:TryGetNode(x,y)
 
-	for k,v in pairs(self.vnodes) do
+	for k,v in pairs(self:GetVNodes()) do
 		if self:TestPoint(v, x, y) then
 			if self:IsNodeSelected(v) then
 				return v, true
@@ -214,17 +198,18 @@ function meta:TakeGrabbedPin()
 	local nodeID = self.grabPin:GetVNode():GetNode().id
 	local pinID = self.grabPin:GetPinID()
 	local graph = self:GetGraph()
+	local vnodes = self:GetVNodes()
 	for k,v in graph:Connections() do
 
 		if v[1] == nodeID and v[2] == pinID then
 
-			self.grabPin = self.vnodes[v[3]]:GetVPin(v[4])
+			self.grabPin = vnodes[v[3]]:GetVPin(v[4])
 			graph:RemoveConnectionID(k)
 			break
 
 		elseif v[3] == nodeID and v[4] == pinID then
 
-			self.grabPin = self.vnodes[v[1]]:GetVPin(v[2])
+			self.grabPin = vnodes[v[1]]:GetVPin(v[2])
 			graph:RemoveConnectionID(k)
 			break
 
@@ -328,10 +313,11 @@ function meta:Think()
 		local scaleFactor = self:GetCoordinateScaleFactor()
 		local x0,y0 = unpack(self.leftMouseStart)
 		local x1,y1 = self:PointToWorld( self.vgraph:GetMousePos() )
+		local vnodes = self:GetVNodes()
 
 		for k,v in pairs(self.storedNodeOffsets) do
 			local ox, oy = unpack(v)
-			self.vnodes[k]:GetNode():Move( (x1 + ox) / scaleFactor, (y1 + oy) / scaleFactor )
+			vnodes[k]:GetNode():Move( (x1 + ox) / scaleFactor, (y1 + oy) / scaleFactor )
 		end
 	end
 

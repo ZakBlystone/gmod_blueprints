@@ -18,12 +18,14 @@ for i=1, 100 do table.insert(vsamples,
 	{Vector(0,0,0), Color(0,0,0,0)}
 ) end
 
-function DrawHermite(x0,y0,x1,y1,c0,c1,samples)
+function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
 
 	--[[if x0 < 0 and x1 < 0 then return end
 	if x0 > w and x1 > w then return end
 	if y0 < 0 and y1 < 0 then return end
 	if y0 > h and y1 > h then return end]]
+
+	alpha = alpha or 1
 
 	local width = 4
 	local px = x0
@@ -51,7 +53,7 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,samples)
 		local y = CubicHermite(y0, y1, 0, 0, t)
 
 		positions[i+1][1]:SetUnpacked(x,y,0)
-		positions[i+1][2]:SetUnpacked(Lerp(t, c0.r, c1.r), Lerp(t, c0.g, c1.g), Lerp(t, c0.b, c1.b), c0.a)
+		positions[i+1][2]:SetUnpacked(Lerp(t, c0.r, c1.r), Lerp(t, c0.g, c1.g), Lerp(t, c0.b, c1.b), c0.a * alpha)
 
 		px = x
 		py = y

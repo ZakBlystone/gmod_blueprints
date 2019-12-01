@@ -74,7 +74,7 @@ function meta:GetSize()
 	for pinID, pin, pos in node:SidePins(PD_In) do
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
-		maxPinWidthIn = math.max(maxPinWidthIn, w + PIN_EDGE_SPACING)
+		maxPinWidthIn = math.max(maxPinWidthIn, w)
 		totalPinHeightIn = totalPinHeightIn + h + PIN_SPACING
 	end
 	if totalPinHeightIn ~= 0 then totalPinHeightIn = totalPinHeightIn - PIN_SPACING end
@@ -82,7 +82,7 @@ function meta:GetSize()
 	for pinID, pin, pos in node:SidePins(PD_Out) do
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
-		maxPinWidthOut = math.max(maxPinWidthOut, w + PIN_EDGE_SPACING)
+		maxPinWidthOut = math.max(maxPinWidthOut, w)
 		totalPinHeightOut = totalPinHeightOut + h + PIN_SPACING
 	end
 	if totalPinHeightOut ~= 0 then totalPinHeightOut = totalPinHeightOut - PIN_SPACING end
@@ -101,6 +101,9 @@ function meta:GetSize()
 
 	self.width = math.max(width, maxPinWidthIn + maxPinWidthOut) + pinSideSpacing
 	self.height = footHeight + headHeight + math.max(totalPinHeightIn, totalPinHeightOut)
+
+	if maxPinWidthIn ~= 0 then self.width = self.width + PIN_EDGE_SPACING end
+	if maxPinWidthOut ~= 0 then self.width = self.width + PIN_EDGE_SPACING end
 
 	if node:GetTypeName() == "CORE_Pin" then
 		self.width = 80
@@ -135,11 +138,11 @@ function meta:CreatePins()
 
 	local node = self.node
 	for pinID, pin, pos in node:SidePins(PD_In) do
-		self.pins[pinID] = bpuigraphpin.New(self, self.editor, pinID, pos)
+		self.pins[pinID] = bpuigraphpin.New(self, pinID, pos)
 	end
 
 	for pinID, pin, pos in node:SidePins(PD_Out) do
-		self.pins[pinID] = bpuigraphpin.New(self, self.editor, pinID, pos)
+		self.pins[pinID] = bpuigraphpin.New(self, pinID, pos)
 	end
 
 end
@@ -204,7 +207,7 @@ end
 function meta:GetPos()
 
 	local x,y = self.node:GetPos()
-	local scale = self.editor:GetCoordinateScaleFactor()
+	local scale = 2 -- HARD CODE FOR NOW, FIX LATER
 	x = x * scale
 	y = y * scale
 	return x,y
@@ -213,6 +216,7 @@ end
 
 function meta:IsSelected()
 
+	if not self.editor then return false end
 	return self.editor:IsNodeSelected(self)
 
 end
@@ -225,14 +229,14 @@ function meta:GetHitBox()
 
 end
 
-function meta:DrawPins(xOffset, yOffset)
+function meta:DrawPins(xOffset, yOffset, alpha)
 
 	local x,y = self:GetPos()
 
 	self:LayoutPins()
 
 	for k,v in pairs(self.pins) do
-		v:Draw(x, y)
+		v:Draw(x+xOffset, y+yOffset, alpha)
 	end
 
 end
@@ -250,26 +254,26 @@ function meta:GetPinSpotLocation(pinID)
 
 end
 
-function meta:Draw(xOffset, yOffset)
+function meta:Draw(xOffset, yOffset, alpha)
 
 	self:Invalidate(true)
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
 
-	x = x + (xOffset or 0)
-	y = y + (yOffset or 0)
+	x = x + xOffset
+	y = y + yOffset
 
 	local node = self.node
 	local outline = 4
 	if self:IsSelected() then
-		draw.RoundedBox(16, x-outline, y-outline, w+outline*2, h+outline*2, Color(200,150,80,255))
+		draw.RoundedBox(16, x-outline, y-outline, w+outline*2, h+outline*2, Color(200,150,80,255*alpha))
 	end
 
 	local err = _G.G_BPError
 	if err ~= nil then
 		if err.nodeID == self.node.id and err.graphID == self.graph.id then
-			draw.RoundedBox(16, x, y, w, h, Color(200,80,80,255))
+			draw.RoundedBox(16, x, y, w, h, Color(200,80,80,255*alpha))
 		end
 	end
 
@@ -277,42 +281,48 @@ function meta:Draw(xOffset, yOffset)
 	local ntc = NodeTypeColors[ node:GetCodeType() ]
 	local isCompact = node:HasFlag(NTF_Compact)
 	local offset = isCompact and 0 or NODE_HEADER_HEIGHT
-	draw.RoundedBoxEx(12, x, y + offset, w, h - offset, Color(20,20,20,230), isCompact, isCompact, true, true)
+	draw.RoundedBoxEx(12, x, y + offset, w, h - offset, Color(20,20,20,230*alpha), isCompact, isCompact, true, true)
 
 
 	if not isCompact then 
-		draw.RoundedBoxEx(12, x, y, w, NODE_HEADER_HEIGHT, Color(ntc.r,ntc.g,ntc.b,180), true, true)
+		draw.RoundedBoxEx(12, x, y, w, NODE_HEADER_HEIGHT, Color(ntc.r,ntc.g,ntc.b,180*alpha), true, true)
 		surface.SetDrawColor(Color(ntc.r,ntc.g,ntc.b,50))
 		surface.DrawRect(x,y + NODE_HEADER_HEIGHT,w,2)
 	end
 	local role = node:GetRole()
 
 	if role == ROLE_Shared and false then
-		draw.RoundedBox(4, x + w - 30, y, 9, 18, Color(20,160,255,255))
-		draw.RoundedBox(4, x + w - 30, y + 9, 10, 9, Color(255,160,20,255))
+		draw.RoundedBox(4, x + w - 30, y, 9, 18, Color(20,160,255,255*alpha))
+		draw.RoundedBox(4, x + w - 30, y + 9, 10, 9, Color(255,160,20,255*alpha))
 	elseif role == ROLE_Server then
-		draw.RoundedBox(4, x + w - 30, y, 10, 18, Color(20,160,255,255))
+		draw.RoundedBox(4, x + w - 30, y, 10, 18, Color(20,160,255,255*alpha))
 	elseif role == ROLE_Client then
-		draw.RoundedBox(4, x + w - 30, y, 10, 18, Color(255,160,20,255))
+		draw.RoundedBox(4, x + w - 30, y, 10, 18, Color(255,160,20,255*alpha))
 	end
 
 	render.PushFilterMag( TEXFILTER.LINEAR )
 	render.PushFilterMin( TEXFILTER.LINEAR )
 
-	if not node:HasFlag(NTF_Compact) then
-		draw.SimpleText(self:GetDisplayName(), "NodeTitleFontShadow", x + 5, y, Color(0,0,0,255))
-		draw.SimpleText(self:GetDisplayName(), "NodeTitleFont", x + 8, y + 2)
-	else
-		-- HACK
-		if node:GetTypeName() ~= "CORE_Pin" then
-			draw.SimpleText(self:GetDisplayName(), "NodeTitleFont", x + w/2, y + h/2, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-		end
-	end
+	local b,e = pcall( function()
 
-	self:DrawPins(x,y)
+		if not node:HasFlag(NTF_Compact) then
+			draw.SimpleText(self:GetDisplayName(), "NodeTitleFontShadow", x + 5, y, Color(0,0,0,255*alpha))
+			draw.SimpleText(self:GetDisplayName(), "NodeTitleFont", x + 8, y + 2, Color(255,255,255,255*alpha))
+		else
+			-- HACK
+			if node:GetTypeName() ~= "CORE_Pin" then
+				draw.SimpleText(self:GetDisplayName(), "NodeTitleFont", x + w/2, y + h/2, Color(255,255,255,255*alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			end
+		end
+
+		self:DrawPins(xOffset, yOffset, alpha)
+
+	end)
 
 	render.PopFilterMag()
 	render.PopFilterMin()
+
+	if not b then print(e) end
 
 end
 

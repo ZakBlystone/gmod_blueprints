@@ -39,15 +39,13 @@ function PANEL:Init()
 	self:SetBackgroundColor( Color(40,40,40) )
 	self:NoClipping(true)
 
-	self.editor = bpgrapheditor.New( self )
-	self.painter = bpgraphpainter.New( self.editor, self )
-	self.nodes = {}
-	self.titleText = "Blueprint"
 	self.zoomTime = 0
 	self.mouseDragging = 0
 
 	self.callback = function(...)
-		self.editor:OnGraphCallback(...)
+		local editor = self:GetEditor()
+		if editor == nil then return end
+		editor:OnGraphCallback(...)
 	end
 
 	self:InitRenderer()
@@ -68,6 +66,12 @@ function PANEL:GetGraph()
 
 end
 
+function PANEL:GetEditor()
+
+	return self.editor
+
+end
+
 function PANEL:SetGraph( graph )
 
 	if self.graph then self.graph:RemoveListener(self.callback) end
@@ -75,6 +79,9 @@ function PANEL:SetGraph( graph )
 	self.graph = graph
 
 	graph:AddListener(self.callback, bpgraph.CB_ALL)
+
+	self.editor = bpgrapheditor.New( self )
+	self.interface = bpgrapheditorinterface.New( self.editor, self )
 
 	self.editor:CreateAllNodes()
 	self:CenterToOrigin()
@@ -104,7 +111,7 @@ function PANEL:PostAutoRefresh()
 
 	self:InitRenderer()
 	self:CenterToOrigin()
-	self.editor:CreateAllNodes()
+	if self.editor ~= nil then self.editor:CreateAllNodes() end
 
 end
 
@@ -171,7 +178,7 @@ end
 
 function PANEL:Draw2D()
 
-	self.painter:Draw(self:GetSize())
+	if self.interface ~= nil then self.interface:Draw(self:GetSize()) end
 
 end
 
@@ -198,7 +205,7 @@ function PANEL:Paint(w, h)
 	local x, y = self:LocalToScreen(0,0)
 
 	self.renderer:Draw(x,y,w,h)
-	self.painter:DrawOverlay(self:GetSize())
+	if self.interface ~= nil then self.interface:DrawOverlay(self:GetSize()) end
 
 
 	return true
@@ -262,6 +269,8 @@ end
 
 function PANEL:OnMousePressed( mouse )
 
+	if self.editor == nil then return end
+
 	self.editor:CloseCreationContext()
 
 	self:RequestFocus()
@@ -288,6 +297,8 @@ end
 
 function PANEL:OnMouseReleased( mouse )
 
+	if self.editor == nil then return end
+
 	local mx, my = self:GetMousePos()
 
 	if mouse == MOUSE_LEFT then self.editor:LeftMouse(mx,my,false) end
@@ -308,13 +319,15 @@ end
 
 function PANEL:OnKeyCodePressed( code )
 
-	print("KEYCODE: " .. tostring(code))
+	if self.editor == nil then return end
 
 	self.editor:KeyPress(code)
 
 end
 
 function PANEL:OnKeyCodeReleased( code )
+
+	if self.editor == nil then return end
 
 	self.editor:KeyRelease(code)
 

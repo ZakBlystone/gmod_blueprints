@@ -1,0 +1,140 @@
+if SERVER then AddCSLuaFile() return end
+
+module("bpgrapheditorinterface", package.seeall, bpcommon.rescope(bpgraph, bpschema))
+
+local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
+	["$basetexture"] = "dev/dev_measuregeneric01b",
+	["$vertexcolor"] = 1,
+	["$vertexalpha"] = 1,
+})
+
+local meta = bpcommon.MetaTable("bpgrapheditorinterface")
+
+function meta:Init( editor, vgraph )
+
+	self.editor = editor
+	self.vgraph = vgraph
+	self.graphPainter = bpgraphpainter.New(vgraph:GetGraph(), editor:GetNodeSet(), vgraph)
+	return self
+
+end
+
+function meta:GetEditor() return self.editor end
+function meta:GetVGraph() return self.vgraph end
+function meta:PointToWorld(x,y) return self:GetVGraph():GetRenderer():PointToWorld(x,y) end
+function meta:PointToScreen(x,y) return self:GetVGraph():GetRenderer():PointToScreen(x,y) end
+
+function meta:DrawGrabbedLine()
+
+	local editor = self:GetEditor()
+	local pin = editor:GetGrabbedPin()
+	if pin == nil then return end
+
+	local mx, my = editor:GetGrabbedPinPos()
+	local ax,ay = pin:GetVNode():GetPinSpotLocation(pin:GetPinID())
+	local apintype = pin:GetPin()
+
+	if apintype:IsOut() then
+		bprenderutils.DrawHermite( ax, ay, mx, my, 
+			apintype:GetColor(),
+			Color(255,255,255)
+		)
+	else
+		bprenderutils.DrawHermite( mx, my, ax, ay, 
+			Color(255,255,255),
+			apintype:GetColor()
+		)
+	end
+
+end
+
+function meta:GetZoomString()
+
+	local zoom = self:GetVGraph():GetZoomLevel()
+	if zoom > 0 then return "-" .. math.abs(zoom) end
+	return "+" .. math.abs(zoom)
+
+end
+
+function meta:PaintGraphTitle(w,h)
+
+	local title = self:GetEditor():GetGraph():GetTitle()
+	draw.SimpleText( title, "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+end
+
+function meta:PaintZoomIndicator(w,h)
+
+	local dt = 1 - (CurTime() - self:GetVGraph().zoomTime) / 2
+	if dt < 0 then return end
+
+	draw.SimpleText( "Zoom: " .. self:GetZoomString(), "NodePinFont", 10, h - 30, Color( 255, 255, 255, 60 * dt ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+end
+
+function meta:DrawGrid( material, pixelGridUnits, textureGridDivisions )
+
+	local size = 400000
+	local texture = material:GetTexture("$basetexture")
+	local tw = texture:GetMappingWidth()
+	local th = texture:GetMappingHeight()
+
+	local scale = (tw/pixelGridUnits) / textureGridDivisions
+
+	local u0, v0 = 0,0
+	local u1, v1 = (size*2 / tw) * scale, (size*2 / th) * scale
+
+	u0 = u0 - (u1 % 1)
+	v0 = v0 - (v1 % 1)
+
+	local du = 0.5 / tw
+	local dv = 0.5 / th
+	u0, v0 = ( u0 - du ) / ( 1 - 2 * du ), ( v0 - dv ) / ( 1 - 2 * dv )
+	u1, v1 = ( u1 - du ) / ( 1 - 2 * du ), ( v1 - dv ) / ( 1 - 2 * dv )
+
+	surface.SetMaterial(material)
+	surface.DrawTexturedRectUV( -size, -size, size*2, size*2, u0, v0, u1, v1 )
+
+end
+
+function meta:Draw(w,h)
+
+	surface.SetDrawColor(Color(80,80,80,255))
+	self:DrawGrid(BGMaterial, 15, 2)
+
+	surface.SetDrawColor(Color(150,150,150,80))
+	self:DrawGrid(BGMaterial, 15, 8)
+
+	-- Draw graph here
+	self.graphPainter:Draw()
+
+	self:DrawGrabbedLine()
+
+	surface.SetMaterial(BGMaterial)
+	surface.SetDrawColor(Color(255,255,255))
+	surface.DrawTexturedRectUV( 0, 0, 15, 15, 0, 0, 1, 1 )
+
+	local editor = self:GetEditor()
+	if editor:IsDragSelecting() then
+		local border = 4
+		local x,y,w,h = editor:GetSelectionRect()
+		surface.SetDrawColor(Color(120,150,255,20))
+		surface.DrawRect(x,y,w,h)
+
+		surface.SetDrawColor(Color(255,255,255,40))
+		surface.DrawRect(x,y,w,border)
+		surface.DrawRect(x+border,y+h-border,w-border,border)
+		surface.DrawRect(x,y+border,border,h-border)
+		surface.DrawRect(x+w-border,y+border,border,h-border)
+	end
+
+end
+
+function meta:DrawOverlay(w,h)
+
+	self:PaintGraphTitle(w,h)
+	self:PaintZoomIndicator(w,h)
+
+end
+
+function New(...) return bpcommon.MakeInstance(meta, ...) end
