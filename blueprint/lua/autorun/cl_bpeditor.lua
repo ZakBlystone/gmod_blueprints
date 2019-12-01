@@ -1,7 +1,5 @@
 if SERVER then AddCSLuaFile() return end
 
-include("cl_bpnode.lua")
-include("cl_bppin.lua")
 include("cl_bpvarcreatemenu.lua")
 include("cl_bpgrapheditmenu.lua")
 include("sh_bpschema.lua")
