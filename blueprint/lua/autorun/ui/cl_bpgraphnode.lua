@@ -290,13 +290,10 @@ function meta:Draw(xOffset, yOffset, alpha)
 	end
 	local role = node:GetRole()
 
-	if role == ROLE_Shared and false then
-		draw.RoundedBox(4, x + w - 30, y, 9, 18, Color(20,160,255,255*alpha))
-		draw.RoundedBox(4, x + w - 30, y + 9, 10, 9, Color(255,160,20,255*alpha))
-	elseif role == ROLE_Server then
-		draw.RoundedBox(4, x + w - 30, y, 10, 18, Color(20,160,255,255*alpha))
+	if role == ROLE_Server then
+		draw.RoundedBox(4, x + w - 30, y, 10, NODE_HEADER_HEIGHT, Color(20,160,255,255*alpha))
 	elseif role == ROLE_Client then
-		draw.RoundedBox(4, x + w - 30, y, 10, 18, Color(255,160,20,255*alpha))
+		draw.RoundedBox(4, x + w - 30, y, 10, NODE_HEADER_HEIGHT, Color(255,160,20,255*alpha))
 	end
 
 	render.PushFilterMag( TEXFILTER.LINEAR )

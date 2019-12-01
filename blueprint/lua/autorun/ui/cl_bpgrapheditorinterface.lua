@@ -10,11 +10,20 @@ local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
 
 local meta = bpcommon.MetaTable("bpgrapheditorinterface")
 
+local TOOLTIP_TIME = .6
+
 function meta:Init( editor, vgraph )
 
 	self.editor = editor
 	self.vgraph = vgraph
 	self.graphPainter = bpgraphpainter.New(vgraph:GetGraph(), editor:GetNodeSet(), vgraph)
+	self.hoverTimer = 0
+	self.lastMouseX = 0
+	self.lastMouseY = 0
+	self.tooltip = false
+	self.tooltipText = nil
+	self.tooltipLocation = nil
+	self.tooltipAlpha = 0
 	return self
 
 end
@@ -97,6 +106,71 @@ function meta:DrawGrid( material, pixelGridUnits, textureGridDivisions )
 
 end
 
+function meta:GetTooltipUnderCursor(mx, my)
+
+	local vnode = self:GetEditor():TryGetNode( mx, my )
+	if vnode then
+
+		local vpin = self:GetEditor():TryGetNodePin( vnode, mx, my )
+
+		if vpin then
+			return vpin:GetPin():GetDescription()
+		end
+
+		return vnode:GetNode():GetDescription()
+
+	end
+
+end
+
+function meta:DrawTooltip()
+
+	local mx, my = self:PointToWorld(self:GetVGraph():GetMousePos())
+
+	if mx == self.lastMouseX and my == self.lastMouseY then
+		self.hoverTimer = self.hoverTimer + FrameTime()
+		if self.hoverTimer > TOOLTIP_TIME and not self.tooltip then
+			self.tooltip = true
+			self.tooltipLocation = {mx, my}
+			self.tooltipText = self:GetTooltipUnderCursor(mx, my)
+		end
+	else
+		self.tooltip = false
+		self.hoverTimer = 0
+	end
+
+	self.lastMouseX = mx
+	self.lastMouseY = my
+
+	local dt = FrameTime()
+	if self.tooltip then
+
+		self.tooltipAlpha = Lerp(1 - math.exp(dt * -10), self.tooltipAlpha, 1)
+
+	else
+
+		self.tooltipAlpha = Lerp(1 - math.exp(dt * -10), self.tooltipAlpha, 0)
+
+	end
+
+	if self.tooltipLocation and self.tooltipText then
+
+		local sx, sy = self:PointToScreen( unpack(self.tooltipLocation) )
+		local font = "HudHintTextLarge"
+		local alpha = self.tooltipAlpha
+
+		sy = sy - 20 * alpha
+
+		surface.SetFont(font)
+		local tw, th = surface.GetTextSize( self.tooltipText )
+
+		draw.RoundedBox(6, sx - 5, sy - 5, tw + 10, th + 10, Color(0,0,0,255 * alpha))
+		draw.SimpleText( self.tooltipText, font, sx, sy - 1, Color( 255, 255, 255, 255 * alpha ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+	end
+
+end
+
 function meta:Draw(w,h)
 
 	surface.SetDrawColor(Color(80,80,80,255))
@@ -134,6 +208,7 @@ function meta:DrawOverlay(w,h)
 
 	self:PaintGraphTitle(w,h)
 	self:PaintZoomIndicator(w,h)
+	self:DrawTooltip()
 
 end
 
