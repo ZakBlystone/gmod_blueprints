@@ -577,7 +577,8 @@ end
 
 function meta:Compile(flags, compileErrorHandler)
 
-	local ok, res = bpcompile.Compile(self, flags)
+	local compiler = bpcompiler.New(self, flags)
+	local ok, res = compiler:Compile()
 
 	if ok then
 		self.compiled = res

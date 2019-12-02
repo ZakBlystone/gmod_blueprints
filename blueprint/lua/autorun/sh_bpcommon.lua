@@ -7,7 +7,7 @@ module("bpcommon", package.seeall)
 file.CreateDir("blueprints")
 
 ENABLE_PROFILING = true
-ENABLE_DEEP_PROFILING = false
+ENABLE_DEEP_PROFILING = true
 
 function rescope(...)
 	local scopes = {...}

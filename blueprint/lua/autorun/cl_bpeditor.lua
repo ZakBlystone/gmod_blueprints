@@ -99,7 +99,7 @@ function PANEL:Init()
 		end, Color(80,180,80), "icon16/server_go.png"},
 		{"Export Script to Clipboard", function()
 
-			local ok, str = bpcompile.Compile(self.module, bit.bor(bpcompile.CF_Standalone, bpcompile.CF_CodeString))
+			local ok, str = bpcompiler.New(self.module, bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_CodeString)):Compile()
 			if ok then 
 				SetClipboardText(str)
 			else

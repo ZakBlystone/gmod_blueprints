@@ -1,9 +1,9 @@
 if SERVER then AddCSLuaFile() end
 
-include("sh_bpcompile.lua")
+include("sh_bpcompiler.lua")
 include("sh_bpmodule.lua")
 
-module("bpnet", package.seeall, bpcommon.rescope(bpcompile))
+module("bpnet", package.seeall, bpcommon.rescope(bpcompiler))
 
 local CMD_Upload = 0
 local CMD_Download = 1
