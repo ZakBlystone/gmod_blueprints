@@ -635,8 +635,6 @@ function meta:CompileNodeSingle(nodeID)
 
 	self.finish()
 
-	popi()
-
 end
 
 -- given a non-pure function, walk back through the tree of pure nodes that contribute to its inputs
