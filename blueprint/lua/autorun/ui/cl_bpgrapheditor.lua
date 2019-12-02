@@ -330,6 +330,17 @@ function meta:MiddleMouse(x,y,pressed)
 
 end
 
+function meta:DeleteSelected()
+
+	for k, v in pairs(self:GetSelectedNodes()) do
+		if not v:GetNode():HasFlag(NTF_NoDelete) then
+			self:GetGraph():RemoveNode(k)
+		end
+	end
+	self:ClearSelection()
+
+end
+
 function meta:KeyPress( code )
 
 	print("KEY PRESSED: " .. code)
@@ -337,17 +348,13 @@ function meta:KeyPress( code )
 	if self:IsLocked() then return end
 
 	if code == KEY_DELETE then
-		for k, v in pairs(self:GetSelectedNodes()) do
-			if not v:GetNode():HasFlag(NTF_NoDelete) then
-				self:GetGraph():RemoveNode(k)
-			end
-		end
-		self:ClearSelection()
+		self:DeleteSelected()
+		return
 	end
 
 	if input.IsKeyDown( KEY_LCONTROL ) then
 
-		if code == KEY_C then
+		if code == KEY_C or code == KEY_X then
 			local selected = self:GetSelectedNodes()
 			local selectedIDs = {}
 			for k,v in pairs(selected) do table.insert(selectedIDs, v:GetNode().id) end
@@ -376,6 +383,8 @@ function meta:KeyPress( code )
 				x = x,
 				y = y,
 			}
+
+			if code == KEY_X then self:DeleteSelected() end
 
 			print("COPIED GRAPH")
 		end
