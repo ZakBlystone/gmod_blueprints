@@ -6,12 +6,17 @@ include("sh_bpdefpack.lua")
 
 module("bpdefs", package.seeall, bpcommon.rescope(bpschema))
 
+local ready = false
 local pinTypeLookup = {}
 local pinFlagLookup = {}
 local defpack = bpdefpack.New()
 
 local WITH_DOCUMENTATION = true
 local DEFPACK_LOCATION = "blueprints/bp_newdefinitionpack.txt"
+
+function Ready()
+	return ready
+end
 
 local roleLookup = {
 	["SERVER"] = ROLE_Server,
@@ -471,10 +476,6 @@ end
 bptransfer.RegisterTag("defs2", {
 	status = "Downloading Blueprint Definitions",
 })
-
-function Ready()
-	return ready
-end
 
 function Get()
 	return defpack
