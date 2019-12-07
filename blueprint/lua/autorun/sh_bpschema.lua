@@ -136,8 +136,75 @@ Defaults = {
 	[PN_Func] = "nil",
 }
 
+PinType = bppintype.New
+
 function IsPinType(v)
-	return type(v) == "table"
+	return type(v) == "table" and getmetatable(v) == bpcommon.FindMetaTable("bppintype")
+end
+
+NodePinImplicitCasts = {}
+
+function AddPinCast(from, to, bidirectional, wrapper)
+
+	local castInfo = nil
+	for _, info in pairs(NodePinImplicitCasts) do
+		if info.from == from then castInfo = info break end
+	end
+	if castInfo == nil then castInfo = NodePinImplicitCasts[table.insert(NodePinImplicitCasts, { from = from, to = {} })] end
+
+	local function Add( type )
+		table.insert(castInfo.to, {
+			type = type,
+			bidir = bidirectional,
+			wrapper = wrapper,
+		})
+	end
+
+	if type(to) == "table" and not IsPinType(to) then
+		for k,v in pairs(to) do Add(v) end
+	elseif IsPinType(to) then
+		Add(to)
+	end
+
+end
+
+AddPinCast(PinType(PN_Enum), { PinType(PN_Number) } )
+AddPinCast(PinType(PN_Number), { PinType(PN_Enum), PinType(PN_String) } )
+AddPinCast(PinType(PN_Ref, PNF_None, "Entity"), { 
+	PinType(PN_Ref, PNF_None, "Player"),
+	PinType(PN_Ref, PNF_None, "Weapon"),
+	PinType(PN_Ref, PNF_None, "NPC"),
+	PinType(PN_Ref, PNF_None, "Vehicle"),
+}, true)
+--[[
+AddPinCast(PinType(PN_Vector), PinType(PN_String), false, "tostring(@)")
+AddPinCast(PinType(PN_Bool), PinType(PN_String), false, "tostring(@)")
+AddPinCast(PinType(PN_Ref, PNF_None, "Entity"), PinType(PN_String), false, "tostring(@)")
+AddPinCast(PinType(PN_Ref, PNF_None, "Weapon"), PinType(PN_String), false, "tostring(@)")
+AddPinCast(PinType(PN_Ref, PNF_None, "NPC"), PinType(PN_String), false, "tostring(@)")
+AddPinCast(PinType(PN_Ref, PNF_None, "Vehicle"), PinType(PN_String), false, "tostring(@)")
+]]
+
+function CanCast(outPinType, inPinType)
+
+	for _, castInfo in pairs(NodePinImplicitCasts) do
+		if castInfo.from == outPinType then
+			for _, entry in pairs(castInfo.to) do
+				if entry.type == inPinType then
+					return true, entry.wrapper
+				end
+			end
+		elseif castInfo.from == inPinType then
+			for _, entry in pairs(castInfo.to) do
+				if entry.bidir and entry.type == outPinType then
+					return true, entry.wrapper
+				end
+			end
+		end
+	end
+
+	return false
+
 end
 
 function MakePin(dir, name, pintype, flags, ex, desc)
@@ -173,6 +240,7 @@ function PinRetArg( nodeType, infmt, outfmt, concat )
 end
 
 function FindMatchingPin(ntype, pf)
+
 	local informs = ntype:GetInforms()
 	local ignoreNullable = bit.band( PNF_All, bit.bnot( PNF_Nullable ) )
 	local pins = ntype:GetPins()
@@ -184,11 +252,24 @@ function FindMatchingPin(ntype, pf)
 		pins = node:GetPins()
 	end
 
+	local inPin = nil
+	local outPin = nil
+
+	if pf:GetDir() == PD_In then inPin = pf end
+	if pf:GetDir() == PD_Out then outPin = pf end
+
 	for id, pin in pairs(pins) do
+
+		if pf:GetDir() == PD_In then outPin = pin end
+		if pf:GetDir() == PD_Out then inPin = pin end
 		local sameType = pin:GetType():Equal(pf:GetType(), 0)
 		local sameFlags = pin:GetFlags(ignoreNullable) == pf:GetFlags(ignoreNullable)
 		local tableMatch = informs ~= nil and #informs > 0 and pin:HasFlag(PNF_Table) and pf:HasFlag(PNF_Table) and pin:IsType(PN_Any)
-		local anyMatch = informs ~= nil and #informs > 0 and not pin:HasFlag(PNF_Table) and not pf:HasFlag(PNF_Table)
-		if pin:GetDir() ~= pf:GetDir() and (ntype:GetName() == "CORE_Pin" or ((sameType and sameFlags) or tableMatch or anyMatch)) then return id, pin end
+		local anyMatch = informs ~= nil and #informs > 0 and not pin:HasFlag(PNF_Table) and not pf:HasFlag(PNF_Table) and pin:GetBaseType() ~= PN_Exec
+		local typeFlagTableMatch = ((sameType and sameFlags) or tableMatch or anyMatch)
+		local castMatch = sameType or CanCast(outPin:GetType(), inPin:GetType())
+		if pin:GetDir() ~= pf:GetDir() and (ntype:GetName() == "CORE_Pin" or typeFlagTableMatch or castMatch) then return id, pin end
+
 	end
+
 end

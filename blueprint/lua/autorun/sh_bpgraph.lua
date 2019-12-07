@@ -557,49 +557,6 @@ function meta:IsPinConnected(nodeID, pinID)
 
 end
 
-function meta:CheckConversion(pin0, pin1)
-
-	if pin0:GetBaseType() == PN_Ref and pin1:GetBaseType() == PN_Ref then
-		if pin0:GetSubType() == "Player" and pin1:GetSubType() == "Entity" then
-			return true
-		end
-		if pin0:GetSubType() == "Entity" and pin1:GetSubType() == "Player" then
-			return true
-		end
-		if pin0:GetSubType() == "Weapon" and pin1:GetSubType() == "Entity" then
-			return true
-		end
-		if pin0:GetSubType() == "Entity" and pin1:GetSubType() == "Weapon" then
-			return true
-		end
-		if pin0:GetSubType() == "NPC" and pin1:GetSubType() == "Entity" then
-			return true
-		end
-		if pin0:GetSubType() == "Entity" and pin1:GetSubType() == "NPC" then
-			return true
-		end
-		if pin0:GetSubType() == "Vehicle" and pin1:GetSubType() == "Entity" then
-			return true
-		end
-		if pin0:GetSubType() == "Entity" and pin1:GetSubType() == "Vehicle" then
-			return true
-		end
-	end
-
-	local cv = NodePinImplicitConversions[pin0:GetBaseType()]
-	if cv then
-		for k,v in pairs(cv) do
-			if type(v) == "table" then
-				if v[1] == pin1:GetBaseType() and v[2] == pin1:GetSubType() then return true end
-			else
-				if v == pin1:GetBaseType() then return true end
-			end
-		end
-	end
-	return false
-
-end
-
 function meta:NodePinToString(nodeID, pinID)
 
 	return self:GetNode(nodeID):ToString(pinID)
@@ -618,7 +575,8 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
 	if p0:GetDir() == p1:GetDir() then return false, "Can't connect " .. (p0:IsOut() and "m/m" or "f/f") .. " pins" end
 
-	if self:GetNode(nodeID0):GetTypeName() == "CORE_Pin" or self:GetNode(nodeID1):GetTypeName() == "CORE_Pin" then return true end
+	if self:GetNode(nodeID0):GetTypeName() == "CORE_Pin" and p0:IsType(PN_Any) then return true end
+	if self:GetNode(nodeID1):GetTypeName() == "CORE_Pin" and p1:IsType(PN_Any) then return true end
 
 	if p0:HasFlag(PNF_Table) ~= p1:HasFlag(PNF_Table) then return false, "Can't connect table to non-table pin" end
 
@@ -627,9 +585,7 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 		if p0:IsType(PN_Any) and not p1:IsType(PN_Exec) then return true end
 		if p1:IsType(PN_Any) and not p0:IsType(PN_Exec) then return true end
 
-		-- Does not work properly, take into account pin directions to determine what conversion is being attempted
-		-- Maybe rectify pin ordering so pin0 is always PD_Out, and pin1 is always PD_In
-		if self:CheckConversion(p0, p1) or self:CheckConversion(p1, p0) then
+		if bpschema.CanCast(p0:GetType(), p1:GetType()) then
 			return true
 		else
 			return false, "No explicit conversion between " .. self:NodePinToString(nodeID0, pinID0) .. " and " .. self:NodePinToString(nodeID1, pinID1)
@@ -692,6 +648,7 @@ function meta:CanAddNode(nodeType)
 
 	for _, node in self:Nodes() do
 		if node:GetTypeName() == "__Entry" and nodeType:GetName() == "__Entry" then return false end
+		if node:GetTypeName() == "__Exit" and nodeType:GetName() == "__Exit" then return false end
 	end
 
 	return true

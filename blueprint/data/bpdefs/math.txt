@@ -55,6 +55,31 @@ LIB MATH
 		PARAM operator, -
 		COMPACT
 	}
+	PURE AddAngle, SHARED
+	{
+		DISPLAY angle + angle
+		OUT Result, PN_Angles
+		CLASS VariadicOperator
+		PARAM operator, +
+		COMPACT
+	}
+	PURE SubAngle, SHARED
+	{
+		DISPLAY angle - angle
+		OUT Result, PN_Angles
+		CLASS VariadicOperator
+		PARAM operator, -
+		COMPACT
+	}
+	PURE AngleMulScalar, SHARED
+	{
+		DISPLAY angle * number
+		IN Angle, PN_Angles
+		IN Scalar, PN_Number
+		OUT Result, PN_Angles
+		CODE #1 = $1 * $2
+		COMPACT true
+	}
 	PURE AddVector, SHARED
 	{
 		DISPLAY vector + vector
