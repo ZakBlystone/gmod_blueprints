@@ -139,7 +139,12 @@ Defaults = {
 PinType = bppintype.New
 
 function IsPinType(v)
-	return type(v) == "table" and getmetatable(v) == bpcommon.FindMetaTable("bppintype")
+	if type(v) == "table" then
+		local m = getmetatable(v)
+		if m == bpcommon.FindMetaTable("bppintype") then return true end
+		if m == bpcommon.FindMetaTable("bppin") then return true end
+	end
+	return false
 end
 
 NodePinImplicitCasts = {}

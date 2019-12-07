@@ -34,7 +34,15 @@ function meta:GetFlags(mask) return bit.band(self.flags, mask or bpschema.PNF_Al
 function meta:GetColor() return bpschema.NodePinColors[ self:GetBaseType() ] or Color(0,0,0,255) end
 function meta:GetTypeName() return bpschema.PinTypeNames[ self:GetBaseType() ] or "UNKNOWN" end
 function meta:GetLiteralType() return bpschema.NodeLiteralTypes[ self:GetBaseType() ] end
-function meta:GetDefault() return bpschema.Defaults[ self:GetBaseType() ] end
+function meta:GetDefault()
+
+	if self:GetBaseType() == bpschema.PN_Enum then
+		local enum = bpdefs.Get():GetEnum( self )
+		if enum and enum.entries[1] then return enum.entries[1].key end
+	end
+	return bpschema.Defaults[ self:GetBaseType() ]
+
+end
 
 function meta:ToString()
 	local str = self:GetTypeName()
