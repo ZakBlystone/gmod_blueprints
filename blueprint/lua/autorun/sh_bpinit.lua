@@ -1,5 +1,11 @@
 AddCSLuaFile()
 
+if SERVER then
+	util.AddNetworkString("bphandshake")
+	util.AddNetworkString("bpmessage")
+	util.AddNetworkString("bpclosechannel")
+end
+
 -- CORE
 include("core/sh_bpcommon.lua")
 include("core/sh_bpbuffer.lua")

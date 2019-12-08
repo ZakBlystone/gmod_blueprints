@@ -506,6 +506,7 @@ function imeta:__SetEnabled( enable )
 	local isEnabled = activeList[guid] ~= nil
 	if isEnabled == false and enable == true then
 		--print("BINDING GAMEMODE HOOKS")
+		self:netInit()
 		self:__BindGamemodeHooks()
 		activeList[guid] = self
 		return
@@ -514,6 +515,7 @@ function imeta:__SetEnabled( enable )
 	if isEnabled == true and enable == false then
 		--print("UN-BINDING GAMEMODE HOOKS")
 		self:__UnbindGamemodeHooks()
+		self:netShutdown()
 		activeList[guid] = nil
 		return
 	end

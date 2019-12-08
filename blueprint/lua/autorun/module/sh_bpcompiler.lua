@@ -909,19 +909,30 @@ function meta:CompileNetworkCode()
 	self.begin(CTX_Network)
 
 	self.emitBlock [[
+	if SERVER then
+		util.AddNetworkString("bphandshake")
+		util.AddNetworkString("bpmessage")
+		util.AddNetworkString("bpclosechannel")
+	end
 	G_BPNetHandlers = G_BPNetHandlers or {}
 	G_BPNetChannels = G_BPNetChannels or {}
+	net.Receive("bpclosechannel", function(len, pl)
+		local channelID = net.ReadUInt(16)
+		G_BPNetChannels[channelID] = nil
+		print("Net close netchannel: " .. channelID)
+	end)
 	net.Receive("bphandshake", function(len, pl)
+		local moduleGUID = net.ReadData(16)
 		local instanceGUID = net.ReadData(16)
-		if G_BPNetHandlers[instanceGUID] then 
-			G_BPNetHandlers[instanceGUID]:netReceiveHandshake(len, pl)
+		for _, v in pairs(G_BPNetHandlers) do
+			if v.__bpm.guid ~= moduleGUID then continue end
+			v:netReceiveHandshake(instanceGUID, len, pl)
 		end
 	end)
 	net.Receive("bpmessage", function(len, pl)
 		local channelID = net.ReadUInt(16)
-		for _, handler in pairs(G_BPNetHandlers) do
-			handler:netReceiveMessage(channelID, len, pl)
-		end
+		local channel = G_BPNetChannels[channelID]
+		if channel ~= nil then channel:netReceiveMessage(len, pl) end
 	end)
 	]]
 
@@ -930,8 +941,64 @@ function meta:CompileNetworkCode()
 	self.begin(CTX_NetworkMeta)
 
 	self.emitBlock [[
+	function meta:allocChannel(id, guid)
+		if (id or -1) == -1 then for i=0, 65535 do if G_BPNetChannels[i] == nil then id = i break end end end
+		if id == -1 then error("Unable to allocate network channel") end
+		if G_BPNetChannels[id] then print("WARNING: Network channel already allocated: " .. id) end
+		G_BPNetChannels[id] = self
+		return { id = id, guid = guid }
+	end
+	function meta:closeChannel(ch)
+		if G_BPNetChannels[ch.id] == nil then return end
+		print("Free netchannel: " .. ch.id)
+		G_BPNetChannels[ch.id] = nil
+		if SERVER then
+			net.Start("bpclosechannel")
+			net.WriteUInt(ch.id, 16)
+			net.Broadcast()
+		end
+	end
 	function meta:netInit()
-
+		print("Net init")
+		table.insert(G_BPNetHandlers, self)
+		self.channels = {}
+		if CLIENT then
+			net.Start("bphandshake")
+			net.WriteData(__bpm.guid, 16)
+			net.WriteData(self.guid, 16)
+			net.SendToServer()
+		end
+	end
+	function meta:netShutdown()
+		print("Net shutdown")
+		for _, v in pairs(self.channels) do self:closeChannel(v) end
+		table.RemoveByValue(G_BPNetHandlers, self)
+	end
+	function meta:netReceiveHandshake(instanceGUID, len, pl)
+		if SERVER then
+			print("Recv handshake request from: " .. tostring(pl))
+			local chan = self:allocChannel(nil, instanceGUID)
+			self.channels[pl] = chan
+			net.Start("bphandshake")
+			net.WriteData(__bpm.guid, 16)
+			net.WriteData(instanceGUID, 16)
+			net.WriteUInt(chan.id, 16)
+			net.Send(pl)
+			print("Handshake Establish Channel: " .. chan.id .. " -> " .. __bpm.guidString(self.guid))
+		else
+			local id = net.ReadUInt(16)
+			if instanceGUID == self.guid then
+				self.netChannel = self:allocChannel(id, self.guid)
+				self.channels = {self.netChannel}
+				print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+			end
+		end
+	end
+	function meta:netStartMessage()
+		net.Start("bpmessage")
+		net.WriteUInt(self.netChannel.id)
+	end
+	function meta:netReceiveMessage(len, pl)
 	end
 	]]
 
@@ -995,6 +1062,11 @@ function meta:CompileCodeSegment()
 	local meta = BLUEPRINT_OVERRIDE_META or {}
 	if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end
 	__bpm.meta = meta
+	__bpm.guidString = function(g)
+		return ("%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X"):format(
+			g[1]:byte(),g[2]:byte(),g[3]:byte(),g[4]:byte(),g[5]:byte(),g[6]:byte(),g[7]:byte(),g[8]:byte(),
+			g[9]:byte(),g[10]:byte(),g[11]:byte(),g[12]:byte(),g[13]:byte(),g[14]:byte(),g[15]:byte(),g[16]:byte())
+	end
 	__bpm.hexBytes = function(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
 	__bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end
 	]]
@@ -1082,7 +1154,6 @@ function meta:CompileCodeSegment()
 		local instance = __bpm.new()
 		if instance.CORE_Init then instance:CORE_Init() end
 		local bpm = instance.__bpm
-
 		for k,v in pairs(bpm.events) do
 			if not v.hook or type(meta[k]) ~= "function" then continue end
 			local function call(...) return instance[k](instance, ...) end
@@ -1153,10 +1224,7 @@ function meta:CompileGraphMetaHook(graph, nodeID, name)
 	if self.ilp then
 		
 		self.emitBlock [[
-		if __bpm.checkilp() then return end
-		__ilptrip = false
-		__ilp = 0
-		__ilph = __ilph + 1
+		if __bpm.checkilp() then return end __ilptrip=false __ilp=0 __ilph=__ilph+1
 		]]
 
 	end
