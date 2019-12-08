@@ -1,6 +1,6 @@
 if SERVER then AddCSLuaFile() return end
 
-module("bprenderutils", package.seeall, bpcommon.rescope(bpgraph, bpschema, bpnodedef))
+module("bprenderutils", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
 local function CubicHermite(p0, p1, m0, m1, t)
 	local tS = t*t;

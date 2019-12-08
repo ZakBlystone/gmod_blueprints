@@ -1,11 +1,6 @@
 if SERVER then AddCSLuaFile() return end
 
-include("sh_bpschema.lua")
-include("sh_bpnodedef.lua")
-include("sh_bpnodetype.lua")
-
-module("bpuicreatemenu", package.seeall, bpcommon.rescope(bpschema, bpnodedef, bpnodetype))
-
+module("bpuicreatemenu", package.seeall, bpcommon.rescope(bpschema, bpnodetype))
 
 local PANEL = {}
 

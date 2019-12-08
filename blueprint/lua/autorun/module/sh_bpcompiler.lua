@@ -1,12 +1,6 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bpschema.lua")
-include("sh_bpgraph.lua")
-include("sh_bpnodedef.lua")
-include("sh_bpmodule.lua")
-
-module("bpcompiler", package.seeall, bpcommon.rescope(bpschema, bpnodedef, bpcommon))
+module("bpcompiler", package.seeall, bpcommon.rescope(bpschema, bpcommon))
 
 CF_None = 0
 CF_Standalone = 1
@@ -400,7 +394,7 @@ function meta:GetGraphJumpTable()
 
 end
 
--- replaces meta-code in the node type (see top of sh_bpnodedef) with references to actual variables
+-- replaces meta-code in the node type (see top of defspec.txt) with references to actual variables
 function meta:CompileVars(code, inVars, outVars, nodeID)
 
 	local str = code

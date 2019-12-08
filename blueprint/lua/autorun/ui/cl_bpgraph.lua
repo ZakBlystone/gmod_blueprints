@@ -1,8 +1,6 @@
 if SERVER then AddCSLuaFile() return end
 
-include("cl_bpgraphnode.lua")
-
-module("bpuigraph2", package.seeall, bpcommon.rescope(bpgraph, bpschema, bpnodedef))
+module("bpuigraph", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
 local PANEL = {}
 
@@ -343,4 +341,4 @@ function PANEL:OnKeyCodeReleased( code )
 
 end
 
-derma.DefineControl( "BPGraph2", "Blueprint graph renderer", PANEL, "DPanel" )
+derma.DefineControl( "BPGraph", "Blueprint graph renderer", PANEL, "DPanel" )

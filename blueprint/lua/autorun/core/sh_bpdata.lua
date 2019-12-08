@@ -1,9 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bpbuffer.lua")
-include("sh_bpstringtable.lua")
-
 module("bpdata", package.seeall, bpcommon.rescope(bit))
 
 local ENTITY_BITS = 12

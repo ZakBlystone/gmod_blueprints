@@ -1,11 +1,6 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bpschema.lua")
-include("sh_bpnodeclasses.lua")
-include("sh_bpnodetype.lua")
-
-module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef))
+module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema))
 
 bpcommon.CallbackList({
 	"NODE_PINS_UPDATED",

@@ -1,6 +1,6 @@
 if SERVER then AddCSLuaFile() return end
 
-module("bprender2d", package.seeall, bpcommon.rescope(bpgraph, bpschema, bpnodedef))
+module("bprender2d", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
 local meta = bpcommon.MetaTable("bprender2d")
 

@@ -1,8 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bpschema.lua")
-
 module("bpnodeclasses", package.seeall, bpcommon.rescope(bpschema))
 
 local nodeTypeBasePath = "autorun/nodetypes/"

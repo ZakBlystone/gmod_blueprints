@@ -1,8 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bpschema.lua")
-
 module("bpvariable", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bpvariable")

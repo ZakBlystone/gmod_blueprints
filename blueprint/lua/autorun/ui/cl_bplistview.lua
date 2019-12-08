@@ -1,7 +1,5 @@
 if SERVER then AddCSLuaFile() return end
 
-include("sh_bpcommon.lua")
-
 module("bpuilistview", package.seeall)
 
 local PANEL = {}

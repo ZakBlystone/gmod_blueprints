@@ -1,10 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bpschema.lua")
-include("sh_bpnodetypegroup.lua")
-include("sh_bpstruct.lua")
-
 module("bpdefpack", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bpdefpack")

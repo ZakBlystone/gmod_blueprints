@@ -1,9 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bpschema.lua")
-include("sh_bpvariable.lua")
-
 module("bpevent", package.seeall, bpcommon.rescope(bpschema))
 
 EVF_None = 0

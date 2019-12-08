@@ -1,9 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bptransfer.lua")
-include("sh_bpcommon.lua")
-include("sh_bpdefpack.lua")
-
 module("bpdefs", package.seeall, bpcommon.rescope(bpschema))
 
 local ready = false
@@ -426,7 +422,6 @@ local function LoadDefinitionPack(data)
 		iter = iter + 1
 		if iter % 5 == 0 then MsgC(Color(100,255,100), ".") end
 		if coroutine.status(co) == "dead" then
-			--bpnodedef.InstallDefs()
 			timer.Remove("DefLoader2")
 		end
 	end)

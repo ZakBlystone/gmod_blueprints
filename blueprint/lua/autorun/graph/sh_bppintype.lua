@@ -1,7 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-
 module("bppintype", package.seeall)
 
 local meta = bpcommon.MetaTable("bppintype")

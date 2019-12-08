@@ -1,8 +1,6 @@
 if SERVER then AddCSLuaFile() return end
 
-include("../sh_bpschema.lua")
-
-module("bptextliteraledit", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
+module("bptextliteraledit", package.seeall, bpcommon.rescope(bpschema))
 
 function EditPinLiteral( vpin )
 

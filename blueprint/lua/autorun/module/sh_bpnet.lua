@@ -1,7 +1,4 @@
-if SERVER then AddCSLuaFile() end
-
-include("sh_bpcompiler.lua")
-include("sh_bpmodule.lua")
+AddCSLuaFile()
 
 module("bpnet", package.seeall, bpcommon.rescope(bpcompiler))
 

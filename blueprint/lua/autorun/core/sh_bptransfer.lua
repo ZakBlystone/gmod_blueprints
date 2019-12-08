@@ -1,7 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-
 G_TransferPlayerStates = G_TransferPlayerStates or {}
 G_TransferTags = G_TransferTags or {}
 

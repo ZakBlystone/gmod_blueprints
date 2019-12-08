@@ -1,10 +1,5 @@
 if SERVER then AddCSLuaFile() return end
 
-include("cl_bpvarcreatemenu.lua")
-include("cl_bpgrapheditmenu.lua")
-include("sh_bpschema.lua")
-include("sh_bpmodule.lua")
-
 module("bpuieditor", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
 local PANEL = {}
@@ -386,7 +381,7 @@ function PANEL:GraphAdded( id )
 
 	--print("GRAPH ADDED: " .. id)
 	local graph = self.module:GetGraph(id)
-	local vgraph = vgui.Create("BPGraph2", self.Content)
+	local vgraph = vgui.Create("BPGraph", self.Content)
 
 	vgraph:SetGraph( graph )
 	vgraph:SetVisible(false)

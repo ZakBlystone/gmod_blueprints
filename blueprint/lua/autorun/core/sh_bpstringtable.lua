@@ -1,7 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-
 module("bpstringtable", package.seeall)
 
 local INVALID_STRING = 0

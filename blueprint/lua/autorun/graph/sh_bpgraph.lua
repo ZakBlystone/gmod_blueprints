@@ -1,13 +1,6 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bpschema.lua")
-include("sh_bpnodedef.lua")
-include("sh_bpdata.lua")
-include("sh_bplist.lua")
-include("sh_bpnode.lua")
-
-module("bpgraph", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpnodedef)) --bpnodedef is temporary
+module("bpgraph", package.seeall, bpcommon.rescope(bpcommon, bpschema))
 
 bpcommon.CallbackList({
 	"NODE_ADD",

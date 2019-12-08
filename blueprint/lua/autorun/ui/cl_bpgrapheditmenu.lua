@@ -1,13 +1,8 @@
 if SERVER then AddCSLuaFile() return end
 
-include("sh_bpschema.lua")
-include("sh_bpnodedef.lua")
-include("sh_bpgraph.lua")
-include("sh_bpstruct.lua")
+module("bpuigrapheditmenu", package.seeall, bpcommon.rescope(bpschema))
 
-module("bpuistructeditmenu", package.seeall, bpcommon.rescope(bpschema, bpnodedef))
-
-local function StructVarList( module, window, list, name )
+local function GraphVarList( module, window, list, name )
 
 	local vlist = vgui.Create( "BPListView", window )
 	vlist:SetList( list )
@@ -31,44 +26,23 @@ local function StructVarList( module, window, list, name )
 
 end
 
-function EditStructParams( struct )
+function EditGraphParams( graph )
 
 	local width = 500
 
 	local window = vgui.Create( "DFrame" )
-	window:SetTitle( "Edit Struct Pins" )
+	window:SetTitle( "Edit Graph Parameters" )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
 
-	local pins = StructVarList( struct.module, window, struct.pins, "Pins" )
-	pins:Dock( FILL )
+	local inputs = GraphVarList( graph.module, window, graph.inputs, "Inputs" )
+	local outputs = GraphVarList( graph.module, window, graph.outputs, "Outputs" )
 
-	window.OnFocusChanged = function(self, gained)
-		timer.Simple(.1, function()
-			if not (gained or vgui.FocusedHasParent(window)) then
-				self:Close()
-			end
-		end)
-	end
+	inputs:SetWide( width / 2 - 10 )
+	outputs:SetWide( width / 2 - 10 )
 
-	window:SetSize( 500, 400 )
-	window:Center()
-
-	window:MakePopup()
-
-end
-
-function EditEventParams( event )
-
-	local width = 500
-
-	local window = vgui.Create( "DFrame" )
-	window:SetTitle( "Edit Struct Pins" )
-	window:SetDraggable( true )
-	window:ShowCloseButton( true )
-
-	local pins = StructVarList( event.module, window, event.pins, "Pins" )
-	pins:Dock( FILL )
+	inputs:Dock( LEFT )
+	outputs:Dock( RIGHT )
 
 	window.OnFocusChanged = function(self, gained)
 		timer.Simple(.1, function()

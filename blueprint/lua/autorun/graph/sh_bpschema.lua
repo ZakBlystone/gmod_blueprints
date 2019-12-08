@@ -1,8 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bppin.lua")
-
 module("bpschema", package.seeall)
 
 PD_In = 0

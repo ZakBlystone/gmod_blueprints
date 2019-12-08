@@ -1,9 +1,5 @@
 AddCSLuaFile()
 
-include("sh_bpcommon.lua")
-include("sh_bpschema.lua")
-include("sh_bppin.lua")
-
 module("bpnodetype", package.seeall, bpcommon.rescope(bpschema))
 
 NC_Class = 0
