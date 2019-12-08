@@ -21,6 +21,8 @@ local CTX_Vars = "vars_"
 local CTX_Code = "code"
 local CTX_MetaEvents = "metaevents_"
 local CTX_Hooks = "hooks_"
+local CTX_Network = "network"
+local CTX_NetworkMeta = "networkmeta"
 
 local meta = bpcommon.MetaTable("bpcompiler")
 
@@ -902,6 +904,41 @@ function meta:CompileGraphEntry()
 
 end
 
+function meta:CompileNetworkCode()
+
+	self.begin(CTX_Network)
+
+	self.emitBlock [[
+	G_BPNetHandlers = G_BPNetHandlers or {}
+	G_BPNetChannels = G_BPNetChannels or {}
+	net.Receive("bphandshake", function(len, pl)
+		local instanceGUID = net.ReadData(16)
+		if G_BPNetHandlers[instanceGUID] then 
+			G_BPNetHandlers[instanceGUID]:netReceiveHandshake(len, pl)
+		end
+	end)
+	net.Receive("bpmessage", function(len, pl)
+		local channelID = net.ReadUInt(16)
+		for _, handler in pairs(G_BPNetHandlers) do
+			handler:netReceiveMessage(channelID, len, pl)
+		end
+	end)
+	]]
+
+	self.finish()
+
+	self.begin(CTX_NetworkMeta)
+
+	self.emitBlock [[
+	function meta:netInit()
+
+	end
+	]]
+
+	self.finish()
+
+end
+
 -- glues all the code together
 function meta:CompileCodeSegment()
 
@@ -915,7 +952,6 @@ function meta:CompileCodeSegment()
 	--self.emit("if SERVER then util.AddNetworkString(\"bpmessage\") end\n")
 
 	self.emitContext( CTX_MetaTables )
-	self.emit("local __guid = \"" .. bpcommon.GUIDToString(self.module:GetUID(), true) .. "\"")
 	self.emit("local __self = nil")
 
 	-- debugging and infinite-loop-protection
@@ -937,6 +973,8 @@ function meta:CompileCodeSegment()
 	-- __bpm is the module table, it contains utilities and listings for module functions
 	self.emit("local __bpm = {}")
 
+	self.emitContext( CTX_Network )
+
 	-- emit each graph's entry function
 	for id in self.module:GraphIDs() do
 		self.emitContext( CTX_Graph .. id )
@@ -957,10 +995,11 @@ function meta:CompileCodeSegment()
 	local meta = BLUEPRINT_OVERRIDE_META or {}
 	if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end
 	__bpm.meta = meta
-	__bpm.guid = __guid
 	__bpm.hexBytes = function(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
 	__bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end
 	]]
+
+	self.emit("__bpm.guid = __bpm.hexBytes(\"" .. bpcommon.GUIDToString(self.module:GetUID(), true) .. "\")")
 
 	-- delay manager (so that delays can be cancelled when a module is unloaded)
 	self.emitBlock [[
@@ -977,6 +1016,9 @@ function meta:CompileCodeSegment()
 
 	-- error management, allows for custom error handling with debug info about which node / graph the error happened in
 	self.emit("__bpm.onError = function(msg, mod, graph, node) end")
+
+	-- network meta functions
+	self.emitContext( CTX_NetworkMeta )
 
 	-- update function, runs delays and resets the ilp recursion value for hooks
 	self.emit("function meta:update()")
@@ -1002,14 +1044,24 @@ function meta:CompileCodeSegment()
 		self.emitContext( k )
 	end
 
+	-- minified guid generator
+	self.emitBlock [[
+	__bpm.makeGUID = function()
+		local d,r,s,u,a=os.date("*t"),math.random(0,2^32-1),_G.__guidsalt or 0,os.clock()
+		local o,c,b,l,y="",0,0,bit.lshift,system a = function(v, n) for i=0,n do if b%8==0
+		and i~=0 then o=o .. string.char(c) c=0 end if i==n then continue end
+		c=c+((bit.band(v,l(1,i))~=0)and l(1,b%8)or 0) b=b+1 end end a(d.day, 5) a(d.hour, 5)
+		a(d.min, 6) a(d.month, 4) a(d.sec, 6) a(d.year, 12) a(r, 32) a(s, 32) a(u*1000, 24)
+		a(y.IsWindows() and 1 or 0, 1) a(y.IsLinux() and 1 or 0, 1) _G.__guidsalt=s+1 return o
+	end
+	]]
+
 	-- constructor
 	self.emit("__bpm.new = function()")
 	self.emit("\tlocal instance = setmetatable({}, meta)")
 	self.emit("\tinstance.delays = {}")
 	self.emit("\tinstance.__bpm = __bpm")
-	if bit.band(self.flags, CF_Standalone) ~= 0 then
-		self.emit("\tinstance.__guid = __guid")
-	end
+	self.emit("\tinstance.guid = __bpm.makeGUID()")
 	self.emitContext( CTX_Vars .. "global", 1 )
 	self.emit("\treturn instance")
 	self.emit("end")
@@ -1258,6 +1310,8 @@ function meta:Compile()
 	for _, graph in pairs( self.graphs ) do
 		Profile("graph", self.CompileGraph, self, graph )
 	end
+
+	self:CompileNetworkCode()
 
 	-- compile main code segment
 	Profile("code-segment", self.CompileCodeSegment, self)

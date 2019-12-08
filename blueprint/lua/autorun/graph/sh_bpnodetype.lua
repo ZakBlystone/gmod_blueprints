@@ -12,6 +12,17 @@ local meta = bpcommon.MetaTable("bpnodetype")
 bpcommon.AddFlagAccessors(meta)
 
 meta.__tostring = function(self) return self:ToString() end
+meta.__eq = function(a, b)
+	local aPins = a:GetPins()
+	local bPins = b:GetPins()
+	if #aPins ~= #bPins then return false end
+	for k, pin in pairs(aPins) do
+		if not bPins[k] then return false end
+		if pin:GetName() ~= bPins[k]:GetName() then return false end
+		if pin:GetType() ~= bPins[k]:GetType() then return false end
+	end
+	return true
+end
 
 local PIN_INPUT_EXEC = MakePin( PD_In, "Exec", PN_Exec )
 local PIN_OUTPUT_EXEC = MakePin( PD_Out, "Exec", PN_Exec )

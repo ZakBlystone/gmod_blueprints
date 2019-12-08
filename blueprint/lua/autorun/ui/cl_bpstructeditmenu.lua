@@ -58,7 +58,7 @@ function EditEventParams( event )
 	local width = 500
 
 	local window = vgui.Create( "DFrame" )
-	window:SetTitle( "Edit Struct Pins" )
+	window:SetTitle( "Edit Event" )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
 

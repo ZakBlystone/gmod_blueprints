@@ -458,12 +458,6 @@ function imeta:__GetModule()
 
 end
 
-function imeta:__GetUID()
-
-	return self.__guid
-
-end
-
 function imeta:__BindGamemodeHooks()
 
 	local meta = getmetatable(self)
@@ -474,7 +468,7 @@ function imeta:__BindGamemodeHooks()
 	for k,v in pairs(bpm.events) do
 		if not v.hook or type(meta[k]) ~= "function" then continue end
 		local function call(...) return self[k](self, ...) end
-		local key = "bphook_" .. GUIDToString(self:__GetUID(), true)
+		local key = "bphook_" .. GUIDToString(self.guid, true)
 		--print("BIND KEY: " .. v.hook .. " : " .. key)
 		hook.Add(v.hook, key, call)
 	end
@@ -490,7 +484,7 @@ function imeta:__UnbindGamemodeHooks()
 
 	for k,v in pairs(bpm.events) do
 		if not v.hook or type(meta[k]) ~= "function" then continue end
-		local key = "bphook_" .. GUIDToString(self:__GetUID(), true)
+		local key = "bphook_" .. GUIDToString(self.guid, true)
 		--print("UNBIND KEY: " .. v.hook .. " : " .. key)
 		hook.Remove(v.hook, key, false)
 	end
@@ -504,7 +498,7 @@ end
 function imeta:__SetEnabled( enable )
 
 	local modID = self.__module:GetUID()
-	local guid = self:__GetUID()
+	local guid = self.guid
 
 	activeModules[modID] = activeModules[modID] or {}
 
@@ -543,13 +537,12 @@ function meta:SetEnabled( enable )
 
 end
 
-function meta:Instantiate(guid)
+function meta:Instantiate()
 
 	local instance = self:Get().new()
 	local meta = table.Copy(getmetatable(instance))
 	for k,v in pairs(imeta) do meta[k] = v end
 	setmetatable(instance, meta)
-	instance.__guid = guid or GUID()
 	instance.__module = self
 	return instance
 
@@ -560,7 +553,7 @@ function meta:GetSingleton()
 	self.singleton = self.singleton or (self:IsValid() and self:Instantiate() or nil)
 	if not self.singleton then return end
 
-	self.singleton.__guid = self.uniqueID
+	self.singleton.guid = self:Get().guid
 	return self.singleton
 
 end

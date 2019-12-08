@@ -289,7 +289,7 @@ function PANEL:Init()
 	self.EventList.PopulateMenuItems = function(pnl, items, id)
 		prev(pnl, items, id)
 		table.insert(items, {
-			name = "Edit Pins",
+			name = "Edit Event",
 			func = function() self:EditEventPins(id) end,
 		})
 	end

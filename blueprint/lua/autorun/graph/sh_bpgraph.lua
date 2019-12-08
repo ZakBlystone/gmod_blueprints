@@ -641,7 +641,7 @@ function meta:CanAddNode(nodeType)
 
 	for _, node in self:Nodes() do
 		if node:GetTypeName() == "__Entry" and nodeType:GetName() == "__Entry" then return false end
-		if node:GetTypeName() == "__Exit" and nodeType:GetName() == "__Exit" then return false end
+		if node:GetTypeName() == "__Exit" and nodeType:GetName() == "__Exit" and node:GetType() ~= nodeType then return false end
 	end
 
 	return true

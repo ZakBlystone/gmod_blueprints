@@ -330,18 +330,6 @@ function MakeObservable(obj, cblist)
 	end
 end
 
---[[
-	day/mo = 5bits-> 6bits
-	hour = 5bits  -> 6bits
-	minute = 6bits
-	month = 4bits -> 6bits
-	second = 6bits
-	year = 12bits -> 12bits
-	rand = 32bits -> 24bits
-	salt = 32bits -> 24bits
-	uptime = 24bits
-]]
-
 function GUIDToString( guid, raw )
 
 	local fmt = nil
@@ -370,30 +358,14 @@ function GUIDToString( guid, raw )
 
 end
 
-_G.__guidsalt = _G.__guidsalt or 0
 function GUID()
 
-	_G.__guidsalt = _G.__guidsalt + 1
-	local dd = os.date("*t")
-	local rand = math.random(0, 2^32-1)
-	local salt = _G.__guidsalt
-	local uptime = os.clock() * 1000
-
-	local out = bpdata.OutStream(true)
-	out:WriteBits(dd.day, 5)
-	out:WriteBits(dd.hour, 5)
-	out:WriteBits(dd.min, 6)
-	out:WriteBits(dd.month, 4)
-	out:WriteBits(dd.sec, 6)
-	out:WriteBits(dd.year, 12)
-	out:WriteBits(rand, 32)
-	out:WriteBits(salt, 32)
-	out:WriteBits(uptime, 24)
-	out:WriteBits(system.IsWindows() and 1 or 0, 1)
-	out:WriteBits(system.IsLinux() and 1 or 0, 1)
-
-	local str, len = out:GetString(false, false)
-	return str
+	local d,r,s,u,a=os.date("*t"),math.random(0,2^32-1),_G.__guidsalt or 0,os.clock()
+	local o,c,b,l,y="",0,0,bit.lshift,system a = function(v, n) for i=0,n do if b%8==0
+	and i~=0 then o=o .. string.char(c) c=0 end if i==n then continue end
+	c=c+((bit.band(v,l(1,i))~=0)and l(1,b%8)or 0) b=b+1 end end a(d.day, 5) a(d.hour, 5)
+	a(d.min, 6) a(d.month, 4) a(d.sec, 6) a(d.year, 12) a(r, 32) a(s, 32) a(u*1000, 24)
+	a(y.IsWindows() and 1 or 0, 1) a(y.IsLinux() and 1 or 0, 1) _G.__guidsalt=s+1 return o
 
 end
 
