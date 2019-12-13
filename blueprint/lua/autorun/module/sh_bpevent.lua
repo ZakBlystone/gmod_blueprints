@@ -77,7 +77,12 @@ function meta:CallNodeType()
 			for _, pin in node:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) end) do
 				local nthunk = GetNetworkThunk(pin)
 				if nthunk ~= nil then
-					node.send.emit(nthunk.write:gsub("@", compiler:GetVarCode(compiler:GetPinVar(pin)) ))
+					local vcode = compiler:GetVarCode(compiler:GetPinVar(pin))
+					if pin:HasFlag(PNF_Table) then
+						node.send.emit("__self:netWriteTable( function(x) " .. nthunk.write:gsub("@","x") ..  " end, " .. vcode .. ")")
+					else
+						node.send.emit(nthunk.write:gsub("@", vcode ))
+					end
 				end
 			end
 			node.send.emit("if SERVER then net.Broadcast() else net.SendToServer() end")
@@ -93,7 +98,11 @@ function meta:CallNodeType()
 			for _, pin in node:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) end) do
 				local nthunk = GetNetworkThunk(pin)
 				if nthunk ~= nil then
-					table.insert(t, nthunk.read)
+					if pin:HasFlag(PNF_Table) then
+						table.insert(t, "__self:netReadTable( function(x) return " .. nthunk.read .. " end )")
+					else
+						table.insert(t, nthunk.read)
+					end
 				else
 					table.insert(t, "nil")
 				end

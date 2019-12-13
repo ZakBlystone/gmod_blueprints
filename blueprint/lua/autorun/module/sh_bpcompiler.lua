@@ -1045,7 +1045,6 @@ function meta:CompileNetworkCode()
 	function meta:netReceiveHandshake(instanceGUID, len, pl)
 		if SERVER then
 			local ready = net.ReadBool()
-
 			if not ready and instanceGUID == self.guid then
 				print("Recv handshake request from: " .. tostring(pl))
 				net.Start("bphandshake")
@@ -1071,6 +1070,20 @@ function meta:CompileNetworkCode()
 				self.netReady = true
 			end
 		end
+	end
+	function meta:netWriteTable(f, t)
+		net.WriteUInt(#t, 24)
+		for i=1, #t do
+			f(t[i])
+		end
+	end
+	function meta:netReadTable(f)
+		local t = {}
+		local n = net.ReadUInt(24)
+		for i=1, n do
+			table.insert(t, f())
+		end
+		return t
 	end
 	function meta:netStartMessage(id)
 		net.Start("bpmessage")

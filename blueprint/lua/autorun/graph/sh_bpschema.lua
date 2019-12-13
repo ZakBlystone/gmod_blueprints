@@ -156,10 +156,11 @@ function AddNetworkThunk(pinType, read, write)
 
 end
 
-function GetNetworkThunk(pinType)
+function GetNetworkThunk(pinType, mask)
 
+	mask = mask or 0
 	for k,v in pairs(NodePinNetworkThunks) do
-		if v.pinType:Equal(pinType, PNF_Table) then return v end
+		if v.pinType:Equal(pinType, mask) then return v end
 	end
 	return nil
 
@@ -207,6 +208,7 @@ AddNetworkThunk(PinType(PN_String), "net.ReadString()", "net.WriteString(@)")
 AddNetworkThunk(PinType(PN_Color), "net.ReadColor()", "net.WriteColor(@)")
 AddNetworkThunk(PinType(PN_Angles), "net.ReadAngle()", "net.WriteAngle(@)")
 AddNetworkThunk(PinType(PN_Enum), "net.ReadUInt(24)", "net.WriteUInt(@, 24)")
+AddNetworkThunk(PinType(PN_Ref, PNF_None, "Player"), "net.ReadEntity()", "net.WriteEntity(@)")
 AddNetworkThunk(PinType(PN_Ref, PNF_None, "Entity"), "net.ReadEntity()", "net.WriteEntity(@)")
 AddNetworkThunk(PinType(PN_Ref, PNF_None, "Weapon"), "net.ReadEntity()", "net.WriteEntity(@)")
 AddNetworkThunk(PinType(PN_Ref, PNF_None, "NPC"), "net.ReadEntity()", "net.WriteEntity(@)")
