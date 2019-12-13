@@ -63,6 +63,53 @@ function meta:CallNodeType()
 	local ret, arg, pins = PinRetArg( ntype )
 	ntype:SetCode( "__self:__Event" .. self.id .. "(" .. arg .. ")" )
 
+	ntype.Compile = function(node, compiler, pass)
+
+		print("COMPILE PASS: " .. tostring(pass))
+
+		if pass == bpcompiler.CP_PREPASS then
+			node.recv = compiler:AllocThunk(bpcompiler.TK_NETCODE)
+			node.send = compiler:AllocThunk(bpcompiler.TK_GENERIC)
+			node.send.begin()
+
+			node.send.emit("__self:netPostCall( function()")
+			node.send.emit("__self:netStartMessage(" .. node.recv.id .. ")")
+			for _, pin in node:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) end) do
+				local nthunk = GetNetworkThunk(pin)
+				if nthunk ~= nil then
+					node.send.emit(nthunk.write:gsub("@", compiler:GetVarCode(compiler:GetPinVar(pin)) ))
+				end
+			end
+			node.send.emit("if SERVER then net.Broadcast() else net.SendToServer() end")
+			node.send.emit("end)")
+
+			node.send.emit("goto popcall")
+			node.send.finish()
+
+			node.recv.begin()
+			node.recv.emit("if msgID == " .. node.recv.id .. " then")
+			local call = "self:__Event" .. self.id .. "( "
+			local t = {}
+			for _, pin in node:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) end) do
+				local nthunk = GetNetworkThunk(pin)
+				if nthunk ~= nil then
+					table.insert(t, nthunk.read)
+				else
+					table.insert(t, "nil")
+				end
+			end
+			call = call .. table.concat(t, ", ") .. " )"
+			node.recv.emit(call)
+			node.recv.emit("end")
+			node.recv.finish()
+		elseif pass == bpcompiler.CP_MAINPASS then
+			compiler.emitContext(node.send.context)
+		elseif pass == bpcompiler.CP_NETCODE then
+			compiler.emitContext(node.recv.context)
+		end
+
+	end
+
 	return ntype
 
 end
@@ -103,7 +150,7 @@ end
 function meta:ReadFromStream(stream, mode, version)
 
 	self.pins:ReadFromStream(stream, mode, version)
-	self.bits = stream:ReadBits(8)
+	self.flags = stream:ReadBits(8)
 	return self
 
 end

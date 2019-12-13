@@ -919,7 +919,7 @@ function meta:CopyInto(other)
 		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs, true )
 		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs, true )
 
-		for _, node in other:Nodes() do node.graph = other tostring(other) end
+		for _, node in other:Nodes() do node.graph = other end
 		for _, node in self:Nodes() do node.graph = self end
 
 		for _, c in self:Connections() do

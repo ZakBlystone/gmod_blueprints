@@ -100,7 +100,7 @@ function meta:ToString(pinID)
 	else
 		str = ntype:GetName()
 		if pinID then
-			local p = self:GetPin(pinID)
+			local p = type(pinID) == "table" and pinID or self:GetPin(pinID)
 			if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end
 			if p then str = str .. "." .. p:ToString(true,true) end
 		end
@@ -125,6 +125,11 @@ function meta:UpdatePins()
 	self:GeneratePins(self.pinCache)
 	self:SetLiteralDefaults()
 	self:FireListeners(CB_NODE_PINS_UPDATED)
+
+	for k,v in pairs(self:GetPins()) do
+		v.node = self
+		v.id = k
+	end
 
 end
 

@@ -144,6 +144,27 @@ function IsPinType(v)
 	return false
 end
 
+NodePinNetworkThunks = {}
+
+function AddNetworkThunk(pinType, read, write)
+
+	table.insert(NodePinNetworkThunks, {
+		read = read,
+		write = write,
+		pinType = pinType,
+	})
+
+end
+
+function GetNetworkThunk(pinType)
+
+	for k,v in pairs(NodePinNetworkThunks) do
+		if v.pinType:Equal(pinType, PNF_Table) then return v end
+	end
+	return nil
+
+end
+
 NodePinImplicitCasts = {}
 
 function AddPinCast(from, to, bidirectional, wrapper)
@@ -178,6 +199,19 @@ AddPinCast(PinType(PN_Ref, PNF_None, "Entity"), {
 	PinType(PN_Ref, PNF_None, "NPC"),
 	PinType(PN_Ref, PNF_None, "Vehicle"),
 }, true)
+
+AddNetworkThunk(PinType(PN_Bool), "net.ReadBool()", "net.WriteBool(@)")
+AddNetworkThunk(PinType(PN_Vector), "net.ReadVector()", "net.WriteVector(@)")
+AddNetworkThunk(PinType(PN_Number), "net.ReadFloat()", "net.WriteFloat(@)")
+AddNetworkThunk(PinType(PN_String), "net.ReadString()", "net.WriteString(@)")
+AddNetworkThunk(PinType(PN_Color), "net.ReadColor()", "net.WriteColor(@)")
+AddNetworkThunk(PinType(PN_Angles), "net.ReadAngle()", "net.WriteAngle(@)")
+AddNetworkThunk(PinType(PN_Enum), "net.ReadUInt(24)", "net.WriteUInt(@, 24)")
+AddNetworkThunk(PinType(PN_Ref, PNF_None, "Entity"), "net.ReadEntity()", "net.WriteEntity(@)")
+AddNetworkThunk(PinType(PN_Ref, PNF_None, "Weapon"), "net.ReadEntity()", "net.WriteEntity(@)")
+AddNetworkThunk(PinType(PN_Ref, PNF_None, "NPC"), "net.ReadEntity()", "net.WriteEntity(@)")
+AddNetworkThunk(PinType(PN_Ref, PNF_None, "Vehicle"), "net.ReadEntity()", "net.WriteEntity(@)")
+AddNetworkThunk(PinType(PN_Ref, PNF_None, "VMatrix"), "net.ReadMatrix()", "net.WriteMatrix(@)")
 --[[
 AddPinCast(PinType(PN_Vector), PinType(PN_String), false, "tostring(@)")
 AddPinCast(PinType(PN_Bool), PinType(PN_String), false, "tostring(@)")

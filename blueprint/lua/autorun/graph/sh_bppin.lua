@@ -51,6 +51,29 @@ function meta:GetDefault(...) return self.default or self:GetType():GetDefault(.
 	return HSVToColor(math.fmod((self:GetBaseType() + CurTime()) * 80, 360), .75, 1)
 end]]
 
+function meta:GetNode()
+
+	return self.node
+
+end
+
+function meta:GetConnectedPins()
+
+	local node = self:GetNode()
+	local graph = node.graph
+	local nodeID = node.id
+	local pinID = self.id
+	local out = {}
+	local dir = self:GetDir()
+	for k, v in graph:Connections() do
+		if dir == bpschema.PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
+		if dir == bpschema.PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
+		table.insert(out, graph:GetNode( dir == bpschema.PD_In and v[1] or v[3]):GetPin( dir == bpschema.PD_In and v[2] or v[4]))
+	end
+	return out
+
+end
+
 function meta:WriteToStream(stream)
 
 	assert(stream:IsUsingStringTable())

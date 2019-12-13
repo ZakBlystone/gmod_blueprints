@@ -11,18 +11,26 @@ CF_CodeString = 16
 
 CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
 
+CP_PREPASS = 0
+CP_MAINPASS = 1
+CP_NETCODE = 2
+
+TK_GENERIC = 0
+TK_NETCODE = 1
+
 -- Context prefixes, a context stores lines of code
-local CTX_SingleNode = "singlenode_"
-local CTX_FunctionNode = "functionnode_"
-local CTX_Graph = "graph_"
-local CTX_JumpTable = "jumptable_"
-local CTX_MetaTables = "metatables_"
-local CTX_Vars = "vars_"
-local CTX_Code = "code"
-local CTX_MetaEvents = "metaevents_"
-local CTX_Hooks = "hooks_"
-local CTX_Network = "network"
-local CTX_NetworkMeta = "networkmeta"
+CTX_SingleNode = "singlenode_"
+CTX_FunctionNode = "functionnode_"
+CTX_Graph = "graph_"
+CTX_JumpTable = "jumptable_"
+CTX_MetaTables = "metatables_"
+CTX_Vars = "vars_"
+CTX_Code = "code"
+CTX_MetaEvents = "metaevents_"
+CTX_Hooks = "hooks_"
+CTX_Network = "network"
+CTX_NetworkMeta = "networkmeta"
+CTX_Thunk = "thunk"
 
 local meta = bpcommon.MetaTable("bpcompiler")
 
@@ -88,6 +96,7 @@ end
 
 function meta:Setup()
 
+	self.thunks = {}
 	self.compiledNodes = {}
 	self.graphs = {}
 	self.vars = {}
@@ -103,6 +112,34 @@ function meta:Setup()
 	self.guidString = bpcommon.GUIDToString(self.module:GetUID(), true)
 
 	return self
+
+end
+
+function meta:AllocThunk(type)
+	
+	self.thunks[type] = self.thunks[type] or {}
+	local t = self.thunks[type]
+
+	local id = #t + 1
+	table.insert(t, {
+		context = CTX_Thunk .. "_" .. type .. "_" .. id,
+		begin = function()
+			self.begin(CTX_Thunk .. "_" .. type .. "_" .. id)
+		end,
+		emit = self.emit,
+		emitBlock = self.emitBlock,
+		finish = function()
+			self.finish()
+		end,
+		id = id,
+	})
+	return t[id]
+
+end
+
+function meta:GetThunk(type, id)
+
+	return self.thunks[type][id]
 
 end
 
@@ -123,7 +160,7 @@ local nodeTypeEnumerateData = {
 	[NT_Special] = { unique = true },
 }
 
-local function SanitizeString(str)
+function SanitizeString(str)
 
 	local r = str:gsub("\\n", "__CH~NL__")
 	r = r:gsub("\\", "\\\\")
@@ -135,7 +172,7 @@ local function SanitizeString(str)
 
 end
 
-local function DesanitizeCodedString(str)
+function DesanitizeCodedString(str)
 
 	for k,v in pairs(codenames) do
 		str = str:gsub(v, k == "%" and "%%" or k)
@@ -346,24 +383,29 @@ function meta:FindLocalVarForNode(nodeID, vname)
 end
 
 -- find the variable that is assigned to the given node/pin
-function meta:FindVarForPin(nodeID, pinID, noLiteral)
+function meta:FindVarForPin(pin, noLiteral)
 
 	for k,v in pairs(self.vars) do
 
 		if v.literal == true and noLiteral then continue end
 		if v.localvar then continue end
 		if v.graph ~= self.graph.id then continue end
-		if v.node == nodeID and v.pin == pinID then return v end
+		if pin ~= nil then 
+			if v.node == pin:GetNode().id and v.pin == pin.id then return v end
+		else
+			if v.node == nil and v.pin == nil then return v end
+		end
 
 	end
 
 end
 
+
 -- basically just adds a self prefix for global variables to scope them into the module
 function meta:GetVarCode(var, jump)
 
 	if var == nil then
-		error("Failed to get var for " .. self.currentNode:ToString() .. " ``" .. self.currentCode .. "``" )
+		error("Failed to get var for " .. self.currentNode:ToString() .. " ``" .. tostring(self.currentCode) .. "``" )
 	end
 
 	local s = ""
@@ -371,19 +413,6 @@ function meta:GetVarCode(var, jump)
 	if var.literal then return s .. var.var end
 	if var.global or var.isFunc or var.keyAsGlobal then return "__self." .. var.var end
 	return s .. var.var
-
-end
-
--- returns all connections to a given node's pin
-function meta:GetPinConnections(pinDir, nodeID, pinID)
-
-	local out = {}
-	for k, v in self.graph:Connections() do
-		if pinDir == PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
-		if pinDir == PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
-		table.insert(out, v)
-	end
-	return out
 
 end
 
@@ -457,6 +486,69 @@ function meta:CompileVars(code, inVars, outVars, nodeID)
 
 end
 
+-- If pin is connected, gets the connected var. Otherwise creates a literal if applicable
+function meta:GetPinVar(pin)
+
+	local node = pin:GetNode()
+	local codeType = node:GetCodeType()
+	local pins = pin:GetConnectedPins()
+
+	if pin:IsIn() then
+
+		if #pins == 1 then
+
+			local var = self:FindVarForPin(pins[1])
+			if var == nil then error("COULDN'T FIND INPUT VAR FOR " .. pins[1]:GetNode():ToString(pins[1])) end
+			return var
+
+		-- if there are no connections, try to assign literals on this pin
+		elseif #pins == 0 then
+
+			local literalVar = self:FindVarForPin(pin)
+			if literalVar ~= nil then
+				return literalVar
+			else
+				-- unconnected nullable pins just have their value set to nil
+				local nullable = pin:HasFlag(PNF_Nullable)
+				if nullable then
+					return { var = "nil" }
+				else
+					error("Pin must be connected: " .. node:ToString(pinID))
+				end
+			end
+		else
+			error("No handler for multiple input pins")
+		end
+
+	elseif pin:IsOut() then
+
+		if codeType == NT_Event then
+			return self:FindVarForPin(pin)
+		else
+
+			if pin:IsType(PN_Exec) then
+
+				-- unconnected exec pins jump to ::jmp_0:: which just pops the stack
+				return {
+					var = #pins == 0 and "0" or pins[1]:GetNode().id,
+					jump = true,
+				}
+
+			else
+
+				-- find output variable to write to on this pin
+				local var = self:FindVarForPin(pin)
+				if var == nil then error("Unable to find var for pin " .. node:ToString(pinID)) end
+				return var
+
+			end
+
+		end
+
+	end
+
+end
+
 -- compiles a single node
 function meta:CompileNodeSingle(nodeID)
 
@@ -510,7 +602,7 @@ function meta:CompileNodeSingle(nodeID)
 			ipin = ipin + 1
 		end
 
-		local ret = self:FindVarForPin(nil, nil, true)
+		local ret = self:FindVarForPin(nil, true)
 		code = code .. self:GetVarCode(ret) .. " = true\n"
 		code = code .. "goto __terminus\n"
 
@@ -531,80 +623,24 @@ function meta:CompileNodeSingle(nodeID)
 
 	-- iterate through all input pins
 	for pinID, pin, pos in node:SidePins(PD_In) do
-		local pinType = self.graph:GetPinType( nodeID, pinID )
+		local pinType = pin:GetType()
 		if pinType:IsType(PN_Exec) then continue end
 
 		if codeType == NT_FuncOutput then
-			outVars[pos] = self:FindVarForPin(nodeID, pinID, true)
+			outVars[pos] = self:FindVarForPin(pin, true)
 		end
 
-
-		-- iterate through all of this pin's connections, and find variables on the pins it's connected to.
-		local connections = self:GetPinConnections(PD_In, nodeID, pinID)
-		for _, v in pairs(connections) do
-
-			local var = self:FindVarForPin(v[1], v[2])
-			if var then
-				inVars[pos] = var
-			else
-				error("COULDN'T FIND INPUT VAR FOR " .. node:ToString(pinID))
-			end
-
-		end
-
-		-- if there are no connections, try to assign literals on this pin
-		if #connections == 0 then
-
-			local literalVar = self:FindVarForPin(nodeID, pinID)
-			if literalVar ~= nil then
-				inVars[pos] = literalVar
-			else
-				-- unconnected nullable pins just have their value set to nil
-				local nullable = pin:HasFlag(PNF_Nullable)
-				if nullable then
-					inVars[pos] = { var = "nil" }
-				else
-					error("Pin must be connected: " .. node:ToString(pinID))
-				end
-			end
-		end
+		inVars[pos] = self:GetPinVar(pin)
 
 	end
 
 	-- iterate through all output pins
 	for pinID, pin, pos in node:SidePins(PD_Out) do
 		
-		local pinType = self.graph:GetPinType( nodeID, pinID )
-		local connections = self:GetPinConnections(PD_Out, nodeID, pinID)
-		if codeType == NT_Event then
+		local pinType = pin:GetType()
+		local pins = pin:GetConnectedPins()
 
-			-- assign return values for all event pins
-			outVars[pos] = self:FindVarForPin(nodeID, pinID)
-			--if outVars[lookupID] ~= nil then PrintTable(outVars[lookupID]) end
-
-		else
-
-			if pinType:IsType(PN_Exec) then
-
-				-- unconnect exec pins jump to ::jmp_0:: which just pops the stack
-				outVars[pos] = {
-					var = #connections == 0 and "0" or connections[1][3],
-					jump = true,
-				}
-
-			else
-
-				-- find output variable to write to on this pin
-				local var = self:FindVarForPin(nodeID, pinID)
-				if var then 
-					outVars[pos] = var
-				else
-					error("Unable to find var for pin " .. node:ToString(pinID))
-				end
-
-			end
-
-		end
+		outVars[pos] = self:GetPinVar(pin)
 
 	end	
 
@@ -624,9 +660,17 @@ function meta:CompileNodeSingle(nodeID)
 		self.emit("__dbgnode = " .. nodeID)
 	end
 
-	-- break the code apart and emit each line
-	for _, l in pairs(string.Explode("\n", code)) do
-		self.emit(l)
+	-- node can compile itself if needed
+	if self:RunNodeCompile(node, CP_MAINPASS) then
+
+
+	else
+
+		-- break the code apart and emit each line
+		for _, l in pairs(string.Explode("\n", code)) do
+			self.emit(l)
+		end
+
 	end
 
 	self.finish()
@@ -652,13 +696,13 @@ function meta:WalkBackPureNodes(nodeID, call)
 
 		for pinID, pin in self.graph:GetNode(pnode):SidePins(PD_In) do
 
-			local connections = self:GetPinConnections(PD_In, pnode, pinID)
+			local connections = pin:GetConnectedPins()
 			for _, v in pairs(connections) do
 
-				local node = self.graph:GetNode( v[1] )
+				local node = v:GetNode()
 				if node:GetCodeType() == NT_Pure then
-					table.insert(stack, v[1])
-					table.insert(output, v[1])
+					table.insert(stack, node.id)
+					table.insert(output, node.id)
 				end
 
 			end
@@ -695,9 +739,9 @@ function meta:CompileNodeFunction(nodeID)
 			if not pinType:IsType(PN_Exec) then continue end
 
 			-- get the exec pin's connection and jump to the node it's connected to
-			local connection = self:GetPinConnections(PD_Out, nodeID, pinID)[1]
+			local connection = pin:GetConnectedPins()[1]
 			if connection ~= nil then
-				self.emit("\tgoto jmp_" .. connection[3])
+				self.emit("\tgoto jmp_" .. connection:GetNode().id)
 				self.finish()
 				return
 			end
@@ -908,12 +952,19 @@ function meta:CompileNetworkCode()
 
 	self.begin(CTX_Network)
 
-	self.emitBlock [[
-	if SERVER then
-		util.AddNetworkString("bphandshake")
-		util.AddNetworkString("bpmessage")
-		util.AddNetworkString("bpclosechannel")
+	if bit.band(self.flags, CF_Standalone) ~= 0 then
+
+		self.emitBlock [[
+		if SERVER then
+			util.AddNetworkString("bphandshake")
+			util.AddNetworkString("bpmessage")
+			util.AddNetworkString("bpclosechannel")
+		end
+		]]
+
 	end
+
+	self.emitBlock [[
 	G_BPNetHandlers = G_BPNetHandlers or {}
 	G_BPNetChannels = G_BPNetChannels or {}
 	net.Receive("bpclosechannel", function(len, pl)
@@ -949,6 +1000,7 @@ function meta:CompileNetworkCode()
 		return { id = id, guid = guid }
 	end
 	function meta:closeChannel(ch)
+		if ch == nil then return end
 		if G_BPNetChannels[ch.id] == nil then return end
 		print("Free netchannel: " .. ch.id)
 		G_BPNetChannels[ch.id] = nil
@@ -960,45 +1012,81 @@ function meta:CompileNetworkCode()
 	end
 	function meta:netInit()
 		print("Net init")
+		self.netReady = false
+		self.netPendingCalls = {}
 		table.insert(G_BPNetHandlers, self)
-		self.channels = {}
 		if CLIENT then
 			net.Start("bphandshake")
 			net.WriteData(__bpm.guid, 16)
 			net.WriteData(self.guid, 16)
+			net.WriteBool(false)
 			net.SendToServer()
+		else
+			self.netChannel = self:allocChannel(nil, self.guid)
 		end
 	end
 	function meta:netShutdown()
 		print("Net shutdown")
-		for _, v in pairs(self.channels) do self:closeChannel(v) end
+		self:closeChannel(self.netChannel)
 		table.RemoveByValue(G_BPNetHandlers, self)
+	end
+	function meta:netUpdate()
+		if not self.netReady then return end
+		local pc = self.netPendingCalls[1]
+		while pc ~= nil do
+			pc()
+			table.remove(self.netPendingCalls, 1)
+			pc = self.netPendingCalls[1]
+		end
+	end
+	function meta:netPostCall(func)
+		table.insert(self.netPendingCalls, func)
 	end
 	function meta:netReceiveHandshake(instanceGUID, len, pl)
 		if SERVER then
-			print("Recv handshake request from: " .. tostring(pl))
-			local chan = self:allocChannel(nil, instanceGUID)
-			self.channels[pl] = chan
-			net.Start("bphandshake")
-			net.WriteData(__bpm.guid, 16)
-			net.WriteData(instanceGUID, 16)
-			net.WriteUInt(chan.id, 16)
-			net.Send(pl)
-			print("Handshake Establish Channel: " .. chan.id .. " -> " .. __bpm.guidString(self.guid))
+			local ready = net.ReadBool()
+
+			if not ready and instanceGUID == self.guid then
+				print("Recv handshake request from: " .. tostring(pl))
+				net.Start("bphandshake")
+				net.WriteData(__bpm.guid, 16)
+				net.WriteData(instanceGUID, 16)
+				net.WriteUInt(self.netChannel.id, 16)
+				net.Send(pl)
+				print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+			else
+				print("Channel established on both roles: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+				self.netReady = true
+			end
 		else
 			local id = net.ReadUInt(16)
 			if instanceGUID == self.guid then
 				self.netChannel = self:allocChannel(id, self.guid)
-				self.channels = {self.netChannel}
 				print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+				net.Start("bphandshake")
+				net.WriteData(__bpm.guid, 16)
+				net.WriteData(self.guid, 16)
+				net.WriteBool(true)
+				net.SendToServer()
+				self.netReady = true
 			end
 		end
 	end
-	function meta:netStartMessage()
+	function meta:netStartMessage(id)
 		net.Start("bpmessage")
-		net.WriteUInt(self.netChannel.id)
+		net.WriteUInt(self.netChannel.id, 16)
+		net.WriteUInt(id, 16)
 	end
 	function meta:netReceiveMessage(len, pl)
+		local msgID = net.ReadUInt(16)]]
+
+		self.pushIndent()
+		for id, node in self.graph:Nodes() do
+			self:RunNodeCompile(node, CP_NETCODE)
+		end
+		self.popIndent()
+
+	self.emitBlock [[
 	end
 	]]
 
@@ -1098,11 +1186,12 @@ function meta:CompileCodeSegment()
 
 	if self.ilp then self.emit("__ilph = 0") end
 	self.emitBlock [[
+	self:netUpdate()
 	for i=#self.delays, 1, -1 do
 		self.delays[i].time = self.delays[i].time - FrameTime()
 		if self.delays[i].time <= 0 then
 			local s,e = pcall(self.delays[i].func)
-			if not s then self.delays = {} __bpm.onError(e:sub(e:find(':', 11)+2, -1), " .. self.module.id .. ", __dbggraph or -1, __dbgnode or -1) end
+			if not s then self.delays = {} __bpm.onError(e:sub((e:find(':', 11) or 0)+2, -1), " .. self.module.id .. ", __dbggraph or -1, __dbgnode or -1) end
 			table.remove(self.delays, i)
 		end
 	end
@@ -1168,6 +1257,14 @@ function meta:CompileCodeSegment()
 
 end
 
+function meta:RunNodeCompile(node, pass)
+
+	local ntype = node:GetType()
+	if ntype.Compile then ntype.Compile(node, self, pass) return true end
+	return false
+
+end
+
 -- called on all graphs before main compile pass, generates all potentially shared data between graphs
 function meta:PreCompileGraph(graph, uniqueKeys)
 
@@ -1196,6 +1293,12 @@ function meta:PreCompileGraph(graph, uniqueKeys)
 	-- compile jump table and variable listing for this graph
 	Profile("jump-table", self.CompileGraphJumpTable, self)
 	Profile("var-listing", self.CompileGraphVarListing, self)
+
+	Profile("graph-prepass", function()
+		for id, node in self.graph:Nodes() do
+			self:RunNodeCompile(node, CP_PREPASS)
+		end
+	end)
 
 end
 
@@ -1230,7 +1333,7 @@ function meta:CompileGraphMetaHook(graph, nodeID, name)
 	end
 
 	if self.graph.type == GT_Function then
-		self.emit(self:GetVarCode(self:FindVarForPin(nil, nil)) .. " = false")
+		self.emit(self:GetVarCode(self:FindVarForPin(nil)) .. " = false")
 	end
 
 	-- protected call into graph entrypoint, calls error handler on error
@@ -1244,7 +1347,7 @@ function meta:CompileGraphMetaHook(graph, nodeID, name)
 	end
 
 	if self.graph.type == GT_Function then
-		self.emit("if " .. self:GetVarCode(self:FindVarForPin(nil, nil)) .. " == true then")
+		self.emit("if " .. self:GetVarCode(self:FindVarForPin(nil)) .. " == true then")
 		self.emit("return")
 
 		local out = {}
