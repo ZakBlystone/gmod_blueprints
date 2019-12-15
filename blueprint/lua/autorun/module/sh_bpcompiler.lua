@@ -13,7 +13,7 @@ CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
 
 CP_PREPASS = 0
 CP_MAINPASS = 1
-CP_NETCODE = 2
+CP_NETCODEMSG = 2
 
 TK_GENERIC = 0
 TK_NETCODE = 1
@@ -110,6 +110,7 @@ function meta:Setup()
 	self.ilpmax = 10000
 	self.ilpmaxh = 4
 	self.guidString = bpcommon.GUIDToString(self.module:GetUID(), true)
+	self.varscope = nil
 
 	return self
 
@@ -158,6 +159,8 @@ local nodeTypeEnumerateData = {
 	[NT_Function] = { unique = true },
 	[NT_Event] = { unique = true },
 	[NT_Special] = { unique = true },
+	[NT_FuncInput] = { unique = true },
+	[NT_FuncOutput] = { unique = true },
 }
 
 function SanitizeString(str)
@@ -181,19 +184,94 @@ function DesanitizeCodedString(str)
 
 end
 
+function meta:CreateNodeVar(node, identifier, isGlobal)
+
+	local key = bpcommon.CreateUniqueKey(self.varscope, "local_" .. node:GetTypeName() .. "_v_" .. identifier)
+	local v = {
+		var = key,
+		localvar = identifier,
+		node = node,
+		graph = node:GetGraph(),
+		keyAsGlobal = isGlobal,
+	}
+
+	table.insert(self.vars, v)
+	return v
+
+end
+
+-- creates a variable for the specified pin
+function meta:CreatePinVar(pin)
+
+	local node = pin:GetNode()
+	local graph = node:GetGraph()
+	local graphName = self.graph:GetName()
+	local pinName = pin:GetName()
+	local codeType = node:GetCodeType()
+	local isFunctionPin = codeType == NT_FuncInput or codeType == NT_FuncOutput
+	local unique = self.varscope
+	local pinStr = node:ToString(pin)
+
+	pinName = (pinName ~= "" and pinName or "pin")
+
+	if pin:IsType(PN_Exec) then return nil end
+	if pin:IsIn() then
+
+		if isFunctionPin then
+
+			local key = bpcommon.CreateUniqueKey({}, "func_" .. graphName .. "_out_" .. pinName)
+			table.insert(self.vars, {
+				var = key,
+				pin = pin,
+				graph = graph,
+				output = true,
+				isFunc = true,
+			})
+			return self.vars[#self.vars]
+
+		end
+
+	elseif pin:IsOut() then
+
+		if not isFunctionPin then
+
+			local key = bpcommon.CreateUniqueKey(unique, "fcall_" .. node:GetTypeName() .. "_ret_" .. pinName)
+			table.insert(self.vars, {
+				var = key,
+				global = codeType ~= NT_Pure,
+				pin = pin,
+				graph = graph,
+				isFunc = isFunctionPin,
+			})
+			return self.vars[#self.vars]
+
+		else
+
+			local key = bpcommon.CreateUniqueKey(unique, "func_" .. graphName .. "_in_" .. pinName)
+			table.insert(self.vars, {
+				var = key,
+				pin = pin,
+				graph = graph,
+				isFunc = isFunctionPin,
+			})
+
+		end
+
+	end
+
+end
+
 --[[
 This function goes through all nodes of a certain type in the current graph and creates variable entries for them.
 These variables are used to connect node outputs to inputs among other things
 
-There are currently 3 types of vars:
-	node-locals, return-values, and literals
+There are currently 2 types of vars:
+	node-locals and return-values
 
 Node-locals are internal variables scoped to a specific node.
 The foreach node uses this to keep track of its iteration.
 
 Return-values hold the output of non-pure function calls.
-
-Literals are values stored on unconnected input pins.
 ]]
 
 function meta:CreateFunctionGraphVars(uniqueKeys)
@@ -201,83 +279,12 @@ function meta:CreateFunctionGraphVars(uniqueKeys)
 	local unique = uniqueKeys
 	local name = self.graph:GetName()
 	local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_returned")
+
 	table.insert(self.vars, {
 		var = key,
-		type = PN_Bool,
-		init = "false",
-		node = nil,
-		pin = nil,
-		graph = self.graph.id,
+		graph = self.graph,
 		isFunc = true,
 	})
-
-	for nodeID, node in self.graph:Nodes() do
-		local codeType = node:GetCodeType()
-		if codeType == NT_FuncInput then
-
-			for pinID, pin in node:SidePins(PD_Out) do
-				local pinType = self.graph:GetPinType( nodeID, pinID )
-				if pinType:IsType(PN_Exec) then continue end
-
-				local pinName = pin:GetName()
-				local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_in_" .. (pinName ~= "" and pinName or "pin"))
-				--print(" " .. key)
-
-				table.insert(self.vars, {
-					var = key,
-					init = pinType:GetDefault(),
-					type = pinType,
-					node = nodeID,
-					pin = pinID,
-					graph = self.graph.id,
-					isFunc = true,
-				})
-			end
-
-		elseif codeType == NT_FuncOutput then
-
-			for pinID, pin in node:SidePins(PD_In) do
-				local pinType = self.graph:GetPinType( nodeID, pinID )
-				if pinType:IsType(PN_Exec) then continue end
-
-				-- TODO, multiple return nodes access the same variables, make these graph-scope instead.
-				local pinName = pin:GetName()
-				local key = bpcommon.CreateUniqueKey({}, "func_" .. name .. "_out_" .. (pinName ~= "" and pinName or "pin"))
-
-				if node.literals and node.literals[pinID] ~= nil then
-
-					local l = tostring(node.literals[pinID])
-
-					-- string literals need to be surrounded by quotes
-					-- TODO: Sanitize these
-					if pinType:IsType(PN_String) then l = "\"" .. SanitizeString(l) .. "\"" end
-
-					table.insert(self.vars, {
-						var = l,
-						type = pinType,
-						literal = true,
-						node = nodeID,
-						pin = pinID,
-						graph = self.graph.id,
-						isFunc = true,
-					})
-
-				end
-
-				table.insert(self.vars, {
-					var = key,
-					init = pinType:GetDefault(),
-					type = pinType,
-					node = nodeID,
-					pin = pinID,
-					graph = self.graph.id,
-					output = true,
-					isFunc = true,
-				})
-			end
-
-		end
-	end
 
 end
 
@@ -285,98 +292,31 @@ function meta:EnumerateGraphVars(uniqueKeys)
 
 	local localScopeUnique = {}
 	for nodeID, node in self.graph:Nodes() do
-		local codeType = node:GetCodeType()
-		local e = nodeTypeEnumerateData[codeType]
+
+		local e = nodeTypeEnumerateData[node:GetCodeType()]
 		if not e then continue end
 
 		local unique = e.unique and uniqueKeys or localScopeUnique
+		self.varscope = unique
 
-		-- some nodetypes have local variables exclusive to themselves
-		for _, l in pairs(node:GetLocals()) do
+		for _, l in pairs(node:GetLocals()) do self:CreateNodeVar(node, l, false) end
+		for _, l in pairs(node:GetGlobals()) do self:CreateNodeVar(node, l, true) end
+		for pinID, pin in node:Pins() do self:CreatePinVar(pin) end
 
-			local key = bpcommon.CreateUniqueKey(unique, "local_" .. node:GetTypeName() .. "_v_" .. l)
+		self.varscope = nil
 
-			table.insert(self.vars, {
-				var = key,
-				localvar = l,
-				node = nodeID,
-				graph = self.graph.id,
-			})
-
-		end
-
-		-- some nodetypes have local variables exclusive to themselves
-		for _, l in pairs(node:GetGlobals()) do
-
-			local key = bpcommon.CreateUniqueKey(unique, "local_" .. node:GetTypeName() .. "_v_" .. l)
-
-			table.insert(self.vars, {
-				var = key,
-				localvar = l,
-				node = nodeID,
-				graph = self.graph.id,
-				keyAsGlobal = true,
-			})
-
-		end
-
-		-- unconnected pins can contain literals, make internal variables for them
-		for pinID, pin in node:SidePins(PD_In) do
-			local pinType = self.graph:GetPinType( nodeID, pinID )
-
-			if node.literals and node.literals[pinID] ~= nil then
-
-				local l = tostring(node.literals[pinID])
-
-				-- string literals need to be surrounded by quotes
-				-- TODO: Sanitize these
-				if pinType:IsType(PN_String) then l = "\"" .. SanitizeString(l) .. "\"" end
-
-				table.insert(self.vars, {
-					var = l,
-					type = pinType,
-					literal = true,
-					node = nodeID,
-					pin = pinID,
-					graph = self.graph.id,
-				})
-
-			end
-
-		end
-
-		-- output pins create local variables, if the function is non-pure, the variable is global
-		for pinID, pin in node:SidePins(PD_Out) do
-			local pinType = self.graph:GetPinType( nodeID, pinID )
-
-			if pinType:IsType(PN_Exec) then continue end
-
-			local pinName = pin:GetName()
-			local key = bpcommon.CreateUniqueKey(unique, "fcall_" .. node:GetTypeName() .. "_ret_" .. (pinName ~= "" and pinName or "pin"))
-
-			table.insert(self.vars, {
-				var = key,
-				type = pinType,
-				init = pinType:GetDefault(),
-				global = codeType ~= NT_Pure,
-				node = nodeID,
-				pin = pinID,
-				graph = self.graph.id,
-			})
-
-		end
 	end
 
 end
 
 -- find a node-local variable by name for a given node
-function meta:FindLocalVarForNode(nodeID, vname)
+function meta:FindVarForNode(node, vname)
 
 	for k,v in pairs(self.vars) do
 
 		if not v.localvar then continue end
-		if v.graph ~= self.graph.id then continue end
-		if v.node == nodeID and v.localvar == vname then return v end
+		if v.graph ~= self.graph then continue end
+		if v.node == node and v.localvar == vname then return v end
 
 	end
 
@@ -387,15 +327,28 @@ function meta:FindVarForPin(pin, noLiteral)
 
 	for k,v in pairs(self.vars) do
 
-		if v.literal == true and noLiteral then continue end
 		if v.localvar then continue end
-		if v.graph ~= self.graph.id then continue end
+		if v.graph ~= self.graph then continue end
 		if pin ~= nil then 
-			if v.node == pin:GetNode().id and v.pin == pin.id then return v end
+			if v.pin == pin then return v end
 		else
-			if v.node == nil and v.pin == nil then return v end
+			if v.pin == nil then return v end
 		end
 
+	end
+
+	--if pin then error("Var not found for pin: " .. pin:GetNode():ToString(pin)) end
+
+end
+
+function meta:GetPinLiteral(pin)
+
+	local node = pin:GetNode()
+	if node and node.literals[pin.id] ~= nil and not noLiteral then
+		local l = tostring(node.literals[pin.id])
+		if pin:IsType(PN_String) then l = "\"" .. SanitizeString(l) .. "\"" end
+
+		return { var = l }
 	end
 
 end
@@ -456,13 +409,13 @@ function meta:CompileVars(code, inVars, outVars, nodeID)
 
 	local lmap = {}
 	for k,v in pairs(node:GetLocals()) do
-		local var = self:FindLocalVarForNode(nodeID, v)
+		local var = self:FindVarForNode(node, v)
 		if var == nil then error("Failed to find internal variable: " .. tostring(v)) end
 		lmap[v] = var
 	end
 
 	for k,v in pairs(node:GetGlobals()) do
-		local var = self:FindLocalVarForNode(nodeID, v)
+		local var = self:FindVarForNode(node, v)
 		if var == nil then error("Failed to find internal variable: " .. tostring(v)) end
 		lmap[v] = var
 	end
@@ -504,7 +457,7 @@ function meta:GetPinVar(pin)
 		-- if there are no connections, try to assign literals on this pin
 		elseif #pins == 0 then
 
-			local literalVar = self:FindVarForPin(pin)
+			local literalVar = self:GetPinLiteral(pin)
 			if literalVar ~= nil then
 				return literalVar
 			else
@@ -895,7 +848,7 @@ function meta:CompileGraphVarListing()
 	self.begin(CTX_Vars .. self.graph.id)
 
 	for k, v in pairs(self.vars) do
-		if v.graph ~= self.graph.id then continue end
+		if v.graph ~= self.graph then continue end
 		if not v.literal and not v.global and not v.isFunc and not v.keyAsGlobal then
 			self.emit("local " .. v.var .. " = nil")
 		end
@@ -1095,7 +1048,7 @@ function meta:CompileNetworkCode()
 
 		self.pushIndent()
 		for id, node in self.graph:Nodes() do
-			self:RunNodeCompile(node, CP_NETCODE)
+			self:RunNodeCompile(node, CP_NETCODEMSG)
 		end
 		self.popIndent()
 
@@ -1345,7 +1298,7 @@ function meta:CompileGraphMetaHook(graph, nodeID, name)
 
 	end
 
-	if self.graph.type == GT_Function then
+	if self.graph:GetType() == GT_Function then
 		self.emit(self:GetVarCode(self:FindVarForPin(nil)) .. " = false")
 	end
 
@@ -1359,7 +1312,7 @@ function meta:CompileGraphMetaHook(graph, nodeID, name)
 		self.emit("__ilph = __ilph - 1")
 	end
 
-	if self.graph.type == GT_Function then
+	if self.graph:GetType() == GT_Function then
 		self.emit("if " .. self:GetVarCode(self:FindVarForPin(nil)) .. " == true then")
 		self.emit("return")
 
@@ -1368,7 +1321,7 @@ function meta:CompileGraphMetaHook(graph, nodeID, name)
 		local emitted = {}
 		for k,v in pairs(self.vars) do
 			if emitted[v.var] then continue end
-			if v.graph == self.graph.id and v.isFunc and v.output then
+			if v.graph == self.graph and v.isFunc and v.output then
 				table.insert(out, v)
 				emitted[v.var] = true
 			end

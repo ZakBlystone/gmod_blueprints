@@ -113,7 +113,7 @@ function meta:CallNodeType()
 			node.recv.finish()
 		elseif pass == bpcompiler.CP_MAINPASS then
 			compiler.emitContext(node.send.context)
-		elseif pass == bpcompiler.CP_NETCODE then
+		elseif pass == bpcompiler.CP_NETCODEMSG then
 			compiler.emitContext(node.recv.context)
 		end
 
