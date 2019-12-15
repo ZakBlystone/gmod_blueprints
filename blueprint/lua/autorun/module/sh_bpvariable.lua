@@ -59,8 +59,26 @@ function meta:GetterNodeType()
 	ntype:AddFlag( NTF_Custom )
 	ntype:AddPin( MakePin(PD_Out, "value", self.pintype) )
 	ntype:SetCodeType( NT_Pure )
-	ntype:SetCode( "#1 = __self.__" .. self:GetName() )
 	ntype:SetDisplayName( "Get" .. self:GetName() )
+	ntype:SetCode("")
+	ntype.Compile = function(node, compiler, pass)
+
+		if pass == bpcompiler.CP_PREPASS then
+
+			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
+				return { var = "__self.__" .. self:GetName() }
+			end )
+			return true
+
+		elseif pass == bpcompiler.CP_ALLOCVARS then return true
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			if node:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) ) end
+			return true
+
+		end
+
+	end
 	return ntype
 
 end
@@ -73,8 +91,29 @@ function meta:SetterNodeType()
 	ntype:AddPin( MakePin(PD_In, "value", self.pintype) )
 	ntype:AddPin( MakePin(PD_Out, "value", self.pintype) )
 	ntype:SetCodeType( NT_Function )
-	ntype:SetCode( "__self.__" .. self:GetName() .. " = $1 #1 = $1" )
+	--ntype:SetCode( "__self.__" .. self:GetName() .. " = $1 #1 = $1" )
 	ntype:SetDisplayName( "Set" .. self:GetName() )
+	ntype:SetCode("")
+	ntype.Compile = function(node, compiler, pass)
+
+		local varName = "__self.__" .. self:GetName()
+		if pass == bpcompiler.CP_PREPASS then
+
+			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
+				return { var = varName }
+			end )
+			return true
+
+		elseif pass == bpcompiler.CP_ALLOCVARS then return true
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			compiler.emit( varName .. " = " .. compiler:GetPinCode( node:FindPin(PD_In, "value") ) )
+			if node:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) ) end
+			return true
+
+		end
+
+	end
 	return ntype
 
 end

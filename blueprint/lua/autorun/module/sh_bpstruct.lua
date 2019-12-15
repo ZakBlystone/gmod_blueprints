@@ -30,7 +30,7 @@ end
 function meta:NewPin(name, type, default, flags, ex, desc)
 
 	local var = bpvariable.New(type, default, flags, ex)
-	return self.pins:Add( var, self.nameMap[name] or name )
+	return self.pins:Add( var, self.nameMap[name:lower()] or name )
 
 end
 
@@ -72,8 +72,8 @@ end
 
 function meta:RemapName(old, new)
 
-	self.nameMap[old] = new
-	self.invNameMap[new] = old
+	self.nameMap[old:lower()] = new
+	self.invNameMap[new:lower()] = old
 
 end
 
@@ -112,7 +112,7 @@ function meta:MakerNodeType()
 
 	local ret, arg = PinRetArg( ntype, function(s,pin)
 		local name = pin:GetName()
-		return "\n [\"" .. (self.invNameMap[name] or name) .. "\"] = " .. s
+		return "\n [\"" .. (self.invNameMap[name:lower()] or name) .. "\"] = " .. s
 	end)
 	local argt = "{ " .. arg .. "\n}"
 	local code = ret .. " = "
@@ -163,7 +163,7 @@ function meta:BreakerNodeType()
 			for pinID, pin in node:SidePins(PD_Out) do
 				compiler:CreatePinRouter( pin, function(pin)
 					local name = pin:GetName()
-					return { var = compiler:GetPinCode(input) .. "[\"" .. (self.invNameMap[name] or name) .. "\"]" }
+					return { var = compiler:GetPinCode(input) .. "[\"" .. (self.invNameMap[name:lower()] or name) .. "\"]" }
 				end )
 			end
 			return true
