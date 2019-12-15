@@ -42,6 +42,17 @@ function meta:Invalidate(invalidatePins)
 
 end
 
+function meta:ShouldBeCompact()
+
+	for k,v in pairs(self.pins) do
+		if v.pin:GetLiteralType() == "string" and #v:GetConnections() == 0 then
+			return false
+		end
+	end
+	return self.node:HasFlag(NTF_Compact)
+
+end
+
 function meta:GetSize()
 
 	if self.width and self.height then
@@ -81,7 +92,7 @@ function meta:GetSize()
 	end
 	if totalPinHeightOut ~= 0 then totalPinHeightOut = totalPinHeightOut - PIN_SPACING end
 
-	if node:HasFlag(NTF_Compact) then
+	if self:ShouldBeCompact() then
 		surface.SetFont("NodeTitleFont")
 		local titleWidth = surface.GetTextSize( name )
 		width = math.max(titleWidth+40, 0)
@@ -117,7 +128,7 @@ function meta:CalculatePinLocation(vpin)
 	local ox, oy = vpin:GetHotspotOffset()
 	local x = 0
 	local y = 10
-	if self.node:HasFlag(NTF_Compact) then y = -5 end
+	if self:ShouldBeCompact() then y = -5 end
 	if dir == PD_In then
 		return x, y + id * 15
 	else
@@ -147,7 +158,7 @@ function meta:LayoutPins()
 
 	local function LayoutSide(s)
 		local y = NODE_HEADER_HEIGHT + NODE_HEADER_SPACING
-		if self.node:HasFlag(NTF_Compact) then y = NODE_COMPACT_HEADER_HEIGHT + NODE_COMPACT_HEADER_SPACING end
+		if self:ShouldBeCompact() then y = NODE_COMPACT_HEADER_HEIGHT + NODE_COMPACT_HEADER_SPACING end
 
 		local node = self.node
 		for pinID, pin, pos in node:SidePins(s) do
@@ -250,6 +261,8 @@ end
 
 function meta:Draw(xOffset, yOffset, alpha)
 
+	--self:Invalidate(true)
+
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
 
@@ -272,7 +285,7 @@ function meta:Draw(xOffset, yOffset, alpha)
 
 
 	local ntc = NodeTypeColors[ node:GetCodeType() ]
-	local isCompact = node:HasFlag(NTF_Compact)
+	local isCompact = self:ShouldBeCompact()
 	local offset = isCompact and 0 or NODE_HEADER_HEIGHT
 	draw.RoundedBoxEx(12, x, y + offset, w, h - offset, Color(20,20,20,(selected and 252 or 230)*alpha), isCompact, isCompact, true, true)
 
@@ -295,7 +308,7 @@ function meta:Draw(xOffset, yOffset, alpha)
 
 	local b,e = pcall( function()
 
-		if not node:HasFlag(NTF_Compact) then
+		if not self:ShouldBeCompact() then
 			draw.SimpleText(self:GetDisplayName(), "NodeTitleFontShadow", x + 5, y, Color(0,0,0,255*alpha))
 			draw.SimpleText(self:GetDisplayName(), "NodeTitleFont", x + 8, y + 2, Color(255,255,255,255*alpha))
 		else

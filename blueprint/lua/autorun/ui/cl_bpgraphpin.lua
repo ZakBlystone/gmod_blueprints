@@ -7,6 +7,8 @@ local meta = bpcommon.MetaTable("bpuigraphpin")
 local TEXT_OFFSET = 8
 local LITERAL_OFFSET = 10
 local LITERAL_HEIGHT = 24
+local LITERAL_MIN_WIDTH = 80
+local LITERAL_MAX_WIDTH = 300
 local PIN_SIZE = 24
 local PIN_HITBOX_EXPAND = 8
 local PIN_LITERAL_HITBOX_EXPAND = 8
@@ -25,8 +27,15 @@ function meta:Init(vnode, pinID, sideIndex)
 	self.literalPos = nil
 	self.cacheWidth = nil
 	self.cacheHeight = nil
+	self.connections = self.pin:GetConnectedPins()
 
 	return self
+
+end
+
+function meta:GetConnections()
+
+	return self.connections
 
 end
 
@@ -71,12 +80,17 @@ function meta:GetLiteralSize()
 
 	if not self:ShouldDrawLiteral() then return 0,0 end
 
-	local h = LITERAL_HEIGHT
+	local font = self.font
+	surface.SetFont(font)
+
 	local literalType = self.pin:GetLiteralType()
+	local value = self:GetLiteralValue()
+	local h = LITERAL_HEIGHT
+	local w = surface.GetTextSize(value)
 	if literalType then
-		if literalType == "enum" then return 200, h end
-		if literalType == "string" then return 200, h end
-		if literalType == "number" then return 80, h end
+		if literalType == "enum" then return math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h end
+		if literalType == "string" then return math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h end
+		if literalType == "number" then return math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h end
 		if literalType == "bool" then return h, h end
 		--if literalType == "vector" then return 100, h end
 	end
@@ -101,6 +115,7 @@ function meta:Invalidate()
 	self.cacheHeight = nil
 	self.titlePos = nil
 	self.literalPos = nil
+	self.connections = self.pin:GetConnectedPins()
 
 end
 
@@ -212,6 +227,28 @@ function meta:IsConnected()
 
 end
 
+function meta:GetLiteralValue()
+
+	local node = self.vnode:GetNode()
+	local literalType = self.pin:GetLiteralType()
+	if not literalType then return "" end
+
+	local literal = node:GetLiteral(self.pinID) or "!!!UNASSIGNED LITERAL!!!"
+
+	if literalType == "bool" then
+		literal = (literal == "true") and "X" or ""
+	elseif literalType == "enum" then
+		local enum = bpdefs.Get():GetEnum( self:GetPin() )
+		if enum then
+			local key = enum.lookup[literal]
+			if key then literal = enum.entries[key].shortkey end
+		end
+	end
+
+	return literal
+
+end
+
 function meta:DrawLiteral(x, y, alpha)
 
 	local node = self.vnode:GetNode()
@@ -219,22 +256,11 @@ function meta:DrawLiteral(x, y, alpha)
 	if self.pin:GetDir() == PD_In and not self.pin:HasFlag(PNF_Table) then
 		local literalType = self.pin:GetLiteralType()
 		if literalType then
-			self.literalType = literalType
-			local literal = node:GetLiteral(self.pinID) or "!!!UNASSIGNED LITERAL!!!"
+			local literal = self:GetLiteralValue()
 
 			local w, h = self:GetLiteralSize()
 			surface.SetDrawColor( Color(50,50,50,150*alpha) )
 			surface.DrawRect(x + self.literalPos,y,w,h)
-
-			if literalType == "bool" then
-				literal = (literal == "true") and "X" or ""
-			elseif literalType == "enum" then
-				local enum = bpdefs.Get():GetEnum( self:GetPin() )
-				if enum then
-					local key = enum.lookup[literal]
-					if key then literal = enum.entries[key].shortkey end
-				end
-			end
 
 			draw.SimpleText(literal, font, x + self.literalPos, y+PIN_SIZE/2, Color(255,255,255,255*alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 		end

@@ -141,6 +141,7 @@ function meta:OnGraphCallback( cb, ... )
 	if cb == CB_NODE_ADD then return self:NodeAdded(...) end
 	if cb == CB_NODE_REMOVE then return self:NodeRemoved(...) end
 	if cb == CB_NODE_MOVE then return self:NodeMove(...) end
+	if cb == CB_PIN_EDITLITERAL then return self:PinEditLiteral(...) end
 	if cb == CB_CONNECTION_ADD then return self:ConnectionAdded(...) end
 	if cb == CB_CONNECTION_REMOVE then return self:ConnectionRemoved(...) end
 	if cb == CB_GRAPH_CLEAR then return self:GraphCleared(...) end
@@ -151,10 +152,31 @@ end
 function meta:CreateAllNodes() self.nodeSet:CreateAllNodes() end
 function meta:NodeAdded( id ) self.nodeSet:NodeAdded(id) end
 function meta:NodeRemoved( id ) self.nodeSet:NodeRemoved(id) end
-
 function meta:NodeMove( id, x, y ) end
-function meta:ConnectionAdded( id ) end
-function meta:ConnectionRemoved( id ) end
+
+function meta:PinEditLiteral( nodeID, pinID, value )
+	local node = self.nodeSet:GetVNodes()[nodeID]
+	if node then node:Invalidate(true) end
+end
+
+function meta:ConnectionAdded( id, conn )
+
+	local nodes = self.nodeSet:GetVNodes()
+	local nodeA = nodes[conn[1]]
+	local nodeB = nodes[conn[3]]
+	if nodeA then nodeA:Invalidate(true) end
+	if nodeB then nodeB:Invalidate(true) end
+
+end
+function meta:ConnectionRemoved( id, conn ) 
+
+	local nodes = self.nodeSet:GetVNodes()
+	local nodeA = nodes[conn[1]]
+	local nodeB = nodes[conn[3]]
+	if nodeA then nodeA:Invalidate(true) end
+	if nodeB then nodeB:Invalidate(true) end
+
+end
 function meta:GraphCleared() end
 function meta:PostModifyNode( id, action ) self.nodeSet:PostModifyNode(id, action) end
 
