@@ -360,12 +360,12 @@ end
 
 function GUID()
 
-	local d,r,s,u,a=os.date("*t"),math.random(0,2^32-1),_G.__guidsalt or 0,os.clock()
-	local o,c,b,l,y="",0,0,bit.lshift,system a = function(v, n) for i=0,n do if b%8==0
-	and i~=0 then o=o .. string.char(c) c=0 end if i==n then continue end
-	c=c+((bit.band(v,l(1,i))~=0)and l(1,b%8)or 0) b=b+1 end end a(d.day, 5) a(d.hour, 5)
-	a(d.min, 6) a(d.month, 4) a(d.sec, 6) a(d.year, 12) a(r, 32) a(s, 32) a(u*1000, 24)
-	a(y.IsWindows() and 1 or 0, 1) a(y.IsLinux() and 1 or 0, 1) _G.__guidsalt=s+1 return o
+	local d,b,g,m=os.date"*t",function(x,y)return x and y or 0 end,system,bit
+	local r,n,s,u,x,y=function(x,y)return m.band(m.rshift(x,y or 0),0xFF)end,
+	math.random(2^32-1),_G.__guidsalt or b(CLIENT,2^31),os.clock()*1000,
+	d.min*1024+d.hour*32+d.day,d.year*16+d.month;_G.__guidsalt=s+1;return
+	string.char(r(x),r(x,8),r(y),r(y,8),r(n,24),r(n,16),r(n,8),r(n),r(s,24),r(s,16),
+	r(s,8),r(s),r(u,16),r(u,8),r(u),d.sec*4+b(g.IsWindows(),2)+b(g.IsLinux(),1))
 
 end
 
