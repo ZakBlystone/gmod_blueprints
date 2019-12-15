@@ -169,10 +169,10 @@ function meta:PostModifyNode( node, action, subaction )
 	local pins = node:GetPins()
 
 	for k, c in pairs(held) do
-		local pinID = node:FindPin(c[1], c[2])
+		local pinID = node:FindPin(c[1], c[2]).id
 		if pinID then
 			local other = self:GetNode(c[3])
-			local otherPin = other:FindPin(c[4], c[5])
+			local otherPin = other:FindPin(c[4], c[5]).id
 			if otherPin ~= nil then self:ConnectNodes(node.id, pinID, other.id, otherPin) end
 		else
 			print("Couldn't find pin: " .. tostring(c[2]))
@@ -857,13 +857,13 @@ function meta:ResolveConnectionMeta()
 			if meta == nil then continue end
 			if (pin0 == nil or pin0:GetName():lower() ~= meta[2]:lower()) and not ignorePin0 then
 				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")
-				c[2] = nt0:FindPin( PD_Out, meta[2] )
+				c[2] = nt0:FindPin( PD_Out, meta[2] ).id
 				MsgC( c[2] ~= nil and Color(100,255,100) or Color(255,100,100), c[2] ~= nil and " Resolved\n" or " Not resolved\n" )
 			end
 
 			if (pin1 == nil or pin1:GetName():lower() ~= meta[4]:lower()) and not ignorePin1 then
 				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
-				c[4] = nt0:FindPin( PD_In, meta[4] )
+				c[4] = nt0:FindPin( PD_In, meta[4] ).id
 				MsgC( c[4] ~= nil and Color(100,255,100) or Color(255,100,100), c[4] ~= nil and " Resolved\n" or " Not resolved\n" )
 			end
 		end

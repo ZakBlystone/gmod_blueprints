@@ -154,13 +154,33 @@ function meta:BreakerNodeType()
 		ntype:AddPin( pin:CreatePin(PD_Out) )
 	end
 
-	local ret, arg = PinRetArg( ntype, nil, function(s,pin)
-		local name = pin:GetName()
-		return "\n" .. s .. " = $1[\"" .. (self.invNameMap[name] or name) .. "\"]"
-	end, "")
-	if ret[1] == '\n' then ret = ret:sub(2,-1) end
+	ntype:SetCode("")
+	ntype.Compile = function(node, compiler, pass)
 
-	ntype:SetCode(ret)
+		if pass == bpcompiler.CP_PREPASS then
+
+			local input = node:FindPin(PD_In, self:GetName())
+			for pinID, pin in node:SidePins(PD_Out) do
+				compiler:CreatePinRouter( pin, function(pin)
+					local name = pin:GetName()
+					return { var = compiler:GetPinCode(input) .. "[\"" .. (self.invNameMap[name] or name) .. "\"]" }
+				end )
+			end
+			return true
+
+		elseif pass == bpcompiler.CP_ALLOCVARS then
+
+			compiler:CreatePinVar( node:FindPin(PD_In, self:GetName()) )
+			return true
+
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			if node:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) ) end
+			return true
+
+		end
+
+	end
 
 	for _, pin in pairs(ntype:GetPins()) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
 

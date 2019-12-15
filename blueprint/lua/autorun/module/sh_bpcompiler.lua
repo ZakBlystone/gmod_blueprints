@@ -14,6 +14,7 @@ CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
 CP_PREPASS = 0
 CP_MAINPASS = 1
 CP_NETCODEMSG = 2
+CP_ALLOCVARS = 3
 
 TK_GENERIC = 0
 TK_NETCODE = 1
@@ -111,6 +112,7 @@ function meta:Setup()
 	self.ilpmaxh = 4
 	self.guidString = bpcommon.GUIDToString(self.module:GetUID(), true)
 	self.varscope = nil
+	self.pinRouters = {}
 
 	return self
 
@@ -197,6 +199,12 @@ function meta:CreateNodeVar(node, identifier, isGlobal)
 
 	table.insert(self.vars, v)
 	return v
+
+end
+
+function meta:CreatePinRouter(pin, func)
+
+	self.pinRouters[pin] = func
 
 end
 
@@ -299,9 +307,13 @@ function meta:EnumerateGraphVars(uniqueKeys)
 		local unique = e.unique and uniqueKeys or localScopeUnique
 		self.varscope = unique
 
-		for _, l in pairs(node:GetLocals()) do self:CreateNodeVar(node, l, false) end
-		for _, l in pairs(node:GetGlobals()) do self:CreateNodeVar(node, l, true) end
-		for pinID, pin in node:Pins() do self:CreatePinVar(pin) end
+		if not self:RunNodeCompile(node, CP_ALLOCVARS) then
+
+			for _, l in pairs(node:GetLocals()) do self:CreateNodeVar(node, l, false) end
+			for _, l in pairs(node:GetGlobals()) do self:CreateNodeVar(node, l, true) end
+			for pinID, pin in node:Pins() do self:CreatePinVar(pin) end
+
+		end
 
 		self.varscope = nil
 
@@ -324,6 +336,10 @@ end
 
 -- find the variable that is assigned to the given node/pin
 function meta:FindVarForPin(pin, noLiteral)
+
+	if self.pinRouters[pin] then
+		return self.pinRouters[pin](pin)
+	end
 
 	for k,v in pairs(self.vars) do
 
@@ -366,6 +382,13 @@ function meta:GetVarCode(var, jump)
 	if var.literal then return s .. var.var end
 	if var.global or var.isFunc or var.keyAsGlobal then return "__self." .. var.var end
 	return s .. var.var
+
+end
+
+function meta:GetPinCode(pin, ...)
+
+	local var = self:GetPinVar(pin)
+	return self:GetVarCode(var, ...)
 
 end
 
@@ -466,7 +489,7 @@ function meta:GetPinVar(pin)
 				if nullable then
 					return { var = "nil" }
 				else
-					error("Pin must be connected: " .. node:ToString(pinID))
+					error("Pin must be connected: " .. node:ToString(pin))
 				end
 			end
 		else
@@ -491,7 +514,7 @@ function meta:GetPinVar(pin)
 
 				-- find output variable to write to on this pin
 				local var = self:FindVarForPin(pin)
-				if var == nil then error("Unable to find var for pin " .. node:ToString(pinID)) end
+				if var == nil then error("Unable to find var for pin " .. node:ToString(pin)) end
 				return var
 
 			end
@@ -576,8 +599,7 @@ function meta:CompileNodeSingle(nodeID)
 
 	-- iterate through all input pins
 	for pinID, pin, pos in node:SidePins(PD_In) do
-		local pinType = pin:GetType()
-		if pinType:IsType(PN_Exec) then continue end
+		if pin:IsType(PN_Exec) then continue end
 
 		if codeType == NT_FuncOutput then
 			outVars[pos] = self:FindVarForPin(pin, true)
@@ -590,9 +612,6 @@ function meta:CompileNodeSingle(nodeID)
 	-- iterate through all output pins
 	for pinID, pin, pos in node:SidePins(PD_Out) do
 		
-		local pinType = pin:GetType()
-		local pins = pin:GetConnectedPins()
-
 		outVars[pos] = self:GetPinVar(pin)
 
 	end	
@@ -1226,7 +1245,7 @@ end
 function meta:RunNodeCompile(node, pass)
 
 	local ntype = node:GetType()
-	if ntype.Compile then ntype.Compile(node, self, pass) return true end
+	if ntype.Compile then return ntype.Compile(node, self, pass) end
 	return false
 
 end

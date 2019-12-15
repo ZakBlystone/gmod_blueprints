@@ -65,8 +65,6 @@ function meta:CallNodeType()
 
 	ntype.Compile = function(node, compiler, pass)
 
-		print("COMPILE PASS: " .. tostring(pass))
-
 		if pass == bpcompiler.CP_PREPASS then
 			node.recv = compiler:AllocThunk(bpcompiler.TK_NETCODE)
 			node.send = compiler:AllocThunk(bpcompiler.TK_GENERIC)
@@ -77,7 +75,7 @@ function meta:CallNodeType()
 			for _, pin in node:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) end) do
 				local nthunk = GetNetworkThunk(pin)
 				if nthunk ~= nil then
-					local vcode = compiler:GetVarCode(compiler:GetPinVar(pin))
+					local vcode = compiler:GetPinCode(pin)
 					if pin:HasFlag(PNF_Table) then
 						node.send.emit("__self:netWriteTable( function(x) " .. nthunk.write:gsub("@","x") ..  " end, " .. vcode .. ")")
 					else
@@ -88,7 +86,7 @@ function meta:CallNodeType()
 			node.send.emit("if SERVER then net.Broadcast() else net.SendToServer() end")
 			node.send.emit("end)")
 
-			node.send.emit("goto popcall")
+			node.send.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) )
 			node.send.finish()
 
 			node.recv.begin()
@@ -111,10 +109,11 @@ function meta:CallNodeType()
 			node.recv.emit(call)
 			node.recv.emit("end")
 			node.recv.finish()
+			return true
 		elseif pass == bpcompiler.CP_MAINPASS then
-			compiler.emitContext(node.send.context)
+			compiler.emitContext(node.send.context) return true
 		elseif pass == bpcompiler.CP_NETCODEMSG then
-			compiler.emitContext(node.recv.context)
+			compiler.emitContext(node.recv.context) return true
 		end
 
 	end
