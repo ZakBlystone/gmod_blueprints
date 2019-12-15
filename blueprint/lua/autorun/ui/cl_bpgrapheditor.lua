@@ -4,6 +4,10 @@ G_BPGraphEditorCopyState = nil
 
 module("bpgrapheditor", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
+bpcommon.CallbackList({
+	"POPUP",
+})
+
 local meta = bpcommon.MetaTable("bpgrapheditor")
 
 function meta:Init( vgraph )
@@ -16,6 +20,12 @@ function meta:Init( vgraph )
 	self.leftMouseStart = nil
 	self.dragSelecting = false
 	self.grabLock = nil
+	self.baseUndoGraph = nil
+	self.undo = {}
+	self.undoPtr = -1
+	self.maxUndoLevels = 20
+
+	bpcommon.MakeObservable(self)
 
 	-- HACK!!!!
 	if G_BPGraphEditorCopyState ~= nil then
@@ -23,6 +33,70 @@ function meta:Init( vgraph )
 	end
 
 	return self
+
+end
+
+function meta:CreateUndo(text)
+
+	if self.undoPtr ~= -1 and self.undoPtr ~= #self.undo then
+		for i=#self.undo, self.undoPtr+1, -1 do
+			table.remove(self.undo)
+		end
+	end
+
+	if #self.undo >= self.maxUndoLevels then table.remove(self.undo, 1) end
+
+	local undoGraph = self.graph:CopyInto( bpgraph.New() )
+	table.insert(self.undo, {
+		graph = undoGraph,
+		text = text,
+	})
+	self.undoPtr = #self.undo
+
+end
+
+function meta:DeleteLastUndo()
+
+	if self.undoPtr <= 0 then return end
+	table.remove(self.undo)
+	self.undoPtr = #self.undo
+
+end
+
+function meta:Popup(text)
+
+	self:FireListeners(CB_POPUP, text)
+
+end
+
+function meta:Undo()
+
+	if self.undoPtr <= 0 then return end
+	if self.undoPtr == #self.undo then
+		self.baseUndoGraph = self.graph:CopyInto( bpgraph.New() )
+	end
+	local apply = self.undo[self.undoPtr]
+	self:Popup("Undo " .. tostring(apply.text))
+	apply.graph:CopyInto( self.graph )
+	self:CreateAllNodes()
+	self.undoPtr = self.undoPtr - 1
+
+end
+
+function meta:Redo()
+
+	local apply = self.undo[self.undoPtr+2]
+	if apply then
+		self:Popup("Redo " .. tostring(apply.text))
+		apply.graph:CopyInto( self.graph )
+		self:CreateAllNodes()
+		self.undoPtr = self.undoPtr + 1
+	elseif #self.undo ~= 0 and self.undoPtr ~= #self.undo then
+		self:Popup("Redo " .. tostring(self.undo[#self.undo].text))
+		self.baseUndoGraph:CopyInto( self.graph )
+		self:CreateAllNodes()
+		self.undoPtr = #self.undo
+	end
 
 end
 
@@ -152,12 +226,23 @@ end
 
 function meta:BeginMovingNodes()
 
+	self:CreateUndo("Move Nodes")
 	local x0, y0 = unpack(self.leftMouseStart)
 	self.movingNodes = true
+	self.nodesMoved = false
 	self.storedNodeOffsets = {}
 	for k, v in pairs(self:GetSelectedNodes()) do
 		local nx, ny = v:GetPos()
 		self.storedNodeOffsets[k] = {nx-x0, ny-y0}
+	end
+
+end
+
+function meta:FinishMovingNodes()
+
+	if self.movingNodes then
+		if not self.nodesMoved then self:DeleteLastUndo() end
+		self.movingNodes = false
 	end
 
 end
@@ -205,7 +290,7 @@ function meta:ConnectPins(vpin0, vpin1)
 	local nodeID1 = vpin1:GetVNode():GetNode().id
 	local pinID0 = vpin0:GetPinID()
 	local pinID1 = vpin1:GetPinID()
-	self:GetGraph():ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
+	return self:GetGraph():ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 
 end
 
@@ -238,6 +323,8 @@ end
 function meta:PasteGraph()
 
 	if G_BPGraphEditorCopyState == nil then return false end
+
+	self:CreateUndo("Paste Nodes")
 
 	local scaleFactor = self:GetCoordinateScaleFactor()
 	local copy = G_BPGraphEditorCopyState
@@ -291,7 +378,8 @@ function meta:LeftMouse(x,y,pressed)
 		if self.grabPin then
 			local targetPin = self:TryGetPin(wx,wy)
 			if targetPin then
-				self:ConnectPins(self.grabPin, targetPin)
+				self:CreateUndo("Connect Pins")
+				if not self:ConnectPins(self.grabPin, targetPin) then self:DeleteLastUndo() end
 			else
 				self:OpenCreationContext(self.grabPin:GetPin())
 				return
@@ -301,7 +389,7 @@ function meta:LeftMouse(x,y,pressed)
 		self.grabPin = nil
 		self.leftMouseStart = nil
 		self.dragSelecting = false
-		self.movingNodes = false
+		self:FinishMovingNodes()
 
 	end
 
@@ -348,11 +436,22 @@ function meta:KeyPress( code )
 	if self:IsLocked() then return end
 
 	if code == KEY_DELETE then
+		self:CreateUndo("Deleted Nodes")
 		self:DeleteSelected()
 		return
 	end
 
 	if input.IsKeyDown( KEY_LCONTROL ) then
+
+		if code == KEY_Z then
+			self:Undo()
+			return
+		end
+
+		if code == KEY_Y then
+			self:Redo()
+			return
+		end
 
 		if code == KEY_C or code == KEY_X then
 			local selected = self:GetSelectedNodes()
@@ -384,7 +483,10 @@ function meta:KeyPress( code )
 				y = y,
 			}
 
-			if code == KEY_X then self:DeleteSelected() end
+			if code == KEY_X then
+				self:CreateUndo("Cut Nodes")
+				self:DeleteSelected() 
+			end
 
 			print("COPIED GRAPH")
 		end
@@ -411,7 +513,9 @@ function meta:Think()
 
 		for k,v in pairs(self.storedNodeOffsets) do
 			local ox, oy = unpack(v)
-			vnodes[k]:GetNode():Move( (x1 + ox) / scaleFactor, (y1 + oy) / scaleFactor )
+			if vnodes[k]:GetNode():Move( (x1 + ox) / scaleFactor, (y1 + oy) / scaleFactor ) then
+				self.nodesMoved = true
+			end
 		end
 	end
 
@@ -542,6 +646,7 @@ function meta:OpenCreationContext( pinFilter )
 	createMenu:Setup( self:GetGraph(), pinFilter )
 	createMenu.OnNodeTypeSelected = function( menu, nodeType )
 
+		self:CreateUndo("Added Node")
 		local nodeID, node = self:GetGraph():AddNode(nodeType:GetName(), wx, wy)
 		self:ConnectNodeToGrabbedPin( node )
 		self:ResetGrabbedPin()

@@ -369,14 +369,19 @@ function meta:GetModule() return self:GetGraph():GetModule() end
 
 function meta:Move(x, y)
 
+	local px = self.x
+	local py = self.y
+
 	x = math.Round(x / 15) * 15
 	y = math.Round(y / 15) * 15
 
 	self.x = x
 	self.y = y
 
-	if self.graph == nil then return end
+	if self.graph == nil then return px ~= self.x or py ~= self.y end
 	self.graph:FireListeners(bpgraph.CB_NODE_MOVE, self.id, x, y)
+
+	return px ~= self.x or py ~= self.y
 
 end
 

@@ -11,6 +11,7 @@ local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
 local meta = bpcommon.MetaTable("bpgrapheditorinterface")
 
 local TOOLTIP_TIME = .6
+local POPUP_TIME = 4
 
 function meta:Init( editor, vgraph )
 
@@ -24,6 +25,14 @@ function meta:Init( editor, vgraph )
 	self.tooltipText = nil
 	self.tooltipLocation = nil
 	self.tooltipAlpha = 0
+	self.popups = {}
+
+	self.editor:AddListener(function(cb, ...)
+
+		if cb == bpgrapheditor.CB_POPUP then self:OnPopup(...) end
+
+	end, bpgrapheditor.CB_ALL)
+
 	return self
 
 end
@@ -32,6 +41,12 @@ function meta:GetEditor() return self.editor end
 function meta:GetVGraph() return self.vgraph end
 function meta:PointToWorld(x,y) return self:GetVGraph():GetRenderer():PointToWorld(x,y) end
 function meta:PointToScreen(x,y) return self:GetVGraph():GetRenderer():PointToScreen(x,y) end
+
+function meta:OnPopup(text)
+
+	table.insert(self.popups, {text = text, time = POPUP_TIME})
+
+end
 
 function meta:DrawGrabbedLine()
 
@@ -78,6 +93,47 @@ function meta:PaintZoomIndicator(w,h)
 	if dt < 0 then return end
 
 	draw.SimpleText( "Zoom: " .. self:GetZoomString(), "NodePinFont", 10, h - 30, Color( 255, 255, 255, 60 * dt ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+end
+
+function meta:PaintPopups(w,h)
+
+	--[[self.ptimer = self.ptimer or CurTime() + .05
+	if self.ptimer < CurTime() then
+		self.ptimer = CurTime() + .05
+		self:OnPopup("Popup " .. CurTime())
+	end]]
+
+	local font = "NodePinFont"
+	local x = w - ScreenScale(5)
+	local y = h - ScreenScale(8)
+	local ft = FrameTime()
+	local n = 1
+	
+	surface.SetFont(font)
+	for i=#self.popups, 1, -1 do
+
+		local v = self.popups[i]
+		v.time = v.time - ft
+		v.flash = (v.flash or 1) - ft
+
+		if n > 5 then v.time = v.time - ft * 2 end
+		if n > 8 then v.time = v.time - ft * 2 end
+		if n > 10 then v.time = v.time - ft * 2 end
+
+		if v.time <= 0 then table.remove(self.popups, i) continue end
+
+		local fadeout = (math.min(v.time, 1)) ^ 3
+		local flash = math.max(v.flash, 0)
+
+		local tw, th = surface.GetTextSize( v.text )
+
+		draw.RoundedBox(6, x - tw - 5, y - th - 5, tw + 10, th + 10, Color(0,0,0,150 * fadeout))
+		draw.SimpleText( v.text, font, x, y, Color( 255, 255 - flash * 80, 255 - flash * 200, 200 * fadeout + flash * 50 ), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+		y = y - 50
+		n = n + 1
+
+	end
 
 end
 
@@ -216,6 +272,7 @@ function meta:DrawOverlay(w,h)
 
 	self:PaintGraphTitle(w,h)
 	self:PaintZoomIndicator(w,h)
+	self:PaintPopups(w,h)
 	self:DrawTooltip()
 
 end
