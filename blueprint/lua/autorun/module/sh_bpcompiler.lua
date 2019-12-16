@@ -1066,9 +1066,13 @@ function meta:CompileNetworkCode()
 		local msgID = net.ReadUInt(16)]]
 
 		self.pushIndent()
-		for id, node in self.graph:Nodes() do
-			self:RunNodeCompile(node, CP_NETCODEMSG)
+
+		for _, graph in pairs(self.graphs) do
+			for _, node in graph:Nodes() do
+				self:RunNodeCompile(node, CP_NETCODEMSG)
+			end
 		end
+
 		self.popIndent()
 
 	self.emitBlock [[

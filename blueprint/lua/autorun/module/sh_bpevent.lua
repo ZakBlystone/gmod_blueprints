@@ -60,8 +60,9 @@ function meta:CallNodeType()
 		ntype:AddPin( pin:CreatePin(PD_In) )
 	end
 
-	local ret, arg, pins = PinRetArg( ntype )
-	ntype:SetCode( "__self:__Event" .. self.id .. "(" .. arg .. ")" )
+	--local ret, arg, pins = PinRetArg( ntype )
+	--ntype:SetCode( "__self:__Event" .. self.id .. "(" .. arg .. ")" )
+	ntype:SetCode("")
 
 	ntype.Compile = function(node, compiler, pass)
 
