@@ -86,7 +86,7 @@ function PANEL:Init()
 			)
 		end, nil, "icon16/folder.png"},
 		{"Compile and upload", function()
-			bpnet.SendModule( self.module )
+			--bpnet.SendModule( self.module )
 
 			if LastSavedFile then
 				SaveFunc( LastSavedFile )
@@ -476,7 +476,7 @@ local function OpenEditor()
 	editor:SetModule(mod)
 	--mod:CreateTestModule()
 
-	bpnet.DownloadServerModule( mod )
+	--bpnet.DownloadServerModule( mod )
 	--graph:CreateTestGraph()
 	--graph:RemoveNode( graph.nodes[1] )
 

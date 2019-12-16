@@ -29,6 +29,7 @@ include("module/sh_bpvariable.lua")
 include("module/sh_bpstruct.lua")
 include("module/sh_bpevent.lua")
 include("module/sh_bpmodule.lua")
+include("module/sh_bpenv.lua")
 include("module/sh_bpnet.lua")
 include("module/sh_bpcompiler.lua")
 

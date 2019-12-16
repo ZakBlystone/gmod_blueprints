@@ -377,3 +377,7 @@ function GCHandle(func)
 	return prx
 
 end
+
+function PlayerKey(ply)
+	return ply:AccountID() or "singleplayer"
+end

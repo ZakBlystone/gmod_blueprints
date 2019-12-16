@@ -25,7 +25,6 @@ fmtVersion = 4
 local meta = bpcommon.MetaTable("bpmodule")
 
 nextModuleID = nextModuleID or 0
-activeModules = activeModules or {}
 
 bpcommon.CreateIndexableListIterators(meta, "graphs")
 bpcommon.CreateIndexableListIterators(meta, "variables")
@@ -528,68 +527,29 @@ function imeta:__UnbindGamemodeHooks()
 
 end
 
-function imeta:__SetEnabled( enable )
+function imeta:__Init( )
 
-	local modID = self.__module:GetUID()
-	local guid = self.guid
-
-	activeModules[modID] = activeModules[modID] or {}
-
-	local activeList = activeModules[modID]
-	local isEnabled = activeList[guid] ~= nil
-	if isEnabled == false and enable == true then
-		--print("BINDING GAMEMODE HOOKS")
-		self:netInit()
-		self:__BindGamemodeHooks()
-		activeList[guid] = self
-		return
-	end
-
-	if isEnabled == true and enable == false then
-		--print("UN-BINDING GAMEMODE HOOKS")
-		self:netShutdown()
-		self:__UnbindGamemodeHooks()
-		activeList[guid] = nil
-		return
-	end
+	self:netInit()
+	self:__BindGamemodeHooks()
 
 end
 
-function meta:SetEnabled( enable )
+function imeta:__Shutdown()
 
-	local modID = self:GetUID()
-	activeModules[modID] = activeModules[modID] or {}
-	local activeList = activeModules[modID]
-
-	if enable then
-		self:GetSingleton():__SetEnabled( enable )
-	else
-		for k,v in pairs(activeList) do
-			v:__SetEnabled(false)
-		end
-		activeModules[modID] = {}
-	end
+	self:netShutdown()
+	self:__UnbindGamemodeHooks()
 
 end
 
-function meta:Instantiate()
+function meta:Instantiate( forceGUID )
 
 	local instance = self:Get().new()
 	local meta = table.Copy(getmetatable(instance))
 	for k,v in pairs(imeta) do meta[k] = v end
 	setmetatable(instance, meta)
 	instance.__module = self
+	if forceGUID then instance.guid = forceGUID end
 	return instance
-
-end
-
-function meta:GetSingleton()
-
-	self.singleton = self.singleton or (self:IsValid() and self:Instantiate() or nil)
-	if not self.singleton then return end
-
-	self.singleton.guid = self:Get().guid
-	return self.singleton
 
 end
 
@@ -654,13 +614,3 @@ end
 function CreateTestModule()
 	return New():CreateTestModule()
 end
-
-hook.Add("Think", "__updatebpmodules", function()
-
-	for _, m in pairs(activeModules) do
-		for _, instance in pairs(m) do
-			instance:update()
-		end
-	end
-
-end)
