@@ -64,6 +64,10 @@ end
 function PANEL:Init()
 
 	--self:SetBackgroundColor( Color(80,80,80) )
+
+	hook.Add("BPEditorBecomeActive", tostring(self), function()
+		if IsValid(self) then self:Remove() end
+	end)
 	
 	local function inserter( list )
 		return function( name, nodeType )
@@ -257,6 +261,10 @@ function PANEL:Paint(w,h)
 	surface.SetDrawColor( Color(80,80,80) )
 	surface.DrawRect(0,0,w,h)
 
+end
+
+function PANEL:OnRemove()
+	hook.Remove("BPEditorBecomeActive", tostring(self))
 end
 
 vgui.Register( "BPCreateMenu", PANEL, "EditablePanel" )

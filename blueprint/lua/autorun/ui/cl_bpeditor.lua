@@ -303,6 +303,7 @@ function PANEL:Init()
 
 	self.vvars = {}
 	self.vgraphs = {}
+	self.wasActive = false
 
 end
 
@@ -350,6 +351,20 @@ function PANEL:Think()
 	else
 		self.BpErrorWasNil = true
 	end
+
+	if self:IsActive() then
+		if not self.wasActive then
+			print("EDITOR BECOME ACTIVE")
+			hook.Run("BPEditorBecomeActive")
+			self.wasActive = true
+		end
+	else
+		if self.wasActive then
+			print("EDITOR BECOME INACTIVE")
+			self.wasActive = false
+		end
+	end
+
 
 end
 
@@ -423,6 +438,12 @@ end
 function PANEL:GetModule()
 
 	return self.module
+
+end
+
+function PANEL:OnFocusChanged( gained )
+
+	print("MAIN PANEL FOCUS CHANGE: " .. tostring(gained))
 
 end
 

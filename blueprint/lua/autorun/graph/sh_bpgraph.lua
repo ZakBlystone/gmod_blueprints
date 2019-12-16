@@ -892,7 +892,7 @@ function meta:CreateDeferredData()
 		self:WalkInforms()
 		self:RemoveInvalidConnections()
 		for i, connection in self:Connections() do
-			self:FireListeners(CB_CONNECTION_ADD, connection, i)
+			self:FireListeners(CB_CONNECTION_ADD, i, connection)
 		end
 
 	end)
