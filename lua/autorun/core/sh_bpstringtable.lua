@@ -19,8 +19,8 @@ function meta:Add(str)
 	if found ~= nil then
 		return found
 	else
-		local id = #self.strings
-		self.strings[id+1] = str
+		local id = #self.strings+1
+		self.strings[id] = str
 		self.rstrings[str] = id
 		return id
 	end
