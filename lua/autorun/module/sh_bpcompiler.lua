@@ -657,10 +657,8 @@ end
 function meta:WalkBackPureNodes(nodeID, call)
 
 	local max = 10000
-	local stack = {}
+	local stack = { nodeID }
 	local output = {}
-
-	stack[#stack] = nodeID
 
 	while #stack > 0 and max > 0 do
 

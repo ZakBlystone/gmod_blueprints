@@ -102,6 +102,18 @@ function PANEL:Init()
 			end
 
 		end, nil, "icon16/page_code.png"},
+		{"Run Locally", function()
+
+			bpenv.Uninstall(self.module)
+			local ok, str = self.module:Compile( bpcompiler.CF_Default )
+			if ok then
+				bpenv.Install(self.module)
+				bpenv.Instantiate(self.module)
+			else
+				error(str)
+			end
+
+		end, nil, "icon16/page_code.png"},
 		{"Asset Browser", function()
 
 			RunConsoleCommand("pac_asset_browser")
