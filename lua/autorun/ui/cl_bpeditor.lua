@@ -148,7 +148,7 @@ function PANEL:Init()
 	pcall( function()
 
 		local optX = 2
-		for k,v in pairs(MenuOptions) do
+		for _, v in ipairs(MenuOptions) do
 			local textColor = Color(240,240,240)
 			local color = v[3] or Color(80,80,80)
 			local opt = vgui.Create("DButton", self.Menu)
@@ -240,10 +240,10 @@ function PANEL:Init()
 		prev(pnl, items, id)
 		local graph = self.module:GetGraph(id)
 		if graph.type == bpschema.GT_Function and not graph:HasFlag(bpgraph.FL_LOCK_PINS) then
-			table.insert(items, {
+			items[#items+1] = {
 				name = "Edit Pins",
 				func = function() self:EditGraphPins(id) end,
-			})
+			}
 		end
 	end
 
@@ -273,10 +273,10 @@ function PANEL:Init()
 	local prev = self.StructList.PopulateMenuItems
 	self.StructList.PopulateMenuItems = function(pnl, items, id)
 		prev(pnl, items, id)
-		table.insert(items, {
+		items[#items+1] = {
 			name = "Edit Pins",
 			func = function() self:EditStructPins(id) end,
-		})
+		}
 	end
 
 	self.EventList = vgui.Create("BPListView", bottomSplit)
@@ -288,10 +288,10 @@ function PANEL:Init()
 	local prev = self.EventList.PopulateMenuItems
 	self.EventList.PopulateMenuItems = function(pnl, items, id)
 		prev(pnl, items, id)
-		table.insert(items, {
+		items[#items+1] = {
 			name = "Edit Event",
 			func = function() self:EditEventPins(id) end,
-		})
+		}
 	end
 
 	menu:SetTop(topSplit)

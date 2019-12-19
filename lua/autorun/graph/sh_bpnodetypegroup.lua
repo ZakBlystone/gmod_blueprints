@@ -47,7 +47,7 @@ function meta:GetEntries() return self.entries end
 function meta:NewEntry()
 
 	local entry = bpnodetype.New(GroupContexts[self:GetType()], self)
-	table.insert(self.entries, entry)
+	self.entries[#self.entries+1] = entry
 	return entry
 
 end
@@ -83,7 +83,7 @@ function meta:ReadFromStream(stream)
 	local count = stream:ReadInt(false)
 
 	if self.entryType == TYPE_STRUCTS then
-		for i=1, count do table.insert(self.entries, bpstruct.New():ReadFromStream(stream)) end
+		for i=1, count do self.entries[#self.entries+1] = bpstruct.New():ReadFromStream(stream) end
 	else
 		for i=1, count do self:NewEntry():ReadFromStream(stream) end
 	end

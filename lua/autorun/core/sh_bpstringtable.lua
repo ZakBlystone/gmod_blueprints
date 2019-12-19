@@ -19,8 +19,8 @@ function meta:Add(str)
 	if found ~= nil then
 		return found
 	else
-		table.insert(self.strings, str)
 		local id = #self.strings
+		self.strings[id+1] = str
 		self.rstrings[str] = id
 		return id
 	end
@@ -39,17 +39,17 @@ function meta:WriteToStream(stream)
 	local longStrings = {}
 	local longLookup = {}
 	local count = #self.strings
-	for i, str in pairs(self.strings) do
+	for i, str in ipairs(self.strings) do
 		if str:len() >= 256 then
 			longLookup[i] = true
-			table.insert(longStrings, i)
+			longStrings[#longStrings+1] = i
 		end
 	end
 
 	stream:WriteInt(count, false)
 	stream:WriteInt(#longStrings, false)
 
-	for k, v in pairs(longStrings) do
+	for _,v in ipairs(longStrings) do
 		stream:WriteBits(v, 24)
 	end
 

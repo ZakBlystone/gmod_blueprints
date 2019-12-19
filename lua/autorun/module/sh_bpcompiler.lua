@@ -50,24 +50,24 @@ function meta:Init( mod, flags )
 	end
 	self.emit = function(text)
 		if self.indent ~= 0 then text = string.rep("\t", self.indent) .. text end
-		table.insert(self.buffer, text)
+		self.buffer[#self.buffer+1] = text
 	end
 	self.emitBlock = function(text)
 		local lines = string.Explode("\n", text)
 		local minIndent = nil
-		for _, line in pairs(lines) do
+		for _, line in ipairs(lines) do
 			local _, num = string.find(line, "\t+")
 			if num then minIndent = math.min(num, minIndent or 10) else minIndent = 0 end
 		end
 		local commonIndent = "^" .. string.rep("\t", minIndent)
-		for k, line in pairs(lines) do
+		for k, line in ipairs(lines) do
 			line = minIndent == 0 and line or line:gsub(commonIndent, "")
 			if line ~= "" or k ~= #lines then self.emit(line) end
 		end
 	end
 	self.emitIndented = function(lines, tabcount)
 		local t = string.rep("\t", tabcount or 0)
-		for _, l in pairs(lines) do
+		for _, l in ipairs(lines) do
 			self.emit( t .. l )
 		end
 	end
@@ -124,7 +124,7 @@ function meta:AllocThunk(type)
 	local t = self.thunks[type]
 
 	local id = #t + 1
-	table.insert(t, {
+	t[id] = {
 		context = CTX_Thunk .. "_" .. type .. "_" .. id,
 		begin = function()
 			self.begin(CTX_Thunk .. "_" .. type .. "_" .. id)
@@ -135,7 +135,7 @@ function meta:AllocThunk(type)
 			self.finish()
 		end,
 		id = id,
-	})
+	}
 	return t[id]
 
 end
@@ -197,7 +197,7 @@ function meta:CreateNodeVar(node, identifier, isGlobal)
 		keyAsGlobal = isGlobal,
 	}
 
-	table.insert(self.vars, v)
+	self.vars[#self.vars+1] = v
 	return v
 
 end
@@ -228,13 +228,13 @@ function meta:CreatePinVar(pin)
 		if isFunctionPin then
 
 			local key = bpcommon.CreateUniqueKey({}, "func_" .. graphName .. "_out_" .. pinName)
-			table.insert(self.vars, {
+			self.vars[#self.vars+1] = {
 				var = key,
 				pin = pin,
 				graph = graph,
 				output = true,
 				isFunc = true,
-			})
+			}
 			return self.vars[#self.vars]
 
 		end
@@ -244,24 +244,24 @@ function meta:CreatePinVar(pin)
 		if not isFunctionPin then
 
 			local key = bpcommon.CreateUniqueKey(unique, "fcall_" .. node:GetTypeName() .. "_ret_" .. pinName)
-			table.insert(self.vars, {
+			self.vars[#self.vars+1] = {
 				var = key,
 				global = codeType ~= NT_Pure,
 				pin = pin,
 				graph = graph,
 				isFunc = isFunctionPin,
-			})
+			}
 			return self.vars[#self.vars]
 
 		else
 
 			local key = bpcommon.CreateUniqueKey(unique, "func_" .. graphName .. "_in_" .. pinName)
-			table.insert(self.vars, {
+			self.vars[#self.vars+1] = {
 				var = key,
 				pin = pin,
 				graph = graph,
 				isFunc = isFunctionPin,
-			})
+			}
 
 		end
 
@@ -288,11 +288,11 @@ function meta:CreateFunctionGraphVars(uniqueKeys)
 	local name = self.graph:GetName()
 	local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_returned")
 
-	table.insert(self.vars, {
+	self.vars[#self.vars+1] = {
 		var = key,
 		graph = self.graph,
 		isFunc = true,
-	})
+	}
 
 end
 
@@ -309,8 +309,8 @@ function meta:EnumerateGraphVars(uniqueKeys)
 
 		if not self:RunNodeCompile(node, CP_ALLOCVARS) then
 
-			for _, l in pairs(node:GetLocals()) do self:CreateNodeVar(node, l, false) end
-			for _, l in pairs(node:GetGlobals()) do self:CreateNodeVar(node, l, true) end
+			for _, l in ipairs(node:GetLocals()) do self:CreateNodeVar(node, l, false) end
+			for _, l in ipairs(node:GetGlobals()) do self:CreateNodeVar(node, l, true) end
 			for pinID, pin in node:Pins() do self:CreatePinVar(pin) end
 
 		end
@@ -324,7 +324,7 @@ end
 -- find a node-local variable by name for a given node
 function meta:FindVarForNode(node, vname)
 
-	for k,v in pairs(self.vars) do
+	for _, v in ipairs(self.vars) do
 
 		if not v.localvar then continue end
 		if v.graph ~= self.graph then continue end
@@ -341,7 +341,7 @@ function meta:FindVarForPin(pin, noLiteral)
 		return self.pinRouters[pin](pin)
 	end
 
-	for k,v in pairs(self.vars) do
+	for _, v in ipairs(self.vars) do
 
 		if v.localvar then continue end
 		if v.graph ~= self.graph then continue end
@@ -365,6 +365,9 @@ function meta:GetPinLiteral(pin)
 		if pin:IsType(PN_String) then l = "\"" .. SanitizeString(l) .. "\"" end
 
 		return { var = l }
+	else
+		local def = pin:GetDefault()
+		return def and { var = pin:GetDefault() } or nil
 	end
 
 end
@@ -431,13 +434,13 @@ function meta:CompileVars(code, inVars, outVars, nodeID)
 	str = str:gsub("#(%d+)", function(x) return self:GetVarCode(outVars[tonumber(x) + outBase], true) end)
 
 	local lmap = {}
-	for k,v in pairs(node:GetLocals()) do
+	for k,v in ipairs(node:GetLocals()) do
 		local var = self:FindVarForNode(node, v)
 		if var == nil then error("Failed to find internal variable: " .. tostring(v)) end
 		lmap[v] = var
 	end
 
-	for k,v in pairs(node:GetGlobals()) do
+	for k,v in ipairs(node:GetGlobals()) do
 		local var = self:FindVarForNode(node, v)
 		if var == nil then error("Failed to find internal variable: " .. tostring(v)) end
 		lmap[v] = var
@@ -639,7 +642,7 @@ function meta:CompileNodeSingle(nodeID)
 	else
 
 		-- break the code apart and emit each line
-		for _, l in pairs(string.Explode("\n", code)) do
+		for _, l in ipairs(string.Explode("\n", code)) do
 			self.emit(l)
 		end
 
@@ -657,7 +660,7 @@ function meta:WalkBackPureNodes(nodeID, call)
 	local stack = {}
 	local output = {}
 
-	table.insert(stack, nodeID)
+	stack[#stack] = nodeID
 
 	while #stack > 0 and max > 0 do
 
@@ -669,12 +672,12 @@ function meta:WalkBackPureNodes(nodeID, call)
 		for pinID, pin in self.graph:GetNode(pnode):SidePins(PD_In) do
 
 			local connections = pin:GetConnectedPins()
-			for _, v in pairs(connections) do
+			for _, v in ipairs(connections) do
 
 				local node = v:GetNode()
 				if node:GetCodeType() == NT_Pure then
-					table.insert(stack, node.id)
-					table.insert(output, node.id)
+					stack[#stack+1] = node.id
+					output[#output+1] = node.id
 				end
 
 			end
@@ -750,33 +753,33 @@ function meta:CompileMetaTableLookup()
 
 	-- Collect all used types from module and write out the needed meta tables
 	local types = self.module:GetUsedPinTypes(nil, true)
-	for _, t in pairs(types) do
+	for _, t in ipairs(types) do
 
 		local baseType = t:GetBaseType()
 		if baseType == PN_Ref then
 
 			local class = bpdefs.Get():GetClass(t)
-			table.insert(tables, class.name)
+			tables[#tables+1] = class.name
 
 		elseif baseType == PN_Struct then
 
 			local struct = bpdefs.Get():GetStruct(t)
 			local metaTable = struct and struct:GetMetaTable() or nil
 			if metaTable then
-				table.insert(tables, metaTable)
+				tables[#tables+1] = metaTable
 			end
 
 		elseif baseType == PN_Vector then
 
-			table.insert(tables, "Vector")
+			tables[#tables+1] = "Vector"
 
 		elseif baseType == PN_Angles then
 
-			table.insert(tables, "Angle")
+			tables[#tables+1] = "Angle"
 
 		elseif baseType == PN_Color then
 
-			table.insert(tables, "Color")
+			tables[#tables+1] = "Color"
 
 		end
 
@@ -787,13 +790,13 @@ function meta:CompileMetaTableLookup()
 		for _, node in graph:Nodes() do
 			local rm = node:GetRequiredMeta()
 			if not rm then continue end
-			for _, m in pairs(rm) do
-				if not table.HasValue(tables, m) then table.insert(tables, m) end
+			for _, m in ipairs(rm) do
+				if not table.HasValue(tables, m) then tables[#tables+1] = m end
 			end
 		end
 	end
 
-	for k, v in pairs(tables) do
+	for _, v in ipairs(tables) do
 		self.emit("local " .. v ..  "_ = FindMetaTable(\"" .. v .. "\")")
 	end
 
@@ -823,7 +826,7 @@ function meta:CompileGraphJumpTable()
 	-- create jump vectors for each of those
 	local jumpTable = self:GetGraphJumpTable()
 	for id, node in self.graph:Nodes() do
-		for _, j in pairs(node:GetJumpSymbols()) do
+		for _, j in ipairs(node:GetJumpSymbols()) do
 
 			jumpTable[id] = jumpTable[id] or {}
 			jumpTable[id][j] = nextJumpID
@@ -842,7 +845,7 @@ function meta:CompileGlobalVarListing()
 
 	self.begin(CTX_Vars .. "global")
 
-	for k, v in pairs(self.vars) do
+	for _, v in ipairs(self.vars) do
 		if not v.literal and v.global then
 			self.emit("instance." .. v.var .. " = nil")
 		end
@@ -866,7 +869,7 @@ function meta:CompileGraphVarListing()
 
 	self.begin(CTX_Vars .. self.graph.id)
 
-	for k, v in pairs(self.vars) do
+	for _, v in ipairs(self.vars) do
 		if v.graph ~= self.graph then continue end
 		if not v.literal and not v.global and not v.isFunc and not v.keyAsGlobal then
 			self.emit("local " .. v.var .. " = nil")
@@ -947,7 +950,7 @@ function meta:CompileNetworkCode()
 	net.Receive("bphandshake", function(len, pl)
 		local moduleGUID = net.ReadData(16)
 		local instanceGUID = net.ReadData(16)
-		for _, v in pairs(G_BPNetHandlers) do
+		for _, v in ipairs(G_BPNetHandlers) do
 			if v.__bpm.guid ~= moduleGUID then continue end
 			v:netReceiveHandshake(instanceGUID, len, pl)
 		end
@@ -1053,7 +1056,7 @@ function meta:CompileNetworkCode()
 		local t = {}
 		local n = net.ReadUInt(24)
 		for i=1, n do
-			table.insert(t, f())
+			t[#t+1] = f()
 		end
 		return t
 	end
@@ -1067,7 +1070,7 @@ function meta:CompileNetworkCode()
 
 		self.pushIndent()
 
-		for _, graph in pairs(self.graphs) do
+		for _, graph in ipairs(self.graphs) do
 			for _, node in graph:Nodes() do
 				self:RunNodeCompile(node, CP_NETCODEMSG)
 			end
@@ -1158,7 +1161,7 @@ function meta:CompileCodeSegment()
 	end
 	__bpm.delay = function(key, delay, func)
 		for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end
-		table.insert( __self.delays, { key = key, func = func, time = delay })
+		__self.delays[#__self.delays+1] = { key = key, func = func, time = delay }
 	end
 	]]
 
@@ -1342,15 +1345,15 @@ function meta:CompileGraphMetaHook(graph, nodeID, name)
 		local out = {}
 
 		local emitted = {}
-		for k,v in pairs(self.vars) do
+		for _, v in ipairs(self.vars) do
 			if emitted[v.var] then continue end
 			if v.graph == self.graph and v.isFunc and v.output then
-				table.insert(out, v)
+				out[#out+1] = v
 				emitted[v.var] = true
 			end
 		end
 
-		for k, v in pairs(out) do
+		for k, v in ipairs(out) do
 			self.emit("\t" .. self:GetVarCode(v) .. (k == #out and "" or ","))
 		end
 
@@ -1451,7 +1454,7 @@ function meta:Compile()
 
 		-- make local copies of all module graphs so they can be edited without changing the module
 		for id, graph in self.module:Graphs() do
-			table.insert( self.graphs, graph:CopyInto( bpgraph.New() ) )
+			self.graphs[#self.graphs+1] = graph:CopyInto( bpgraph.New() )
 		end
 
 	end)
@@ -1459,7 +1462,7 @@ function meta:Compile()
 	-- pre-compile all graphs in the module
 	-- each graph shares a unique key table to ensure global variable names are distinct
 	local uniqueKeys = {}
-	for _, graph in pairs( self.graphs ) do
+	for _, graph in ipairs( self.graphs ) do
 		Profile("pregraph", self.PreCompileGraph, self, graph, uniqueKeys )
 	end
 
@@ -1467,7 +1470,7 @@ function meta:Compile()
 	Profile( "global-var-listing", self.CompileGlobalVarListing, self)
 
 	-- compile each graph
-	for _, graph in pairs( self.graphs ) do
+	for _, graph in ipairs( self.graphs ) do
 		Profile("graph", self.CompileGraph, self, graph )
 	end
 

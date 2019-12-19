@@ -149,18 +149,18 @@ NodePinNetworkThunks = {}
 
 function AddNetworkThunk(pinType, read, write)
 
-	table.insert(NodePinNetworkThunks, {
+	NodePinNetworkThunks[#NodePinNetworkThunks+1] = {
 		read = read,
 		write = write,
 		pinType = pinType,
-	})
+	}
 
 end
 
 function GetNetworkThunk(pinType, mask)
 
 	mask = mask or 0
-	for k,v in pairs(NodePinNetworkThunks) do
+	for _, v in ipairs(NodePinNetworkThunks) do
 		if v.pinType:Equal(pinType, mask) then return v end
 	end
 	return nil
@@ -172,21 +172,21 @@ NodePinImplicitCasts = {}
 function AddPinCast(from, to, bidirectional, wrapper)
 
 	local castInfo = nil
-	for _, info in pairs(NodePinImplicitCasts) do
+	for _, info in ipairs(NodePinImplicitCasts) do
 		if info.from == from then castInfo = info break end
 	end
 	if castInfo == nil then castInfo = NodePinImplicitCasts[table.insert(NodePinImplicitCasts, { from = from, to = {} })] end
 
 	local function Add( type )
-		table.insert(castInfo.to, {
+		castInfo.to[#castInfo.to+1] = {
 			type = type,
 			bidir = bidirectional,
 			wrapper = wrapper,
-		})
+		}
 	end
 
 	if type(to) == "table" and not IsPinType(to) then
-		for k,v in pairs(to) do Add(v) end
+		for _, v in ipairs(to) do Add(v) end
 	elseif IsPinType(to) then
 		Add(to)
 	end
@@ -226,15 +226,15 @@ AddPinCast(PinType(PN_Ref, PNF_None, "Vehicle"), PinType(PN_String), false, "tos
 
 function CanCast(outPinType, inPinType)
 
-	for _, castInfo in pairs(NodePinImplicitCasts) do
+	for _, castInfo in ipairs(NodePinImplicitCasts) do
 		if castInfo.from == outPinType then
-			for _, entry in pairs(castInfo.to) do
+			for _, entry in ipairs(castInfo.to) do
 				if entry.type == inPinType then
 					return true, entry.wrapper
 				end
 			end
 		elseif castInfo.from == inPinType then
-			for _, entry in pairs(castInfo.to) do
+			for _, entry in ipairs(castInfo.to) do
 				if entry.bidir and entry.type == outPinType then
 					return true, entry.wrapper
 				end
@@ -262,14 +262,15 @@ function PinRetArg( nodeType, infmt, outfmt, concat )
 	--print(nodeType.name)
 	local base = (nodeType:GetCodeType() == NT_Event) and 2 or 1
 	local pins = {[PD_In] = {}, [PD_Out] = {}}
-	for k,v in pairs(nodeType:GetPins()) do
+	for _, v in ipairs(nodeType:GetPins()) do
 		if v:GetBaseType() == PN_Exec then continue end
 		local dir = v:GetDir()
 		local num = (base+#pins[dir])
 		local s = (dir == PD_In and "$" or "#") .. num
 		if infmt and dir == PD_In then s = infmt(s, v, num) end
 		if outfmt and dir == PD_Out then s = outfmt(s, v, num) end
-		table.insert(pins[dir], s)
+		local p = pins[dir]
+		p[#p+1] = s
 	end
 
 	local ret = table.concat(pins[PD_Out], concat)
@@ -297,7 +298,7 @@ function FindMatchingPin(ntype, pf)
 	if pf:GetDir() == PD_In then inPin = pf end
 	if pf:GetDir() == PD_Out then outPin = pf end
 
-	for id, pin in pairs(pins) do
+	for id, pin in ipairs(pins) do
 
 		if pf:GetDir() == PD_In then outPin = pin end
 		if pf:GetDir() == PD_Out then inPin = pin end

@@ -16,7 +16,7 @@ meta.__eq = function(a, b)
 	local aPins = a:GetPins()
 	local bPins = b:GetPins()
 	if #aPins ~= #bPins then return false end
-	for k, pin in pairs(aPins) do
+	for k, pin in ipairs(aPins) do
 		if not bPins[k] then return false end
 		if pin:GetName() ~= bPins[k]:GetName() then return false end
 		if pin:GetType() ~= bPins[k]:GetType() then return false end
@@ -53,13 +53,13 @@ function meta:Init(context, group)
 
 end
 
-function meta:AddPin(pin) table.insert(self.pins, pin) end
-function meta:AddRequiredMeta(meta) table.insert(self.requiredMeta, meta) end
+function meta:AddPin(pin) self.pins[#self.pins+1] = pin end
+function meta:AddRequiredMeta(meta) self.requiredMeta[#self.requiredMeta+1] = meta end
 function meta:AddPinRedirect(fromName, toName) self.pinRedirects[fromName] = toName end
-function meta:AddJumpSymbol(name) table.insert(self.jumpSymbols, name) end
-function meta:AddLocal(name) table.insert(self.locals, name) end
-function meta:AddGlobal(name) table.insert(self.globals, name) end
-function meta:AddInform(pinID) table.insert(self.informs, pinID) end
+function meta:AddJumpSymbol(name) self.jumpSymbols[#self.jumpSymbols+1] = name end
+function meta:AddLocal(name) self.locals[#self.locals+1] = name end
+function meta:AddGlobal(name) self.globals[#self.globals+1] = name end
+function meta:AddInform(pinID) self.informs[#self.informs+1] = pinID end
 function meta:SetRole(role) self.role = role end
 function meta:SetCodeType(codeType) self.codeType = codeType end
 function meta:SetName(name) self.name = name end
@@ -88,7 +88,7 @@ function meta:GetContext() return self.context end
 function meta:GetGroup() return self.group end
 function meta:ReturnsValues()
 
-	for k,v in pairs(self.pins) do
+	for _, v in ipairs(self.pins) do
 		if v:GetDir() == PD_In and v:GetBaseType() ~= PN_Exec then return true end
 	end
 	return false
@@ -105,17 +105,17 @@ function meta:GetPins()
 		local groupName = self.group:GetName()
 
 		if pinTypeOverride then
-			table.insert(pins, MakePin(
+			pins[#pins+1] = MakePin(
 				PD_In,
 				bpcommon.Camelize(typeName or groupName),
 				pinTypeOverride
-			))
+			)
 		else
-			table.insert(pins, MakePin(
+			pins[#pins+1] =  MakePin(
 				PD_In,
 				bpcommon.Camelize(typeName or groupName),
 				PN_Ref, PNF_None, groupName
-			))
+			)
 		end
 
 	end
@@ -134,11 +134,7 @@ function meta:GetPins()
 	end
 
 	--HACK
-	local count = 0
-	for k,v in pairs(pins) do
-		count = count + 1
-	end
-	if count <= 2 and self:GetCodeType() == NT_Pure then
+	if #pins <= 2 and self:GetCodeType() == NT_Pure then
 		self:AddFlag(NTF_Compact)
 	end
 
@@ -286,7 +282,7 @@ function meta:ReadFromStream(stream)
 
 	local numPins = stream:ReadBits(8)
 	for i=1, numPins do
-		table.insert(self.pins, bppin.New():ReadFromStream(stream))
+		self.pins[#self.pins+1] = bppin.New():ReadFromStream(stream)
 	end
 
 	return self

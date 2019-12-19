@@ -72,7 +72,7 @@ function meta:AddFile(fileName, tag, searchPath)
 		return 
 	end
 
-	for k,v in pairs(self.pending) do
+	for k,v in ipairs(self.pending) do
 		if v.name == entry.name then 
 			self.pending[k] = entry 
 			print("Update pending file: " .. entry.name) 
@@ -81,7 +81,7 @@ function meta:AddFile(fileName, tag, searchPath)
 	end
 
 	
-	table.insert(self.pending, entry)
+	self.pending[#self.pending+1] = entry
 
 end
 

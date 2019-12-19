@@ -130,14 +130,14 @@ function meta:CopyInto( other, deep )
 
 		for id, item in self:Items() do
 			local copy = table.Copy( item )
-			table.insert( other.items, copy )
+			other.items[#other.items+1] = copy
 			other.itemLookup[id] = copy
 		end
 
 	else
 
 		for id, item in self:Items() do
-			table.insert( other.items, item )
+			other.items[#other.items+1] = item
 			other.itemLookup[id] = item
 		end
 
@@ -178,7 +178,7 @@ function meta:Add( item, optName )
 
 	self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
 
-	table.insert( self.items, item )
+	self.items[#self.items+1] = item
 	self.itemLookup[item.id] = item
 	self:Advance()
 
@@ -247,7 +247,7 @@ function meta:WriteToStream(stream, mode, version)
 	stream:WriteBool(self.namedItems)
 	stream:WriteInt(self.nextID, false)
 	stream:WriteInt(self:Size(), false)
-	for k,v in pairs(self.items) do
+	for _,v in ipairs(self.items) do
 		stream:WriteInt(v.id, false)
 		if self.namedItems then bpdata.WriteValue( v.name, stream ) end
 		if not v.WriteToStream then error("Need stream implementation for list item") end
@@ -276,7 +276,7 @@ function meta:ReadFromStream(stream, mode, version)
 			if not item.ReadFromStream then error("Need stream implementation for list item") end
 			item:ReadFromStream(stream, mode, version)
 			self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
-			table.insert(self.items, item)
+			self.items[#self.items+1] = item
 			self:FireListeners(CB_ADD, item.id, item)
 			self:FireListeners(CB_POSTMODIFY, MODIFY_ADD, item.id, item)
 		end

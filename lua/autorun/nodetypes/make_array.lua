@@ -12,18 +12,18 @@ function NODE:GeneratePins(pins)
 
 	local anyPin = bppintype.New(bpschema.PN_Any)
 	for i=1, self.data.pinCount do
-		table.insert(pins, bpschema.MakePin(
+		pins[#pins+1] = bpschema.MakePin(
 			bpschema.PD_In,
 			"In_" .. i,
 			anyPin
-		))
+		)
 	end
 
-	table.insert(pins, bpschema.MakePin(
+	pins[#pins+1] = bpschema.MakePin(
 		bpschema.PD_Out,
 		"Out",
 		anyPin:AsTable()
-	))
+	)
 
 	self.BaseClass.GeneratePins(self, pins)
 
@@ -33,25 +33,25 @@ function NODE:GetOptions(tab)
 
 	self.BaseClass.GetOptions(self, tab)
 
-	table.insert(tab, {
+	tab[#tab+1] = {
 		"AddPin",
 		function()
 			self:PreModify()
 			self.data.pinCount = self.data.pinCount + 1
 			self:PostModify()
-		end
-	})
+		end,
+	}
 
 	if self.data.pinCount > 2 then
 
-		table.insert(tab, {
+		tab[#tab+1] = {
 			"RemovePin",
 			function()
 				self:PreModify()
 				self.data.pinCount = self.data.pinCount - 1
 				self:PostModify()
-			end
-		})
+			end,
+		}
 
 	end
 
@@ -60,9 +60,9 @@ end
 function NODE:GetInforms()
 
 	local informs = {}
-	for k,v in pairs(self:GetPins()) do
+	for k,v in ipairs(self:GetPins()) do
 		if v:GetType(true):IsType(bpschema.PN_Any) then
-			table.insert(informs, k)
+			informs[#informs+1] = k
 		end
 	end
 	return informs

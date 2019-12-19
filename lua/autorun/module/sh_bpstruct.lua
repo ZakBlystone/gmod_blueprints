@@ -122,7 +122,7 @@ function meta:MakerNodeType()
 
 	ntype:SetCode(code)
 
-	--for _, pin in pairs(ntype:GetPins()) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
+	--for _, pin in ipairs(ntype:GetPins()) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
 
 	return ntype
 
@@ -182,7 +182,7 @@ function meta:BreakerNodeType()
 
 	end
 
-	--for _, pin in pairs(ntype:GetPins()) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
+	--for _, pin in ipairs(ntype:GetPins()) do pin:SetName( bpcommon.Camelize(pin:GetName()) ) end
 
 	return ntype
 

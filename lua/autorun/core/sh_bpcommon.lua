@@ -89,7 +89,7 @@ local function RecurseStack(st, depth)
 	local timedata = {}
 
 	depth = depth or 0
-	for _, smp in pairs(st.children) do
+	for _, smp in ipairs(st.children) do
 
 		local t = data[table.insert(data, {key=smp.key, smp=smp, t=nil})]
 
@@ -105,7 +105,7 @@ local function RecurseStack(st, depth)
 
 	table.sort(data, function(a,b) return a.t.total > b.t.total end)
 
-	for k,v in pairs(data) do
+	for k,v in ipairs(data) do
 		print( string.rep(" ", (depth)) .. string.format("%-" .. (32 - depth) .. "s%8.2f%8.2f%8.2f%8.2f%8.2f", " -" .. v.key .. "[" .. v.t.samples .. "]", 
 			v.smp.time,
 			(v.t.total)/v.t.samples,
@@ -145,7 +145,7 @@ function CallbackList(t, listindex)
 	cblist["CB_LOOKUP"] = {}
 
 	local cbx = 1
-	for k,v in pairs(t) do
+	for k,v in ipairs(t) do
 		cblist["CB_" .. tostring(v)] = cbx
 		cblist["CB_LOOKUP"][cbx] = "CB_" .. tostring(v)
 		cbx = cbx * 2

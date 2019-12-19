@@ -20,10 +20,10 @@ local function SortedFilteredNodeList( graph, filter, res )
 	local options = {}
 	local types = graph:GetNodeTypes()
 	for k,v in pairs(types) do
-		if filter(v) and not v.hidden then table.insert(options, k) end
+		if filter(v) and not v.hidden then options[#options+1] = k end
 	end
 	table.sort(options, function(a,b) return DisplayName(types[a]) < DisplayName(types[b]) end)
-	for _, v in pairs(options) do
+	for _, v in ipairs(options) do
 		res( v, types[v] )
 	end
 end
@@ -34,7 +34,7 @@ local function FilterByType( filterType ) return function(n)
 end
 
 local function FilterByPinType( pinType ) return function(n) 
-		for _, pin in pairs(n.pins) do 
+		for _, pin in ipairs(n.pins) do 
 			if pin:GetType():Equal(pinType, 0) then return true end 
 		end 
 		return false 
@@ -104,14 +104,14 @@ function PANEL:Init()
 	end
 
 	local function addTreeBPNode( p, nodeType, expanded )
-		table.insert(self.timers, { t = self.nextTimer, f = function()
+		self.timers[#self.timers+1] = { t = self.nextTimer, f = function()
 			local node = addTreeNode(p, DisplayName(nodeType), NodeIcon(nodeType), expanded)
 			node.InternalDoClick = function() treeItemClick(nodeType) end
 			local desc = nodeType:GetDescription()
 			if desc and desc ~= "" then
 				node:SetTooltip(desc)
 			end
-		end })
+		end }
 		self.nextTimer = self.nextTimer + 0.001
 	end
 

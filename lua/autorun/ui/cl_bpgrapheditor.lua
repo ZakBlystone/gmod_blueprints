@@ -47,10 +47,10 @@ function meta:CreateUndo(text)
 	if #self.undo >= self.maxUndoLevels then table.remove(self.undo, 1) end
 
 	local undoGraph = self.graph:CopyInto( bpgraph.New() )
-	table.insert(self.undo, {
+	self.undo[#self.undo+1] = {
 		graph = undoGraph,
 		text = text,
-	})
+	}
 	self.undoPtr = #self.undo
 
 end
@@ -478,7 +478,7 @@ function meta:KeyPress( code )
 		if code == KEY_C or code == KEY_X then
 			local selected = self:GetSelectedNodes()
 			local selectedIDs = {}
-			for k,v in pairs(selected) do table.insert(selectedIDs, v:GetNode().id) end
+			for k,v in pairs(selected) do selectedIDs[#selectedIDs+1] = v:GetNode().id end
 
 			if #selectedIDs == 0 then
 				print("Tried copy, but no nodes selected")

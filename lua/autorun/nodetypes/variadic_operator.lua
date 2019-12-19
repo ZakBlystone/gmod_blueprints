@@ -14,7 +14,7 @@ function NODE:GeneratePins(pins)
 
 	local dataPin = nil
 	local dataPinID = nil
-	for k,v in pairs(pins) do
+	for k,v in ipairs(pins) do
 		if v:IsOut() and not v:IsType(bpschema.PN_Exec) then
 			dataPin = v
 			dataPinID = k
@@ -27,14 +27,14 @@ function NODE:GeneratePins(pins)
 	table.remove(pins, dataPinID)
 
 	for i=1, self.data.pinCount do
-		table.insert(pins, bpschema.MakePin(
+		pins[#pins+1] = bpschema.MakePin(
 			bpschema.PD_In,
 			"In_" .. i,
 			dataPin:GetType()
-		))
+		)
 	end
 
-	table.insert(pins, dataPin)
+	pins[#pins+1] = dataPin
 
 end
 
@@ -42,25 +42,25 @@ function NODE:GetOptions(tab)
 
 	self.BaseClass.GetOptions(self, tab)
 
-	table.insert(tab, {
+	tab[#tab+1] = {
 		"AddPin",
 		function()
 			self:PreModify()
 			self.data.pinCount = self.data.pinCount + 1
 			self:PostModify()
 		end
-	})
+	}
 
 	if self.data.pinCount > 2 then
 
-		table.insert(tab, {
+		tab[#tab+1] = {
 			"RemovePin",
 			function()
 				self:PreModify()
 				self.data.pinCount = self.data.pinCount - 1
 				self:PostModify()
 			end
-		})
+		}
 
 	end
 

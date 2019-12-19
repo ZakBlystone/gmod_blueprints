@@ -98,12 +98,12 @@ function meta:CallNodeType()
 				local nthunk = GetNetworkThunk(pin)
 				if nthunk ~= nil then
 					if pin:HasFlag(PNF_Table) then
-						table.insert(t, "__self:netReadTable( function(x) return " .. nthunk.read .. " end )")
+						t[#t+1] = "__self:netReadTable( function(x) return " .. nthunk.read .. " end )"
 					else
-						table.insert(t, nthunk.read)
+						t[#t+1] = nthunk.read
 					end
 				else
-					table.insert(t, "nil")
+					t[#t+1] = nil
 				end
 			end
 			call = call .. table.concat(t, ", ") .. " )"

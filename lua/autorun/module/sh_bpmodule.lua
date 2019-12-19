@@ -332,7 +332,7 @@ function meta:RequestGraphForEvent( nodeType )
 		graph:SetFlag(bpgraph.FL_ROLE_CLIENT)
 	end
 
-	for k,v in pairs(nodeType:GetPins()) do
+	for _, v in ipairs(nodeType:GetPins()) do
 
 		if v:IsType(PN_Exec) then continue end
 		if v:IsOut() then
