@@ -47,6 +47,12 @@ function meta:GetEntries() return self.entries end
 function meta:NewEntry()
 
 	local entry = bpnodetype.New(GroupContexts[self:GetType()], self)
+	return self:AddEntry( entry )
+
+end
+
+function meta:AddEntry(entry)
+
 	self.entries[#self.entries+1] = entry
 	return entry
 

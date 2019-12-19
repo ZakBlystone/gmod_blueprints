@@ -63,10 +63,12 @@ function meta:GetterNodeType()
 	ntype:SetCode("")
 	ntype.Compile = function(node, compiler, pass)
 
+		local varName = "__self.__" .. self:GetName()
+		if compiler.compactVars then varName = "__self.__" .. self.id end
 		if pass == bpcompiler.CP_PREPASS then
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
-				return { var = "__self.__" .. self:GetName() }
+				return { var = varName }
 			end )
 			return true
 
@@ -97,6 +99,7 @@ function meta:SetterNodeType()
 	ntype.Compile = function(node, compiler, pass)
 
 		local varName = "__self.__" .. self:GetName()
+		if compiler.compactVars then varName = "__self.__" .. self.id end
 		if pass == bpcompiler.CP_PREPASS then
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)

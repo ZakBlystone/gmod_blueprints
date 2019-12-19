@@ -8,6 +8,7 @@ CF_Comments = 2
 CF_Debug = 4
 CF_ILP = 8
 CF_CodeString = 16
+CF_CompactVars = 32
 
 CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
 
@@ -105,6 +106,7 @@ function meta:Setup()
 	self.contexts = {}
 	self.current_context = nil
 	self.buffer = ""
+	self.compactVars = bit.band(self.flags, CF_CompactVars) ~= 0
 	self.debug = bit.band(self.flags, CF_Debug) ~= 0
 	self.debugcomments = bit.band(self.flags, CF_Comments) ~= 0
 	self.ilp = bit.band(self.flags, CF_ILP) ~= 0
@@ -188,7 +190,7 @@ end
 
 function meta:CreateNodeVar(node, identifier, isGlobal)
 
-	local key = bpcommon.CreateUniqueKey(self.varscope, "local_" .. node:GetTypeName() .. "_v_" .. identifier)
+	local key = bpcommon.CreateUniqueKey(self.varscope, self.compactVars and "l" or "local_" .. node:GetTypeName() .. "_v_" .. identifier)
 	local v = {
 		var = key,
 		localvar = identifier,
@@ -219,6 +221,7 @@ function meta:CreatePinVar(pin)
 	local isFunctionPin = codeType == NT_FuncInput or codeType == NT_FuncOutput
 	local unique = self.varscope
 	local pinStr = node:ToString(pin)
+	local compactVars = self.compactVars
 
 	pinName = (pinName ~= "" and pinName or "pin")
 
@@ -227,7 +230,7 @@ function meta:CreatePinVar(pin)
 
 		if isFunctionPin then
 
-			local key = bpcommon.CreateUniqueKey({}, "func_" .. graphName .. "_out_" .. pinName)
+			local key = bpcommon.CreateUniqueKey({}, compactVars and "f" or "func_" .. graphName .. "_out_" .. pinName)
 			self.vars[#self.vars+1] = {
 				var = key,
 				pin = pin,
@@ -243,7 +246,7 @@ function meta:CreatePinVar(pin)
 
 		if not isFunctionPin then
 
-			local key = bpcommon.CreateUniqueKey(unique, "fcall_" .. node:GetTypeName() .. "_ret_" .. pinName)
+			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "fcall_" .. node:GetTypeName() .. "_ret_" .. pinName)
 			self.vars[#self.vars+1] = {
 				var = key,
 				global = codeType ~= NT_Pure,
@@ -255,7 +258,7 @@ function meta:CreatePinVar(pin)
 
 		else
 
-			local key = bpcommon.CreateUniqueKey(unique, "func_" .. graphName .. "_in_" .. pinName)
+			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "func_" .. graphName .. "_in_" .. pinName)
 			self.vars[#self.vars+1] = {
 				var = key,
 				pin = pin,
@@ -286,7 +289,7 @@ function meta:CreateFunctionGraphVars(uniqueKeys)
 
 	local unique = uniqueKeys
 	local name = self.graph:GetName()
-	local key = bpcommon.CreateUniqueKey(unique, "func_" .. name .. "_returned")
+	local key = bpcommon.CreateUniqueKey(unique, self.compactVars and "f" or "func_" .. name .. "_returned")
 
 	self.vars[#self.vars+1] = {
 		var = key,
@@ -855,7 +858,9 @@ function meta:CompileGlobalVarListing()
 	for id, var in self.module:Variables() do
 		local def = var.default
 		if var:GetType() == PN_String and bit.band(var:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-		self.emit("instance.__" .. var.name .. " = " .. tostring(def))
+		local varName = var.name
+		if self.compactVars then varName = id end
+		self.emit("instance.__" .. varName .. " = " .. tostring(def))
 	end
 
 	self.finish()
@@ -949,8 +954,7 @@ function meta:CompileNetworkCode()
 		local moduleGUID = net.ReadData(16)
 		local instanceGUID = net.ReadData(16)
 		for _, v in ipairs(G_BPNetHandlers) do
-			if v.__bpm.guid ~= moduleGUID then continue end
-			v:netReceiveHandshake(instanceGUID, len, pl)
+			if v.__bpm.guid == moduleGUID then v:netReceiveHandshake(instanceGUID, len, pl) end
 		end
 	end)
 	net.Receive("bpmessage", function(len, pl)
@@ -1234,10 +1238,11 @@ function meta:CompileCodeSegment()
 		if instance.CORE_Init then instance:CORE_Init() end
 		local bpm = instance.__bpm
 		for k,v in pairs(bpm.events) do
-			if not v.hook or type(meta[k]) ~= "function" then continue end
-			local function call(...) return instance[k](instance, ...) end
-			local key = "bphook_" .. instance.__guid
-			hook.Add(v.hook, key, call)
+			if v.hook and type(meta[k]) == "function" then
+				local function call(...) return instance[k](instance, ...) end
+				local key = "bphook_" .. instance.__guid
+				hook.Add(v.hook, key, call)
+			end
 		end
 		]]
 
@@ -1510,7 +1515,7 @@ if SERVER and bpdefs ~= nil then
 	local graphid, graph = mod:NewGraph("Events", GT_Event)
 	graph:AddNode("__Call" .. funcid)
 
-	mod:Compile()
+	mod:Compile( bit.bor(CF_Default, CF_CompactVars) )
 
 end
 

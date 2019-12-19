@@ -105,7 +105,7 @@ function PANEL:Init()
 		{"Run Locally", function()
 
 			bpenv.Uninstall(self.module)
-			local ok, str = self.module:Compile( bpcompiler.CF_Default )
+			local ok, str = self.module:Compile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 			if ok then
 				bpenv.Install(self.module)
 				bpenv.Instantiate(self.module)
