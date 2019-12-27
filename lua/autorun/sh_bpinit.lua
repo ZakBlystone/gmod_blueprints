@@ -55,3 +55,6 @@ include("ui/cl_bpgrapheditmenu.lua")
 include("ui/cl_bpstructeditmenu.lua")
 include("ui/cl_bpvarcreatemenu.lua")
 include("ui/cl_bpeditor.lua")
+
+-- TEST
+include("sh_bptest.lua")

@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 module("bpstringtable", package.seeall)
 
-local INVALID_STRING = 0
+INVALID_STRING = 0
 
 local meta = bpcommon.MetaTable("bpstringtable")
 
