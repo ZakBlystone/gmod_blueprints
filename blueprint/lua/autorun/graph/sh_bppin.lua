@@ -82,9 +82,6 @@ function meta:WriteToStream(stream)
 	stream:WriteStr(self.name)
 	stream:WriteStr(self.desc)
 	stream:WriteStr(self.default)
-	if self.default ~= nil then
-		print("WRITE DEFAULT: " .. self.name .. " = " .. tostring(self.default))
-	end
 	return self
 
 end
@@ -97,9 +94,6 @@ function meta:ReadFromStream(stream)
 	self.name = stream:ReadStr()
 	self.desc = stream:ReadStr()
 	self.default = stream:ReadStr()
-	if self.default ~= nil then
-		print("READ DEFAULT: " .. self.name .. " = " .. tostring(self.default))
-	end
 	return self
 
 end
