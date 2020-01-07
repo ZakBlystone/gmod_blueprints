@@ -82,6 +82,9 @@ function meta:WriteToStream(stream)
 	stream:WriteStr(self.name)
 	stream:WriteStr(self.desc)
 	stream:WriteStr(self.default)
+	if self.default ~= nil then
+		print("WRITE DEFAULT: " .. self.name .. " = " .. tostring(self.default))
+	end
 	return self
 
 end
@@ -94,6 +97,9 @@ function meta:ReadFromStream(stream)
 	self.name = stream:ReadStr()
 	self.desc = stream:ReadStr()
 	self.default = stream:ReadStr()
+	if self.default ~= nil then
+		print("READ DEFAULT: " .. self.name .. " = " .. tostring(self.default))
+	end
 	return self
 
 end
@@ -103,6 +109,14 @@ function meta:ToString(printTypeInfo, printDir)
 	if printDir then str = str .. " (" .. (self:GetDir() == bpschema.PD_In and "IN" or "OUT") .. ")" end
 	if printTypeInfo then str = str .. " [" .. self:GetType():ToString() .. "]" end
 	return str
+end
+
+function meta:Copy(dir)
+
+	local copy = bpcommon.MakeInstance(meta, dir or self.dir, self.name, self.type, self.desc)
+	copy.default = self.default
+	return copy
+
 end
 
 bpcommon.ForwardMetaCallsVia(meta, "bppintype", "GetType")

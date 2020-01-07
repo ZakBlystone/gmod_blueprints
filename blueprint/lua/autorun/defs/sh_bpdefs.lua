@@ -299,16 +299,7 @@ function(block, value)
 	local key = value.tuple[1]
 	if key == "NAME" then block.struct:RemapName(value.tuple[2], value.tuple[3]) end
 	if key == "METATABLE" then block.struct:SetMetaTable(value.tuple[2]) end
-	if key == "PIN" then
-		local pin = ParsePin(value)
-		block.struct:NewPin(
-			pin:GetName(),
-			pin:GetBaseType(),
-			pin:GetDefault(),
-			pin:GetFlags(),
-			pin:GetSubType(),
-			pin:GetDescription())
-	end
+	if key == "PIN" then block.struct:AddPin(ParsePin(value)) end
 end,
 function(block, parent)
 

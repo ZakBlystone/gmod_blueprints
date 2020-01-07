@@ -6,7 +6,7 @@ local meta = bpcommon.MetaTable("bpstruct")
 
 function meta:Init()
 
-	self.pins = bplist.New():NamedItems("Pins"):Constructor(bpvariable.New)
+	self.pins = bplist.New():NamedItems("Pins"):Constructor(bppin.New)
 	self.nameMap = {}
 	self.invNameMap = {}
 	self.pins:AddListener(function(cb, action, id, var)
@@ -27,10 +27,10 @@ function meta:Init()
 
 end
 
-function meta:NewPin(name, type, default, flags, ex, desc)
+function meta:AddPin(pin)
 
-	local var = bpvariable.New(type, default, flags, ex)
-	return self.pins:Add( var, self.nameMap[name:lower()] or name )
+	local name = pin:GetName()
+	return self.pins:Add( pin, self.nameMap[name:lower()] or name )
 
 end
 
@@ -107,7 +107,7 @@ function meta:MakerNodeType()
 	end
 
 	for _, pin in self.pins:Items() do
-		ntype:AddPin( pin:CreatePin(PD_In) )
+		ntype:AddPin( pin:Copy(PD_In) )
 	end
 
 	local ret, arg = PinRetArg( ntype, function(s,pin)
@@ -151,7 +151,7 @@ function meta:BreakerNodeType()
 	end
 
 	for _, pin in self.pins:Items() do
-		ntype:AddPin( pin:CreatePin(PD_Out) )
+		ntype:AddPin( pin:Copy(PD_Out) )
 	end
 
 	ntype:SetCode("")

@@ -74,6 +74,7 @@ function meta:SetLiteralDefaults()
 		if literal then
 			if self:GetLiteral(pinID) == nil then
 				self:SetLiteral(pinID, default)
+				print("SET LITERAL TO DEFAULT: " .. self:ToString(pinID) .. " : " .. tostring(default))
 			end
 		end
 	end
