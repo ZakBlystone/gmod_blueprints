@@ -15,7 +15,7 @@ bpcommon.AddFlagAccessors(meta)
 function meta:Init()
 
 	self.flags = 0
-	self.pins = bplist.New():NamedItems("Pins"):Constructor(bpvariable.New)
+	self.pins = bplist.New():NamedItems("Pins"):Constructor(bppin.New)
 	self.pins:AddListener(function(cb, action, id, var)
 
 		if self.module then
@@ -57,7 +57,7 @@ function meta:CallNodeType()
 	ntype:AddFlag(NTF_Custom)
 
 	for _, pin in self.pins:Items() do
-		ntype:AddPin( pin:CreatePin(PD_In) )
+		ntype:AddPin( pin:Copy(PD_In) )
 	end
 
 	--local ret, arg, pins = PinRetArg( ntype )
@@ -135,7 +135,7 @@ function meta:EventNodeType()
 	ntype:AddFlag(NTF_NotHook)
 
 	for _, pin in self.pins:Items() do
-		ntype:AddPin( pin:CreatePin(PD_Out) )
+		ntype:AddPin( pin:Copy(PD_Out) )
 	end
 
 	local ret, arg, pins = PinRetArg( ntype, nil, function(s,v,k)
@@ -158,7 +158,15 @@ end
 
 function meta:ReadFromStream(stream, mode, version)
 
-	self.pins:ReadFromStream(stream, mode, version)
+	if version >= 4 then
+		self.pins:ReadFromStream(stream, mode, version)
+	else
+		local oldPins = bplist.New():NamedItems("Pins"):Constructor(bpvariable.New)
+		oldPins:ReadFromStream(stream, mode, version)
+		for _, v in oldPins:Items() do
+			self.pins:Add( v:CreatePin(PD_None) )
+		end
+	end
 	self.flags = stream:ReadBits(8)
 	return self
 

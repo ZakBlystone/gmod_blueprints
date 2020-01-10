@@ -2,6 +2,7 @@ AddCSLuaFile()
 
 module("bpschema", package.seeall)
 
+PD_None = -1
 PD_In = 0
 PD_Out = 1
 

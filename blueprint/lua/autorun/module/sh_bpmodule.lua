@@ -20,7 +20,7 @@ GRAPH_NODETYPE_ACTIONS = {
 
 
 fmtMagic = 0x42504D30
-fmtVersion = 3
+fmtVersion = 4
 
 local meta = bpcommon.MetaTable("bpmodule")
 
@@ -351,6 +351,7 @@ function meta:NetSend()
 	bpcommon.ProfileStart("module:NetSend")
 	bpcommon.Profile("module-net-write", function()
 		local outStream = bpdata.OutStream()
+		outStream:UseStringTable()
 		bpcommon.Profile( "write-module", self.WriteToStream, self, outStream, STREAM_NET )
 		bpcommon.Profile( "write-net-stream", outStream.WriteToNet, outStream, true )
 	end)
@@ -362,7 +363,8 @@ function meta:NetRecv()
 
 	bpcommon.ProfileStart("module:NetRecv")
 	bpcommon.Profile("module-net-read", function()
-	local inStream = bpdata.InStream()
+		local inStream = bpdata.InStream()
+		inStream:UseStringTable()
 		bpcommon.Profile( "read-net-stream", inStream.ReadFromNet, inStream, true )
 		bpcommon.Profile( "read-module", self.ReadFromStream, self, inStream, STREAM_NET )
 	end)
@@ -370,12 +372,29 @@ function meta:NetRecv()
 
 end
 
-function meta:Load(filename)
+function meta:LoadHeader(filename)
 
 	local inStream = bpdata.InStream(false, true)
 	if not inStream:LoadFile(filename, true, true) then
 		error("Failed to load blueprint, try using 'Convert'")
 	end
+
+	local magic = inStream:ReadInt( false )
+	local version = inStream:ReadInt( false )
+	return magic, version
+
+end
+
+function meta:Load(filename)
+
+	local magic, version = self:LoadHeader(filename)
+
+	local inStream = bpdata.InStream(false, true)
+	if version >= 4 then inStream:UseStringTable() end
+	if not inStream:LoadFile(filename, true, true) then
+		error("Failed to load blueprint, try using 'Convert'")
+	end
+
 	self:ReadFromStream( inStream, STREAM_FILE )
 
 end
@@ -383,6 +402,7 @@ end
 function meta:Save(filename)
 
 	local outStream = bpdata.OutStream(false, true)
+	outStream:UseStringTable()
 	self:WriteToStream( outStream, STREAM_FILE )
 	outStream:WriteToFile(filename, true, true)
 
