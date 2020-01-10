@@ -380,7 +380,17 @@ function meta:LoadHeader(filename)
 	end
 
 	local magic = inStream:ReadInt( false )
+
+	if magic ~= fmtMagic then
+		print("Probably using string table, try that")
+		inStream:Reset()
+		inStream:UseStringTable()
+		inStream:LoadFile(filename, true, true)
+		magic = inStream:ReadInt( false )
+	end
+
 	local version = inStream:ReadInt( false )
+
 	return magic, version
 
 end
@@ -388,6 +398,9 @@ end
 function meta:Load(filename)
 
 	local magic, version = self:LoadHeader(filename)
+
+	print("MAGIC: " .. magic)
+	print("VERSION: " .. version)
 
 	local inStream = bpdata.InStream(false, true)
 	if version >= 4 then inStream:UseStringTable() end
@@ -435,7 +448,7 @@ function meta:ReadFromStream(stream, mode)
 	local magic = stream:ReadInt( false )
 	local version = stream:ReadInt( false )
 
-	if magic ~= fmtMagic then error("Invalid blueprint data") end
+	if magic ~= fmtMagic then error("Invalid blueprint data: " .. fmtMagic .. " != " .. magic) end
 	if version > fmtVersion then error("Blueprint data version is newer") end
 
 	self.version = version
