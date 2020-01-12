@@ -97,12 +97,12 @@ function RequestVarSpec( module, callback, parent )
 		--Combo:AddChoice( "Icon Choice", "myData3", false, "icon16/star.png" )
 	end
 
-	for _, v in ipairs(bpdefs.Get():GetClasses()) do
+	for _, v in pairs(bpdefs.Get():GetClasses()) do
 		if v:GetParam("pinTypeOverride") then continue end
 		Combo:AddChoice( v.name, {PN_Ref, v.name} )
 	end
 
-	for _, v in ipairs(bpdefs.Get():GetStructs()) do
+	for _, v in pairs(bpdefs.Get():GetStructs()) do
 		if v:GetPinTypeOverride() then continue end
 		Combo:AddChoice( v.name, {PN_Struct, v.name} )
 	end
