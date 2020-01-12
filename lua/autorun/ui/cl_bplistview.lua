@@ -235,7 +235,7 @@ end
 
 function PANEL:Select(id)
 
-	if self.selectedID ~= id then
+	if self.selectedID ~= id or self.alwaysSelect then
 		self.selectedID = id
 		self:OnItemSelected( id, id and self.list:Get(id) or nil )
 	end

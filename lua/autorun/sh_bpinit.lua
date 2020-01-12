@@ -14,6 +14,10 @@ include("core/sh_bpstringtable.lua")
 include("core/sh_bpdata.lua")
 include("core/sh_bptransfer.lua")
 
+-- SYSTEM
+include("system/sh_bpfile.lua")
+include("system/sh_bpuser.lua")
+
 -- GRAPH
 include("graph/sh_bppintype.lua")
 include("graph/sh_bppin.lua")
@@ -41,6 +45,8 @@ include("defs/sh_bpdefs.lua")
 include("ui/sh_bpui.lua")
 include("ui/cl_bprenderutils.lua")
 include("ui/cl_bprender2d.lua")
+include("ui/cl_bpmenubar.lua")
+include("ui/cl_bpfilemanager.lua")
 include("ui/cl_bpgraph.lua")
 include("ui/cl_bpgraphcreatemenu.lua")
 include("ui/cl_bpgraphpin.lua")
@@ -54,6 +60,7 @@ include("ui/cl_bptextliteraledit.lua")
 include("ui/cl_bpgrapheditmenu.lua")
 include("ui/cl_bpstructeditmenu.lua")
 include("ui/cl_bpvarcreatemenu.lua")
+include("ui/cl_bpmoduleeditor.lua")
 include("ui/cl_bpeditor.lua")
 
 -- TEST

@@ -106,14 +106,26 @@ function meta:Size()
 
 end
 
-function meta:GetNameForItem( optName, item )
+function meta:SetSanitizer( func )
 
-	optName = optName or item.name
+	self.sanitizer = func
+	return self
 
-	if self.preserveNames then return optName end
-	local name = bpcommon.Sanitize(optName) 
-	if name == nil then name = self.namePrefix .. item.id end
-	name = bpcommon.Camelize(name)
+end
+
+function meta:GetNameForItem( name, item )
+
+	name = name or item.name
+
+	if self.preserveNames then return name end
+
+	if self.sanitizer then
+		name = self.sanitizer(name)
+	else
+		name = bpcommon.Sanitize(name)
+		if name == nil then name = self.namePrefix .. item.id end
+		name = bpcommon.Camelize(name)
+	end
 
 	local namesTaken = {}
 	for _, item in self:Items() do namesTaken[item:GetName()] = true end
