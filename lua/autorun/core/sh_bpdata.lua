@@ -232,6 +232,7 @@ end
 
 function OUT:UseStringTable()
 	self.stringTable = bpstringtable.New()
+	return self
 end
 
 function OUT:IsUsingStringTable()
@@ -281,6 +282,7 @@ function OUT:WriteToNet(compressed)
 	local str, len = self:GetString(compressed, false)
 	net.WriteUInt(len, 32)
 	net.WriteData(str, len)
+	return self
 
 end
 
@@ -346,6 +348,7 @@ end
 
 function IN:UseStringTable()
 	self.stringTable = bpstringtable.New()
+	return self
 end
 
 function IN:IsUsingStringTable()
@@ -396,6 +399,7 @@ function IN:ReadFromNet(compressed)
 	local len = net.ReadUInt(32)
 	local str = net.ReadData(len)
 	self:LoadString(str, compressed, false)
+	return self
 
 end
 

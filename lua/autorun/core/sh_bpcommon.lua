@@ -9,6 +9,9 @@ file.CreateDir("blueprints")
 ENABLE_PROFILING = true
 ENABLE_DEEP_PROFILING = false
 
+STREAM_FILE = 1
+STREAM_NET = 2
+
 function rescope(...)
 	local scopes = {...}
 	local vars = {}

@@ -14,6 +14,7 @@ bpcommon.CallbackList({
 MODIFY_ADD = 0
 MODIFY_REMOVE = 1
 MODIFY_RENAME = 2
+MODIFY_REPLACE = 3
 
 local meta = bpcommon.MetaTable("bplist")
 meta.__index = meta
@@ -50,8 +51,8 @@ function meta:Clear()
 
 end
 
-function meta:Advance()
-	self.nextID = self.nextID + 1
+function meta:Advance(forceIndex)
+	self.nextID = (forceIndex or self.nextID) + 1
 end
 
 function meta:NextIndex()
@@ -156,6 +157,7 @@ function meta:CopyInto( other, deep )
 	end
 
 	other.nextID = self.nextID
+	return other
 
 end
 
@@ -179,10 +181,10 @@ function meta:ConstructNamed( name, ... )
 
 end
 
-function meta:Add( item, optName )
+function meta:Add( item, optName, forceIndex )
 
 	if item.id ~= nil then error("Cannot add uniquely indexed items to multiple lists") end
-	item.id = self:NextIndex()
+	item.id = forceIndex or self:NextIndex()
 
 	if self.namedItems then
 		item.name = self:GetNameForItem( optName, item )
@@ -192,7 +194,7 @@ function meta:Add( item, optName )
 
 	self.items[#self.items+1] = item
 	self.itemLookup[item.id] = item
-	self:Advance()
+	self:Advance(forceIndex)
 
 	if item.PostInit then item:PostInit() end
 
@@ -249,6 +251,26 @@ function meta:Rename( id, newName )
 	item.name = self:GetNameForItem( newName, item )
 	self:FireListeners(CB_RENAME, item.id, prev, item.name)
 	self:FireListeners(CB_POSTMODIFY, MODIFY_RENAME, item.id, item)
+
+end
+
+function meta:Replace( id, item )
+
+	local oldItem, oldItemIdx = nil, nil
+	for i, exist in ipairs(self.items) do
+		if exist.id == id then
+			oldItem = exist
+			oldItemIdx = i
+			break
+		end
+	end
+
+	if not oldItem then error("Attempt to replace invalid index") end
+
+	self:FireListeners(CB_PREMODIFY, MODIFY_REPLACE, item.id, item)
+	self.itemLookup[id] = item
+	self.items[oldItemIdx] = item
+	self:FireListeners(CB_POSTMODIFY, MODIFY_REPLACE, item.id, item)
 
 end
 

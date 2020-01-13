@@ -10,12 +10,15 @@ end
 include("core/sh_bpcommon.lua")
 include("core/sh_bpbuffer.lua")
 include("core/sh_bplist.lua")
+include("core/sh_bplistdiff.lua")
+include("core/sh_bpnetlist.lua")
 include("core/sh_bpstringtable.lua")
 include("core/sh_bpdata.lua")
 include("core/sh_bptransfer.lua")
 
 -- SYSTEM
 include("system/sh_bpfile.lua")
+include("system/sh_bpfilesystem.lua")
 include("system/sh_bpuser.lua")
 
 -- GRAPH
