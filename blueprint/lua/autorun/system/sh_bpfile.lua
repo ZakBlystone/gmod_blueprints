@@ -23,8 +23,10 @@ bpcommon.AddFlagAccessors(meta)
 
 meta.__eq = function(a,b)
 
-	if a.name ~= b.name then return false end
 	if a.flags ~= b.flags then return false end
+	if a.uid ~= b.uid then return false end
+	if a.type ~= b.type then return false end
+	if a.owner ~= b.owner then return false end
 	return true
 
 end

@@ -123,6 +123,8 @@ function meta:ApplyPatch( rev, diff, ply )
 
 	self.revision = rev
 
+	print(self.list:ToString("Old List"))
+
 	diff:Patch( self.list )
 
 	print(self.list:ToString("New List"))
@@ -152,7 +154,7 @@ function meta:PushChanges( ply )
 	self.revision = self.revision + 1
 
 	print("Pushing changes")
-	print( self.list:ToString("from") )
+	print( self.list:ToString("latest") )
 
 	if SERVER then
 
@@ -351,13 +353,6 @@ if SERVER then
 		for _, list in ipairs(G_BPNetworkedLists) do
 			list.playerShadows[ply] = nil
 			list.subscriptions[ply] = nil
-		end
-	end)
-
-	hook.Add("PlayerInitialSpawn", "BPNetListPlayerInit", function(ply)
-		for _, list in ipairs(G_BPNetworkedLists) do
-			list.playerShadows[ply] = bplist.New()
-			list.subscriptions[ply] = false
 		end
 	end)
 

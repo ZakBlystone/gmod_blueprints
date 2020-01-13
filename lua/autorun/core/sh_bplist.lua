@@ -238,11 +238,11 @@ function meta:RemoveIf( cond )
 
 end
 
-function meta:Rename( id, newName )
+function meta:Rename( id, newName, force )
 
 	local item = self:Get(id)
 	if item == nil then return false end
-	if item.CanRename and not item:CanRename() then return false end
+	if not force and (item.CanRename and not item:CanRename()) then return false end
 
 	if newName == item.name then return false end
 
@@ -266,7 +266,7 @@ function meta:Replace( id, item )
 		end
 	end
 
-	if not oldItem then error("Attempt to replace invalid index") end
+	if not oldItem then error("Attempt to replace invalid index: " .. id .. " " .. tostring(oldItemIdx)) end
 
 	self:FireListeners(CB_PREMODIFY, MODIFY_REPLACE, item.id, item)
 	self.itemLookup[id] = item

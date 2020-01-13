@@ -168,12 +168,14 @@ function PANEL:Rename( id )
 			v.edit.OnFocusChanged = function(te, gained)
 				if not gained then 
 					self.list:Rename( id, te:GetText() )
+					if bpcommon.IsMetaTable(self.list, "bpnetlist") then self.list:PushChanges() end
 					v.btn:SetVisible(true)
 					te:Remove()
 				end
 			end
 			v.edit.OnEnter = function(te)
 				self.list:Rename( id, te:GetText() )
+				if bpcommon.IsMetaTable(self.list, "bpnetlist") then self.list:PushChanges() end
 				v.btn:SetVisible(true)
 				te:Remove()
 			end

@@ -5,6 +5,7 @@ module("bplistdiff", package.seeall)
 ELEMENT_REMOVED = 1
 ELEMENT_ADDED = 2
 ELEMENT_MODIFIED = 3
+ELEMENT_RENAMED = 4
 
 local meta = bpcommon.MetaTable("bplistdiff")
 meta.__index = meta
@@ -39,6 +40,10 @@ function meta:Init(old, new)
 
 			self.diff[#self.diff+1] = { act = ELEMENT_MODIFIED, id = id, item = entry }
 
+		elseif entry.name ~= item.name then
+
+			self.diff[#self.diff+1] = { act = ELEMENT_RENAMED, id = id, name = entry.name }
+
 		end
 
 	end
@@ -68,6 +73,7 @@ function meta:Patch(list)
 		if act == ELEMENT_REMOVED then list:Remove( v.id ) end
 		if act == ELEMENT_ADDED then list:Add( table.Copy(v.item), v.name, v.id ) end
 		if act == ELEMENT_MODIFIED then list:Replace( v.id, table.Copy(v.item) ) end
+		if act == ELEMENT_RENAMED then list:Rename( v.id, v.name, true ) end
 
 	end
 
@@ -95,6 +101,11 @@ function meta:WriteToStream(stream, mode, version)
 
 			stream:WriteInt( v.id, false )
 			v.item:WriteToStream( stream, mode, version )
+
+		elseif act == ELEMENT_RENAMED then
+
+			stream:WriteInt( v.id, false )
+			bpdata.WriteValue( v.name, stream )
 
 		end
 
@@ -133,6 +144,13 @@ function meta:ReadFromStream(stream, mode, version)
 
 			self.diff[#self.diff+1] = { act = act, id = id, item = item }
 
+		elseif act == ELEMENT_RENAMED then
+
+			local id = stream:ReadInt( false )
+			local name = bpdata.ReadValue( stream )
+
+			self.diff[#self.diff+1] = { act = act, id = id, name = name }
+
 		end
 
 	end
@@ -147,6 +165,7 @@ function meta:ToString()
 		if v.act == ELEMENT_REMOVED then str = str .. "\n - " .. v.id end
 		if v.act == ELEMENT_ADDED then str = str .. "\n + " .. v.id .. " [" .. tostring(v.name) .. "]" .. " : " .. tostring(v.item) end
 		if v.act == ELEMENT_MODIFIED then str = str .. "\n : " .. v.id .. " : " .. tostring(v.item) end
+		if v.act == ELEMENT_RENAMED then str = str .. "\n # " .. v.id .. " : " .. tostring(v.name) end
 
 	end
 

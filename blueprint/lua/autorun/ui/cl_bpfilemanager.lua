@@ -4,7 +4,7 @@ module("bpuifilemanager", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
 local PANEL = {}
 
-function PANEL:OnFileSelected( file )
+function PANEL:OnFileOpen( file )
 
 end
 
