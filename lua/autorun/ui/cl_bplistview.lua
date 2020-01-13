@@ -90,6 +90,7 @@ function PANEL:CreateItemPanel( id, item )
 
 		if self.noConfirm then
 			self.list:Remove( id )
+			if bpcommon.IsMetaTable(self.list, "bpnetlist") then self.list:PushChanges() end
 			return
 		end
 
@@ -98,6 +99,7 @@ function PANEL:CreateItemPanel( id, item )
 		"Yes",
 		function() 
 			self.list:Remove( id )
+			if bpcommon.IsMetaTable(self.list, "bpnetlist") then self.list:PushChanges() end
 		end,
 		"No",
 		function() end)

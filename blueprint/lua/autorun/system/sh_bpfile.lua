@@ -17,6 +17,7 @@ FT_Unknown = 0
 FT_Module = 1
 
 local meta = bpcommon.MetaTable("bpfile")
+meta.__tostring = function(self) return self:ToString() end
 
 bpcommon.AddFlagAccessors(meta)
 
@@ -68,13 +69,21 @@ end
 function meta:ReadFromStream(stream, mode, version)
 
 	self.flags = stream:ReadBits(8)
-	self.uid = bpcommon.ReadStr(16)
+	self.uid = stream:ReadStr(16)
 
 	if not self:HasFlag( FL_AlwaysRun ) then self:ClearFlag( FL_Running ) end
 	if self:HasFlag(FL_HasOwner) then
 		self.owner = bpuser.New()
 		self.owner:ReadFromStream(stream, mode, version)
 	end
+
+end
+
+function meta:ToString()
+
+	local name = self.name or "unnamed"
+	local own = self:HasFlag(FL_HasOwner) and " [" .. tostring(self.owner) .. "]" or ""
+	return "[" .. name .. "] " .. bpcommon.GUIDToString( self.uid ) .. " (" .. self.flags .. ")" .. own
 
 end
 

@@ -31,14 +31,41 @@ function meta:Init( index, name, list )
 		self.subscriptions = {}
 		self.playerShadows = {}
 		for _, pl in ipairs(player.GetAll()) do
-			self.playerShadows[pl] = bplist.New()
+			self.playerShadows[pl] = self:CreateShadow()
 		end
 	else
-		self.serverShadow = bplist.New()
+		self.serverShadow = self:CreateShadow()
 		self.subscribed = false
 	end
 
+	self.AddListener = function(self, ...) self.list:AddListener(...) end
+	self.RemoveListener = function(self, ...) self.list:RemoveListener(...) end
+
 	return self
+
+end
+
+function meta:CreateShadow()
+
+	local shadow = bplist.New()
+	shadow.namedItems = self.list.namedItems
+	shadow.namePrefix = self.list.namePrefix
+	shadow.constructor = self.list.constructor
+	shadow.sanitizer = self.list.sanitizer
+	return shadow
+
+end
+
+function meta:GetPlayerShadow(pl)
+
+	local shadow = self.playerShadows[pl]
+	if shadow == nil then
+		print("Player[" .. tostring(pl) .. "] doesn't have netlist[" .. self.name .. "], creating...")
+		shadow = self:CreateShadow()
+		self.playerShadows[pl] = shadow
+	end
+
+	return shadow
 
 end
 
@@ -57,20 +84,25 @@ end
 function meta:AckPatch( rev, ply )
 
 	if rev ~= self.revision then
-		ErrorNoHalt("List revision since ack, not patching")
+		ErrorNoHalt("!!! List revision since ack, not patching")
 		return
 	end
 
 	if SERVER then
 
-		local shadow = self.playerShadows[ply]
-		if shadow == nil then ErrorNoHalt("Player doesn't have netlist[" .. self.name .. "]") return end
+		local shadow = self:GetPlayerShadow(ply)
 
+		print("Client[" .. tostring(ply) .. "] ack patch '" .. self.name .. "' " .. rev)
 		bplistdiff.New( shadow, self.list ):Patch( shadow )
+
+		print( shadow:ToString("updated_player_shadow") )
 
 	else
 
 		bplistdiff.New( self.serverShadow, self.list ):Patch( self.serverShadow )
+		print("Server ack patch '" .. self.name .. "' " .. rev)
+
+		print( self.serverShadow:ToString("updated_server_shadow") )
 
 	end
 
@@ -80,15 +112,23 @@ function meta:ApplyPatch( rev, diff, ply )
 
 	if not self:CanApplyPatch( diff, ply ) then return end
 
-	if rev < self.revision + 1 then
-		ErrorNoHalt("Tried to patch from outdated revision: " .. rev .. " -> " .. self.revision .. " fetching latest")
-		self:RequestChanges( ply )
+	if rev < self.revision then
+		ErrorNoHalt("Tried to patch '" .. self.name .. "' from outdated revision: " .. rev .. " -> " .. self.revision .. " fetching latest")
+		--self:RequestChanges( ply )
 		return
+	else
+		print("Applying patch for '" .. self.name .. "' " .. self.revision .. " -> " .. rev)
+		print( diff:ToString() )
 	end
 
 	self.revision = rev
 
 	diff:Patch( self.list )
+
+	print(self.list:ToString("New List"))
+
+	if SERVER then diff:Patch( self:GetPlayerShadow(ply) ) print( self:GetPlayerShadow(ply):ToString("patched_player_shadow") ) end
+	if CLIENT then diff:Patch( self.serverShadow ) print( self.serverShadow:ToString("patched_server_shadow") ) end
 
 	net.Start("bpnetlist")
 	net.WriteUInt(CMD_Ack, CommandBits)
@@ -109,17 +149,23 @@ end
 
 function meta:PushChanges( ply )
 
+	self.revision = self.revision + 1
+
+	print("Pushing changes")
+	print( self.list:ToString("from") )
+
 	if SERVER then
 
 		for _, pl in ipairs(player.GetAll()) do
 
 			if ply and pl ~= ply then continue end
 
-			local shadow = self.playerShadows[pl]
-			if shadow == nil then ErrorNoHalt("Player doesn't have netlist[" .. self.name .. "]") continue end
+			local shadow = self:GetPlayerShadow(pl)
+
+			print( shadow:ToString("playershadow_" .. tostring(pl)) )
 
 			local diff = bplistdiff.New( shadow, self.list )
-			if diff:IsEmpty() then continue end
+			if diff:IsEmpty() then print("No changes since shadow, not sending diff to client[" .. tostring(pl) .. "], pushing anyway...") end
 
 			local stream = bpdata.OutStream():UseStringTable()
 			diff:WriteToStream( stream, STREAM_NET )
@@ -131,12 +177,17 @@ function meta:PushChanges( ply )
 			stream:WriteToNet( true )
 			net.Send(pl)
 
+			print("Sending patch to player[" .. self.name .. "]: " .. self.revision .. " -> " .. tostring(pl))
+			print( diff:ToString() )
+
 		end
 
 	else
 
+		print( self.serverShadow:ToString("servershadow") )
+
 		local diff = bplistdiff.New( self.serverShadow, self.list )
-		if diff:IsEmpty() then return end
+		if diff:IsEmpty() then print("No changes since shadow, not sending diff to server, pushing anyway...") end
 
 		local stream = bpdata.OutStream():UseStringTable()
 		diff:WriteToStream( stream, STREAM_NET )
@@ -147,6 +198,9 @@ function meta:PushChanges( ply )
 		net.WriteUInt(self.revision, 32)
 		stream:WriteToNet( true )
 		net.SendToServer()
+
+		print("Sending patch to server[" .. self.name .. "]: " .. self.revision)
+		print( diff:ToString() )
 
 	end
 
@@ -160,10 +214,12 @@ function meta:RequestChanges( ply )
 
 	if SERVER then
 
+		print("Requesting changes for '" .. self.name .. "' from client: " .. tostring(ply))
 		net.Send(ply)
 
 	else
 
+		print("Requesting changes for '" .. self.name .. "' from server")
 		net.SendToServer()
 
 	end
@@ -178,7 +234,8 @@ function meta:OnListCallback( cb, ... )
 	if timer.Exists(timerName) then timer.Remove(timerName) end
 
 	timer.Create(timerName, 0, 1, function()
-		self.revision = self.revision + 1
+
+		print("Detected list change[" .. self.name .. "], pushing changes to subscribers: " .. self.revision .. " -> " .. (self.revision+1))
 
 		if SERVER then
 
@@ -200,15 +257,21 @@ end
 
 function meta:SetSubscribed( subscribed, ply )
 
+	local k = subscribed and "subscribed to" or "unsubscribed from"
+
 	if SERVER then
 
+		print("Client[" .. tostring(ply) .. "] " .. k .. " list[" .. self.name .. "]")
 		self.subscriptions[ply] = subscribed
 
 	else
 
+		print("Server " .. k .. " list[" .. self.name .. "]")
 		self.subscribed = subscribed
 
 	end
+
+	if subscribed then self:PushChanges(ply) end
 
 end
 
@@ -217,7 +280,7 @@ function meta:Subscribe( subscribed, ply )
 	net.Start("bpnetlist")
 	net.WriteUInt(CMD_Subscribe, CommandBits)
 	net.WriteUInt(self.index, IndexBits)
-	net.WriteBool(true)
+	net.WriteBool(subscribed)
 
 	if SERVER then
 
@@ -259,8 +322,8 @@ net.Receive("bpnetlist", function(len, ply)
 	if cmd == CMD_PushDiff then
 
 		local rev = net.ReadUInt(32)
-		local diff = bplistdiff.New()
-		local stream = bpdata.InStream():UseStringTable():ReadFromNet()
+		local diff = bplistdiff.New():Constructor( netlist.list.constructor )
+		local stream = bpdata.InStream():UseStringTable():ReadFromNet(true)
 		diff:ReadFromStream( stream, STREAM_NET )
 		netlist:ApplyPatch( rev, diff, ply )
 

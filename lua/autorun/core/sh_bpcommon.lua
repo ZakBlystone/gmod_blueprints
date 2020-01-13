@@ -243,6 +243,12 @@ function FindMetaTable(name)
 
 end
 
+function IsMetaTable(tbl, name)
+
+	return getmetatable(tbl) == G_BPMetaRegistry[name]
+
+end
+
 function MakeInstance(meta, ...)
 
 	if type(meta) == "string" then meta = G_BPMetaRegistry[name] end

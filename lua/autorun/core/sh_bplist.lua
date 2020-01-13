@@ -17,6 +17,7 @@ MODIFY_RENAME = 2
 MODIFY_REPLACE = 3
 
 local meta = bpcommon.MetaTable("bplist")
+meta.__tostring = function(self) return self:ToString() end
 meta.__index = meta
 
 function meta:Init(...)
@@ -328,6 +329,16 @@ end
 function meta:GetTable()
 
 	return self.items
+
+end
+
+function meta:ToString(name)
+
+	local str = (name or "list") .. ":"
+	for id, item in self:Items() do
+		str = str .. "\n [" .. id .. "] = " .. tostring(item)
+	end
+	return str
 
 end
 

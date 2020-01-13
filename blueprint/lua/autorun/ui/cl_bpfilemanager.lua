@@ -64,12 +64,14 @@ function PANEL:Init()
 	self.content:Dock( FILL )
 	self.content:SetBackgroundColor( Color(30,30,30) )
 
-	local localFiles = bplist.New():NamedItems():SetSanitizer( bpfile.Sanitizer )
-	localFiles:Add(bpfile.New(), "zaks/testmodule")
-	localFiles:Add(bpfile.New(), "zaks/testmodule")
+	--local localFiles = bplist.New():NamedItems():SetSanitizer( bpfile.Sanitizer )
+	--localFiles:Add(bpfile.New(), "zaks/testmodule")
+	--localFiles:Add(bpfile.New(), "zaks/testmodule")
 
-	self.localView = vgui.Create("BPFileView"):SetView("Local", localFiles)
-	self.remoteView = vgui.Create("BPFileView"):SetView("Server")
+	self.localView = vgui.Create("BPFileView"):SetView("Local", G_FS_Client:GetFiles())
+	self.remoteView = vgui.Create("BPFileView"):SetView("Server", G_FS_Server:GetFiles())
+
+	G_FS_Server:GetFiles():Subscribe( true )
 
 	self.content:SetLeft(self.localView)
 	self.content:SetRight(self.remoteView)
@@ -80,6 +82,12 @@ function PANEL:Init()
 		local mod = bpmodule.New()
 		self.editor:OpenModule( mod )
 	end
+
+end
+
+function PANEL:OnRemove()
+
+	G_FS_Server:GetFiles():Subscribe( false )
 
 end
 

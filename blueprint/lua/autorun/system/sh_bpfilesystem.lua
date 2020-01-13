@@ -9,7 +9,8 @@ local LIST_INDEX_CLIENT = 1
 
 function meta:Init( index, name )
 
-	self.files = bpnetlist.Register(index, "filesystem_" .. name, bplist.New():Constructor(bpfile.New))
+	local list = bplist.New():Constructor(bpfile.New):NamedItems():SetSanitizer( bpfile.Sanitizer )
+	self.files = bpnetlist.Register(index, "filesystem_" .. name, list)
 
 	return self
 
