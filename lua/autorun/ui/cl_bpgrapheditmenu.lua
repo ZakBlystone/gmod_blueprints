@@ -10,11 +10,11 @@ local function GraphVarList( module, window, list, name )
 	vlist:SetNoConfirm()
 	vlist.HandleAddItem = function(pnl)
 		window.spec = bpuivarcreatemenu.RequestVarSpec( module, function(name, type, flags, ex) 
-			list:Add( bpvariable.New( type, nil, flags, ex ), name )
+			list:Add( MakePin(PD_None, nil, type, flags, ex), name )
 		end, window )
 	end
 	vlist.ItemBackgroundColor = function( list, id, item, selected )
-		local vcolor = bpschema.NodePinColors[item.type]
+		local vcolor = item:GetColor()
 		if selected then
 			return vcolor
 		else

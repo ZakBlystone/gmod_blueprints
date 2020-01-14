@@ -12,17 +12,7 @@ local meta = bpcommon.MetaTable("bpnodetype")
 bpcommon.AddFlagAccessors(meta)
 
 meta.__tostring = function(self) return self:ToString() end
-meta.__eq = function(a, b)
-	local aPins = a:GetPins()
-	local bPins = b:GetPins()
-	if #aPins ~= #bPins then return false end
-	for k, pin in pairs(aPins) do
-		if not bPins[k] then return false end
-		if pin:GetName() ~= bPins[k]:GetName() then return false end
-		if pin:GetType() ~= bPins[k]:GetType() then return false end
-	end
-	return true
-end
+meta.__eq = nil
 
 local PIN_INPUT_EXEC = MakePin( PD_In, "Exec", PN_Exec )
 local PIN_OUTPUT_EXEC = MakePin( PD_Out, "Exec", PN_Exec )
@@ -95,6 +85,18 @@ function meta:ReturnsValues()
 
 end
 
+function meta:ClearPins()
+
+	self.pins = {}
+
+end
+
+function meta:GetRawPins()
+
+	return self.pins
+
+end
+
 function meta:GetPins()
 	local pins = {}
 
@@ -120,7 +122,7 @@ function meta:GetPins()
 
 	end
 
-	table.Add(pins, self.pins)
+	table.Add(pins, self:GetRawPins())
 
 	if self:GetCodeType() == NT_Function then
 		table.insert(pins, 1, PIN_OUTPUT_THRU)
@@ -297,6 +299,19 @@ function meta:ToString()
 
 	return self:GetName()
 
+end
+
+function meta:SamePins(other)
+	local a,b = self, other
+	local aPins = a:GetPins()
+	local bPins = b:GetPins()
+	if #aPins ~= #bPins then return false end
+	for k, pin in pairs(aPins) do
+		if not bPins[k] then return false end
+		if pin:GetName() ~= bPins[k]:GetName() then return false end
+		if pin:GetType() ~= bPins[k]:GetType() then return false end
+	end
+	return true
 end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end

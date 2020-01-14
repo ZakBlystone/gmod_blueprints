@@ -45,8 +45,8 @@ function meta:Init(module, type)
 	-- Create lists for graph elements
 	self.deferredNodes = bplist.New():Constructor(self.nodeConstructor)
 	self.nodes = bplist.New():Constructor(self.nodeConstructor)
-	self.inputs = bplist.New():NamedItems("Inputs"):Constructor(bpvariable.New)
-	self.outputs = bplist.New():NamedItems("Outputs"):Constructor(bpvariable.New)
+	self.inputs = bplist.New():NamedItems("Inputs"):Constructor(bppin.New)
+	self.outputs = bplist.New():NamedItems("Outputs"):Constructor(bppin.New)
 	self.connections = {}
 	self.heldConnections = {}
 
@@ -54,13 +54,13 @@ function meta:Init(module, type)
 	self.inputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( "__Call" .. self.id )
-			self:PreModifyNodeType("__Entry")
-			self:PreModifyNodeType("__Exit")
+			self.module:PreModifyNodeType( self.callNodeType )
+			self:PreModifyNodeType( self.callEntryNodeType )
+			self:PreModifyNodeType( self.callExitNodeType )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( "__Call" .. self.id )
-			self:PostModifyNodeType("__Entry")
-			self:PostModifyNodeType("__Exit")
+			self.module:PostModifyNodeType( self.callNodeType )
+			self:PostModifyNodeType( self.callEntryNodeType )
+			self:PostModifyNodeType( self.callExitNodeType )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -69,13 +69,13 @@ function meta:Init(module, type)
 	self.outputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( "__Call" .. self.id )
-			self:PreModifyNodeType("__Entry")
-			self:PreModifyNodeType("__Exit")
+			self.module:PreModifyNodeType( self.callNodeType )
+			self:PreModifyNodeType( self.callEntryNodeType )
+			self:PreModifyNodeType( self.callExitNodeType )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( "__Call" .. self.id )
-			self:PostModifyNodeType("__Entry")
-			self:PostModifyNodeType("__Exit")
+			self.module:PostModifyNodeType( self.callNodeType )
+			self:PostModifyNodeType( self.callEntryNodeType )
+			self:PostModifyNodeType( self.callExitNodeType )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -99,6 +99,35 @@ function meta:Init(module, type)
 
 	end, bplist.CB_ALL)
 
+	local pinmeta = FindMetaTable("bppin")
+
+	self.callNodeType = bpnodetype.New()
+	self.callNodeType:AddFlag(NTF_Custom)
+	self.callNodeType:SetCodeType(NT_Function)
+	self.callNodeType.GetDisplayName = function() return self:GetName() end
+	self.callNodeType.GetGraphThunk = function() return self end
+	self.callNodeType.GetRole = function() return self:GetNetworkRole() end
+	self.callNodeType.GetRawPins = function()
+		local pins = {}
+		bpcommon.Transform(self.inputs:GetTable(), pins, pinmeta.Copy, PD_In)
+		bpcommon.Transform(self.outputs:GetTable(), pins, pinmeta.Copy, PD_Out)
+		return pins
+	end
+
+	self.callEntryNodeType = bpnodetype.New()
+	self.callEntryNodeType:SetCodeType(NT_FuncInput)
+	self.callEntryNodeType:SetName("__Entry")
+	self.callEntryNodeType:AddFlag(NTF_NoDelete)
+	self.callEntryNodeType.GetDisplayName = function() return self:GetName() end
+	self.callEntryNodeType.GetRole = function() return self:GetNetworkRole() end
+	self.callEntryNodeType.GetRawPins = function() return bpcommon.Transform(self.inputs:GetTable(), {}, pinmeta.Copy, PD_Out) end
+
+	self.callExitNodeType = bpnodetype.New()
+	self.callExitNodeType:SetCodeType(NT_FuncOutput)
+	self.callExitNodeType:SetDisplayName("Return")
+	self.callExitNodeType:SetName("__Exit")
+	self.callExitNodeType.GetRawPins = function() return bpcommon.Transform(self.outputs:GetTable(), {}, pinmeta.Copy, PD_In) end
+
 	bpcommon.MakeObservable(self)
 
 	return self
@@ -110,8 +139,8 @@ function meta:PostInit()
 	-- Function graphs add entry and exit nodes on creation
 	if self.type == GT_Function then
 
-		self:AddNode("__Entry", 0, 200)
-		self:AddNode("__Exit", 400, 200)
+		self:AddNode(self.callEntryNodeType, 0, 200)
+		self:AddNode(self.callExitNodeType, 400, 200)
 
 	end
 
@@ -149,12 +178,12 @@ function meta:PreModifyNode( node, action, subaction )
 
 end
 
-function meta:PostModifyNode( node, action, subaction )
+function meta:PostModifyNode( node )
 
-	print("NODE MODIFICATION: " .. node:ToString() .. " " .. tostring(action) .. " " .. tostring(subaction))
+	--print("NODE MODIFICATION: " .. node:ToString() )
 
 	node:UpdatePins()
-	self:FireListeners(CB_POSTMODIFY_NODE, node.id, action)
+	self:FireListeners(CB_POSTMODIFY_NODE, node.id)
 
 	local ntype = node:GetType()
 	local held = self.heldConnections[node.id]
@@ -180,9 +209,20 @@ end
 
 function meta:PreModifyNodeType( nodeType)
 
-	for id, node in self:Nodes() do
-		if node:GetTypeName() ~= nodeType then continue end
-		self:PreModifyNode( node, action, subaction )
+	if type(nodeType) == "table" then
+
+		for id, node in self:Nodes() do
+			if node:GetType() ~= nodeType then continue end
+			self:PreModifyNode( node, action, subaction )
+		end
+
+	else
+
+		for id, node in self:Nodes() do
+			if node:GetTypeName() ~= nodeType then continue end
+			self:PreModifyNode( node, action, subaction )
+		end
+
 	end
 
 end
@@ -191,24 +231,21 @@ function meta:PostModifyNodeType( nodeType )
 
 	self:CacheNodeTypes()
 
-	for id, node in self:Nodes() do
-		if node:GetTypeName() ~= nodeType then continue end
-		self:PostModifyNode( node, action, subaction )
+	if type(nodeType) == "table" then
+
+		for id, node in self:Nodes() do
+			if node:GetType() ~= nodeType then continue end
+			self:PostModifyNode( node, action, subaction )
+		end
+
+	else
+
+		for id, node in self:Nodes() do
+			if node:GetTypeName() ~= nodeType then continue end
+			self:PostModifyNode( node, action, subaction )
+		end
+
 	end
-
-end
-
-function meta:PreModify(action, subaction)
-
-	self:PreModifyNodeType("__Entry")
-	self:PreModifyNodeType("__Exit")
-
-end
-
-function meta:PostModify(action, subaction)
-
-	self:PostModifyNodeType("__Entry")
-	self:PostModifyNodeType("__Exit")
 
 end
 
@@ -244,18 +281,7 @@ end
 
 function meta:GetFunctionType()
 
-	if self.type ~= GT_Function then return end
-
-	local ntype = bpnodetype.New()
-	ntype:AddFlag(NTF_Custom)
-	ntype:SetCodeType(NT_Function)
-	ntype:SetDisplayName(self:GetName())
-	ntype:SetGraphThunk(self.id)
-
-	for id, var in self.inputs:Items() do ntype:AddPin( var:CreatePin( PD_In ) ) end
-	for id, var in self.outputs:Items() do ntype:AddPin( var:CreatePin( PD_Out ) ) end
-
-	return ntype
+	return self.callNodeType
 
 end
 
@@ -266,31 +292,14 @@ function meta:CacheNodeTypes()
 
 end
 
-function meta:CreateFunctionNodeTypes( output )
+function meta:GetNetworkRole()
 
 	local role = nil
 	if self:HasFlag(FL_ROLE_CLIENT) and self:HasFlag(FL_ROLE_SERVER) then role = ROLE_Shared
 	elseif self:HasFlag(FL_ROLE_SERVER) then role = ROLE_Server
 	elseif self:HasFlag(FL_ROLE_CLIENT) then role = ROLE_Client end
 
-	local entry = bpnodetype.New()
-	local exit = bpnodetype.New()
-
-	for id, var in self.inputs:Items() do entry:AddPin( var:CreatePin( PD_Out ) ) end
-	for id, var in self.outputs:Items() do exit:AddPin( var:CreatePin( PD_In ) ) end
-
-	entry:SetCodeType(NT_FuncInput)
-	entry:SetDisplayName(self:GetName())
-	entry:SetName("__Entry")
-	entry:SetRole(role)
-	entry:AddFlag(NTF_NoDelete)
-
-	exit:SetCodeType(NT_FuncOutput)
-	exit:SetDisplayName("Return")
-	exit:SetName("__Exit")
-
-	output["__Entry"] = entry
-	output["__Exit"] = exit
+	return role
 
 end
 
@@ -300,12 +309,13 @@ function meta:GetNodeTypes()
 
 	return Profile("cache-node-types", function()
 		local types = {}
-		local base = self:GetModule():GetNodeTypes( self.id )
+		local base = self:GetModule():GetNodeTypes( self )
 
 		table.Merge(types, base)
 
 		if self.type == GT_Function then
-			self:CreateFunctionNodeTypes(types)
+			types["__Entry"] = self.callEntryNodeType
+			types["__Exit"] = self.callExitNodeType
 
 			-- blacklist invalid types in function graphs
 			for k, v in pairs(types) do
@@ -625,18 +635,17 @@ function meta:CanAddNode(nodeType)
 	end
 
 	for _, node in self:Nodes() do
-		if node:GetTypeName() == "__Entry" and nodeType:GetName() == "__Entry" then return false end
-		if node:GetTypeName() == "__Exit" and nodeType:GetName() == "__Exit" and node:GetType() ~= nodeType then return false end
+		if node:GetType() == self.callEntryNodeType and nodeType == self.callEntryNodeType then return false end
 	end
 
 	return true
 
 end
 
-function meta:AddNode(nodeTypeName, ...)
+function meta:AddNode(nodeType, ...)
 
-	local nodeType = self:GetNodeTypes()[nodeTypeName]
-	if nodeType == nil then error("Node type not found: " .. nodeTypeName) end
+	nodeType = type(nodeType) == "table" and nodeType or self:GetNodeTypes()[nodeType]
+	if nodeType == nil then error("Node type not found: " .. nodeType) end
 
 	if not self:CanAddNode(nodeType) then return end
 
@@ -645,7 +654,7 @@ function meta:AddNode(nodeTypeName, ...)
 		return
 	end
 
-	local node = self.nodeConstructor(nodeTypeName, ...)
+	local node = self.nodeConstructor(nodeType, ...)
 	return self.nodes:Add( node )
 
 end
@@ -795,10 +804,20 @@ function meta:ReadFromStream(stream, mode, version)
 		self.flags = stream:ReadInt( false )
 
 		if self.type == GT_Function then
+
 			self.inputs:SuppressEvents(true)
 			self.outputs:SuppressEvents(true)
-			self.inputs:ReadFromStream(stream, mode, version)
-			self.outputs:ReadFromStream(stream, mode, version)
+
+			if version and version < 5 then
+				local inputs = bplist.New():NamedItems("Inputs"):Constructor(bpvariable.New):ReadFromStream(stream, mode, version)
+				local outputs = bplist.New():NamedItems("Outputs"):Constructor(bpvariable.New):ReadFromStream(stream, mode, version)
+				for _, v in inputs:Items() do self.inputs:Add( v:CreatePin(PD_None), v.name ) end
+				for _, v in outputs:Items() do self.outputs:Add( v:CreatePin(PD_None), v.name ) end
+			else
+				self.inputs:ReadFromStream(stream, mode, version)
+				self.outputs:ReadFromStream(stream, mode, version)
+			end
+
 			self.inputs:SuppressEvents(false)
 			self.outputs:SuppressEvents(false)
 		end

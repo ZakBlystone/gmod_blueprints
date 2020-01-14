@@ -13,9 +13,11 @@ function meta:Init(nodeType, x, y, literals)
 
 	if type(nodeType) == "table" then
 		self.nodeTypeObject = nodeType
+		self.nodeType = self.nodeTypeObject:GetName()
+	else
+		self.nodeType = nodeType or "invalid"
 	end
 
-	self.nodeType = nodeType or "invalid"
 	self.x = x or 0
 	self.y = y or 0
 	self.literals = literals or {}

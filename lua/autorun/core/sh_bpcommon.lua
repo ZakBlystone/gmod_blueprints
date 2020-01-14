@@ -230,6 +230,9 @@ function MetaTable(name)
 	G_BPMetaRegistry[name] = G_BPMetaRegistry[name] or {}
 	local mt = G_BPMetaRegistry[name]
 	mt.__index = mt
+
+	_G["is" .. name] = function(tbl) return tbl.BaseClass == mt or getmetatable(tbl) == mt end
+
 	return mt
 
 end
@@ -237,6 +240,15 @@ end
 function FindMetaTable(name)
 
 	return G_BPMetaRegistry[name]
+
+end
+
+function GetMetaTableName(tbl)
+
+	for k,v in pairs(G_BPMetaRegistry) do
+		if v == tbl then return k end
+	end
+	return "unknown"
 
 end
 
@@ -375,5 +387,14 @@ function GCHandle(func)
 	local meta = getmetatable(prx)
 	function meta.__gc( self ) pcall( func ) end
 	return prx
+
+end
+
+function Transform(tab, out, func, ...)
+
+	for _, v in ipairs(tab) do
+		out[#out+1] = func(v, ...)
+	end
+	return out
 
 end

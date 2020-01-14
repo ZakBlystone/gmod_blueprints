@@ -12,7 +12,7 @@ STREAM_FILE = 1
 STREAM_NET = 2
 
 fmtMagic = 0x42504D30
-fmtVersion = 4
+fmtVersion = 5
 
 local meta = bpcommon.MetaTable("bpmodule")
 
@@ -64,17 +64,6 @@ function meta:Init(type)
 		end
 
 	end, bplist.CB_ALL)
-
-	self.graphs:AddListener(function(cb, action, id, graph)
-
-		if action ~= bplist.MODIFY_RENAME then return end
-		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyGraph( id, graph )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyGraph( id, graph )
-		end
-
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	self.structs:AddListener(function(cb, id)
 		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__Make" .. id, "__Break" .. id}) end
@@ -153,24 +142,6 @@ function meta:PostModifyNodeType( nodeType )
 
 end
 
-function meta:PreModifyGraph( id, graph )
-
-	if graph:GetType() ~= GT_Function then return end
-
-	graph:PreModify()
-	self:PreModifyNodeType( "__Call" .. id )
-
-end
-
-function meta:PostModifyGraph( id, graph )
-
-	if graph:GetType() ~= GT_Function then return end
-
-	graph:PostModify()
-	self:PostModifyNodeType( "__Call" .. id )
-
-end
-
 function meta:RemoveNodeTypes( nodeTypes )
 
 	for _, graph in self:Graphs() do
@@ -209,7 +180,7 @@ function meta:NodeTypeInUse( nodeType )
 
 end
 
-function meta:GetNodeTypes( graphID )
+function meta:GetNodeTypes( graph )
 
 	local types = {}
 	local base = bpdefs.Get():GetNodeTypes()
@@ -224,9 +195,10 @@ function meta:GetNodeTypes( graphID )
 
 	for id, v in self:Graphs() do
 
-		if v:GetType() == GT_Function and id ~= graphID then
+		if v:GetType() == GT_Function and v ~= graph then
 
 			types["__Call" .. id] = v:GetFunctionType()
+			if not types["__Call" .. id] then print("FUNCTION GRAPH WITHOUT CALL NODE: " .. id) end
 
 		end
 
@@ -434,6 +406,8 @@ function meta:ReadFromStream(stream, mode)
 
 	if magic ~= fmtMagic then error("Invalid blueprint data: " .. fmtMagic .. " != " .. magic) end
 	if version > fmtVersion then error("Blueprint data version is newer") end
+
+	print("MODULE VERSION: " .. version)
 
 	self.version = version
 	self.type = stream:ReadInt( false )

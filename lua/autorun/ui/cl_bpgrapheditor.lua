@@ -178,7 +178,7 @@ function meta:ConnectionRemoved( id, conn )
 
 end
 function meta:GraphCleared() end
-function meta:PostModifyNode( id, action ) self.nodeSet:PostModifyNode(id, action) end
+function meta:PostModifyNode( id ) self.nodeSet:PostModifyNode(id) end
 
 function meta:IsLocked() return self.vgraph:GetIsLocked() end
 

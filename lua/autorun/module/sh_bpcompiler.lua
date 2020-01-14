@@ -91,12 +91,24 @@ function meta:Init( mod, flags )
 		return out
 	end
 
+	self.metaClasses = {
+		[bpcommon.FindMetaTable("bpgraph")] = 0,
+		[bpcommon.FindMetaTable("bpnode")] = 1,
+		[bpcommon.FindMetaTable("bpnodetype")] = 2,
+		[bpcommon.FindMetaTable("bppin")] = 3,
+		[bpcommon.FindMetaTable("bppintype")] = 4,
+		[bpcommon.FindMetaTable("bpmodule")] = 4,
+	}
+
+
 	return self
 
 end
 
 function meta:Setup()
 
+	self.idents = {}
+	self.nodeIdents = {}
 	self.thunks = {}
 	self.compiledNodes = {}
 	self.graphs = {}
@@ -143,6 +155,35 @@ end
 function meta:GetThunk(type, id)
 
 	return self.thunks[type][id]
+
+end
+
+-- builds localized ids for objects used during compilation
+function meta:GetID(tbl)
+
+	-- currently, debug relies on indices consistent with lists
+	if self.debug then
+
+		return tbl.id
+
+	else
+
+		-- nodes are indexed on a per-graph basis
+		if isbpnode(tbl) then
+			local id = self.nodeIdents
+			local graph = tbl:GetGraph()
+			id[graph] = id[graph] or bpindexer.New()
+			return id[graph](tbl)
+		end
+
+		local mt = tbl.BaseClass or getmetatable(tbl)
+		local classID = self.metaClasses[mt]
+		if not classID then error("Tried to ID invalid class: " .. tostring(mt) .. " -> " .. bpcommon.GetMetaTableName(mt)) end
+
+		self.idents[classID] = self.idents[classID] or bpindexer.New()
+		return self.idents[classID](tbl)
+
+	end
 
 end
 
@@ -395,19 +436,19 @@ end
 -- finds or creates a jump table for the current graph
 function meta:GetGraphJumpTable()
 
-	local graphID = self.graph.id
-	self.nodejumps[graphID] = self.nodejumps[graphID] or {}
-	return self.nodejumps[graphID]
+	self.nodejumps[self.graph] = self.nodejumps[self.graph] or {}
+	return self.nodejumps[self.graph]
 
 end
 
 -- replaces meta-code in the node type (see top of defspec.txt) with references to actual variables
-function meta:CompileVars(code, inVars, outVars, nodeID)
+function meta:CompileVars(code, inVars, outVars, node)
 
 	local str = code
-	local node = self.graph:GetNode(nodeID)
 	local inBase = 0
 	local outBase = 0
+	local graphID = self:GetID(self.graph)
+	local nodeID = self:GetID(node)
 
 	self.currentNode = node
 	self.currentCode = str
@@ -418,9 +459,9 @@ function meta:CompileVars(code, inVars, outVars, nodeID)
 	end
 
 	-- replace macros
-	str = string.Replace( str, "@graph", "graph_" .. self.graph.id .. "_entry" )
+	str = string.Replace( str, "@graph", "graph_" .. graphID .. "_entry" )
 	str = string.Replace( str, "!node", tostring(nodeID))
-	str = string.Replace( str, "!graph", tostring(self.graph.id))
+	str = string.Replace( str, "!graph", tostring(graphID))
 	str = string.Replace( str, "!module", tostring(self.guidString))
 
 	-- replace input pin codes
@@ -506,7 +547,7 @@ function meta:GetPinVar(pin)
 
 				-- unconnected exec pins jump to ::jmp_0:: which just pops the stack
 				return {
-					var = #pins == 0 and "0" or pins[1]:GetNode().id,
+					var = #pins == 0 and "0" or self:GetID(pins[1]:GetNode()),
 					jump = true,
 				}
 
@@ -526,9 +567,9 @@ function meta:GetPinVar(pin)
 end
 
 -- compiles a single node
-function meta:CompileNodeSingle(nodeID)
+function meta:CompileNodeSingle(node)
 
-	local node = self.graph:GetNode(nodeID)
+	local nodeID = self:GetID(node)
 	local code = node:GetCode()
 	local codeType = node:GetCodeType()
 	local graphThunk = node:GetGraphThunk()
@@ -539,16 +580,15 @@ function meta:CompileNodeSingle(nodeID)
 	-- TODO: Instead of building these strings, find a more direct approach of compiling these
 	-- generate code based on function graph inputs and outputs
 	if graphThunk ~= nil then
-		local target = self.module:GetGraph( graphThunk )
 		--print("---------------GRAPH THUNK: " .. ntype.graphThunk .. "---------------------------")
 		code = ""
-		local n = target.outputs:Size()
+		local n = graphThunk.outputs:Size()
 		for i=1, n do
 			code = code .. "#" .. i .. (i~=n and ", " or " ")
 		end
 		if n ~= 0 then code = code .. "= " end
-		code = code .. "__self:" .. target:GetName() .. "("
-		local n = target.inputs:Size()
+		code = code .. "__self:" .. graphThunk:GetName() .. "("
+		local n = graphThunk.inputs:Size()
 		for i=1, n do
 			code = code .. "$" .. i .. (i~=n and ", " or "")
 		end
@@ -591,7 +631,7 @@ function meta:CompileNodeSingle(nodeID)
 	end
 
 	-- the context to emit (singlenode_graph#_node#)
-	self.begin(CTX_SingleNode .. self.graph.id .. "_" .. nodeID)
+	self.begin(CTX_SingleNode .. self:GetID(self.graph) .. "_" .. nodeID)
 
 	-- list of inputs/outputs to compile
 	local inVars = {}
@@ -620,7 +660,7 @@ function meta:CompileNodeSingle(nodeID)
 	code = string.Replace(code, "\t", "")
 
 	-- take all the mapped variables and place them in the code string
-	code = Profile("vct", self.CompileVars, self, code, inVars, outVars, nodeID)
+	code = Profile("vct", self.CompileVars, self, code, inVars, outVars, node)
 
 	-- emit some infinite-loop-protection code
 	if self.ilp and (codeType == NT_Function or codeType == NT_Special or codeType == NT_FuncOutput) then
@@ -651,13 +691,13 @@ end
 
 -- given a non-pure function, walk back through the tree of pure nodes that contribute to its inputs
 -- traversal order follows proceedural execution of nodes (inputs traversed, then node)
-function meta:WalkBackPureNodes(nodeID, call)
+function meta:WalkBackPureNodes(node, call)
 
 	local max = 10000
 	local stack = {}
 	local output = {}
 
-	table.insert(stack, nodeID)
+	table.insert(stack, node)
 
 	while #stack > 0 and max > 0 do
 
@@ -666,15 +706,15 @@ function meta:WalkBackPureNodes(nodeID, call)
 		local pnode = stack[#stack]
 		table.remove(stack, #stack)
 
-		for pinID, pin in self.graph:GetNode(pnode):SidePins(PD_In) do
+		for pinID, pin in pnode:SidePins(PD_In) do
 
 			local connections = pin:GetConnectedPins()
 			for _, v in pairs(connections) do
 
 				local node = v:GetNode()
 				if node:GetCodeType() == NT_Pure then
-					table.insert(stack, node.id)
-					table.insert(output, node.id)
+					table.insert(stack, node)
+					table.insert(output, node)
 				end
 
 			end
@@ -694,12 +734,13 @@ function meta:WalkBackPureNodes(nodeID, call)
 end
 
 -- compiles a non-pure function by collapsing all connected pure nodes into it and emitting labels/jumps
-function meta:CompileNodeFunction(nodeID)
+function meta:CompileNodeFunction(node)
 
-	local node = self.graph:GetNode(nodeID)
 	local codeType = node:GetCodeType()
+	local graphID = self:GetID(self.graph)
+	local nodeID = self:GetID(node)
 
-	self.begin(CTX_FunctionNode .. self.graph.id .. "_" .. nodeID)
+	self.begin(CTX_FunctionNode .. graphID .. "_" .. nodeID)
 	if self.debugcomments then self.emit("-- " .. node:ToString()) end
 	self.emit("::jmp_" .. nodeID .. "::")
 
@@ -707,13 +748,12 @@ function meta:CompileNodeFunction(nodeID)
 	if codeType == NT_Event or codeType == NT_FuncInput then 
 
 		for pinID, pin in node:SidePins(PD_Out) do
-			local pinType = self.graph:GetPinType( nodeID, pinID )
-			if not pinType:IsType(PN_Exec) then continue end
+			if not pin:IsType(PN_Exec) then continue end
 
 			-- get the exec pin's connection and jump to the node it's connected to
 			local connection = pin:GetConnectedPins()[1]
 			if connection ~= nil then
-				self.emit("\tgoto jmp_" .. connection:GetNode().id)
+				self.emit("\tgoto jmp_" .. self:GetID(connection:GetNode()))
 				self.finish()
 				return
 			end
@@ -728,14 +768,14 @@ function meta:CompileNodeFunction(nodeID)
 
 	-- walk through all connected pure nodes, emit each node's code context once
 	local emitted = {}
-	self:WalkBackPureNodes(nodeID, function(pure)
+	self:WalkBackPureNodes(node, function(pure)
 		if emitted[pure] then return end
 		emitted[pure] = true
-		self.emitContext( CTX_SingleNode .. self.graph.id .. "_" .. pure, 1 )
+		self.emitContext( CTX_SingleNode .. graphID .. "_" .. self:GetID(pure), 1 )
 	end)
 
 	-- emit this non-pure node's code
-	self.emitContext( CTX_SingleNode .. self.graph.id .. "_" .. nodeID, 1 )
+	self.emitContext( CTX_SingleNode .. graphID .. "_" .. nodeID, 1 )
 
 	self.finish()
 
@@ -804,7 +844,7 @@ end
 -- lua doesn't have a switch/case construct, so build a massive 'if' bank to jump to each section of the code.
 function meta:CompileGraphJumpTable()
 
-	self.begin(CTX_JumpTable .. self.graph.id)
+	self.begin(CTX_JumpTable .. self:GetID(self.graph))
 
 	local nextJumpID = 0
 
@@ -812,7 +852,8 @@ function meta:CompileGraphJumpTable()
 	self.emit( "if ip == 0 then goto jmp_0 end" )
 
 	-- emit jumps for all non-pure functions
-	for id, node in self.graph:Nodes() do
+	for _, node in self.graph:Nodes() do
+		local id = self:GetID(node)
 		if node:GetCodeType() ~= NT_Pure then
 			self.emit( "if ip == " .. id .. " then goto jmp_" .. id .. " end" )
 		end
@@ -822,7 +863,8 @@ function meta:CompileGraphJumpTable()
 	-- some nodes have internal jump symbols to control program flow (delay / sequence)
 	-- create jump vectors for each of those
 	local jumpTable = self:GetGraphJumpTable()
-	for id, node in self.graph:Nodes() do
+	for _, node in self.graph:Nodes() do
+		local id = self:GetID(node)
 		for _, j in pairs(node:GetJumpSymbols()) do
 
 			jumpTable[id] = jumpTable[id] or {}
@@ -851,7 +893,7 @@ function meta:CompileGlobalVarListing()
 		end
 	end
 
-	for id, var in self.module:Variables() do
+	for _, var in self.module:Variables() do
 		local def = var.default
 		if var:GetType() == PN_String and bit.band(var:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 		self.emit("instance.__" .. var.name .. " = " .. tostring(def))
@@ -864,7 +906,7 @@ end
 -- builds local variable initializer code for graph entry function
 function meta:CompileGraphVarListing()
 
-	self.begin(CTX_Vars .. self.graph.id)
+	self.begin(CTX_Vars .. self:GetID(self.graph))
 
 	for k, v in pairs(self.vars) do
 		if v.graph ~= self.graph then continue end
@@ -880,7 +922,7 @@ end
 -- compiles the graph entry function
 function meta:CompileGraphEntry()
 
-	local graphID = self.graph.id
+	local graphID = self:GetID(self.graph)
 
 	self.begin(CTX_Graph .. graphID)
 
@@ -905,7 +947,7 @@ function meta:CompileGraphEntry()
 	self.emitContext( CTX_JumpTable .. graphID, 1 )
 
 	-- emit all functions belonging to this graph
-	local code = self.getFilteredContexts( CTX_FunctionNode .. self.graph.id )
+	local code = self.getFilteredContexts( CTX_FunctionNode .. graphID )
 	for k, _ in pairs(code) do
 		self.emitContext( k, 1 )
 	end
@@ -916,7 +958,7 @@ function meta:CompileGraphEntry()
 
 	self.finish()
 
-	--print(table.concat( self.getContext( CTX_Graph .. self.graph.id ), "\n" ))
+	--print(table.concat( self.getContext( CTX_Graph .. graphID ), "\n" ))
 
 end
 
@@ -1086,6 +1128,8 @@ end
 -- glues all the code together
 function meta:CompileCodeSegment()
 
+	local moduleID = self:GetID(self.module)
+
 	self.begin(CTX_Code)
 
 	if bit.band(self.flags, CF_Standalone) ~= 0 then
@@ -1128,8 +1172,8 @@ function meta:CompileCodeSegment()
 	if self.ilp then
 		self.emitBlock ([[
 		__bpm.checkilp = function()
-			if __ilph > ]] .. self.ilpmaxh .. [[ then __bpm.onError("Infinite loop in hook", ]] .. self.module.id .. [[, __dbggraph or -1, __dbgnode or -1) return true end
-			if __ilptrip then __bpm.onError("Infinite loop", ]] .. self.module.id .. [[, __dbggraph or -1, __dbgnode or -1) return true end
+			if __ilph > ]] .. self.ilpmaxh .. [[ then __bpm.onError("Infinite loop in hook", ]] .. moduleID .. [[, __dbggraph or -1, __dbgnode or -1) return true end
+			if __ilptrip then __bpm.onError("Infinite loop", ]] .. moduleID .. [[, __dbggraph or -1, __dbgnode or -1) return true end
 		end
 		]])
 	end
@@ -1174,17 +1218,17 @@ function meta:CompileCodeSegment()
 	self.pushIndent()
 
 	if self.ilp then self.emit("__ilph = 0") end
-	self.emitBlock [[
+	self.emitBlock ([[
 	self:netUpdate()
 	for i=#self.delays, 1, -1 do
 		self.delays[i].time = self.delays[i].time - FrameTime()
 		if self.delays[i].time <= 0 then
 			local s,e = pcall(self.delays[i].func)
-			if not s then self.delays = {} __bpm.onError(e:sub((e:find(':', 11) or 0)+2, -1), " .. self.module.id .. ", __dbggraph or -1, __dbgnode or -1) end
+			if not s then self.delays = {} __bpm.onError(e:sub((e:find(':', 11) or 0)+2, -1), ]] .. moduleID .. [[, __dbggraph or -1, __dbgnode or -1) end
 			table.remove(self.delays, i)
 		end
 	end
-	]]
+	]])
 
 	self.popIndent()
 	self.emit("end")
@@ -1292,9 +1336,11 @@ function meta:PreCompileGraph(graph, uniqueKeys)
 end
 
 -- compiles a metamethod for a given event
-function meta:CompileGraphMetaHook(graph, nodeID, name)
+function meta:CompileGraphMetaHook(graph, node, name)
 
-	local node = self.graph:GetNode(nodeID)
+	local graphID = self:GetID(self.graph)
+	local moduleID = self:GetID(self.module)
+	local nodeID = self:GetID(node)
 
 	self.currentNode = node
 	self.currentCode = ""
@@ -1309,7 +1355,7 @@ function meta:CompileGraphMetaHook(graph, nodeID, name)
 	self.emit("__self = self")
 
 	-- emit the code for the event node
-	self.emitContext( CTX_SingleNode .. self.graph.id .. "_" .. nodeID )
+	self.emitContext( CTX_SingleNode .. graphID .. "_" .. nodeID )
 
 	-- infinite-loop-protection, prevents a loop case where an event calls a function which in turn calls the event.
 	-- a counter is incremented and as recursion happens, the counter increases.
@@ -1326,8 +1372,8 @@ function meta:CompileGraphMetaHook(graph, nodeID, name)
 	end
 
 	-- protected call into graph entrypoint, calls error handler on error
-	self.emit("local b,e = pcall(graph_" .. self.graph.id .. "_entry, " .. nodeID .. ")")
-	self.emit("if not b then __bpm.onError(tostring(e), " .. self.module.id .. ", __dbggraph or -1, __dbgnode or -1) end")
+	self.emit("local b,e = pcall(graph_" .. graphID .. "_entry, " .. nodeID .. ")")
+	self.emit("if not b then __bpm.onError(tostring(e), " .. moduleID .. ", __dbggraph or -1, __dbgnode or -1) end")
 
 	-- infinite-loop-protection, after calling the event the counter is decremented.
 	if self.ilp then
@@ -1369,15 +1415,18 @@ function meta:CompileGraph(graph)
 
 	self.graph = graph
 
+	local graphID = self:GetID(self.graph)
+	local moduleID = self:GetID(self.module)
+
 	-- compile each single-node context in the graph
-	for id in self.graph:NodeIDs() do
-		Profile("single-node", self.CompileNodeSingle, self, id)
+	for id, node in self.graph:Nodes() do
+		Profile("single-node", self.CompileNodeSingle, self, node)
 	end
 
 	-- compile all non-pure function nodes in the graph (and events / special nodes)
 	for id, node in self.graph:Nodes() do
 		if node:GetCodeType() ~= NT_Pure then
-			Profile("functions", self.CompileNodeFunction, self, id)
+			Profile("functions", self.CompileNodeFunction, self, node)
 		end
 	end
 
@@ -1385,9 +1434,9 @@ function meta:CompileGraph(graph)
 	for id, node in self.graph:Nodes() do
 		local codeType = node:GetCodeType()
 		if codeType == NT_Event then
-			self:CompileGraphMetaHook(graph, id, node:GetTypeName())
+			self:CompileGraphMetaHook(graph, node, node:GetTypeName())
 		elseif codeType == NT_FuncInput then
-			self:CompileGraphMetaHook(graph, id, graph:GetName())
+			self:CompileGraphMetaHook(graph, node, graph:GetName())
 		end
 	end
 
@@ -1397,7 +1446,7 @@ function meta:CompileGraph(graph)
 	--print("COMPILING GRAPH: " .. graph:GetName() .. " [" .. graph:GetFlags() .. "]")
 
 	-- compile hook listing for each event (only events that have hook designations)
-	self.begin(CTX_Hooks .. self.graph.id)
+	self.begin(CTX_Hooks .. graphID)
 
 	for id, node in self.graph:Nodes() do
 		local codeType = node:GetCodeType()
@@ -1408,9 +1457,9 @@ function meta:CompileGraph(graph)
 
 			self.pushIndent()
 			self.emit("hook = \"" .. hook .. "\",")
-			self.emit("graphID = " .. self.graph.id .. ",")
+			self.emit("graphID = " .. graphID .. ",")
 			self.emit("nodeID = " .. id .. ",")
-			self.emit("moduleID = " .. self.module.id .. ",")
+			self.emit("moduleID = " .. moduleID .. ",")
 			self.popIndent()
 			--self.emit("\t\tfunc = nil,")
 
@@ -1424,10 +1473,10 @@ function meta:CompileGraph(graph)
 
 		self.pushIndent()
 		self.emit("hook = \"" .. graph:GetName() .. "\",")
-		self.emit("graphID = " .. graph.id .. ",")
+		self.emit("graphID = " .. graphID .. ",")
 		self.emit("nodeID = -1,")
-		self.emit("moduleID = " .. self.module.id .. ",")
-		self.emit("key = \"__bphook_" .. self.module.id .. "\"")
+		self.emit("moduleID = " .. moduleID .. ",")
+		self.emit("key = \"__bphook_" .. moduleID .. "\"")
 		self.popIndent()
 		--self.emit("\t\tfunc = nil,")
 
@@ -1502,9 +1551,9 @@ if SERVER and bpdefs ~= nil then
 	local mod = bpmodule.New()
 	local funcid, graph = mod:NewGraph("MyFunction", GT_Function)
 
-	graph.outputs:Add( bpvariable.New(), "retvar" )
-	graph.outputs:Add( bpvariable.New(), "retvar2" )
-	graph.inputs:Add( bpvariable.New(), "testVar" )
+	graph.outputs:Add( MakePin(PD_None, nil, PN_Bool), "retvar" )
+	graph.outputs:Add( MakePin(PD_None, nil, PN_Bool), "retvar2" )
+	graph.inputs:Add( MakePin(PD_None, nil, PN_Bool), "testVar" )
 
 	local graphid, graph = mod:NewGraph("Events", GT_Event)
 	graph:AddNode("__Call" .. funcid)
