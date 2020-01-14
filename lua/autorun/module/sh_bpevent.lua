@@ -67,6 +67,9 @@ function meta:CallNodeType()
 	ntype.Compile = function(node, compiler, pass)
 
 		if pass == bpcompiler.CP_PREPASS then
+
+			print("EVENT CALL PREPASS")
+
 			node.recv = compiler:AllocThunk(bpcompiler.TK_NETCODE)
 			node.send = compiler:AllocThunk(bpcompiler.TK_GENERIC)
 			node.send.begin()

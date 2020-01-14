@@ -159,18 +159,22 @@ function meta:BreakerNodeType()
 
 		if pass == bpcompiler.CP_PREPASS then
 
+			return true
+
+		elseif pass == bpcompiler.CP_ALLOCVARS then
+
+			print("CREATING PIN ROUTERS ON STRUCT: " .. self:GetName())
+			compiler:CreatePinVar( node:FindPin(PD_In, self:GetName()) )
+
 			local input = node:FindPin(PD_In, self:GetName())
 			for pinID, pin in node:SidePins(PD_Out) do
+				print("+PIN ROUTER: " .. pin:GetName())
 				compiler:CreatePinRouter( pin, function(pin)
 					local name = pin:GetName()
 					return { var = compiler:GetPinCode(input) .. "[\"" .. (self.invNameMap[name:lower()] or name) .. "\"]" }
 				end )
 			end
-			return true
 
-		elseif pass == bpcompiler.CP_ALLOCVARS then
-
-			compiler:CreatePinVar( node:FindPin(PD_In, self:GetName()) )
 			return true
 
 		elseif pass == bpcompiler.CP_MAINPASS then

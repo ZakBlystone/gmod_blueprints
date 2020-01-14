@@ -65,12 +65,16 @@ function meta:GetterNodeType()
 
 		if pass == bpcompiler.CP_PREPASS then
 
+			return true
+
+		elseif pass == bpcompiler.CP_ALLOCVARS then 
+
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
 				return { var = "__self.__" .. self:GetName() }
 			end )
+
 			return true
 
-		elseif pass == bpcompiler.CP_ALLOCVARS then return true
 		elseif pass == bpcompiler.CP_MAINPASS then
 
 			if node:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) ) end
@@ -99,12 +103,15 @@ function meta:SetterNodeType()
 		local varName = "__self.__" .. self:GetName()
 		if pass == bpcompiler.CP_PREPASS then
 
+			return true
+
+		elseif pass == bpcompiler.CP_ALLOCVARS then 
+
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
 				return { var = varName }
 			end )
 			return true
 
-		elseif pass == bpcompiler.CP_ALLOCVARS then return true
 		elseif pass == bpcompiler.CP_MAINPASS then
 
 			compiler.emit( varName .. " = " .. compiler:GetPinCode( node:FindPin(PD_In, "value") ) )
