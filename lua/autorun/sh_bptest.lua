@@ -149,10 +149,16 @@ if SERVER then
 
 	end
 
-	local files, folders = file.Find(testPath .. "*", "LUA")
-	for _, file in ipairs(files) do
+	local function LoadTestSuites()
 
-		LoadTestSuite(file)
+		testSuites = {}
+
+		local files, folders = file.Find(testPath .. "*", "LUA")
+		for _, file in ipairs(files) do
+
+			LoadTestSuite(file)
+
+		end
 
 	end
 
@@ -167,6 +173,16 @@ if SERVER then
 
 	end
 
+	LoadTestSuites()
 	RunAllTests()
+
+	concommand.Add("bp_reloadtests", function()
+		LoadTestSuites()
+		RunAllTests()
+	end)
+
+	concommand.Add("bp_runtests", function()
+		RunAllTests()
+	end)
 
 end
