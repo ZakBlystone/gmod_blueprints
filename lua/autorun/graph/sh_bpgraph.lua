@@ -14,9 +14,6 @@ bpcommon.CallbackList({
 	"POSTMODIFY_NODE",
 })
 
-NODE_MODIFY_RENAME = 1
-NODE_MODIFY_SIGNATURE = 2
-
 FL_NONE = 0
 FL_LOCK_PINS = 1
 FL_LOCK_NAME = 2
@@ -57,13 +54,13 @@ function meta:Init(module, type)
 	self.inputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( "__Call" .. self.id, NODE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType("__Entry", NODE_MODIFY_SIGNATURE, action)
-			self:PreModifyNodeType("__Exit", NODE_MODIFY_SIGNATURE, action)
+			self.module:PreModifyNodeType( "__Call" .. self.id )
+			self:PreModifyNodeType("__Entry")
+			self:PreModifyNodeType("__Exit")
 		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( "__Call" .. self.id, NODE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType("__Entry", NODE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType("__Exit", NODE_MODIFY_SIGNATURE, action )
+			self.module:PostModifyNodeType( "__Call" .. self.id )
+			self:PostModifyNodeType("__Entry")
+			self:PostModifyNodeType("__Exit")
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -72,13 +69,13 @@ function meta:Init(module, type)
 	self.outputs:AddListener(function(cb, action, id, var)
 
 		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( "__Call" .. self.id, NODE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType("__Entry", NODE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType("__Exit", NODE_MODIFY_SIGNATURE, action )
+			self.module:PreModifyNodeType( "__Call" .. self.id )
+			self:PreModifyNodeType("__Entry")
+			self:PreModifyNodeType("__Exit")
 		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( "__Call" .. self.id, NODE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType("__Entry", NODE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType("__Exit", NODE_MODIFY_SIGNATURE, action )
+			self.module:PostModifyNodeType( "__Call" .. self.id )
+			self:PostModifyNodeType("__Entry")
+			self:PostModifyNodeType("__Exit")
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -181,49 +178,37 @@ function meta:PostModifyNode( node, action, subaction )
 
 end
 
-function meta:PreModifyNodeType( nodeType, action, subaction )
+function meta:PreModifyNodeType( nodeType)
 
-	if action == NODE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
-
-		for id, node in self:Nodes() do
-			if node:GetTypeName() ~= nodeType then continue end
-			self:PreModifyNode( node, action, subaction )
-		end
-
+	for id, node in self:Nodes() do
+		if node:GetTypeName() ~= nodeType then continue end
+		self:PreModifyNode( node, action, subaction )
 	end
 
 end
 
-function meta:PostModifyNodeType( nodeType, action, subaction )
+function meta:PostModifyNodeType( nodeType )
 
 	self:CacheNodeTypes()
 
-	if action == NODE_MODIFY_SIGNATURE and subaction ~= bplist.MODIFY_RENAME then
-
-		for id, node in self:Nodes() do
-			if node:GetTypeName() ~= nodeType then continue end
-			self:PostModifyNode( node, action, subaction )
-		end
-
+	for id, node in self:Nodes() do
+		if node:GetTypeName() ~= nodeType then continue end
+		self:PostModifyNode( node, action, subaction )
 	end
 
 end
 
 function meta:PreModify(action, subaction)
 
-	if action == bpmodule.GRAPH_MODIFY_RENAME then
-		self:PreModifyNodeType("__Entry", NODE_MODIFY_RENAME, subaction)
-		self:PreModifyNodeType("__Exit", NODE_MODIFY_RENAME, subaction)
-	end
+	self:PreModifyNodeType("__Entry")
+	self:PreModifyNodeType("__Exit")
 
 end
 
 function meta:PostModify(action, subaction)
 
-	if action == bpmodule.GRAPH_MODIFY_RENAME then
-		self:PostModifyNodeType("__Entry", NODE_MODIFY_RENAME, subaction)
-		self:PostModifyNodeType("__Exit", NODE_MODIFY_RENAME, subaction)
-	end
+	self:PostModifyNodeType("__Entry")
+	self:PostModifyNodeType("__Exit")
 
 end
 

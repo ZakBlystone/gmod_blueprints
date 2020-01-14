@@ -188,14 +188,14 @@ end
 function meta:PreModify()
 
 	if not self.graph then return end
-	self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+	self.graph:PreModifyNode( self )
 
 end
 
 function meta:PostModify()
 
 	if not self.graph then return end
-	self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+	self.graph:PostModifyNode( self )
 
 end
 

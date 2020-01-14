@@ -11,14 +11,6 @@ bpcommon.CallbackList({
 STREAM_FILE = 1
 STREAM_NET = 2
 
-GRAPH_MODIFY_RENAME = 1
-GRAPH_MODIFY_SIGNATURE = 2
-GRAPH_NODETYPE_ACTIONS = {
-	[GRAPH_MODIFY_RENAME] = bpgraph.NODE_MODIFY_RENAME,
-	[GRAPH_MODIFY_SIGNATURE] = bpgraph.NODE_MODIFY_SIGNATURE,
-}
-
-
 fmtMagic = 0x42504D30
 fmtVersion = 4
 
@@ -77,9 +69,9 @@ function meta:Init(type)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyGraph( GRAPH_MODIFY_RENAME, id, graph )
+			self:PreModifyGraph( id, graph )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyGraph( GRAPH_MODIFY_RENAME, id, graph )
+			self:PostModifyGraph( id, graph )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -93,15 +85,11 @@ function meta:Init(type)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType( "__Make" .. id )
+			self:PreModifyNodeType( "__Break" .. id )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType( "__Make" .. id )
+			self:PostModifyNodeType( "__Break" .. id )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -115,15 +103,11 @@ function meta:Init(type)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType( "__Event" .. id )
+			self:PreModifyNodeType( "__EventCall" .. id )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType( "__Event" .. id )
+			self:PostModifyNodeType( "__EventCall" .. id )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -137,11 +121,11 @@ function meta:Init(type)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__VGet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__VSet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( "__VGet" .. id )
+			self:PreModifyNodeType( "__VSet" .. id )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__VGet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__VSet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( "__VGet" .. id )
+			self:PostModifyNodeType( "__VSet" .. id )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -153,37 +137,37 @@ function meta:Init(type)
 
 end
 
-function meta:PreModifyNodeType( nodeType, action, subaction )
+function meta:PreModifyNodeType( nodeType )
 
 	for _, graph in self:Graphs() do
-		graph:PreModifyNodeType( nodeType, action, subaction )
+		graph:PreModifyNodeType( nodeType )
 	end
 
 end
 
-function meta:PostModifyNodeType( nodeType, action, subaction )
+function meta:PostModifyNodeType( nodeType )
 
 	for _, graph in self:Graphs() do
-		graph:PostModifyNodeType( nodeType, action, subaction )
+		graph:PostModifyNodeType( nodeType )
 	end
 
 end
 
-function meta:PreModifyGraph( action, id, graph, subaction )
+function meta:PreModifyGraph( id, graph )
 
 	if graph:GetType() ~= GT_Function then return end
 
-	graph:PreModify(action, subaction)
-	self:PreModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action], subaction )
+	graph:PreModify()
+	self:PreModifyNodeType( "__Call" .. id )
 
 end
 
-function meta:PostModifyGraph( action, id, graph )
+function meta:PostModifyGraph( id, graph )
 
 	if graph:GetType() ~= GT_Function then return end
 
-	graph:PostModify(action, subaction)
-	self:PostModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action], subaction )
+	graph:PostModify()
+	self:PostModifyNodeType( "__Call" .. id )
 
 end
 

@@ -20,11 +20,11 @@ function meta:Init()
 
 		if self.module then
 			if cb == bplist.CB_PREMODIFY then
-				self.module:PreModifyNodeType( "__Event" .. self.id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-				self.module:PreModifyNodeType( "__EventCall" .. self.id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+				self.module:PreModifyNodeType( "__Event" .. self.id )
+				self.module:PreModifyNodeType( "__EventCall" .. self.id )
 			elseif cb == bplist.CB_POSTMODIFY then
-				self.module:PostModifyNodeType( "__Event" .. self.id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-				self.module:PostModifyNodeType( "__EventCall" .. self.id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+				self.module:PostModifyNodeType( "__Event" .. self.id )
+				self.module:PostModifyNodeType( "__EventCall" .. self.id )
 			end
 		end
 
