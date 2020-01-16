@@ -297,7 +297,7 @@ end
 
 function meta:ToString()
 
-	return self:GetName()
+	return tostring( self:GetName() )
 
 end
 

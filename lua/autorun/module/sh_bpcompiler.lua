@@ -895,8 +895,9 @@ function meta:CompileGlobalVarListing()
 
 	for _, var in self.module:Variables() do
 		local def = var.default
-		if var:GetType() == PN_String and bit.band(var:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-		self.emit("instance.__" .. var.name .. " = " .. tostring(def))
+		local vtype = var:GetType()
+		if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+		self.emit("instance.__" .. var:GetName() .. " = " .. tostring(def))
 	end
 
 	self.finish()
@@ -1549,14 +1550,14 @@ end
 if SERVER and bpdefs ~= nil then
 
 	local mod = bpmodule.New()
-	local funcid, graph = mod:NewGraph("MyFunction", GT_Function)
+	local funcid, funcgraph = mod:NewGraph("MyFunction", GT_Function)
 
-	graph.outputs:Add( MakePin(PD_None, nil, PN_Bool), "retvar" )
-	graph.outputs:Add( MakePin(PD_None, nil, PN_Bool), "retvar2" )
-	graph.inputs:Add( MakePin(PD_None, nil, PN_Bool), "testVar" )
+	funcgraph.outputs:Add( MakePin(PD_None, nil, PN_Bool), "retvar" )
+	funcgraph.outputs:Add( MakePin(PD_None, nil, PN_Bool), "retvar2" )
+	funcgraph.inputs:Add( MakePin(PD_None, nil, PN_Bool), "testVar" )
 
 	local graphid, graph = mod:NewGraph("Events", GT_Event)
-	graph:AddNode("__Call" .. funcid)
+	graph:AddNode(funcgraph:GetCallNodeType())
 
 	mod:Compile()
 

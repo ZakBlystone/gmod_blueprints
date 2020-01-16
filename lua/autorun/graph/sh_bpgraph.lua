@@ -99,8 +99,10 @@ function meta:Init(module, type)
 
 	end, bplist.CB_ALL)
 
-	local pinmeta = FindMetaTable("bppin")
+	local pinmeta = bpcommon.FindMetaTable("bppin")
 
+	-- For function graphs
+	-- Function to call graph entry point
 	self.callNodeType = bpnodetype.New()
 	self.callNodeType:AddFlag(NTF_Custom)
 	self.callNodeType:SetCodeType(NT_Function)
@@ -114,6 +116,7 @@ function meta:Init(module, type)
 		return pins
 	end
 
+	-- Entry point node
 	self.callEntryNodeType = bpnodetype.New()
 	self.callEntryNodeType:SetCodeType(NT_FuncInput)
 	self.callEntryNodeType:SetName("__Entry")
@@ -122,6 +125,7 @@ function meta:Init(module, type)
 	self.callEntryNodeType.GetRole = function() return self:GetNetworkRole() end
 	self.callEntryNodeType.GetRawPins = function() return bpcommon.Transform(self.inputs:GetTable(), {}, pinmeta.Copy, PD_Out) end
 
+	-- Return node
 	self.callExitNodeType = bpnodetype.New()
 	self.callExitNodeType:SetCodeType(NT_FuncOutput)
 	self.callExitNodeType:SetDisplayName("Return")
@@ -279,7 +283,7 @@ function meta:GetModule()
 
 end
 
-function meta:GetFunctionType()
+function meta:GetCallNodeType()
 
 	return self.callNodeType
 
@@ -642,10 +646,10 @@ function meta:CanAddNode(nodeType)
 
 end
 
-function meta:AddNode(nodeType, ...)
+function meta:AddNode(nodeTypeName, ...)
 
-	nodeType = type(nodeType) == "table" and nodeType or self:GetNodeTypes()[nodeType]
-	if nodeType == nil then error("Node type not found: " .. nodeType) end
+	nodeType = type(nodeTypeName) == "table" and nodeTypeName or self:GetNodeTypes()[nodeTypeName]
+	if nodeType == nil then error("Node type not found: " .. tostring(nodeTypeName)) end
 
 	if not self:CanAddNode(nodeType) then return end
 
@@ -1013,31 +1017,7 @@ end
 
 function meta:CreateTestGraph()
 
-	local graph = self
-	local n1 = graph:AddNode("If", 700, 10)
-	local n2 = graph:AddNode("Crouching", 350, 150 )
-	local n4 = graph:AddNode("SetVelocity", 1000, 100)
-	local n5 = graph:AddNode("Vector", 750, 200, {0,0,800})
-	local n6 = graph:AddNode("Alive", 350, 350)
-	local n7 = graph:AddNode("And", 600, 300)
-	local n8 = graph:AddNode("ToString", 650, 500)
-	local n9 = graph:AddNode("Print", 1000, 500)
-	local n10 = graph:AddNode("PlayerTick", 10, 10)
-	local n11 = graph:AddNode("GetVelocity", 350, 500)
-
-	graph:ConnectNodes(n10, 1, n1, 1)
-	graph:ConnectNodes(n10, 2, n2, 1)
-	graph:ConnectNodes(n1, 3, n4, 1)
-	graph:ConnectNodes(n10, 2, n4, 3)
-	graph:ConnectNodes(n5, 4, n4, 4)
-	graph:ConnectNodes(n2, 2, n7, 1)
-	graph:ConnectNodes(n6, 2, n7, 2)
-	graph:ConnectNodes(n6, 1, n10, 2)
-	graph:ConnectNodes(n7, 3, n1, 2)
-	graph:ConnectNodes(n4, 2, n9, 1)
-	graph:ConnectNodes(n8, 2, n9, 3)
-	graph:ConnectNodes(n10, 2, n11, 1)
-	graph:ConnectNodes(n11, 2, n8, 1)
+	-- Rewrite this
 
 end
 

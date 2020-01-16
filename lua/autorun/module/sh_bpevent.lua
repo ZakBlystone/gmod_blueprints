@@ -20,51 +20,47 @@ function meta:Init()
 
 		if self.module then
 			if cb == bplist.CB_PREMODIFY then
-				self.module:PreModifyNodeType( "__Event" .. self.id )
-				self.module:PreModifyNodeType( "__EventCall" .. self.id )
+				self.module:PreModifyNodeType( self.eventNodeType )
+				self.module:PreModifyNodeType( self.callNodeType )
 			elseif cb == bplist.CB_POSTMODIFY then
-				self.module:PostModifyNodeType( "__Event" .. self.id )
-				self.module:PostModifyNodeType( "__EventCall" .. self.id )
+				self.module:PostModifyNodeType( self.eventNodeType )
+				self.module:PostModifyNodeType( self.callNodeType )
 			end
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
-	return self
+	local pinmeta = bpcommon.FindMetaTable("bppin")
 
-end
+	-- Event node on receiving end
+	self.eventNodeType = bpnodetype.New()
+	self.eventNodeType:AddFlag(NTF_Custom)
+	self.eventNodeType:AddFlag(NTF_NotHook)
+	self.eventNodeType:SetCodeType(NT_Event)
+	self.eventNodeType.GetDisplayName = function() return self:GetName() end
+	self.eventNodeType.GetDescription = function() return "Custom Event: " .. self:GetName() end
+	self.eventNodeType.GetCategory = function() return self:GetName() end
+	self.eventNodeType.GetRawPins = function() return bpcommon.Transform( self.pins:GetTable(), {}, pinmeta.Copy, PD_Out ) end
+	self.eventNodeType.GetCode = function(ntype)
 
-function meta:SetName(name)
+		local ret, arg, pins = PinRetArg( ntype, nil, function(s,v,k)
+			return s.. " = " .. "arg[" .. (k-1) .. "]"
+		end, "\n" )
 
-	self.name = name
+		return ret
 
-end
-
-function meta:GetName()
-
-	return self.name
-
-end
-
-function meta:CallNodeType()
-
-	local ntype = bpnodetype.New()
-	ntype:SetName("__EventCall" .. self.id)
-	ntype:SetDisplayName("Call " .. self:GetName())
-	ntype:SetCodeType(NT_Function)
-	ntype:SetDescription("Call " .. self:GetName() .. " event")
-	ntype:SetCategory(self:GetName())
-	ntype:AddFlag(NTF_Custom)
-
-	for _, pin in self.pins:Items() do
-		ntype:AddPin( pin:Copy(PD_In) )
 	end
 
-	--local ret, arg, pins = PinRetArg( ntype )
-	--ntype:SetCode( "__self:__Event" .. self.id .. "(" .. arg .. ")" )
-	ntype:SetCode("")
-
-	ntype.Compile = function(node, compiler, pass)
+	-- Event calling node
+	self.callNodeType = bpnodetype.New()
+	self.callNodeType:AddFlag(NTF_Custom)
+	self.callNodeType:SetCodeType(NT_Function)
+	self.callNodeType:SetCode("")
+	self.callNodeType.GetDisplayName = function() return "Call " .. self:GetName() end
+	self.callNodeType.GetDescription = function() return "Call " .. self:GetName() .. " event" end
+	self.callNodeType.GetCategory = function() return self:GetName() end
+	self.callNodeType.GetRawPins = function() return bpcommon.Transform( self.pins:GetTable(), {}, pinmeta.Copy, PD_In ) end
+	self.callNodeType.Compile = function(node, compiler, pass)
 
 		if pass == bpcompiler.CP_PREPASS then
 
@@ -122,32 +118,31 @@ function meta:CallNodeType()
 
 	end
 
-	return ntype
+	return self
+
+end
+
+function meta:SetName(name)
+
+	self.name = name
+
+end
+
+function meta:GetName()
+
+	return self.name
+
+end
+
+function meta:CallNodeType()
+
+	return self.callNodeType
 
 end
 
 function meta:EventNodeType()
 
-	local ntype = bpnodetype.New()
-	ntype:SetName("__Event" .. self.id)
-	ntype:SetDisplayName(self:GetName())
-	ntype:SetCodeType(NT_Event)
-	ntype:SetDescription("Custom Event: " .. self:GetName())
-	ntype:SetCategory(self:GetName())
-	ntype:AddFlag(NTF_Custom)
-	ntype:AddFlag(NTF_NotHook)
-
-	for _, pin in self.pins:Items() do
-		ntype:AddPin( pin:Copy(PD_Out) )
-	end
-
-	local ret, arg, pins = PinRetArg( ntype, nil, function(s,v,k)
-		return s.. " = " .. "arg[" .. (k-1) .. "]"
-	end, "\n" )
-
-	ntype:SetCode(ret)
-
-	return ntype
+	return self.eventNodeType
 
 end
 

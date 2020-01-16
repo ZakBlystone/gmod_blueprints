@@ -12,7 +12,7 @@ STREAM_FILE = 1
 STREAM_NET = 2
 
 fmtMagic = 0x42504D30
-fmtVersion = 5
+fmtVersion = 6
 
 local meta = bpcommon.MetaTable("bpmodule")
 
@@ -53,38 +53,38 @@ function meta:Init(type)
 	self.revision = 1
 	self.uniqueID = bpcommon.GUID()
 
-	self.graphs:AddListener(function(cb, id)
+	self.graphs:AddListener(function(cb, id, graph)
 
 		if cb == bplist.CB_ADD then
 			self:FireListeners(CB_GRAPH_ADD, id)
 		elseif cb == bplist.CB_REMOVE then
-			self:RemoveNodeTypes({"__Call" .. id})
+			self:RemoveNodeTypes({ graph:GetCallNodeType() })
 			self:FireListeners(CB_GRAPH_REMOVE, id)
 			self:RecacheNodeTypes()
 		end
 
 	end, bplist.CB_ALL)
 
-	self.structs:AddListener(function(cb, id)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__Make" .. id, "__Break" .. id}) end
+	self.structs:AddListener(function(cb, id, struct)
+		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ struct:MakerNodeType(), struct:BreakerNodeType() }) end
 		self:RecacheNodeTypes()
 	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
-	self.structs:AddListener(function(cb, action, id, graph)
+	self.structs:AddListener(function(cb, action, id, struct)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__Make" .. id )
-			self:PreModifyNodeType( "__Break" .. id )
+			self:PreModifyNodeType( struct:MakerNodeType() )
+			self:PreModifyNodeType( struct:BreakerNodeType() )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__Make" .. id )
-			self:PostModifyNodeType( "__Break" .. id )
+			self:PostModifyNodeType( struct:MakerNodeType() )
+			self:PostModifyNodeType( struct:BreakerNodeType() )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
-	self.events:AddListener(function(cb, id)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__Event" .. id, "__EventCall" .. id}) end
+	self.events:AddListener(function(cb, id, event)
+		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ event:EventNodeType(), event:CallNodeType() }) end
 		self:RecacheNodeTypes()
 	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
@@ -92,29 +92,29 @@ function meta:Init(type)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__Event" .. id )
-			self:PreModifyNodeType( "__EventCall" .. id )
+			self:PreModifyNodeType( event:EventNodeType() )
+			self:PreModifyNodeType( event:CallNodeType() )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__Event" .. id )
-			self:PostModifyNodeType( "__EventCall" .. id )
+			self:PostModifyNodeType( event:EventNodeType() )
+			self:PostModifyNodeType( event:CallNodeType() )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	self.variables:AddListener(function(cb, id, var)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__VSet" .. id, "__VGet" .. id}) end
+		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ var:SetterNodeType(), var:GetterNodeType() }) end
 		self:RecacheNodeTypes()
 	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
-	self.variables:AddListener(function(cb, action, id, graph)
+	self.variables:AddListener(function(cb, action, id, var)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__VGet" .. id )
-			self:PreModifyNodeType( "__VSet" .. id )
+			self:PreModifyNodeType( var:SetterNodeType() )
+			self:PreModifyNodeType( var:GetterNodeType() )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__VGet" .. id )
-			self:PostModifyNodeType( "__VSet" .. id )
+			self:PostModifyNodeType( var:SetterNodeType() )
+			self:PostModifyNodeType( var:GetterNodeType() )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -145,7 +145,7 @@ end
 function meta:RemoveNodeTypes( nodeTypes )
 
 	for _, graph in self:Graphs() do
-		graph.nodes:RemoveIf( function(node) return table.HasValue( nodeTypes, node:GetTypeName() ) end )
+		graph.nodes:RemoveIf( function(node) return table.HasValue( nodeTypes, node:GetType() ) end )
 	end
 
 end
@@ -197,7 +197,7 @@ function meta:GetNodeTypes( graph )
 
 		if v:GetType() == GT_Function and v ~= graph then
 
-			types["__Call" .. id] = v:GetFunctionType()
+			types["__Call" .. id] = v:GetCallNodeType()
 			if not types["__Call" .. id] then print("FUNCTION GRAPH WITHOUT CALL NODE: " .. id) end
 
 		end

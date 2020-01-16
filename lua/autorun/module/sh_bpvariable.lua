@@ -6,68 +6,20 @@ local meta = bpcommon.MetaTable("bpvariable")
 
 function meta:Init(type, default, flags, ex, repmode)
 
-	self.type = type or PN_Number
-	self.default = bit.band(flags or 0, PNF_Table) ~= 0 and "{}" or (default or Defaults[self.type])
-	self.flags = flags or PNF_None
-	self.ex = ex
+	self.pintype = bppintype.New(type or PN_Number, flags or PNF_None, ex)
+	self.default = bit.band(flags or 0, PNF_Table) ~= 0 and "{}" or (default or Defaults[type])
 	self.repmode = repmode
-	self.pintype = bppintype.New(self.type, self.flags, self.ex)
-	return self
 
-end
+	self.getterNodeType = bpnodetype.New()
+	self.getterNodeType:AddFlag( NTF_Compact )
+	self.getterNodeType:AddFlag( NTF_Custom )
+	self.getterNodeType:SetCodeType( NT_Pure )
+	self.getterNodeType:SetCode("")
+	self.getterNodeType.GetDisplayName = function() return "Get" .. self:GetName() end
+	self.getterNodeType.GetRawPins = function() return { MakePin( PD_Out, "value", self.pintype ) } end
+	self.getterNodeType.Compile = function(node, compiler, pass)
 
-function meta:GetName()
-
-	return self.name
-
-end
-
-function meta:GetFlags()
-
-	return self.flags
-
-end
-
-function meta:GetType()
-
-	return self.type
-
-end
-
-function meta:GetDefaultValue()
-
-	return self.default
-
-end
-
-function meta:GetExtended()
-
-	return self.ex
-
-end
-
-function meta:CreatePin( dir, nameOverride )
-
-	return MakePin(dir, self:GetName(), self.pintype)
-
-end
-
-function meta:GetterNodeType()
-
-	local ntype = bpnodetype.New()
-	ntype:AddFlag( NTF_Compact )
-	ntype:AddFlag( NTF_Custom )
-	ntype:AddPin( MakePin(PD_Out, "value", self.pintype) )
-	ntype:SetCodeType( NT_Pure )
-	ntype:SetDisplayName( "Get" .. self:GetName() )
-	ntype:SetCode("")
-	ntype.Compile = function(node, compiler, pass)
-
-		if pass == bpcompiler.CP_PREPASS then
-
-			return true
-
-		elseif pass == bpcompiler.CP_ALLOCVARS then 
+		if pass == bpcompiler.CP_ALLOCVARS then 
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
 				return { var = "__self.__" .. self:GetName() }
@@ -83,29 +35,18 @@ function meta:GetterNodeType()
 		end
 
 	end
-	return ntype
 
-end
-
-function meta:SetterNodeType()
-
-	local ntype = bpnodetype.New()
-	ntype:AddFlag( NTF_Compact )
-	ntype:AddFlag( NTF_Custom )
-	ntype:AddPin( MakePin(PD_In, "value", self.pintype) )
-	ntype:AddPin( MakePin(PD_Out, "value", self.pintype) )
-	ntype:SetCodeType( NT_Function )
-	--ntype:SetCode( "__self.__" .. self:GetName() .. " = $1 #1 = $1" )
-	ntype:SetDisplayName( "Set" .. self:GetName() )
-	ntype:SetCode("")
-	ntype.Compile = function(node, compiler, pass)
+	self.setterNodeType = bpnodetype.New()
+	self.setterNodeType:AddFlag( NTF_Compact )
+	self.setterNodeType:AddFlag( NTF_Custom )
+	self.setterNodeType:SetCodeType( NT_Function )
+	self.setterNodeType:SetCode("")
+	self.setterNodeType.GetDisplayName = function() return "Set" .. self:GetName() end
+	self.setterNodeType.GetRawPins = function() return { MakePin( PD_In, "value", self.pintype ), MakePin( PD_Out, "value", self.pintype ) } end
+	self.setterNodeType.Compile = function(node, compiler, pass)
 
 		local varName = "__self.__" .. self:GetName()
-		if pass == bpcompiler.CP_PREPASS then
-
-			return true
-
-		elseif pass == bpcompiler.CP_ALLOCVARS then 
+		if pass == bpcompiler.CP_ALLOCVARS then 
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
 				return { var = varName }
@@ -121,17 +62,45 @@ function meta:SetterNodeType()
 		end
 
 	end
-	return ntype
+
+	return self
+
+end
+
+function meta:GetName()
+
+	return self.name
+
+end
+
+function meta:GetType()
+
+	return self.pintype
+
+end
+
+function meta:CreatePin( dir, nameOverride )
+
+	return MakePin(dir, self:GetName(), self.pintype)
+
+end
+
+function meta:GetterNodeType()
+
+	return self.getterNodeType
+
+end
+
+function meta:SetterNodeType()
+
+	return self.setterNodeType
 
 end
 
 function meta:WriteToStream(stream, mode, version)
 
-	stream:WriteInt( self.type )
-	stream:WriteInt( self.flags )
+	self.pintype:WriteToStream(stream, mode, version)
 	bpdata.WriteValue( self.default, stream )
-	bpdata.WriteValue( self.name, stream )
-	bpdata.WriteValue( self.ex, stream )
 	bpdata.WriteValue( self.repmode, stream )
 
 end
@@ -149,15 +118,25 @@ local typeRemap = {
 
 function meta:ReadFromStream(stream, mode, version)
 
-	self.type = stream:ReadInt( false )
-	self.flags = stream:ReadInt( false )
-	self.default = bpdata.ReadValue( stream )
-	self.name = bpdata.ReadValue( stream )
-	self.ex = bpdata.ReadValue( stream )
-	self.repmode = bpdata.ReadValue( stream )
-	self.pintype = bppintype.New(self.type, self.flags, self.ex)
+	if version < 6 then
 
-	if version == 1 then self.type = typeRemap[self.type] or self.type end
+		self.type = stream:ReadInt( false )
+		self.flags = stream:ReadInt( false )
+		self.default = bpdata.ReadValue( stream )
+		self.name = bpdata.ReadValue( stream )
+		self.ex = bpdata.ReadValue( stream )
+		self.repmode = bpdata.ReadValue( stream )
+		self.pintype = bppintype.New(self.type, self.flags, self.ex)
+
+		if version == 1 then self.type = typeRemap[self.type] or self.type end
+
+	else
+
+		self.pintype = bppintype.New():ReadFromStream(stream, mode, version)
+		self.default = bpdata.ReadValue( stream )
+		self.repmode = bpdata.ReadValue( stream )
+
+	end
 
 end
 
