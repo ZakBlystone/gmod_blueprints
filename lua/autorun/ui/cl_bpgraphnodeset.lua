@@ -45,7 +45,7 @@ function meta:NodeRemoved( id )
 
 end
 
-function meta:PostModifyNode( id, action )
+function meta:PostModifyNode( id )
 
 	if self.vnodes[id] ~= nil then
 		self.vnodes[id]:CreatePins()

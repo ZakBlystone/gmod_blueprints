@@ -233,6 +233,9 @@ function MetaTable(name)
 	G_BPMetaRegistry[name] = G_BPMetaRegistry[name] or {}
 	local mt = G_BPMetaRegistry[name]
 	mt.__index = mt
+
+	_G["is" .. name] = function(tbl) return tbl.BaseClass == mt or getmetatable(tbl) == mt end
+
 	return mt
 
 end
@@ -243,9 +246,12 @@ function FindMetaTable(name)
 
 end
 
-function IsMetaTable(tbl, name)
+function GetMetaTableName(tbl)
 
-	return getmetatable(tbl) == G_BPMetaRegistry[name]
+	for k,v in pairs(G_BPMetaRegistry) do
+		if v == tbl then return k end
+	end
+	return "unknown"
 
 end
 
@@ -388,5 +394,16 @@ function GCHandle(func)
 end
 
 function PlayerKey(ply)
+
 	return ply:AccountID() or "singleplayer"
+
+end
+
+function Transform(tab, out, func, ...)
+
+	for _, v in ipairs(tab) do
+		out[#out+1] = func(v, ...)
+	end
+	return out
+
 end

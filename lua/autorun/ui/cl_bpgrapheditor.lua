@@ -178,7 +178,7 @@ function meta:ConnectionRemoved( id, conn )
 
 end
 function meta:GraphCleared() end
-function meta:PostModifyNode( id, action ) self.nodeSet:PostModifyNode(id, action) end
+function meta:PostModifyNode( id ) self.nodeSet:PostModifyNode(id) end
 
 function meta:IsLocked() return self.vgraph:GetIsLocked() end
 
@@ -669,7 +669,7 @@ function meta:OpenCreationContext( pinFilter )
 	createMenu.OnNodeTypeSelected = function( menu, nodeType )
 
 		self:CreateUndo("Added Node")
-		local nodeID, node = self:GetGraph():AddNode(nodeType:GetName(), wx, wy)
+		local nodeID, node = self:GetGraph():AddNode(nodeType, wx, wy)
 		self:ConnectNodeToGrabbedPin( node )
 		self:ResetGrabbedPin()
 

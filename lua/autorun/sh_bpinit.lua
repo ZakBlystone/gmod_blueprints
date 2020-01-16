@@ -8,6 +8,7 @@ end
 
 -- CORE
 include("core/sh_bpcommon.lua")
+include("core/sh_bpindexer.lua")
 include("core/sh_bpbuffer.lua")
 include("core/sh_bplist.lua")
 include("core/sh_bplistdiff.lua")

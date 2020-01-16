@@ -28,8 +28,8 @@ function meta:PostInit()
 		local breaker = v:BreakerNodeType()
 		local maker = v:MakerNodeType()
 
-		tab[maker.name] = maker
-		tab[breaker.name] = breaker
+		tab[maker:GetName()] = maker
+		tab[breaker:GetName()] = breaker
 
 		self.structLookup[v:GetName()] = v
 	end

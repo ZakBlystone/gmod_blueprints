@@ -318,6 +318,8 @@ function meta:ReadFromStream(stream, mode, version)
 
 	end)
 
+	return self
+
 end
 
 function meta:Get( id )

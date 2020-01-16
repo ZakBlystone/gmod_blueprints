@@ -8,16 +8,11 @@ bpcommon.CallbackList({
 	"GRAPH_REMOVE",
 })
 
-GRAPH_MODIFY_RENAME = 1
-GRAPH_MODIFY_SIGNATURE = 2
-GRAPH_NODETYPE_ACTIONS = {
-	[GRAPH_MODIFY_RENAME] = bpgraph.NODE_MODIFY_RENAME,
-	[GRAPH_MODIFY_SIGNATURE] = bpgraph.NODE_MODIFY_SIGNATURE,
-}
-
+STREAM_FILE = 1
+STREAM_NET = 2
 
 fmtMagic = 0x42504D30
-fmtVersion = 4
+fmtVersion = 6
 
 local meta = bpcommon.MetaTable("bpmodule")
 
@@ -57,53 +52,38 @@ function meta:Init(type)
 	self.revision = 1
 	self.uniqueID = bpcommon.GUID()
 
-	self.graphs:AddListener(function(cb, id)
+	self.graphs:AddListener(function(cb, id, graph)
 
 		if cb == bplist.CB_ADD then
 			self:FireListeners(CB_GRAPH_ADD, id)
 		elseif cb == bplist.CB_REMOVE then
-			self:RemoveNodeTypes({"__Call" .. id})
+			self:RemoveNodeTypes({ graph:GetCallNodeType() })
 			self:FireListeners(CB_GRAPH_REMOVE, id)
 			self:RecacheNodeTypes()
 		end
 
 	end, bplist.CB_ALL)
 
-	self.graphs:AddListener(function(cb, action, id, graph)
-
-		if action ~= bplist.MODIFY_RENAME then return end
-		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyGraph( GRAPH_MODIFY_RENAME, id, graph )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyGraph( GRAPH_MODIFY_RENAME, id, graph )
-		end
-
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
-
-	self.structs:AddListener(function(cb, id)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__Make" .. id, "__Break" .. id}) end
+	self.structs:AddListener(function(cb, id, struct)
+		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ struct:MakerNodeType(), struct:BreakerNodeType() }) end
 		self:RecacheNodeTypes()
 	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
-	self.structs:AddListener(function(cb, action, id, graph)
+	self.structs:AddListener(function(cb, action, id, struct)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType( struct:MakerNodeType() )
+			self:PreModifyNodeType( struct:BreakerNodeType() )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__Make" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType( "__Break" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType( struct:MakerNodeType() )
+			self:PostModifyNodeType( struct:BreakerNodeType() )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
-	self.events:AddListener(function(cb, id)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__Event" .. id, "__EventCall" .. id}) end
+	self.events:AddListener(function(cb, id, event)
+		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ event:EventNodeType(), event:CallNodeType() }) end
 		self:RecacheNodeTypes()
 	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
@@ -111,33 +91,29 @@ function meta:Init(type)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-			self:PreModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PreModifyNodeType( event:EventNodeType() )
+			self:PreModifyNodeType( event:CallNodeType() )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__Event" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
-			self:PostModifyNodeType( "__EventCall" .. id, bpgraph.NODE_MODIFY_SIGNATURE, action )
+			self:PostModifyNodeType( event:EventNodeType() )
+			self:PostModifyNodeType( event:CallNodeType() )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	self.variables:AddListener(function(cb, id, var)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({"__VSet" .. id, "__VGet" .. id}) end
+		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ var:SetterNodeType(), var:GetterNodeType() }) end
 		self:RecacheNodeTypes()
 	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
-	self.variables:AddListener(function(cb, action, id, graph)
+	self.variables:AddListener(function(cb, action, id, var)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( "__VGet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PreModifyNodeType( "__VSet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PreModifyNodeType( var:SetterNodeType() )
+			self:PreModifyNodeType( var:GetterNodeType() )
 		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( "__VGet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
-			self:PostModifyNodeType( "__VSet" .. id, bpgraph.NODE_MODIFY_RENAME, action )
+			self:PostModifyNodeType( var:SetterNodeType() )
+			self:PostModifyNodeType( var:GetterNodeType() )
 		end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
@@ -149,44 +125,26 @@ function meta:Init(type)
 
 end
 
-function meta:PreModifyNodeType( nodeType, action, subaction )
+function meta:PreModifyNodeType( nodeType )
 
 	for _, graph in self:Graphs() do
-		graph:PreModifyNodeType( nodeType, action, subaction )
+		graph:PreModifyNodeType( nodeType )
 	end
 
 end
 
-function meta:PostModifyNodeType( nodeType, action, subaction )
+function meta:PostModifyNodeType( nodeType )
 
 	for _, graph in self:Graphs() do
-		graph:PostModifyNodeType( nodeType, action, subaction )
+		graph:PostModifyNodeType( nodeType )
 	end
-
-end
-
-function meta:PreModifyGraph( action, id, graph, subaction )
-
-	if graph:GetType() ~= GT_Function then return end
-
-	graph:PreModify(action, subaction)
-	self:PreModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action], subaction )
-
-end
-
-function meta:PostModifyGraph( action, id, graph )
-
-	if graph:GetType() ~= GT_Function then return end
-
-	graph:PostModify(action, subaction)
-	self:PostModifyNodeType( "__Call" .. id, GRAPH_NODETYPE_ACTIONS[action], subaction )
 
 end
 
 function meta:RemoveNodeTypes( nodeTypes )
 
 	for _, graph in self:Graphs() do
-		graph.nodes:RemoveIf( function(node) return table.HasValue( nodeTypes, node:GetTypeName() ) end )
+		graph.nodes:RemoveIf( function(node) return table.HasValue( nodeTypes, node:GetType() ) end )
 	end
 
 end
@@ -221,7 +179,7 @@ function meta:NodeTypeInUse( nodeType )
 
 end
 
-function meta:GetNodeTypes( graphID )
+function meta:GetNodeTypes( graph )
 
 	local types = {}
 	local base = bpdefs.Get():GetNodeTypes()
@@ -236,9 +194,10 @@ function meta:GetNodeTypes( graphID )
 
 	for id, v in self:Graphs() do
 
-		if v:GetType() == GT_Function and id ~= graphID then
+		if v:GetType() == GT_Function and v ~= graph then
 
-			types["__Call" .. id] = v:GetFunctionType()
+			types["__Call" .. id] = v:GetCallNodeType()
+			if not types["__Call" .. id] then print("FUNCTION GRAPH WITHOUT CALL NODE: " .. id) end
 
 		end
 
@@ -446,6 +405,8 @@ function meta:ReadFromStream(stream, mode)
 
 	if magic ~= fmtMagic then error("Invalid blueprint data: " .. fmtMagic .. " != " .. magic) end
 	if version > fmtVersion then error("Blueprint data version is newer") end
+
+	print("MODULE VERSION: " .. version)
 
 	self.version = version
 	self.type = stream:ReadInt( false )

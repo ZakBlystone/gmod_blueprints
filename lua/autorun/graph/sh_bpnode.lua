@@ -13,9 +13,11 @@ function meta:Init(nodeType, x, y, literals)
 
 	if type(nodeType) == "table" then
 		self.nodeTypeObject = nodeType
+		self.nodeType = self.nodeTypeObject:GetName()
+	else
+		self.nodeType = nodeType or "invalid"
 	end
 
-	self.nodeType = nodeType or "invalid"
 	self.x = x or 0
 	self.y = y or 0
 	self.literals = literals or {}
@@ -188,14 +190,14 @@ end
 function meta:PreModify()
 
 	if not self.graph then return end
-	self.graph:PreModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+	self.graph:PreModifyNode( self )
 
 end
 
 function meta:PostModify()
 
 	if not self.graph then return end
-	self.graph:PostModifyNode( self, bpgraph.NODE_MODIFY_SIGNATURE )
+	self.graph:PostModifyNode( self )
 
 end
 
@@ -316,6 +318,8 @@ function meta:GetType()
 	local nodeTypes = self.graph:GetNodeTypes()
 	local ntype = nodeTypes[ self.nodeType ]
 	if self.nodeType ~= "invalid" and ntype == nil then error("Unable to find node type: " .. tostring(self.nodeType)) end
+	self.nodeTypeObject = ntype
+
 	return ntype
 
 end

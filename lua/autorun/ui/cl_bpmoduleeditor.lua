@@ -164,7 +164,7 @@ function PANEL:Init()
 
 	end
 	self.GraphList.ItemBackgroundColor = function( list, id, item, selected )
-		local vcolor = bpschema.GraphTypeColors[item.type]
+		local vcolor = bpschema.GraphTypeColors[item:GetType()]
 		if selected then
 			return vcolor
 		else
@@ -193,7 +193,7 @@ function PANEL:Init()
 		end)
 	end
 	self.VarList.ItemBackgroundColor = function( list, id, item, selected )
-		local vcolor = bpschema.NodePinColors[item.type]
+		local vcolor = item:GetType():GetColor()
 		if selected then
 			return vcolor
 		else
