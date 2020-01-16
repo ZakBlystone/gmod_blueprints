@@ -700,14 +700,11 @@ end
 function meta:WalkBackPureNodes(node, call)
 
 	local max = 10000
-	local stack = { nodeID }
+	local stack = {}
 	local output = {}
 
-<<<<<<< HEAD
-=======
 	table.insert(stack, node)
 
->>>>>>> dev
 	while #stack > 0 and max > 0 do
 
 		max = max - 1
@@ -1560,6 +1557,8 @@ function meta:Compile()
 
 end
 
+function New(...) return bpcommon.MakeInstance(meta, ...) end
+
 if SERVER and bpdefs ~= nil then
 
 	local mod = bpmodule.New()
@@ -1575,5 +1574,3 @@ if SERVER and bpdefs ~= nil then
 	mod:Compile( bit.bor(CF_Default, CF_CompactVars) )
 
 end
-
-function New(...) return bpcommon.MakeInstance(meta, ...) end
