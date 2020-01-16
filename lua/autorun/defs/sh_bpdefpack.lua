@@ -25,11 +25,9 @@ function meta:PostInit()
 
 	local tab = self.nodeTypes
 	for k,v in pairs(self.structs) do
-		local breaker = v:BreakerNodeType()
-		local maker = v:MakerNodeType()
 
-		tab[maker:GetName()] = maker
-		tab[breaker:GetName()] = breaker
+		tab["Make" .. v:GetName()] = v:MakerNodeType()
+		tab["Break" .. v:GetName()] = v:BreakerNodeType()
 
 		self.structLookup[v:GetName()] = v
 	end
