@@ -100,7 +100,7 @@ function meta:ToString(pinID)
 	if not ntype then 
 		str = "<unknown>"
 	else
-		str = ntype:GetName()
+		str = ntype:GetName() or "unnamed"
 		if pinID then
 			local p = type(pinID) == "table" and pinID or self:GetPin(pinID)
 			if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end

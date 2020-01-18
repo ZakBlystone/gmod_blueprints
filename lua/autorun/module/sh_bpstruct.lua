@@ -6,7 +6,7 @@ local meta = bpcommon.MetaTable("bpstruct")
 
 function meta:Init()
 
-	self.pins = bplist.New():NamedItems("Pins"):Constructor(bppin.New)
+	self.pins = bplist.New(bppin_meta):NamedItems("Pins")
 	self.nameMap = {}
 	self.invNameMap = {}
 	self.pins:AddListener(function(cb, action, id, var)
@@ -208,7 +208,7 @@ function meta:ReadFromStream(stream, mode, version)
 	if not version or version >= 4 then
 		self.pins:ReadFromStream(stream, mode, version)
 	else
-		oldPins = bplist.New():NamedItems("Pins"):Constructor(bpvariable.New)
+		oldPins = bplist.New(bpvariable_meta):NamedItems("Pins")
 		oldPins:ReadFromStream(stream, mode, version)
 	end
 	self.nameMap = bpdata.ReadValue(stream)

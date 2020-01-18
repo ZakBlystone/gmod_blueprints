@@ -25,28 +25,11 @@ bpcommon.CreateIndexableListIterators(meta, "events")
 
 function meta:Init(type)
 
-	self.graphConstructor = function()
-		local graph = bpgraph.New(self)
-		return graph
-	end
-
-	self.structConstructor = function(...)
-		local struct = bpstruct.New(...):MarkAsCustom()
-		struct.module = self
-		return struct
-	end
-
-	self.eventConstructor = function(...)
-		local event = bpevent.New(...)
-		event.module = self
-		return event
-	end
-
 	self.version = fmtVersion
-	self.graphs = bplist.New():NamedItems("Graph"):Constructor(self.graphConstructor)
-	self.structs = bplist.New():NamedItems("Struct"):Constructor(self.structConstructor)
-	self.variables = bplist.New():NamedItems("Var"):Constructor(bpvariable.New)
-	self.events = bplist.New():NamedItems("Event"):Constructor(self.eventConstructor)
+	self.graphs = bplist.New(bpgraph_meta, self, "module"):NamedItems("Graph")
+	self.structs = bplist.New(bpstruct_meta, self, "module"):NamedItems("Struct")
+	self.variables = bplist.New(bpvariable_meta):NamedItems("Var")
+	self.events = bplist.New(bpevent_meta, self, "module"):NamedItems("Event")
 	self.id = nextModuleID
 	self.type = self.type or MT_Game
 	self.revision = 1
@@ -243,7 +226,7 @@ end
 
 function meta:NewGraph(name, type)
 
-	local id, graph = self.graphs:Add( bpgraph.New(self, type), name )
+	local id, graph = self.graphs:ConstructNamed( name, type )
 	return id, graph
 
 end

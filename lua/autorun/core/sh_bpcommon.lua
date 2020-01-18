@@ -233,10 +233,26 @@ function MetaTable(name)
 	G_BPMetaRegistry[name] = G_BPMetaRegistry[name] or {}
 	local mt = G_BPMetaRegistry[name]
 	mt.__index = mt
+	mt.__hash = util.CRC(name)
+
+	for k, v in pairs(G_BPMetaRegistry) do
+		if name ~= k and v.__hash == mt.__hash then
+			error("CRC32 HASH COLLISION: " .. name .. " <--> " .. k .. " [" .. mt.__hash .. " <--> " .. v.__hash)
+		end
+	end
 
 	_G["is" .. name] = function(tbl) return tbl.BaseClass == mt or getmetatable(tbl) == mt end
+	_G[name .. "_meta"] = mt
 
 	return mt
+
+end
+
+function GetMetaTableFromHash(hash)
+
+	for k,v in pairs(G_BPMetaRegistry) do
+		if v.__hash == hash then return v end
+	end
 
 end
 

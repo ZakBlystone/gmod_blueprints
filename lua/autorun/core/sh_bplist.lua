@@ -20,10 +20,19 @@ local meta = bpcommon.MetaTable("bplist")
 meta.__tostring = function(self) return self:ToString() end
 meta.__index = meta
 
-function meta:Init(...)
+function meta:Init( meta, outer, alias )
 
+	self.itemMeta = meta
+	self.outer = outer
+	self.outerAlias = alias
 	bpcommon.MakeObservable(self)
 	return self:Clear()
+
+end
+
+function meta:GetItemMeta()
+
+	return self.itemMeta
 
 end
 
@@ -31,13 +40,6 @@ function meta:NamedItems( prefix )
 
 	self.namedItems = true
 	self.namePrefix = (prefix or "Item") .. "_"
-	return self
-
-end
-
-function meta:Constructor( func )
-
-	self.constructor = func
 	return self
 
 end
@@ -168,6 +170,17 @@ function meta:PreserveNames(preserve)
 
 end
 
+function meta:ConstructObject( ... )
+
+	local obj = bpcommon.MakeInstance( self.itemMeta, ... )
+	if self.outer then
+		local key = self.outerAlias or "outer"
+		obj[key] = self.outer
+	end
+	return obj
+
+end
+
 function meta:Construct( ... )
 
 	return self:ConstructNamed(nil, ...)
@@ -176,8 +189,7 @@ end
 
 function meta:ConstructNamed( name, ... )
 
-	if not self.constructor then error("Item type does not have constructor") end
-	local item = self.constructor(...)
+	local item = self:ConstructObject( ... )
 	return self:Add(item, name)
 
 end
@@ -277,8 +289,6 @@ end
 
 function meta:WriteToStream(stream, mode, version)
 
-	if not self.constructor then error("No constructor for list items") end
-
 	stream:WriteBool(self.namedItems)
 	stream:WriteInt(self.nextID, false)
 	stream:WriteInt(self:Size(), false)
@@ -293,8 +303,6 @@ end
 
 function meta:ReadFromStream(stream, mode, version)
 
-	if not self.constructor then error("No constructor for list items") end
-
 	bpcommon.Profile("list-read", function()
 
 		self:Clear()
@@ -303,7 +311,7 @@ function meta:ReadFromStream(stream, mode, version)
 		local count = stream:ReadInt(false)
 		if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
 		for i=1, count do
-			local item = self.constructor()
+			local item = self:ConstructObject()
 			item.id = stream:ReadInt(false)
 			if item.PostInit then item:PostInit() end
 			self.itemLookup[item.id] = item

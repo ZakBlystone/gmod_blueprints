@@ -68,10 +68,10 @@ function PANEL:Init()
 	--localFiles:Add(bpfile.New(), "zaks/testmodule")
 	--localFiles:Add(bpfile.New(), "zaks/testmodule")
 
-	self.localView = vgui.Create("BPFileView"):SetView("Local", G_FS_Client:GetFiles())
-	self.remoteView = vgui.Create("BPFileView"):SetView("Server", G_FS_Server:GetFiles())
+	self.localView = vgui.Create("BPFileView") --:SetView("Local", G_FS_Client:GetFiles())
+	self.remoteView = vgui.Create("BPFileView") --:SetView("Server", G_FS_Server:GetFiles())
 
-	G_FS_Server:GetFiles():Subscribe( true )
+	--G_FS_Server:GetFiles():Subscribe( true )
 
 	self.content:SetLeft(self.localView)
 	self.content:SetRight(self.remoteView)
@@ -87,7 +87,7 @@ end
 
 function PANEL:OnRemove()
 
-	G_FS_Server:GetFiles():Subscribe( false )
+	--G_FS_Server:GetFiles():Subscribe( false )
 
 end
 

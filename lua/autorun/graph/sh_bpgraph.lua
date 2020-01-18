@@ -30,23 +30,16 @@ bpcommon.CreateIndexableListIterators(meta, "inputs")
 bpcommon.CreateIndexableListIterators(meta, "outputs")
 bpcommon.AddFlagAccessors(meta)
 
-function meta:Init(module, type)
-
-	self.nodeConstructor = function(...)
-		local node = bpnode.New(...)
-		node.graph = self
-		return node
-	end
+function meta:Init(type)
 
 	self.flags = FL_NONE
 	self.type = type or GT_Event
-	self.module = module
 
 	-- Create lists for graph elements
-	self.deferredNodes = bplist.New():Constructor(self.nodeConstructor)
-	self.nodes = bplist.New():Constructor(self.nodeConstructor)
-	self.inputs = bplist.New():NamedItems("Inputs"):Constructor(bppin.New)
-	self.outputs = bplist.New():NamedItems("Outputs"):Constructor(bppin.New)
+	self.deferredNodes = bplist.New(bpnode_meta, self, "graph")
+	self.nodes = bplist.New(bpnode_meta, self, "graph")
+	self.inputs = bplist.New(bppin_meta):NamedItems("Inputs")
+	self.outputs = bplist.New(bppin_meta):NamedItems("Outputs")
 	self.connections = {}
 	self.heldConnections = {}
 
@@ -649,8 +642,7 @@ function meta:AddNode(nodeTypeName, ...)
 		return
 	end
 
-	local node = self.nodeConstructor(nodeType, ...)
-	return self.nodes:Add( node )
+	return self.nodes:Construct( nodeType, ... )
 
 end
 
@@ -804,8 +796,8 @@ function meta:ReadFromStream(stream, mode, version)
 			self.outputs:SuppressEvents(true)
 
 			if version and version < 5 then
-				local inputs = bplist.New():NamedItems("Inputs"):Constructor(bpvariable.New):ReadFromStream(stream, mode, version)
-				local outputs = bplist.New():NamedItems("Outputs"):Constructor(bpvariable.New):ReadFromStream(stream, mode, version)
+				local inputs = bplist.New(bpvariable_meta):NamedItems("Inputs"):ReadFromStream(stream, mode, version)
+				local outputs = bplist.New(bpvariable_meta):NamedItems("Outputs"):ReadFromStream(stream, mode, version)
 				for _, v in inputs:Items() do self.inputs:Add( v:CreatePin(PD_None), v.name ) end
 				for _, v in outputs:Items() do self.outputs:Add( v:CreatePin(PD_None), v.name ) end
 			else
