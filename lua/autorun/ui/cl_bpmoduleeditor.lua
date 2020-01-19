@@ -84,26 +84,23 @@ function PANEL:Init()
 		end, Color(80,180,80), "icon16/server_go.png"},
 		{"Export Script to Clipboard", function()
 
-			local ok, str = bpcompiler.New(self.module, bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_CodeString)):Compile()
-			if ok then 
-				SetClipboardText(str)
-			else
-				error(str)
-			end
+			local result = self.module:Compile( bit.bor(bpcompiler.CF_Standalone) )
+			SetClipboardText(result:GetCode())
 
 		end, nil, "icon16/page_code.png"},
-		{"Run Locally", function()
+		{"Local: Install", function()
 
-			bpenv.Uninstall(self.module)
-			local ok, str = self.module:Compile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
-			if ok then
-				bpenv.Install(self.module)
-				bpenv.Instantiate(self.module)
-			else
-				error(str)
-			end
+			bpenv.Uninstall( bpenv.Get( self.module:GetUID() ) )
+			local result = self.module:Compile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) ):Load()
+			bpenv.Install(result)
+			bpenv.Instantiate(result)
 
-		end, nil, "icon16/page_code.png"},
+		end, Color(80,180,80), "icon16/page_code.png"},
+		{"Local: Uninstall", function()
+
+			bpenv.Uninstall( bpenv.Get( self.module:GetUID() ) )
+
+		end, Color(180,80,80), "icon16/page_code.png"},
 		{"Asset Browser", function()
 
 			RunConsoleCommand("pac_asset_browser")

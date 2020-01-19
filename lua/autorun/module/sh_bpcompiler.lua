@@ -7,8 +7,7 @@ CF_Standalone = 1
 CF_Comments = 2
 CF_Debug = 4
 CF_ILP = 8
-CF_CodeString = 16
-CF_CompactVars = 32
+CF_CompactVars = 16
 
 CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
 
@@ -1277,23 +1276,24 @@ function meta:CompileCodeSegment()
 	end
 	self.emit("}")
 
-	-- assign local to _G.__BPMODULE so we can grab it from RunString
-	self.emit("__BPMODULE = __bpm")
-
 	if bit.band(self.flags, CF_Standalone) ~= 0 then
 
 		self.emitBlock [[
 		local instance = __bpm.new()
 		if instance.CORE_Init then instance:CORE_Init() end
 		local bpm = instance.__bpm
+		local key = "bphook_" .. bpm.guidString(instance.guid)
 		for k,v in pairs(bpm.events) do
 			if v.hook and type(meta[k]) == "function" then
 				local function call(...) return instance[k](instance, ...) end
-				local key = "bphook_" .. instance.__guid
 				hook.Add(v.hook, key, call)
 			end
 		end
 		]]
+
+	else
+
+		self.emit("return __bpm")
 
 	end
 
@@ -1536,24 +1536,14 @@ function meta:Compile()
 	-- compile main code segment
 	Profile("code-segment", self.CompileCodeSegment, self)
 
-	self.compiled = table.concat( self.getContext( CTX_Code ), "\n" )
+	self.compiledCode = table.concat( self.getContext( CTX_Code ), "\n" )
 
 	ProfileEnd()
 
 	-- write compiled output to file for debugging
-	file.Write("blueprints/last_compile.txt", self.compiled)
+	file.Write("blueprints/last_compile.txt", self.compiledCode)
 
-	-- if set, just return the compiled string, don't try to run the module
-	if bit.band(self.flags, CF_CodeString) ~= 0 then return true, self.compiled end
-
-	-- run the code and grab the __BPMODULE global
-	local errorString = RunString(self.compiled, "", false)
-	if errorString then return false, errorString end
-
-	local x = __BPMODULE
-	__BPMODULE = nil
-
-	return true, x
+	return bpcompiledmodule.New( self.module, self.compiledCode )
 
 end
 
@@ -1571,6 +1561,7 @@ if SERVER and bpdefs ~= nil then
 	local graphid, graph = mod:NewGraph("Events", GT_Event)
 	graph:AddNode(funcgraph:GetCallNodeType())
 
-	mod:Compile( bit.bor(CF_Default, CF_CompactVars) )
+	local result = mod:Compile( bit.bor(CF_Default, CF_CompactVars) )
+	result:Load()
 
 end

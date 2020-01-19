@@ -37,6 +37,8 @@ end
 
 function Uninstall( mod )
 
+	if mod == nil then return end
+
 	local uid = mod:GetUID()
 
 	if installed[mod:GetUID()] ~= nil then
@@ -51,6 +53,8 @@ function Uninstall( mod )
 end
 
 function Instantiate( mod, forceGUID )
+
+	if not installed[mod:GetUID()] then error("Tried to instantiate module before it was installed") end
 
 	local instance = mod:Instantiate( forceGUID )
 	instance:__Init()

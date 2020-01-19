@@ -146,6 +146,12 @@ function meta:GetUID()
 
 end
 
+function meta:GetType()
+
+	return self.type
+
+end
+
 function meta:NodeTypeInUse( nodeType )
 
 	for id, v in self:Graphs() do
@@ -423,122 +429,10 @@ function meta:CreateTestModule()
 
 end
 
-local imeta = {}
-
-function imeta:__GetModule()
-
-	return self.__module
-
-end
-
-function imeta:__BindGamemodeHooks()
-
-	local meta = getmetatable(self)
-
-	if self.CORE_Init then self:CORE_Init() end
-	local bpm = self.__bpm
-
-	for k,v in pairs(bpm.events) do
-		if not v.hook or type(meta[k]) ~= "function" then continue end
-		local function call(...) return self[k](self, ...) end
-		local key = "bphook_" .. GUIDToString(self.guid, true)
-		--print("BIND KEY: " .. v.hook .. " : " .. key)
-		hook.Add(v.hook, key, call)
-	end
-
-end
-
-function imeta:__UnbindGamemodeHooks()
-
-	local meta = getmetatable(self)
-
-	if self.shuttingDown then ErrorNoHalt("!!!!!Recursive shutdown!!!!!") return end
-	local bpm = self.__bpm
-
-	for k,v in pairs(bpm.events) do
-		if not v.hook or type(meta[k]) ~= "function" then continue end
-		local key = "bphook_" .. GUIDToString(self.guid, true)
-		--print("UNBIND KEY: " .. v.hook .. " : " .. key)
-		hook.Remove(v.hook, key, false)
-	end
-
-	self.shuttingDown = true
-	if self.CORE_Shutdown then self:CORE_Shutdown() end
-	self.shuttingDown = false
-
-end
-
-function imeta:__Init( )
-
-	self:netInit()
-	self:__BindGamemodeHooks()
-
-end
-
-function imeta:__Shutdown()
-
-	self:netShutdown()
-	self:__UnbindGamemodeHooks()
-
-end
-
-function meta:Instantiate( forceGUID )
-
-	local instance = self:Get().new()
-	local meta = table.Copy(getmetatable(instance))
-	for k,v in pairs(imeta) do meta[k] = v end
-	setmetatable(instance, meta)
-	instance.__module = self
-	if forceGUID then instance.guid = forceGUID end
-	return instance
-
-end
-
-function meta:Compile(flags, compileErrorHandler)
+function meta:Compile(flags)
 
 	local compiler = bpcompiler.New(self, flags)
-	local ok, res = compiler:Compile()
-
-	if ok then
-		self.compiled = res
-		self:AttachErrorHandler()
-	else
-		print("Blueprint Code Error: " .. tostring(res))
-	end
-
-	return ok, res
-
-end
-
-function meta:AttachErrorHandler()
-
-	if self.errorHandler ~= nil then
-		self:Get().onError = function(msg, mod, graph, node)
-			self.errorHandler(self, msg, graph, node)
-		end
-	end
-
-end
-
-function meta:IsValid()
-
-	return self.compiled ~= nil
-
-end
-
-function meta:Get()
-
-	return self.compiled
-
-end
-
-function meta:SetErrorHandler(errorHandler)
-
-	self.errorHandler = errorHandler
-
-	if self:IsValid() then
-		self:AttachErrorHandler()
-	end
+	return compiler:Compile()
 
 end
 
