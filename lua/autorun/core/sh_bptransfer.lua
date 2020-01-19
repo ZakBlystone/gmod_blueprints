@@ -360,10 +360,9 @@ if SERVER then
 
 elseif CLIENT then
 
-	hook.Add("SetupMove", "BPReportPlayerReady", function()
+	hook.Add("BPClientReady", "BPReportPlayerReady", function()
 		if G_TransferPlayerStates[LocalPlayer()] == nil then
 
-			print("Process player initial move")
 			G_TransferPlayerStates[LocalPlayer()] = TransferState(LocalPlayer())
 			net.Start("bptransfer")
 			net.WriteUInt(CMD_PlayerReady, CommandBits)

@@ -625,5 +625,25 @@ function ReadValue(buf, thread)
 	end
 end
 
+function ReadArray(meta, stream, ...)
+
+	local t = {}
+	local n = stream:ReadInt(false)
+	for i=1, n do
+		t[#t+1] = bpcommon.MakeInstance( meta ):ReadFromStream(stream, ...)
+	end
+	return t
+
+end
+
+function WriteArray(meta, t, stream, ...)
+
+	stream:WriteInt(#t, false)
+	if #t == 0 then return end
+	for i=1, #t do
+		t[i]:WriteToStream(stream, ...)
+	end
+
+end
 
 --TestAll()

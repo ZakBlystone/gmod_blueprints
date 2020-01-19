@@ -21,6 +21,8 @@ include("core/sh_bptransfer.lua")
 include("system/sh_bpfile.lua")
 include("system/sh_bpfilesystem.lua")
 include("system/sh_bpuser.lua")
+include("system/sh_bpgroup.lua")
+include("system/sh_bpusermanager.lua")
 
 -- GRAPH
 include("graph/sh_bppintype.lua")

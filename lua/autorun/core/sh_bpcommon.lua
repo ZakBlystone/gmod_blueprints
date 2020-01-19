@@ -228,12 +228,18 @@ function CreateIndexableListIterators(meta, variable)
 
 end
 
-function MetaTable(name)
+function MetaTable(name, extends)
 
 	G_BPMetaRegistry[name] = G_BPMetaRegistry[name] or {}
 	local mt = G_BPMetaRegistry[name]
 	mt.__index = mt
 	mt.__hash = util.CRC(name)
+
+	if extends then
+		local base = G_BPMetaRegistry[name]
+		if base == nil then error("Couldn't find base class for " .. name .. " : " .. tostring(extends)) end
+		table.Inherit(mt, base)
+	end
 
 	for k, v in pairs(G_BPMetaRegistry) do
 		if name ~= k and v.__hash == mt.__hash then
