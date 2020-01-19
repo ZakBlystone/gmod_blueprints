@@ -435,7 +435,7 @@ function meta:BuildInformDirectionalCandidates(dir, candidateNodes)
 					local otherPin = dir == PD_In and v[2] or v[4]
 					if other:IsInformPin( otherPin ) == false and other:GetPin( otherPin ):GetBaseType() ~= PN_Any then
 						if not table.HasValue(candidateNodes, other) then
-							candidateNodes[#candidateNodes] = other
+							candidateNodes[#candidateNodes+1] = other
 						end
 					end
 				end
