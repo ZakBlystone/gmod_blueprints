@@ -55,27 +55,37 @@ function GetGroupByName( name )
 
 end
 
-local function AddGroup( name, flags, hardcoded )
+local function LocalAddGroup( name, flags, hardcoded )
+
+	for _, v in ipairs(G_BPGroups) do
+		if v:GetName() == name then error("Group already exists: " .. name) return end
+	end
 
 	local group = bpgroup.New( name, flags )
-	if hardcoded then group:SetFlag( bpgroup.FL_Permanent ) end
+	if hardcoded then group:SetFlag( bpgroup.FL_Locked ) end
 	G_BPGroups[#G_BPGroups+1] = bpgroup.New( name, flags )
 
 end
 
 local function RemoveGroup( group )
 
+	if group:HasFlag( bpgroup.FL_Locked ) then return end
+
 	local id = GetGroupID( group )
+	for _, user in ipairs( G_BPUsers ) do
+		user:ShiftGroupBits( id )
+	end
+
+	table.remove( G_BPGroups, id + 1 )
 
 end
 
 local function CreateDefaultGroups()
 
-	AddGroup( "admins", bpgroup.FL_AllPermissions, true )
-	AddGroup( "auditors", bit.bor(bpgroup.FL_CanViewAny, bpgroup.FL_CanToggle) )
-	AddGroup( "trusted", bit.bor(bpgroup.FL_CanUpload, bpgroup.FL_CanRunLocally, bpgroup.FL_CanUseProtected, bpgroup.FL_CanToggle) )
-	AddGroup( "newbie", bit.bor(bpgroup.FL_CanUpload) )
-	AddGroup( "vagrant", bpgroup.FL_None )
+	LocalAddGroup( "admins", bpgroup.FL_AllPermissions, true )
+	LocalAddGroup( "auditors", bit.bor(bpgroup.FL_CanViewAny, bpgroup.FL_CanToggle) )
+	LocalAddGroup( "trusted", bit.bor(bpgroup.FL_CanUpload, bpgroup.FL_CanRunLocally, bpgroup.FL_CanUseProtected, bpgroup.FL_CanToggle) )
+	LocalAddGroup( "newbie", bit.bor(bpgroup.FL_CanUpload) )
 
 end
 
@@ -152,8 +162,11 @@ local function HandleLogin( ply )
 	if user:IsValid() then
 
 		local existing = FindUser( user )
-		if existing then 
+		if existing then
+			print("Found existing user: " .. user:GetName() .. " -> " .. existing:GetName())
+			existing.name = user:GetName()
 			existing:SetFlag( bpuser.FL_LoggedIn )
+			user = existing
 		else
 			user:SetFlag( bpuser.FL_NewUser )
 			G_BPUsers[#G_BPUsers+1] = user
@@ -161,6 +174,7 @@ local function HandleLogin( ply )
 		end
 
 		if ply:IsAdmin() then
+			print( user:GetName() .. " is an admin, adding to admin group" )
 			user:AddGroup( GetGroupByName("admins") )
 		end
 
@@ -174,10 +188,15 @@ local function HandleLogin( ply )
 
 end
 
+function GetLocalUser()
+
+	return _G.G_BPLocalUser
+
+end
+
 function Login()
 
-	if SERVER then return end
-
+	assert(CLIENT)
 	print("Logging into server")
 
 	net.Start("bpusermanager")
@@ -228,6 +247,52 @@ function RemoveUser(group, user)
 
 end
 
+function AddGroup(name)
+
+	assert(CLIENT)
+	net.Start("bpusermanager")
+	net.WriteUInt(CMD_AddGroup, CommandBits)
+	net.WriteString(name)
+	net.SendToServer()
+
+end
+
+function RemoveGroup(group)
+
+	assert(CLIENT)
+	local groupID = GetGroupID(group)
+	if groupID == -1 then error("Group not found") end
+	net.Start("bpusermanager")
+	net.WriteUInt(CMD_RemoveGroup, CommandBits)
+	net.WriteUInt(groupID, GroupBits)
+	net.SendToServer()
+
+end
+
+function SetGroupFlag(group, flag)
+
+	assert(CLIENT)
+	local groupID = GetGroupID(group)
+	if groupID == -1 then error("Group not found") end
+	net.Start("bpusermanager")
+	net.WriteUInt(CMD_SetGroupFlag, CommandBits)
+	net.WriteUInt(flag, 16)
+	net.SendToServer()
+
+end
+
+function ClearGroupFlag(group, flag)
+
+	assert(CLIENT)
+	local groupID = GetGroupID(group)
+	if groupID == -1 then error("Group not found") end
+	net.Start("bpusermanager")
+	net.WriteUInt(CMD_ClearGroupFlag, CommandBits)
+	net.WriteUInt(flag, 16)
+	net.SendToServer()
+
+end
+
 local isLoggedIn = false
 
 net.Receive("bpusermanager", function(len, ply)
@@ -240,17 +305,23 @@ net.Receive("bpusermanager", function(len, ply)
 		assert(SERVER)
 		HandleLogin(ply)
 	elseif cmd == CMD_LoginAck then
+		assert(CLIENT)
 		if not isLoggedIn then
 			isLoggedIn = true
 			print("Logged in!")
 			hook.Run("BPClientReady")
 		end
 	elseif cmd == CMD_UpdateTables then
+		assert(CLIENT)
 		local flags = net.ReadUInt(TableFlagBits)
 		local stream = bpdata.InStream():ReadFromNet(true)
 		if bit.band(flags, TF_Users) ~= 0 then
 			print("Updating user table")
 			G_BPUsers = bpdata.ReadArray(bpuser_meta, stream, STREAM_NET)
+			PrintTable(G_BPUsers)
+			for _, user in ipairs(G_BPUsers) do
+				if user == _G.G_BPLocalUser then _G.G_BPLocalUser = user end
+			end
 			hook.Run("BPUserTableUpdated")
 		end
 		if bit.band(flags, TF_Groups) ~= 0 then
@@ -271,8 +342,46 @@ net.Receive("bpusermanager", function(len, ply)
 		if sendingUser:HasPermission( bpgroup.FL_CanEditUsers ) then
 			local group = G_BPGroups[ net.ReadUInt(GroupBits) + 1 ]
 			local user = G_BPUsers[ net.ReadUInt(32) + 1 ]
+			local adminGroup = GetGroupByName("admins")
+			if user == sendingUser and sendingUser:IsInGroup( adminGroup ) and group == adminGroup then
+				print(user:GetName() .. " tried to remove themselves from admin group")
+				return
+			end
 			user:RemoveGroup( group )
 			PushTables(TF_Users)
+		end
+	elseif cmd == CMD_AddGroup then
+		assert(SERVER)
+		if sendingUser:HasPermission( bpgroup.FL_CanEditGroups ) then
+			local name = net.ReadString()
+			LocalAddGroup(name)
+			PushTables(TF_Groups)
+		end
+	elseif cmd == CMD_RemoveGroup then
+		assert(SERVER)
+		if sendingUser:HasPermission( bpgroup.FL_CanEditGroups ) then
+			local group = G_BPGroups[ net.ReadUInt(GroupBits) + 1 ]
+			RemoveGroup(group)
+			PushTables(TF_Groups)
+		end
+	elseif cmd == CMD_SetGroupFlag then
+		assert(SERVER)
+		if sendingUser:HasPermission( bpgroup.FL_CanEditPermissions ) then
+			local group = G_BPGroups[ net.ReadUInt(GroupBits) + 1 ]
+			local flag = net.ReadUInt(8)
+			if group:HasFlag( bpgroup.FL_Locked ) then return end
+			if flag == bpgroup.FL_Locked then return end
+			group:SetFlag( flag )
+			PushTables(TF_Groups)
+		end
+	elseif cmd == CMD_ClearGroupFlag then
+		assert(SERVER)
+		if sendingUser:HasPermission( bpgroup.FL_CanEditPermissions ) then
+			local group = G_BPGroups[ net.ReadUInt(GroupBits) + 1 ]
+			local flag = net.ReadUInt(8)
+			if group:HasFlag( bpgroup.FL_Locked ) then return end
+			group:ClearFlag( flag )
+			PushTables(TF_Groups)
 		end
 	end
 

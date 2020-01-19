@@ -22,18 +22,31 @@ function meta:Init( ply )
 
 end
 
+function meta:ShiftGroupBits( id )
+
+	assert(SERVER)
+	local keepMask = bit.lshift(1, id) - 1
+	local shiftMask = bit.bnot( self.groups )
+	local old = bit.band( self.groups, keepMask )
+	local shifted = bit.band( bit.rshift( self.groups, 1 ), shiftMask )
+	self.groups = bit.bor( shifted, bit.band( self.groups, keepMask ) )
+
+end
+
 function meta:AddGroup( group )
 
+	assert(SERVER)
 	local id = bpusermanager.GetGroupID( group )
-	if id == -1 then return end
+	if id == -1 then print("Unable to find group: " .. group:GetName()) return end
 	self.groups = bit.bor( self.groups, bit.lshift(1, id) )
 
 end
 
 function meta:RemoveGroup( group )
 
+	assert(SERVER)
 	local id = bpusermanager.GetGroupID( group )
-	if id == -1 then return end
+	if id == -1 then print("Unable to find group: " .. group:GetName()) return end
 	self.groups = bit.band( self.groups, bit.bnot( bit.lshift(1, id) ) )
 
 end
@@ -41,7 +54,7 @@ end
 function meta:IsInGroup( group )
 
 	local id = bpusermanager.GetGroupID( group )
-	if id == -1 then return end
+	if id == -1 then print("Unable to find group: " .. group:GetName()) return end
 	return bit.band( self.groups, bit.lshift(1, id) ) ~= 0
 
 end
@@ -77,6 +90,12 @@ function meta:GetSteamID()
 
 end
 
+function meta:GetSteamID64()
+
+	return util.SteamIDTo64( self.steamID )
+
+end
+
 function meta:IsValid()
 
 	return self.steamID ~= nil
@@ -100,7 +119,7 @@ function meta:SetPlayer(ply)
 
 end
 
-function meta:GetPlayerName()
+function meta:GetName()
 
 	return self.name
 
@@ -112,6 +131,8 @@ function meta:WriteToStream(stream, mode, version)
 	bpdata.WriteValue( self.name, stream )
 	stream:WriteBits( self.flags, 8 )
 	stream:WriteBits( self.groups, 32 )
+
+	print("Transmit user: " .. self.name .. " -> " .. self.groups)
 
 
 	return self
@@ -125,6 +146,8 @@ function meta:ReadFromStream(stream, mode, version)
 	self.flags = stream:ReadBits( 8 )
 	self.groups = stream:ReadBits( 32 )
 
+	print("Recv user: " .. self.name .. " -> " .. self.groups)
+
 	if mode == bpcommon.STREAM_FILE then
 		self:ClearFlag( FL_LoggedIn )
 		self:ClearFlag( FL_NewUser )
@@ -133,7 +156,7 @@ function meta:ReadFromStream(stream, mode, version)
 	if CLIENT then
 
 		-- Get up-to-date name
-		steamworks.RequestPlayerInfo( self:GetSteamID(), function( name )
+		steamworks.RequestPlayerInfo( self:GetSteamID64(), function( name )
 
 			self.name = name
 

@@ -75,7 +75,10 @@ function PANEL:Init()
 	self.FileManager = vgui.Create("BPFileManager")
 	self.FileManager.editor = self
 
+	self.UserManager = vgui.Create("BPUserManager")
+
 	self.Tabs:AddSheet( "Files", self.FileManager, nil, false, false, "Files" )
+	self.Tabs:AddSheet( "Users", self.UserManager, nil, false, false, "Users" )
 
 end
 
@@ -165,6 +168,7 @@ local function OpenEditor()
 
 	--local mod = bpmodule.New()
 	--editor:OpenModule( mod )
+	--mod:Load("blueprints/bpm_ded.txt")
 	--editor:SetModule(mod)
 	--mod:CreateTestModule()
 
