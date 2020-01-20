@@ -388,7 +388,9 @@ end
 
 function IN:LoadFile(name, compressed, base64encoded)
 	if type(name) == "string" then
-		return self:LoadString( file.Read(name), compressed, base64encoded )
+		local d = file.Read(name)
+		if d == nil then error("Failed to load file: " .. name) end
+		return self:LoadString( d, compressed, base64encoded )
 	else
 		return self:LoadString( name:Read(name:Size()), compressed, base64encoded )
 	end

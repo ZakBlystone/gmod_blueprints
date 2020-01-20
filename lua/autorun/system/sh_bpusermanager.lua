@@ -55,6 +55,29 @@ function GetGroupByName( name )
 
 end
 
+function FindUserForPlayer( ply )
+
+	if game.SinglePlayer() and SERVER then
+		for _, v in ipairs( G_BPUsers ) do
+			if v:HasFlag( bpuser.FL_LoggedIn ) then return v end
+		end
+		return nil
+	end
+
+	for _, v in ipairs( G_BPUsers ) do
+		if v:GetPlayer() == ply then return v end
+	end
+
+end
+
+function FindUser( user )
+
+	for _, v in ipairs( G_BPUsers ) do
+		if v == user then return v end
+	end
+
+end
+
 local function LocalAddGroup( name, flags, hardcoded )
 
 	for _, v in ipairs(G_BPGroups) do
@@ -131,30 +154,9 @@ local function SaveTables()
 
 end
 
-local function FindUserForPlayer( ply )
-
-	if game.SinglePlayer() and SERVER then
-		for _, v in ipairs( G_BPUsers ) do
-			if v:HasFlag( bpuser.FL_LoggedIn ) then return v end
-		end
-		return nil
-	end
-
-	for _, v in ipairs( G_BPUsers ) do
-		if v:GetPlayer() == ply then return v end
-	end
-
-end
-
-local function FindUser( user )
-
-	for _, v in ipairs( G_BPUsers ) do
-		if v == user then return v end
-	end
-
-end
-
 local function HandleLogin( ply )
+
+	assert(SERVER)
 
 	local stream = bpdata.InStream():ReadFromNet(true)
 	local user = bpuser.New():ReadFromStream( stream, STREAM_NET )
@@ -165,7 +167,6 @@ local function HandleLogin( ply )
 		if existing then
 			print("Found existing user: " .. user:GetName() .. " -> " .. existing:GetName())
 			existing.name = user:GetName()
-			existing:SetFlag( bpuser.FL_LoggedIn )
 			user = existing
 		else
 			user:SetFlag( bpuser.FL_NewUser )
@@ -176,6 +177,11 @@ local function HandleLogin( ply )
 		if ply:IsAdmin() then
 			print( user:GetName() .. " is an admin, adding to admin group" )
 			user:AddGroup( GetGroupByName("admins") )
+		end
+
+		if not user:HasFlag( bpuser.FL_LoggedIn ) then
+			user:SetFlag( bpuser.FL_LoggedIn )
+			hook.Run("BPClientReady", ply)
 		end
 
 		net.Start("bpusermanager")

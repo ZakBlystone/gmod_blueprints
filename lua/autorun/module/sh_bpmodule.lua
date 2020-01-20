@@ -316,7 +316,7 @@ function meta:NetRecv()
 
 end
 
-function meta:LoadHeader(filename)
+function LoadHeader(filename)
 
 	local inStream = bpdata.InStream(false, true)
 	if not inStream:LoadFile(filename, true, true) then
@@ -333,15 +333,21 @@ function meta:LoadHeader(filename)
 		magic = inStream:ReadInt( false )
 	end
 
-	local version = inStream:ReadInt( false )
-
-	return magic, version
+	return {
+		magic = magic,
+		version = inStream:ReadInt( false ),
+		type = inStream:ReadInt( false ),
+		revision = inStream:ReadInt( false ),
+		uid = inStream:ReadStr( 16 ),
+	}
 
 end
 
 function meta:Load(filename)
 
-	local magic, version = self:LoadHeader(filename)
+	local head = LoadHeader(filename)
+	local magic = head.magic
+	local version = head.version
 
 	print("MAGIC: " .. magic)
 	print("VERSION: " .. version)
@@ -414,6 +420,8 @@ function meta:ReadFromStream(stream, mode)
 	for _, graph in self:Graphs() do
 		graph:CreateDeferredData()
 	end
+
+	return self
 
 end
 

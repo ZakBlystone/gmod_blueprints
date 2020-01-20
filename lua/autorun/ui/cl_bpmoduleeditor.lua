@@ -84,7 +84,7 @@ function PANEL:Init()
 		end, Color(80,180,80), "icon16/server_go.png"},
 		{"Export Script to Clipboard", function()
 
-			local result = self.module:Compile( bit.bor(bpcompiler.CF_Standalone) )
+			local result = self.module:Compile( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
 			SetClipboardText(result:GetCode())
 
 		end, nil, "icon16/page_code.png"},
@@ -341,6 +341,12 @@ function PANEL:SetModule( mod )
 	self.StructList:SetList( self.module.structs )
 	self.EventList:SetList( self.module.events )
 	self.module:AddListener(self.callback, bpmodule.CB_ALL)
+
+	for id, graph in self.module.graphs:Items() do
+		self:GraphAdded( id )
+	end
+
+	self.Content:SetLeftWidth(150)
 
 end
 

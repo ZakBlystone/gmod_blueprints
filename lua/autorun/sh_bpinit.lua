@@ -17,13 +17,6 @@ include("core/sh_bpstringtable.lua")
 include("core/sh_bpdata.lua")
 include("core/sh_bptransfer.lua")
 
--- SYSTEM
-include("system/sh_bpfile.lua")
-include("system/sh_bpfilesystem.lua")
-include("system/sh_bpuser.lua")
-include("system/sh_bpgroup.lua")
-include("system/sh_bpusermanager.lua")
-
 -- GRAPH
 include("graph/sh_bppintype.lua")
 include("graph/sh_bppin.lua")
@@ -43,6 +36,13 @@ include("module/sh_bpcompiledmodule.lua")
 include("module/sh_bpenv.lua")
 include("module/sh_bpnet.lua")
 include("module/sh_bpcompiler.lua")
+
+-- SYSTEM
+include("system/sh_bpuser.lua")
+include("system/sh_bpgroup.lua")
+include("system/sh_bpusermanager.lua")
+include("system/sh_bpfile.lua")
+include("system/sh_bpfilesystem.lua")
 
 -- DEFS
 include("defs/sh_bpdefpack.lua")

@@ -50,10 +50,36 @@ function meta:GetName()
 
 end
 
+function meta:AddData(data, tag, name)
+
+	local buf = NewBuffer(true)
+	buf:Write(data)
+	buf:Flush()
+
+	local cacheFile = buf:GetCacheFilename()
+	local f = file.Open(cacheFile, "rb", "DATA")
+	if f == nil then print("Stream buffer not found") return false end
+
+	local size = f:Size()
+	local entry = {
+		buffer = buf, --prevent buffer from closing
+		name = name or string.GetFileFromFilename(cacheFile),
+		file = f,
+		chunks = math.ceil( size / self.chunkSize ),
+		size = size,
+		tag = tag,
+	}
+
+	entry.remaining = entry.chunks
+
+	return self:AddEntry(entry)
+
+end
+
 function meta:AddFile(fileName, tag, searchPath)
 
 	local f = file.Open(fileName, "rb", searchPath or "DATA")
-	if f == nil then return false end
+	if f == nil then print("File not found: " .. fileName) return false end
 
 	local size = f:Size()
 	local entry = {
@@ -66,22 +92,29 @@ function meta:AddFile(fileName, tag, searchPath)
 
 	entry.remaining = entry.chunks
 
+	return self:AddEntry(entry)
+
+end
+
+function meta:AddEntry(entry)
+
 	if self.filePendingAck and self.filePendingAck.name == entry.name then 
 		self.filePendingAck = entry
 		print("Update ack-pending file: " .. entry.name)
-		return 
+		return true
 	end
 
 	for k,v in ipairs(self.pending) do
 		if v.name == entry.name then 
 			self.pending[k] = entry 
 			print("Update pending file: " .. entry.name) 
-			return 
+			return true
 		end
 	end
 
 	
 	self.pending[#self.pending+1] = entry
+	return true
 
 end
 
@@ -126,7 +159,11 @@ function meta:OnRemoteFinished(entry)
 
 	hook.Call("BPTransferRemoteReceived", nil, self, entry)
 
-	print(self:GetName() .. " finished downloading file: " .. entry.name)
+	if SERVER then
+		print(self:GetName() .. " finished downloading file: " .. entry.name)
+	else
+		print(self:GetName() .. " finished uploading file: " .. entry.name)
+	end
 
 end
 
@@ -194,7 +231,10 @@ function meta:OnFileRequest(name, tag, size, chunks)
 		chunk = 0,
 	}
 
-	hook.Call("BPTransferRequest", nil, self, self.recv)
+	if hook.Call("BPTransferRequest", nil, self, self.recv) == false then
+		self:Cancel("File transfer denied")
+		return
+	end
 
 	net.Start("bptransfer")
 	net.WriteUInt(CMD_AckFile, CommandBits)
@@ -246,6 +286,9 @@ function meta:CloseFile()
 		if self.current.file ~= nil then
 			self.current.file:Close()
 			self.current.file = nil
+		end
+		if self.current.buffer then
+			self.current.buffer:Close()
 		end
 	end
 

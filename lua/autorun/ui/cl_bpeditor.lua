@@ -120,6 +120,12 @@ end
 
 function PANEL:OpenModule( mod )
 
+	local existing = self.openModules[mod:GetUID()]
+	if existing then
+		self.Tabs:SetActiveTab( existing.Tab )
+		return
+	end
+
 	local title = bpcommon.GUIDToString( mod:GetUID(), true )
 	local view = vgui.Create("BPModuleEditor")
 	local sheet = self.Tabs:AddSheet( title, view, nil, false, false, title )
@@ -135,9 +141,12 @@ end
 function PANEL:CloseModule( mod )
 
 	local opened = self.openModules[mod:GetUID()]
+	if opened == nil then return end
 
 	self.Tabs:CloseTab( opened.Tab )
 	opened.Panel:Remove()
+
+	self.openModules[mod:GetUID()] = nil
 
 end
 
