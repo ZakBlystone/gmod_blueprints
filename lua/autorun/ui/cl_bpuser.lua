@@ -105,6 +105,20 @@ function PANEL:Paint(w, h)
 
 	draw.RoundedBox(4, 0, 0, w, h, Color(30,30,30))
 
+	if self.user then
+
+		if self.user == bpusermanager.GetLocalUser() then
+
+			draw.RoundedBox(4, 2, 2, w-4, h-4, Color(50,70,50))
+
+		elseif self.user:HasFlag( bpuser.FL_LoggedIn ) then
+
+			draw.RoundedBox(4, 2, 2, w-4, h-4, Color(50,60,70))
+
+		end
+
+	end
+
 end
 
 function PANEL:GetUser()
@@ -143,8 +157,8 @@ end
 
 function PANEL:PerformLayout()
 
-	self.nameLabel:SetPos(50,2)
-	self.steamLabel:SetPos(50,15)
+	self.nameLabel:SetPos(50,3)
+	self.steamLabel:SetPos(50,16)
 	self.avatar:SetSize(32,32)
 	self.avatar:SetPos(4,4)
 
