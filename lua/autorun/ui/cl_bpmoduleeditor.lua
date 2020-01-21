@@ -77,10 +77,7 @@ function PANEL:Init()
 		end, nil, "icon16/disk.png"},
 		{"Compile and upload", function()
 			--bpnet.SendModule( self.module )
-
-			if LastSavedFile then
-				SaveFunc( LastSavedFile )
-			end
+			self:Upload(true)
 		end, Color(80,180,80), "icon16/server_go.png"},
 		{"Export Script to Clipboard", function()
 
@@ -90,15 +87,15 @@ function PANEL:Init()
 		end, nil, "icon16/page_code.png"},
 		{"Local: Install", function()
 
-			bpenv.Uninstall( bpenv.Get( self.module:GetUID() ) )
+			bpenv.Uninstall( self.module:GetUID() )
 			local result = self.module:Compile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) ):Load()
-			bpenv.Install(result)
-			bpenv.Instantiate(result)
+			bpenv.Install( result )
+			bpenv.Instantiate( result:GetUID() )
 
 		end, Color(80,180,80), "icon16/page_code.png"},
 		{"Local: Uninstall", function()
 
-			bpenv.Uninstall( bpenv.Get( self.module:GetUID() ) )
+			bpenv.Uninstall( self.module:GetUID() )
 
 		end, Color(180,80,80), "icon16/page_code.png"},
 		{"Asset Browser", function()
@@ -247,6 +244,7 @@ end
 function PANEL:Save()
 
 	self.module:Save( self.file:GetPath() )
+	bpfilesystem.MarkFileAsChanged( self.file, false )
 	return true
 
 end
@@ -366,6 +364,15 @@ end
 function PANEL:GetModule()
 
 	return self.module
+
+end
+
+function PANEL:Upload( execute )
+
+	if not self.file then return end
+
+	local _, _, name = self.file:GetPath():find("bpm_([%w_]+).txt$")
+	bpfilesystem.UploadObject(self.module, name or self.file:GetPath(), execute)
 
 end
 

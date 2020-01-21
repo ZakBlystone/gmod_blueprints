@@ -6,8 +6,11 @@ local meta = bpcommon.MetaTable("bpcompiledmodule")
 
 function meta:Init( mod, code, debugSymbols )
 
-	self.type = mod:GetType()
-	self.uniqueID = mod:GetUID()
+	if mod then
+		self.type = mod:GetType()
+		self.uniqueID = mod:GetUID()
+	end
+
 	self.code = code
 	self.debugSymbols = debugSymbols
 	self.unit = nil

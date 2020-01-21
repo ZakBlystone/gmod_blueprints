@@ -13,6 +13,9 @@ local CMD_AckClientCmd = 0
 local CMD_UpdateFileTable = 1
 local CMD_TakeLock = 2
 local CMD_ReleaseLock = 3
+local CMD_RunFile = 4
+local CMD_StopFile = 5
+local CMD_DeleteFile = 6
 
 local FileDirectory = "blueprints/server/"
 local FileIndex = FileDirectory .. "__index.txt"
@@ -44,7 +47,6 @@ local function FindRemoteFile( file )
 	for _, f in ipairs( GetFiles() ) do
 		if f == file then return f end
 	end
-	return file
 
 end
 
@@ -63,29 +65,73 @@ function IndexLocalFiles()
 
 	assert(CLIENT)
 
+	print("Indexing")
+
 	local files, _ = file.Find(ClientFileDirectory .. "*", "DATA")
 
+	local persist = {}
 	for _, f in ipairs(files) do
 
 		local head = bpmodule.LoadHeader(ClientFileDirectory .. f)
-		if not G_BPLocalFiles[head.uid] then
+		local existing = G_BPLocalFiles[head.uid]
+		if not existing then
 
 			local entry = bpfile.New(head.uid, bpfile.FT_Module, f)
 			entry:SetPath( ClientFileDirectory .. f )
 			G_BPLocalFiles[head.uid] = entry
 
+		else
+
+			existing:SetName(f)
+
 		end
+
+		persist[head.uid] = true
 
 	end
 
 	for k,v in pairs(G_BPLocalFiles) do
 
-		local remote = FindRemoteFile( v )
-		if remote then remote:CopyRemoteToLocal( v ) end
+		if not persist[k] then 
+			G_BPLocalFiles[k] = nil
+		else
+			local remote = FindRemoteFile( v )
+			if remote then 
+				remote:CopyRemoteToLocal( v )
+			else
+				v:ForgetRemote()
+			end
+		end
 
 	end
 
+	local totalFileCount = 0
+	for k,v in pairs(G_BPLocalFiles) do
+		totalFileCount = totalFileCount + 1
+	end
+	print("TOTAL LOCAL FILES: " .. totalFileCount)
+
 	hook.Run("BPFileTableUpdated", FT_Local)
+
+end
+
+function NewModuleFile( name )
+
+	local path = ClientFileDirectory .. "bpm_" .. name .. ".txt"
+
+	if file.Exists( path, "DATA" ) then
+		return nil
+	end
+
+	local mod = bpmodule.New()
+	mod:CreateDefaults()
+	mod:Save( path )
+	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, path)
+	entry:SetPath( path )
+	G_BPLocalFiles[mod:GetUID()] = entry
+	hook.Run("BPFileTableUpdated", FT_Local)
+
+	return entry
 
 end
 
@@ -123,6 +169,13 @@ local function LoadIndex()
 		local version = stream:ReadInt(false)
 		G_BPFiles = bpdata.ReadArray(bpfile_meta, stream, STREAM_FILE)
 
+		for _, f in ipairs(G_BPFiles) do
+			if bpenv.NumRunningInstances( f:GetUID() ) > 0 then
+				f:SetFlag( bpfile.FL_Running )
+			end
+			f:SetPath( UIDToModulePath( f:GetUID() ) )
+		end
+
 		print("Loaded file index: " .. #G_BPFiles)
 
 		PushFiles()
@@ -151,10 +204,42 @@ local function AddFile( newFile )
 
 	G_BPFiles[#G_BPFiles+1] = newFile
 
-	PushFiles()
+end
+
+local function RunLocalFile( file )
+
+	local modulePath = UIDToModulePath( file:GetUID() )
+	local mod = bpmodule.New()
+	mod:Load( modulePath )
+	local cmod = mod:Compile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+
+	bpnet.Install( cmod )
+
+	file:SetFlag(bpfile.FL_Running)
 
 end
 
+local function StopLocalFile( file )
+
+	bpnet.Uninstall( file:GetUID() )
+
+	file:ClearFlag(bpfile.FL_Running)
+
+end
+
+local function DeleteLocalFile( fileObject )
+
+	for i, f in ipairs(G_BPFiles) do
+		if f == fileObject then
+			file.Delete( fileObject:GetPath() )
+			table.remove( G_BPFiles, i )
+			break
+		end
+	end
+
+	SaveIndex()
+
+end
 
 if SERVER then
 
@@ -165,7 +250,10 @@ if SERVER then
 
 	hook.Add("BPTransferRequest", "bpfilesystem", function(state, data)
 		print( tostring( state:GetPlayer() ) )
-		if data.tag == "module" then return true end
+		if data.tag == "module" then
+			local user = bpusermanager.FindUserForPlayer( state:GetPlayer() )
+			if not user:HasPermission(bpgroup.FL_CanUpload) then return false end
+		end
 	end)
 
 	hook.Add("BPTransferReceived", "bpfilesystem", function(state, data)
@@ -178,6 +266,7 @@ if SERVER then
 			local stream = bpdata.InStream(false, true):UseStringTable()
 			if not stream:LoadString(moduleData, true, false) then error("Failed to load file locally") end
 
+			local execute = bpdata.ReadValue(stream)
 			local name = bpdata.ReadValue(stream)
 			local mod = bpmodule.New():ReadFromStream(stream, STREAM_NET)
 			local filename = UIDToModulePath( mod:GetUID() )
@@ -186,12 +275,20 @@ if SERVER then
 			local entry = bpfile.New( mod:GetUID(), bpfile.FT_Module )
 			entry:SetOwner( owner )
 			entry:SetName( name )
+			entry:SetPath( filename )
 			entry:TakeLock( owner )
 
 			print("Module uploaded: " .. tostring(name) .. " -> " .. filename)
+			print("Module marked for execute: " .. tostring(execute))
 
 			AddFile(entry)
+
+			if execute and owner:HasPermission(bpgroup.FL_CanToggle) then
+				RunLocalFile( entry )
+			end
+
 			SaveIndex()
+			PushFiles()
 
 		end
 	end)
@@ -242,13 +339,14 @@ function MarkFileAsChanged( file, changed )
 
 end
 
-function UploadObject( object, name )
+function UploadObject( object, name, execute )
 
 	assert( CLIENT )
 	assert( isbpmodule(object) )
 
 	local stream = bpdata.OutStream(false, true, true):UseStringTable()
 
+	bpdata.WriteValue(execute, stream)
 	bpdata.WriteValue(name, stream)
 	object:WriteToStream(stream, STREAM_NET)
 
@@ -281,6 +379,45 @@ function ReleaseLock( file, callback )
 
 	net.Start("bpfilesystem")
 	net.WriteUInt(CMD_ReleaseLock, CommandBits)
+	net.WriteData(file:GetUID(), 16)
+	net.SendToServer()
+
+end
+
+function RunFile( file, callback )
+
+	assert(CLIENT)
+
+	ClientCommand( callback, CMD_RunFile )
+
+	net.Start("bpfilesystem")
+	net.WriteUInt(CMD_RunFile, CommandBits)
+	net.WriteData(file:GetUID(), 16)
+	net.SendToServer()
+
+end
+
+function StopFile( file, callback )
+
+	assert(CLIENT)
+
+	ClientCommand( callback, CMD_StopFile )
+
+	net.Start("bpfilesystem")
+	net.WriteUInt(CMD_StopFile, CommandBits)
+	net.WriteData(file:GetUID(), 16)
+	net.SendToServer()
+
+end
+
+function DeleteFile( file, callback )
+
+	assert(CLIENT)
+
+	ClientCommand( callback, CMD_DeleteFile )
+
+	net.Start("bpfilesystem")
+	net.WriteUInt(CMD_DeleteFile, CommandBits)
 	net.WriteData(file:GetUID(), 16)
 	net.SendToServer()
 
@@ -325,6 +462,36 @@ net.Receive("bpfilesystem", function(len, ply)
 		file:ReleaseLock()
 		AckClientCommand(ply, cmd)
 		SaveIndex()
+		PushFiles()
+	elseif cmd == CMD_RunFile then
+		assert(SERVER)
+		local user = bpusermanager.FindUserForPlayer( ply )
+		if not user then AckClientCommand(ply, cmd, "Not logged in") return end
+		local file = FindFileByUID(net.ReadData(16))
+		if not file then AckClientCommand(ply, cmd, "File not found") return end
+		if not user:HasPermission(bpgroup.FL_CanToggle) then AckClientCommand(ply, cmd, "Insufficient Permissions") return end
+		RunLocalFile( file )
+		AckClientCommand(ply, cmd)
+		PushFiles()
+	elseif cmd == CMD_StopFile then
+		assert(SERVER)
+		local user = bpusermanager.FindUserForPlayer( ply )
+		if not user then AckClientCommand(ply, cmd, "Not logged in") return end
+		local file = FindFileByUID(net.ReadData(16))
+		if not file then AckClientCommand(ply, cmd, "File not found") return end
+		if not user:HasPermission(bpgroup.FL_CanToggle) then AckClientCommand(ply, cmd, "Insufficient Permissions") return end
+		StopLocalFile( file )
+		AckClientCommand(ply, cmd)
+		PushFiles()
+	elseif cmd == CMD_DeleteFile then
+		assert(SERVER)
+		local user = bpusermanager.FindUserForPlayer( ply )
+		if not user then AckClientCommand(ply, cmd, "Not logged in") return end
+		local file = FindFileByUID(net.ReadData(16))
+		if not file then AckClientCommand(ply, cmd, "File not found") return end
+		if not user:HasPermission(bpgroup.FL_CanDelete) then AckClientCommand(ply, cmd, "Insufficient Permissions") return end
+		DeleteLocalFile( file )
+		AckClientCommand(ply, cmd)
 		PushFiles()
 	end
 

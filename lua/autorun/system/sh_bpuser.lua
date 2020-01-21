@@ -137,9 +137,6 @@ function meta:WriteToStream(stream, mode, version)
 	stream:WriteBits( self.flags, 8 )
 	stream:WriteBits( self.groups, 32 )
 
-	print("Transmit user: " .. self.name .. " -> " .. self.groups)
-
-
 	return self
 
 end
@@ -150,8 +147,6 @@ function meta:ReadFromStream(stream, mode, version)
 	self.name = bpdata.ReadValue( stream )
 	self.flags = stream:ReadBits( 8 )
 	self.groups = stream:ReadBits( 32 )
-
-	print("Recv user: " .. self.name .. " -> " .. self.groups)
 
 	if mode == bpcommon.STREAM_FILE then
 		self:ClearFlag( FL_LoggedIn )

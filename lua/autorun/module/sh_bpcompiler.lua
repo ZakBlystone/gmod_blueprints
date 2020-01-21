@@ -270,7 +270,7 @@ function meta:CreatePinVar(pin)
 
 		if isFunctionPin then
 
-			local key = bpcommon.CreateUniqueKey({}, compactVars and "f" or "func_" .. graphName .. "_out_" .. pinName)
+			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "func_" .. graphName .. "_out_" .. pinName)
 			self.vars[#self.vars+1] = {
 				var = key,
 				pin = pin,
@@ -904,9 +904,9 @@ function meta:CompileGlobalVarListing()
 		local def = var.default
 		local vtype = var:GetType()
 		if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-		local varName = var.name
+		local varName = var:GetName()
 		if self.compactVars then varName = id end
-		self.emit("instance.__" .. var:GetName() .. " = " .. tostring(def))
+		self.emit("instance.__" .. varName .. " = " .. tostring(def))
 	end
 
 	self.finish()

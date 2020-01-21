@@ -25,47 +25,43 @@ function Install( mod )
 
 	local uid = mod:GetUID()
 
+	if installed[uid] then Uninstall( uid ) end
+
 	print("INSTALL MODULE: " .. GUIDToString(uid))
 
-	if installed[uid] then
-		self:Uninstall( uid )
-	end
 	mod:SetErrorHandler( HandleModuleError )
 	installed[mod:GetUID()] = mod
 
 end
 
-function Uninstall( mod )
+function Uninstall( uid )
 
-	if mod == nil then return end
+	if uid == nil then return end
 
-	local uid = mod:GetUID()
-
-	if installed[mod:GetUID()] ~= nil then
+	if installed[uid] ~= nil then
 		print("UNINSTALL MODULE: " .. GUIDToString(uid))
 
-		DestroyAll(mod)
-		installed[mod:GetUID()] = nil
+		DestroyAll(uid)
+		installed[uid] = nil
 	else
 		--print("ALREADY UNINSTALLED MODULE: " .. GUIDToString(uid))
 	end
 
 end
 
-function Instantiate( mod, forceGUID )
+function Instantiate( uid, forceGUID )
 
-	if not installed[mod:GetUID()] then error("Tried to instantiate module before it was installed") end
+	if not installed[uid] then error("Tried to instantiate module before it was installed") end
 
-	local instance = mod:Instantiate( forceGUID )
+	local instance = installed[uid]:Instantiate( forceGUID )
 	instance:__Init()
 	active[#active+1] = instance
 	return instance
 
 end
 
-function NumRunningInstances( mod )
+function NumRunningInstances( uid )
 
-	local uid = mod:GetUID()
 	local count = 0
 	for i=#active, 1, -1 do
 		if active[i]:__GetModule():GetUID() == uid then count = count + 1 end
@@ -81,9 +77,8 @@ function Destroy( instance )
 
 end
 
-function DestroyAll( mod )
+function DestroyAll( uid )
 
-	local uid = mod:GetUID()
 	for i=#active, 1, -1 do
 		if active[i]:__GetModule():GetUID() == uid then Destroy(active[i]) end
 	end

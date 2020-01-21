@@ -182,6 +182,18 @@ function meta:CopyRemoteToLocal( f )
 
 end
 
+function meta:ForgetRemote()
+
+	self:ClearFlag( bpfile.FL_IsServerFile )
+	self:ClearFlag( bpfile.FL_HasLock )
+	self:ClearFlag( bpfile.FL_HasOwner )
+	self:ClearFlag( bpfile.FL_Running )
+
+	self.lock = nil
+	self.owner = nil
+
+end
+
 function meta:ToString()
 
 	local name = self.name or "unnamed"

@@ -12,6 +12,7 @@ FL_CanEditPermissions = 32 --User can edit group permission table
 FL_CanEditUsers = 64       --User can add and remove users from groups
 FL_CanEditGroups = 128     --User can add and remove groups
 FL_CanViewAny = 256        --User can view any blueprint on the server
+FL_CanDelete = 512         --User can delete files on the server
 FL_AllPermissions = 0xFFFF
 
 PermissionInfo = {
@@ -23,6 +24,7 @@ PermissionInfo = {
 	{"Can Edit Users", FL_CanEditUsers, "User can add / remove users from a group"},
 	{"Can Edit Groups", FL_CanEditGroups, "User can add / remove groups"},
 	{"Can Edit View Any", FL_CanViewAny, "User can view any blueprint on the server"},
+	{"Can Delete", FL_CanDelete, "User can delete files on the server"}
 }
 
 local meta = bpcommon.MetaTable("bpgroup")

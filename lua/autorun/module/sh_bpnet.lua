@@ -1,90 +1,80 @@
 AddCSLuaFile()
 
-module("bpnet", package.seeall, bpcommon.rescope(bpcompiler))
+module("bpnet", package.seeall, bpcommon.rescope(bpcompiler, bpcommon))
 
-local CMD_Upload = 0
-local CMD_Download = 1
-local CMD_Error = 2
-local CMD_Install = 3
-local CMD_Uninstall = 4
-local CMD_Instantiate = 5
-local CMD_Destroy = 6
+local CommandBits = 4
+local CMD_Install = 0
+local CMD_Uninstall = 1
+local CMD_Instantiate = 2
+local CMD_Destroy = 3
 
 local CompileFlags = CF_Default
 local PlayerKey = bpcommon.PlayerKey
 
+if SERVER then
+	util.AddNetworkString("bpnet")
+end
+
 local function ErrorHandler( bp, msg, graphID, nodeID )
 
-	print("BLUEPRINT ERROR: " .. tostring(msg) .. " at " .. tostring(graphID) .. "[" .. tostring(nodeID) .. "]")
-
-	if SERVER then
-
-		net.Start("bpclientcmd")
-		net.WriteUInt(CMD_Error, 4)
-		net.WriteUInt(bp.id, 32)
-		net.WriteUInt(graphID, 32)
-		net.WriteUInt(nodeID, 32)
-		net.WriteString(msg)
-		net.Send( bp.owner )
-
-	else
-
-		print("ERROR MSG: " .. msg)
-
-	end
 
 end
 hook.Add("BPModuleError", "bpnetHandleError", ErrorHandler)
 
-if SERVER then
+function Install( mod )
 
-	hook.Add("PlayerDisconnected", "bpnetHandleDisconnect", function(ply)
+	assert(SERVER)
 
-	end)
+	local instanceUID = bpcommon.GUID()
 
-	util.AddNetworkString("bpclientcmd")
-	util.AddNetworkString("bpservercmd")
+	mod:Load()
 
-	net.Receive("bpservercmd", function(len, ply)
+	bpenv.Install( mod )
+	bpenv.Instantiate( mod:GetUID(), instanceUID )
 
-		local cmd = net.ReadUInt(4)
+	local stream = bpdata.OutStream(false, true, true):UseStringTable()
+	mod:WriteToStream(stream, STREAM_NET)
 
-	end)
+	net.Start("bpnet")
+	net.WriteUInt( CMD_Install, CommandBits )
+	net.WriteData( instanceUID, 16 )
+	stream:WriteToNet(true)
+	net.Broadcast()
 
-else
+end
 
-	net.Receive("bpclientcmd", function(len)
+function Uninstall( uid )
 
-		local cmd = net.ReadUInt(4)
+	assert(SERVER)
 
-	end)
+	bpenv.Uninstall( uid )
 
-	--[[function DownloadServerModule( mod, steamid )
+	net.Start("bpnet")
+	net.WriteUInt( CMD_Uninstall, CommandBits )
+	net.WriteData( uid, 16 )
+	net.Broadcast()
 
-		downloadTarget = mod
+end
 
-		net.Start("bpservercmd")
-		net.WriteUInt(CMD_Download, 4)
-		net.WriteString( steamid or PlayerKey(LocalPlayer()) )
-		net.SendToServer()
+net.Receive("bpnet", function(len, ply)
+
+	local cmd = net.ReadUInt(4)
+	if cmd == CMD_Install then
+
+		local uid = net.ReadData( 16 )
+		local stream = bpdata.InStream(false, true, true):UseStringTable()
+		stream:ReadFromNet(true)
+		local mod = bpcompiledmodule.New():ReadFromStream( stream, STREAM_NET )
+
+		mod:Load()
+		bpenv.Install( mod )
+		bpenv.Instantiate( mod:GetUID(), uid )
+
+	elseif cmd == CMD_Uninstall then
+
+		local uid = net.ReadData(16)
+		bpenv.Uninstall( uid )
 
 	end
 
-	function SendModule( mod )
-
-		mod:Compile(CompileFlags)
-
-		net.Start("bpservercmd")
-		net.WriteUInt(CMD_Upload, 4)
-		mod:NetSend()
-
-		_G.G_BPError = nil
-
-		--local toSend = outStream:GetString(true, true)
-
-		--net.WriteString(toSend)
-		net.SendToServer()
-
-	end]]
-
-end
+end)

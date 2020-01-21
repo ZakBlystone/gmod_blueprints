@@ -238,6 +238,15 @@ function meta:Clear()
 
 end
 
+function meta:CreateDefaults()
+
+	local id, graph = self:NewGraph("EventGraph")
+	graph:AddNode("CORE_Init", 120, 100)
+	graph:AddNode("GM_Think", 120, 300)
+	graph:AddNode("CORE_Shutdown", 120, 500)
+
+end
+
 function meta:NewVariable(name, type, default, flags, ex)
 
 	return self.variables:Add( bpvariable.New(type, default, flags, ex), name )
@@ -340,7 +349,7 @@ function LoadHeader(filename)
 	local magic = inStream:ReadInt( false )
 
 	if magic ~= fmtMagic then
-		print("Probably using string table, try that")
+		--print("Probably using string table, try that")
 		inStream:Reset()
 		inStream:UseStringTable()
 		inStream:LoadFile(filename, true, true)

@@ -5,6 +5,8 @@ module("bpuieditor", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 local PANEL = {}
 local TITLE = "Blueprint Editor"
 
+local deleteOnClose = CreateConVar("bp_delete_editor_on_close", "0", FCVAR_ARCHIVE, "For debugging, re-created editor UI")
+
 LastSavedFile = nil
 
 function PANEL:RunCommand( func, ... )
@@ -54,6 +56,7 @@ function PANEL:Init()
 	self:SetDraggable(true)
 	self:SetSizable(true)
 	self:ShowCloseButton(true)
+	self:SetDeleteOnClose(false)
 
 	self.Tabs = vgui.Create("DPropertySheet", self )
 	self.Tabs:DockMargin(0, 0, 0, 5)
@@ -198,10 +201,19 @@ local function OpenEditor()
 		return
 	end
 
-	if G_BPEditorInstance then
+	if IsValid(G_BPEditorInstance) then
 
-		if IsValid(G_BPEditorInstance) then G_BPEditorInstance:Remove() end
-		G_BPEditorInstance = nil
+		if deleteOnClose:GetBool() then
+
+			if IsValid(G_BPEditorInstance) then G_BPEditorInstance:Remove() end
+			G_BPEditorInstance = nil
+
+		else
+
+			G_BPEditorInstance:SetVisible( true )
+			return
+
+		end
 
 	end
 
@@ -224,6 +236,14 @@ local function OpenEditor()
 	G_BPEditorInstance = editor
 
 end
+
+concommand.Add("bp_editorpanic", function()
+
+	print("Tearing down editor")
+	if IsValid(G_BPEditorInstance) then G_BPEditorInstance:Remove() end
+	G_BPEditorInstance = nil
+
+end)
 
 concommand.Add("open_blueprint", function()
 

@@ -8,6 +8,8 @@ local lockIconLocal = "icon16/accept.png"
 local lockIconRemote = "icon16/lock_delete.png"
 local lockIconUnlocked = "icon16/page.png"
 local statusIconHasChanges = "icon16/asterisk_yellow.png"
+local statusIconRunning = "icon16/resultset_next.png"
+local statusIconStopped = "icon16/stop.png"
 
 function PANEL:OnFileOpen( file )
 
@@ -35,18 +37,29 @@ function PANEL:GetName()
 
 end
 
+function PANEL:GetFile()
+
+	return self.file
+
+end
+
 function PANEL:SetFile(file, role)
 
 	self.file = file
 	self.role = role
 
 	if role == bpfilesystem.FT_Local then
-		self.nameLabel:SetText( file:GetName() .. " --- " .. tostring(file:GetPath()) .. " [ " .. tostring( self.file:GetLock() ) .. "]" )
+		self.nameLabel:SetText( tostring(self.file:GetName()).. " --- " .. tostring(self.file:GetPath()) )
 	else
-		self.nameLabel:SetText( file:GetName() .. " [ " .. tostring( self.file:GetLock() ) .. "]" )
+		self.nameLabel:SetText( tostring(self.file:GetName()) .. " --- by: " .. tostring( self.file:GetOwner() ) )
 	end
 
-	self.statusImage:SetVisible( self.file:HasFlag( bpfile.FL_HasLocalChanges) )
+	if role == bpfilesystem.FT_Local then
+		self.statusImage:SetVisible( self.file:HasFlag( bpfile.FL_HasLocalChanges) )
+	else
+		self.statusImage:SetVisible( true )
+		self.statusImage:SetImage( self.file:HasFlag( bpfile.FL_Running ) and statusIconRunning or statusIconStopped )
+	end
 
 	local lock = self.file:GetLock()
 	if lock then
@@ -181,6 +194,24 @@ function PANEL:OpenMenu()
 
 	self.menu = DermaMenu( false, self )
 
+	if self.role == bpfilesystem.FT_Remote then
+
+		if self.file:HasFlag( bpfile.FL_Running ) then
+
+			self.menu:AddOption( "Stop File", function()
+				bpfilesystem.StopFile( self.file )
+			end)
+
+		else
+
+			self.menu:AddOption( "Run File", function()
+				bpfilesystem.RunFile( self.file )
+			end)
+
+		end
+
+	end
+
 	if self.file:HasFlag( bpfile.FL_IsServerFile ) then
 
 		if self.file:GetLock() == nil then
@@ -220,6 +251,28 @@ function PANEL:OpenMenu()
 		self.menu:AddOption( "Upload", function()
 
 			self:UploadFile()
+
+		end)
+
+	end
+
+	if self.role == bpfilesystem.FT_Local then
+
+		self.menu:AddOption( "Delete", function()
+
+		Derma_Query("Are you sure you want to delete \"" .. self.file:GetName() .. "\"?", "Delete File",
+		"Yes", function() self.view:GetEditor():CloseFileUID( self.file:GetUID() ) file.Delete(self.file:GetPath()) bpfilesystem.IndexLocalFiles() end,
+		"No", function() end)
+
+		end)
+
+	else
+
+		self.menu:AddOption( "Delete", function()
+
+		Derma_Query("Are you sure you want to delete \"" .. self.file:GetName() .. "\"?", "Delete File",
+		"Yes", function() bpfilesystem.DeleteFile( self.file ) end,
+		"No", function() end)
 
 		end)
 
@@ -270,9 +323,11 @@ end
 
 function PANEL:UpdateFiles(fileList, role)
 
-	for k, v in pairs( fileList ) do
-		local id = k
+	local persist = {}
+	for _, v in pairs( fileList ) do
+		local id = v:GetUID()
 		local existing = self.listLookup[id]
+		persist[id] = true
 		if not existing then
 			local panel = vgui.Create("BPFile")
 			panel:SetFile(v, role)
@@ -281,6 +336,16 @@ function PANEL:UpdateFiles(fileList, role)
 			self.listLookup[id] = panel
 		else
 			existing:SetFile(v, role)
+		end
+	end
+
+	for i=#self.list.Items, 1, -1 do
+		local item = self.list.Items[i]
+		local uid = item:GetFile():GetUID()
+		if not persist[uid] then
+			self.listLookup[uid] = nil
+			self.list.Items[i]:Remove()
+			table.remove(self.list.Items, i)
 		end
 	end
 
@@ -302,8 +367,8 @@ function PANEL:Init()
 	FileViews[#FileViews+1] = self
 
 	self.menu = bpuimenubar.AddTo(self)
-	self.menu:Add("New Module", function() end, nil, "icon16/asterisk_yellow.png")
-	self.menu:Add("Refresh Local Files", bpfilesystem.IndexLocalFiles, nil, "icon16/arrow_refresh.png")
+	self.menu:Add("New Module", function() self:CreateModule() end, nil, "icon16/asterisk_yellow.png")
+	self.menu:Add("Refresh Local Files", function() bpfilesystem.IndexLocalFiles() end, nil, "icon16/arrow_refresh.png")
 	--self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
 
 	self.middle = vgui.Create("DPanel")
@@ -335,6 +400,18 @@ function PANEL:Init()
 
 	self:UpdateRemoteFiles()
 	self:UpdateLocalFiles()
+
+end
+
+function PANEL:CreateModule()
+
+	print("Create Module")
+	Derma_StringRequest("New Module", "Module Name", "untitled",
+		function( text )
+			local file = bpfilesystem.NewModuleFile( text )
+			if not file then Derma_Message("Failed to create module: " .. text, "Error", "Ok") end
+			--if file ~= nil then self:GetEditor():OpenFile( file ) end
+		end, nil, "OK", "Cancel")
 
 end
 
