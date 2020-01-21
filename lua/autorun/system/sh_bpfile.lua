@@ -12,6 +12,8 @@ FL_None = 0
 FL_Running = 1
 FL_AlwaysRun = 2
 FL_HasOwner = 4
+FL_HasLock = 8
+FL_IsServerFile = 16
 
 FT_Unknown = 0
 FT_Module = 1
@@ -38,6 +40,31 @@ function meta:Init(uid, type, name)
 
 end
 
+function meta:GetLock()
+
+	return self.lock
+
+end
+
+function meta:TakeLock( user )
+
+	assert(SERVER)
+
+	if self.lock ~= nil then error("File already locked by: " .. tostring( self.lock )) end
+	self.lock = user
+	if user ~= nil then self:SetFlag(FL_HasLock) end
+
+end
+
+function meta:ReleaseLock()
+
+	assert(SERVER)
+
+	self.lock = nil
+	self:ClearFlag(FL_HasLock)
+
+end
+
 function meta:SetOwner( owner )
 
 	self.owner = owner
@@ -46,6 +73,13 @@ function meta:SetOwner( owner )
 	else
 		self:ClearFlag(FL_HasOwner)
 	end
+	return self
+
+end
+
+function meta:GetOwner()
+
+	return self.owner
 
 end
 
@@ -95,6 +129,10 @@ function meta:WriteToStream(stream, mode, version)
 		self.owner:WriteToStream(stream, mode, version)
 	end
 
+	if self:HasFlag(FL_HasLock) then
+		self.lock:WriteToStream(stream, mode, version)
+	end
+
 end
 
 function meta:ReadFromStream(stream, mode, version)
@@ -103,10 +141,18 @@ function meta:ReadFromStream(stream, mode, version)
 	self.uid = stream:ReadStr(16)
 	self.name = bpdata.ReadValue(stream)
 
-	if not self:HasFlag( FL_AlwaysRun ) then self:ClearFlag( FL_Running ) end
+	if mode == bpcommon.STREAM_FILE then
+		if not self:HasFlag( FL_AlwaysRun ) then self:ClearFlag( FL_Running ) end
+	end
+
 	if self:HasFlag(FL_HasOwner) then
 		self.owner = bpuser.New()
 		self.owner:ReadFromStream(stream, mode, version)
+	end
+
+	if self:HasFlag(FL_HasLock) then
+		self.lock = bpuser.New()
+		self.lock:ReadFromStream(stream, mode, version)
 	end
 
 	return self

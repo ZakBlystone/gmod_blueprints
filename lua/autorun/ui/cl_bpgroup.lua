@@ -22,6 +22,14 @@ function PANEL:SetGroup( group )
 
 end
 
+function PANEL:Paint(w, h)
+
+	local r,g,b,a = self.group:GetColor():Unpack()
+	draw.RoundedBox(4, 0, 0, w, h, Color(r,g,b,a))
+	draw.RoundedBox(4, 1, 1, w-2, h-2, Color(r/2,g/2,b/2,a))
+
+end
+
 function PANEL:GetGroup()
 
 	return self.group

@@ -86,7 +86,8 @@ local function LocalAddGroup( name, flags, hardcoded )
 
 	local group = bpgroup.New( name, flags )
 	if hardcoded then group:SetFlag( bpgroup.FL_Locked ) end
-	G_BPGroups[#G_BPGroups+1] = bpgroup.New( name, flags )
+	G_BPGroups[#G_BPGroups+1] = group
+	return group
 
 end
 
@@ -105,10 +106,10 @@ end
 
 local function CreateDefaultGroups()
 
-	LocalAddGroup( "admins", bpgroup.FL_AllPermissions, true )
-	LocalAddGroup( "auditors", bit.bor(bpgroup.FL_CanViewAny, bpgroup.FL_CanToggle) )
-	LocalAddGroup( "trusted", bit.bor(bpgroup.FL_CanUpload, bpgroup.FL_CanRunLocally, bpgroup.FL_CanUseProtected, bpgroup.FL_CanToggle) )
-	LocalAddGroup( "newbie", bit.bor(bpgroup.FL_CanUpload) )
+	LocalAddGroup( "admins", bpgroup.FL_AllPermissions, true ):SetColor( Color(255,100,100) )
+	LocalAddGroup( "auditors", bit.bor(bpgroup.FL_CanViewAny, bpgroup.FL_CanToggle) ):SetColor( Color(255,100,255) )
+	LocalAddGroup( "trusted", bit.bor(bpgroup.FL_CanUpload, bpgroup.FL_CanRunLocally, bpgroup.FL_CanUseProtected, bpgroup.FL_CanToggle) ):SetColor( Color(100,255,100) )
+	LocalAddGroup( "newbie", bit.bor(bpgroup.FL_CanUpload) ):SetColor( Color(100,100,100) )
 
 end
 
@@ -138,6 +139,7 @@ local function LoadTables()
 
 	else
 
+		G_BPGroups = {}
 		CreateDefaultGroups()
 
 	end
@@ -398,6 +400,8 @@ if SERVER then
 	hook.Add("Initialize", "bpusermanager", function()
 		LoadTables()
 	end)
+
+	LoadTables()
 
 elseif CLIENT then
 

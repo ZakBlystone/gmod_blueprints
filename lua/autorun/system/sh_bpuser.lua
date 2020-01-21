@@ -8,6 +8,11 @@ FL_NewUser = 2
 
 local meta = bpcommon.MetaTable("bpuser")
 meta.__eq = function(a,b) return a:Equals(b) end
+meta.__tostring = function(self)
+
+	return tostring(self:GetName()) .. " [ " .. tostring(self:GetSteamID()) .. " ]"
+
+end
 
 bpcommon.AddFlagAccessors(meta)
 

@@ -33,7 +33,18 @@ local function UIDToModulePath( uid )
 
 end
 
-local function IndexLocalFiles()
+local function FindRemoteFile( file )
+
+	assert(CLIENT)
+
+	for _, f in ipairs( GetFiles() ) do
+		if f == file then return f end
+	end
+	return file
+
+end
+
+function IndexLocalFiles()
 
 	assert(CLIENT)
 
@@ -43,11 +54,13 @@ local function IndexLocalFiles()
 	for _, f in ipairs(files) do
 
 		local head = bpmodule.LoadHeader(ClientFileDirectory .. f)
-		local entry = bpfile.New(head.uid, bpfile.FT_Module, f)
+		local entry = FindRemoteFile( bpfile.New(head.uid, bpfile.FT_Module, f) )
 		entry:SetPath( ClientFileDirectory .. f )
 		G_BPLocalFiles[#G_BPLocalFiles+1] = entry
 
 	end
+
+	hook.Run("BPFileTableUpdated", FT_Local)
 
 end
 
@@ -89,11 +102,20 @@ local function LoadIndex()
 
 		PushFiles()
 
+	else
+
+		G_BPFiles = {}
+		PushFiles()
+
 	end
 
 end
 
 local function AddFile( newFile )
+
+	assert(SERVER)
+
+	newFile:SetFlag(bpfile.FL_IsServerFile)
 
 	for i, file in ipairs(G_BPFiles) do
 		if file == newFile then
@@ -139,6 +161,7 @@ if SERVER then
 			local entry = bpfile.New( mod:GetUID(), bpfile.FT_Module )
 			entry:SetOwner( owner )
 			entry:SetName( name )
+			entry:TakeLock( owner )
 
 			print("Module uploaded: " .. tostring(name) .. " -> " .. filename)
 
@@ -183,19 +206,23 @@ net.Receive("bpfilesystem", function(len, ply)
 		G_BPFiles = bpdata.ReadArray(bpfile_meta, stream, STREAM_NET)
 		print("Updated remote files: " .. #G_BPFiles)
 		hook.Run("BPFileTableUpdated", FT_Remote)
+
+		IndexLocalFiles()
 	end
 
 end)
 
 if CLIENT then
 
-	concommand.Add("bp_uploadtest", function()
+	concommand.Add("bp_uploadtest", function(p,c,a)
+
+		if not a[1] then return end
 
 		local mod = bpmodule.New()
-		mod:Load("blueprints/bpm_ded.txt")
+		mod:Load("blueprints/bpm_" .. a[1] .. ".txt")
 
 		print("Try uploading module")
-		UploadObject( mod, "test_module" )
+		UploadObject( mod, a[1] )
 
 	end)
 

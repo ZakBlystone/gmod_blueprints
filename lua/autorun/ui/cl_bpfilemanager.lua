@@ -4,6 +4,10 @@ module("bpuifilemanager", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
 local PANEL = {}
 
+local lockIconLocal = "icon16/accept.png"
+local lockIconRemote = "icon16/lock_delete.png"
+local lockIconUnlocked = "icon16/page.png"
+
 function PANEL:OnFileOpen( file )
 
 end
@@ -16,6 +20,9 @@ function PANEL:Init()
 	self.nameLabel = vgui.Create("DLabel", self)
 	self.nameLabel:SetFont("DermaDefaultBold")
 
+	self.lockImage = vgui.Create("DImage", self)
+	self.lockImage:SetImage(lockIconUnlocked)
+
 end
 
 function PANEL:SetFile(file, role)
@@ -24,9 +31,32 @@ function PANEL:SetFile(file, role)
 	self.role = role
 
 	if role == bpfilesystem.FT_Local then
-		self.nameLabel:SetText( file:GetName() .. " --- " .. tostring(file:GetPath()) )
+		self.nameLabel:SetText( file:GetName() .. " --- " .. tostring(file:GetPath()) .. " [ " .. tostring( self.file:GetLock() ) .. "]" )
 	else
-		self.nameLabel:SetText( file:GetName() )
+		self.nameLabel:SetText( file:GetName() .. " [ " .. tostring( self.file:GetLock() ) .. "]" )
+	end
+
+
+	local lock = self.file:GetLock()
+	if lock then
+
+		local isLocal = lock == bpusermanager.GetLocalUser()
+		self.lockImage:SetImage(isLocal and lockIconLocal or lockIconRemote)
+		self.lockImage:SetVisible(true)
+
+	else
+
+		if self.file:HasFlag( bpfile.FL_IsServerFile ) then
+
+			self.lockImage:SetImage(lockIconUnlocked)
+			self.lockImage:SetVisible(false)
+
+		else
+
+			self.lockImage:SetVisible(false)
+
+		end
+
 	end
 
 end
@@ -36,16 +66,118 @@ function PANEL:PerformLayout()
 	self.nameLabel:SetPos( 4, 4)
 	self.nameLabel:SizeToContents()
 
+	local w,h = self:GetSize()
+	self.lockImage:SizeToContents()
+	self.lockImage:SetPos(w-self.lockImage:GetWide()-4, h/2 - self.lockImage:GetTall()/2)
+
 end
 
 function PANEL:Paint(w, h)
 
-	draw.RoundedBox(4, 0, 0, w, h, Color(50,50,50))
+	local selected = self.view:GetEditor().selectedFile == self
+
+	if self.file:HasFlag( bpfile.FL_IsServerFile ) then
+
+		--draw.RoundedBoxEx(8, 0, 0, w-40, h, HexColor("#2d3436"), false, false, false, false)
+		self.nameLabel:SetTextColor( selected and HexColor("ffd271") or HexColor("#dfe6e9") )
+
+		local lock = self.file:GetLock()
+		local col = lock and (lock == bpusermanager.GetLocalUser() and HexColor("#9cf196") or HexColor("#edaaaa")) or HexColor("#636e72")
+		draw.RoundedBoxEx(8, 0, 0, w, h, Color(col.r/1.5, col.g/1.5, col.b/1.5), false, true, false, true)
+
+	else
+
+		self.nameLabel:SetTextColor( selected and HexColor("ffd271") or HexColor("#636e72") )
+		draw.RoundedBoxEx(8, 0, 0, w, h, HexColor("#2d3436"), false, true, false, true)
+
+	end
+
+end
+
+function PANEL:DoDoubleClick()
+
+	print("DoubleClick")
+
+	if self.file and self.role == bpfilesystem.FT_Local then
+
+		local mod = bpmodule.New()
+		mod:Load(self.file:GetPath())
+		self.view:GetEditor():OpenModule( mod )
+
+	end
+
+end
+
+function PANEL:DoClick()
+
+	print("Clicked")
+
+	self.view:GetEditor().selectedFile = self
+
+end
+
+function PANEL:DoRightClick()
+
+	print("Right Clicked")
 
 end
 
 derma.DefineControl( "BPFile", "Blueprint file", PANEL, "DButton" )
 
+
+local PANEL = {}
+
+function PANEL:Init()
+
+	self.AllowAutoRefresh = true
+	self:SetBackgroundColor( Color(40,40,40) )
+
+	self.label = vgui.Create("DLabel", self)
+	self.label:SetText("FILES")
+	self.label:DockMargin(8, 2, 2, 2)
+	self.label:Dock( TOP )
+	self.label:SetFont("DermaDefaultBold")
+
+	self.listLookup = {}
+	self.list = vgui.Create("DPanelList", self)
+	self.list:SetSpacing(2)
+	self.list:EnableVerticalScrollbar()
+	self.list:Dock( FILL )
+
+end
+
+function PANEL:SetTitle( title )
+
+	self.label:SetText( title )
+	return self
+
+end
+
+function PANEL:UpdateFiles(fileList, role)
+
+	for _, v in ipairs( fileList ) do
+		local id = v:GetUID()
+		local existing = self.listLookup[id]
+		if not existing then
+			local panel = vgui.Create("BPFile")
+			panel:SetFile(v, role)
+			panel.view = self
+			self.list:AddItem( panel )
+			self.listLookup[id] = panel
+		else
+			existing:SetFile(v, role)
+		end
+	end
+
+	table.sort( self.list.Items, function( a, b )
+
+		return a:GetName() < b:GetName()
+
+	end)
+
+end
+
+derma.DefineControl( "BPFileList", "Blueprint file list", PANEL, "DPanel" )
 
 local PANEL = {}
 local FileViews = {}
@@ -56,6 +188,8 @@ function PANEL:Init()
 
 	self.menu = bpuimenubar.AddTo(self)
 	self.menu:Add("New Module", function() end, nil, "icon16/asterisk_yellow.png")
+	self.menu:Add("Refresh Local Files", bpfilesystem.IndexLocalFiles, nil, "icon16/arrow_refresh.png")
+	self.menu:Add("Upload", bpfilesystem.IndexLocalFiles, nil, "icon16/arrow_up.png")
 
 	self.middle = vgui.Create("DPanel")
 	self.middle:SetBackgroundColor(Color(70,70,70))
@@ -68,15 +202,11 @@ function PANEL:Init()
 	self.content:Dock( FILL )
 	self.content:SetBackgroundColor( Color(30,30,30) )
 
-	self.remoteLookup = {}
-	self.remoteList = vgui.Create("DPanelList")
-	self.remoteList:SetSpacing(2)
-	self.remoteList:EnableVerticalScrollbar()
+	self.remoteList = vgui.Create("BPFileList"):SetTitle("Server Files")
+	self.localList = vgui.Create("BPFileList"):SetTitle("Local Files")
 
-	self.localLookup = {}
-	self.localList = vgui.Create("DPanelList")
-	self.localList:SetSpacing(2)
-	self.localList:EnableVerticalScrollbar()
+	self.remoteList.GetEditor = function() return self.editor end
+	self.localList.GetEditor = function() return self.editor end
 
 	self.content:SetLeft(self.localList)
 	self.content:SetRight(self.remoteList)
@@ -101,51 +231,13 @@ end
 
 function PANEL:UpdateRemoteFiles()
 
-	local fileList = bpfilesystem.GetFiles()
-
-	for _, v in ipairs( fileList ) do
-		local id = v:GetUID()
-		local existing = self.remoteLookup[id]
-		if not existing then
-			local panel = vgui.Create("BPFile")
-			panel:SetFile(v, bpfilesystem.FT_Remote)
-			self.remoteList:AddItem( panel )
-			self.remoteLookup[id] = panel
-		else
-			existing:SetFile(v)
-		end
-	end
-
-	table.sort( self.remoteList.Items, function( a, b )
-
-		return a:GetName() < b:GetName()
-
-	end)
+	self.remoteList:UpdateFiles( bpfilesystem.GetFiles(), bpfilesystem.FT_Remote )
 
 end
 
 function PANEL:UpdateLocalFiles()
 
-	local fileList = bpfilesystem.GetLocalFiles()
-
-	for _, v in ipairs( fileList ) do
-		local id = v:GetUID()
-		local existing = self.localLookup[id]
-		if not existing then
-			local panel = vgui.Create("BPFile")
-			panel:SetFile(v, bpfilesystem.FT_Local)
-			self.localList:AddItem( panel )
-			self.localLookup[id] = panel
-		else
-			existing:SetFile(v)
-		end
-	end
-
-	table.sort( self.localList.Items, function( a, b )
-
-		return a:GetName() < b:GetName()
-
-	end)
+	self.localList:UpdateFiles( bpfilesystem.GetLocalFiles(), bpfilesystem.FT_Local )
 
 end
 

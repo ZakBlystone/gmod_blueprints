@@ -44,12 +44,26 @@ function meta:GetName()
 
 end
 
+function meta:GetColor()
+
+	return self.color or Color(50,50,50)
+
+end
+
+function meta:SetColor( col )
+
+	self.color = col
+	return self
+
+end
+
 function meta:AddUser(user) bpusermanager.AddUser(self, user) end
 function meta:RemoveUser(user) bpusermanager.RemoveUser(self, user) end
 
 function meta:WriteToStream(stream, mode, version)
 
 	bpdata.WriteValue( self.name, stream )
+	bpdata.WriteValue( self.color, stream )
 	stream:WriteBits( self.flags, 16 )
 
 	return self
@@ -59,6 +73,7 @@ end
 function meta:ReadFromStream(stream, mode, version)
 
 	self.name = bpdata.ReadValue( stream )
+	self.color = bpdata.ReadValue( stream )
 	self.flags = stream:ReadBits( 16 )
 
 	return self

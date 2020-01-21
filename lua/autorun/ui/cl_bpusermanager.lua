@@ -79,7 +79,7 @@ end
 
 function PANEL:UpdateGroups()
 
-	self.groupList:Clear( true )
+	print("Updating groups for: " .. tostring(self))
 
 	local persist = {}
 	for _, v in ipairs( bpusermanager.GetGroups() ) do
