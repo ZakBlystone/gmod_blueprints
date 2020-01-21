@@ -7,6 +7,7 @@ local PANEL = {}
 local lockIconLocal = "icon16/accept.png"
 local lockIconRemote = "icon16/lock_delete.png"
 local lockIconUnlocked = "icon16/page.png"
+local statusIconHasChanges = "icon16/asterisk_yellow.png"
 
 function PANEL:OnFileOpen( file )
 
@@ -23,6 +24,15 @@ function PANEL:Init()
 	self.lockImage = vgui.Create("DImage", self)
 	self.lockImage:SetImage(lockIconUnlocked)
 
+	self.statusImage = vgui.Create("DImage", self)
+	self.statusImage:SetImage(statusIconHasChanges)
+
+end
+
+function PANEL:GetName()
+
+	return self.file and self.file:GetName() or "file"
+
 end
 
 function PANEL:SetFile(file, role)
@@ -36,6 +46,7 @@ function PANEL:SetFile(file, role)
 		self.nameLabel:SetText( file:GetName() .. " [ " .. tostring( self.file:GetLock() ) .. "]" )
 	end
 
+	self.statusImage:SetVisible( self.file:HasFlag( bpfile.FL_HasLocalChanges) )
 
 	local lock = self.file:GetLock()
 	if lock then
@@ -70,6 +81,9 @@ function PANEL:PerformLayout()
 	self.lockImage:SizeToContents()
 	self.lockImage:SetPos(w-self.lockImage:GetWide()-4, h/2 - self.lockImage:GetTall()/2)
 
+	self.statusImage:SizeToContents()
+	self.statusImage:SetPos(w-32-4, h/2 - self.lockImage:GetTall()/2)
+
 end
 
 function PANEL:Paint(w, h)
@@ -96,9 +110,16 @@ end
 
 function PANEL:OpenFile()
 
+	self.view:GetEditor():OpenFile( self.file )
+
+end
+
+function PANEL:UploadFile()
+
 	local mod = bpmodule.New()
+	local _, _, name = self.file:GetPath():find("bpm_([%w_]+).txt$")
 	mod:Load(self.file:GetPath())
-	self.view:GetEditor():OpenModule( mod )
+	bpfilesystem.UploadObject(mod, name or self.file:GetPath())
 
 end
 
@@ -162,18 +183,46 @@ function PANEL:OpenMenu()
 
 	if self.file:HasFlag( bpfile.FL_IsServerFile ) then
 
-		self.menu:AddOption( self.file:GetLock() ~= nil and "Release Lock" or "Take Lock", function()
+		if self.file:GetLock() == nil then
 
-			local f = self.file:GetLock() ~= nil and bpfilesystem.ReleaseLock or bpfilesystem.TakeLock
-			f( self.file, function(res, msg)
+			self.menu:AddOption( "Take Lock", function()
 
-				if not res then
-					Derma_Message( msg, "Failed to release lock on file", "OK" )
-				end
+				bpfilesystem.TakeLock( self.file, function(res, msg)
+
+					if not res then
+						Derma_Message( msg, "Failed to release lock on file", "OK" )
+					end
+
+				end )
 
 			end )
 
-		end )
+		else
+
+			self.menu:AddOption( "Release Lock", function()
+
+				self.view:GetEditor():CloseFile( self.file, function()
+					bpfilesystem.ReleaseLock( self.file, function(res, msg)
+
+						if not res then
+							Derma_Message( msg, "Failed to release lock on file", "OK" )
+						end
+
+					end )
+				end )
+
+			end )
+
+		end
+
+	elseif self.role == bpfilesystem.FT_Local then
+
+		self.menu:AddOption( "Upload", function()
+
+			self:UploadFile()
+
+		end)
+
 	end
 	
 	self.menu:SetMinimumWidth( 100 )
@@ -221,8 +270,8 @@ end
 
 function PANEL:UpdateFiles(fileList, role)
 
-	for _, v in ipairs( fileList ) do
-		local id = v:GetUID()
+	for k, v in pairs( fileList ) do
+		local id = k
 		local existing = self.listLookup[id]
 		if not existing then
 			local panel = vgui.Create("BPFile")
@@ -255,7 +304,7 @@ function PANEL:Init()
 	self.menu = bpuimenubar.AddTo(self)
 	self.menu:Add("New Module", function() end, nil, "icon16/asterisk_yellow.png")
 	self.menu:Add("Refresh Local Files", bpfilesystem.IndexLocalFiles, nil, "icon16/arrow_refresh.png")
-	self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
+	--self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
 
 	self.middle = vgui.Create("DPanel")
 	self.middle:SetBackgroundColor(Color(70,70,70))

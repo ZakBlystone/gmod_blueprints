@@ -14,6 +14,7 @@ FL_AlwaysRun = 2
 FL_HasOwner = 4
 FL_HasLock = 8
 FL_IsServerFile = 16
+FL_HasLocalChanges = 32
 
 FT_Unknown = 0
 FT_Module = 1
@@ -163,6 +164,21 @@ function meta:ReadFromStream(stream, mode, version)
 	end
 
 	return self
+
+end
+
+function meta:CopyRemoteToLocal( f )
+
+	f.owner = self.owner
+	f.lock = self.lock
+	f.uid = self.uid
+	f.name = self.name
+
+	local copyFlagMask = bit.bor( FL_HasOwner, FL_HasLock, FL_AlwaysRun, FL_Running, FL_IsServerFile )
+	local fl = self:GetFlags()
+	local oldFlags = f:GetFlags()
+
+	f:SetFlags( bit.bor( bit.band(oldFlags, bit.bnot(copyFlagMask)), bit.band(fl, copyFlagMask) ) )
 
 end
 

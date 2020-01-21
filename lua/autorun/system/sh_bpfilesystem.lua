@@ -65,13 +65,23 @@ function IndexLocalFiles()
 
 	local files, _ = file.Find(ClientFileDirectory .. "*", "DATA")
 
-	G_BPLocalFiles = {}
 	for _, f in ipairs(files) do
 
 		local head = bpmodule.LoadHeader(ClientFileDirectory .. f)
-		local entry = FindRemoteFile( bpfile.New(head.uid, bpfile.FT_Module, f) )
-		entry:SetPath( ClientFileDirectory .. f )
-		G_BPLocalFiles[#G_BPLocalFiles+1] = entry
+		if not G_BPLocalFiles[head.uid] then
+
+			local entry = bpfile.New(head.uid, bpfile.FT_Module, f)
+			entry:SetPath( ClientFileDirectory .. f )
+			G_BPLocalFiles[head.uid] = entry
+
+		end
+
+	end
+
+	for k,v in pairs(G_BPLocalFiles) do
+
+		local remote = FindRemoteFile( v )
+		if remote then remote:CopyRemoteToLocal( v ) end
 
 	end
 
@@ -221,6 +231,17 @@ local function AckClientCommand( ply, cmd, result )
 
 end
 
+function MarkFileAsChanged( file, changed )
+
+	if changed == nil then changed = true end
+
+	assert( CLIENT )
+	if changed == file:HasFlag( bpfile.FL_HasLocalChanges ) then return end
+	if changed then file:SetFlag( bpfile.FL_HasLocalChanges ) else file:ClearFlag( bpfile.FL_HasLocalChanges ) end
+	IndexLocalFiles()
+
+end
+
 function UploadObject( object, name )
 
 	assert( CLIENT )
@@ -292,6 +313,7 @@ net.Receive("bpfilesystem", function(len, ply)
 		if not file:CanTakeLock(user) then AckClientCommand(ply, cmd, "File is locked by someone else") return end
 		file:TakeLock(user)
 		AckClientCommand(ply, cmd)
+		SaveIndex()
 		PushFiles()
 	elseif cmd == CMD_ReleaseLock then
 		assert(SERVER)
@@ -302,6 +324,7 @@ net.Receive("bpfilesystem", function(len, ply)
 		if not file:CanTakeLock(user) then AckClientCommand(ply, cmd, "File is locked by someone else") return end
 		file:ReleaseLock()
 		AckClientCommand(ply, cmd)
+		SaveIndex()
 		PushFiles()
 	end
 
@@ -333,5 +356,13 @@ if SERVER then
 else
 
 	IndexLocalFiles()
+	hook.Add("Think", "bpfilesystem", function()
+		for k,v in pairs(ClientPendingCommands) do
+			if CurTime() - v.time > 5 then
+				ClientPendingCommands[k].callback(false, "Timed Out")
+				ClientPendingCommands[k] = nil
+			end
+		end
+	end)
 
 end

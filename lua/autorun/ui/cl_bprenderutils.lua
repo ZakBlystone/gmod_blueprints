@@ -36,7 +36,7 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
 	local dy = (y1 - y0)
 
 	local d = math.sqrt(math.max(dx*dx, 8000), dy*dy) * 2
-	d = math.min(d, 400)
+	d = math.min(d, 1000)
 
 	positions[1][1]:SetUnpacked(x0,y0,0)
 	positions[1][2] = c0

@@ -118,7 +118,7 @@ function PANEL:OnFocusChanged( gained )
 
 end
 
-function PANEL:OpenModule( mod )
+function PANEL:OpenModule( mod, name, file )
 
 	local existing = self.openModules[mod:GetUID()]
 	if existing then
@@ -126,11 +126,12 @@ function PANEL:OpenModule( mod )
 		return
 	end
 
-	local title = bpcommon.GUIDToString( mod:GetUID(), true )
+	local title = "Module: " .. name or bpcommon.GUIDToString( mod:GetUID(), true )
 	local view = vgui.Create("BPModuleEditor")
 	local sheet = self.Tabs:AddSheet( title, view, nil, false, false, title )
 	view:SetModule( mod )
 	view.editor = self
+	view.file = file
 
 	self.openModules[mod:GetUID()] = sheet
 
@@ -138,15 +139,50 @@ function PANEL:OpenModule( mod )
 
 end
 
-function PANEL:CloseModule( mod )
+function PANEL:OpenFile( file )
 
-	local opened = self.openModules[mod:GetUID()]
+	local mod = bpmodule.New()
+	mod:Load(file:GetPath())
+	self:OpenModule( mod, file:GetName(), file )
+
+end
+
+function PANEL:CloseFile( file, callback )
+
+	print("CLOSING FILE: " .. tostring(file:GetName()))
+
+	local opened = self.openModules[file:GetUID()]
+	local nop = function() end
+
+	callback = callback or nop
+
+	if opened and file:HasFlag( bpfile.FL_HasLocalChanges ) then 
+		self.Tabs:SetActiveTab( opened.Tab )
+		Derma_Query("This module has unsaved changes, would you like the save them?", "Close",
+		"Yes", function() if opened.Panel:Save() then bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end end,
+		"No", function() bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end)
+		return
+	end
+
+	if file then self:CloseFileUID( file:GetUID() ) callback() end
+
+end
+
+function PANEL:CloseFileUID( uid )
+
+	local opened = self.openModules[uid]
 	if opened == nil then return end
 
 	self.Tabs:CloseTab( opened.Tab )
 	opened.Panel:Remove()
 
-	self.openModules[mod:GetUID()] = nil
+	self.openModules[uid] = nil
+
+end
+
+function PANEL:CloseModule( mod )
+
+	self:CloseFileUID( mod:GetUID() )
 
 end
 

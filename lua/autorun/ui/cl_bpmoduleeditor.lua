@@ -73,7 +73,7 @@ function PANEL:Init()
 
 	local MenuOptions = {
 		{"Save", function()
-
+			self:Save()
 		end, nil, "icon16/disk.png"},
 		{"Compile and upload", function()
 			--bpnet.SendModule( self.module )
@@ -108,7 +108,11 @@ function PANEL:Init()
 		end, nil, "icon16/zoom.png"},
 		{"Close", function()
 
-			self.editor:CloseModule(self.module)
+			if self.file then
+				self.editor:CloseFile( self.file )
+			else
+				self.editor:CloseModule(self.module)
+			end
 
 		end}
 	}
@@ -240,6 +244,13 @@ function PANEL:Init()
 
 end
 
+function PANEL:Save()
+
+	self.module:Save( self.file:GetPath() )
+	return true
+
+end
+
 function PANEL:EditGraphPins( id )
 
 	bpuigrapheditmenu.EditGraphParams( self.module:GetGraph(id) )
@@ -288,6 +299,8 @@ function PANEL:OnModuleCallback( cb, ... )
 	if cb == CB_MODULE_CLEAR then self:Clear(...) end
 	if cb == CB_GRAPH_ADD then self:GraphAdded(...) end
 	if cb == CB_GRAPH_REMOVE then self:GraphRemoved(...) end
+
+	if self.file then bpfilesystem.MarkFileAsChanged( self.file ) end
 
 end
 

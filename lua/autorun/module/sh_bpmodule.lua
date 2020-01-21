@@ -6,6 +6,8 @@ bpcommon.CallbackList({
 	"MODULE_CLEAR",
 	"GRAPH_ADD",
 	"GRAPH_REMOVE",
+	"NODETYPE_MODIFIED",
+	"GRAPH_MODIFIED",
 })
 
 STREAM_FILE = 1
@@ -34,10 +36,12 @@ function meta:Init(type)
 	self.type = self.type or MT_Game
 	self.revision = 1
 	self.uniqueID = bpcommon.GUID()
+	self.suppressGraphNotify = false
 
 	self.graphs:AddListener(function(cb, id, graph)
 
 		if cb == bplist.CB_ADD then
+			graph:AddListener(function() self:PostModifyGraph(graph) end)
 			self:FireListeners(CB_GRAPH_ADD, id)
 		elseif cb == bplist.CB_REMOVE then
 			self:RemoveNodeTypes({ graph:GetCallNodeType() })
@@ -122,6 +126,8 @@ function meta:PostModifyNodeType( nodeType )
 		graph:PostModifyNodeType( nodeType )
 	end
 
+	self:FireListeners(CB_NODETYPE_MODIFIED, nodeType)
+
 end
 
 function meta:RemoveNodeTypes( nodeTypes )
@@ -136,6 +142,14 @@ function meta:RecacheNodeTypes()
 
 	for _, graph in self:Graphs() do
 		graph:CacheNodeTypes()
+	end
+
+end
+
+function meta:PostModifyGraph( graph )
+
+	if not self.suppressGraphNotify then
+		self:FireListeners(CB_GRAPH_MODIFIED, graph)
 	end
 
 end
@@ -395,6 +409,8 @@ function meta:ReadFromStream(stream, mode)
 
 	self:Clear()
 
+	self.suppressGraphNotify = true
+
 	local magic = stream:ReadInt( false )
 	local version = stream:ReadInt( false )
 
@@ -420,6 +436,8 @@ function meta:ReadFromStream(stream, mode)
 	for _, graph in self:Graphs() do
 		graph:CreateDeferredData()
 	end
+
+	self.suppressGraphNotify = false
 
 	return self
 

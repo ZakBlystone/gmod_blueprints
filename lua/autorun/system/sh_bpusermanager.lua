@@ -190,7 +190,7 @@ local function HandleLogin( ply )
 		net.WriteUInt(CMD_LoginAck, CommandBits)
 		net.Send(ply)
 
-		PushTables(TF_All, ply)
+		PushTables(TF_All)
 
 	end
 
@@ -399,6 +399,12 @@ if SERVER then
 
 	hook.Add("Initialize", "bpusermanager", function()
 		LoadTables()
+	end)
+
+	hook.Add("PlayerDisconnected", "bpusermanager", function(ply)
+		local user = FindUserForPlayer(ply)
+		if user then user:ClearFlag( bpuser.FL_LoggedIn ) end
+		PushTables(TF_Users)
 	end)
 
 	LoadTables()

@@ -51,11 +51,6 @@ function PANEL:UpdateUsers()
 
 	local userList = table.Copy( bpusermanager.GetUsers() )
 
-	local user = bpuser.New()
-	user.name = "Foohy"
-	user.steamID = "STEAM_1:1:18712009"
-	userList[#userList+1] = user
-
 	for _, v in ipairs( userList ) do
 		local id = v:GetSteamID()
 		local existing = self.userLookup[id]
