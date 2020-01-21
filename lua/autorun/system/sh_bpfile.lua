@@ -46,11 +46,18 @@ function meta:GetLock()
 
 end
 
+function meta:CanTakeLock( user )
+
+	if self.lock ~= nil and self.lock ~= user then return false end
+	return true
+
+end
+
 function meta:TakeLock( user )
 
 	assert(SERVER)
 
-	if self.lock ~= nil then error("File already locked by: " .. tostring( self.lock )) end
+	if not self:CanTakeLock(user) then error("File already locked by: " .. tostring( self.lock )) end
 	self.lock = user
 	if user ~= nil then self:SetFlag(FL_HasLock) end
 

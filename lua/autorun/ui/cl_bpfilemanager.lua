@@ -94,15 +94,45 @@ function PANEL:Paint(w, h)
 
 end
 
+function PANEL:OpenFile()
+
+	local mod = bpmodule.New()
+	mod:Load(self.file:GetPath())
+	self.view:GetEditor():OpenModule( mod )
+
+end
+
 function PANEL:DoDoubleClick()
 
 	print("DoubleClick")
 
 	if self.file and self.role == bpfilesystem.FT_Local then
 
-		local mod = bpmodule.New()
-		mod:Load(self.file:GetPath())
-		self.view:GetEditor():OpenModule( mod )
+		if self.file:HasFlag( bpfile.FL_IsServerFile ) then
+
+			if self.file:GetLock() ~= bpusermanager.GetLocalUser() then
+
+				bpfilesystem.TakeLock( self.file, function(res, msg)
+
+					if res then
+						self:OpenFile()
+					else
+						Derma_Message( msg, "Failed to take lock on file", "OK" )
+					end
+
+				end )
+
+			else
+
+				self:OpenFile()
+
+			end
+
+		else
+
+			self:OpenFile()
+
+		end
 
 	end
 
@@ -116,9 +146,45 @@ function PANEL:DoClick()
 
 end
 
+function PANEL:CloseMenu()
+
+	if IsValid( self.menu ) then
+		self.menu:Remove()
+	end
+
+end
+
+function PANEL:OpenMenu()
+
+	self:CloseMenu()
+
+	self.menu = DermaMenu( false, self )
+
+	if self.file:HasFlag( bpfile.FL_IsServerFile ) then
+
+		self.menu:AddOption( self.file:GetLock() ~= nil and "Release Lock" or "Take Lock", function()
+
+			local f = self.file:GetLock() ~= nil and bpfilesystem.ReleaseLock or bpfilesystem.TakeLock
+			f( self.file, function(res, msg)
+
+				if not res then
+					Derma_Message( msg, "Failed to release lock on file", "OK" )
+				end
+
+			end )
+
+		end )
+	end
+	
+	self.menu:SetMinimumWidth( 100 )
+	self.menu:Open( gui.MouseX(), gui.MouseY(), false, self )
+
+end
+
 function PANEL:DoRightClick()
 
-	print("Right Clicked")
+	self.view:GetEditor().selectedFile = self
+	self:OpenMenu()
 
 end
 
@@ -189,7 +255,7 @@ function PANEL:Init()
 	self.menu = bpuimenubar.AddTo(self)
 	self.menu:Add("New Module", function() end, nil, "icon16/asterisk_yellow.png")
 	self.menu:Add("Refresh Local Files", bpfilesystem.IndexLocalFiles, nil, "icon16/arrow_refresh.png")
-	self.menu:Add("Upload", bpfilesystem.IndexLocalFiles, nil, "icon16/arrow_up.png")
+	self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
 
 	self.middle = vgui.Create("DPanel")
 	self.middle:SetBackgroundColor(Color(70,70,70))

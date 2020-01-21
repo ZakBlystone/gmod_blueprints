@@ -9,13 +9,17 @@ FT_Local = 0
 FT_Remote = 1
 
 local CommandBits = 4
-local CMD_UpdateFileTable = 0
+local CMD_AckClientCmd = 0
+local CMD_UpdateFileTable = 1
+local CMD_TakeLock = 2
+local CMD_ReleaseLock = 3
 
 local FileDirectory = "blueprints/server/"
 local FileIndex = FileDirectory .. "__index.txt"
 local FileIndexVersion = 1
 
 local ClientFileDirectory = "blueprints/client/"
+local ClientPendingCommands = {}
 
 if SERVER then
 	file.CreateDir(FileDirectory)
@@ -41,6 +45,17 @@ local function FindRemoteFile( file )
 		if f == file then return f end
 	end
 	return file
+
+end
+
+local function FindFileByUID( uid )
+
+	print("Find File " .. bpcommon.GUIDToString(uid))
+
+	for _, f in ipairs( GetFiles() ) do
+		if f:GetUID() == uid then return f end
+	end
+	return nil
 
 end
 
@@ -179,6 +194,33 @@ else
 
 end
 
+local function ClientCommand( callback, cmd )
+
+	if ClientPendingCommands[cmd] then
+		ClientPendingCommands[cmd].callback(false, "Timed out")
+	end
+
+	local nop = function() end
+
+	ClientPendingCommands[cmd] = {
+		callback = callback or nop,
+		cmd = cmd,
+		time = CurTime(),
+	}
+
+end
+
+local function AckClientCommand( ply, cmd, result )
+
+	net.Start("bpfilesystem")
+	net.WriteUInt(CMD_AckClientCmd, CommandBits)
+	net.WriteUInt(cmd, CommandBits)
+	net.WriteBool(result ~= nil)
+	if result then net.WriteString(result) end
+	net.Send(ply)
+
+end
+
 function UploadObject( object, name )
 
 	assert( CLIENT )
@@ -197,17 +239,70 @@ function UploadObject( object, name )
 
 end
 
+function TakeLock( file, callback )
+
+	assert(CLIENT)
+
+	ClientCommand( callback, CMD_TakeLock )
+
+	net.Start("bpfilesystem")
+	net.WriteUInt(CMD_TakeLock, CommandBits)
+	net.WriteData(file:GetUID(), 16)
+	net.SendToServer()
+
+end
+
+function ReleaseLock( file, callback )
+
+	assert(CLIENT)
+
+	ClientCommand( callback, CMD_ReleaseLock )
+
+	net.Start("bpfilesystem")
+	net.WriteUInt(CMD_ReleaseLock, CommandBits)
+	net.WriteData(file:GetUID(), 16)
+	net.SendToServer()
+
+end
+
 net.Receive("bpfilesystem", function(len, ply)
 
 	local cmd = net.ReadUInt(CommandBits)
-	if cmd == CMD_UpdateFileTable then
+	if cmd == CMD_AckClientCmd then
+		local cc = net.ReadUInt(CommandBits)
+		local res = net.ReadBool()
+		local str = nil
+		if res then str = net.ReadString() end
+		local v = ClientPendingCommands[cc]
+		if v then v.callback( not res, str ) end
+		ClientPendingCommands[cc] = nil
+	elseif cmd == CMD_UpdateFileTable then
 		local stream = bpdata.InStream(false, true)
 		stream:ReadFromNet(true)
 		G_BPFiles = bpdata.ReadArray(bpfile_meta, stream, STREAM_NET)
 		print("Updated remote files: " .. #G_BPFiles)
 		hook.Run("BPFileTableUpdated", FT_Remote)
-
 		IndexLocalFiles()
+	elseif cmd == CMD_TakeLock then
+		assert(SERVER)
+		local user = bpusermanager.FindUserForPlayer( ply )
+		if not user then AckClientCommand(ply, cmd, "Not logged in") return end
+		local file = FindFileByUID(net.ReadData(16))
+		if not file then AckClientCommand(ply, cmd, "File not found") return end
+		if not file:CanTakeLock(user) then AckClientCommand(ply, cmd, "File is locked by someone else") return end
+		file:TakeLock(user)
+		AckClientCommand(ply, cmd)
+		PushFiles()
+	elseif cmd == CMD_ReleaseLock then
+		assert(SERVER)
+		local user = bpusermanager.FindUserForPlayer( ply )
+		if not user then AckClientCommand(ply, cmd, "Not logged in") return end
+		local file = FindFileByUID(net.ReadData(16))
+		if not file then AckClientCommand(ply, cmd, "File not found") return end
+		if not file:CanTakeLock(user) then AckClientCommand(ply, cmd, "File is locked by someone else") return end
+		file:ReleaseLock()
+		AckClientCommand(ply, cmd)
+		PushFiles()
 	end
 
 end)

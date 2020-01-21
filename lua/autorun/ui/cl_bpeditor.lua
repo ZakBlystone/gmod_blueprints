@@ -72,13 +72,13 @@ function PANEL:Init()
 	self.wasActive = false
 	self.openModules = {}
 
+	self.UserManager = vgui.Create("BPUserManager")
+
 	self.FileManager = vgui.Create("BPFileManager")
 	self.FileManager.editor = self
 
-	self.UserManager = vgui.Create("BPUserManager")
-
-	self.Tabs:AddSheet( "Files", self.FileManager, nil, false, false, "Files" )
 	self.Tabs:AddSheet( "Users", self.UserManager, nil, false, false, "Users" )
+	self.Tabs:SetActiveTab( self.Tabs:AddSheet( "Files", self.FileManager, nil, false, false, "Files" ).Tab )
 
 end
 
