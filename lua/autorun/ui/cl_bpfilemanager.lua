@@ -333,6 +333,18 @@ function PANEL:SetTitle( title )
 
 end
 
+function PANEL:ClearFiles()
+
+	for i=#self.list.Items, 1, -1 do
+		local item = self.list.Items[i]
+		local uid = item:GetFile():GetUID()
+		self.listLookup[uid] = nil
+		self.list.Items[i]:Remove()
+		table.remove(self.list.Items, i)
+	end
+
+end
+
 function PANEL:UpdateFiles(fileList, role)
 
 	local persist = {}
@@ -380,7 +392,7 @@ function PANEL:Init()
 
 	self.menu = bpuimenubar.AddTo(self)
 	self.menu:Add("New Module", function() self:CreateModule() end, nil, "icon16/asterisk_yellow.png")
-	self.menu:Add("Refresh Local Files", function() bpfilesystem.IndexLocalFiles() end, nil, "icon16/arrow_refresh.png")
+	self.menu:Add("Refresh Local Files", function() self.localList:ClearFiles() bpfilesystem.IndexLocalFiles(true) end, nil, "icon16/arrow_refresh.png")
 	--self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
 
 	self.middle = vgui.Create("DPanel")

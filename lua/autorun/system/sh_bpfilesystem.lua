@@ -62,11 +62,15 @@ local function FindFileByUID( uid )
 
 end
 
-function IndexLocalFiles()
+function IndexLocalFiles( refresh )
 
 	assert(CLIENT)
 
 	print("Indexing")
+
+	if refresh then
+		G_BPLocalFiles = {}
+	end
 
 	local files, _ = file.Find(ClientFileDirectory .. "*", "DATA")
 
