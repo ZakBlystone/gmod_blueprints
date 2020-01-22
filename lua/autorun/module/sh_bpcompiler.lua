@@ -270,7 +270,8 @@ function meta:CreatePinVar(pin)
 
 		if isFunctionPin then
 
-			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "func_" .. graphName .. "_out_" .. pinName)
+			local graphID = self:GetID(graph)
+			local key = bpcommon.CreateUniqueKey({}, compactVars and ("r" .. graphID) or "func_" .. graphName .. "_out_" .. pinName)
 			self.vars[#self.vars+1] = {
 				var = key,
 				pin = pin,
