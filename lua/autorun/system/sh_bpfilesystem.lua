@@ -573,7 +573,7 @@ net.Receive("bpfilesystem", function(len, ply)
 		if not user then AckClientCommand(ply, cmd, "Not logged in") return end
 		local file = FindFileByUID(net.ReadData(16))
 		if not file then AckClientCommand(ply, cmd, "File not found") return end
-		if not user:HasPermission(bpgroup.FL_CanDelete) then AckClientCommand(ply, cmd, "Insufficient Permissions") return end
+		if not file:CanTakeLock(user) and not user:HasPermission(bpgroup.FL_CanDelete) then AckClientCommand(ply, cmd, "Insufficient Permissions") return end
 		DeleteLocalFile( file )
 		AckClientCommand(ply, cmd)
 		PushFiles()

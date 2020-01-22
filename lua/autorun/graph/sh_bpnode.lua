@@ -18,6 +18,8 @@ function meta:Init(nodeType, x, y, literals)
 		self.nodeType = nodeType or "invalid"
 	end
 
+	assert(self.nodeType ~= nil)
+
 	self.x = x or 0
 	self.y = y or 0
 	self.literals = literals or {}
