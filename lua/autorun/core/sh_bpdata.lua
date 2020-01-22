@@ -282,7 +282,7 @@ function OUT:WriteToNet(compressed)
 	local str, len = self:GetString(compressed, false)
 	net.WriteUInt(len, 32)
 	net.WriteData(str, len)
-	return self
+	return self, len
 
 end
 

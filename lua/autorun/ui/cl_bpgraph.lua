@@ -170,7 +170,7 @@ function PANEL:OnMouseWheeled( delta )
 	local mousex = gui.MouseX()-x
 	local mousey = gui.MouseY()-y
 
-	self:SetZoomLevel( self:GetZoomLevel() + delta, mousex, mousey )
+	self:SetZoomLevel( self:GetZoomLevel() - delta, mousex, mousey )
 
 end
 

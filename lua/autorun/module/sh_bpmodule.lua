@@ -304,9 +304,9 @@ function meta:RequestGraphForEvent( nodeType )
 
 		if v:IsType(PN_Exec) then continue end
 		if v:IsOut() then
-			graph.inputs:Add(bpvariable.New( v:GetBaseType(), nil, v:GetFlags(), v:GetSubType() ), v:GetName())
+			graph.inputs:Add(v:Copy(), v:GetName())
 		else
-			graph.outputs:Add(bpvariable.New( v:GetBaseType(), nil, v:GetFlags(), v:GetSubType() ), v:GetName())
+			graph.outputs:Add(v:Copy(), v:GetName())
 		end
 
 	end
@@ -397,9 +397,6 @@ end
 function meta:WriteToStream(stream, mode)
 
 	-- each save to disk is a revision on the loaded original
-	if mode == bpmodule.STREAM_FILE then
-		self.revision = self.revision + 1
-	end
 
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )

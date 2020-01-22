@@ -210,6 +210,18 @@ function PANEL:OpenMenu()
 
 		end
 
+		self.menu:AddOption( "Download", function()
+
+			bpfilesystem.DownloadFile( self.file, function(res, msg)
+
+				if not res then
+					Derma_Message( msg, "Failed to download file", "OK" )
+				end
+
+			end )
+
+		end )
+
 	end
 
 	if self.file:HasFlag( bpfile.FL_IsServerFile ) then

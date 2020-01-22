@@ -38,7 +38,8 @@ function Install( mod )
 	net.Start("bpnet")
 	net.WriteUInt( CMD_Install, CommandBits )
 	net.WriteData( instanceUID, 16 )
-	stream:WriteToNet(true)
+	local s,p = stream:WriteToNet(true)
+	print("Send compiled module size: " .. p .. " bytes")
 	net.Broadcast()
 
 end

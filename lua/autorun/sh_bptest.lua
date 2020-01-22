@@ -173,8 +173,7 @@ if SERVER then
 
 	end
 
-	LoadTestSuites()
-	RunAllTests()
+	local testsLoaded = false
 
 	concommand.Add("bp_reloadtests", function()
 		LoadTestSuites()
@@ -182,6 +181,10 @@ if SERVER then
 	end)
 
 	concommand.Add("bp_runtests", function()
+		if not testsLoaded then
+			LoadTestSuites()
+			testsLoaded = true
+		end
 		RunAllTests()
 	end)
 

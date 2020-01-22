@@ -206,7 +206,7 @@ AddNetworkThunk(PinType(PN_Bool), "net.ReadBool()", "net.WriteBool(@)")
 AddNetworkThunk(PinType(PN_Vector), "net.ReadVector()", "net.WriteVector(@)")
 AddNetworkThunk(PinType(PN_Number), "net.ReadFloat()", "net.WriteFloat(@)")
 AddNetworkThunk(PinType(PN_String), "net.ReadString()", "net.WriteString(@)")
-AddNetworkThunk(PinType(PN_Color), "net.ReadColor()", "net.WriteColor(@)")
+AddNetworkThunk(PinType(PN_Color), "net.ReadColor()", "net.WriteColor(Color(@.r, @.g, @.b, @.a))") --some functions don't make a proper color table
 AddNetworkThunk(PinType(PN_Angles), "net.ReadAngle()", "net.WriteAngle(@)")
 AddNetworkThunk(PinType(PN_Enum), "net.ReadUInt(24)", "net.WriteUInt(@, 24)")
 AddNetworkThunk(PinType(PN_Ref, PNF_None, "Player"), "net.ReadEntity()", "net.WriteEntity(@)")
@@ -227,13 +227,13 @@ AddPinCast(PinType(PN_Ref, PNF_None, "Vehicle"), PinType(PN_String), false, "tos
 function CanCast(outPinType, inPinType)
 
 	for _, castInfo in ipairs(NodePinImplicitCasts) do
-		if castInfo.from == outPinType then
+		if castInfo.from:Equal( outPinType, PNF_Table, false ) then
 			for _, entry in ipairs(castInfo.to) do
 				if entry.type == inPinType then
 					return true, entry.wrapper
 				end
 			end
-		elseif castInfo.from == inPinType then
+		elseif castInfo.from:Equal( inPinType, PNF_Table, false ) then
 			for _, entry in ipairs(castInfo.to) do
 				if entry.bidir and entry.type == outPinType then
 					return true, entry.wrapper

@@ -16,6 +16,7 @@ local CMD_ReleaseLock = 3
 local CMD_RunFile = 4
 local CMD_StopFile = 5
 local CMD_DeleteFile = 6
+local CMD_DownloadFile = 7
 
 local FileDirectory = "blueprints/server/"
 local FileIndex = FileDirectory .. "__index.txt"
@@ -241,6 +242,25 @@ local function DeleteLocalFile( fileObject )
 
 end
 
+local function DownloadLocalFile( file, ply )
+
+	local state = bptransfer.GetState( ply )
+	local stream = bpdata.OutStream(false, true, true):UseStringTable()
+
+	local modulePath = UIDToModulePath( file:GetUID() )
+	local mod = bpmodule.New()
+	mod:Load( modulePath )
+	mod:WriteToStream(stream, STREAM_NET)
+
+	local data = stream:GetString(true, false)
+	if not state:AddData(data, "module", file:GetName()) then
+		return false
+	end
+
+	return true
+
+end
+
 if SERVER then
 
 	hook.Add("BPClientReady", "bpfilesystem", function(ply)
@@ -270,21 +290,36 @@ if SERVER then
 			local name = bpdata.ReadValue(stream)
 			local mod = bpmodule.New():ReadFromStream(stream, STREAM_NET)
 			local filename = UIDToModulePath( mod:GetUID() )
-			mod:Save(filename)
+			local file = FindFileByUID( mod:GetUID() )
 
-			local entry = bpfile.New( mod:GetUID(), bpfile.FT_Module )
-			entry:SetOwner( owner )
-			entry:SetName( name )
-			entry:SetPath( filename )
-			entry:TakeLock( owner )
+			if file then
+
+				if not file:CanTakeLock( owner ) then 
+					error("User does not have lock on file") 
+				end
+
+			else
+
+				local entry = bpfile.New( mod:GetUID(), bpfile.FT_Module )
+				entry:SetOwner( owner )
+				entry:SetName( name )
+				entry:SetPath( filename )
+				entry:TakeLock( owner )
+				AddFile(entry)
+
+				file = entry
+
+			end
+
+			mod.revision = mod.revision + 1
+			print("Module increment revision: " .. mod.revision)
+			mod:Save(filename)
 
 			print("Module uploaded: " .. tostring(name) .. " -> " .. filename)
 			print("Module marked for execute: " .. tostring(execute))
 
-			AddFile(entry)
-
 			if execute and owner:HasPermission(bpgroup.FL_CanToggle) then
-				RunLocalFile( entry )
+				RunLocalFile( file )
 			end
 
 			SaveIndex()
@@ -294,6 +329,42 @@ if SERVER then
 	end)
 
 else
+
+	hook.Add("BPTransferReceived", "bpfilesystem", function(state, data)
+		if data.tag == "module" then
+
+			local moduleData = data.buffer:GetString()
+			local stream = bpdata.InStream(false, true):UseStringTable()
+			if not stream:LoadString(moduleData, true, false) then error("Failed to load file locally") end
+
+			local path = ClientFileDirectory .. "bpm_" .. data.name .. ".txt"
+			local mod = bpmodule.New()
+			mod:ReadFromStream( stream, STREAM_NET )
+
+			if file.Exists(path, "DATA") then
+				local head = bpmodule.LoadHeader(path)
+				if mod:GetUID() == head.uid then
+					if mod.revision >= head.revision then
+						print("Updated local copy : " .. path)
+						mod:Save( path )
+					else
+						print("Local module is newer : " .. path)
+					end
+				else
+					print("Unmatched module with same path : " .. bpcommon.GUIDToString( head.uid ) .. " <<-- " .. bpcommon.GUIDToString( mod:GetUID() ))
+				end
+			else
+				mod:Save( path )
+
+				local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, path)
+				entry:SetPath( path )
+				G_BPLocalFiles[mod:GetUID()] = entry
+			end
+
+			IndexLocalFiles()
+
+		end
+	end)
 
 	hook.Add("BPClientReady", "bpfilesystem", function()
 		IndexLocalFiles()
@@ -423,6 +494,19 @@ function DeleteFile( file, callback )
 
 end
 
+function DownloadFile( file, callback )
+
+	assert(CLIENT)
+
+	ClientCommand( callback, CMD_DownloadFile )
+
+	net.Start("bpfilesystem")
+	net.WriteUInt(CMD_DownloadFile, CommandBits)
+	net.WriteData(file:GetUID(), 16)
+	net.SendToServer()
+
+end
+
 net.Receive("bpfilesystem", function(len, ply)
 
 	local cmd = net.ReadUInt(CommandBits)
@@ -493,6 +577,18 @@ net.Receive("bpfilesystem", function(len, ply)
 		DeleteLocalFile( file )
 		AckClientCommand(ply, cmd)
 		PushFiles()
+	elseif cmd == CMD_DownloadFile then
+		assert(SERVER)
+		local user = bpusermanager.FindUserForPlayer( ply )
+		if not user then AckClientCommand(ply, cmd, "Not logged in") return end
+		local file = FindFileByUID(net.ReadData(16))
+		if not file then AckClientCommand(ply, cmd, "File not found") return end
+		if not file:CanTakeLock(user) then AckClientCommand(ply, cmd, "File is locked by someone else") return end
+		if DownloadLocalFile( file, ply ) then
+			AckClientCommand(ply, cmd)
+		else
+			AckClientCommand(ply, cmd, "Failed to download file")
+		end
 	end
 
 end)
