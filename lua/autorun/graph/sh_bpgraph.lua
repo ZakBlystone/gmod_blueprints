@@ -622,8 +622,10 @@ function meta:CanAddNode(nodeType)
 		return false
 	end
 
-	for _, node in self:Nodes() do
-		if node:GetType() == self.callEntryNodeType and nodeType == self.callEntryNodeType then return false end
+	if nodeType:GetCodeType() == NT_FuncInput then
+		for _, node in self:Nodes() do
+			if node:GetCodeType() == NT_FuncInput then return false end
+		end
 	end
 
 	return true

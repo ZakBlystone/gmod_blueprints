@@ -48,11 +48,17 @@ function PANEL:SetFile(file, role)
 	self.file = file
 	self.role = role
 
+	local title = ""
 	if role == bpfilesystem.FT_Local then
-		self.nameLabel:SetText( tostring(self.file:GetName()).. " --- " .. tostring(self.file:GetPath()) )
+		title = tostring(self.file:GetName()).. " --- " .. tostring(self.file:GetPath())
 	else
-		self.nameLabel:SetText( tostring(self.file:GetName()) .. " --- by: " .. tostring( self.file:GetOwner() ) )
+		title = tostring(self.file:GetName()) .. " --- by: " .. tostring( self.file:GetOwner() )
 	end
+
+	if self.file:HasFlag( bpfile.FL_IsServerFile ) then
+		title = title .. " r" .. tostring(self.file:GetRevision())
+	end
+	self.nameLabel:SetText( title )
 
 	if role == bpfilesystem.FT_Local then
 		self.statusImage:SetVisible( self.file:HasFlag( bpfile.FL_HasLocalChanges) )

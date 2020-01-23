@@ -17,6 +17,7 @@ local CMD_RunFile = 4
 local CMD_StopFile = 5
 local CMD_DeleteFile = 6
 local CMD_DownloadFile = 7
+local CMD_AckUpload = 8
 
 local FileDirectory = "blueprints/server/"
 local FileIndex = FileDirectory .. "__index.txt"
@@ -83,6 +84,7 @@ function IndexLocalFiles( refresh )
 
 			local entry = bpfile.New(head.uid, bpfile.FT_Module, f)
 			entry:SetPath( ClientFileDirectory .. f )
+			entry:SetRevision( head.revision )
 			G_BPLocalFiles[head.uid] = entry
 
 		else
@@ -175,10 +177,13 @@ local function LoadIndex()
 		G_BPFiles = bpdata.ReadArray(bpfile_meta, stream, STREAM_FILE)
 
 		for _, f in ipairs(G_BPFiles) do
+			local path = UIDToModulePath( f:GetUID() )
+			local head = bpmodule.LoadHeader( path )
 			if bpenv.NumRunningInstances( f:GetUID() ) > 0 then
 				f:SetFlag( bpfile.FL_Running )
 			end
-			f:SetPath( UIDToModulePath( f:GetUID() ) )
+			f:SetPath( path )
+			f:SetRevision( head.revision )
 		end
 
 		print("Loaded file index: " .. #G_BPFiles)
@@ -319,6 +324,14 @@ if SERVER then
 			print("Module increment revision: " .. mod.revision)
 			mod:Save(filename)
 
+			file:SetRevision( mod.revision )
+
+			net.Start("bpfilesystem")
+			net.WriteUInt(CMD_AckUpload, CommandBits)
+			net.WriteData(mod:GetUID(), 16)
+			net.WriteUInt(mod.revision, 32)
+			net.Send( state:GetPlayer() )
+
 			print("Module uploaded: " .. tostring(name) .. " -> " .. filename)
 			print("Module marked for execute: " .. tostring(execute))
 
@@ -351,6 +364,8 @@ else
 					if mod.revision >= head.revision then
 						print("Updated local copy : " .. path)
 						mod:Save( path )
+						local f = G_BPLocalFiles[ mod:GetUID() ]
+						f:SetRevision( mod.revision )
 					else
 						print("Local module is newer : " .. path)
 					end
@@ -362,6 +377,7 @@ else
 
 				local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, path)
 				entry:SetPath( path )
+				entry:SetRevision( mod.revision )
 				G_BPLocalFiles[mod:GetUID()] = entry
 			end
 
@@ -442,6 +458,7 @@ function TakeLock( file, callback )
 	net.Start("bpfilesystem")
 	net.WriteUInt(CMD_TakeLock, CommandBits)
 	net.WriteData(file:GetUID(), 16)
+	net.WriteUInt(file:GetRevision(), 32)
 	net.SendToServer()
 
 end
@@ -536,6 +553,8 @@ net.Receive("bpfilesystem", function(len, ply)
 		local file = FindFileByUID(net.ReadData(16))
 		if not file then AckClientCommand(ply, cmd, "File not found") return end
 		if not file:CanTakeLock(user) then AckClientCommand(ply, cmd, "File is locked by someone else") return end
+		local remoteRev = net.ReadUInt(32)
+		if file:GetRevision() > remoteRev then AckClientCommand(ply, cmd, "Your file is older than the server's, download latest") return end
 		file:TakeLock(user)
 		AckClientCommand(ply, cmd)
 		SaveIndex()
@@ -592,6 +611,20 @@ net.Receive("bpfilesystem", function(len, ply)
 			AckClientCommand(ply, cmd)
 		else
 			AckClientCommand(ply, cmd, "Failed to download file")
+		end
+	elseif cmd == CMD_AckUpload then
+		assert(CLIENT)
+		local uid = net.ReadData(16)
+		local rev = net.ReadUInt(32)
+		local file = G_BPLocalFiles[uid]
+		if file then
+			local mod = bpmodule.New()
+			mod:Load( file:GetPath() )
+			assert(mod.revision <= rev)
+			mod.revision = rev
+			mod:Save( file:GetPath() )
+			file:SetRevision( rev )
+			IndexLocalFiles()
 		end
 	end
 

@@ -115,6 +115,18 @@ function meta:SetPath( path )
 
 end
 
+function meta:SetRevision( rev )
+
+	self.revision = rev
+
+end
+
+function meta:GetRevision()
+
+	return self.revision or 0
+
+end
+
 function meta:GetPath()
 
 	return self.path
@@ -132,6 +144,10 @@ function meta:WriteToStream(stream, mode, version)
 	stream:WriteBits(self.flags, 8)
 	stream:WriteStr(self.uid)
 	bpdata.WriteValue(self.name, stream)
+
+	if mode == bpcommon.STREAM_NET then
+		stream:WriteInt(self.revision or 0, false)
+	end
 
 	if self:HasFlag(FL_HasOwner) then
 		self.owner:WriteToStream(stream, mode, version)
@@ -151,6 +167,10 @@ function meta:ReadFromStream(stream, mode, version)
 
 	if mode == bpcommon.STREAM_FILE then
 		if not self:HasFlag( FL_AlwaysRun ) then self:ClearFlag( FL_Running ) end
+	end
+
+	if mode == bpcommon.STREAM_NET then
+		self.revision = stream:ReadInt(false)
 	end
 
 	if self:HasFlag(FL_HasOwner) then
