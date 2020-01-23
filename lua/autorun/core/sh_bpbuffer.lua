@@ -31,6 +31,12 @@ function meta:Init( fileBacked )
 	return self
 end
 
+function meta:GetCacheFilename()
+
+	return self.filePath
+
+end
+
 function meta:Write(data)
 	if self.fileBacked then
 		self.file:Write(data)
@@ -39,9 +45,15 @@ function meta:Write(data)
 	end
 end
 
-function meta:GetString()
+function meta:Flush()
 	if self.fileBacked then
 		self.file:Flush()
+	end
+end
+
+function meta:GetString()
+	if self.fileBacked then
+		self:Flush()
 		return file.Read(self.filePath, "DATA")
 	else
 		return self.buffer

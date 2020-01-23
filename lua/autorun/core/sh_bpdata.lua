@@ -121,7 +121,7 @@ function Str2Float(str)
 	return n
 end
 
-local function Num2Str(value, signed, bytes)
+function Num2Str(value, signed, bytes)
 	local x = ""
 	local sig = (bytes * 8)
 
@@ -147,7 +147,7 @@ local function Num2Str(value, signed, bytes)
 	return x
 end
 
-local function Str2Num(str, signed, bytes)
+function Str2Num(str, signed, bytes)
 	local value = 0
 	local sig = (bytes * 8)
 	for i=1, bytes do
@@ -183,7 +183,7 @@ end
 --licensed under the terms of the LGPL2
 
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-local function base64_encode(data)
+function base64_encode(data)
     return ((data:gsub('.', function(x) 
         local r,b='',x:byte()
         for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
@@ -196,7 +196,7 @@ local function base64_encode(data)
     end)..({ '', '==', '=' })[#data%3+1])
 end
 
-local function base64_decode(data)
+function base64_decode(data)
     data = string.gsub(data, '[^'..b..'=]', '')
     return (data:gsub('.', function(x)
         if (x == '=') then return '' end
@@ -232,6 +232,7 @@ end
 
 function OUT:UseStringTable()
 	self.stringTable = bpstringtable.New()
+	return self
 end
 
 function OUT:IsUsingStringTable()
@@ -281,6 +282,7 @@ function OUT:WriteToNet(compressed)
 	local str, len = self:GetString(compressed, false)
 	net.WriteUInt(len, 32)
 	net.WriteData(str, len)
+	return self, len
 
 end
 
@@ -346,6 +348,7 @@ end
 
 function IN:UseStringTable()
 	self.stringTable = bpstringtable.New()
+	return self
 end
 
 function IN:IsUsingStringTable()
@@ -385,7 +388,9 @@ end
 
 function IN:LoadFile(name, compressed, base64encoded)
 	if type(name) == "string" then
-		return self:LoadString( file.Read(name), compressed, base64encoded )
+		local d = file.Read(name)
+		if d == nil then error("Failed to load file: " .. name) end
+		return self:LoadString( d, compressed, base64encoded )
 	else
 		return self:LoadString( name:Read(name:Size()), compressed, base64encoded )
 	end
@@ -396,6 +401,7 @@ function IN:ReadFromNet(compressed)
 	local len = net.ReadUInt(32)
 	local str = net.ReadData(len)
 	self:LoadString(str, compressed, false)
+	return self
 
 end
 
@@ -461,49 +467,6 @@ IN.ReadLong = IN.ReadInt
 
 InStream = function(bitstream, crc) return setmetatable({}, IN):Init(bitstream, crc) end
 OutStream = function(bitstream, crc, fileBacked) return setmetatable({}, OUT):Init(bitstream, crc, fileBacked) end
-
-
-
-local function Test( t, bytes )
-	print( "Testing Signed: " .. t )
-	for i=zdata["MAX_SIGNED_" .. t] - 100, zdata["MAX_SIGNED_" .. t] do
-		local byte = Str2Num( Num2Str( i, true, bytes ), true, bytes )
-		if i ~= byte then print( i .. " ~= " .. byte ) break end
-	end
-
-	for i=zdata["MIN_SIGNED_" .. t], zdata["MIN_SIGNED_" .. t] + 100 do
-		local byte = Str2Num( Num2Str( i, true, bytes ), true, bytes )
-		if i ~= byte then print( i .. " ~= " .. byte ) break end
-	end
-
-	print( "Testing Unsigned: " .. t )
-	for i=0, 100 do
-		local byte = Str2Num( Num2Str( i, false, bytes ), false, bytes )
-		if i ~= byte then print( i .. " ~= " .. byte ) break end
-	end
-
-	for i=zdata["MAX_UNSIGNED_" .. t] - 100, zdata["MAX_UNSIGNED_" .. t] do
-		local byte = Str2Num( Num2Str( i, false, bytes ), false, bytes )
-		if i ~= byte then print( i .. " ~= " .. byte ) break end
-	end
-end
-
-local function TestFloats()
-	print( "Testing Floats" )
-
-	for i=-30000,30000 do
-		local f = i / 100
-		local f2 = Str2Float( Float2Str( f ) )
-		if math.abs(f - f2) > FLOAT_ACCURACY then print( f .. " ~= " .. f2 ) break end
-	end
-end
-
-local function TestAll()
-	Test("BYTE", 1)
-	Test("SHORT", 2)
-	Test("LONG", 4)
-	TestFloats()
-end
 
 function WriteValue(t, buf, thread)
 	local ttype = type(t)
@@ -664,5 +627,25 @@ function ReadValue(buf, thread)
 	end
 end
 
+function ReadArray(meta, stream, ...)
+
+	local t = {}
+	local n = stream:ReadInt(false)
+	for i=1, n do
+		t[#t+1] = bpcommon.MakeInstance( meta ):ReadFromStream(stream, ...)
+	end
+	return t
+
+end
+
+function WriteArray(meta, t, stream, ...)
+
+	stream:WriteInt(#t, false)
+	if #t == 0 then return end
+	for i=1, #t do
+		t[i]:WriteToStream(stream, ...)
+	end
+
+end
 
 --TestAll()

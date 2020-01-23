@@ -15,6 +15,6 @@ function Get(name)
 end
 
 local files, folders = file.Find(nodeTypeBasePath .. "*", "LUA")
-for k,v in pairs(files) do
+for _, v in ipairs(files) do
 	include(nodeTypeBasePath .. v)
 end

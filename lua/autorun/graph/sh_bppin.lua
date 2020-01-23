@@ -68,7 +68,7 @@ function meta:GetConnectedPins()
 	for k, v in graph:Connections() do
 		if dir == bpschema.PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
 		if dir == bpschema.PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
-		table.insert(out, graph:GetNode( dir == bpschema.PD_In and v[1] or v[3]):GetPin( dir == bpschema.PD_In and v[2] or v[4]))
+		out[#out+1] = graph:GetNode( dir == bpschema.PD_In and v[1] or v[3] ):GetPin( dir == bpschema.PD_In and v[2] or v[4] )
 	end
 	return out
 

@@ -18,6 +18,8 @@ function meta:Init(nodeType, x, y, literals)
 		self.nodeType = nodeType or "invalid"
 	end
 
+	assert(self.nodeType ~= nil)
+
 	self.x = x or 0
 	self.y = y or 0
 	self.literals = literals or {}
@@ -85,7 +87,7 @@ end
 function meta:ShiftLiterals(d)
 
 	local l = table.Copy(self.literals)
-	for pinID, literal in pairs(l) do
+	for pinID, literal in ipairs(l) do
 		self:SetLiteral(pinID+d, literal)
 	end
 	self:RemoveInvalidLiterals()
@@ -100,7 +102,7 @@ function meta:ToString(pinID)
 	if not ntype then 
 		str = "<unknown>"
 	else
-		str = ntype:GetName()
+		str = ntype:GetName() or "unnamed"
 		if pinID then
 			local p = type(pinID) == "table" and pinID or self:GetPin(pinID)
 			if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end
@@ -128,7 +130,7 @@ function meta:UpdatePins()
 	self:SetLiteralDefaults()
 	self:FireListeners(CB_NODE_PINS_UPDATED)
 
-	for k,v in pairs(self:GetPins()) do
+	for k, v in ipairs(self:GetPins()) do
 		v.node = self
 		v.id = k
 	end
@@ -139,7 +141,7 @@ function meta:UpdatePinInforms()
 
 	local informs = self:GetInforms()
 	--MsgC(Color(80,255,20), "Update " .. #informs .. " informs...\n")
-	for k,v in pairs(informs) do
+	for _, v in ipairs(informs) do
 		local pin = self:GetPin(v)
 		--MsgC(Color(80,255,20), "\tModify " .. pin:ToString(true,true) .. " -> ")
 		if self.informType == nil then
@@ -218,7 +220,7 @@ function meta:GetNumSidePins(dir)
 
 	local pins = self:GetPins()
 	local i = 0
-	for k,v in pairs(pins) do 
+	for _, v in ipairs(pins) do 
 		if v:GetDir() == dir then i = i + 1 end 
 	end
 	return i
@@ -305,7 +307,7 @@ end
 function meta:RemoveInvalidLiterals()
 
 	local pins = self:GetPins()
-	for pinID, value in pairs(self.literals) do
+	for pinID, value in ipairs(self.literals) do
 		if pins[pinID] == nil or pins[pinID]:IsOut() or pins[pinID]:IsType(PN_Exec) then self.literals[pinID] = nil end
 	end
 
@@ -356,10 +358,10 @@ function meta:GetOptions(tab)
 			if not pin:IsType(PN_Exec) then canConvert = true end
 		end
 		if canConvert then
-			table.insert(tab, {"ConvertToPure", function() self:ConvertType(NT_Pure) end })
+			tab[#tab+1] = {"ConvertToPure", function() self:ConvertType(NT_Pure) end }
 		end
 	elseif self:GetCodeType() == NT_Pure then
-		table.insert(tab, {"ConvertToNonPure", function() self:ConvertType(NT_Function) end })
+		tab[#tab+1] = {"ConvertToNonPure", function() self:ConvertType(NT_Function) end }
 	end
 
 end

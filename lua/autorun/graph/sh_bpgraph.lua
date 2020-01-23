@@ -30,23 +30,16 @@ bpcommon.CreateIndexableListIterators(meta, "inputs")
 bpcommon.CreateIndexableListIterators(meta, "outputs")
 bpcommon.AddFlagAccessors(meta)
 
-function meta:Init(module, type)
-
-	self.nodeConstructor = function(...)
-		local node = bpnode.New(...)
-		node.graph = self
-		return node
-	end
+function meta:Init(type)
 
 	self.flags = FL_NONE
 	self.type = type or GT_Event
-	self.module = module
 
 	-- Create lists for graph elements
-	self.deferredNodes = bplist.New():Constructor(self.nodeConstructor)
-	self.nodes = bplist.New():Constructor(self.nodeConstructor)
-	self.inputs = bplist.New():NamedItems("Inputs"):Constructor(bppin.New)
-	self.outputs = bplist.New():NamedItems("Outputs"):Constructor(bppin.New)
+	self.deferredNodes = bplist.New(bpnode_meta, self, "graph")
+	self.nodes = bplist.New(bpnode_meta, self, "graph")
+	self.inputs = bplist.New(bppin_meta):NamedItems("Inputs")
+	self.outputs = bplist.New(bppin_meta):NamedItems("Outputs")
 	self.connections = {}
 	self.heldConnections = {}
 
@@ -170,12 +163,12 @@ function meta:PreModifyNode( node, action, subaction )
 			local other = self:GetNode(c[3])
 			local pin = pins[c[2]]
 			self:RemoveConnectionID(i)
-			table.insert(held, {pin:GetDir(), pin:GetName(), c[3], PD_In, other:GetPin(c[4]):GetName()})
+			held[#held+1] = {pin:GetDir(), pin:GetName(), c[3], PD_In, other:GetPin(c[4]):GetName()}
 		elseif c[3] == node.id then --input
 			local other = self:GetNode(c[1])
 			local pin = pins[c[4]]
 			self:RemoveConnectionID(i)
-			table.insert(held, {pin:GetDir(), pin:GetName(), c[1], PD_Out, other:GetPin(c[2]):GetName()})
+			held[#held+1] = {pin:GetDir(), pin:GetName(), c[1], PD_Out, other:GetPin(c[2]):GetName()}
 		end
 
 	end
@@ -198,7 +191,7 @@ function meta:PostModifyNode( node )
 
 	local pins = node:GetPins()
 
-	for k, c in pairs(held) do
+	for _, c in ipairs(held) do
 		local pinID = node:FindPin(c[1], c[2]).id
 		if pinID then
 			local other = self:GetNode(c[3])
@@ -362,7 +355,7 @@ function meta:GetPinConnections(pinDir, nodeID, pinID)
 	for k, v in self:Connections() do
 		if pinDir == PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
 		if pinDir == PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
-		table.insert(out, v)
+		out[#out+1] = v
 	end
 	return out
 
@@ -376,7 +369,7 @@ function meta:GetUsedPinTypes(used, noFlags)
 			local pinType = pin:GetType()
 			if noFlags then pinType = pinType:WithFlags(0) end
 			if not table.HasValue(used, pinType) then
-				table.insert(used, pinType)
+				used[#used+1] = pinType
 			end
 		end
 	end
@@ -397,13 +390,13 @@ function meta:NodeWalk(nodeID, condition, visited)
 	local function AddNodeConnections(node)
 		if visited[node] then return end visited[node] = true
 		for pinID, pin in node:Pins() do
-			for _, v in pairs( self:GetPinConnections(pin:GetDir(), node.id, pinID) ) do
+			for _, v in ipairs( self:GetPinConnections(pin:GetDir(), node.id, pinID) ) do
 				local other = pin:GetDir() == PD_In and v[1] or v[3]
 				local otherPin = pin:GetDir() == PD_In and v[2] or v[4]
 				local otherNode = self:GetNode( other )
 
 				-- Push connection onto stack if condition passes
-				if condition(otherNode, otherPin) then table.insert(stack, v) end
+				if condition(otherNode, otherPin) then stack[#stack+1] = v end
 			end
 		end
 	end
@@ -417,7 +410,7 @@ function meta:NodeWalk(nodeID, condition, visited)
 		-- Pop connection from stack and insert it into output table
 		local conn = stack[#stack]
 		table.remove(stack, #stack)
-		table.insert(connections, conn)
+		connections[#connections+1] = conn
 
 		local node0 = self:GetNode(conn[1])
 		local node1 = self:GetNode(conn[3])
@@ -437,12 +430,12 @@ function meta:BuildInformDirectionalCandidates(dir, candidateNodes)
 	for id, node in self:Nodes() do
 		for pinID, pin in node:SidePins(dir) do
 			if node:IsInformPin(pinID) then
-				for _, v in pairs( self:GetPinConnections(dir, id, pinID) ) do
+				for _, v in ipairs( self:GetPinConnections(dir, id, pinID) ) do
 					local other = self:GetNode( dir == PD_In and v[1] or v[3] )
 					local otherPin = dir == PD_In and v[2] or v[4]
 					if other:IsInformPin( otherPin ) == false and other:GetPin( otherPin ):GetBaseType() ~= PN_Any then
 						if not table.HasValue(candidateNodes, other) then
-							table.insert(candidateNodes, other)
+							candidateNodes[#candidateNodes+1] = other
 						end
 					end
 				end
@@ -466,37 +459,28 @@ function meta:WalkInforms()
 
 		self:BuildInformDirectionalCandidates(PD_In, candidateNodes)
 
-		--print("Forward Walk: ")
-		for k,v in pairs(candidateNodes) do
+		for _, v in ipairs(candidateNodes) do
 			local connections = self:NodeWalk(v.id, function(node, pinID)
 				return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_In
 			end, visited)
 			local pinType = nil
-			for _,c in pairs(connections) do
+			for _,c in ipairs(connections) do
 				if not self:GetNode(c[1]):IsInformPin(c[2]) then pinType = self:GetNode(c[1]):GetPin(c[2]):GetType(true) end
-				--print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
 				self:GetNode(c[3]):SetInform(pinType)
 			end
 		end
 
 		self:BuildInformDirectionalCandidates(PD_Out, candidateNodes)
 
-		--print("Reverse Walk: ")
-		for k,v in pairs(candidateNodes) do
+		for _, v in ipairs(candidateNodes) do
 			local connections = self:NodeWalk(v.id, function(node, pinID)
 				return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_Out
 			end, visited)
 			local pinType = nil
-			for _,c in pairs(connections) do
+			for _,c in ipairs(connections) do
 				if not self:GetNode(c[3]):IsInformPin(c[4]) then pinType = self:GetNode(c[3]):GetPin(c[4]):GetType(true) end
-				--print("\t" .. self:GetNode(c[1]):ToString(c[2]) .. " -> " .. self:GetNode(c[3]):ToString(c[4]))
 				self:GetNode(c[1]):SetInform(pinType)
 			end
-		end
-
-		--print("Visited Nodes:")
-		for k,v in pairs(visited) do
-			--print("\t" .. k:ToString())
 		end
 
 	end)
@@ -610,7 +594,7 @@ function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 	local cc, m = self:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 	if not cc then print(m) return false end
 
-	table.insert(self.connections, { nodeID0, pinID0, nodeID1, pinID1 })
+	self.connections[#self.connections+1] = { nodeID0, pinID0, nodeID1, pinID1 }
 
 	--print("CONNECTED: " .. self:GetNode(nodeID0):ToString(pinID0) .. " -> " .. self:GetNode(nodeID1):ToString(pinID1))
 
@@ -638,8 +622,10 @@ function meta:CanAddNode(nodeType)
 		return false
 	end
 
-	for _, node in self:Nodes() do
-		if node:GetType() == self.callEntryNodeType and nodeType == self.callEntryNodeType then return false end
+	if nodeType:GetCodeType() == NT_FuncInput then
+		for _, node in self:Nodes() do
+			if node:GetCodeType() == NT_FuncInput then return false end
+		end
 	end
 
 	return true
@@ -658,8 +644,7 @@ function meta:AddNode(nodeTypeName, ...)
 		return
 	end
 
-	local node = self.nodeConstructor(nodeType, ...)
-	return self.nodes:Add( node )
+	return self.nodes:Construct( nodeType, ... )
 
 end
 
@@ -726,7 +711,7 @@ function meta:CollapseSingleRerouteNode(nodeID)
 	for i, c in self:Connections() do
 
 		if c[1] == nodeID then --output
-			table.insert(insert, {c[3],c[4]})
+			insert[#insert+1] = {c[3],c[4]}
 			self:RemoveConnectionID(i)
 		elseif c[3] == nodeID then --input
 			input = {c[1],c[2]}
@@ -737,7 +722,7 @@ function meta:CollapseSingleRerouteNode(nodeID)
 
 	if input == nil then print("Reroute node did not have input connection") return end
 
-	for _, c in pairs(insert) do
+	for _, c in ipairs(insert) do
 		if not self:ConnectNodes(input[1], input[2], c[1], c[2]) then 
 			error("Unable to reconnect re-route nodes: " .. 
 				self:NodePinToString(input[1], input[2]) .. " -> " .. 
@@ -813,8 +798,8 @@ function meta:ReadFromStream(stream, mode, version)
 			self.outputs:SuppressEvents(true)
 
 			if version and version < 5 then
-				local inputs = bplist.New():NamedItems("Inputs"):Constructor(bpvariable.New):ReadFromStream(stream, mode, version)
-				local outputs = bplist.New():NamedItems("Outputs"):Constructor(bpvariable.New):ReadFromStream(stream, mode, version)
+				local inputs = bplist.New(bpvariable_meta):NamedItems("Inputs"):ReadFromStream(stream, mode, version)
+				local outputs = bplist.New(bpvariable_meta):NamedItems("Outputs"):ReadFromStream(stream, mode, version)
 				for _, v in inputs:Items() do self.inputs:Add( v:CreatePin(PD_None), v.name ) end
 				for _, v in outputs:Items() do self.outputs:Add( v:CreatePin(PD_None), v.name ) end
 			else
@@ -931,7 +916,7 @@ function meta:CopyInto(other)
 		for _, node in self:Nodes() do node.graph = self end
 
 		for _, c in self:Connections() do
-			table.insert(other.connections, {c[1], c[2], c[3], c[4]})
+			other.connections[#other.connections+1] = {c[1], c[2], c[3], c[4]}
 		end
 
 	end)
@@ -946,7 +931,7 @@ function meta:CreateSubGraph(subNodeIds)
 	local hold = {}
 
 	for i, c in self:Connections() do
-		table.insert(hold, c)
+		hold[#hold+1] = c
 	end
 
 	copy:CacheNodeTypes()
@@ -955,14 +940,14 @@ function meta:CreateSubGraph(subNodeIds)
 	copy:RemoveInvalidConnections()
 
 	local severedPins = {}
-	for k,v in pairs(hold) do
+	for _, v in ipairs(hold) do
 
 		if table.HasValue(subNodeIds, v[1]) and not table.HasValue(subNodeIds, v[3]) then
-			table.insert(severedPins, {v[1], v[2]})
+			severedPins[#severedPins+1] = {v[1], v[2]}
 		end
 
 		if not table.HasValue(subNodeIds, v[1]) and table.HasValue(subNodeIds, v[3]) then
-			table.insert(severedPins, {v[3], v[4]})
+			severedPins[#severedPins+1] = {v[3], v[4]}
 		end
 
 	end

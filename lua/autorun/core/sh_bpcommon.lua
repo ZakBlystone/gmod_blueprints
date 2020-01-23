@@ -9,6 +9,9 @@ file.CreateDir("blueprints")
 ENABLE_PROFILING = true
 ENABLE_DEEP_PROFILING = false
 
+STREAM_FILE = 1
+STREAM_NET = 2
+
 function rescope(...)
 	local scopes = {...}
 	local vars = {}
@@ -89,7 +92,7 @@ local function RecurseStack(st, depth)
 	local timedata = {}
 
 	depth = depth or 0
-	for _, smp in pairs(st.children) do
+	for _, smp in ipairs(st.children) do
 
 		local t = data[table.insert(data, {key=smp.key, smp=smp, t=nil})]
 
@@ -105,7 +108,7 @@ local function RecurseStack(st, depth)
 
 	table.sort(data, function(a,b) return a.t.total > b.t.total end)
 
-	for k,v in pairs(data) do
+	for k,v in ipairs(data) do
 		print( string.rep(" ", (depth)) .. string.format("%-" .. (32 - depth) .. "s%8.2f%8.2f%8.2f%8.2f%8.2f", " -" .. v.key .. "[" .. v.t.samples .. "]", 
 			v.smp.time,
 			(v.t.total)/v.t.samples,
@@ -145,7 +148,7 @@ function CallbackList(t, listindex)
 	cblist["CB_LOOKUP"] = {}
 
 	local cbx = 1
-	for k,v in pairs(t) do
+	for k,v in ipairs(t) do
 		cblist["CB_" .. tostring(v)] = cbx
 		cblist["CB_LOOKUP"][cbx] = "CB_" .. tostring(v)
 		cbx = cbx * 2
@@ -225,15 +228,37 @@ function CreateIndexableListIterators(meta, variable)
 
 end
 
-function MetaTable(name)
+function MetaTable(name, extends)
 
 	G_BPMetaRegistry[name] = G_BPMetaRegistry[name] or {}
 	local mt = G_BPMetaRegistry[name]
 	mt.__index = mt
+	mt.__hash = util.CRC(name)
+
+	if extends then
+		local base = G_BPMetaRegistry[name]
+		if base == nil then error("Couldn't find base class for " .. name .. " : " .. tostring(extends)) end
+		table.Inherit(mt, base)
+	end
+
+	for k, v in pairs(G_BPMetaRegistry) do
+		if name ~= k and v.__hash == mt.__hash then
+			error("CRC32 HASH COLLISION: " .. name .. " <--> " .. k .. " [" .. mt.__hash .. " <--> " .. v.__hash)
+		end
+	end
 
 	_G["is" .. name] = function(tbl) return tbl.BaseClass == mt or getmetatable(tbl) == mt end
+	_G[name .. "_meta"] = mt
 
 	return mt
+
+end
+
+function GetMetaTableFromHash(hash)
+
+	for k,v in pairs(G_BPMetaRegistry) do
+		if v.__hash == hash then return v end
+	end
 
 end
 
@@ -387,6 +412,12 @@ function GCHandle(func)
 	local meta = getmetatable(prx)
 	function meta.__gc( self ) pcall( func ) end
 	return prx
+
+end
+
+function PlayerKey(ply)
+
+	return ply:AccountID() or "singleplayer"
 
 end
 

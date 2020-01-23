@@ -320,11 +320,11 @@ LIB GLOBAL
 		IN name, PN_String, #The internal name of the render target. WARNING	 The name is treated like a path and gets its extension discarded. "name.1" and "name.2" are considered the same name and will result in the same render target being reused.
 		IN width, PN_Number, #The width of the render target, must be power of 2.
 		IN height, PN_Number, #The height of the render target, must be power of 2.
-		IN sizeMode, PN_Enum, PNF_None, RT, #Bitflag that influences the sizing of the render target, see RT_SIZE_ Enums.
-		IN depthMode, PN_Enum, PNF_None, MATERIAL, #Bitflag that determines the depth buffer usage of the render target MATERIAL_RT_DEPTH_ Enums.
+		IN sizeMode, PN_Enum, PNF_None, RT_SIZE, #Bitflag that influences the sizing of the render target, see RT_SIZE_ Enums.
+		IN depthMode, PN_Enum, PNF_None, MATERIAL_RT_DEPTH, #Bitflag that determines the depth buffer usage of the render target MATERIAL_RT_DEPTH_ Enums.
 		IN textureFlags, PN_Enum, PNF_None, TEXTUREFLAGS, #Bitflag that configurates the texture, see TEXTUREFLAGS_ Enums. List of flags can also be found on the Valve's Developer Wiki: https://developer.valvesoftware.com/wiki/Valve_Texture_Format
 		IN rtFlags, PN_Enum, PNF_None, CREATERENDERTARGETFLAGS, #Flags that controll the HDR behaviour of the render target, see CREATERENDERTARGETFLAGS_ Enums.
-		IN imageFormat, PN_Enum, PNF_None, IMAGE, #Image format, see IMAGE_FORMAT_ Enums.
+		IN imageFormat, PN_Enum, PNF_None, IMAGE_FORMAT, #Image format, see IMAGE_FORMAT_ Enums.
 		OUT rt, PN_Ref, PNF_None, ITexture, #The new render target.
 	}
 	PURE GetViewEntity, CLIENT

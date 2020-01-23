@@ -44,7 +44,7 @@ function meta:PointToScreen(x,y) return self:GetVGraph():GetRenderer():PointToSc
 
 function meta:OnPopup(text)
 
-	table.insert(self.popups, {text = text, time = POPUP_TIME})
+	self.popups[#self.popups+1] = {text = text, time = POPUP_TIME}
 
 end
 

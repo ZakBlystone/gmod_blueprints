@@ -19,10 +19,13 @@ function meta:Init(type, default, flags, ex, repmode)
 	self.getterNodeType.GetRawPins = function() return { MakePin( PD_Out, "value", self.pintype ) } end
 	self.getterNodeType.Compile = function(node, compiler, pass)
 
+		local varName = "__self.__" .. self:GetName()
+		if compiler.compactVars then varName = "__self.__" .. self.id end
+
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
-				return { var = "__self.__" .. self:GetName() }
+				return { var = varName }
 			end )
 
 			return true
@@ -46,6 +49,8 @@ function meta:Init(type, default, flags, ex, repmode)
 	self.setterNodeType.Compile = function(node, compiler, pass)
 
 		local varName = "__self.__" .. self:GetName()
+		if compiler.compactVars then varName = "__self.__" .. self.id end
+
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)

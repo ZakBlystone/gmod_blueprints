@@ -14,9 +14,7 @@ function ClosestDistanceToCubicHermite(k, p0, p1, m0, m1)
 end
 
 local vsamples = {}
-for i=1, 100 do table.insert(vsamples, 
-	{Vector(0,0,0), Color(0,0,0,0)}
-) end
+for i=1, 100 do vsamples[#vsamples+1] = {Vector(0,0,0), Color(0,0,0,0)} end
 
 function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
 
@@ -38,7 +36,7 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
 	local dy = (y1 - y0)
 
 	local d = math.sqrt(math.max(dx*dx, 8000), dy*dy) * 2
-	d = math.min(d, 400)
+	d = math.min(d, 1000)
 
 	positions[1][1]:SetUnpacked(x0,y0,0)
 	positions[1][2] = c0

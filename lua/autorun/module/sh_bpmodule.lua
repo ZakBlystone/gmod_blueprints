@@ -6,6 +6,8 @@ bpcommon.CallbackList({
 	"MODULE_CLEAR",
 	"GRAPH_ADD",
 	"GRAPH_REMOVE",
+	"NODETYPE_MODIFIED",
+	"GRAPH_MODIFIED",
 })
 
 STREAM_FILE = 1
@@ -17,7 +19,6 @@ fmtVersion = 6
 local meta = bpcommon.MetaTable("bpmodule")
 
 nextModuleID = nextModuleID or 0
-activeModules = activeModules or {}
 
 bpcommon.CreateIndexableListIterators(meta, "graphs")
 bpcommon.CreateIndexableListIterators(meta, "variables")
@@ -26,36 +27,21 @@ bpcommon.CreateIndexableListIterators(meta, "events")
 
 function meta:Init(type)
 
-	self.graphConstructor = function()
-		local graph = bpgraph.New(self)
-		return graph
-	end
-
-	self.structConstructor = function(...)
-		local struct = bpstruct.New(...):MarkAsCustom()
-		struct.module = self
-		return struct
-	end
-
-	self.eventConstructor = function(...)
-		local event = bpevent.New(...)
-		event.module = self
-		return event
-	end
-
 	self.version = fmtVersion
-	self.graphs = bplist.New():NamedItems("Graph"):Constructor(self.graphConstructor)
-	self.structs = bplist.New():NamedItems("Struct"):Constructor(self.structConstructor)
-	self.variables = bplist.New():NamedItems("Var"):Constructor(bpvariable.New)
-	self.events = bplist.New():NamedItems("Event"):Constructor(self.eventConstructor)
+	self.graphs = bplist.New(bpgraph_meta, self, "module"):NamedItems("Graph")
+	self.structs = bplist.New(bpstruct_meta, self, "module"):NamedItems("Struct")
+	self.variables = bplist.New(bpvariable_meta):NamedItems("Var")
+	self.events = bplist.New(bpevent_meta, self, "module"):NamedItems("Event")
 	self.id = nextModuleID
 	self.type = self.type or MT_Game
 	self.revision = 1
 	self.uniqueID = bpcommon.GUID()
+	self.suppressGraphNotify = false
 
 	self.graphs:AddListener(function(cb, id, graph)
 
 		if cb == bplist.CB_ADD then
+			graph:AddListener(function() self:PostModifyGraph(graph) end)
 			self:FireListeners(CB_GRAPH_ADD, id)
 		elseif cb == bplist.CB_REMOVE then
 			self:RemoveNodeTypes({ graph:GetCallNodeType() })
@@ -140,6 +126,8 @@ function meta:PostModifyNodeType( nodeType )
 		graph:PostModifyNodeType( nodeType )
 	end
 
+	self:FireListeners(CB_NODETYPE_MODIFIED, nodeType)
+
 end
 
 function meta:RemoveNodeTypes( nodeTypes )
@@ -158,9 +146,23 @@ function meta:RecacheNodeTypes()
 
 end
 
+function meta:PostModifyGraph( graph )
+
+	if not self.suppressGraphNotify then
+		self:FireListeners(CB_GRAPH_MODIFIED, graph)
+	end
+
+end
+
 function meta:GetUID()
 
 	return self.uniqueID
+
+end
+
+function meta:GetType()
+
+	return self.type
 
 end
 
@@ -236,6 +238,15 @@ function meta:Clear()
 
 end
 
+function meta:CreateDefaults()
+
+	local id, graph = self:NewGraph("EventGraph")
+	graph:AddNode("CORE_Init", 120, 100)
+	graph:AddNode("GM_Think", 120, 300)
+	graph:AddNode("CORE_Shutdown", 120, 500)
+
+end
+
 function meta:NewVariable(name, type, default, flags, ex)
 
 	return self.variables:Add( bpvariable.New(type, default, flags, ex), name )
@@ -244,7 +255,7 @@ end
 
 function meta:NewGraph(name, type)
 
-	local id, graph = self.graphs:Add( bpgraph.New(self, type), name )
+	local id, graph = self.graphs:ConstructNamed( name, type )
 	return id, graph
 
 end
@@ -289,7 +300,7 @@ function meta:RequestGraphForEvent( nodeType )
 		graph:SetFlag(bpgraph.FL_ROLE_CLIENT)
 	end
 
-	for k,v in pairs(nodeType:GetPins()) do
+	for _, v in ipairs(nodeType:GetPins()) do
 
 		if v:IsType(PN_Exec) then continue end
 		if v:IsOut() then
@@ -328,7 +339,7 @@ function meta:NetRecv()
 
 end
 
-function meta:LoadHeader(filename)
+function LoadHeader(filename)
 
 	local inStream = bpdata.InStream(false, true)
 	if not inStream:LoadFile(filename, true, true) then
@@ -338,22 +349,28 @@ function meta:LoadHeader(filename)
 	local magic = inStream:ReadInt( false )
 
 	if magic ~= fmtMagic then
-		print("Probably using string table, try that")
+		--print("Probably using string table, try that")
 		inStream:Reset()
 		inStream:UseStringTable()
 		inStream:LoadFile(filename, true, true)
 		magic = inStream:ReadInt( false )
 	end
 
-	local version = inStream:ReadInt( false )
-
-	return magic, version
+	return {
+		magic = magic,
+		version = inStream:ReadInt( false ),
+		type = inStream:ReadInt( false ),
+		revision = inStream:ReadInt( false ),
+		uid = inStream:ReadStr( 16 ),
+	}
 
 end
 
 function meta:Load(filename)
 
-	local magic, version = self:LoadHeader(filename)
+	local head = LoadHeader(filename)
+	local magic = head.magic
+	local version = head.version
 
 	print("MAGIC: " .. magic)
 	print("VERSION: " .. version)
@@ -380,9 +397,6 @@ end
 function meta:WriteToStream(stream, mode)
 
 	-- each save to disk is a revision on the loaded original
-	if mode == bpmodule.STREAM_FILE then
-		self.revision = self.revision + 1
-	end
 
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
@@ -400,6 +414,8 @@ end
 function meta:ReadFromStream(stream, mode)
 
 	self:Clear()
+
+	self.suppressGraphNotify = true
 
 	local magic = stream:ReadInt( false )
 	local version = stream:ReadInt( false )
@@ -427,6 +443,10 @@ function meta:ReadFromStream(stream, mode)
 		graph:CreateDeferredData()
 	end
 
+	self.suppressGraphNotify = false
+
+	return self
+
 end
 
 function meta:CreateTestModule()
@@ -441,160 +461,21 @@ function meta:CreateTestModule()
 
 end
 
-local imeta = {}
-
-function imeta:__GetModule()
-
-	return self.__module
-
-end
-
-function imeta:__BindGamemodeHooks()
-
-	local meta = getmetatable(self)
-
-	if self.CORE_Init then self:CORE_Init() end
-	local bpm = self.__bpm
-
-	for k,v in pairs(bpm.events) do
-		if not v.hook or type(meta[k]) ~= "function" then continue end
-		local function call(...) return self[k](self, ...) end
-		local key = "bphook_" .. GUIDToString(self.guid, true)
-		--print("BIND KEY: " .. v.hook .. " : " .. key)
-		hook.Add(v.hook, key, call)
-	end
-
-end
-
-function imeta:__UnbindGamemodeHooks()
-
-	local meta = getmetatable(self)
-
-	if self.shuttingDown then ErrorNoHalt("!!!!!Recursive shutdown!!!!!") return end
-	local bpm = self.__bpm
-
-	for k,v in pairs(bpm.events) do
-		if not v.hook or type(meta[k]) ~= "function" then continue end
-		local key = "bphook_" .. GUIDToString(self.guid, true)
-		--print("UNBIND KEY: " .. v.hook .. " : " .. key)
-		hook.Remove(v.hook, key, false)
-	end
-
-	self.shuttingDown = true
-	if self.CORE_Shutdown then self:CORE_Shutdown() end
-	self.shuttingDown = false
-
-end
-
-function imeta:__SetEnabled( enable )
-
-	local modID = self.__module:GetUID()
-	local guid = self.guid
-
-	activeModules[modID] = activeModules[modID] or {}
-
-	local activeList = activeModules[modID]
-	local isEnabled = activeList[guid] ~= nil
-	if isEnabled == false and enable == true then
-		--print("BINDING GAMEMODE HOOKS")
-		self:netInit()
-		self:__BindGamemodeHooks()
-		activeList[guid] = self
-		return
-	end
-
-	if isEnabled == true and enable == false then
-		--print("UN-BINDING GAMEMODE HOOKS")
-		self:netShutdown()
-		self:__UnbindGamemodeHooks()
-		activeList[guid] = nil
-		return
-	end
-
-end
-
-function meta:SetEnabled( enable )
-
-	local modID = self:GetUID()
-	activeModules[modID] = activeModules[modID] or {}
-	local activeList = activeModules[modID]
-
-	if enable then
-		self:GetSingleton():__SetEnabled( enable )
-	else
-		for k,v in pairs(activeList) do
-			v:__SetEnabled(false)
-		end
-		activeModules[modID] = {}
-	end
-
-end
-
-function meta:Instantiate()
-
-	local instance = self:Get().new()
-	local meta = table.Copy(getmetatable(instance))
-	for k,v in pairs(imeta) do meta[k] = v end
-	setmetatable(instance, meta)
-	instance.__module = self
-	return instance
-
-end
-
-function meta:GetSingleton()
-
-	self.singleton = self.singleton or (self:IsValid() and self:Instantiate() or nil)
-	if not self.singleton then return end
-
-	self.singleton.guid = self:Get().guid
-	return self.singleton
-
-end
-
-function meta:Compile(flags, compileErrorHandler)
+function meta:Compile(flags)
 
 	local compiler = bpcompiler.New(self, flags)
-	local ok, res = compiler:Compile()
+	return compiler:Compile()
 
-	if ok then
-		self.compiled = res
-		self:AttachErrorHandler()
+end
+
+function meta:TryCompile(flags)
+
+	local compiler = bpcompiler.New(self, flags)
+	local b, e = pcall(compiler.Compile, compiler)
+	if not b then
+		return false, e
 	else
-		print("Blueprint Code Error: " .. tostring(res))
-	end
-
-	return ok, res
-
-end
-
-function meta:AttachErrorHandler()
-
-	if self.errorHandler ~= nil then
-		self:Get().onError = function(msg, mod, graph, node)
-			self.errorHandler(self, msg, graph, node)
-		end
-	end
-
-end
-
-function meta:IsValid()
-
-	return self.compiled ~= nil
-
-end
-
-function meta:Get()
-
-	return self.compiled
-
-end
-
-function meta:SetErrorHandler(errorHandler)
-
-	self.errorHandler = errorHandler
-
-	if self:IsValid() then
-		self:AttachErrorHandler()
+		return true, e
 	end
 
 end
@@ -612,13 +493,3 @@ end
 function CreateTestModule()
 	return New():CreateTestModule()
 end
-
-hook.Add("Think", "__updatebpmodules", function()
-
-	for _, m in pairs(activeModules) do
-		for _, instance in pairs(m) do
-			instance:update()
-		end
-	end
-
-end)

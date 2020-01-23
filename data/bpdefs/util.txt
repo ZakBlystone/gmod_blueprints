@@ -67,7 +67,7 @@ LIB UTIL
 		CODE
 		{
 			for _, pl in pairs(player.GetAll()) do 
-			if pl:Nick():lower():find($1:lower()) ~= nil then #1 = pl break end 
+			if pl:Nick():lower():find(($1):lower()) ~= nil then #1 = pl break end 
 			end
 			#2 = (#1 ~= nil)
 		}

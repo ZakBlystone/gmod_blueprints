@@ -35,7 +35,7 @@ function meta:Invalidate(invalidatePins)
 	self.height = nil
 
 	if invalidatePins then
-		for k,v in pairs(self.pins) do
+		for _, v in ipairs(self.pins) do
 			v:Invalidate()
 		end
 	end
@@ -44,7 +44,7 @@ end
 
 function meta:ShouldBeCompact()
 
-	for k,v in pairs(self.pins) do
+	for _, v in ipairs(self.pins) do
 		if v.pin:GetLiteralType() == "string" and #v:GetConnections() == 0 then
 			return false
 		end
@@ -173,7 +173,7 @@ function meta:LayoutPins()
 	LayoutSide(PD_Out)
 
 
-	--[[for _, vpin in pairs(self.pins) do
+	--[[for _, vpin in ipairs(self.pins) do
 		local x,y = self:CalculatePinLocation(vpin)
 		vpin:SetPos(x,y)
 	end]]
@@ -240,7 +240,7 @@ function meta:DrawPins(xOffset, yOffset, alpha)
 
 	self:LayoutPins()
 
-	for k,v in pairs(self.pins) do
+	for k,v in ipairs(self.pins) do
 		v:Draw(x+xOffset, y+yOffset, alpha)
 	end
 

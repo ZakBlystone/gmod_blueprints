@@ -30,4 +30,22 @@ surface.CreateFont( "NodePinFont", {
 	blursize = 0,
 } )
 
+local hexChars = "0123456789abcdef"
+local hexLookup = {}
+for i=1, #hexChars do hexLookup[hexChars[i]] = i hexLookup[hexChars[i]:upper()] = i end
+
+function HexColor(hex)
+
+	local r,g,b
+	for s in string.gmatch(hex, "(%x%x)") do
+		if not r then r = hexLookup[s[1]] * 0x10 + hexLookup[s[2]]
+		elseif not g then g = hexLookup[s[1]] * 0x10 + hexLookup[s[2]]
+		elseif not b then b = hexLookup[s[1]] * 0x10 + hexLookup[s[2]]
+		end
+	end
+
+	return Color(r, g, b, 255)
+
+end
+
 end

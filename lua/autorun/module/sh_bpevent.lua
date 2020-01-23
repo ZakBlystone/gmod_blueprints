@@ -15,7 +15,7 @@ bpcommon.AddFlagAccessors(meta)
 function meta:Init()
 
 	self.flags = 0
-	self.pins = bplist.New():NamedItems("Pins"):Constructor(bppin.New)
+	self.pins = bplist.New(bppin_meta):NamedItems("Pins")
 	self.pins:AddListener(function(cb, action, id, var)
 
 		if self.module then
@@ -30,8 +30,6 @@ function meta:Init()
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
-	local pinmeta = bpcommon.FindMetaTable("bppin")
-
 	-- Event node on receiving end
 	self.eventNodeType = bpnodetype.New()
 	self.eventNodeType:AddFlag(NTF_Custom)
@@ -40,7 +38,7 @@ function meta:Init()
 	self.eventNodeType.GetDisplayName = function() return self:GetName() end
 	self.eventNodeType.GetDescription = function() return "Custom Event: " .. self:GetName() end
 	self.eventNodeType.GetCategory = function() return self:GetName() end
-	self.eventNodeType.GetRawPins = function() return bpcommon.Transform( self.pins:GetTable(), {}, pinmeta.Copy, PD_Out ) end
+	self.eventNodeType.GetRawPins = function() return bpcommon.Transform( self.pins:GetTable(), {}, bppin_meta.Copy, PD_Out ) end
 	self.eventNodeType.GetCode = function(ntype)
 
 		local ret, arg, pins = PinRetArg( ntype, nil, function(s,v,k)
@@ -59,7 +57,7 @@ function meta:Init()
 	self.callNodeType.GetDisplayName = function() return "Call " .. self:GetName() end
 	self.callNodeType.GetDescription = function() return "Call " .. self:GetName() .. " event" end
 	self.callNodeType.GetCategory = function() return self:GetName() end
-	self.callNodeType.GetRawPins = function() return bpcommon.Transform( self.pins:GetTable(), {}, pinmeta.Copy, PD_In ) end
+	self.callNodeType.GetRawPins = function() return bpcommon.Transform( self.pins:GetTable(), {}, bppin_meta.Copy, PD_In ) end
 	self.callNodeType.Compile = function(node, compiler, pass)
 
 		if pass == bpcompiler.CP_PREPASS then
@@ -97,12 +95,12 @@ function meta:Init()
 				local nthunk = GetNetworkThunk(pin)
 				if nthunk ~= nil then
 					if pin:HasFlag(PNF_Table) then
-						table.insert(t, "__self:netReadTable( function(x) return " .. nthunk.read .. " end )")
+						t[#t+1] = "__self:netReadTable( function(x) return " .. nthunk.read .. " end )"
 					else
-						table.insert(t, nthunk.read)
+						t[#t+1] = nthunk.read
 					end
 				else
-					table.insert(t, "nil")
+					t[#t+1] = nil
 				end
 			end
 			call = call .. table.concat(t, ", ") .. " )"
@@ -159,7 +157,7 @@ function meta:ReadFromStream(stream, mode, version)
 	if not version or version >= 4 then
 		self.pins:ReadFromStream(stream, mode, version)
 	else
-		local oldPins = bplist.New():NamedItems("Pins"):Constructor(bpvariable.New)
+		local oldPins = bplist.New(bpvariable_meta):NamedItems("Pins")
 		oldPins:ReadFromStream(stream, mode, version)
 		for _, v in oldPins:Items() do
 			self.pins:Add( v:CreatePin(PD_None) )

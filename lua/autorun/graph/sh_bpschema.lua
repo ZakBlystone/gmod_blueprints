@@ -149,18 +149,18 @@ NodePinNetworkThunks = {}
 
 function AddNetworkThunk(pinType, read, write)
 
-	table.insert(NodePinNetworkThunks, {
+	NodePinNetworkThunks[#NodePinNetworkThunks+1] = {
 		read = read,
 		write = write,
 		pinType = pinType,
-	})
+	}
 
 end
 
 function GetNetworkThunk(pinType, mask)
 
 	mask = mask or 0
-	for k,v in pairs(NodePinNetworkThunks) do
+	for _, v in ipairs(NodePinNetworkThunks) do
 		if v.pinType:Equal(pinType, mask) then return v end
 	end
 	return nil
@@ -169,32 +169,33 @@ end
 
 NodePinImplicitCasts = {}
 
-function AddPinCast(from, to, bidirectional, wrapper)
+function AddPinCast(from, to, bidirectional, wrapper, ignoreSub)
 
 	local castInfo = nil
-	for _, info in pairs(NodePinImplicitCasts) do
+	for _, info in ipairs(NodePinImplicitCasts) do
 		if info.from == from then castInfo = info break end
 	end
 	if castInfo == nil then castInfo = NodePinImplicitCasts[table.insert(NodePinImplicitCasts, { from = from, to = {} })] end
 
 	local function Add( type )
-		table.insert(castInfo.to, {
+		castInfo.to[#castInfo.to+1] = {
 			type = type,
 			bidir = bidirectional,
 			wrapper = wrapper,
-		})
+			ignoreSub = ignoreSub,
+		}
 	end
 
 	if type(to) == "table" and not IsPinType(to) then
-		for k,v in pairs(to) do Add(v) end
+		for _, v in ipairs(to) do Add(v) end
 	elseif IsPinType(to) then
 		Add(to)
 	end
 
 end
 
-AddPinCast(PinType(PN_Enum), { PinType(PN_Number) } )
-AddPinCast(PinType(PN_Number), { PinType(PN_Enum), PinType(PN_String) } )
+AddPinCast(PinType(PN_Number), { PinType(PN_Enum) }, true, nil, true )
+AddPinCast(PinType(PN_Number), { PinType(PN_String) } )
 AddPinCast(PinType(PN_Ref, PNF_None, "Entity"), { 
 	PinType(PN_Ref, PNF_None, "Player"),
 	PinType(PN_Ref, PNF_None, "Weapon"),
@@ -206,7 +207,7 @@ AddNetworkThunk(PinType(PN_Bool), "net.ReadBool()", "net.WriteBool(@)")
 AddNetworkThunk(PinType(PN_Vector), "net.ReadVector()", "net.WriteVector(@)")
 AddNetworkThunk(PinType(PN_Number), "net.ReadFloat()", "net.WriteFloat(@)")
 AddNetworkThunk(PinType(PN_String), "net.ReadString()", "net.WriteString(@)")
-AddNetworkThunk(PinType(PN_Color), "net.ReadColor()", "net.WriteColor(@)")
+AddNetworkThunk(PinType(PN_Color), "net.ReadColor()", "net.WriteColor(Color(@.r, @.g, @.b, @.a))") --some functions don't make a proper color table
 AddNetworkThunk(PinType(PN_Angles), "net.ReadAngle()", "net.WriteAngle(@)")
 AddNetworkThunk(PinType(PN_Enum), "net.ReadUInt(24)", "net.WriteUInt(@, 24)")
 AddNetworkThunk(PinType(PN_Ref, PNF_None, "Player"), "net.ReadEntity()", "net.WriteEntity(@)")
@@ -226,16 +227,16 @@ AddPinCast(PinType(PN_Ref, PNF_None, "Vehicle"), PinType(PN_String), false, "tos
 
 function CanCast(outPinType, inPinType)
 
-	for _, castInfo in pairs(NodePinImplicitCasts) do
-		if castInfo.from == outPinType then
-			for _, entry in pairs(castInfo.to) do
-				if entry.type == inPinType then
+	for _, castInfo in ipairs(NodePinImplicitCasts) do
+		if castInfo.from:Equal( outPinType, PNF_Table ) then
+			for _, entry in ipairs(castInfo.to) do
+				if entry.type:Equal( inPinType, PNF_Table, entry.ignoreSub ) then
 					return true, entry.wrapper
 				end
 			end
-		elseif castInfo.from == inPinType then
-			for _, entry in pairs(castInfo.to) do
-				if entry.bidir and entry.type == outPinType then
+		elseif castInfo.from:Equal( inPinType, PNF_Table ) then
+			for _, entry in ipairs(castInfo.to) do
+				if entry.bidir and entry.type:Equal( outPinType, PNF_Table, entry.ignoreSub ) then
 					return true, entry.wrapper
 				end
 			end
@@ -262,14 +263,15 @@ function PinRetArg( nodeType, infmt, outfmt, concat )
 	--print(nodeType.name)
 	local base = (nodeType:GetCodeType() == NT_Event) and 2 or 1
 	local pins = {[PD_In] = {}, [PD_Out] = {}}
-	for k,v in pairs(nodeType:GetPins()) do
+	for _, v in ipairs(nodeType:GetPins()) do
 		if v:GetBaseType() == PN_Exec then continue end
 		local dir = v:GetDir()
 		local num = (base+#pins[dir])
 		local s = (dir == PD_In and "$" or "#") .. num
 		if infmt and dir == PD_In then s = infmt(s, v, num) end
 		if outfmt and dir == PD_Out then s = outfmt(s, v, num) end
-		table.insert(pins[dir], s)
+		local p = pins[dir]
+		p[#p+1] = s
 	end
 
 	local ret = table.concat(pins[PD_Out], concat)
@@ -297,7 +299,7 @@ function FindMatchingPin(ntype, pf)
 	if pf:GetDir() == PD_In then inPin = pf end
 	if pf:GetDir() == PD_Out then outPin = pf end
 
-	for id, pin in pairs(pins) do
+	for id, pin in ipairs(pins) do
 
 		if pf:GetDir() == PD_In then outPin = pin end
 		if pf:GetDir() == PD_Out then inPin = pin end

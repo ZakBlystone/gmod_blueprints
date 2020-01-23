@@ -27,7 +27,7 @@ local nodetypeLookup = {
 	["EVENT"] = NT_Event,
 }
 
-for k,v in pairs(bpschema) do
+for k, v in pairs(bpschema) do
 	if k:sub(1,3) == "PN_" then pinTypeLookup[k] = v end
 	if k:sub(1,4) == "PNF_" then pinFlagLookup[k] = v end
 end
@@ -35,8 +35,8 @@ end
 local function EnumerateDefs( base, output, search )
 
 	local files, folders = file.Find(base, search)
-	for _, f in pairs(files) do table.insert(output, {base:sub(0,-2) .. f, search}) end
-	for _, f in pairs(folders) do EnumerateDefs( base:sub(0,-2) .. f .. "/*", output, search ) end
+	for _, f in ipairs(files) do output[#output+1] = {base:sub(0,-2) .. f, search} end
+	for _, f in ipairs(folders) do EnumerateDefs( base:sub(0,-2) .. f .. "/*", output, search ) end
 
 end
 
@@ -52,8 +52,8 @@ local function CreateReducedEnumKeys( enum )
 	if #enum.entries == 0 then print("Enum has no entries: " .. enum.name) return end
 
 	local common = enum.entries[1].key
-	for k,v in pairs(enum.entries) do
-		for _, b in pairs(blacklist) do
+	for _, v in ipairs(enum.entries) do
+		for _, b in ipairs(blacklist) do
 			if v.key:sub(0, b:len()) == b then blacklisted[v.key] = true break end
 		end
 		if blacklisted[v.key] then continue end
@@ -64,7 +64,7 @@ local function CreateReducedEnumKeys( enum )
 	end
 
 	local commonLen = common:len()
-	for k,v in pairs(enum.entries) do
+	for _, v in ipairs(enum.entries) do
 		v.shortkey = blacklisted[v.key] and v.key or v.key:sub(commonLen+1, -1)
 	end
 
@@ -93,10 +93,10 @@ local function ParseLine(line, state)
 			state.openLiteralBlock = false
 			state.literalBlock = true
 		else
-			table.insert(state.parsed, {
+			state.parsed[#state.parsed+1] = {
 				level = state.level,
 				opener = true,
-			})
+			}
 		end
 		state.level = state.level + 1
 		return
@@ -105,16 +105,16 @@ local function ParseLine(line, state)
 
 		state.level = state.level - 1 
 		if state.literalBlock then
-			table.insert(state.parsed, {
+			state.parsed[#state.parsed+1] = {
 				level = state.level,
 				tuple = {state.literalInstigator, state.literal},
 				literal = state.literal,
-			})
+			}
 		else
-			table.insert(state.parsed, {
+			state.parsed[#state.parsed+1] = {
 				level = state.level,
 				closer = true,
-			})
+			}
 		end
 		state.openLiteralBlock = false
 		state.literalBlock = false
@@ -150,11 +150,11 @@ local function ParseLine(line, state)
 
 	end
 
-	table.insert(state.parsed, {
+	state.parsed[#state.parsed+1] = {
 		level = state.level,
 		tuple = tuple,
 		literal = literal,
-	})
+	}
 
 end
 
@@ -165,7 +165,7 @@ local function ParseDefinitionFile( filePath, search )
 	if str == nil then error("Failed to read file: " .. tostring(filePath)) end
 
 	local lines = string.Explode("\n", str)
-	for _, line in pairs(lines) do
+	for _, line in ipairs(lines) do
 		ParseLine(line:Trim(), state)
 	end
 
@@ -184,7 +184,7 @@ local function ParseDefinitionFile( filePath, search )
 		if block.opener then
 			local h = GetBlockHandler(prevBlock)
 			if h then h.open(prevBlock, blockStack[#blockStack]) end
-			table.insert(blockStack, prevBlock)
+			blockStack[#blockStack+1] = prevBlock
 		elseif block.closer then
 			local top = blockStack[#blockStack]
 			local h = GetBlockHandler(top)
@@ -218,7 +218,7 @@ function LoadAndParseDefs()
 	local foundDefs = {}
 	EnumerateDefs( "data/bpdefs/*", foundDefs, "THIRDPARTY" )
 
-	for k,v in pairs(foundDefs) do
+	for _, v in ipairs(foundDefs) do
 		--if string.find(v[1], "core") or string.find(v[1], "gamemode") then
 			ParseDefinitionFile(v[1], v[2])
 		--end
@@ -246,7 +246,7 @@ local function ParsePin(t)
 	if type == nil then error("NO TYPE FOR: " .. tostring(args[3])) end
 
 	if args[4] then
-		for _, fl in pairs(string.Explode("|", args[4])) do
+		for _, fl in ipairs(string.Explode("|", args[4])) do
 			flags = bit.bor(flags, pinFlagLookup[fl] or 0)
 		end
 	end
@@ -318,10 +318,11 @@ end,
 function(block, value)
 
 	if value.tuple[1] == "VALUE" then
-		table.insert(block.enum.entries, {
+		local e = block.enum.entries
+		e[#e+1] = {
 			key = value.tuple[2],
 			desc = WITH_DOCUMENTATION and value.literal or nil,
-		})
+		}
 		block.enum.lookup[value.tuple[2]] = #block.enum.entries
 	end
 
@@ -377,9 +378,10 @@ local function RegisterNodeBlock(name, codeType)
 	end,
 	function(block, value) ParseNodeValue(block.type, value) end,
 	function(block, parent)
-		if block.type.TBD or block.type:HasFlag(NTF_Protected) then --for now, protected nodes don't exist
+		if block.type.TBD then --for now, protected nodes don't exist
 			parent.group:RemoveEntry(block.type)
 		end
+		--block.type:HasFlag(NTF_Protected)
 	end)
 
 end
@@ -437,7 +439,7 @@ elseif SERVER then
 
 	defpack:PostInit()
 
-	for k,v in pairs(bptransfer.GetStates()) do v:AddFile(DEFPACK_LOCATION, "defs2") end
+	for k, v in pairs(bptransfer.GetStates()) do v:AddFile(DEFPACK_LOCATION, "defs2") end
 
 	hook.Add("BPTransferStateReady", "downloadDefs2", function(ply, state)
 		state:AddFile(DEFPACK_LOCATION, "defs2")

@@ -14,14 +14,25 @@ bpcommon.CallbackList({
 MODIFY_ADD = 0
 MODIFY_REMOVE = 1
 MODIFY_RENAME = 2
+MODIFY_REPLACE = 3
 
 local meta = bpcommon.MetaTable("bplist")
+meta.__tostring = function(self) return self:ToString() end
 meta.__index = meta
 
-function meta:Init(...)
+function meta:Init( meta, outer, alias )
 
+	self.itemMeta = meta
+	self.outer = outer
+	self.outerAlias = alias
 	bpcommon.MakeObservable(self)
 	return self:Clear()
+
+end
+
+function meta:GetItemMeta()
+
+	return self.itemMeta
 
 end
 
@@ -29,13 +40,6 @@ function meta:NamedItems( prefix )
 
 	self.namedItems = true
 	self.namePrefix = (prefix or "Item") .. "_"
-	return self
-
-end
-
-function meta:Constructor( func )
-
-	self.constructor = func
 	return self
 
 end
@@ -50,8 +54,8 @@ function meta:Clear()
 
 end
 
-function meta:Advance()
-	self.nextID = self.nextID + 1
+function meta:Advance(forceIndex)
+	self.nextID = (forceIndex or self.nextID) + 1
 end
 
 function meta:NextIndex()
@@ -106,14 +110,26 @@ function meta:Size()
 
 end
 
-function meta:GetNameForItem( optName, item )
+function meta:SetSanitizer( func )
 
-	optName = optName or item.name
+	self.sanitizer = func
+	return self
 
-	if self.preserveNames then return optName end
-	local name = bpcommon.Sanitize(optName) 
-	if name == nil then name = self.namePrefix .. item.id end
-	name = bpcommon.Camelize(name)
+end
+
+function meta:GetNameForItem( name, item )
+
+	name = name or item.name
+
+	if self.preserveNames then return name end
+
+	if self.sanitizer then
+		name = self.sanitizer(name)
+	else
+		name = bpcommon.Sanitize(name)
+		if name == nil then name = self.namePrefix .. item.id end
+		name = bpcommon.Camelize(name)
+	end
 
 	local namesTaken = {}
 	for _, item in self:Items() do namesTaken[item:GetName()] = true end
@@ -130,26 +146,38 @@ function meta:CopyInto( other, deep )
 
 		for id, item in self:Items() do
 			local copy = table.Copy( item )
-			table.insert( other.items, copy )
+			other.items[#other.items+1] = copy
 			other.itemLookup[id] = copy
 		end
 
 	else
 
 		for id, item in self:Items() do
-			table.insert( other.items, item )
+			other.items[#other.items+1] = item
 			other.itemLookup[id] = item
 		end
 
 	end
 
 	other.nextID = self.nextID
+	return other
 
 end
 
 function meta:PreserveNames(preserve)
 
 	self.preserveNames = preserve
+
+end
+
+function meta:ConstructObject( ... )
+
+	local obj = bpcommon.MakeInstance( self.itemMeta, ... )
+	if self.outer then
+		local key = self.outerAlias or "outer"
+		obj[key] = self.outer
+	end
+	return obj
 
 end
 
@@ -161,16 +189,15 @@ end
 
 function meta:ConstructNamed( name, ... )
 
-	if not self.constructor then error("Item type does not have constructor") end
-	local item = self.constructor(...)
+	local item = self:ConstructObject( ... )
 	return self:Add(item, name)
 
 end
 
-function meta:Add( item, optName )
+function meta:Add( item, optName, forceIndex )
 
 	if item.id ~= nil then error("Cannot add uniquely indexed items to multiple lists") end
-	item.id = self:NextIndex()
+	item.id = forceIndex or self:NextIndex()
 
 	if self.namedItems then
 		item.name = self:GetNameForItem( optName, item )
@@ -178,9 +205,9 @@ function meta:Add( item, optName )
 
 	self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
 
-	table.insert( self.items, item )
+	self.items[#self.items+1] = item
 	self.itemLookup[item.id] = item
-	self:Advance()
+	self:Advance(forceIndex)
 
 	if item.PostInit then item:PostInit() end
 
@@ -223,11 +250,11 @@ function meta:RemoveIf( cond )
 
 end
 
-function meta:Rename( id, newName )
+function meta:Rename( id, newName, force )
 
 	local item = self:Get(id)
 	if item == nil then return false end
-	if item.CanRename and not item:CanRename() then return false end
+	if not force and (item.CanRename and not item:CanRename()) then return false end
 
 	if newName == item.name then return false end
 
@@ -240,14 +267,32 @@ function meta:Rename( id, newName )
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Replace( id, item )
 
-	if not self.constructor then error("No constructor for list items") end
+	local oldItem, oldItemIdx = nil, nil
+	for i, exist in ipairs(self.items) do
+		if exist.id == id then
+			oldItem = exist
+			oldItemIdx = i
+			break
+		end
+	end
+
+	if not oldItem then error("Attempt to replace invalid index: " .. id .. " " .. tostring(oldItemIdx)) end
+
+	self:FireListeners(CB_PREMODIFY, MODIFY_REPLACE, item.id, item)
+	self.itemLookup[id] = item
+	self.items[oldItemIdx] = item
+	self:FireListeners(CB_POSTMODIFY, MODIFY_REPLACE, item.id, item)
+
+end
+
+function meta:WriteToStream(stream, mode, version)
 
 	stream:WriteBool(self.namedItems)
 	stream:WriteInt(self.nextID, false)
 	stream:WriteInt(self:Size(), false)
-	for k,v in pairs(self.items) do
+	for _,v in ipairs(self.items) do
 		stream:WriteInt(v.id, false)
 		if self.namedItems then bpdata.WriteValue( v.name, stream ) end
 		if not v.WriteToStream then error("Need stream implementation for list item") end
@@ -258,8 +303,6 @@ end
 
 function meta:ReadFromStream(stream, mode, version)
 
-	if not self.constructor then error("No constructor for list items") end
-
 	bpcommon.Profile("list-read", function()
 
 		self:Clear()
@@ -268,7 +311,7 @@ function meta:ReadFromStream(stream, mode, version)
 		local count = stream:ReadInt(false)
 		if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
 		for i=1, count do
-			local item = self.constructor()
+			local item = self:ConstructObject()
 			item.id = stream:ReadInt(false)
 			if item.PostInit then item:PostInit() end
 			self.itemLookup[item.id] = item
@@ -276,7 +319,7 @@ function meta:ReadFromStream(stream, mode, version)
 			if not item.ReadFromStream then error("Need stream implementation for list item") end
 			item:ReadFromStream(stream, mode, version)
 			self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
-			table.insert(self.items, item)
+			self.items[#self.items+1] = item
 			self:FireListeners(CB_ADD, item.id, item)
 			self:FireListeners(CB_POSTMODIFY, MODIFY_ADD, item.id, item)
 		end
@@ -296,6 +339,16 @@ end
 function meta:GetTable()
 
 	return self.items
+
+end
+
+function meta:ToString(name)
+
+	local str = (name or "list") .. ":"
+	for id, item in self:Items() do
+		str = str .. "\n [" .. id .. "] = " .. tostring(item)
+	end
+	return str
 
 end
 

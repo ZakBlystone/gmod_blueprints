@@ -24,20 +24,28 @@ end
 function meta:PostInit()
 
 	local tab = self.nodeTypes
-	for k,v in pairs(self.structs) do
+	for k,v in ipairs(self.structs) do
 
-		tab["Make" .. v:GetName()] = v:MakerNodeType()
-		tab["Break" .. v:GetName()] = v:BreakerNodeType()
+		local maker = v:MakerNodeType()
+		local breaker = v:BreakerNodeType()
+
+		local makerName = "Make" .. v:GetName()
+		local breakerName = "Break" .. v:GetName()
+		tab[makerName] = maker
+		tab[breakerName] = breaker
+
+		maker.name = makerName
+		breaker.name = breakerName
 
 		self.structLookup[v:GetName()] = v
 	end
 
-	for k,v in pairs(self.enums) do
+	for _,v in ipairs(self.enums) do
 		self.enumLookup[v.name] = v
 	end
 
-	for k,v in pairs(self.nodeGroups) do
-		for _, e in pairs(v:GetEntries()) do
+	for _,v in ipairs(self.nodeGroups) do
+		for _, e in ipairs(v:GetEntries()) do
 			tab[e:GetName()] = e
 		end
 
@@ -55,7 +63,7 @@ function meta:PostInit()
 	end
 
 	--[[print("Init node types: ")
-	for k,v in pairs(tab) do
+	for k,v in ipairs(tab) do
 		print(v:GetName())
 	end]]
 
@@ -115,19 +123,19 @@ end
 
 function meta:AddStruct(struct)
 
-	table.insert(self.structs, struct)
+	self.structs[#self.structs+1] = struct
 
 end
 
 function meta:AddNodeGroup(group)
 
-	table.insert(self.nodeGroups, group)
+	self.nodeGroups[#self.nodeGroups+1] = group
 
 end
 
 function meta:AddEnum(enum)
 
-	table.insert(self.enums, enum)
+	self.enums[#self.enums+1] = enum
 
 end
 
@@ -167,7 +175,7 @@ function meta:ReadFromStream(stream)
 	local structCount = stream:ReadInt(false)
 
 	for i=1, groupCount do
-		table.insert(self.nodeGroups, bpnodetypegroup.New():ReadFromStream(stream))
+		self.nodeGroups[#self.nodeGroups+1] = bpnodetypegroup.New():ReadFromStream(stream)
 	end
 
 	for i=1, structCount do
@@ -176,7 +184,7 @@ function meta:ReadFromStream(stream)
 		local pinTypeOverride = stream:ReadInt(true)
 
 		struct:SetName( structName )
-		table.insert(self.structs, struct)
+		self.structs[#self.structs+1] = struct
 		-- This is a dumb out-of-bounds hack, fix later
 		if pinTypeOverride ~= -1 then struct.pinTypeOverride = pinTypeOverride end
 	end
@@ -194,7 +202,7 @@ function meta:ToString(inner)
 	local str = "Node Groups: " .. #self.nodeGroups .. ", Struct Groups: " .. #self.structs .. ", Enums: " .. #self.enums
 	if inner then
 
-		for k,v in pairs(self.nodeGroups) do
+		for _,v in ipairs(self.nodeGroups) do
 
 			str = str .. "\n\t" .. v:ToString()
 

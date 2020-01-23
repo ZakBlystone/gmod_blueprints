@@ -133,7 +133,7 @@ function PANEL:OpenMenu( id )
 
 	local t = {}
 	self:PopulateMenuItems(t, id)
-	for k,v in pairs(t) do
+	for _, v in ipairs(t) do
 		self.menu:AddOption( v.name, v.func )
 	end
 
@@ -144,7 +144,7 @@ end
 
 function PANEL:PopulateMenuItems( items, id )
 
-	table.insert(items, { name = "Rename", func = function() self:Rename(id) end })
+	items[#items+1] = { name = "Rename", func = function() self:Rename(id) end }
 
 end
 
@@ -156,7 +156,7 @@ function PANEL:Rename( id )
 
 	local item = self.list:Get(id)
 
-	for k,v in pairs(self.listview:GetItems()) do
+	for _, v in ipairs(self.listview:GetItems()) do
 		if v.id == id then
 			v.btn:SetVisible(false)
 			v.edit = vgui.Create("DTextEntry", v)
@@ -235,7 +235,7 @@ end
 
 function PANEL:Select(id)
 
-	if self.selectedID ~= id then
+	if self.selectedID ~= id or self.alwaysSelect then
 		self.selectedID = id
 		self:OnItemSelected( id, id and self.list:Get(id) or nil )
 	end
