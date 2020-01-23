@@ -468,6 +468,18 @@ function meta:Compile(flags)
 
 end
 
+function meta:TryCompile(flags)
+
+	local compiler = bpcompiler.New(self, flags)
+	local b, e = pcall(compiler.Compile, compiler)
+	if not b then
+		return false, e
+	else
+		return true, e
+	end
+
+end
+
 function meta:ToString()
 
 	return GUIDToString(self:GetUID())

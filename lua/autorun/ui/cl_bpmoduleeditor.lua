@@ -77,7 +77,18 @@ function PANEL:Init()
 		end, nil, "icon16/disk.png"},
 		{"Compile and upload", function()
 			--bpnet.SendModule( self.module )
-			self:Upload(true)
+			local ok, res = self.module:TryCompile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+			if ok then
+				ok, res = res:TryLoad()
+				if ok then
+					self:Save()
+					self:Upload(true)
+				else
+					Derma_Message( res, "Failed to run", "OK" )
+				end
+			else
+				Derma_Message( res, "Failed to compile", "OK" )
+			end
 		end, Color(80,180,80), "icon16/server_go.png"},
 		{"Export Script to Clipboard", function()
 
@@ -87,10 +98,19 @@ function PANEL:Init()
 		end, nil, "icon16/page_code.png"},
 		{"Local: Install", function()
 
-			bpenv.Uninstall( self.module:GetUID() )
-			local result = self.module:Compile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) ):Load()
-			bpenv.Install( result )
-			bpenv.Instantiate( result:GetUID() )
+			local ok, res = self.module:TryCompile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+			if ok then
+				ok, res = res:TryLoad()
+				if ok then
+					bpenv.Uninstall( self.module:GetUID() )
+					bpenv.Install( res )
+					bpenv.Instantiate( res:GetUID() )
+				else
+					Derma_Message( res, "Failed to run", "OK" )
+				end
+			else
+				Derma_Message( res, "Failed to compile", "OK" )
+			end
 
 		end, Color(80,180,80), "icon16/page_code.png"},
 		{"Local: Uninstall", function()
