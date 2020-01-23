@@ -61,8 +61,9 @@ function meta:TryLoad()
 
 	local result, err = CompileString(self.code, "bpmodule[" .. bpcommon.GUIDToString( self:GetUID() ) .. "]", false)
 	if not result then return false, err end
+	if type(result) == "string" then return false, result end
 	self.unit = result()
-	return true
+	return true, self
 
 end
 

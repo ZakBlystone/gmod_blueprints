@@ -378,9 +378,10 @@ local function RegisterNodeBlock(name, codeType)
 	end,
 	function(block, value) ParseNodeValue(block.type, value) end,
 	function(block, parent)
-		if block.type.TBD or block.type:HasFlag(NTF_Protected) then --for now, protected nodes don't exist
+		if block.type.TBD then --for now, protected nodes don't exist
 			parent.group:RemoveEntry(block.type)
 		end
+		--block.type:HasFlag(NTF_Protected)
 	end)
 
 end

@@ -271,7 +271,7 @@ function meta:CreatePinVar(pin)
 		if isFunctionPin then
 
 			local graphID = self:GetID(graph)
-			local key = bpcommon.CreateUniqueKey({}, compactVars and ("r" .. graphID) or "func_" .. graphName .. "_out_" .. pinName)
+			local key = bpcommon.CreateUniqueKey({}, compactVars and ("r" .. graphID .. "_" .. pin.id) or "func_" .. graphName .. "_out_" .. pinName)
 			self.vars[#self.vars+1] = {
 				var = key,
 				pin = pin,
@@ -1174,7 +1174,8 @@ function meta:CompileCodeSegment()
 	self.emitContext( CTX_Network )
 
 	-- emit each graph's entry function
-	for id in self.module:GraphIDs() do
+	for _, graph in ipairs(self.graphs) do
+		local id = self:GetID(graph)
 		self.emitContext( CTX_Graph .. id )
 	end
 

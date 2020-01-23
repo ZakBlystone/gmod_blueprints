@@ -17,6 +17,7 @@ end
 
 local function ErrorHandler( bp, msg, graphID, nodeID )
 
+	print("***BLUEPRINT ERROR*** : " .. tostring(msg))
 
 end
 hook.Add("BPModuleError", "bpnetHandleError", ErrorHandler)

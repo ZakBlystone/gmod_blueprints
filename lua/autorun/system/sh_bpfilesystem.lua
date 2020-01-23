@@ -241,6 +241,7 @@ local function DeleteLocalFile( fileObject )
 
 	for i, f in ipairs(G_BPFiles) do
 		if f == fileObject then
+			bpnet.Uninstall( fileObject:GetUID() )
 			file.Delete( fileObject:GetPath() )
 			table.remove( G_BPFiles, i )
 			break

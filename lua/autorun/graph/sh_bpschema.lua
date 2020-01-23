@@ -169,7 +169,7 @@ end
 
 NodePinImplicitCasts = {}
 
-function AddPinCast(from, to, bidirectional, wrapper)
+function AddPinCast(from, to, bidirectional, wrapper, ignoreSub)
 
 	local castInfo = nil
 	for _, info in ipairs(NodePinImplicitCasts) do
@@ -182,6 +182,7 @@ function AddPinCast(from, to, bidirectional, wrapper)
 			type = type,
 			bidir = bidirectional,
 			wrapper = wrapper,
+			ignoreSub = ignoreSub,
 		}
 	end
 
@@ -193,8 +194,8 @@ function AddPinCast(from, to, bidirectional, wrapper)
 
 end
 
-AddPinCast(PinType(PN_Enum), { PinType(PN_Number) } )
-AddPinCast(PinType(PN_Number), { PinType(PN_Enum), PinType(PN_String) } )
+AddPinCast(PinType(PN_Number), { PinType(PN_Enum) }, true, nil, true )
+AddPinCast(PinType(PN_Number), { PinType(PN_String) } )
 AddPinCast(PinType(PN_Ref, PNF_None, "Entity"), { 
 	PinType(PN_Ref, PNF_None, "Player"),
 	PinType(PN_Ref, PNF_None, "Weapon"),
@@ -227,15 +228,15 @@ AddPinCast(PinType(PN_Ref, PNF_None, "Vehicle"), PinType(PN_String), false, "tos
 function CanCast(outPinType, inPinType)
 
 	for _, castInfo in ipairs(NodePinImplicitCasts) do
-		if castInfo.from:Equal( outPinType, PNF_Table, false ) then
+		if castInfo.from:Equal( outPinType, PNF_Table ) then
 			for _, entry in ipairs(castInfo.to) do
-				if entry.type == inPinType then
+				if entry.type:Equal( inPinType, PNF_Table, entry.ignoreSub ) then
 					return true, entry.wrapper
 				end
 			end
-		elseif castInfo.from:Equal( inPinType, PNF_Table, false ) then
+		elseif castInfo.from:Equal( inPinType, PNF_Table ) then
 			for _, entry in ipairs(castInfo.to) do
-				if entry.bidir and entry.type == outPinType then
+				if entry.bidir and entry.type:Equal( outPinType, PNF_Table, entry.ignoreSub ) then
 					return true, entry.wrapper
 				end
 			end
