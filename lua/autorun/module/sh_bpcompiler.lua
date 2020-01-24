@@ -670,11 +670,8 @@ function meta:CompileNodeSingle(node)
 
 	-- emit some infinite-loop-protection code
 	if self.ilp and (codeType == NT_Function or codeType == NT_Special or codeType == NT_FuncOutput) then
-		self.emit("__ilp = __ilp + 1 if __ilp > " .. self.ilpmax .. " then __ilptrip = true goto __terminus end")
-	end
-
-	-- and debugging info
-	if self.debug then
+		self.emit((self.debug and "_FR_ILPD" or "_FR_ILP") .. "(" .. self.ilpmax .. ", " .. nodeID .. ")")
+	elseif self.debug then
 		self.emit("__dbgnode = " .. nodeID)
 	end
 
@@ -841,9 +838,7 @@ function meta:CompileMetaTableLookup()
 		end
 	end
 
-	for _, v in ipairs(tables) do
-		self.emit("local " .. v ..  "_ = FindMetaTable(\"" .. v .. "\")")
-	end
+	self.emit("\n_FR_MTL(" .. table.concat(tables, ",") .. ")")
 
 	self.finish()
 
@@ -856,14 +851,13 @@ function meta:CompileGraphJumpTable()
 
 	local nextJumpID = 0
 
-	-- jmp_0 just pops the call stack
-	self.emit( "if ip == 0 then goto jmp_0 end" )
+	local jl = {0}
 
 	-- emit jumps for all non-pure functions
 	for _, node in self.graph:Nodes() do
 		local id = self:GetID(node)
 		if node:GetCodeType() ~= NT_Pure then
-			self.emit( "if ip == " .. id .. " then goto jmp_" .. id .. " end" )
+			jl[#jl+1] = id
 		end
 		nextJumpID = math.max(nextJumpID, id+1)
 	end
@@ -877,11 +871,13 @@ function meta:CompileGraphJumpTable()
 
 			jumpTable[id] = jumpTable[id] or {}
 			jumpTable[id][j] = nextJumpID
-			self.emit( "if ip == " .. nextJumpID .. " then goto jmp_" .. nextJumpID .. " end" )
+			jl[#jl+1] = nextJumpID
 			nextJumpID = nextJumpID + 1
 
 		end
 	end
+
+	self.emit("_FR_JLIST(" .. table.concat(jl, ",") .. ")")
 
 	self.finish()
 
@@ -919,11 +915,18 @@ function meta:CompileGraphVarListing()
 
 	self.begin(CTX_Vars .. self:GetID(self.graph))
 
+	local locals = {}
 	for _, v in ipairs(self.vars) do
 		if v.graph ~= self.graph then continue end
 		if not v.literal and not v.global and not v.isFunc and not v.keyAsGlobal then
-			self.emit("local " .. v.var .. " = nil")
+			locals[#locals+1] = v.var
 		end
+	end
+
+	if self.compactVars then
+		self.emit("_FR_ILOCALS(" .. #locals .. ")")
+	else
+		self.emit("_FR_LOCALS(" .. table.concat(locals, ",") .. ")")
 	end
 
 	self.finish()
@@ -939,7 +942,6 @@ function meta:CompileGraphEntry()
 
 	-- graph function header and callstack
 	self.emit("\nlocal function graph_" .. graphID .. "_entry( ip )\n")
-	self.emit("\tlocal cs = {}")
 
 	-- debugging info
 	if self.debug then
@@ -950,10 +952,7 @@ function meta:CompileGraphEntry()
 	self.emitContext( CTX_Vars .. graphID, 1 )
 
 	-- emit jump table
-	self.emit( "\tlocal function pushjmp(i) table.insert(cs, 1, i) end")
-	self.emit( "\tgoto jumpto" )
-	self.emit( "\n\t::jmp_0:: ::popcall::\n\tif #cs > 0 then ip = cs[1] table.remove(cs, 1) else goto __terminus end" )
-	self.emit( "\n\t::jumpto::" )
+	self.emit( "\t_FR_CALLSTACK()")
 
 	self.emitContext( CTX_JumpTable .. graphID, 1 )
 
@@ -979,141 +978,18 @@ function meta:CompileNetworkCode()
 
 	if bit.band(self.flags, CF_Standalone) ~= 0 then
 
-		self.emitBlock [[
-		if SERVER then
-			util.AddNetworkString("bphandshake")
-			util.AddNetworkString("bpmessage")
-			util.AddNetworkString("bpclosechannel")
-		end
-		]]
+		self.emit("_FR_STANDALONEHEAD()")
 
 	end
 
-	self.emitBlock [[
-	G_BPNetHandlers = G_BPNetHandlers or {}
-	G_BPNetChannels = G_BPNetChannels or {}
-	net.Receive("bpclosechannel", function(len, pl)
-		local channelID = net.ReadUInt(16)
-		G_BPNetChannels[channelID] = nil
-		print("Net close netchannel: " .. channelID)
-	end)
-	net.Receive("bphandshake", function(len, pl)
-		local moduleGUID = net.ReadData(16)
-		local instanceGUID = net.ReadData(16)
-		for _, v in ipairs(G_BPNetHandlers) do
-			if v.__bpm.guid == moduleGUID then v:netReceiveHandshake(instanceGUID, len, pl) end
-		end
-	end)
-	net.Receive("bpmessage", function(len, pl)
-		local channelID = net.ReadUInt(16)
-		local channel = G_BPNetChannels[channelID]
-		if channel ~= nil then channel:netReceiveMessage(len, pl) end
-	end)
-	]]
+	self.emit("_FR_NETHEAD()")
 
 	self.finish()
 
 	self.begin(CTX_NetworkMeta)
 
 	self.emitBlock [[
-	function meta:allocChannel(id, guid)
-		if (id or -1) == -1 then for i=0, 65535 do if G_BPNetChannels[i] == nil then id = i break end end end
-		if id == -1 then error("Unable to allocate network channel") end
-		if G_BPNetChannels[id] then print("WARNING: Network channel already allocated: " .. id) end
-		G_BPNetChannels[id] = self
-		return { id = id, guid = guid }
-	end
-	function meta:closeChannel(ch)
-		if ch == nil then return end
-		if G_BPNetChannels[ch.id] == nil then return end
-		print("Free netchannel: " .. ch.id)
-		G_BPNetChannels[ch.id] = nil
-		if SERVER then
-			net.Start("bpclosechannel")
-			net.WriteUInt(ch.id, 16)
-			net.Broadcast()
-		end
-	end
-	function meta:netInit()
-		print("Net init")
-		self.netReady = false
-		self.netPendingCalls = {}
-		table.insert(G_BPNetHandlers, self)
-		if CLIENT then
-			net.Start("bphandshake")
-			net.WriteData(__bpm.guid, 16)
-			net.WriteData(self.guid, 16)
-			net.WriteBool(false)
-			net.SendToServer()
-		else
-			self.netChannel = self:allocChannel(nil, self.guid)
-		end
-	end
-	function meta:netShutdown()
-		print("Net shutdown")
-		self:closeChannel(self.netChannel)
-		table.RemoveByValue(G_BPNetHandlers, self)
-	end
-	function meta:netUpdate()
-		if not self.netReady then return end
-		local pc = self.netPendingCalls[1]
-		while pc ~= nil do
-			pc()
-			table.remove(self.netPendingCalls, 1)
-			pc = self.netPendingCalls[1]
-		end
-	end
-	function meta:netPostCall(func)
-		table.insert(self.netPendingCalls, func)
-	end
-	function meta:netReceiveHandshake(instanceGUID, len, pl)
-		if SERVER then
-			local ready = net.ReadBool()
-			if not ready and instanceGUID == self.guid then
-				print("Recv handshake request from: " .. tostring(pl))
-				net.Start("bphandshake")
-				net.WriteData(__bpm.guid, 16)
-				net.WriteData(instanceGUID, 16)
-				net.WriteUInt(self.netChannel.id, 16)
-				net.Send(pl)
-				print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
-			else
-				print("Channel established on both roles: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
-				self.netReady = true
-			end
-		else
-			local id = net.ReadUInt(16)
-			if instanceGUID == self.guid then
-				self.netChannel = self:allocChannel(id, self.guid)
-				print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
-				net.Start("bphandshake")
-				net.WriteData(__bpm.guid, 16)
-				net.WriteData(self.guid, 16)
-				net.WriteBool(true)
-				net.SendToServer()
-				self.netReady = true
-			end
-		end
-	end
-	function meta:netWriteTable(f, t)
-		net.WriteUInt(#t, 24)
-		for i=1, #t do
-			f(t[i])
-		end
-	end
-	function meta:netReadTable(f)
-		local t = {}
-		local n = net.ReadUInt(24)
-		for i=1, n do
-			t[#t+1] = f()
-		end
-		return t
-	end
-	function meta:netStartMessage(id)
-		net.Start("bpmessage")
-		net.WriteUInt(self.netChannel.id, 16)
-		net.WriteUInt(id, 16)
-	end
+	_FR_NETMAIN()
 	function meta:netReceiveMessage(len, pl)
 		local msgID = net.ReadUInt(16)]]
 
@@ -1142,34 +1018,8 @@ function meta:CompileCodeSegment()
 
 	self.begin(CTX_Code)
 
-	if bit.band(self.flags, CF_Standalone) ~= 0 then
-		self.emit("AddCSLuaFile()")
-	end
-
-	--self.emit("if SERVER then util.AddNetworkString(\"bphandshake\") end")
-	--self.emit("if SERVER then util.AddNetworkString(\"bpmessage\") end\n")
-
 	self.emitContext( CTX_MetaTables )
-	self.emit("local __self = nil")
-
-	-- debugging and infinite-loop-protection
-	if self.debug then
-		self.emitBlock [[
-		local __dbgnode = -1
-		local __dbggraph = -1
-		]]
-	end
-
-	if self.ilp then
-		self.emitBlock [[
-		local __ilptrip = false
-		local __ilp = 0
-		local __ilph = 0
-		]]
-	end
-
-	-- __bpm is the module table, it contains utilities and listings for module functions
-	self.emit("local __bpm = {}")
+	self.emit("_FR_HEAD(" .. (self.debug and 1 or 0) .. ", " .. (self.ilp and 1 or 0) .. ")")
 
 	self.emitContext( CTX_Network )
 
@@ -1181,85 +1031,23 @@ function meta:CompileCodeSegment()
 
 	-- infinite-loop-protection checker
 	if self.ilp then
-		self.emitBlock ([[
-		__bpm.checkilp = function()
-			if __ilph > ]] .. self.ilpmaxh .. [[ then __bpm.onError("Infinite loop in hook", ]] .. moduleID .. [[, __dbggraph or -1, __dbgnode or -1) return true end
-			if __ilptrip then __bpm.onError("Infinite loop", ]] .. moduleID .. [[, __dbggraph or -1, __dbgnode or -1) return true end
-		end
-		]])
+		self.emit("_FR_CHECKILP(" .. self.ilpmaxh .. ")")
 	end
 
 	-- metatable for the module
-	self.emitBlock [[
-	local meta = BLUEPRINT_OVERRIDE_META or {}
-	if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end
-	__bpm.meta = meta
-	__bpm.guidString = function(g)
-		return ("%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X"):format(
-			g[1]:byte(),g[2]:byte(),g[3]:byte(),g[4]:byte(),g[5]:byte(),g[6]:byte(),g[7]:byte(),g[8]:byte(),
-			g[9]:byte(),g[10]:byte(),g[11]:byte(),g[12]:byte(),g[13]:byte(),g[14]:byte(),g[15]:byte(),g[16]:byte())
-	end
-	__bpm.hexBytes = function(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
-	__bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end
-	]]
-
+	self.emit("_FR_SUPPORT()")
 	self.emit("__bpm.guid = __bpm.hexBytes(\"" .. bpcommon.GUIDToString(self.module:GetUID(), true) .. "\")")
-
-	-- delay manager (so that delays can be cancelled when a module is unloaded)
-	self.emitBlock [[
-	__bpm.delayExists = function(key)
-		for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then return true end end
-		return false
-	end
-	__bpm.delay = function(key, delay, func)
-		for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end
-		__self.delays[#__self.delays+1] = { key = key, func = func, time = delay }
-	end
-	]]
-
-
-	-- error management, allows for custom error handling with debug info about which node / graph the error happened in
-	self.emit("__bpm.onError = function(msg, mod, graph, node) end")
 
 	-- network meta functions
 	self.emitContext( CTX_NetworkMeta )
 
 	-- update function, runs delays and resets the ilp recursion value for hooks
-	self.emit("function meta:update()")
-	self.pushIndent()
-
-	if self.ilp then self.emit("__ilph = 0") end
-	self.emitBlock ([[
-	self:netUpdate()
-	for i=#self.delays, 1, -1 do
-		self.delays[i].time = self.delays[i].time - FrameTime()
-		if self.delays[i].time <= 0 then
-			local s,e = pcall(self.delays[i].func)
-			if not s then self.delays = {} __bpm.onError(e:sub((e:find(':', 11) or 0)+2, -1), ]] .. moduleID .. [[, __dbggraph or -1, __dbgnode or -1) end
-			table.remove(self.delays, i)
-		end
-	end
-	]])
-
-	self.popIndent()
-	self.emit("end")
+	self.emit ("_FR_UPDATE(" .. (self.ilp and 1 or 0) .. ")")
 
 	-- emit all meta events (functions with graph entry points)
 	for k, _ in pairs( self.getFilteredContexts(CTX_MetaEvents) ) do
 		self.emitContext( k )
 	end
-
-	-- minified guid generator
-	self.emitBlock [[
-	__bpm.makeGUID = function()
-		local d,b,g,m=os.date"*t",function(x,y)return x and y or 0 end,system,bit
-		local r,n,s,u,x,y=function(x,y)return m.band(m.rshift(x,y or 0),0xFF)end,
-		math.random(2^32-1),_G.__guidsalt or b(CLIENT,2^31),os.clock()*1000,
-		d.min*1024+d.hour*32+d.day,d.year*16+d.month;_G.__guidsalt=s+1;return
-		string.char(r(x),r(x,8),r(y),r(y,8),r(n,24),r(n,16),r(n,8),r(n),r(s,24),r(s,16),
-		r(s,8),r(s),r(u,16),r(u,8),r(u),d.sec*4+b(g.IsWindows(),2)+b(g.IsLinux(),1))
-	end
-	]]
 
 	-- constructor
 	self.emit("__bpm.new = function()")
@@ -1280,18 +1068,7 @@ function meta:CompileCodeSegment()
 
 	if bit.band(self.flags, CF_Standalone) ~= 0 then
 
-		self.emitBlock [[
-		local instance = __bpm.new()
-		if instance.CORE_Init then instance:CORE_Init() end
-		local bpm = instance.__bpm
-		local key = "bphook_" .. bpm.guidString(instance.guid)
-		for k,v in pairs(bpm.events) do
-			if v.hook and type(meta[k]) == "function" then
-				local function call(...) return instance[k](instance, ...) end
-				hook.Add(v.hook, key, call)
-			end
-		end
-		]]
+		self.emit("_FR_STANDALONE()")
 
 	else
 
@@ -1370,29 +1147,11 @@ function meta:CompileGraphMetaHook(graph, node, name)
 	-- emit the code for the event node
 	self.emitContext( CTX_SingleNode .. graphID .. "_" .. nodeID )
 
-	-- infinite-loop-protection, prevents a loop case where an event calls a function which in turn calls the event.
-	-- a counter is incremented and as recursion happens, the counter increases.
-	if self.ilp then
-		
-		self.emitBlock [[
-		if __bpm.checkilp() then return end __ilptrip=false __ilp=0 __ilph=__ilph+1
-		]]
-
-	end
-
 	if self.graph:GetType() == GT_Function then
 		self.emit(self:GetVarCode(self:FindVarForPin(nil)) .. " = false")
 	end
 
-	-- protected call into graph entrypoint, calls error handler on error
-	self.emit("local b,e = pcall(graph_" .. graphID .. "_entry, " .. nodeID .. ")")
-	self.emit("if not b then __bpm.onError(tostring(e), " .. moduleID .. ", __dbggraph or -1, __dbgnode or -1) end")
-
-	-- infinite-loop-protection, after calling the event the counter is decremented.
-	if self.ilp then
-		self.emit("if __bpm.checkilp() then return end")
-		self.emit("__ilph = __ilph - 1")
-	end
+	self.emit("_FR_MPCALL(" .. (self.ilp and 1 or 0) .. ", " .. graphID .. ", " .. nodeID .. ")")
 
 	if self.graph:GetType() == GT_Function then
 		self.emit("if " .. self:GetVarCode(self:FindVarForPin(nil)) .. " == true then")
@@ -1466,34 +1225,15 @@ function meta:CompileGraph(graph)
 		local hook = node:GetHook()
 		if codeType == NT_Event and hook then
 
-			self.emit("[\"" .. node:GetTypeName() .. "\"] = {")
-
-			self.pushIndent()
-			self.emit("hook = \"" .. hook .. "\",")
-			self.emit("graphID = " .. graphID .. ",")
-			self.emit("nodeID = " .. id .. ",")
-			self.emit("moduleID = " .. moduleID .. ",")
-			self.popIndent()
-			--self.emit("\t\tfunc = nil,")
-
-			self.emit("},")
+			local args = {node:GetTypeName(), hook, graphID, id}
+			self.emit("_FR_HOOK(" .. table.concat(args, ",") .. ")")
 
 		end
 	end
 
 	if graph:HasFlag(bpgraph.FL_HOOK) then
-		self.emit("[\"" .. graph:GetName() .. "\"] = {")
-
-		self.pushIndent()
-		self.emit("hook = \"" .. graph:GetName() .. "\",")
-		self.emit("graphID = " .. graphID .. ",")
-		self.emit("nodeID = -1,")
-		self.emit("moduleID = " .. moduleID .. ",")
-		self.emit("key = \"__bphook_" .. moduleID .. "\"")
-		self.popIndent()
-		--self.emit("\t\tfunc = nil,")
-
-		self.emit("},")
+		local args = {graph:GetName(), graph:GetName(), graphID, -1}
+		self.emit("_FR_HOOK(" .. table.concat(args, ",") .. ")")
 	end
 
 	self.finish()
@@ -1542,10 +1282,13 @@ function meta:Compile()
 
 	ProfileEnd()
 
-	-- write compiled output to file for debugging
-	file.Write("blueprints/last_compile.txt", self.compiledCode)
+	local compiledModule = bpcompiledmodule.New( self.module, self.compiledCode )
 
-	return bpcompiledmodule.New( self.module, self.compiledCode )
+	-- write compiled output to file for debugging
+	file.Write("blueprints/last_compile_.txt", compiledModule:GetCode(true))
+	file.Write("blueprints/last_compile.txt", compiledModule:GetCode())
+
+	return compiledModule
 
 end
 
