@@ -245,13 +245,13 @@ function PANEL:Think()
 
 	if self:IsActive() then
 		if not self.wasActive then
-			print("EDITOR BECOME ACTIVE")
+			--print("EDITOR BECOME ACTIVE")
 			hook.Run("BPEditorBecomeActive")
 			self.wasActive = true
 		end
 	else
 		if self.wasActive then
-			print("EDITOR BECOME INACTIVE")
+			--print("EDITOR BECOME INACTIVE")
 			self.wasActive = false
 		end
 	end
@@ -261,7 +261,7 @@ end
 
 function PANEL:OnFocusChanged( gained )
 
-	print("MAIN PANEL FOCUS CHANGE: " .. tostring(gained))
+	--print("MAIN PANEL FOCUS CHANGE: " .. tostring(gained))
 
 end
 

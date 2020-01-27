@@ -287,6 +287,7 @@ function PANEL:OnMousePressed( mouse )
 
 	if mouse == MOUSE_LEFT then if self.editor:LeftMouse(mx,my,true) then return true end end
 	if mouse == MOUSE_RIGHT then if self.editor:RightMouse(mx,my,true) then return true end end
+	if mouse == MOUSE_MIDDLE then if self.editor:MiddleMouse(mx,my,true) then return true end end
 
 	if mouse ~= MOUSE_RIGHT then return end
 
@@ -311,6 +312,7 @@ function PANEL:OnMouseReleased( mouse )
 
 	if mouse == MOUSE_LEFT then self.editor:LeftMouse(mx,my,false) end
 	if mouse == MOUSE_RIGHT then self.editor:RightMouse(mx,my,false) end
+	if mouse == MOUSE_MIDDLE then self.editor:MiddleMouse(mx,my,false) end
 
 	if mouse ~= MOUSE_RIGHT then return end
 

@@ -422,11 +422,6 @@ function meta:RightMouse(x,y,pressed)
 	local wx, wy = self:PointToWorld(x,y)
 
 	if pressed then
-		if G_BPGraphEditorCopyState ~= nil then
-			G_BPGraphEditorCopyState = nil
-			return true
-		end
-
 		local vnode, alreadySelected = self:TryGetNode(wx, wy)
 		if vnode ~= nil then
 			self:OpenNodeContext(vnode)
@@ -437,6 +432,13 @@ function meta:RightMouse(x,y,pressed)
 end
 
 function meta:MiddleMouse(x,y,pressed)
+
+	if pressed then
+		if G_BPGraphEditorCopyState ~= nil then
+			G_BPGraphEditorCopyState = nil
+			return true
+		end
+	end
 
 end
 
@@ -509,6 +511,8 @@ function meta:KeyPress( code )
 				self:CreateUndo("Cut Nodes")
 				self:DeleteSelected() 
 			end
+
+			self:Popup("Left-click to paste, Middle-click to cancel")
 
 			print("COPIED GRAPH")
 		end
