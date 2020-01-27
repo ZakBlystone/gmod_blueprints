@@ -3,6 +3,149 @@ if SERVER then AddCSLuaFile() return end
 module("bpuieditor", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
 local PANEL = {}
+
+function PANEL:Init()
+
+	self.AllowAutoRefresh = true
+	self:SetMouseInputEnabled( true )
+	self:SetContentAlignment( 7 )
+	self:SetTextInset( 0, 4 )
+
+end
+
+function PANEL:Setup( label, pPropertySheet, pPanel, strMaterial, closeButton )
+
+	self.labelText = label
+	self:SetText( self.labelText )
+	self:SetPropertySheet( pPropertySheet )
+	self:SetPanel( pPanel )
+
+	if ( strMaterial ) then
+
+		self.Image = vgui.Create( "DImage", self )
+		self.Image:SetImage( strMaterial )
+		self.Image:SizeToContents()
+		self:InvalidateLayout()
+
+	end
+
+	if closeButton then
+
+		self.CloseButton = vgui.Create( "DButton", self )
+		self.CloseButton:SetText(" X ")
+		self.CloseButton:SizeToContents()
+		self.CloseButton.DoClick = function() self:Close() end
+		self:InvalidateLayout()
+
+	end
+
+end
+
+function PANEL:SetSuffix( str )
+
+	self:SetText( self.labelText .. str )
+	self:InvalidateLayout()
+	self:GetParent():InvalidateLayout()
+	self:GetParent():GetParent():InvalidateLayout()
+
+end
+
+function PANEL:Close()
+
+end
+
+function PANEL:PerformLayout()
+
+	self:ApplySchemeSettings()
+
+	if self.CloseButton then
+
+		self.CloseButton:SetPos( self:GetWide() - self.CloseButton:GetWide() - 6, 0 )
+
+	end
+
+	if ( !self.Image ) then return end
+
+	self.Image:SetPos( 7, 3 )
+
+	if ( !self:IsActive() ) then
+		self.Image:SetImageColor( Color( 255, 255, 255, 155 ) )
+	else
+		self.Image:SetImageColor( Color( 255, 255, 255, 255 ) )
+	end
+
+end
+
+function PANEL:ApplySchemeSettings()
+
+	local ExtraInset = 10
+	local ExtraWide = 0
+
+	if ( self.Image ) then
+		ExtraInset = ExtraInset + self.Image:GetWide()
+	end
+
+	if self.CloseButton then
+		ExtraWide = ExtraWide + self.CloseButton:GetWide()
+	end
+
+	self:SetTextInset( ExtraInset, 4 )
+	local w, h = self:GetContentSize()
+	h = self:GetTabHeight()
+
+	self:SetSize( w + 10 + ExtraWide, h )
+
+	DLabel.ApplySchemeSettings( self )
+
+end
+
+
+derma.DefineControl( "BPEditorTab", "Blueprint editor tab", PANEL, "DTab" )
+
+local PANEL = {}
+
+AccessorFunc( PANEL, "m_Editor", "Editor" )
+
+function PANEL:AddSheet( label, panel, Tooltip, material, closeButton )
+
+	if ( !IsValid( panel ) ) then
+		ErrorNoHalt( "DPropertySheet:AddSheet tried to add invalid panel!" )
+		debug.Trace()
+		return
+	end
+
+	local Sheet = {}
+
+	Sheet.Name = label
+
+	Sheet.Tab = vgui.Create( "BPEditorTab", self )
+	Sheet.Tab:SetTooltip( Tooltip )
+	Sheet.Tab:Setup( label, self, panel, material, closeButton )
+
+	Sheet.Panel = panel
+	Sheet.Panel.NoStretchX = NoStretchX
+	Sheet.Panel.NoStretchY = NoStretchY
+	Sheet.Panel:SetPos( self:GetPadding(), 20 + self:GetPadding() )
+	Sheet.Panel:SetVisible( false )
+
+	panel:SetParent( self )
+
+	table.insert( self.Items, Sheet )
+
+	if ( !self:GetActiveTab() ) then
+		self:SetActiveTab( Sheet.Tab )
+		Sheet.Panel:SetVisible( true )
+	end
+
+	self.tabScroller:AddPanel( Sheet.Tab )
+
+	return Sheet
+
+end
+
+derma.DefineControl( "BPEditorPropertySheet", "Blueprint editor property sheet", PANEL, "DPropertySheet" )
+
+local PANEL = {}
 local TITLE = "Blueprint Editor"
 
 local deleteOnClose = CreateConVar("bp_delete_editor_on_close", "0", FCVAR_ARCHIVE, "For debugging, re-created editor UI")
@@ -58,10 +201,11 @@ function PANEL:Init()
 	self:ShowCloseButton(true)
 	self:SetDeleteOnClose(false)
 
-	self.Tabs = vgui.Create("DPropertySheet", self )
+	self.Tabs = vgui.Create("BPEditorPropertySheet", self )
 	self.Tabs:DockMargin(0, 0, 0, 5)
 	self.Tabs:Dock( FILL )
 	self.Tabs:SetPadding( 0 )
+	self.Tabs:SetEditor( self )
 
 	self.Status = vgui.Create("DPanel", self)
 	self.Status:Dock( BOTTOM )
@@ -80,8 +224,8 @@ function PANEL:Init()
 	self.FileManager = vgui.Create("BPFileManager")
 	self.FileManager.editor = self
 
-	self.Tabs:AddSheet( "Users", self.UserManager, nil, false, false, "Users" )
-	self.Tabs:SetActiveTab( self.Tabs:AddSheet( "Files", self.FileManager, nil, false, false, "Files" ).Tab )
+	self.Tabs:AddSheet( "Users", self.UserManager, "Users", "icon16/group.png" )
+	self.Tabs:SetActiveTab( self.Tabs:AddSheet( "Files", self.FileManager, "Files", "icon16/folder.png" ).Tab )
 
 end
 
@@ -129,12 +273,21 @@ function PANEL:OpenModule( mod, name, file )
 		return
 	end
 
-	local title = "Module: " .. name or bpcommon.GUIDToString( mod:GetUID(), true )
+	local title = name or bpcommon.GUIDToString( mod:GetUID(), true )
 	local view = vgui.Create("BPModuleEditor")
-	local sheet = self.Tabs:AddSheet( title, view, nil, false, false, title )
+	local sheet = self.Tabs:AddSheet( title, view, title, "icon16/application.png", true )
 	view:SetModule( mod )
 	view.editor = self
 	view.file = file
+	view.tab = sheet.Tab
+
+	sheet.Tab.Close = function()
+		if file then
+			self:CloseFile( file )
+		else
+			self:CloseModule( mod )
+		end
+	end
 
 	self.openModules[mod:GetUID()] = sheet
 
@@ -152,6 +305,8 @@ end
 
 function PANEL:CloseFile( file, callback )
 
+	if file == nil then return end
+
 	print("CLOSING FILE: " .. tostring(file:GetName()))
 
 	local opened = self.openModules[file:GetUID()]
@@ -162,7 +317,7 @@ function PANEL:CloseFile( file, callback )
 	if opened and file:HasFlag( bpfile.FL_HasLocalChanges ) then 
 		self.Tabs:SetActiveTab( opened.Tab )
 		Derma_Query("This module has unsaved changes, would you like the save them?", "Close",
-		"Yes", function() if opened.Panel:Save() then bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end end,
+		"Yes", function() if opened.Panel:Save() then self:CloseFileUID( file:GetUID() ) callback() end end,
 		"No", function() bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end)
 		return
 	end

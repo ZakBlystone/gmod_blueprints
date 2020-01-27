@@ -98,6 +98,11 @@ function PANEL:Init()
 		end, nil, "icon16/page_code.png"},
 		{"Local: Install", function()
 
+			if not bpusermanager.GetLocalUser():HasPermission( bpgroup.FL_CanRunLocally ) then
+				Derma_Message( "You do not have permission to run local scripts", "Run Locally", "OK" )
+				return
+			end
+
 			local ok, res = self.module:TryCompile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 			if ok then
 				ok, res = res:TryLoad()
@@ -123,7 +128,7 @@ function PANEL:Init()
 			RunConsoleCommand("pac_asset_browser")
 
 		end, nil, "icon16/zoom.png"},
-		{"Close", function()
+		--[[{"Close", function()
 
 			if self.file then
 				self.editor:CloseFile( self.file )
@@ -131,7 +136,7 @@ function PANEL:Init()
 				self.editor:CloseModule(self.module)
 			end
 
-		end}
+		end}]]
 	}
 
 	self.callback = function(...)
@@ -265,6 +270,7 @@ function PANEL:Save()
 
 	self.module:Save( self.file:GetPath() )
 	bpfilesystem.MarkFileAsChanged( self.file, false )
+	if self.tab then self.tab:SetSuffix("") end
 	return true
 
 end
@@ -318,7 +324,10 @@ function PANEL:OnModuleCallback( cb, ... )
 	if cb == CB_GRAPH_ADD then self:GraphAdded(...) end
 	if cb == CB_GRAPH_REMOVE then self:GraphRemoved(...) end
 
-	if self.file then bpfilesystem.MarkFileAsChanged( self.file ) end
+	if self.file and not self.file:HasFlag( bpfile.FL_HasLocalChanges ) then
+		if self.tab then print("MARK SUFFIX") self.tab:SetSuffix("*") end
+		bpfilesystem.MarkFileAsChanged( self.file ) 
+	end
 
 end
 
