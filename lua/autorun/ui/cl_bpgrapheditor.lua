@@ -422,6 +422,12 @@ function meta:RightMouse(x,y,pressed)
 	local wx, wy = self:PointToWorld(x,y)
 
 	if pressed then
+		local selected = self:GetSelectedNodes()
+		if #selected > 1 then
+			self:OpenMultiNodeContext(selected)
+			return false
+		end
+
 		local vnode, alreadySelected = self:TryGetNode(wx, wy)
 		if vnode ~= nil then
 			self:OpenNodeContext(vnode)
@@ -608,6 +614,25 @@ function meta:OpenNodeContext(vnode)
 	local node = vnode:GetNode()
 	local x,y = self.vgraph:GetMousePos(true)
 	node:GetOptions(options)
+
+	if #options == 0 then return end
+
+	self:CloseNodeContext()
+	self.nodeMenu = DermaMenu( false, self.vgraph )
+
+	for k,v in pairs(options) do
+		self.nodeMenu:AddOption( v[1], v[2] )
+	end
+
+	self.nodeMenu:SetMinimumWidth( 100 )
+	self.nodeMenu:Open( x, y, false, self.vgraph )
+
+end
+
+function meta:OpenMultiNodeContext(selected)
+
+	local options = {}
+	local x,y = self.vgraph:GetMousePos(true)
 
 	if #options == 0 then return end
 

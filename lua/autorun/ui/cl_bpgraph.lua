@@ -39,6 +39,7 @@ function PANEL:Init()
 
 	self.zoomTime = 0
 	self.mouseDragging = 0
+	self.PressTimeout = 0
 
 	self.callback = function(...)
 		local editor = self:GetEditor()

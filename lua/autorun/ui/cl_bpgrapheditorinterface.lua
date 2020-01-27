@@ -248,9 +248,9 @@ function meta:Draw(w,h)
 
 	self:DrawGrabbedLine()
 
-	surface.SetMaterial(BGMaterial)
-	surface.SetDrawColor(Color(255,255,255))
-	surface.DrawTexturedRectUV( 0, 0, 15, 15, 0, 0, 1, 1 )
+	--surface.SetMaterial(BGMaterial)
+	--surface.SetDrawColor(Color(255,255,255))
+	--surface.DrawTexturedRectUV( 0, 0, 15, 15, 0, 0, 1, 1 )
 
 	local editor = self:GetEditor()
 	if editor:IsDragSelecting() then
