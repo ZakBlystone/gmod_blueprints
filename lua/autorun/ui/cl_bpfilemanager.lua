@@ -138,7 +138,7 @@ end
 function PANEL:UploadFile()
 
 	local mod = bpmodule.New()
-	local _, _, name = self.file:GetPath():find("bpm_([%w_]+).txt$")
+	local name = bpfilesystem.ModulePathToName( self.file:GetPath() )
 	mod:Load(self.file:GetPath())
 	bpfilesystem.UploadObject(mod, name or self.file:GetPath())
 
@@ -442,7 +442,7 @@ function PANEL:CreateModule()
 		function( text )
 			local file = bpfilesystem.NewModuleFile( text )
 			if not file then Derma_Message("Failed to create module: " .. text, "Error", "Ok") end
-			--if file ~= nil then self:GetEditor():OpenFile( file ) end
+			if file ~= nil then self.editor:OpenFile( file ) end
 		end, nil, "OK", "Cancel")
 
 end

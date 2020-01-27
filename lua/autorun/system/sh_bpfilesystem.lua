@@ -33,6 +33,20 @@ else
 	file.CreateDir(ClientFileDirectory)
 end
 
+function ModuleNameToFilename( name )
+
+	return "bpm_" .. name .. ".txt"
+
+end
+
+function ModulePathToName( path )
+
+	local _, _, name = path:find("bpm_([%w_]+).txt$")
+	return name
+
+end
+
+function GetClientDirectory() return ClientFileDirectory end
 function GetFiles() return G_BPFiles end
 function GetLocalFiles() return G_BPLocalFiles end
 
@@ -124,7 +138,8 @@ end
 
 function NewModuleFile( name )
 
-	local path = ClientFileDirectory .. "bpm_" .. name .. ".txt"
+	local fileName = ModuleNameToFilename(name)
+	local path = ClientFileDirectory .. fileName
 
 	if file.Exists( path, "DATA" ) then
 		return nil
@@ -133,7 +148,7 @@ function NewModuleFile( name )
 	local mod = bpmodule.New()
 	mod:CreateDefaults()
 	mod:Save( path )
-	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, path)
+	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, fileName)
 	entry:SetPath( path )
 	G_BPLocalFiles[mod:GetUID()] = entry
 	hook.Run("BPFileTableUpdated", FT_Local)
@@ -355,7 +370,7 @@ else
 			local stream = bpdata.InStream(false, true):UseStringTable()
 			if not stream:LoadString(moduleData, true, false) then error("Failed to load file locally") end
 
-			local path = ClientFileDirectory .. "bpm_" .. data.name .. ".txt"
+			local path = ClientFileDirectory .. ModuleNameToFilename(data.name)
 			local mod = bpmodule.New()
 			mod:ReadFromStream( stream, STREAM_NET )
 
@@ -630,22 +645,6 @@ net.Receive("bpfilesystem", function(len, ply)
 	end
 
 end)
-
-if CLIENT then
-
-	concommand.Add("bp_uploadtest", function(p,c,a)
-
-		if not a[1] then return end
-
-		local mod = bpmodule.New()
-		mod:Load("blueprints/bpm_" .. a[1] .. ".txt")
-
-		print("Try uploading module")
-		UploadObject( mod, a[1] )
-
-	end)
-
-end
 
 if SERVER then
 	

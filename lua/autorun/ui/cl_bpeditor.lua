@@ -380,7 +380,6 @@ local function OpenEditor()
 
 	--local mod = bpmodule.New()
 	--editor:OpenModule( mod )
-	--mod:Load("blueprints/bpm_ded3.txt")
 	--editor:SetModule(mod)
 	--mod:CreateTestModule()
 

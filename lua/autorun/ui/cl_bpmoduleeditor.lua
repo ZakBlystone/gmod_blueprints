@@ -4,72 +4,9 @@ module("bpuimoduleeditor", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
 local PANEL = {}
 
---[[
-		{"New Module", function(p)
-			LastSavedFile = nil
-			local m = bpmodule.New()
-			p:SetModule( m )
-			local id, graph = m:NewGraph("EventGraph")
-			graph:AddNode("CORE_Init", 120, 100)
-			graph:AddNode("GM_Think", 120, 300)
-			graph:AddNode("CORE_Shutdown", 120, 500)
-		end, nil, "icon16/asterisk_yellow.png"},
-]]
-
---[[
-		{"Load", function()
-			Derma_StringRequest(
-				"Load Blueprint",
-				"What filename though?",
-				"",
-				function( text ) 
-
-					editor:RunCommand( function()
-					if file.Exists("blueprints/bpm_" .. text .. ".txt", "DATA") then
-						LastSavedFile = text
-						self.module:Load("blueprints/bpm_" .. text .. ".txt")
-					end
-					end)
-
-				end,
-				function( text ) end
-			)
-		end, nil, "icon16/folder.png"},
-]]
-
---[[
-			if LastSavedFile ~= nil then
-
-				Derma_Query("Overwrite " .. LastSavedFile .. "?",
-					"Save File",
-					"Yes",
-					function() 
-						editor:RunCommand( function()
-						SaveFunc( LastSavedFile )
-						end)
-					end,
-					"No",
-					function() 
-
-						Derma_StringRequest( "Save Blueprint", "What filename though?", "", SaveFunc, function( text ) end )
-
-					end)
-
-				return
-
-			end
-
-			Derma_StringRequest( "Save Blueprint", "What filename though?", "", SaveFunc, function( text ) end )
-]]
-
 function PANEL:Init()
 
 	local editor = self:GetParent()
-
-	local SaveFunc = function( text ) 
-		self.module:Save("blueprints/bpm_" .. text .. ".txt")
-		LastSavedFile = text
-	end
 
 	local MenuOptions = {
 		{"Save", function()
@@ -128,15 +65,6 @@ function PANEL:Init()
 			RunConsoleCommand("pac_asset_browser")
 
 		end, nil, "icon16/zoom.png"},
-		--[[{"Close", function()
-
-			if self.file then
-				self.editor:CloseFile( self.file )
-			else
-				self.editor:CloseModule(self.module)
-			end
-
-		end}]]
 	}
 
 	self.callback = function(...)
@@ -400,7 +328,7 @@ function PANEL:Upload( execute )
 
 	if not self.file then return end
 
-	local _, _, name = self.file:GetPath():find("bpm_([%w_]+).txt$")
+	local name = bpfilesystem.ModulePathToName( self.file:GetPath() )
 	bpfilesystem.UploadObject(self.module, name or self.file:GetPath(), execute)
 
 end

@@ -9,7 +9,7 @@ function PANEL:Init()
 
 	self.AllowAutoRefresh = true
 	self.menu = bpuimenubar.AddTo(self)
-	self.menu:Add("Add Group", function() end, nil, "icon16/asterisk_yellow.png")
+	--self.menu:Add("Add Group", function() end, nil, "icon16/asterisk_yellow.png")
 
 	self.contentPanel = vgui.Create("DPanel", self)
 	self.contentPanel:Dock( FILL )
@@ -32,12 +32,18 @@ function PANEL:Init()
 	self.content:SetLeft(self.groupList)
 	self.content:SetRight(self.userList)
 	--self.content:SetDividerWidth(5)
-	self.content:SetLeftWidth(200)
 
 	UserViews[#UserViews+1] = self
 
 	self:UpdateUsers()
 	self:UpdateGroups()
+
+	-- Why is derma like this???
+	timer.Simple( .1, function()
+		if IsValid(self) and IsValid(self.content) then
+			self.content:SetLeftWidth(200)
+		end
+	end)
 
 end
 
