@@ -107,6 +107,8 @@ end
 
 function PANEL:Paint(w, h)
 
+	if not self.view then return end
+
 	local selected = self.view:GetEditor().selectedFile == self
 
 	if self.file:HasFlag( bpfile.FL_IsServerFile ) then

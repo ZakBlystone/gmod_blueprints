@@ -157,18 +157,20 @@ function meta:PreModifyNode( node, action, subaction )
 	local held = self.heldConnections[node.id]
 	local pins = node:GetPins()
 
+	node.holdPinCount = #pins
+
 	for i, c in self:Connections() do
 
 		if c[1] == node.id then --output
 			local other = self:GetNode(c[3])
 			local pin = pins[c[2]]
 			self:RemoveConnectionID(i)
-			held[#held+1] = {pin:GetDir(), pin:GetName(), c[3], PD_In, other:GetPin(c[4]):GetName()}
+			held[#held+1] = {pin:GetDir(), pin:GetName(), c[3], PD_In, other:GetPin(c[4]):GetName(), c[2]}
 		elseif c[3] == node.id then --input
 			local other = self:GetNode(c[1])
 			local pin = pins[c[4]]
 			self:RemoveConnectionID(i)
-			held[#held+1] = {pin:GetDir(), pin:GetName(), c[1], PD_Out, other:GetPin(c[2]):GetName()}
+			held[#held+1] = {pin:GetDir(), pin:GetName(), c[1], PD_Out, other:GetPin(c[2]):GetName(), c[4]}
 		end
 
 	end
@@ -190,9 +192,12 @@ function meta:PostModifyNode( node )
 	if held == nil then return end
 
 	local pins = node:GetPins()
+	local pinCountSame = node.holdPinCount == #pins
 
 	for _, c in ipairs(held) do
-		local pinID = node:FindPin(c[1], c[2]).id
+		local found = node:FindPin(c[1], c[2])
+		local pinID = found and found.id
+		if pinID == nil and pinCountSame then pinID = c[6] end
 		if pinID then
 			local other = self:GetNode(c[3])
 			local otherPin = other:FindPin(c[4], c[5]).id

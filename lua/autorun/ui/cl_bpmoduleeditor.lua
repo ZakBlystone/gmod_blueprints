@@ -229,7 +229,7 @@ function PANEL:Init()
 	self.StructList.PopulateMenuItems = function(pnl, items, id)
 		prev(pnl, items, id)
 		items[#items+1] = {
-			name = "Edit Pins",
+			name = "Edit Struct",
 			func = function() self:EditStructPins(id) end,
 		}
 	end

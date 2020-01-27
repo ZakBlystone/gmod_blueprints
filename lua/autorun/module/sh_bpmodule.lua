@@ -74,7 +74,7 @@ function meta:Init(type)
 		self:RecacheNodeTypes()
 	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
-	self.events:AddListener(function(cb, action, id, graph)
+	self.events:AddListener(function(cb, action, id, event)
 
 		if action ~= bplist.MODIFY_RENAME then return end
 		if cb == bplist.CB_PREMODIFY then
