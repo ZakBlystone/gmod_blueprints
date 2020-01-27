@@ -12,7 +12,7 @@ function PANEL:Init()
 		{"Save", function()
 			self:Save()
 		end, nil, "icon16/disk.png"},
-		{"Compile and upload", function()
+		{"Send to server", function()
 			--bpnet.SendModule( self.module )
 			local ok, res = self.module:TryCompile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 			if ok then

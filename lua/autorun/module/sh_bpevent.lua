@@ -166,6 +166,7 @@ function meta:Init()
 				node.call = compiler:AllocThunk(bpcompiler.TK_GENERIC)
 				node.call.begin()
 				node.call.emit(call)
+				node.call.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) )
 				node.call.finish()
 			end
 			return true
