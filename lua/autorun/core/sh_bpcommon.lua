@@ -157,6 +157,16 @@ function CallbackList(t, listindex)
 	cblist["CB_ALL"] = cbx-1
 end
 
+function ZipStringLeft(str, max)
+
+	local len = str:len()
+	if len > max then
+		return "..." .. str:sub(len - max + 4, -1)
+	end
+	return str
+
+end
+
 function Camelize(str)
 
 	if str:len() == 0 then return "" end

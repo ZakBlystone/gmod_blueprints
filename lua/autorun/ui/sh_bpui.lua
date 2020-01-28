@@ -3,6 +3,7 @@ AddCSLuaFile()
 if SERVER then
 
 	resource.AddFile("resource/fonts/Akkurat-Bold.ttf")
+	resource.AddFile("resource/fonts/JetBrainsMono-Bold.ttf")
 
 else
 
@@ -28,6 +29,12 @@ surface.CreateFont( "NodePinFont", {
 	size = 28,
 	weight = 500,
 	blursize = 0,
+} )
+
+surface.CreateFont( "NodeLiteralFont", {
+	font = "JetBrains Mono",
+	size = 26,
+	weight = 1000,
 } )
 
 local hexChars = "0123456789abcdef"

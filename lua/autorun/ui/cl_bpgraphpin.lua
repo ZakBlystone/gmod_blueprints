@@ -8,7 +8,7 @@ local TEXT_OFFSET = 8
 local LITERAL_OFFSET = 10
 local LITERAL_HEIGHT = 24
 local LITERAL_MIN_WIDTH = 40
-local LITERAL_MAX_WIDTH = 300
+local LITERAL_MAX_WIDTH = 350
 local PIN_SIZE = 24
 local PIN_HITBOX_EXPAND = 8
 local PIN_LITERAL_HITBOX_EXPAND = 8
@@ -23,6 +23,7 @@ function meta:Init(vnode, pinID, sideIndex)
 	self.pin = vnode:GetNode():GetPin(pinID)
 	self.sideIndex = sideIndex
 	self.font = "NodePinFont"
+	self.literalFont = "NodeLiteralFont"
 	self.titlePos = nil
 	self.literalPos = nil
 	self.cacheWidth = nil
@@ -80,7 +81,7 @@ function meta:GetLiteralSize()
 
 	if not self:ShouldDrawLiteral() then return 0,0 end
 
-	local font = self.font
+	local font = self.literalFont
 	surface.SetFont(font)
 
 	local literalType = self.pin:GetLiteralType()
@@ -115,6 +116,7 @@ function meta:Invalidate()
 	self.cacheHeight = nil
 	self.titlePos = nil
 	self.literalPos = nil
+	self.literalText = nil
 	self.connections = self.pin:GetConnectedPins()
 
 end
@@ -229,6 +231,8 @@ end
 
 function meta:GetLiteralValue()
 
+	if self.literalText then return self.literalText end
+
 	local node = self.vnode:GetNode()
 	local literalType = self.pin:GetLiteralType()
 	if not literalType then return "" end
@@ -245,6 +249,8 @@ function meta:GetLiteralValue()
 		end
 	end
 
+	self.literalText = bpcommon.ZipStringLeft(literal, 26)
+
 	return literal
 
 end
@@ -252,7 +258,7 @@ end
 function meta:DrawLiteral(x, y, alpha)
 
 	local node = self.vnode:GetNode()
-	local font = self.font
+	local font = self.literalFont
 	if self.pin:GetDir() == PD_In and not self.pin:HasFlag(PNF_Table) then
 		local literalType = self.pin:GetLiteralType()
 		if literalType then

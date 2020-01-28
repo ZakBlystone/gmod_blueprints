@@ -45,7 +45,7 @@ end
 function meta:ShouldBeCompact()
 
 	for _, v in ipairs(self.pins) do
-		if v.pin:GetLiteralType() == "string" and #v:GetConnections() == 0 then
+		if v.pin:IsIn() and v.pin:GetLiteralType() == "string" and #v:GetConnections() == 0 then
 			return false
 		end
 	end
