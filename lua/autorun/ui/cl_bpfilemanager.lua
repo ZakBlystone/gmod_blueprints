@@ -241,7 +241,7 @@ function PANEL:OpenMenu()
 				bpfilesystem.TakeLock( self.file, function(res, msg)
 
 					if not res then
-						Derma_Message( msg, "Failed to release lock on file", "OK" )
+						Derma_Message( msg, "Failed to take lock on file", "OK" )
 					end
 
 				end )

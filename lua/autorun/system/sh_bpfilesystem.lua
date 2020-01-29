@@ -471,10 +471,13 @@ function TakeLock( file, callback )
 
 	ClientCommand( callback, CMD_TakeLock )
 
+	local localFile = G_BPLocalFiles[file:GetUID()]
+	if localFile == nil then return end
+
 	net.Start("bpfilesystem")
 	net.WriteUInt(CMD_TakeLock, CommandBits)
-	net.WriteData(file:GetUID(), 16)
-	net.WriteUInt(file:GetRevision(), 32)
+	net.WriteData(localFile:GetUID(), 16)
+	net.WriteUInt(localFile:GetRevision(), 32)
 	net.SendToServer()
 
 end
@@ -485,9 +488,12 @@ function ReleaseLock( file, callback )
 
 	ClientCommand( callback, CMD_ReleaseLock )
 
+	local localFile = G_BPLocalFiles[file:GetUID()]
+	if localFile == nil then return end
+
 	net.Start("bpfilesystem")
 	net.WriteUInt(CMD_ReleaseLock, CommandBits)
-	net.WriteData(file:GetUID(), 16)
+	net.WriteData(localFile:GetUID(), 16)
 	net.SendToServer()
 
 end
