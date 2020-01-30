@@ -52,7 +52,7 @@ LIB surface
 	FUNC DrawPoly, CLIENT
 	{
 		DESC Draws a textured polygon (secretly a triangle fan) with a maximum of 256 vertices. Only works properly with convex polygons. You may try to render concave polygons, but there is no guarantee that things wont get messed up.
-		IN vertices, PN_Struct, PNF_None, PolygonVertex, #A table containing integer vertices. See the PolygonVertex structure. The vertices must be in clockwise order.
+		IN vertices, PN_Struct, PNF_Table, PolygonVertex, #A table containing integer vertices. See the PolygonVertex structure. The vertices must be in clockwise order.
 	}
 	FUNC DrawRect, CLIENT
 	{

@@ -428,6 +428,13 @@ STRUCT MeshVertex
 	PIN v, PN_Number, #The v texture scale.
 	PIN userdata, PN_Struct, PNF_Nullable, MeshTangentInfo, #A table of four numbers. This is used by most shaders in Source to hold tangent information of the vertex ( tangentX, tangentY, tangentZ, tangentHandedness ).
 }
+STRUCT PolygonVertex
+{
+	PIN x, PN_Number, #The x coordinate of the vertex.
+	PIN y, PN_Number, #The y coordinate of the vertex.
+	PIN u, PN_Number, PNF_Nullable, #The u texture coordinate of the vertex.
+	PIN v, PN_Number, PNF_Nullable, #The v texture coordinate of the vertex.
+}
 STRUCT OperatingParams
 {
 	PIN RPM, PN_Number, #The current RPM of the vehicle
