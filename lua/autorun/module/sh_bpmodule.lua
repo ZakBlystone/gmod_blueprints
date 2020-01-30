@@ -14,7 +14,7 @@ STREAM_FILE = 1
 STREAM_NET = 2
 
 fmtMagic = 0x42504D30
-fmtVersion = 6
+fmtVersion = 7
 
 local meta = bpcommon.MetaTable("bpmodule")
 
@@ -356,12 +356,15 @@ function LoadHeader(filename)
 		magic = inStream:ReadInt( false )
 	end
 
+	local version = inStream:ReadInt( false )
+
 	return {
 		magic = magic,
-		version = inStream:ReadInt( false ),
+		version = version,
 		type = inStream:ReadInt( false ),
 		revision = inStream:ReadInt( false ),
 		uid = inStream:ReadStr( 16 ),
+		envVersion = version >= 7 and bpdata.ReadValue( inStream ) or "",
 	}
 
 end
@@ -404,6 +407,10 @@ function meta:WriteToStream(stream, mode)
 	stream:WriteInt( self.revision, false )
 	stream:WriteStr( self.uniqueID )
 
+	if mode == STREAM_FILE then
+		bpdata.WriteValue( bpcommon.ENV_VERSION, stream )
+	end
+
 	Profile("write-variables", self.variables.WriteToStream, self.variables, stream, mode, fmtVersion)
 	Profile("write-graphs", self.graphs.WriteToStream, self.graphs, stream, mode, fmtVersion)
 	Profile("write-structs", self.structs.WriteToStream, self.structs, stream, mode, fmtVersion)
@@ -429,6 +436,13 @@ function meta:ReadFromStream(stream, mode)
 	self.type = stream:ReadInt( false )
 	self.revision = stream:ReadInt( false )
 	self.uniqueID = stream:ReadStr( 16 )
+
+	if mode == STREAM_FILE and self.version >= 7 then
+		self.envVersion = bpdata.ReadValue( stream )
+	else
+		self.envVersion = ""
+	end
+
 	print( bpcommon.GUIDToString( self.uniqueID ) .. " v" .. self.revision  )
 
 	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)

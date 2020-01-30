@@ -1018,6 +1018,10 @@ function meta:CompileCodeSegment()
 
 	self.begin(CTX_Code)
 
+	if bit.band(self.flags, CF_Standalone) ~= 0 then
+		self.emit("-- Compiled using gm_blueprints v" .. bpcommon.ENV_VERSION .. " ( https://github.com/ZakBlystone/gmblueprints )")
+	end
+
 	self.emitContext( CTX_MetaTables )
 	self.emit("_FR_HEAD(" .. (self.debug and 1 or 0) .. ", " .. (self.ilp and 1 or 0) .. ")")
 
