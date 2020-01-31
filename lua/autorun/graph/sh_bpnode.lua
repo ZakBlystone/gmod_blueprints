@@ -391,6 +391,24 @@ function meta:Move(x, y)
 
 end
 
+function meta:Copy()
+
+	local newNode = setmetatable({}, meta)
+	newNode.x = self.x
+	newNode.y = self.y
+	newNode.literals = table.Copy(self.literals)
+	newNode.data = table.Copy(self.data)
+	newNode.nodeType = self.nodeType
+	newNode.nodeTypeObject = self.nodeTypeObject
+	newNode.graph = self.graph
+
+	bpcommon.MakeObservable(newNode)
+
+	newNode:PostInit()
+	return newNode
+
+end
+
 function meta:WriteToStream(stream, mode, version)
 
 	Profile("write-node", function()

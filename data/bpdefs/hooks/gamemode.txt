@@ -559,6 +559,13 @@ HOOKS GM
 	{
 		DESC Used to render post processing effects.
 	}
+	HOOK ScaleNPCDamage, SERVER
+	{
+		DESC Called when an NPC takes damage.
+		OUT npc, PN_Ref, PNF_None, NPC, #The NPC that takes damage
+		OUT hitgroup, PN_Enum, PNF_None, HITGROUP, #The hitgroup (hitbox) enum where the NPC took damage.
+		OUT dmginfo, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info
+	}
 	HOOK SetupMove, SHARED
 	{
 		DESC SetupMove is called before the engine process movements. This allows us to override the players movement.

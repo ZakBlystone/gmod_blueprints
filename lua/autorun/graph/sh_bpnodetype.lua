@@ -21,7 +21,7 @@ function meta:Init(context, group)
 
 	self.flags = 0
 	self.role = 0
-	self.codeType = 0
+	self.codeType = NT_Pure
 	self.code = nil
 	self.category = nil
 	self.displayName = nil
@@ -211,7 +211,7 @@ function meta:GetCode()
 
 	if self:GetContext() == NC_Hook then
 
-		local ret, arg, pins = PinRetArg( self, nil, function(s,v,k)
+		local ret, arg, pins = PinRetArg( self:GetCodeType(), self:GetPins(), nil, function(s,v,k)
 			return s.. " = " .. "arg[" .. (k-1) .. "]"
 		end, "\n" )
 
@@ -219,7 +219,7 @@ function meta:GetCode()
 
 	end
 
-	local ret, arg, pins = PinRetArg( self )
+	local ret, arg, pins = PinRetArg( self:GetCodeType(), self:GetPins() )
 	local call = groupName .. "_." .. self.name
 
 	if self:GetContext() == NC_Lib then 
