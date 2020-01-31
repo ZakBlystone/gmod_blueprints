@@ -576,12 +576,50 @@ end
 function meta:CompileNodeSingle(node)
 
 	local nodeID = self:GetID(node)
-	local code = node:GetCode()
 	local codeType = node:GetCodeType()
 	local graphThunk = node:GetGraphThunk()
 
+	-- the context to emit (singlenode_graph#_node#)
+	self.begin(CTX_SingleNode .. self:GetID(self.graph) .. "_" .. nodeID)
+
+	-- emit some infinite-loop-protection code
+	if self.ilp and (codeType == NT_Function or codeType == NT_Special or codeType == NT_FuncOutput) then
+		self.emit((self.debug and "_FR_ILPD" or "_FR_ILP") .. "(" .. self.ilpmax .. ", " .. nodeID .. ")")
+	elseif self.debug then
+		self.emit("__dbgnode = " .. nodeID)
+	end
+
+	-- if node can compile itself, stop here
+	if self:RunNodeCompile(node, CP_MAINPASS) then self.finish() return end
+
+
+	local code = node:GetCode()
+
 	self.currentNode = node
-	self.currentCode = str
+	self.currentCode = code
+
+	-- list of inputs/outputs to compile
+	local inVars = {}
+	local outVars = {}
+
+	-- iterate through all input pins
+	for pinID, pin, pos in node:SidePins(PD_In) do
+		if pin:IsType(PN_Exec) then continue end
+
+		if codeType == NT_FuncOutput then
+			outVars[pos] = self:FindVarForPin(pin, true)
+		end
+
+		inVars[pos] = self:GetPinVar(pin)
+
+	end
+
+	-- iterate through all output pins
+	for pinID, pin, pos in node:SidePins(PD_Out) do
+
+		outVars[pos] = self:GetPinVar(pin)
+
+	end
 
 	-- TODO: Instead of building these strings, find a more direct approach of compiling these
 	-- generate code based on function graph inputs and outputs
@@ -636,56 +674,15 @@ function meta:CompileNodeSingle(node)
 		return
 	end
 
-	-- the context to emit (singlenode_graph#_node#)
-	self.begin(CTX_SingleNode .. self:GetID(self.graph) .. "_" .. nodeID)
-
-	-- list of inputs/outputs to compile
-	local inVars = {}
-	local outVars = {}
-
-	-- iterate through all input pins
-	for pinID, pin, pos in node:SidePins(PD_In) do
-		if pin:IsType(PN_Exec) then continue end
-
-		if codeType == NT_FuncOutput then
-			outVars[pos] = self:FindVarForPin(pin, true)
-		end
-
-		inVars[pos] = self:GetPinVar(pin)
-
-	end
-
-	-- iterate through all output pins
-	for pinID, pin, pos in node:SidePins(PD_Out) do
-		
-		outVars[pos] = self:GetPinVar(pin)
-
-	end	
-
 	-- grab code off node type and remove tabs
 	code = string.Replace(code, "\t", "")
 
 	-- take all the mapped variables and place them in the code string
 	code = Profile("vct", self.CompileVars, self, code, inVars, outVars, node)
 
-	-- emit some infinite-loop-protection code
-	if self.ilp and (codeType == NT_Function or codeType == NT_Special or codeType == NT_FuncOutput) then
-		self.emit((self.debug and "_FR_ILPD" or "_FR_ILP") .. "(" .. self.ilpmax .. ", " .. nodeID .. ")")
-	elseif self.debug then
-		self.emit("__dbgnode = " .. nodeID)
-	end
-
-	-- node can compile itself if needed
-	if self:RunNodeCompile(node, CP_MAINPASS) then
-
-
-	else
-
-		-- break the code apart and emit each line
-		for _, l in ipairs(string.Explode("\n", code)) do
-			self.emit(l)
-		end
-
+	-- break the code apart and emit each line
+	for _, l in ipairs(string.Explode("\n", code)) do
+		self.emit(l)
 	end
 
 	self.finish()
@@ -1088,6 +1085,7 @@ function meta:RunNodeCompile(node, pass)
 
 	local ntype = node:GetType()
 	if ntype.Compile then return ntype.Compile(node, self, pass) end
+	if node.Compile then return node:Compile(self, pass) end
 	return false
 
 end
@@ -1284,13 +1282,21 @@ function meta:Compile()
 
 	self.compiledCode = table.concat( self.getContext( CTX_Code ), "\n" )
 
+	local compiledModule = nil
+
+	Profile("code-build-cm", function()
+		compiledModule = bpcompiledmodule.New( self.module, self.compiledCode ) 
+	end)
+
+	Profile("write-files", function()
+
+		-- write compiled output to file for debugging
+		file.Write("blueprints/last_compile_.txt", compiledModule:GetCode(true))
+		file.Write("blueprints/last_compile.txt", compiledModule:GetCode())
+
+	end)
+
 	ProfileEnd()
-
-	local compiledModule = bpcompiledmodule.New( self.module, self.compiledCode )
-
-	-- write compiled output to file for debugging
-	file.Write("blueprints/last_compile_.txt", compiledModule:GetCode(true))
-	file.Write("blueprints/last_compile.txt", compiledModule:GetCode())
 
 	return compiledModule
 

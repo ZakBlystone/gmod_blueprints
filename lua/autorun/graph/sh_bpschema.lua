@@ -257,13 +257,13 @@ function MakePin(dir, name, pintype, flags, ex, desc)
 	)
 end
 
-function PinRetArg( nodeType, infmt, outfmt, concat )
+function PinRetArg( codeType, nodePins, infmt, outfmt, concat )
 
 	concat = concat or ","
 	--print(nodeType.name)
-	local base = (nodeType:GetCodeType() == NT_Event) and 2 or 1
+	local base = (codeType == NT_Event) and 2 or 1
 	local pins = {[PD_In] = {}, [PD_Out] = {}}
-	for _, v in ipairs(nodeType:GetPins()) do
+	for _, v in ipairs(nodePins) do
 		if v:GetBaseType() == PN_Exec then continue end
 		local dir = v:GetDir()
 		local num = (base+#pins[dir])
