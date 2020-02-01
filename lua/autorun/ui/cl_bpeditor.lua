@@ -469,13 +469,13 @@ concommand.Add("bp_open_editor", function()
 
 end)
 
-hook.Add("PlayerBindPress", "catch_f2", function(ply, bind, pressed)
+--[[hook.Add("PlayerBindPress", "catch_f2", function(ply, bind, pressed)
 
 	if bind == "gm_showteam" then
 		OpenEditor()
 	end
 
-end)
+end)]]
 
 list.Set(
 	"DesktopWindows",
