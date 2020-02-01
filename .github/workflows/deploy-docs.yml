@@ -1,0 +1,17 @@
+name: Deploy docs
+
+on: [release]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Deploy GitHub Pages
+      uses: Cecilapp/GitHub-Pages-deploy@2.0.0
+      env:
+        EMAIL: zakblystone@gmail.com
+        GH_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        BUILD_DIR: docs/
