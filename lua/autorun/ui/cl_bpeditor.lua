@@ -219,13 +219,33 @@ function PANEL:Init()
 	self.wasActive = false
 	self.openModules = {}
 
+	self.AssetBrowser = vgui.Create("BPAssetBrowser")
+
 	self.UserManager = vgui.Create("BPUserManager")
 
 	self.FileManager = vgui.Create("BPFileManager")
 	self.FileManager.editor = self
 
+	self.Tabs:AddSheet( "Assets", self.AssetBrowser, "Assets", "icon16/zoom.png")
 	self.Tabs:AddSheet( "Users", self.UserManager, "Users", "icon16/group.png" )
 	self.Tabs:SetActiveTab( self.Tabs:AddSheet( "Files", self.FileManager, "Files", "icon16/folder.png" ).Tab )
+
+end
+
+function PANEL:OpenHelp()
+
+	local help = vgui.Create("DHTML")
+	help:OpenURL("asset://garrysmod/docs/index.html")
+
+	local sheet = self.Tabs:AddSheet( "Help", help, "Help", "icon16/zoom.png", true)
+	sheet.Tab.Close = function()
+		self.Tabs:CloseTab( sheet.Tab )
+		sheet.Panel:Remove()
+	end
+
+	help:Dock( FILL )
+
+	self.Tabs:SetActiveTab( sheet.Tab )
 
 end
 

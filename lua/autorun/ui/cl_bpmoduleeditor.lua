@@ -60,11 +60,6 @@ function PANEL:Init()
 			bpenv.Uninstall( self.module:GetUID() )
 
 		end, Color(180,80,80), "icon16/page_code.png"},
-		{"Asset Browser", function()
-
-			RunConsoleCommand("pac_asset_browser")
-
-		end, nil, "icon16/zoom.png"},
 	}
 
 	self.callback = function(...)

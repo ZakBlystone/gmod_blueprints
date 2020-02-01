@@ -401,6 +401,7 @@ function PANEL:Init()
 	self.menu = bpuimenubar.AddTo(self)
 	self.menu:Add("New Module", function() self:CreateModule() end, nil, "icon16/asterisk_yellow.png")
 	self.menu:Add("Refresh Local Files", function() self.localList:ClearFiles() bpfilesystem.IndexLocalFiles(true) end, nil, "icon16/arrow_refresh.png")
+	self.menu:Add("Help", function() self.editor:OpenHelp() end)
 	--self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
 
 	self.middle = vgui.Create("DPanel")

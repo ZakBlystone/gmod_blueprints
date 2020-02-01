@@ -71,6 +71,7 @@ include("ui/cl_bpgrapheditmenu.lua")
 include("ui/cl_bpstructeditmenu.lua")
 include("ui/cl_bpvarcreatemenu.lua")
 include("ui/cl_bpmoduleeditor.lua")
+include("ui/cl_bpassetbrowser.lua")
 include("ui/cl_bpeditor.lua")
 
 -- TEST
