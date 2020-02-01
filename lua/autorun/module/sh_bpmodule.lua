@@ -13,8 +13,8 @@ bpcommon.CallbackList({
 STREAM_FILE = 1
 STREAM_NET = 2
 
-fmtMagic = 0x42504D30
-fmtVersion = 7
+fmtMagic = 0x42504D31
+fmtVersion = 1
 
 local meta = bpcommon.MetaTable("bpmodule")
 
@@ -260,18 +260,6 @@ function meta:NewGraph(name, type)
 
 end
 
-function meta:CopyGraph( graphID )
-
-	local graph = self:GetGraph( graphID )
-	if graph == nil then return end
-
-	local copy = self:GetGraph( self:NewGraph( "graphproxy_" .. self.nextGraphID ) )
-	graph:CopyInto(copy)
-
-	return copy
-
-end
-
 function meta:GetUsedPinTypes(used, noFlags)
 
 	used = used or {}
@@ -341,22 +329,19 @@ end
 
 function LoadHeader(filename)
 
-	local inStream = bpdata.InStream(false, true)
+	local inStream = bpdata.InStream(false, true):UseStringTable()
 	if not inStream:LoadFile(filename, true, true) then
 		error("Failed to load blueprint, try using 'Convert'")
 	end
 
 	local magic = inStream:ReadInt( false )
-
-	if magic ~= fmtMagic then
-		--print("Probably using string table, try that")
-		inStream:Reset()
-		inStream:UseStringTable()
-		inStream:LoadFile(filename, true, true)
-		magic = inStream:ReadInt( false )
-	end
-
 	local version = inStream:ReadInt( false )
+
+	-- Compat for pre-release blueprints
+	if magic == 0x42504D30 then
+		magic = 0x42504D31
+		version = 1
+	end
 
 	return {
 		magic = magic,
@@ -364,7 +349,7 @@ function LoadHeader(filename)
 		type = inStream:ReadInt( false ),
 		revision = inStream:ReadInt( false ),
 		uid = inStream:ReadStr( 16 ),
-		envVersion = version >= 7 and bpdata.ReadValue( inStream ) or "",
+		envVersion = bpdata.ReadValue( inStream ),
 	}
 
 end
@@ -375,11 +360,7 @@ function meta:Load(filename)
 	local magic = head.magic
 	local version = head.version
 
-	print("MAGIC: " .. magic)
-	print("VERSION: " .. version)
-
-	local inStream = bpdata.InStream(false, true)
-	if version >= 4 then inStream:UseStringTable() end
+	local inStream = bpdata.InStream(false, true):UseStringTable()
 	if not inStream:LoadFile(filename, true, true) then
 		error("Failed to load blueprint, try using 'Convert'")
 	end
@@ -398,8 +379,6 @@ function meta:Save(filename)
 end
 
 function meta:WriteToStream(stream, mode)
-
-	-- each save to disk is a revision on the loaded original
 
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
@@ -427,17 +406,21 @@ function meta:ReadFromStream(stream, mode)
 	local magic = stream:ReadInt( false )
 	local version = stream:ReadInt( false )
 
+	-- Compat for pre-release blueprints
+	if magic == 0x42504D30 and version == 7 then
+		magic = 0x42504D31
+		version = 1
+	end
+
 	if magic ~= fmtMagic then error("Invalid blueprint data: " .. fmtMagic .. " != " .. magic) end
 	if version > fmtVersion then error("Blueprint data version is newer") end
-
-	print("MODULE VERSION: " .. version)
 
 	self.version = version
 	self.type = stream:ReadInt( false )
 	self.revision = stream:ReadInt( false )
 	self.uniqueID = stream:ReadStr( 16 )
 
-	if mode == STREAM_FILE and self.version >= 7 then
+	if mode == STREAM_FILE then
 		self.envVersion = bpdata.ReadValue( stream )
 	else
 		self.envVersion = ""
@@ -448,10 +431,7 @@ function meta:ReadFromStream(stream, mode)
 	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
 	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
 	Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version)
-
-	if version >= 3 then
-		Profile("read-events", self.events.ReadFromStream, self.events, stream, mode, version)
-	end
+	Profile("read-events", self.events.ReadFromStream, self.events, stream, mode, version)
 
 	for _, graph in self:Graphs() do
 		graph:CreateDeferredData()

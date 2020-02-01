@@ -110,15 +110,7 @@ end
 
 function meta:ReadFromStream(stream, mode, version)
 
-	if not version or version >= 4 then
-		self.pins:ReadFromStream(stream, mode, version)
-	else
-		local oldPins = bplist.New(bpvariable_meta):NamedItems("Pins")
-		oldPins:ReadFromStream(stream, mode, version)
-		for _, v in oldPins:Items() do
-			self.pins:Add( v:CreatePin(PD_None) )
-		end
-	end
+	self.pins:ReadFromStream(stream, mode, version)
 	self.flags = stream:ReadBits(8)
 	return self
 

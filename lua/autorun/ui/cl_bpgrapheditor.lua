@@ -340,6 +340,8 @@ function meta:TakeGrabbedPin()
 
 	end
 
+	self.takingGrabbedPin = true
+
 end
 
 function meta:PasteGraph()
@@ -402,7 +404,7 @@ function meta:LeftMouse(x,y,pressed)
 			if targetPin then
 				self:CreateUndo("Connect Pins")
 				if not self:ConnectPins(self.grabPin, targetPin) then self:DeleteLastUndo() end
-			else
+			elseif not self.takingGrabbedPin then
 				self:OpenCreationContext(self.grabPin:GetPin())
 				return
 			end
@@ -411,6 +413,7 @@ function meta:LeftMouse(x,y,pressed)
 		self.grabPin = nil
 		self.leftMouseStart = nil
 		self.dragSelecting = false
+		self.takingGrabbedPin = false
 		self:FinishMovingNodes()
 
 	end

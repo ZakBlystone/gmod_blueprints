@@ -230,6 +230,11 @@ function PANEL:Init()
 	self.Tabs:AddSheet( "Users", self.UserManager, "Users", "icon16/group.png" )
 	self.Tabs:SetActiveTab( self.Tabs:AddSheet( "Files", self.FileManager, "Files", "icon16/folder.png" ).Tab )
 
+	local openCount = cookie.GetNumber("bp_editor_open_count", 0)
+	if openCount == 0 then self:OpenAbout() end
+
+	cookie.Set("bp_editor_open_count", openCount + 1)
+
 end
 
 function PANEL:OpenHelp()
@@ -266,7 +271,7 @@ function PANEL:OpenAbout()
 
 	about:ShowCloseButton(false)
 	about:SetTitle("About")
-	about:SetSize(ScrW()/2, ScrH()/2)
+	about:SetSize(ScrW()*.7, ScrH()*.7)
 	about:Center()
 	about:MakePopup()
 	about:DoModal()
@@ -347,9 +352,19 @@ end
 
 function PANEL:OpenFile( file )
 
+	if not bpdefs.Ready() then
+		Derma_Message( "Wait for definitions to download. If download stalls, run 'bp_request_definitions' in console.", "Failed to open module", "OK" )
+		return
+	end
+
 	local mod = bpmodule.New()
-	mod:Load(file:GetPath())
-	self:OpenModule( mod, file:GetName(), file )
+	local b,e = pcall( function()
+		mod:Load(file:GetPath())
+		self:OpenModule( mod, file:GetName(), file )
+	end)
+	if not b then
+		Derma_Message( e, "Failed to open module", "OK" )
+	end
 
 end
 
@@ -401,11 +416,6 @@ vgui.Register( "BPEditor", PANEL, "DFrame" )
 
 local function OpenEditor()
 
-	if not bpdefs.Ready() then
-		print("Wait for definitions to load")
-		return
-	end
-
 	if IsValid(G_BPEditorInstance) then
 
 		if deleteOnClose:GetBool() then
@@ -420,6 +430,10 @@ local function OpenEditor()
 
 		end
 
+	end
+
+	if not bpdefs.Ready() then
+		LocalPlayer():ConCommand("bp_request_definitions")
 	end
 
 	--for i=1, 2 do
@@ -449,7 +463,7 @@ concommand.Add("bp_editorpanic", function()
 
 end)
 
-concommand.Add("open_blueprint", function()
+concommand.Add("bp_open_editor", function()
 
 	OpenEditor()
 
@@ -462,3 +476,19 @@ hook.Add("PlayerBindPress", "catch_f2", function(ply, bind, pressed)
 	end
 
 end)
+
+list.Set(
+	"DesktopWindows",
+	"BlueprintEditor",
+	{
+		title = "Blueprint Editor",
+		icon = "icon64/blueprints.png",
+		width = 100,
+		height = 100,
+		onewindow = true,
+		init = function(icn, pnl)
+			pnl:Remove()
+			OpenEditor()
+		end
+	}
+)

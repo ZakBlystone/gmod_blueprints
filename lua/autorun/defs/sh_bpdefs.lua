@@ -439,9 +439,17 @@ elseif SERVER then
 
 	defpack:PostInit()
 
-	for k, v in pairs(bptransfer.GetStates()) do v:AddFile(DEFPACK_LOCATION, "defs2") end
+	concommand.Add("bp_push_latest_definitions", function(ply)
 
-	hook.Add("BPTransferStateReady", "downloadDefs2", function(ply, state)
+		if ply:IsAdmin() then
+			for k, v in pairs(bptransfer.GetStates()) do v:AddFile(DEFPACK_LOCATION, "defs2") end
+		end
+
+	end)
+
+	concommand.Add("bp_request_definitions", function(ply)
+		local state = bptransfer.GetState(ply)
+		if not state then return end
 		state:AddFile(DEFPACK_LOCATION, "defs2")
 	end)
 else

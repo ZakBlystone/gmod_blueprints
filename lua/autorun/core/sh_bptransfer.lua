@@ -394,7 +394,8 @@ if SERVER then
 		G_TransferPlayerStates[ply] = nil
 	end)
 
-	concommand.Add("bp_refreshTransferStates", function(ply)
+	concommand.Add("bp_refresh_transfer_states", function(ply)
+		if not ply:IsAdmin() then return end
 		G_TransferPlayerStates = {}
 		net.Start("bptransfer")
 		net.WriteUInt(CMD_Refresh, CommandBits)

@@ -1,5 +1,8 @@
 AddCSLuaFile()
 
+local enabled = CreateConVar("bp_enabled", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Enable blueprint system (you must restart the server for this to take effect)")
+if not enabled:GetBool() then return end
+
 if SERVER then
 	util.AddNetworkString("bphandshake")
 	util.AddNetworkString("bpmessage")

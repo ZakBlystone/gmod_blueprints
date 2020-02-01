@@ -801,17 +801,8 @@ function meta:ReadFromStream(stream, mode, version)
 
 			self.inputs:SuppressEvents(true)
 			self.outputs:SuppressEvents(true)
-
-			if version and version < 5 then
-				local inputs = bplist.New(bpvariable_meta):NamedItems("Inputs"):ReadFromStream(stream, mode, version)
-				local outputs = bplist.New(bpvariable_meta):NamedItems("Outputs"):ReadFromStream(stream, mode, version)
-				for _, v in inputs:Items() do self.inputs:Add( v:CreatePin(PD_None), v.name ) end
-				for _, v in outputs:Items() do self.outputs:Add( v:CreatePin(PD_None), v.name ) end
-			else
-				self.inputs:ReadFromStream(stream, mode, version)
-				self.outputs:ReadFromStream(stream, mode, version)
-			end
-
+			self.inputs:ReadFromStream(stream, mode, version)
+			self.outputs:ReadFromStream(stream, mode, version)
 			self.inputs:SuppressEvents(false)
 			self.outputs:SuppressEvents(false)
 		end

@@ -123,25 +123,9 @@ local typeRemap = {
 
 function meta:ReadFromStream(stream, mode, version)
 
-	if version < 6 then
-
-		self.type = stream:ReadInt( false )
-		self.flags = stream:ReadInt( false )
-		self.default = bpdata.ReadValue( stream )
-		self.name = bpdata.ReadValue( stream )
-		self.ex = bpdata.ReadValue( stream )
-		self.repmode = bpdata.ReadValue( stream )
-		self.pintype = bppintype.New(self.type, self.flags, self.ex)
-
-		if version == 1 then self.type = typeRemap[self.type] or self.type end
-
-	else
-
-		self.pintype = bppintype.New():ReadFromStream(stream, mode, version)
-		self.default = bpdata.ReadValue( stream )
-		self.repmode = bpdata.ReadValue( stream )
-
-	end
+	self.pintype = bppintype.New():ReadFromStream(stream, mode, version)
+	self.default = bpdata.ReadValue( stream )
+	self.repmode = bpdata.ReadValue( stream )
 
 end
 
