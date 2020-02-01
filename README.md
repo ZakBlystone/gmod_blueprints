@@ -16,7 +16,7 @@
   <a href="https://github.com/ZakBlystone/gmod_blueprints/issues">
     <img src="https://img.shields.io/github/issues/ZakBlystone/gmod_blueprints">
   </a>
-  <a href="https://twitter.com/intent/tweet/?text=Woah%2C+Garry%27s+Mod+Blueprints+is+super+cool%21+It%27s+like+UE4+blueprints%2C+but+for+Garry%27s+Mod.+Thanks+%40Zak%21+Available+on+the+Steam+workshop+today.&hashtags=gmod,lua,ue4,blueprints,garrysmod,facepunch">
+  <a href="https://twitter.com/intent/tweet/?text=Gmod%20Blueprints%2C%20Visual%20Scripting%20for%20Garry%27s%20Mod.%20Check%20it%20out%3A%20https%3A%2F%2Fgithub.com%2FZakBlystone%2Fgmod_blueprints&hashtags=gmod,lua,ue4,blueprints,garrysmod,facepunch">
     <img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social">
   </a>
   <img src="https://img.shields.io/github/stars/ZakBlystone/gmod_blueprints?style=social">
