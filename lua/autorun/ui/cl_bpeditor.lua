@@ -234,18 +234,48 @@ end
 
 function PANEL:OpenHelp()
 
-	local help = vgui.Create("DHTML")
-	help:OpenURL("asset://garrysmod/docs/index.html")
+	local outer = vgui.Create("DPanel")
 
-	local sheet = self.Tabs:AddSheet( "Help", help, "Help", "icon16/zoom.png", true)
+	local html = vgui.Create("DHTML", outer)
+	html:OpenURL("asset://garrysmod/docs/index.html")
+	html:Dock( FILL )
+
+	local sheet = self.Tabs:AddSheet( "Help", outer, "Help", "icon16/zoom.png", true)
 	sheet.Tab.Close = function()
 		self.Tabs:CloseTab( sheet.Tab )
 		sheet.Panel:Remove()
 	end
 
-	help:Dock( FILL )
+	outer:DockMargin(5, 0, 5, 5)
+	outer:Dock( FILL )
 
 	self.Tabs:SetActiveTab( sheet.Tab )
+
+end
+
+function PANEL:OpenAbout()
+
+	local about = vgui.Create( "DFrame" )
+
+	local html = vgui.Create("DHTML", about)
+	html:OpenURL("asset://garrysmod/docs/index.html")
+	html:DockMargin(0, 0, 0, 50)
+	html:Dock( FILL )
+
+	local ok = vgui.Create("DButton", about)
+
+	about:ShowCloseButton(false)
+	about:SetTitle("About")
+	about:SetSize(ScrW()/2, ScrH()/2)
+	about:Center()
+	about:MakePopup()
+	about:DoModal()
+
+	ok:SetText("Ok")
+	ok:SetWide(50)
+	ok:SetPos(0, about:GetTall() - 40 )
+	ok:CenterHorizontal()
+	ok.DoClick = function() if IsValid(about) then about:Close() end end
 
 end
 
