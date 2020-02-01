@@ -2,24 +2,24 @@
 Font face definitions
 */
 @font-face {
-    font-family: "Akkurat";
-    src: url("fonts/Akkurat-Bold.woff2") format("woff2");
-    font-style: normal;
-    font-weight: 600;
+  font-family: "Akkurat";
+  src: url(fonts/Akkurat-Bold.woff2) format("woff2"), url(fonts/Akkurat-Bold.woff) format('woff');
+  font-style: normal;
+  font-weight: 600;
 }
 
 @font-face {
-    font-family: "Akkurat";
-    src: url("fonts/Akkurat-Regular.woff2") format("woff2");
-    font-style: normal;
-    font-weight: 400;
+  font-family: Akkurat;
+  src: url(fonts/Akkurat-Regular.woff2) format("woff2"), url(fonts/Akkurat-Bold.woff) format('woff');
+  font-style: normal;
+  font-weight: 400;
 }
 
 @font-face {
-    font-family: "Akkurat";
-    src: url("fonts/Akkurat-Light.woff2") format("woff2");
-    font-style: normal;
-    font-weight: 200;
+  font-family: "Akkurat";
+  src: url(fonts/Akkurat-Light.woff2) format("woff2"), url(fonts/Akkurat-Bold.woff) format('woff');
+  font-style: normal;
+  font-weight: 200;
 }
 
 /*
@@ -29,50 +29,7 @@ Override default styles
 body {
   font-family: "Akkurat";
   background: white;
-}
-
-.container {
-  position: relative;
-  padding: 30px 50px 30px 30px;
-}
-
-img {
-  margin: 25px 0px 25px 25px;
-  border-radius: 15px;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  max-width:100%;
-  max-height:100%;
-}
-
-ol {
-  list-style: none;
-  counter-reset: my-awesome-counter;
-  padding-left: 15px;
-}
-ol li {
-  counter-increment: my-awesome-counter;
-  color: rgb(70, 70, 70);
-  margin-top: 10px;
-  font-weight: normal;
-}
-
-ol li::before {
-  content: counter(my-awesome-counter) ')';
-  color: rgb(60, 60, 60);
-  font-weight: bold;
-  margin-right: 1rem;
-}
-
-.image-multiple {
-  display: flex;
-  flex-grow: 1;
-  align-items: center;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.image-multiple img {
-  flex-shrink: 1;
+  margin: 0;
 }
 
 h1 {
@@ -89,47 +46,7 @@ h2 {
   font-weight: 600;
 }
 
-span.button {
-  padding: 6px 16px 6px 16px;
-  margin: 3px;
-  background: rgb(58, 58, 58);
-  border: 1px solid #707070;
-  border-radius: 4px;
-  color: white;
-  font-family: Tahoma;
-  font-size: 0.7rem;
-  font-weight: bold;
-  letter-spacing: 0.25px;
-}
-
-span.node {
-  padding: 2px 3px 2px 3px;
-  margin: 3px;
-  background: rgb(230, 230, 230);
-  border-radius: 5px;
-  color: rgb(120, 120, 120);;
-  font-weight: 800;
-}
-
-span.pin {
-  display: inline-flex;
-  align-items: center;
-  font-weight: bold;
-  color: white;
-  background-color: rgb(70,70,70);
-  padding: 2px 5px 2px 5px;
-  border-radius: 4px;
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
-span.pin > div {
-  display: inline-block;
-  width: 13px;
-  height: 13px;
-  margin-right: 5px;
-}
-
-span.pin > div.string {
-  background-color: #FAAB97;
+.container {
+  position: relative;
+  padding: 30px 50px 30px 30px;
 }

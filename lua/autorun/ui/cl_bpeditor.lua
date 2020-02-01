@@ -237,7 +237,7 @@ function PANEL:OpenHelp()
 	local outer = vgui.Create("DPanel")
 
 	local html = vgui.Create("DHTML", outer)
-	html:OpenURL("asset://garrysmod/docs/index.html")
+	html:OpenURL("asset://garrysmod/docs/docs.html")
 	html:Dock( FILL )
 
 	local sheet = self.Tabs:AddSheet( "Help", outer, "Help", "icon16/zoom.png", true)
@@ -258,7 +258,7 @@ function PANEL:OpenAbout()
 	local about = vgui.Create( "DFrame" )
 
 	local html = vgui.Create("DHTML", about)
-	html:OpenURL("asset://garrysmod/docs/index.html")
+	html:OpenURL("asset://garrysmod/docs/about.html")
 	html:DockMargin(0, 0, 0, 50)
 	html:Dock( FILL )
 
