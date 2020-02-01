@@ -92,7 +92,7 @@ h2 {
 span.button {
   padding: 6px 16px 6px 16px;
   margin: 3px;
-  background: linear-gradient(to right, rgb(58, 58, 58), rgb(83, 83, 83));
+  background: rgb(58, 58, 58);
   border: 1px solid #707070;
   border-radius: 4px;
   color: white;
