@@ -1,3 +1,5 @@
+[![ko-fi](https://www.ko-fi.com/img/donate_sm.png)](https://ko-fi.com/zacharyblystone)
+
 <p align="center">
   <img src="https://i.imgur.com/EB2NXR4.png">
 </p>
