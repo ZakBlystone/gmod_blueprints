@@ -18,6 +18,7 @@ local CMD_StopFile = 5
 local CMD_DeleteFile = 6
 local CMD_DownloadFile = 7
 local CMD_AckUpload = 8
+local CMD_ServerMessage = 9
 
 local FileDirectory = "blueprints/server/"
 local FileIndex = FileDirectory .. "__index.txt"
@@ -297,7 +298,15 @@ if SERVER then
 		print( tostring( state:GetPlayer() ) )
 		if data.tag == "module" then
 			local user = bpusermanager.FindUserForPlayer( state:GetPlayer() )
-			if not user:HasPermission(bpgroup.FL_CanUpload) then return false end
+			if not user:HasPermission(bpgroup.FL_CanUpload) then
+
+				net.Start("bpfilesystem")
+				net.WriteUInt(CMD_ServerMessage, CommandBits)
+				net.WriteString("You do not have permission to upload files")
+				net.Send( state:GetPlayer() )
+
+				return false
+			end
 		end
 	end)
 
@@ -648,6 +657,8 @@ net.Receive("bpfilesystem", function(len, ply)
 			file:SetRevision( rev )
 			IndexLocalFiles()
 		end
+	elseif cmd == CMD_ServerMessage then
+		Derma_Message(net.ReadString(), "Message from server", "Ok")
 	end
 
 end)
