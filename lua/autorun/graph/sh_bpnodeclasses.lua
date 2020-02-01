@@ -14,7 +14,11 @@ function Get(name)
 	return registered[name:lower()]
 end
 
-local files, folders = file.Find(nodeTypeBasePath .. "*", "LUA")
-for _, v in ipairs(files) do
-	include(nodeTypeBasePath .. v)
-end
+hook.Add("BPPostInit", "loadnodeclasses", function()
+
+	local files, folders = file.Find(nodeTypeBasePath .. "*", "LUA")
+	for _, v in ipairs(files) do
+		include(nodeTypeBasePath .. v)
+	end
+
+end)

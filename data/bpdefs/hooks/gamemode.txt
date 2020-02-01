@@ -100,6 +100,11 @@ HOOKS GM
 		OUT type, PN_String, #Chat filter type.
 		IN suppress=false, PN_Bool, #Return true to suppress the chat message
 	}
+	HOOK ChatTextChanged, CLIENT
+	{
+		DESC Called whenever the content of the user's chat input box is changed.
+		OUT text, PN_String, #The new contents of the input box
+	}
 	HOOK CreateClientsideRagdoll, CLIENT
 	{
 		DESC Called whenever an entity becomes a clientside ragdoll.
@@ -117,6 +122,30 @@ HOOKS GM
 		DESC Allows you to change the players movements before they're sent to the server.
 		OUT cmd, PN_Ref, PNF_None, CUserCmd, #The User Command data
 		IN disableDefaultMovement, PN_Bool, #Return true to: Disable Sandbox C menu "screen clicking", Disable Teammate nocollide (verification required), Prevent calling of C_BaseHLPlayer::CreateMove & subsequently C_BasePlayer::CreateMove
+	}
+	HOOK DoPlayerDeath, SERVER
+	{
+		DESC Handles the player's death.
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		OUT attacker, PN_Ref, PNF_None, Entity, #The entity that killed the player
+		OUT damage, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info
+	}
+	HOOK DrawDeathNotice, CLIENT
+	{
+		DESC This hook is called every frame to draw all of the current death notices.
+		OUT x, PN_Number, #X position to draw death notices as a ratio
+		OUT y, PN_Number, #Y position to draw death notices as a ratio
+	}
+	HOOK DrawPhysgunBeam, CLIENT
+	{
+		DESC Allows you to override physgun beam drawing.
+		OUT player, PN_Ref, PNF_None, Player, #Physgun owner
+		OUT physgun, PN_Ref, PNF_None, Weapon, #The physgun
+		OUT enabled, PN_Bool, #Is the beam enabled
+		OUT target, PN_Ref, PNF_None, Entity, #Entity we are grabbing. This will be NULL if nothing is being held
+		OUT physBone, PN_Number, #ID of the physics bone (PhysObj) we are grabbing at.
+		OUT hitPos, PN_Vector, #Beam hit position relative to the physics bone we are grabbing.
+		IN defaultBeam=true, PN_Bool, #Return false to hide default beam
 	}
 	HOOK EntityEmitSound, SHARED
 	{
@@ -139,6 +168,10 @@ HOOKS GM
 		OUT damage, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info
 		IN blockDamage=false, PN_Bool, #Block damage
 	}
+	HOOK FinishChat, CLIENT
+	{
+		DESC Runs when user cancels/finishes typing.
+	}
 	HOOK FinishMove, SHARED
 	{
 		DESC Called after GM:Move, applies all the changes from the CMoveData to the player.
@@ -152,6 +185,18 @@ HOOKS GM
 		OUT player, PN_Ref, PNF_None, Player, #The player
 		OUT speed, PN_Number, #The fall speed
 		IN damage, PN_Number, #New fall damage
+	}
+	HOOK GetMotionBlurValues, CLIENT
+	{
+		DESC Allows you to modify the Source Engine's motion blur shaders.
+		OUT horizontal, PN_Number, The amount of horizontal blur.
+		OUT vertical, PN_Number, The amount of vertical blur.
+		OUT forward, PN_Number, The amount of forward/radial blur.
+		OUT rotational, PN_Number, The amount of rotational blur.
+		IN horizontal, PN_Number, New amount of horizontal blur.
+		IN vertical, PN_Number, New amount of vertical blur.
+		IN forward, PN_Number, New amount of forward/radial blur.
+		IN rotational, PN_Number, New amount of rotational blur.
 	}
 	HOOK GetTeamColor, CLIENT
 	{
@@ -255,6 +300,34 @@ HOOKS GM
 		OUT move, PN_Ref, PNF_None, CMoveData, #Movement information
 		IN override, PN_Bool, #Return true to suppress default engine action
 	}
+	HOOK NeedsDepthPass, CLIENT
+	{
+		DESC Returning true in this hook will cause it to render depth buffers defined with render.GetResolvedFullFrameDepth.
+		IN renderDepth, PN_Bool, #Render depth buffer
+	}
+	HOOK NetworkEntityCreated, CLIENT
+	{
+		DESC Called when an entity has been created over the network.
+		OUT entity, PN_Ref, PNF_None, Entity, #Created entity
+	}
+	HOOK NetworkIDValidated, SERVER
+	{
+		DESC Called when a player has been validated by Steam.
+		OUT name, PN_String, #Player name
+		OUT steamID, PN_String, #Player SteamID
+	}
+	HOOK NotifyShouldTransmit, CLIENT
+	{
+		DESC Called whenever this entity changes its transmission state for this LocalPlayer, such as exiting or re entering the PVS.
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that changed its transmission state.
+		OUT shouldTransmit, PN_Bool, #True if we started transmitting to this client and false if we stopped.
+	}
+	HOOK OnChatTab, CLIENT
+	{
+		DESC Called when the local player presses TAB while having their chatbox opened.
+		OUT text, PN_String, #The currently typed into chatbox text
+		IN result, PN_String, #What should be placed into the chatbox instead of what currently is when player presses tab
+	}
 	HOOK OnDamagedByExplosion, SERVER
 	{
 		DESC Called when a player has been hurt by an explosion. Override to disable default sound effect.
@@ -273,6 +346,41 @@ HOOKS GM
 		OUT attacker, PN_Ref, PNF_None, Entity, #The NPCs attacker, the entity that gets the kill credit, for example a player or an NPC.
 		OUT inflictor, PN_Ref, PNF_None, Entity, #Death inflictor. The entity that did the killing. Not necessarily a weapon.
 	}
+	HOOK OnPhysgunFreeze, SERVER
+	{
+		DESC Called when a player freezes an entity with the physgun.
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon that was used to freeze the entity.
+		OUT physobj, PN_Ref, PNF_None, PhysObj, #Physics object of the entity.
+		OUT entity, PN_Ref, PNF_None, Entity, #The target entity.
+		OUT player, PN_Ref, PNF_None, Player, #The player who tried to freeze the entity.
+		IN allowFreeze, PN_Bool, #Allow player to freeze entity
+	}
+	HOOK OnPhysgunPickup, SERVER
+	{
+		DESC
+		{
+			Called to when a player has successfully picked up an entity with their Physics Gun.
+			Not to be confused with GM:PhysgunPickup which is called multiple times to ask if the player should be able to pick up an entity.
+		}
+		OUT player, PN_Ref, PNF_None, Player, #The player that has picked up something using the physics gun.
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that was picked up.
+	}
+	HOOK OnPhysgunReload, SERVER
+	{
+		DESC Called when a player reloads with the physgun. Override this to disable default unfreezing behavior.
+		OUT physgun, PN_Ref, PNF_None, Weapon, #The physgun in question
+		OUT player, PN_Ref, PNF_None, Player, #The player wielding the physgun
+		IN allowReload, PN_Bool, #Whether the player can reload with the physgun or not
+	}
+	HOOK OnPlayerChat, CLIENT
+	{
+		DESC Called whenever a player sends a chat message. For the serverside equivalent, see GM:PlayerSay.
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		OUT text, PN_String, #The message's text
+		OUT teamChat, PN_Bool, #Is the player typing in team chat?
+		OUT isDead, PN_Bool, #Is the player dead?
+		IN suppress=false, PN_Bool, #Should the message be suppressed?
+	}
 	HOOK OnPlayerHitGround, SHARED
 	{
 		DESC Called when a player makes contact with the ground.
@@ -281,6 +389,19 @@ HOOKS GM
 		OUT onFloater, PN_Bool, #Did the player land on an object floating in the water?
 		OUT speed, PN_Number, #The speed at which the player hit the ground
 		IN suppress=false, PN_Bool, #Return true to suppress default action
+	}
+	HOOK OnUndo, CLIENT
+	{
+		DESC Called when the player undoes something.
+		OUT name, PN_String, #The name of the undo action
+		OUT customText, PN_String, #The custom text for the undo, set by undo.SetCustomUndoText
+	}
+	HOOK OnViewModelChanged, SHARED
+	{
+		DESC Called when the player changes their weapon to another one - and their viewmodel model changes.
+		OUT viewModel, PN_Ref, PNF_None, Entity, #The viewmodel that is changing
+		OUT oldModel, PN_String, #The old model
+		OUT newModel, PN_String, #The new model
 	}
 	HOOK PhysgunDrop, SHARED
 	{
@@ -295,6 +416,13 @@ HOOKS GM
 		OUT entity, PN_Ref, PNF_None, Entity, #The entity that is being picked up.
 		IN allow=true, PN_Bool, #Returns whether the player can pick up the entity or not.
 	}
+	HOOK PlayerAuthed, SERVER
+	{
+		DESC Called once when the player is authenticated.
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		OUT steamID, PN_String, #The player's SteamID
+		OUT uniqueID, PN_String, #The player's UniqueID
+	}
 	HOOK PlayerButtonDown, SHARED
 	{
 		OUT player, PN_Ref, PNF_None, Player, #Player who pressed the button
@@ -305,33 +433,88 @@ HOOKS GM
 		OUT player, PN_Ref, PNF_None, Player, #Player who released the button
 		OUT button, PN_Enum, PNF_None, BUTTON_CODE, #The button
 	}
+	HOOK PlayerCanHearPlayersVoice, SERVER
+	{
+		OUT listener, PN_Ref, PNF_None, Player, #The listening player.
+		OUT talker, PN_Ref, PNF_None, Player, #The talking player.
+		IN canHear=true, PN_Bool, #Return true if the listener should hear the talker, false if they shouldn't.
+		IN spatialize=true, PN_Bool, #3D sound. If set to true, will fade out the sound the further away listener is from the talker, the voice will also be in stereo, and not mono.
+	}
+	HOOK PlayerCanPickupItem, SERVER
+	{
+		OUT player, PN_Ref, PNF_None, Player, #Player attempting to pick up
+		OUT item, PN_Ref, PNF_None, Entity, #The item the player is attempting to pick up
+		IN allow=true, PN_Bool, #Allow pick up
+	}
+	HOOK PlayerCanPickupWeapon, SERVER
+	{
+		OUT player, PN_Ref, PNF_None, Player, #Player attempting to pick up
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The item the player is attempting to pick up
+		IN allow=true, PN_Bool, #Allow pick up
+	}
+	HOOK PlayerCanSeePlayersChat, SERVER
+	{
+		OUT text, PN_String, The chat text
+		OUT teamOnly, PN_Bool, If the message is team-only
+		OUT listener, PN_Ref, PNF_None, Player, The player receiving the message
+		OUT speaker, PN_Ref, PNF_None, Player, The player sending the message
+		IN canSee=true, PN_Bool, #Can see other player's chat
+	}
+	HOOK PlayerConnect, SHARED
+	{
+		DESC Executes when a player connects to the server. Called before the player has been assigned a UserID and entity.
+		OUT name, PN_String, #The player's name.
+		OUT ip, PN_String, #The player's IP address. Will be "none" for bots.
+	}
 	HOOK PlayerDeath, SERVER
 	{
+		DESC Called when a player is killed by Player:Kill or any other normal means.
 		OUT victim, PN_Ref, PNF_None, Player, #The player who died
 		OUT inflictor, PN_Ref, PNF_None, Entity, #Item used to kill victim
 		OUT attacker, PN_Ref, PNF_None, Entity, #Player or entity that killed the victim
 	}
 	HOOK PlayerDeathSound, SERVER
 	{
+		DESC Returns whether or not the default death sound should be muted.
 		IN mute=false, PN_Bool, #Mute death sound
 	}
 	HOOK PlayerDeathThink, SERVER
 	{
+		DESC Called every think while the player is dead. The return value will determine if the player respawns.
 		OUT player, PN_Ref, PNF_None, Player, #The player affected in the hook.
 		IN allowSpawn=true, PN_Bool, #Allow spawn
 	}
 	HOOK PlayerDisconnected, SERVER
 	{
+		DESC Called when a player leaves the server.
 		OUT player, PN_Ref, PNF_None, Player
+	}
+	HOOK PlayerDriveAnimate, SHARED
+	{
+		DESC Called to update the player's animation during a drive.
+		OUT player, PN_Ref, PNF_None, Player, #The driving player
+	}
+	HOOK PlayerDroppedWeapon, SERVER
+	{
+		DESC Called when a weapon is dropped by a player via Player:DropWeapon.
+		OUT player, PN_Ref, PNF_None, Player, #The player who owned this weapon before it was dropped
+		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon that was dropped
+	}
+	HOOK PlayerEndVoice, CLIENT
+	{
+		DESC Called when player stops using voice chat.
+		OUT player, PN_Ref, PNF_None, Player, #Player who stopped talking
 	}
 	HOOK PlayerEnteredVehicle, SERVER
 	{
+		DESC Called when a player enters a vehicle.
 		OUT player, PN_Ref, PNF_None, Player, #Player who entered vehicle
 		OUT vehicle, PN_Ref, PNF_None, Vehicle, #Vehicle the player entered
 		OUT role, PN_Number
 	}
 	HOOK PlayerFootstep, SHARED
 	{
+		DESC Called whenever a player steps. Return true to mute the normal sound.
 		OUT player, PN_Ref, PNF_None, Player, #The stepping player
 		OUT pos, PN_Vector, #The position of the step
 		OUT foot, PN_Number, #Foot that is stepped. 0 for left, 1 for right
@@ -342,12 +525,14 @@ HOOKS GM
 	}
 	HOOK PlayerFrozeObject, SERVER
 	{
+		DESC Called when a player freezes an object.
 		OUT player, PN_Ref, PNF_None, Player, #Player who has frozen an object
 		OUT entity, PN_Ref, PNF_None, Entity, #The frozen object
 		OUT physObj, PN_Ref, PNF_None, PhysObj, #The frozen physics object of the frozen entity ( For ragdolls )
 	}
 	HOOK PlayerHurt, SERVER
 	{
+		DESC Called when a player gets hurt.
 		OUT victim, PN_Ref, PNF_None, Player, #Victim
 		OUT attacker, PN_Ref, PNF_None, Entity, #Attacker Entity
 		OUT healthRemaining, PN_Number, #Remaining Health
@@ -355,6 +540,7 @@ HOOKS GM
 	}
 	HOOK PlayerInitialSpawn, SERVER
 	{
+		DESC Called when the player spawns for the first time.
 		OUT player, PN_Ref, PNF_None, Player, #The player who spawned.
 		OUT transition, PN_Bool, #If true, the player just spawned from a map transition.
 	}
@@ -367,6 +553,14 @@ HOOKS GM
 	{
 		DESC Called to give players the default set of weapons.
 		OUT player, PN_Ref, PNF_None, Player, #Player to give weapons to.
+		IN preventDefault=true, PN_Bool, #Prevent default loadout
+	}
+	HOOK PlayerNoClip, SHARED
+	{
+		DESC Called when a player tries to switch noclip mode.
+		OUT player, PN_Ref, PNF_None, Player, #The person who entered/exited noclip
+		OUT desiredState, PN_Bool, #Represents the noclip state (on/off) the user will enter if this hook allows them to.
+		IN allow=true, PN_Bool, #Return false to disallow the switch.
 	}
 	HOOK PlayerPostThink, SHARED
 	{
@@ -394,17 +588,61 @@ HOOKS GM
 	}
 	HOOK PlayerSetHandsModel, SERVER
 	{
+		DESC Called whenever view model hands needs setting a model.
 		OUT player, PN_Ref, PNF_None, Player, #The player whose hands needs a model set
 		OUT hands, PN_Ref, PNF_None, Entity, #The hands to set model of
 	}
 	HOOK PlayerSetModel, SERVER
 	{
+		DESC Called whenever a player spawns and must choose a model. A good place to assign a model to a player.
 		OUT player, PN_Ref, PNF_None, Player, #The player being chosen.
+	}
+	HOOK PlayerShouldTakeDamage, SERVER
+	{
+		OUT player, PN_Ref, PNF_None, Player, #The player.
+		OUT attacker, PN_Ref, PNF_None, Entity, #The attacker.
+		IN allowDamage=true, PN_Bool
+	}
+	HOOK PlayerShouldTaunt, SERVER
+	{
+		OUT player, PN_Ref, PNF_None, Player, #Player who tried to taunt
+		OUT act, PN_Enum, PNF_None, ACT, #Act ID of the taunt player tries to do
+		IN allowDamage=true, PN_Bool
+	}
+	HOOK PlayerSilentDeath, SERVER
+	{
+		OUT player, PN_Ref, PNF_None, Player, #The player who was killed
 	}
 	HOOK PlayerSpawn, SERVER
 	{
 		OUT player, PN_Ref, PNF_None, Player, #The player who spawned.
 		OUT transition, PN_Bool, #If true, the player just spawned from a map transition. You probably want to not touch player's weapons if this is set to true from this hook.
+	}
+	HOOK PlayerSpray, SERVER
+	{
+		DESC Determines if the player can spray using the "impulse 201" console command.
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		IN disable=false, PN_Bool, #Return false to allow spraying, return true to prevent spraying.
+	}
+	HOOK PlayerStartTaunt, SERVER
+	{
+		DESC Called when player starts taunting.
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		OUT act, PN_Enum, PNF_None, ACT, #The sequence ID of the taunt
+		OUT length, PN_Number, #Length of the taunt
+	}
+	HOOK PlayerStartVoice, CLIENT
+	{
+		DESC Called when a player starts using voice chat.
+		OUT player, PN_Ref, PNF_None, Player, #Player who started using voice chat
+	}
+	HOOK PlayerStepSoundTime, SHARED
+	{
+		DESC Allows you to override the time between footsteps.
+		OUT player, PN_Ref, PNF_None, Player, #Player who is walking
+		OUT type, PN_Enum, PNF_None, STEPSOUNDTIME, #The type of footsteps
+		OUT walking, PN_Bool, #Is the player walking or not
+		IN time, PN_Number, #Time between footsteps, in ms
 	}
 	HOOK PlayerSwitchFlashlight, SERVER
 	{
@@ -432,11 +670,22 @@ HOOKS GM
 		OUT trace, PN_Struct, PNF_None, TraceResult, #The trace of the bullet's path
 		IN override=false, PN_Bool, #Override engine handling
 	}
+	HOOK PlayerUnfrozeObject, SERVER
+	{
+		DESC Called when a player unfreezes an object.
+		OUT player, PN_Ref, PNF_None, Player, #Player who has unfrozen an object
+		OUT entity, PN_Ref, PNF_None, Entity, #The unfrozen object
+		OUT physobj, PN_Ref, PNF_None, PhysObj, #The frozen physics object of the unfrozen entity
+	}
 	HOOK PlayerUse, SERVER
 	{
 		OUT player, PN_Ref, PNF_None, Player, #The player pressing the "use" key.
 		OUT entity, PN_Ref, PNF_None, Entity, #The entity which the player is looking at / activating USE on.
 		IN allowUse=true, PN_Bool, #Return false if the player is not allowed to USE the entity.
+	}
+	HOOK PostCleanupMap, SHARED
+	{
+		DESC Called right after the map has cleaned up (usually because game.CleanUpMap was called)
 	}
 	HOOK PostDraw2DSkyBox, CLIENT
 	{
@@ -481,10 +730,25 @@ HOOKS GM
 		OUT player, PN_Ref, PNF_None, Player, #The the owner of the view model.
 		OUT weapon, PN_Ref, PNF_None, Weapon, #This is the weapon that is from the view model.
 	}
+	HOOK PostPlayerDeath, SERVER
+	{
+		DESC Called right after GM:DoPlayerDeath, GM:PlayerDeath and GM:PlayerSilentDeath.
+		OUT player, PN_Ref, PNF_None, Player, #The player
+	}
 	HOOK PostPlayerDraw, CLIENT
 	{
 		DESC Called after the player was drawn.
 		OUT player, PN_Ref, PNF_None, Player, #The player that was drawn.
+	}
+	HOOK PostProcessPermitted, CLIENT
+	{
+		DESC Allows you to suppress post processing effect drawing.
+		OUT effect, PN_String, #The classname of Post Processing effect
+		IN allow=true, PN_Bool
+	}
+	HOOK PostRender, CLIENT
+	{
+		DESC Called after the frame has been rendered.
 	}
 	HOOK PreCleanupMap, SHARED
 	{
@@ -566,6 +830,14 @@ HOOKS GM
 		OUT hitgroup, PN_Enum, PNF_None, HITGROUP, #The hitgroup (hitbox) enum where the NPC took damage.
 		OUT dmginfo, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info
 	}
+	HOOK ScalePlayerDamage, SHARED
+	{
+		DESC This hook allows you to change how much damage a player receives when one takes damage to a specific body part.
+		OUT player, PN_Ref, PNF_None, Player, #The NPC that takes damage
+		OUT hitgroup, PN_Enum, PNF_None, HITGROUP, #The hitgroup (hitbox) enum where the NPC took damage.
+		OUT dmginfo, PN_Ref, PNF_None, CTakeDamageInfo, #Damage info
+		IN suppress=false, PN_Bool, #Return true to prevent damage
+	}
 	HOOK SetupMove, SHARED
 	{
 		DESC SetupMove is called before the engine process movements. This allows us to override the players movement.
@@ -579,11 +851,28 @@ HOOKS GM
 		OUT player, PN_Ref, PNF_None, Player, #The player
 		OUT viewEntity, PN_Ref, PNF_None, Entity, #Players Player:GetViewEntity
 	}
+	HOOK SetupSkyboxFog, CLIENT
+	{
+		DESC Allows you to use render.Fog* functions to manipulate skybox fog.
+		OUT scale, PN_Number, #The scale of 3D skybox
+		IN renderedFog=true, PN_Bool, #Return true to tell the engine that fog is set up
+	}
+	HOOK SetupWorldFog, CLIENT
+	{
+		DESC Allows you to use render.Fog* functions to manipulate world fog.
+		IN renderedFog=true, PN_Bool, #Return true to tell the engine that fog is set up
+	}
 	HOOK ShouldDrawLocalPlayer, CLIENT
 	{
 		DESC Called to determine if the LocalPlayer should be drawn.
 		OUT player, PN_Ref, PNF_None, Player, #The player
 		IN drawPlayer=true, PN_Bool, #True to draw the player, false to hide.
+	}
+	HOOK StartChat, CLIENT
+	{
+		DESC Runs when the user tries to open the chat box.
+		OUT isTeamChat, PN_Bool
+		IN suppress, PN_Bool
 	}
 	HOOK StartCommand, SHARED
 	{
@@ -598,6 +887,13 @@ HOOKS GM
 	HOOK Tick, SHARED
 	{
 		DESC Called every HOOK tick, server. Serverside, this is similar to GM:Think.
+	}
+	HOOK TranslateActivity, SHARED
+	{
+		DESC Allows you to translate player activities.
+		OUT player, PN_Ref, PNF_None, Player, #The player
+		OUT activity, PN_Enum, PNF_None, ACT, #The activity
+		IN newActivity, PN_Enum, PNF_None, ACT, #The new, translated activity
 	}
 	HOOK UpdateAnimation, SHARED
 	{

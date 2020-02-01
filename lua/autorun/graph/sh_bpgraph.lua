@@ -313,7 +313,7 @@ function meta:GetNodeTypes()
 		local types = {}
 		local base = self:GetModule():GetNodeTypes( self )
 
-		table.Merge(types, base)
+		for k, v in pairs(base) do types[k] = v end
 
 		if self.type == GT_Function then
 			types["__Entry"] = self.callEntryNodeType

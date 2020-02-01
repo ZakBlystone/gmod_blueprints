@@ -75,3 +75,5 @@ include("ui/cl_bpeditor.lua")
 
 -- TEST
 include("sh_bptest.lua")
+
+hook.Run("BPPostInit")

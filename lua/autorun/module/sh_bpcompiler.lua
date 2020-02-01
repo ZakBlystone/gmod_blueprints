@@ -1275,16 +1275,15 @@ function meta:Compile()
 		Profile("graph", self.CompileGraph, self, graph )
 	end
 
-	self:CompileNetworkCode()
+	Profile("netcode", self.CompileNetworkCode, self)
 
 	-- compile main code segment
 	Profile("code-segment", self.CompileCodeSegment, self)
 
-	self.compiledCode = table.concat( self.getContext( CTX_Code ), "\n" )
-
 	local compiledModule = nil
 
 	Profile("code-build-cm", function()
+		self.compiledCode = table.concat( self.getContext( CTX_Code ), "\n" )
 		compiledModule = bpcompiledmodule.New( self.module, self.compiledCode ) 
 	end)
 
