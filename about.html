@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!-- TODO: REMAKE WHEN GMOD UPDATED TO CHROMIUM -->
+<html>
+	<head>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="about.css">
+	</head>
+	<body>
+		<div class="header">
+			<h2 class="main">Garry's Mod Blueprints</h1>
+			<h2 class="sub">Version 1.0</h2>
+		</div>
+		<section class="warning">
+			<h2>Warning</h2>
+			<p>
+				While this does work in multiplayer, I only recommend that you use it with people you trust.
+				There is a user management system to mitigate some of the risks around this, but it hasn't been fully tested.<br/><br/>
+				Players who use this <strong class="important">CAN EXECUTE CUSTOM SERVERSIDE SCRIPTS</strong>.
+			</p>
+		</section>
+		<section class="main">
+			<h1>Hey there!</h1>
+			<h5>
+				Thank you for downloading this addon and trying it out.
+				It's a little rough around the edges right now, but it will be updated frequently.
+				There are a lot of things I would have liked to fix before launch, but if I
+				kept working on them, this would probably never be released.
+			</h5>
+		</section>
+		<hr>
+		<section>
+			<h2>Bug Reporting & Contributing</h2>
+			<!--<p>
+				Please report any bugs (or feature requests) <a href="https://github.com/ZakBlystone/gmod_blueprints/issues">here</a>.<br/>
+				If you would like to contribute to the development of Gmod Blueprints check out <a href="https://github.com/ZakBlystone/gmod_blueprints">the GitHub repo</a>.
+			</p>-->
+			<p>
+				Please report any bugs (or feature requests) at https://github.com/ZakBlystone/gmod_blueprints/issues</a><br/>
+				If you would like to contribute to the development of Gmod Blueprints, check out the GitHub repo at https://github.com/ZakBlystone/gmod_blueprints</a>
+			</p>
+		</section>
+		<section>
+			<h2>Features</h2>
+			<ul>
+				<li>Lua compiler, takes your graphs and turns them into lua code</li>
+				<li>Basic networking support, custom event nodes can be networked</li>
+				<li>Distributed filesystem, other users can contribute to script development</li>
+				<li>Asset manager to quickly locate file paths to use</li>
+				<li>Definition data pulled from the gmod wiki</li>
+				<li>Infinite loop protection</li>
+			</ul>
+		</section>
+		<section>
+			<h2>Known Issues</h2>
+			<ul>
+				<li>Debug tools don't work yet (currently just prints to console)</li>
+				<li>Compiling is a bit slow for large blueprints with a lot of graphs</li>
+				<li>Some nodes haven't been tested yet and might not work</li>
+				<li>Nodes which have callback pins don't work because callbacks aren't supported yet</li>
+				<li>Working with tables is still kind of garbage at the moment</li>
+				<li>Protected (unsafe) nodes are not culled out yet</li>
+				<li>File management system is kind of obtuse and confusing</li>
+				<li>When a new player joins the server, they do not receive currently running modules until you restart them</li>
+				<li>Some gmod lua functions aren't exposed yet for various reasons</li>
+				<li>Reroute nodes (CORE.Pin) are a pain to place</li>
+				<li>Node creation menu lags pretty badly</li>
+				<li>Node creation menu search and context-aware filtering is buggy</li>
+				<li>Multiline text doesn't work yet, some tooltips are extremely long</li>
+				<li>Graph editor could use more optimization</li>
+				<li>Infinite loop protection doesn't protect against loops that go through the engine</li>
+				<li>CreateMaterial node is a pain to use and needs some love</li>
+			</ul>
+		</section>
+		<section class="last">
+			<h2>Coming Soon</h2>
+			<ul>
+				<li>SWEP, SENT, STOOL support</li>
+				<li>Module Dependencies (adding libraries made in Blueprint)</li>
+				<li>Node callback pin support</li>
+				<li>Custom group editing in user manager</li>
+				<li>Lots of bug fixes and optimizations</li>
+			</ul>
+		</section>
+		<hr class="nomargin">
+		<section class="last special">
+			<h1>Special Thanks</h1>
+			<div class="row">
+				<div class="profile">
+					<img src="profiles/skyler.jpg" />
+					<div class="details">
+						<p class="name">Hayden Cunningham</p>
+						<p class="desc">for making the trailer<br/>and managing community stuff</p>
+					</div>
+				</div>
+				<div class="profile">
+					<img src="profiles/jack.jpg" />
+					<div class="details">
+						<p class="name">Jack Beringen</p>
+						<p class="desc">for the wiki-to-def pipeline<br/>and HTML documentation</p>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="profile">
+					<img src="profiles/sam.png" />
+					<div class="details">
+						<p class="name">Sam Maddock</p>
+						<p class="desc">for helping with git repository stuff</p>
+					</div>
+				</div>
+				<div class="profile">
+					<img src="profiles/scott.jpg" />
+					<div class="details">
+						<p class="name">Scott Kauker</p>
+						<p class="desc">for moral support ;)</p>
+					</div>
+				</div>
+			</div>
+		</section>
+	</body>
+</html>

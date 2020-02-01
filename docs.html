@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="style.css">
+		<link rel="stylesheet" href="docs.css">
+	</head>
+	<body>
+		<div class="container">
+			<h1 class="nomargin">Getting Started</h1>
+			<h2>Creating a module</h2>
+			<ol>
+				<li>Hold <span class="button">C</span> to open the context menu and click on the Blueprint Editor icon<br/>
+					You can bind a shortcut to this in console using <span class="button">bind &lt;key&gt; bp_open_editor</span></li>
+				<img src="images/0_context.png", alt="context-icon"/>
+				<li>Select the <span class="button">Files</span> tab and click <span class="button">New Module</span></li>
+				<img src="images/1_new_module.png", alt="file-manager-click-new-module"/>
+				<li>Give the module a unique name</li>
+				<img src="images/2_module_name.png", alt="file-manager-name-dialog"/>
+			</ol>
+			<h2>Your first blueprint</h2>
+			<h3>Adding Nodes</h3>
+			<ol>
+				<li>Right-click anywhere in the graph editor to bring up the creation menu</li>
+				<img src="images/3_create_menu.png", alt="graph-editor-create"/>
+				<li>In the search-bar type <span class="input">player.</span> and select <span class="node">player.GetAll</span>, you should see the node appear in the graph</li>
+				<div class="image-multiple">
+					<img src="images/4_create_find.png", alt="graph-editor-create-find"/>
+					<img src="images/5_created_node.png", alt="graph-editor"/>
+				</div>
+				<li>Repeat these steps and place <span class="node">CORE.ForEach</span>, <span class="node">Player:ChatPrint</span>, and <span class="node">CORE.ServerOnly</span> your graph should look something like this:</li>
+				<img src="images/6_all_nodes.png", alt="graph-editor-nodes"/>
+				<li>On the <span class="node">Player:ChatPrint</span> node, Left-click the small box next to the <span class="pin"><div class="string"></div>message</span> pin, a dialog will show up and you can enter any message you'd like, press <span class="button">Enter</span> to complete.</li>
+				<div class="image-multiple">
+					<img src="images/7_node_literal.png", alt="graph-editor-node-literal"/>
+					<img src="images/8_node_literal_entry.png", alt="graph-editor-node-literal-entry"/>
+				</div>
+			</ol>
+			<h3>Connecting Nodes</h3>
+			<ol>
+				<li>To connect nodes, Left-click the pin you'd like to connect, and drag your mouse over to the pin you want to connect it to.<br/>
+						Connections are bi-directional it doesn't matter what order you connect the pins.
+				</li>
+				<div class="image-multiple">
+					<img src="images/9_mid_connection.png", alt="graph-editor-mid-connection"/>
+					<img src="images/11_finsh_connection.png", alt="graph-editor-finish-connection"/>
+				</div>
+				<li>If you release your left-mouse button on the graph,<br/> 
+						the creation menu will appear and will be pre-filtered to show only nodes that accept the pin type you started dragging from.
+				</li>
+				<img src="images/10_drop_connection.png", alt="graph-editor-connection-drop"/>
+				<li>To close this menu, just click anywhere on the graph</li>
+				<li>To disconnect a pin, hold <span class="button">Ctrl</span> and left-click the pin you want to disconnect, drag the connection off of the pin and release</li>
+			</ol>
+			<h3>Finishing Up and Running</h3>
+			<ol>
+				<li>Connect the nodes as shown</li>
+				<img src="images/12_connected_nodes.png", alt="graph-editor-nodes-connected"/>
+				<li>Click <span class="button">Send to server</span> and close the editor, you should now see your message printed in chat for all connected players.</li>
+				<img src="images/13_send_to_server.png", alt="graph-editor-send-to-server"/>
+			</ol>
+			<h3>Making Adjustments</h3>
+			<ol>
+				<li>Left-click on the graph and drag to select multiple nodes</li>
+				<img src="images/14_select_box.png", alt="graph-editor-select-box"/>
+				<li>Press <span class="button">Delete</span> to delete the selected nodes</li>
+				<li>Left-click on the <span class="node">GetAll</span> node and press <span class="button">Delete</span></li>
+				<li>Place a <span class="node">CORE.ChatPrintAll</span> and connect it up like this</li>
+				<div class="image-multiple">
+					<img src="images/15_chat_print_all.png", alt="graph-editor-chatprintall"/>
+					<img src="images/16_spam_graph.png", alt="graph-editor-spam-graph"/>
+				</div>
+				<li>Click <span class="button">Send to server</span> and be amazed as your message floods the chat for all players</li>
+			</ol>
+			<h1>Managing Files</h1>
+			<p>This is the file manager, here you can upload / download modules, toggle which modules are currently running, and delete files.<br/>
+			The left panel shows all the files you have locally on your machine.<br/>
+			The right panel shows all files that have been uploaded to the server.<br/>
+			Double-click on a local file to open it.
+			</p>
+			<img src="images/18_filemanager.png", alt="file-manager"/>
+			<p>Right click a file to access options</p>
+			<img src="images/19_filemenu.png", alt="file-manager-menu"/>
+			<p>When a file is green, it means that the file is locked by you. Nobody else can edit that file on the server while you have it locked.<br/>
+			When a file is red, it means that the file is locked by someone else and you cannot edit it.</p>
+			<img src="images/20_filelocked.png", alt="file-manager-locked"/>
+
+			<h1>Managing Users</h1>
+			<p>This is the user manager, here you can assign permissions to users to control who can do what in the blueprint system.<br/>
+			Simply check the box next to which role you want to assign to a user.<br/><br/>
+			<b>Currently you can only assign a user between 4 pre-designed groups. Group creation / editing coming soon.</b><br/>
+			</p>
+			<p>
+			<b>Admin: </b>Can do anything.<br/>
+			<b>Auditor: </b>Can toggle blueprints. (soon to be able to view any server blueprint in read-only mode).<br/>
+			<b>Trusted: </b>Can upload blueprints to the server, can run blueprints locally, and can toggle which blueprints are running. They are also allowed to use protected nodes <br/>
+			<b>Newbie: </b>Can only upload blueprints to the server. Their blueprint will not run until someone toggles it for them.<br/>
+			</p>
+			<p>
+			By default, any new player who joins isn't a member of any of these groups, and cannot do anything with blueprints.<br/>
+			Group / user information is stored persistently on the server.
+			</p>
+			<img src="images/21_usermanager.png", alt="user-manager"/>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,52 @@
+/*
+Font face definitions
+*/
+@font-face {
+  font-family: "Akkurat";
+  src: url(fonts/Akkurat-Bold.woff2) format("woff2"), url(fonts/Akkurat-Bold.woff) format('woff');
+  font-style: normal;
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: Akkurat;
+  src: url(fonts/Akkurat-Regular.woff2) format("woff2"), url(fonts/Akkurat-Bold.woff) format('woff');
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Akkurat";
+  src: url(fonts/Akkurat-Light.woff2) format("woff2"), url(fonts/Akkurat-Bold.woff) format('woff');
+  font-style: normal;
+  font-weight: 200;
+}
+
+/*
+Override default styles
+*/
+
+body {
+  font-family: "Akkurat";
+  background: white;
+  margin: 0;
+}
+
+h1 {
+  font-size: 3rem;
+  font-weight: 800;
+}
+
+h1.nomargin {
+  margin: 0;
+}
+
+h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.container {
+  position: relative;
+  padding: 30px 50px 30px 30px;
+}
