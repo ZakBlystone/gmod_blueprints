@@ -159,20 +159,6 @@ function meta:Draw(x,y,w,h)
 
 	local vx,vy,vw,vh = unpack(self.viewport)
 
-	-- De-compensate for panel shenanigans
-	local OldDrawLine = surface.DrawLine
-	surface.DrawLine = function(x0,y0,x1,y1) OldDrawLine(x0-rx,y0-ry,x1-rx,y1-ry) end
-	local OldSetTextPos = surface.SetTextPos
-	surface.SetTextPos = function(x,y) OldSetTextPos(x-rx, y-ry) end
-	local OldDrawRect = surface.DrawRect
-	surface.DrawRect = function(x,y,...) OldDrawRect(x-rx, y-ry,...) end
-	local OldDrawTexturedRect = surface.DrawTexturedRect
-	surface.DrawTexturedRect = function(x,y,...) OldDrawTexturedRect(x-rx, y-ry,...) end
-	local OldDrawTexturedRectRotated = surface.DrawTexturedRectRotated
-	surface.DrawTexturedRectRotated = function(x,y,...) OldDrawTexturedRectRotated(x-rx, y-ry,...) end
-	local OldDrawTexturedRectUV = surface.DrawTexturedRectUV
-	surface.DrawTexturedRectUV = function(x,y,...) OldDrawTexturedRectUV(x-rx, y-ry,...) end
-
 	cam.Start3D( self.offset, self.angle, self.fov, vx,vy,vw,vh, 1, 20000 )
 
 	render.SuppressEngineLighting( true )
@@ -199,16 +185,6 @@ function meta:Draw(x,y,w,h)
 	render.PopFilterMin()
 	render.SuppressEngineLighting( false )
 	cam.End3D()
-
-	surface.DrawLine = OldDrawLine
-	surface.SetTextPos = OldSetTextPos
-	surface.DrawRect = OldDrawRect
-	surface.DrawTexturedRect = OldDrawTexturedRect
-	surface.DrawTexturedRectRotated = OldDrawTexturedRectRotated
-	surface.DrawTexturedRectUV = OldDrawTexturedRectUV
-
-	local vx,vy = self:PointToScreen(0,0)
-	--draw.SimpleText("<-origin", "Trebuchet18", vx, vy)
 
 end
 

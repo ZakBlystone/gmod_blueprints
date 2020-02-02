@@ -2,6 +2,19 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuigraphnode", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
+local surface_setFont = surface.SetFont
+local surface_setDrawColor = surface.SetDrawColor
+local surface_setTextPos = surface.SetTextPos
+local surface_setTextColor = surface.SetTextColor
+local surface_drawText = surface.DrawText
+local surface_drawRect = surface.DrawRect
+local draw_simpleText = draw.SimpleText
+local render_PushFilterMag = render.PushFilterMag
+local render_PushFilterMin = render.PushFilterMin
+local render_PopFilterMag = render.PopFilterMag
+local render_PopFilterMin = render.PopFilterMin
+local roundedBox = bprenderutils.RoundedBoxFast
+
 local meta = bpcommon.MetaTable("bpuigraphnode")
 
 local NODE_MINIMUM_WIDTH = 100
@@ -33,6 +46,8 @@ function meta:Invalidate(invalidatePins)
 
 	self.width = nil
 	self.height = nil
+	self.displayName = nil
+	self.pinsNeedLayout = true
 
 	if invalidatePins then
 		for _, v in ipairs(self.pins) do
@@ -92,15 +107,17 @@ function meta:GetSize()
 	end
 	if totalPinHeightOut ~= 0 then totalPinHeightOut = totalPinHeightOut - PIN_SPACING end
 
+	surface.SetFont("NodeTitleFont")
+	local titleWidth, titleHeight = surface.GetTextSize( name )
+
+	self.titleWidth = titleWidth
+	self.titleHeight = titleHeight
+
 	if self:ShouldBeCompact() then
-		surface.SetFont("NodeTitleFont")
-		local titleWidth = surface.GetTextSize( name )
 		width = math.max(titleWidth+40, 0)
 		headHeight = NODE_COMPACT_HEADER_HEIGHT
 		footHeight = NODE_COMPACT_FOOTER_HEIGHT
 	else
-		surface.SetFont( "NodeTitleFont" )
-		local titleWidth = surface.GetTextSize( name )
 		width = math.max(inPinWidth + outPinWidth, math.max(NODE_MINIMUM_WIDTH, titleWidth+20))
 	end
 
@@ -154,6 +171,8 @@ end
 
 function meta:LayoutPins()
 
+	if not self.pinsNeedLayout then return end
+
 	local nw, nh = self:GetSize()
 
 	local function LayoutSide(s)
@@ -172,6 +191,8 @@ function meta:LayoutPins()
 	LayoutSide(PD_In)
 	LayoutSide(PD_Out)
 
+	self.pinsNeedLayout = false
+
 
 	--[[for _, vpin in ipairs(self.pins) do
 		local x,y = self:CalculatePinLocation(vpin)
@@ -182,11 +203,16 @@ end
 
 function meta:GetDisplayName()
 
+	if self.displayName then return self.displayName end
+
 	local name = self:GetNode():GetDisplayName()
 	local sub = string.find(name, "[:.]")
 	if sub then
 		name = name:sub(sub+1, -1)
 	end
+
+	self.displayName = name
+
 	return name
 
 end
@@ -236,12 +262,13 @@ end
 
 function meta:DrawPins(xOffset, yOffset, alpha)
 
+	local m = bpuigraphpin_meta
 	local x,y = self:GetPos()
 
 	self:LayoutPins()
 
 	for k,v in ipairs(self.pins) do
-		v:Draw(x+xOffset, y+yOffset, alpha)
+		m.Draw(v, x+xOffset, y+yOffset, alpha)
 	end
 
 end
@@ -273,13 +300,13 @@ function meta:Draw(xOffset, yOffset, alpha)
 	local outline = 8
 	local selected = self:IsSelected()
 	if selected then
-		draw.RoundedBox(16, x-outline, y-outline, w+outline*2, h+outline*2, Color(200,150,80,255*alpha))
+		roundedBox(16, x-outline, y-outline, w+outline*2, h+outline*2, 200,150,80,255*alpha, true, true, true, true)
 	end
 
 	local err = _G.G_BPError
 	if err ~= nil then
 		if err.nodeID == self.node.id and err.graphID == self.graph.id then
-			draw.RoundedBox(16, x, y, w, h, Color(200,80,80,255*alpha))
+			roundedBox(16, x, y, w, h, 200,80,80,255*alpha, true, true, true, true)
 		end
 	end
 
@@ -287,34 +314,49 @@ function meta:Draw(xOffset, yOffset, alpha)
 	local ntc = NodeTypeColors[ node:GetCodeType() ]
 	local isCompact = self:ShouldBeCompact()
 	local offset = isCompact and 0 or NODE_HEADER_HEIGHT
-	draw.RoundedBoxEx(12, x, y + offset, w, h - offset, Color(20,20,20,(selected and 252 or 230)*alpha), isCompact, isCompact, true, true)
+	roundedBox(12, x, y + offset, w, h - offset, 20,20,20,(selected and 252 or 230)*alpha, isCompact, isCompact, true, true)
 
 
 	if not isCompact then 
-		draw.RoundedBoxEx(12, x, y, w, NODE_HEADER_HEIGHT, Color(ntc.r,ntc.g,ntc.b,255*alpha), true, true)
-		surface.SetDrawColor(Color(ntc.r/2,ntc.g/2,ntc.b/2,255*alpha))
-		surface.DrawRect(x,y + NODE_HEADER_HEIGHT,w,2)
+		roundedBox(12, x, y, w, NODE_HEADER_HEIGHT, ntc.r,ntc.g,ntc.b,255*alpha, true, true)
+		surface_setDrawColor(Color(ntc.r/2,ntc.g/2,ntc.b/2,255*alpha))
+		surface_drawRect(x,y + NODE_HEADER_HEIGHT,w,2)
 	end
 	local role = node:GetRole()
 
 	if role == ROLE_Server then
-		draw.RoundedBox(4, x + w - 30, y, 10, NODE_HEADER_HEIGHT, Color(20,160,255,255*alpha))
+		roundedBox(4, x + w - 30, y, 10, NODE_HEADER_HEIGHT, 20,160,255,255*alpha)
 	elseif role == ROLE_Client then
-		draw.RoundedBox(4, x + w - 30, y, 10, NODE_HEADER_HEIGHT, Color(255,160,20,255*alpha))
+		roundedBox(4, x + w - 30, y, 10, NODE_HEADER_HEIGHT, 255,160,20,255*alpha)
 	end
 
-	render.PushFilterMag( TEXFILTER.LINEAR )
-	render.PushFilterMin( TEXFILTER.LINEAR )
+	render_PushFilterMag( TEXFILTER.LINEAR )
+	render_PushFilterMin( TEXFILTER.LINEAR )
 
 	local b,e = pcall( function()
 
+		local name = self:GetDisplayName()
+
 		if not self:ShouldBeCompact() then
-			draw.SimpleText(self:GetDisplayName(), "NodeTitleFontShadow", x + 5, y, Color(0,0,0,255*alpha))
-			draw.SimpleText(self:GetDisplayName(), "NodeTitleFont", x + 8, y + 2, Color(255,255,255,255*alpha))
+
+			surface_setFont( "NodeTitleFontShadow" )
+			surface_setTextPos( math.ceil( x+5 ), math.ceil( y ) )
+			surface_setTextColor( 0, 0, 0, 255*alpha )
+			surface_drawText( name )
+
+			surface_setFont( "NodeTitleFont" )
+			surface_setTextPos( math.ceil( x+8 ), math.ceil( y+2 ) )
+			surface_setTextColor( 255, 255, 255, 255*alpha )
+			surface_drawText( name )
+
 		else
 			-- HACK
 			if node:GetTypeName() ~= "CORE_Pin" then
-				draw.SimpleText(self:GetDisplayName(), "NodeTitleFont", x + w/2, y + h/2, Color(255,255,255,255*alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+
+				surface_setFont( "NodeTitleFont" )
+				surface_setTextPos( math.ceil( x+(w - self.titleWidth)/2 ), math.ceil( y+(h - self.titleHeight)/2 ) )
+				surface_setTextColor( 255, 255, 255, 255*alpha )
+				surface_drawText( name )
 			end
 		end
 
@@ -322,8 +364,8 @@ function meta:Draw(xOffset, yOffset, alpha)
 
 	end)
 
-	render.PopFilterMag()
-	render.PopFilterMin()
+	render_PopFilterMag()
+	render_PopFilterMin()
 
 	if not b then print(e) end
 

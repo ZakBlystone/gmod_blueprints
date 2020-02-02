@@ -2,6 +2,14 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuigraphpin", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
+local surface_setFont = surface.SetFont
+local surface_setDrawColor = surface.SetDrawColor
+local surface_setTextPos = surface.SetTextPos
+local surface_setTextColor = surface.SetTextColor
+local surface_drawText = surface.DrawText
+local surface_drawRect = surface.DrawRect
+local math_ceil = math.ceil
+
 local meta = bpcommon.MetaTable("bpuigraphpin")
 
 local TEXT_OFFSET = 8
@@ -29,6 +37,7 @@ function meta:Init(vnode, pinID, sideIndex)
 	self.cacheWidth = nil
 	self.cacheHeight = nil
 	self.connections = self.pin:GetConnectedPins()
+	self.invalidateMetrics = true
 
 	return self
 
@@ -79,6 +88,8 @@ end
 
 function meta:GetLiteralSize()
 
+	if self.literalW and self.literalH then return self.literalW, self.literalH end
+
 	if not self:ShouldDrawLiteral() then return 0,0 end
 
 	local font = self.literalFont
@@ -89,13 +100,17 @@ function meta:GetLiteralSize()
 	local h = LITERAL_HEIGHT
 	local w = surface.GetTextSize(value)
 	if literalType then
-		if literalType == "enum" then return math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h end
-		if literalType == "string" then return math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h end
-		if literalType == "number" then return math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h end
-		if literalType == "bool" then return h, h end
+		if literalType == "enum" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
+		elseif literalType == "string" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
+		elseif literalType == "number" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
+		elseif literalType == "bool" then w,h = h, h
+		else w,h = 0, h end
 		--if literalType == "vector" then return 100, h end
 	end
-	return 0, h
+
+	self.literalW, self.literalH = w, h
+
+	return w, h
 
 end
 
@@ -118,6 +133,10 @@ function meta:Invalidate()
 	self.literalPos = nil
 	self.literalText = nil
 	self.connections = self.pin:GetConnectedPins()
+	self.invalidateMetrics = true
+	self.literalW = nil
+	self.literalH = nil
+	self.connectionState = nil
 
 end
 
@@ -167,6 +186,9 @@ function meta:Layout()
 	x = x + PIN_SIZE * d
 
 	surface.SetFont( self.font )
+
+	self.titlePos = 0
+	self.literalPos = 0
 
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
 		local title = self.pin:GetDisplayName()
@@ -223,9 +245,13 @@ end
 
 function meta:IsConnected()
 
+	if self.connectionState ~= nil then return self.connectionState end
+
 	local node = self.vnode:GetNode()
 	local graph = node.graph
-	return graph:IsPinConnected( node.id, self.pinID )
+	self.connectionState = graph:IsPinConnected( node.id, self.pinID )
+
+	return self.connectionState
 
 end
 
@@ -265,10 +291,14 @@ function meta:DrawLiteral(x, y, alpha)
 			local literal = self:GetLiteralValue()
 
 			local w, h = self:GetLiteralSize()
-			surface.SetDrawColor( Color(50,50,50,150*alpha) )
-			surface.DrawRect(x + self.literalPos,y,w,h)
+			surface_setDrawColor( 50,50,50,150*alpha )
+			surface_drawRect(x + self.literalPos,y,w,h)
 
-			draw.SimpleText(literal, font, x + self.literalPos, y+PIN_SIZE/2, Color(255,255,255,255*alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			surface_setFont( font )
+			surface_setTextPos( math_ceil( x + self.literalPos ), math_ceil( y+(PIN_SIZE - LITERAL_HEIGHT - 2)/2 ) )
+			surface_setTextColor( 255, 255, 255, 255*alpha )
+			surface_drawText( literal )
+
 		end
 	end
 
@@ -281,26 +311,37 @@ function meta:DrawHotspot(x,y,alpha)
 
 	local ox, oy = self:GetHotspotOffset()
 	local isTable = self.pin:HasFlag(PNF_Table)
+	local r,g,b,a = self.pin:GetColor():Unpack()
 
-	local col = self.pin:GetColor()
-
-	surface.SetDrawColor( Color(col.r, col.g, col.b, 255 * alpha) )
-	surface.DrawRect(x+ox-PIN_SIZE/2,y+oy-PIN_SIZE/2,PIN_SIZE,PIN_SIZE)
-	surface.SetDrawColor( Color(0,0,0,255) )
+	surface_setDrawColor( r, g, b, 255 * alpha )
+	surface_drawRect(x+ox-PIN_SIZE/2,y+oy-PIN_SIZE/2,PIN_SIZE,PIN_SIZE)
 
 	if isTable then
-		surface.DrawRect(x+ox - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
-		surface.DrawRect(x+ox+PIN_SIZE*.25 - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
-		surface.DrawRect(x+ox-PIN_SIZE*.25 - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
+		surface_setDrawColor( 0,0,0,255 )
+		surface_drawRect(x+ox - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
+		surface_drawRect(x+ox+PIN_SIZE*.25 - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
+		surface_drawRect(x+ox-PIN_SIZE*.25 - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
 	end
 
 end
 
 function meta:DrawHitBox()
 
-	surface.SetDrawColor( Color(255,100,200,80) )
 	local hx,hy,hw,hh = self:GetLiteralHitBox()
-	surface.DrawRect(hx,hy,hw,hh)
+	surface_setDrawColor( 255,100,200,80 )
+	surface_drawRect(hx,hy,hw,hh)
+
+end
+
+function meta:BuildMetrics()
+
+	if self.invalidateMetrics ~= nil and not self.invalidateMetrics then return end
+
+	local title = self.pin:GetDisplayName()
+
+	surface.SetFont(self.font)
+	self.titleWidth, self.titleHeight = surface.GetTextSize( title )
+	self.invalidateMetrics = false
 
 end
 
@@ -314,6 +355,7 @@ function meta:Draw(xOffset, yOffset, alpha)
 	end
 
 	self:Layout()
+	self:BuildMetrics()
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
@@ -333,17 +375,13 @@ function meta:Draw(xOffset, yOffset, alpha)
 
 	--self:DrawHitBox()
 
-	surface.SetFont( font )
-
 	local title = self.pin:GetDisplayName()
-	local titleWidth = surface.GetTextSize( title )
 
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
-		if self.pin:IsIn() then
-			draw.SimpleText(title, font, x + self.titlePos, y+PIN_SIZE/2, Color(255,255,255,255*alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-		else
-			draw.SimpleText(title, font, x + self.titlePos, y+PIN_SIZE/2, Color(255,255,255,255*alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-		end
+		surface_setFont( self.font )
+		surface_setTextPos( math_ceil( x + self.titlePos ), math_ceil( y+(PIN_SIZE - self.titleHeight)/2 ) )
+		surface_setTextColor( 255, 255, 255, 255*alpha )
+		surface_drawText( title )
 	end
 
 	--render.PopFilterMag()

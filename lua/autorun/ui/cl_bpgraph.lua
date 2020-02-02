@@ -199,19 +199,18 @@ end
 
 function PANEL:Paint(w, h)
 
-	self:UpdateScroll()
-
-	local x, y = self:LocalToScreen(0,0)
-
-	self.renderer:Draw(x,y,w,h)
-	if self.interface ~= nil then self.interface:DrawOverlay(self:GetSize()) end
-
-
 	return true
 
 end
 
 function PANEL:PaintOver(w, h)
+
+	self:UpdateScroll()
+
+	local x, y = self:LocalToScreen(0,0)
+	self.renderer:Draw(x,y,w,h)
+
+	if self.interface ~= nil then self.interface:DrawOverlay(self:GetSize()) end
 
 	if self:GetIsLocked() then 
 

@@ -254,8 +254,14 @@ function meta:Draw(w,h)
 
 	local editor = self:GetEditor()
 	if editor:IsDragSelecting() then
+
+		local vgraph = self:GetVGraph()
+		local ox, oy = vgraph:LocalToScreen(0,0)
+
 		local border = 4
 		local x,y,w,h = editor:GetSelectionRect()
+		x = x - ox
+		y = y - oy
 		surface.SetDrawColor(Color(120,150,255,20))
 		surface.DrawRect(x,y,w,h)
 

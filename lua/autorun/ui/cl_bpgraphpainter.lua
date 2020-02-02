@@ -100,6 +100,12 @@ end
 
 function meta:DrawNodes(xOffset, yOffset, alpha) 
 
+	local vgraph = self:GetVGraph()
+	local x, y = vgraph:LocalToScreen(0,0)
+
+	xOffset = xOffset - x
+	yOffset = yOffset - y
+
 	local nodesDrawn = 0
 	for _, vnode in pairs(self:GetNodeSet():GetVNodes()) do
 		if self:DrawNode(vnode, xOffset, yOffset, alpha) then nodesDrawn = nodesDrawn + 1 end
