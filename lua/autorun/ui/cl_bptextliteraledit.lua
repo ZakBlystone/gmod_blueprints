@@ -35,6 +35,22 @@ function EditPinLiteral( vpin )
 		text:SetMultiline(false)
 	end
 
+	local detour = text.OnKeyCodeTyped
+	text.OnKeyCodeTyped = function(self, keyCode)
+		if keyCode == KEY_TAB then
+
+			if ( IsValid( self.Menu ) ) then
+
+				self.HistoryPos = self.HistoryPos + 1
+				self:UpdateFromHistory()
+
+			end
+
+			return true
+		end
+		detour(self, keyCode)
+	end
+
 	text.OnFocusChanged = function(self, gained)
 		timer.Simple(.1, function()
 			if not gained then
