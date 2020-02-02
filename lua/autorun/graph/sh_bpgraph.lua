@@ -99,31 +99,29 @@ function meta:Init(type)
 	self.callNodeType = bpnodetype.New()
 	self.callNodeType:AddFlag(NTF_Custom)
 	self.callNodeType:SetCodeType(NT_Function)
+	self.callNodeType:SetNodeClass("FuncCall")
 	self.callNodeType.GetDisplayName = function() return self:GetName() end
 	self.callNodeType.GetGraphThunk = function() return self end
 	self.callNodeType.GetRole = function() return self:GetNetworkRole() end
-	self.callNodeType.GetRawPins = function()
-		local pins = {}
-		bpcommon.Transform(self.inputs:GetTable(), pins, pinmeta.Copy, PD_In)
-		bpcommon.Transform(self.outputs:GetTable(), pins, pinmeta.Copy, PD_Out)
-		return pins
-	end
+	self.callNodeType.graph = self
 
 	-- Entry point node
 	self.callEntryNodeType = bpnodetype.New()
 	self.callEntryNodeType:SetCodeType(NT_FuncInput)
 	self.callEntryNodeType:SetName("__Entry")
 	self.callEntryNodeType:AddFlag(NTF_NoDelete)
+	self.callEntryNodeType:SetNodeClass("FuncEntry")
 	self.callEntryNodeType.GetDisplayName = function() return self:GetName() end
 	self.callEntryNodeType.GetRole = function() return self:GetNetworkRole() end
-	self.callEntryNodeType.GetRawPins = function() return bpcommon.Transform(self.inputs:GetTable(), {}, pinmeta.Copy, PD_Out) end
+	self.callEntryNodeType.graph = self
 
 	-- Return node
 	self.callExitNodeType = bpnodetype.New()
 	self.callExitNodeType:SetCodeType(NT_FuncOutput)
 	self.callExitNodeType:SetDisplayName("Return")
 	self.callExitNodeType:SetName("__Exit")
-	self.callExitNodeType.GetRawPins = function() return bpcommon.Transform(self.outputs:GetTable(), {}, pinmeta.Copy, PD_In) end
+	self.callExitNodeType:SetNodeClass("FuncExit")
+	self.callExitNodeType.graph = self
 
 	bpcommon.MakeObservable(self)
 
@@ -627,6 +625,10 @@ function meta:CanAddNode(nodeType)
 		return false
 	end
 
+	if nodeType:GetCodeType() == NT_FuncInput or nodeType:GetCodeType() == NT_FuncOutput then
+		if nodeType.graph ~= self then return false end
+	end
+
 	if nodeType:GetCodeType() == NT_FuncInput then
 		for _, node in self:Nodes() do
 			if node:GetCodeType() == NT_FuncInput then return false end
@@ -846,13 +848,15 @@ function meta:ResolveConnectionMeta()
 			if meta == nil then continue end
 			if (pin0 == nil or pin0:GetName():lower() ~= meta[2]:lower()) and not ignorePin0 then
 				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")
-				c[2] = nt0:FindPin( PD_Out, meta[2] ).id
+				local found = nt0:FindPin( PD_Out, meta[2] )
+				c[2] = found and found.id or nil
 				MsgC( c[2] ~= nil and Color(100,255,100) or Color(255,100,100), c[2] ~= nil and " Resolved\n" or " Not resolved\n" )
 			end
 
 			if (pin1 == nil or pin1:GetName():lower() ~= meta[4]:lower()) and not ignorePin1 then
 				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
-				c[4] = nt0:FindPin( PD_In, meta[4] ).id
+				local found = nt0:FindPin( PD_In, meta[4] ).id
+				c[4] = found and found.id or nil
 				MsgC( c[4] ~= nil and Color(100,255,100) or Color(255,100,100), c[4] ~= nil and " Resolved\n" or " Not resolved\n" )
 			end
 		end
@@ -908,7 +912,7 @@ function meta:CopyInto(other)
 		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs, true )
 		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs, true )
 
-		for _, node in other:Nodes() do node.graph = other end
+		for _, node in other:Nodes() do node.graph = other node:PostInit() end
 		for _, node in self:Nodes() do node.graph = self end
 
 		for _, c in self:Connections() do

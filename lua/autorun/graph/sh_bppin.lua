@@ -4,9 +4,10 @@ module("bppin", package.seeall)
 
 local meta = bpcommon.MetaTable("bppin")
 
-meta.__tostring = function(self)
+meta.__tostring = nil
+--[[meta.__tostring = function(self)
 	return self:ToString(true, true)
-end
+end]]
 
 function meta:Init(dir, name, type, desc)
 	self.dir = dir

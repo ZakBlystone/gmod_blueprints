@@ -403,8 +403,6 @@ function meta:Copy()
 	newNode.graph = self.graph
 
 	bpcommon.MakeObservable(newNode)
-
-	newNode:PostInit()
 	return newNode
 
 end

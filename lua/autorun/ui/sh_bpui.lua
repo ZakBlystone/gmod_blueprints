@@ -4,6 +4,7 @@ if SERVER then
 
 	resource.AddFile("resource/fonts/Akkurat-Bold.ttf")
 	resource.AddFile("resource/fonts/JetBrainsMono-Bold.ttf")
+	resource.AddFile("materials/icon64/blueprints.png")
 
 else
 

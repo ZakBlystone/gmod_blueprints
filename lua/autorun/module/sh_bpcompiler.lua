@@ -306,6 +306,7 @@ function meta:CreatePinVar(pin)
 				graph = graph,
 				isFunc = isFunctionPin,
 			}
+			return self.vars[#self.vars]
 
 		end
 
@@ -619,54 +620,6 @@ function meta:CompileNodeSingle(node)
 
 		outVars[pos] = self:GetPinVar(pin)
 
-	end
-
-	-- TODO: Instead of building these strings, find a more direct approach of compiling these
-	-- generate code based on function graph inputs and outputs
-	if graphThunk ~= nil then
-		--print("---------------GRAPH THUNK: " .. ntype.graphThunk .. "---------------------------")
-		code = ""
-		local n = graphThunk.outputs:Size()
-		for i=1, n do
-			code = code .. "#" .. i .. (i~=n and ", " or " ")
-		end
-		if n ~= 0 then code = code .. "= " end
-		code = code .. "__self:" .. graphThunk:GetName() .. "("
-		local n = graphThunk.inputs:Size()
-		for i=1, n do
-			code = code .. "$" .. i .. (i~=n and ", " or "")
-		end
-		code = code .. ")"
-		--print(code)
-	end
-
-	-- tie function input pins
-	if codeType == NT_FuncInput then
-		code = ""
-		local ipin = 2
-		for k, v in node:SidePins(PD_Out) do
-			if v:IsType(PN_Exec) then continue end
-			code = code .. "#" .. k .. " = arg[" .. ipin-1 .. "]\n"
-			ipin = ipin + 1
-		end
-
-		if code:len() > 0 then code = code:sub(0, -2) end
-	end
-
-	if codeType == NT_FuncOutput then
-		code = ""
-		local ipin = 2
-		for k, v in node:SidePins(PD_In) do
-			if v:IsType(PN_Exec) then continue end
-			code = code .. "#" .. k .. " = $" .. k .. "\n"
-			ipin = ipin + 1
-		end
-
-		local ret = self:FindVarForPin(nil, true)
-		code = code .. self:GetVarCode(ret) .. " = true\n"
-		code = code .. "goto __terminus\n"
-
-		if code:len() > 0 then code = code:sub(0, -2) end
 	end
 
 	if not code then
@@ -1016,7 +969,7 @@ function meta:CompileCodeSegment()
 	self.begin(CTX_Code)
 
 	if bit.band(self.flags, CF_Standalone) ~= 0 then
-		self.emit("-- Compiled using gm_blueprints v" .. bpcommon.ENV_VERSION .. " ( https://github.com/ZakBlystone/gmblueprints )")
+		self.emit("-- Compiled using gm_blueprints v" .. bpcommon.ENV_VERSION .. " ( https://github.com/ZakBlystone/gmod_blueprints )")
 	end
 
 	self.emitContext( CTX_MetaTables )

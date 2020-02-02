@@ -231,9 +231,11 @@ function PANEL:Init()
 	self.Tabs:SetActiveTab( self.Tabs:AddSheet( "Files", self.FileManager, "Files", "icon16/folder.png" ).Tab )
 
 	local openCount = cookie.GetNumber("bp_editor_open_count", 0)
-	if openCount == 0 then self:OpenAbout() end
+	local lastVersion = cookie.GetString("bp_editor_last_version", "")
+	if openCount == 0 or lastVersion ~= bpcommon.ENV_VERSION then self:OpenAbout() end
 
 	cookie.Set("bp_editor_open_count", openCount + 1)
+	cookie.Set("bp_editor_last_version", bpcommon.ENV_VERSION)
 
 end
 
@@ -242,7 +244,7 @@ function PANEL:OpenHelp()
 	local outer = vgui.Create("DPanel")
 
 	local html = vgui.Create("DHTML", outer)
-	html:OpenURL("asset://garrysmod/docs/docs.html")
+	html:OpenURL("samuelmaddock.github.io/gm-mediaplayer/gmblueprints/docs.html")
 	html:Dock( FILL )
 
 	local sheet = self.Tabs:AddSheet( "Help", outer, "Help", "icon16/zoom.png", true)
@@ -263,7 +265,7 @@ function PANEL:OpenAbout()
 	local about = vgui.Create( "DFrame" )
 
 	local html = vgui.Create("DHTML", about)
-	html:OpenURL("asset://garrysmod/docs/about.html")
+	html:OpenURL("samuelmaddock.github.io/gm-mediaplayer/gmblueprints/about.html")
 	html:DockMargin(0, 0, 0, 50)
 	html:Dock( FILL )
 
