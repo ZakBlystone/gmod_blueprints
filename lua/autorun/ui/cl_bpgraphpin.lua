@@ -127,8 +127,8 @@ end
 function meta:ShouldDrawLiteral()
 
 	if not self:IsConnected() and not self.pin:HasFlag(PNF_Table) then
-		if self.pin:GetDir() == PD_In and self.pin:CanHaveLiteral() ~= nil then
-			return true
+		if self.pin:GetDir() == PD_In and self.pin:CanHaveLiteral() then
+			return self:GetVNode():GetNode():GetTypeName() ~= "CORE_Pin"
 		end
 	end
 	return false
@@ -296,7 +296,7 @@ function meta:DrawLiteral(x, y, alpha)
 	local node = self.vnode:GetNode()
 	local font = self.literalFont
 	if self.pin:GetDir() == PD_In and not self.pin:HasFlag(PNF_Table) then
-		if self.pin:CanHaveLiteral() then
+		if self.pin:CanHaveLiteral() and self:ShouldDrawLiteral() then
 			local display = self.pin.GetLiteralDisplay and self.pin:GetLiteralDisplay() or nil
 			local literal = display or self:GetLiteralValue()
 
