@@ -134,6 +134,16 @@ Defaults = {
 	[PN_Func] = "nil",
 }
 
+PinTypeClasses = {
+	[PN_Bool] = "Boolean",
+	[PN_Number] = "Number",
+	[PN_String] = "String",
+	[PN_Enum] = "Enum",
+	[PN_Vector] = "Vector",
+	[PN_Color] = "Color",
+	[PN_Angles] = "Angle"
+}
+
 PinType = bppintype.New
 
 function IsPinType(v)

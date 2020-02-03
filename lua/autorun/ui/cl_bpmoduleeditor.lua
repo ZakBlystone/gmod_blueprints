@@ -237,6 +237,8 @@ end
 
 function PANEL:OnRemove()
 
+	hook.Remove("BPPinClassRefresh", "pinrefresh_" .. self.module:GetUID())
+
 	self:SetModule(nil)
 
 end
@@ -308,6 +310,18 @@ function PANEL:SetModule( mod )
 	for id, graph in self.module.graphs:Items() do
 		self:GraphAdded( id )
 	end
+
+	hook.Add("BPPinClassRefresh", "pinrefresh_" .. self.module:GetUID(), function(class)
+		print("PIN CLASS UPDATED, INVALIDATE: " .. class)
+		for _, graph in self.module:Graphs() do
+			for _, node in graph:Nodes() do
+				node:UpdatePins()
+			end
+		end
+		for _, ed in pairs( self.vgraphs ) do
+			ed:GetEditor():InvalidateAllNodes( true )
+		end
+	end)
 
 	self.Content:SetLeftWidth(150)
 

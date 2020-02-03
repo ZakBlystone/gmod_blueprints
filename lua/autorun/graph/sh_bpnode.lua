@@ -73,9 +73,8 @@ function meta:SetLiteralDefaults()
 
 	local base = self:GetCodeType() == NT_Function and -1 or 0
 	for pinID, pin, pos in self:SidePins(PD_In) do
-		local default = pin:GetDefault()
-		local literal = pin:GetLiteralType()
-		if literal then
+		if pin:CanHaveLiteral() then
+			local default = pin:GetDefault()
 			if self:GetLiteral(pinID) == nil then
 				self:SetLiteral(pinID, default)
 			end
@@ -127,13 +126,15 @@ function meta:UpdatePins()
 
 	self.pinCache = {}
 	self:GeneratePins(self.pinCache)
-	self:SetLiteralDefaults()
-	self:FireListeners(CB_NODE_PINS_UPDATED)
 
 	for k, v in ipairs(self:GetPins()) do
 		v.node = self
 		v.id = k
+		v:InitPinClass()
 	end
+
+	self:SetLiteralDefaults()
+	self:FireListeners(CB_NODE_PINS_UPDATED)
 
 end
 
@@ -297,7 +298,13 @@ function meta:SetLiteral(pinID, value)
 	end
 
 	value = tostring(value)
+	local prevValue = self.literals[pinID]
+	local changed = value ~= prevValue
 	self.literals[pinID] = value
+
+	if changed and pins[pinID].OnLiteralChanged then
+		pins[pinID]:OnLiteralChanged( prevValue, value )
+	end
 	
 	if self.graph == nil then return end
 	self.graph:FireListeners(bpgraph.CB_PIN_EDITLITERAL, self.id, pinID, value)

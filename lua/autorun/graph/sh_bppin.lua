@@ -17,10 +17,45 @@ function meta:Init(dir, name, type, desc)
 	return self
 end
 
+function meta:InitPinClass()
+
+	local pinClass = self:GetType():GetPinClass()
+	if pinClass then
+		local class = bppinclasses.Get(pinClass)
+		if class == nil then error("Failed to get class: " .. pinClass) end
+		if pinClass and class ~= nil then
+			local base = getmetatable(self)
+			local meta = table.Copy(class)
+			table.Inherit(meta, base)
+			meta.__index = meta
+			setmetatable(self, meta)
+			if meta.Setup then self:Setup() end
+		end
+	end
+
+end
+
+function meta:SetLiteral(value) self:GetNode():SetLiteral( self.id, value ) end
+function meta:GetLiteral() return self:GetNode():GetLiteral( self.id ) end
+function meta:CanHaveLiteral() return self:GetLiteralType() ~= nil end
+
 function meta:SetDir(dir) self.dir = dir return self end
 function meta:SetName(name) self.name = name return self end
 function meta:SetDisplayName(name) self.displayName = name return self end
-function meta:SetInformedType(type) self.informed = type return self end
+function meta:SetInformedType(type) 
+
+	self.informed = type
+
+	if self.informed ~= nil then
+		self:InitPinClass()
+	else
+		setmetatable(self, meta)
+	end
+
+	return self 
+
+end
+
 function meta:SetDefault(def) self.default = def return self end
 function meta:GetDescription() return self.desc or self:GetDisplayName() end
 

@@ -92,20 +92,30 @@ function meta:GetLiteralSize()
 
 	if not self:ShouldDrawLiteral() then return 0,0 end
 
-	local font = self.literalFont
-	surface.SetFont(font)
-
 	local literalType = self.pin:GetLiteralType()
-	local value = self:GetLiteralValue()
 	local h = LITERAL_HEIGHT
-	local w = surface.GetTextSize(value)
-	if literalType then
-		if literalType == "enum" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
-		elseif literalType == "string" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
-		elseif literalType == "number" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
-		elseif literalType == "bool" then w,h = h, h
-		else w,h = 0, h end
-		--if literalType == "vector" then return 100, h end
+	local w = LITERAL_MIN_WIDTH
+
+	local pin = self:GetPin()
+	if pin.GetLiteralSize then
+		w,h = pin:GetLiteralSize(h)
+	else
+
+		local display = self.pin.GetLiteralDisplay and self.pin:GetLiteralDisplay() or nil
+		local font = self.literalFont
+		surface.SetFont(font)
+
+		local value = display or self:GetLiteralValue()
+		w = surface.GetTextSize(value)
+
+		if literalType then
+			if literalType == "enum" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
+			elseif literalType == "string" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
+			elseif literalType == "number" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
+			elseif literalType == "bool" then w,h = h, h
+			else w,h = 0, h end
+			--if literalType == "vector" then return 100, h end
+		end
 	end
 
 	self.literalW, self.literalH = w, h
@@ -117,7 +127,7 @@ end
 function meta:ShouldDrawLiteral()
 
 	if not self:IsConnected() and not self.pin:HasFlag(PNF_Table) then
-		if self.pin:GetDir() == PD_In and self.pin:GetLiteralType() ~= nil then
+		if self.pin:GetDir() == PD_In and self.pin:CanHaveLiteral() ~= nil then
 			return true
 		end
 	end
@@ -286,18 +296,27 @@ function meta:DrawLiteral(x, y, alpha)
 	local node = self.vnode:GetNode()
 	local font = self.literalFont
 	if self.pin:GetDir() == PD_In and not self.pin:HasFlag(PNF_Table) then
-		local literalType = self.pin:GetLiteralType()
-		if literalType then
-			local literal = self:GetLiteralValue()
+		if self.pin:CanHaveLiteral() then
+			local display = self.pin.GetLiteralDisplay and self.pin:GetLiteralDisplay() or nil
+			local literal = display or self:GetLiteralValue()
 
 			local w, h = self:GetLiteralSize()
-			surface_setDrawColor( 50,50,50,150*alpha )
-			surface_drawRect(x + self.literalPos,y,w,h)
 
-			surface_setFont( font )
-			surface_setTextPos( math_ceil( x + self.literalPos ), math_ceil( y+(PIN_SIZE - LITERAL_HEIGHT - 2)/2 ) )
-			surface_setTextColor( 255, 255, 255, 255*alpha )
-			surface_drawText( literal )
+			if self.pin.DrawLiteral then
+
+				self.pin:DrawLiteral(x + self.literalPos,y,w,h,alpha)
+
+			else
+
+				surface_setDrawColor( 50,50,50,150*alpha )
+				surface_drawRect(x + self.literalPos,y,w,h)
+
+				surface_setFont( font )
+				surface_setTextPos( math_ceil( x + self.literalPos ), math_ceil( y+(PIN_SIZE - LITERAL_HEIGHT - 2)/2 ) )
+				surface_setTextColor( 255, 255, 255, 255*alpha )
+				surface_drawText( literal )
+
+			end
 
 		end
 	end
@@ -378,8 +397,9 @@ function meta:Draw(xOffset, yOffset, alpha)
 	local title = self.pin:GetDisplayName()
 
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
+		local hx,hy = self:GetHotspotOffset()
 		surface_setFont( self.font )
-		surface_setTextPos( math_ceil( x + self.titlePos ), math_ceil( y+(PIN_SIZE - self.titleHeight)/2 ) )
+		surface_setTextPos( math_ceil( x + self.titlePos ), math_ceil( hy + y-(self.titleHeight)/2 ) )
 		surface_setTextColor( 255, 255, 255, 255*alpha )
 		surface_drawText( title )
 	end

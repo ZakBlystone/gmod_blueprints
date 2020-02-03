@@ -1256,7 +1256,7 @@ end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end
 
-if SERVER and bpdefs ~= nil then
+--[[if SERVER and bpdefs ~= nil then
 
 	local mod = bpmodule.New()
 	local funcid, funcgraph = mod:NewGraph("MyFunction", GT_Function)
@@ -1271,4 +1271,4 @@ if SERVER and bpdefs ~= nil then
 	local result = mod:Compile( bit.bor(CF_Default, CF_CompactVars) )
 	result:Load()
 
-end
+end]]

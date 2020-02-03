@@ -2,6 +2,40 @@ if SERVER then AddCSLuaFile() return end
 
 module("bptextliteraledit", package.seeall, bpcommon.rescope(bpschema))
 
+function PinLiteralEditWindow( pin, innerClass, w, h, onClose, xoff, yoff )
+
+	local x, y = gui.MouseX(), gui.MouseY()
+
+	local window = vgui.Create( "DFrame" )
+	window:SetTitle( pin:GetDisplayName() )
+	window:SetDraggable( false )
+	window:ShowCloseButton( false )
+
+	window:SetSize( w, h )
+	window:SetPos(x + (xoff or -8), y + (yoff or -30))
+
+	local inner = vgui.Create(innerClass, window)
+
+	hook.Add("BPEditorBecomeActive", tostring(window), function()
+		if IsValid(window) then
+			window:Close() 
+		end
+	end)
+
+	window.OnRemove = function(pnl)
+		if onClose then onClose(window) end
+		hook.Remove("BPEditorBecomeActive", tostring(window))
+	end
+
+	inner:Dock(FILL)
+	inner:RequestFocus()
+
+	window:MakePopup()
+
+	return inner
+
+end
+
 function EditPinLiteral( vpin )
 
 	local node = vpin:GetVNode():GetNode()

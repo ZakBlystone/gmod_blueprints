@@ -177,6 +177,21 @@ function meta:ConnectionRemoved( id, conn )
 	if nodeB then nodeB:Invalidate(true) end
 
 end
+
+function meta:InvalidateAllNodes( pins )
+
+	for _, v in pairs(self.nodeSet:GetVNodes()) do
+
+		if pins then
+			v:CreatePins()
+			v:LayoutPins()
+		end
+
+		v:Invalidate( pins )
+	end
+
+end
+
 function meta:GraphCleared() end
 function meta:PostModifyNode( id ) self.nodeSet:PostModifyNode(id) end
 
@@ -563,6 +578,10 @@ function meta:EditPinLiteral(vnode, vpin)
 	local pinID = vpin:GetPinID()
 	local literalType = pin:GetLiteralType()
 	local value = node:GetLiteral( pinID )
+
+	if pin.OnClicked then
+		pin:OnClicked()
+	end
 
 	if literalType == "bool" then
 		node:SetLiteral(pinID, value == "true" and "false" or "true")
