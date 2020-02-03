@@ -435,7 +435,11 @@ function meta:BuildInformDirectionalCandidates(dir, candidateNodes)
 			if node:IsInformPin(pinID) then
 				for _, v in ipairs( self:GetPinConnections(dir, id, pinID) ) do
 					local other = self:GetNode( dir == PD_In and v[1] or v[3] )
+					if other == nil then continue end
+
 					local otherPin = dir == PD_In and v[2] or v[4]
+					if other:GetPin( otherPin ) == nil then continue end
+
 					if other:IsInformPin( otherPin ) == false and other:GetPin( otherPin ):GetBaseType() ~= PN_Any then
 						if not table.HasValue(candidateNodes, other) then
 							candidateNodes[#candidateNodes+1] = other
@@ -831,6 +835,10 @@ function meta:ResolveConnectionMeta()
 			local meta = self.connectionMeta[i]
 			local nt0 = self:GetNode(c[1])
 			local nt1 = self:GetNode(c[3])
+
+			if nt0 == nil then continue end
+			if nt1 == nil then continue end
+
 			local pin0 = nt0:GetPin(c[2])
 			local pin1 = nt1:GetPin(c[4])
 			local ignorePin0 = false
@@ -855,7 +863,7 @@ function meta:ResolveConnectionMeta()
 
 			if (pin1 == nil or pin1:GetName():lower() ~= meta[4]:lower()) and not ignorePin1 then
 				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
-				local found = nt0:FindPin( PD_In, meta[4] ).id
+				local found = nt0:FindPin( PD_In, meta[4] )
 				c[4] = found and found.id or nil
 				MsgC( c[4] ~= nil and Color(100,255,100) or Color(255,100,100), c[4] ~= nil and " Resolved\n" or " Not resolved\n" )
 			end

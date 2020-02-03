@@ -6,6 +6,9 @@ bpcommon.CallbackList({
 	"NODE_PINS_UPDATED",
 })
 
+local DummyNodeType = bpnodetype.New()
+DummyNodeType:SetDisplayName("InvalidNode")
+
 local meta = bpcommon.MetaTable("bpnode")
 meta.__tostring = function(self) return self:ToString() end
 
@@ -144,6 +147,7 @@ function meta:UpdatePinInforms()
 	--MsgC(Color(80,255,20), "Update " .. #informs .. " informs...\n")
 	for _, v in ipairs(informs) do
 		local pin = self:GetPin(v)
+		if pin == nil then continue end
 		--MsgC(Color(80,255,20), "\tModify " .. pin:ToString(true,true) .. " -> ")
 		if self.informType == nil then
 			pin:SetInformedType(self.informType)
@@ -326,8 +330,10 @@ function meta:GetType()
 
 	local nodeTypes = self.graph:GetNodeTypes()
 	local ntype = nodeTypes[ self.nodeType ]
-	if self.nodeType ~= "invalid" and ntype == nil then error("Unable to find node type: " .. tostring(self.nodeType)) end
+	if self.nodeType ~= "invalid" and ntype == nil then --[[print("Unable to find node type: " .. tostring(self.nodeType))]] end
 	self.nodeTypeObject = ntype
+
+	if ntype == nil then return DummyNodeType end
 
 	return ntype
 
@@ -373,7 +379,7 @@ function meta:GetOptions(tab)
 
 end
 
-function meta:GetPins() return self.pinCache end
+function meta:GetPins() return self.pinCache or {} end
 function meta:GetFlags() return self:GetType():GetFlags() end
 function meta:HasFlag(fl) return bit.band(self:GetFlags(), fl) ~= 0 end
 
