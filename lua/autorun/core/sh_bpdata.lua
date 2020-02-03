@@ -363,6 +363,8 @@ function IN:LoadString(str, compressed, base64encoded)
 	if base64encoded then str = base64_decode(str) end
 	if compressed then str = util.Decompress(str, 0x4000000) end --64 megs max
 
+	if str == nil then return false end
+
 	if self.signedCRC then
 		local remain = str:sub(5,-1)
 		local signed = Str2Int( str:sub(1,4), false )
@@ -378,6 +380,7 @@ function IN:LoadString(str, compressed, base64encoded)
 	else
 		self.buffer = str
 	end
+
 
 	if self.stringTable then
 		self.stringTable:ReadFromStream(self)

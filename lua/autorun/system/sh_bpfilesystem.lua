@@ -93,22 +93,25 @@ function IndexLocalFiles( refresh )
 	local persist = {}
 	for _, f in ipairs(files) do
 
-		local head = bpmodule.LoadHeader(ClientFileDirectory .. f)
-		local existing = G_BPLocalFiles[head.uid]
-		if not existing then
+		local b, e = pcall( function()
+			local head = bpmodule.LoadHeader(ClientFileDirectory .. f)
+			local existing = G_BPLocalFiles[head.uid]
+			if not existing then
 
-			local entry = bpfile.New(head.uid, bpfile.FT_Module, f)
-			entry:SetPath( ClientFileDirectory .. f )
-			entry:SetRevision( head.revision )
-			G_BPLocalFiles[head.uid] = entry
+				local entry = bpfile.New(head.uid, bpfile.FT_Module, f)
+				entry:SetPath( ClientFileDirectory .. f )
+				entry:SetRevision( head.revision )
+				G_BPLocalFiles[head.uid] = entry
 
-		else
+			else
 
-			existing:SetName(f)
+				existing:SetName(f)
 
-		end
+			end
 
-		persist[head.uid] = true
+			persist[head.uid] = true
+		end)
+		if not b then print("Error indexing file: " .. f .. " : " .. tostring(e)) end
 
 	end
 
