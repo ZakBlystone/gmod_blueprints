@@ -329,7 +329,7 @@ function meta:GetType()
 	if self.nodeTypeObject then return self.nodeTypeObject end
 
 	local nodeTypes = self.graph:GetNodeTypes()
-	local ntype = nodeTypes[ self.nodeType ]
+	local ntype = nodeTypes:Find( self.nodeType )
 	if self.nodeType ~= "invalid" and ntype == nil then --[[print("Unable to find node type: " .. tostring(self.nodeType))]] end
 	self.nodeTypeObject = ntype
 

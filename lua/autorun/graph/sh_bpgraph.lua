@@ -307,24 +307,22 @@ function meta:GetNodeTypes()
 
 	if self.__cachedTypes then return self.__cachedTypes end
 
-	return Profile("cache-node-types", function()
-		local types = {}
-		local base = self:GetModule():GetNodeTypes( self )
+	local collection = bpcollection.New()
 
-		for k, v in pairs(base) do types[k] = v end
+	Profile("cache-node-types", function()
+		self:GetModule():GetNodeTypes( self, collection )
 
 		if self.type == GT_Function then
+			local types = {}
+
 			types["__Entry"] = self.callEntryNodeType
 			types["__Exit"] = self.callExitNodeType
 
-			-- blacklist invalid types in function graphs
-			for k, v in pairs(types) do
-				if v.meta and v.meta.latent then types[k] = nil end
-				if v.type == NT_Event then types[k] = nil end
-			end
+			collection:Add( types )
 		end
-		return types
 	end)
+
+	return collection
 
 end
 
@@ -625,6 +623,11 @@ end
 
 function meta:CanAddNode(nodeType)
 
+	if self.type == GT_Function then
+		if nodeType:HasFlag(NTF_Latent) then return false end
+		if nodeType:GetCodeType() == NT_Event then return false end
+	end
+
 	if nodeType:GetCodeType() == NT_Event and self.module:NodeTypeInUse(nodeType:GetName()) then
 		return false
 	end
@@ -645,7 +648,7 @@ end
 
 function meta:AddNode(nodeTypeName, ...)
 
-	nodeType = type(nodeTypeName) == "table" and nodeTypeName or self:GetNodeTypes()[nodeTypeName]
+	nodeType = type(nodeTypeName) == "table" and nodeTypeName or self:GetNodeTypes():Find(nodeTypeName)
 	if nodeType == nil then error("Node type not found: " .. tostring(nodeTypeName)) end
 
 	if not self:CanAddNode(nodeType) then return end

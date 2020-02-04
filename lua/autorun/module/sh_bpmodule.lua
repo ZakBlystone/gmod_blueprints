@@ -182,10 +182,12 @@ function meta:NodeTypeInUse( nodeType )
 
 end
 
-function meta:GetNodeTypes( graph )
+function meta:GetNodeTypes( graph, collection )
 
 	local types = {}
-	local base = bpdefs.Get():GetNodeTypes()
+
+	collection:Add( bpdefs.Get():GetNodeTypes() )
+	collection:Add( types )
 
 	for id, v in self:Variables() do
 
@@ -221,11 +223,6 @@ function meta:GetNodeTypes( graph )
 	end
 
 	for k,v in pairs(types) do v.name = k end
-	for k,v in pairs(base) do
-		if not types[k] then types[k] = v end
-	end
-
-	return types
 
 end
 
@@ -356,6 +353,8 @@ end
 
 function meta:Load(filename)
 
+	bpcommon.ProfileStart("bpmodule:Load")
+
 	local head = LoadHeader(filename)
 	local magic = head.magic
 	local version = head.version
@@ -367,14 +366,20 @@ function meta:Load(filename)
 
 	self:ReadFromStream( inStream, STREAM_FILE )
 
+	bpcommon.ProfileEnd()
+
 end
 
 function meta:Save(filename)
+
+	bpcommon.ProfileStart("bpmodule:Save")
 
 	local outStream = bpdata.OutStream(false, true)
 	outStream:UseStringTable()
 	self:WriteToStream( outStream, STREAM_FILE )
 	outStream:WriteToFile(filename, true, true)
+
+	bpcommon.ProfileEnd()
 
 end
 
