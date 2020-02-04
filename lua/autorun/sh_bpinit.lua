@@ -20,6 +20,7 @@ include("core/sh_bpnetlist.lua")
 include("core/sh_bpstringtable.lua")
 include("core/sh_bpdata.lua")
 include("core/sh_bptransfer.lua")
+include("core/sh_bppastebin.lua")
 
 -- GRAPH
 include("graph/sh_bppintype.lua")

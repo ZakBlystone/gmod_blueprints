@@ -325,20 +325,43 @@ function PANEL:OpenImport()
 	ok:CenterHorizontal()
 	ok.DoClick = function()
 
-		local b,e = pcall( function()
+		local str = text:GetText()
+		local _, _, url = str:find("^(https://pastebin.com/raw/[%w%d_]+)")
 
-			local mod = bpmodule.New()
-			mod:LoadFromText( text:GetText() )
-			mod:GenerateNewUID()
-			self:OpenModule(mod, "unnamed", nil)
+		if url then
 
-			if IsValid(import) then import:Close() end
+			bppastebin.Download( url, function(ok, text)
 
-		end)
+				if ok then self:FinishImport( import, text ) end
 
-		if not b then Derma_Message(e, "Error importing blueprint", "Ok") end
+			end)
+
+		else
+
+			self:FinishImport( import, str )
+
+		end
 
 	end
+
+end
+
+function PANEL:FinishImport( import, text )
+
+	local b,e = pcall( function()
+
+		if import == nil then error("Failed to get import text") end
+
+		local mod = bpmodule.New()
+		mod:LoadFromText( text )
+		mod:GenerateNewUID()
+		self:OpenModule(mod, "unnamed", nil)
+
+		if IsValid(import) then import:Close() end
+
+	end)
+
+	if not b then Derma_Message(e, "Error importing blueprint", "Ok") end
 
 end
 

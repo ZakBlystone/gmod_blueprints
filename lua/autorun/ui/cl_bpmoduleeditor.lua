@@ -17,6 +17,19 @@ function PANEL:Init()
 			SetClipboardText( text )
 			Derma_Message( "Module copied to clipboard", "Export", "Ok" )
 		end, nil, "icon16/folder_go.png"},
+		{"Export to Pastebin", function()
+			local text = self.module:SaveToText()
+			bppastebin.Upload( text, function( ok, result )
+
+				if ok then
+					SetClipboardText( result )
+					Derma_Message( "Pastebin link copied to clipboard", "Export to Pastebin", "Ok" )
+				else
+					Derma_Message( "Error uploading to pastebin: " .. tostring(result), "Export to Pastebin", "Ok" )
+				end
+
+			end)
+		end, nil, "icon16/folder_link.png"},
 		{"Send to server", function()
 			--bpnet.SendModule( self.module )
 			local ok, res = self.module:TryCompile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
