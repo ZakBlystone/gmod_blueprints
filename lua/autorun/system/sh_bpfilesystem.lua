@@ -140,6 +140,25 @@ function IndexLocalFiles( refresh )
 
 end
 
+function AddLocalModule( mod, name )
+
+	local fileName = ModuleNameToFilename(name)
+	local path = ClientFileDirectory .. fileName
+
+	if file.Exists( path, "DATA" ) then
+		return nil
+	end
+
+	mod:Save( path )
+	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, fileName)
+	entry:SetPath( path )
+	G_BPLocalFiles[mod:GetUID()] = entry
+	hook.Run("BPFileTableUpdated", FT_Local)
+
+	return entry
+
+end
+
 function NewModuleFile( name )
 
 	local fileName = ModuleNameToFilename(name)

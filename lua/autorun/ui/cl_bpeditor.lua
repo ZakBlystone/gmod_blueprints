@@ -13,10 +13,19 @@ function PANEL:Init()
 
 end
 
+function PANEL:SetLabel( text )
+
+	self.labelText = text
+	self:SetText( self.labelText )
+	self:InvalidateLayout()
+	self:GetParent():InvalidateLayout()
+	self:GetParent():GetParent():InvalidateLayout()
+
+end
+
 function PANEL:Setup( label, pPropertySheet, pPanel, strMaterial, closeButton )
 
-	self.labelText = label
-	self:SetText( self.labelText )
+	self:SetLabel( label )
 	self:SetPropertySheet( pPropertySheet )
 	self:SetPanel( pPanel )
 
@@ -286,6 +295,53 @@ function PANEL:OpenAbout()
 
 end
 
+function PANEL:OpenImport()
+
+	local import = vgui.Create( "DFrame" )
+
+	local info = vgui.Create("DLabel", import)
+	info:SetText("Paste the blueprint below:")
+	info:SetPos(0, 30)
+	info:SizeToContents()
+
+	local text = vgui.Create("DTextEntry", import)
+	text:DockMargin(0, 30, 0, 50)
+	text:Dock( FILL )
+	text:SetMultiline( true )
+
+	local ok = vgui.Create("DButton", import)
+
+	import:SetTitle("Import Module")
+	import:SetSize(ScrW()*.5, ScrH()*.5)
+	import:Center()
+	import:MakePopup()
+	import:DoModal()
+
+	info:CenterHorizontal()
+
+	ok:SetText("Import")
+	ok:SetWide(50)
+	ok:SetPos(0, import:GetTall() - 40 )
+	ok:CenterHorizontal()
+	ok.DoClick = function()
+
+		local b,e = pcall( function()
+
+			local mod = bpmodule.New()
+			mod:LoadFromText( text:GetText() )
+			mod:GenerateNewUID()
+			self:OpenModule(mod, "unnamed", nil)
+
+			if IsValid(import) then import:Close() end
+
+		end)
+
+		if not b then Derma_Message(e, "Error importing blueprint", "Ok") end
+
+	end
+
+end
+
 function PANEL:Think()
 
 	self.BaseClass.Think(self)
@@ -384,7 +440,7 @@ function PANEL:CloseFile( file, callback )
 	if opened and file:HasFlag( bpfile.FL_HasLocalChanges ) then 
 		self.Tabs:SetActiveTab( opened.Tab )
 		Derma_Query("This module has unsaved changes, would you like the save them?", "Close",
-		"Yes", function() if opened.Panel:Save() then self:CloseFileUID( file:GetUID() ) callback() end end,
+		"Yes", function() opened.Panel:Save( function(ok) if ok then self:CloseFileUID( file:GetUID() ) callback() end end ) end,
 		"No", function() bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end)
 		return
 	end

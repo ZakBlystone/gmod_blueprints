@@ -401,6 +401,7 @@ function PANEL:Init()
 	self.menu = bpuimenubar.AddTo(self)
 	self.menu:Add("New Module", function() self:CreateModule() end, nil, "icon16/asterisk_yellow.png")
 	self.menu:Add("Refresh Local Files", function() self.localList:ClearFiles() bpfilesystem.IndexLocalFiles(true) end, nil, "icon16/arrow_refresh.png")
+	self.menu:Add("Import", function() self.editor:OpenImport() end, nil, "icon16/folder_page.png")
 	self.menu:Add("Help", function() self.editor:OpenHelp() end, nil, "icon16/help.png")
 	self.menu:Add("About", function() self.editor:OpenAbout() end, nil)
 	--self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
@@ -439,13 +440,17 @@ end
 
 function PANEL:CreateModule()
 
-	print("Create Module")
+	--[[print("Create Module")
 	Derma_StringRequest("New Module", "Module Name", "untitled",
 		function( text )
 			local file = bpfilesystem.NewModuleFile( text )
 			if not file then Derma_Message("Failed to create module: " .. text, "Error", "Ok") end
 			if file ~= nil then self.editor:OpenFile( file ) end
-		end, nil, "OK", "Cancel")
+		end, nil, "OK", "Cancel")]]
+
+	local mod = bpmodule.New()
+	mod:CreateDefaults()
+	self.editor:OpenModule(mod, "unnamed", nil)
 
 end
 

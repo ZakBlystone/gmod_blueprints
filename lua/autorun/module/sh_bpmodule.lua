@@ -154,6 +154,12 @@ function meta:PostModifyGraph( graph )
 
 end
 
+function meta:GenerateNewUID()
+
+	self.uniqueID = bpcommon.GUID()
+
+end
+
 function meta:GetUID()
 
 	return self.uniqueID
@@ -351,6 +357,21 @@ function LoadHeader(filename)
 
 end
 
+function meta:LoadFromText(text)
+
+	bpcommon.ProfileStart("bpmodule:Load")
+
+	local inStream = bpdata.InStream(false, true):UseStringTable()
+	if not inStream:LoadString(text, true, true) then
+		error("Failed to load blueprint")
+	end
+
+	self:ReadFromStream( inStream, STREAM_FILE )
+
+	bpcommon.ProfileEnd()
+
+end
+
 function meta:Load(filename)
 
 	bpcommon.ProfileStart("bpmodule:Load")
@@ -367,6 +388,20 @@ function meta:Load(filename)
 	self:ReadFromStream( inStream, STREAM_FILE )
 
 	bpcommon.ProfileEnd()
+
+end
+
+function meta:SaveToText()
+
+	bpcommon.ProfileStart("bpmodule:Save")
+
+	local outStream = bpdata.OutStream(false, true)
+	outStream:UseStringTable()
+	self:WriteToStream( outStream, STREAM_FILE )
+	local out = outStream:GetString(true, true)
+
+	bpcommon.ProfileEnd()
+	return out
 
 end
 

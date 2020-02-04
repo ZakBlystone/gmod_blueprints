@@ -12,14 +12,18 @@ function PANEL:Init()
 		{"Save", function()
 			self:Save()
 		end, nil, "icon16/disk.png"},
+		{"Export", function()
+			local text = self.module:SaveToText()
+			SetClipboardText( text )
+			Derma_Message( "Module copied to clipboard", "Export", "Ok" )
+		end, nil, "icon16/folder_go.png"},
 		{"Send to server", function()
 			--bpnet.SendModule( self.module )
 			local ok, res = self.module:TryCompile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 			if ok then
 				ok, res = res:TryLoad()
 				if ok then
-					self:Save()
-					self:Upload(true)
+					self:Save( function(ok) if ok then self:Upload(true) end end )
 				else
 					Derma_Message( res, "Failed to run", "OK" )
 				end
@@ -27,12 +31,6 @@ function PANEL:Init()
 				Derma_Message( res, "Failed to compile", "OK" )
 			end
 		end, Color(80,180,80), "icon16/server_go.png"},
-		{"Export Script to Clipboard", function()
-
-			local result = self.module:Compile( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
-			SetClipboardText(result:GetCode())
-
-		end, nil, "icon16/page_code.png"},
 		{"Local: Install", function()
 
 			if not bpusermanager.GetLocalUser():HasPermission( bpgroup.FL_CanRunLocally ) then
@@ -54,12 +52,18 @@ function PANEL:Init()
 				Derma_Message( res, "Failed to compile", "OK" )
 			end
 
-		end, Color(80,180,80), "icon16/page_code.png"},
+		end, nil, "icon16/flag_green.png"},
 		{"Local: Uninstall", function()
 
 			bpenv.Uninstall( self.module:GetUID() )
 
-		end, Color(180,80,80), "icon16/page_code.png"},
+		end, nil, "icon16/flag_red.png"},
+		{"Export Lua Script", function()
+
+			local result = self.module:Compile( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
+			SetClipboardText(result:GetCode())
+
+		end, nil, "icon16/page_code.png"},
 	}
 
 	self.callback = function(...)
@@ -189,12 +193,31 @@ function PANEL:Init()
 
 end
 
-function PANEL:Save()
+function PANEL:Save( callback )
 
-	self.module:Save( self.file:GetPath() )
-	bpfilesystem.MarkFileAsChanged( self.file, false )
-	if self.tab then self.tab:SetSuffix("") end
-	return true
+	if self.file == nil then
+
+		Derma_StringRequest("Save Module", "Module Name", "untitled",
+		function( text )
+			local file = bpfilesystem.AddLocalModule( self.module, text )
+			if file ~= nil then
+				self.file = file
+				self.tab:SetLabel( text )
+				if callback then callback(true) end
+			else
+				if callback then callback(false) end
+				Derma_Message("Failed to create module: " .. text, "Error", "Ok")
+			end
+		end, nil, "OK", "Cancel")
+
+	else
+
+		self.module:Save( self.file:GetPath() )
+		bpfilesystem.MarkFileAsChanged( self.file, false )
+		if self.tab then self.tab:SetSuffix("") end
+		if callback then callback(true) end
+
+	end
 
 end
 
