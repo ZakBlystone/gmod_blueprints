@@ -5,7 +5,24 @@ local PIN = {}
 function PIN:Setup()
 
 	self._vector = Vector(0,0,0)
+	self._prec = {1,1,1}
 	self:OnLiteralChanged( nil, self:GetLiteral() )
+
+end
+
+function PIN:NumToStr( i )
+
+	if self._prec[i] == 0 then return string.format("%d", self._vector[i]) end
+	return string.format("%0." .. self._prec[i] .. "f", self._vector[i])
+
+end
+
+function PIN:StrToNum( x, i )
+
+	local _,_,dec = x:find("%-*%d*%.(%d+)")
+	dec = dec and (#dec) or 0
+	self._prec[i] = dec
+	self._vector[i] = tonumber(x)
 
 end
 
@@ -25,8 +42,8 @@ function PIN:OnLiteralChanged( old, new )
 
 	if new then
 		local i = 1
-		for x in new:gmatch("[%d%.]+") do
-			self._vector[ i ] = tonumber(x)
+		for x in new:gmatch("%-*[%d%.]+") do
+			self:StrToNum( x, i )
 			i = i + 1
 		end
 	end
@@ -35,7 +52,10 @@ end
 
 function PIN:GetLiteralDisplay()
 
-	return string.format("(%s, %s, %s)", self._vector.x, self._vector.y, self._vector.z)
+	return string.format("%s, %s, %s",
+	self:NumToStr(1),
+	self:NumToStr(2),
+	self:NumToStr(3))
 
 end
 
@@ -56,7 +76,7 @@ function PIN:OnClicked()
 		local entry = vgui.Create("DTextEntry", pnl)
 		local detour = entry.OnKeyCodeTyped
 		entry.index = i
-		entry:SetText( tostring(self._vector[i]) )
+		entry:SetText( self:NumToStr(i) )
 		entry:SetTabPosition( i )
 		entry:SelectAllOnFocus()
 		entry:SetNumeric(true)
@@ -66,8 +86,11 @@ function PIN:OnClicked()
 			detour(pnl, code)
 		end
 		entry.OnValueChange = function(pnl, value)
-			self._vector[pnl.index] = tonumber(value)
-			self:SetLiteral( string.format("Vector(%s,%s,%s)", self._vector.x, self._vector.y, self._vector.z) )
+			self:StrToNum( value, pnl.index )
+			self:SetLiteral( string.format("Vector(%s,%s,%s)",
+				self:NumToStr(1),
+				self:NumToStr(2),
+				self:NumToStr(3) ))
 		end
 		entries[i] = entry
 	end
