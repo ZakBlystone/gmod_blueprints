@@ -1,0 +1,19 @@
+{
+	"title"		:	"Gmod Blueprints",
+	"type"		:	"tool",
+	"tags"		:	[ "fun" ],
+	"ignore"	:
+	[
+		".git/*",
+		".gitignore",
+		".github/*",
+		"docs/*",
+		"addon.json",
+		"_notes/*",
+		"_history/*",
+		"license",
+		"readme.md",
+		"*.py",
+		"defspec.txt"
+	]
+}

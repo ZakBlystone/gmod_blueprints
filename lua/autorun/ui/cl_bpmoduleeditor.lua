@@ -17,15 +17,19 @@ function PANEL:Init()
 			SetClipboardText( text )
 			Derma_Message( "Module copied to clipboard", "Export", "Ok" )
 		end, nil, "icon16/folder_go.png"},
-		{"Export to Pastebin", function()
+		{"Export shareable key", function( pnl )
 			local text = self.module:SaveToText()
-			bppastebin.Upload( text, function( ok, result )
+			local prev = pnl:GetText()
 
+			pnl:SetEnabled(false)
+			bppaste.Upload( text, function( ok, result )
+
+				if IsValid(pnl) then pnl:SetEnabled(true) end
 				if ok then
 					SetClipboardText( result )
-					Derma_Message( "Pastebin link copied to clipboard", "Export to Pastebin", "Ok" )
+					Derma_Message( "Blueprint key copied to clipboard", "Export shareable key", "Ok" )
 				else
-					Derma_Message( "Error uploading to pastebin: " .. tostring(result), "Export to Pastebin", "Ok" )
+					Derma_Message( "Error creating sharable key: " .. tostring(result), "Export shareable key", "Ok" )
 				end
 
 			end)

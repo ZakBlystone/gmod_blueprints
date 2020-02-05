@@ -11,9 +11,9 @@ function PANEL:Init()
 
 end
 
-function PANEL:RunCommand( func )
+function PANEL:RunCommand( func, panel )
 
-	func()
+	func( panel )
 
 end
 
@@ -34,15 +34,19 @@ function PANEL:Add( name, func, color, icon )
 	opt.Paint = function(btn, w, h)
 		local col = color
 
-		if btn.Hovered then col = Color(200,100,50) end
-		if btn:IsDown() then col = Color(50,170,200) end
+		if btn:IsEnabled() then
+			if btn.Hovered then col = Color(200,100,50) end
+			if btn:IsDown() then col = Color(50,170,200) end
+		else
+			col = Color(col.r - 20, col.g - 20, col.b - 20)
+		end
 
 		local bgColor = Color(col.r + 20, col.g + 20, col.b + 20)
 		draw.RoundedBox( 2, 0, 0, w, h, bgColor )
 		draw.RoundedBox( 2, 1, 1, w-2, h-2, col )
 	end
 	opt.DoClick = function(btn)
-		self:RunCommand( func )
+		self:RunCommand( func, opt )
 	end
 
 	table.insert(self.items, opt)

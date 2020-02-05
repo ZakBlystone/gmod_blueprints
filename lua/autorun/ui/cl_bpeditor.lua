@@ -300,7 +300,7 @@ function PANEL:OpenImport()
 	local import = vgui.Create( "DFrame" )
 
 	local info = vgui.Create("DLabel", import)
-	info:SetText("Paste the blueprint below:")
+	info:SetText("Paste the blueprint below ('bp-xxxxxxxxxxxxxxxxxxxx' codes work too):")
 	info:SetPos(0, 30)
 	info:SizeToContents()
 
@@ -326,11 +326,9 @@ function PANEL:OpenImport()
 	ok.DoClick = function()
 
 		local str = text:GetText()
-		local _, _, url = str:find("^(https://pastebin.com/raw/[%w%d_]+)")
+		if bppaste.IsValidKey( str ) then
 
-		if url then
-
-			bppastebin.Download( url, function(ok, text)
+			bppaste.Download( str, function(ok, text)
 
 				if ok then self:FinishImport( import, text ) end
 
@@ -343,6 +341,8 @@ function PANEL:OpenImport()
 		end
 
 	end
+
+	text:RequestFocus()
 
 end
 
