@@ -126,10 +126,10 @@ LIB UTIL
 	{
 		DESC Test
 		IN Start, PN_Exec
-		IN Duration=1, PN_Number
-		IN ToZero=true, PN_Bool
+		IN Duration=1, PN_Number, #How long should the animation take place
+		IN ToZero=true, PN_Bool, #If true, the value goes from 1 to 0, otherwise it's reversed (0 - 1)
 		OUT Update, PN_Exec
-		OUT Fraction, PN_Number
+		OUT Fraction, PN_Number, #The animated value
 		GLOBAL time
 		CODE
 		{
