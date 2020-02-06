@@ -426,21 +426,25 @@ if game.SinglePlayer() then
 	defpack:PostInit()
 	ready = true
 elseif SERVER then
-	bpcommon.ProfileStart("parse definitions")
-	LoadAndParseDefs()
+	local function ParseAndSave()
+		bpcommon.ProfileStart("parse definitions")
+		LoadAndParseDefs()
 
-	local stream = bpdata.OutStream(false, true, true)
-	stream:UseStringTable()
-	
-	defpack:WriteToStream(stream)
+		local stream = bpdata.OutStream(false, true, true)
+		stream:UseStringTable()
 
-	stream:WriteToFile(DEFPACK_LOCATION, true, false)
-	bpcommon.ProfileEnd()
+		defpack:WriteToStream(stream)
 
-	defpack:PostInit()
+		stream:WriteToFile(DEFPACK_LOCATION, true, false)
+		bpcommon.ProfileEnd()
+
+		defpack:PostInit()
+	end
+	ParseAndSave()
 
 	concommand.Add("bp_push_latest_definitions", function(ply)
 
+		ParseAndSave()
 		if ply:IsAdmin() then
 			for k, v in pairs(bptransfer.GetStates()) do v:AddFile(DEFPACK_LOCATION, "defs2") end
 		end

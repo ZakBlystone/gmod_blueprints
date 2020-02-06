@@ -388,7 +388,7 @@ function meta:update()]] .. x .. [[
 		if self.delays[i].time <= 0 then
 			local s,e = pcall(self.delays[i].func)
 			if not s then self.delays = {} __bpm.onError(e:sub((e:find(':', 11) or 0)+2, -1), 0, __dbggraph or -1, __dbgnode or -1) end
-			table.remove(self.delays, i)
+			if type(e) == "number" then self.delays[i].time = e else table.remove(self.delays, i) end
 		end
 	end
 end]]

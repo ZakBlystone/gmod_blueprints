@@ -122,4 +122,26 @@ LIB UTIL
 			#1 = %current
 		}
 	}
+	SPECIAL Animate, SHARED
+	{
+		DESC Test
+		IN Start, PN_Exec
+		IN Duration=1, PN_Number
+		IN ToZero=true, PN_Bool
+		OUT Update, PN_Exec
+		OUT Fraction, PN_Number
+		GLOBAL time
+		CODE
+		{
+			%time = $2
+			__bpm.delay("thunk_!graph_!node", 0, function()
+				local t = (%time / $2)
+				#2 = $3 and t or (1 - t)
+				%time = math.max(%time - FrameTime(), 0)
+				@graph(#_1)
+				if %time > 0 then return 0 end
+			end)
+			goto popcall
+		}
+	}
 }
