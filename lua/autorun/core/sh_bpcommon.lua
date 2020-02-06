@@ -12,7 +12,7 @@ ENABLE_DEEP_PROFILING = false
 STREAM_FILE = 1
 STREAM_NET = 2
 
-ENV_VERSION = "1.1"
+ENV_VERSION = "1.2"
 
 function rescope(...)
 	local scopes = {...}
