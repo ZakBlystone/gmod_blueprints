@@ -43,6 +43,17 @@ function meta:Init(vnode, pinID, sideIndex)
 
 end
 
+function meta:GetDisplayName()
+
+	if self.displayName then return self.displayName end
+
+	local str = bpcommon.Camelize(self.pin:GetDisplayName()):gsub("%u", function(x) return " " .. x end)
+	if #str > 0 then str = str:sub(2, -1) end
+	self.displayName = str
+	return self.displayName
+
+end
+
 function meta:GetConnections()
 
 	return self.connections
@@ -147,6 +158,7 @@ function meta:Invalidate()
 	self.literalW = nil
 	self.literalH = nil
 	self.connectionState = nil
+	self.displayName = nil
 
 end
 
@@ -162,7 +174,7 @@ function meta:GetSize()
 
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
 		surface.SetFont( self.font )
-		local title = self.pin:GetDisplayName()
+		local title = self:GetDisplayName()
 		local titleWidth = surface.GetTextSize( title )
 		width = width + titleWidth + TEXT_OFFSET
 	end
@@ -201,7 +213,7 @@ function meta:Layout()
 	self.literalPos = 0
 
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
-		local title = self.pin:GetDisplayName()
+		local title = self:GetDisplayName()
 		local titleWidth = surface.GetTextSize( title )
 		x = x + TEXT_OFFSET * d
 		if self.pin:IsOut() then x = x + titleWidth * d end
@@ -356,7 +368,7 @@ function meta:BuildMetrics()
 
 	if self.invalidateMetrics ~= nil and not self.invalidateMetrics then return end
 
-	local title = self.pin:GetDisplayName()
+	local title = self:GetDisplayName()
 
 	surface.SetFont(self.font)
 	self.titleWidth, self.titleHeight = surface.GetTextSize( title )
@@ -394,7 +406,7 @@ function meta:Draw(xOffset, yOffset, alpha)
 
 	--self:DrawHitBox()
 
-	local title = self.pin:GetDisplayName()
+	local title = self:GetDisplayName()
 
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
 		local hx,hy = self:GetHotspotOffset()

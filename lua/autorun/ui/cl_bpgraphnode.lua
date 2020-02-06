@@ -211,6 +211,8 @@ function meta:GetDisplayName()
 		name = name:sub(sub+1, -1)
 	end
 
+	--name = name:gsub("%u%l+", function(x) print(x) return " " .. x end):Trim()
+
 	self.displayName = name
 
 	return name

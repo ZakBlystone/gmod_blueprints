@@ -555,9 +555,10 @@ CLASS Player
 	}
 	FUNC Give, SERVER
 	{
+		REDIRECTPIN bNoAmmo, noAmmo
 		DESC Gives the player a weapon.
 		IN weaponClassName, PN_String, #Class name of weapon to give the player
-		IN bNoAmmo, PN_Bool, PNF_Nullable, #Set to true to not give any ammo on weapon spawn. (Reserve ammo set by DefaultClip)
+		IN noAmmo, PN_Bool, PNF_Nullable, #Set to true to not give any ammo on weapon spawn. (Reserve ammo set by DefaultClip)
 		OUT weapon, PN_Ref, PNF_None, Weapon, #The weapon given to the player, if one was given. It will return NULL if the player already has the weapon, or the weapon entity (entity with given classname) doesn't exist.
 	}
 	FUNC GiveAmmo, SERVER
