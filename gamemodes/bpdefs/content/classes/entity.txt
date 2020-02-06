@@ -1753,8 +1753,9 @@ CLASS Entity, entity
 	}
 	FUNC SetMaterial, SHARED
 	{
+		REDIRECTPIN materialName, materialPath
 		DESC Sets the rendering material override of the entity.
-		IN materialName, PN_String, #New material name. Use an empty string ("") to reset to the default materials.
+		IN materialPath, PN_String, #New material name. Use an empty string ("") to reset to the default materials.
 		IN forceMaterial=false, PN_Bool, PNF_Nullable, #Use it if you wish to apply material other than VertexLitGeneric (such as tools/toolswhite).
 	}
 	FUNC SetMaxHealth, SERVER
