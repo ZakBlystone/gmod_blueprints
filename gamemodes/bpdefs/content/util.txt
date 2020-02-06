@@ -135,9 +135,9 @@ LIB UTIL
 		{
 			%time = $2
 			__bpm.delay("thunk_!graph_!node", 0, function()
+				%time = math.max(%time - FrameTime(), 0)
 				local t = (%time / $2)
 				#2 = $3 and t or (1 - t)
-				%time = math.max(%time - FrameTime(), 0)
 				@graph(#_1)
 				if %time > 0 then return 0 end
 			end)
