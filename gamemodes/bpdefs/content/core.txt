@@ -308,6 +308,7 @@ LIB CORE
 		IN Thing, PN_Any
 		OUT Valid, PN_Exec
 		OUT NotValid, PN_Exec
+		INFORM 2
 		CODE if __bpm.genericIsValid($2) then #1 else #2 end
 	}
 	PURE CheckValue, SHARED
