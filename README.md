@@ -32,11 +32,18 @@ This addon is available via the Steam Workshop.
 # How to Contribute
 
 ## Creating Issues
-When creating new issues, the following must be provided:
+
+### For feature requests
+- Ensure that the feature hasn't already been requested
+- Please be specific, and provide specific examples
+
+### For bugs
+The following must be provided:
 - The saved blueprint script (located in `garrysmod\data\blueprints\client\bpm_yourfile.txt`)
 - Steps to reproduce the issue
 - Any relevant console errors
-- Any relevant tags
+
+**Use the relevant tags for any issue you're creating!**
 
 ## Get the code
 
