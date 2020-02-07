@@ -375,6 +375,9 @@ local function RegisterNodeBlock(name, codeType)
 		block.type:SetCodeType(codeType)
 		block.type:SetName(block.tuple[2])
 		block.type:SetRole(roleLookup[ block.tuple[3] ])
+		if parent.group:GetName() ~= "GM" then
+			block.type:AddFlag(NTF_NotHook)
+		end
 	end,
 	function(block, value) ParseNodeValue(block.type, value) end,
 	function(block, parent)

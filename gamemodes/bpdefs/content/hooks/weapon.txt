@@ -1,0 +1,7 @@
+HOOKS WEAPON
+{
+	HOOK Initialize, SHARED
+	{
+		DESC Called when the weapon entity is created.
+	}
+}

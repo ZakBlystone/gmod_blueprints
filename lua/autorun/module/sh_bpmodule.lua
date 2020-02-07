@@ -172,6 +172,12 @@ function meta:GetType()
 
 end
 
+function meta:SetType( type )
+
+	self.type = type
+
+end
+
 function meta:NodeTypeInUse( nodeType )
 
 	for id, v in self:Graphs() do

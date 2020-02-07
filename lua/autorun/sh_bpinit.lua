@@ -49,6 +49,7 @@ include("system/sh_bpgroup.lua")
 include("system/sh_bpusermanager.lua")
 include("system/sh_bpfile.lua")
 include("system/sh_bpfilesystem.lua")
+include("system/sh_bpswep.lua")
 
 -- DEFS
 include("defs/sh_bpdefpack.lua")
