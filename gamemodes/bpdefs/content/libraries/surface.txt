@@ -105,7 +105,11 @@ LIB surface
 	{
 		DESC Returns the current color affecting draw operations.
 		OUT color, PN_Color, PNF_None, #The color that drawing operations will use as a Color structure.
-		CODE #1 = surface.GetDrawColor()\n#1 = Color(#1.r, #1.g, #1.b, #1.a)
+		CODE
+		{
+			#1 = surface.GetDrawColor()
+			#1 = Color(#1.r, #1.g, #1.b, #1.a)
+		}
 	}
 	PURE GetHUDTexture, CLIENT
 	{
@@ -117,7 +121,11 @@ LIB surface
 	{
 		DESC Returns the current color affecting text draw operations.
 		OUT color, PN_Color, PNF_None, #The color that text drawing operations will use as a Color structure.
-		CODE #1 = surface.GetTextColor()\n#1 = Color(#1.r, #1.g, #1.b, #1.a)
+		CODE
+		{
+			#1 = surface.GetTextColor()
+			#1 = Color(#1.r, #1.g, #1.b, #1.a)
+		}
 	}
 	PURE GetTextSize, CLIENT
 	{
