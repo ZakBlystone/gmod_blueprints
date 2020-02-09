@@ -41,7 +41,9 @@ function NODE:BuildSendThunk(compiler)
 	self.send.emit("__self:netPostCall( function()")
 	self.send.emit("__self:netStartMessage(" .. self.recv.id .. ")")
 
-	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) end) do
+	local recipient = self:FindPin(PD_In, "Recipient")
+
+	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) and x ~= recipient end) do
 		local nthunk = GetNetworkThunk(pin)
 		if nthunk ~= nil then
 			local vcode = compiler:GetPinCode(pin)
@@ -57,7 +59,7 @@ function NODE:BuildSendThunk(compiler)
 		if event:HasFlag( bpevent.EVF_Broadcast ) then
 			self.send.emit("net.Broadcast()")
 		else
-			self.send.emit("net.Send(" .. compiler:GetPinCode( self:FindPin(PD_In, "Recipient") ) .. ")")
+			self.send.emit("net.Send(" .. compiler:GetPinCode( recipient ) .. ")")
 		end
 	else
 		self.send.emit("net.SendToServer()")
@@ -77,10 +79,12 @@ function NODE:BuildRecvThunk(compiler)
 	self.recv.begin()
 	self.recv.emit("if msgID == " .. self.recv.id .. " then")
 
+	local recipient = self:FindPin(PD_In, "Recipient")
+
 	local call = "self:__Event" .. event.id .. "( "
 	local t = {}
 	if event:HasFlag( bpevent.EVF_Client ) then t[#t+1] = "pl" end
-	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) end) do
+	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) and x ~= recipient end) do
 		local nthunk = GetNetworkThunk(pin)
 		if nthunk ~= nil then
 			if pin:HasFlag(PNF_Table) then
