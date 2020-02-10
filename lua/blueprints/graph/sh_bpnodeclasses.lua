@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 module("bpnodeclasses", package.seeall, bpcommon.rescope(bpschema))
 
-local nodeTypeBasePath = "autorun/nodetypes/"
+local nodeTypeBasePath = "blueprints/nodetypes/"
 local registered = {}
 local initializing = false
 

@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 module("bppinclasses", package.seeall, bpcommon.rescope(bpschema))
 
-local pinTypeBasePath = "autorun/pintypes/"
+local pinTypeBasePath = "blueprints/pintypes/"
 local registered = {}
 local initializing = false
 
