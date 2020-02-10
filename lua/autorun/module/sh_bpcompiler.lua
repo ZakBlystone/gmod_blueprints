@@ -584,6 +584,10 @@ function meta:CompileNodeSingle(node)
 	self.begin(CTX_SingleNode .. self:GetID(self.graph) .. "_" .. nodeID)
 
 	local roleCode = node:GetRole()
+	if roleCode == nil then
+		print("NO ROLE CODE FOR NODE: " .. node:GetTypeName())
+		roleCode = 0
+	end
 
 	-- emit some infinite-loop-protection code
 	if self.ilp and (codeType == NT_Function or codeType == NT_Special or codeType == NT_FuncOutput) then

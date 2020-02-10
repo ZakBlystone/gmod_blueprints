@@ -155,7 +155,7 @@ end
 derma.DefineControl( "BPEditorPropertySheet", "Blueprint editor property sheet", PANEL, "DPropertySheet" )
 
 local PANEL = {}
-local TITLE = "Blueprint Editor"
+local TITLE = "Blueprint Editor v" .. bpcommon.ENV_VERSION
 
 local deleteOnClose = CreateConVar("bp_delete_editor_on_close", "0", FCVAR_ARCHIVE, "For debugging, re-created editor UI")
 

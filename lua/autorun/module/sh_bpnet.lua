@@ -47,6 +47,8 @@ local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
 	else
 
 		local mod = bpenv.Get( uid )
+		if not mod then ErrorNoHalt("Module does not exist on the server: " .. tostring(uid)) return end
+
 		local owner = mod:GetOwner()
 		local file = bpfilesystem.FindFileByUID( uid )
 
