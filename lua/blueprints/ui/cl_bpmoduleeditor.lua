@@ -35,6 +35,8 @@ function PANEL:Init()
 			end)
 		end, nil, "icon16/folder_link.png"},
 		{"Send to server", function()
+			_G.G_BPError = nil
+			self.editor:ClearReport()
 			--bpnet.SendModule( self.module )
 			local ok, res = self.module:TryCompile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 			if ok then
@@ -279,6 +281,11 @@ function PANEL:OnRemove()
 
 	hook.Remove("BPPinClassRefresh", "pinrefresh_" .. self.module:GetUID())
 
+	if _G.G_BPError and _G.G_BPError.uid == self.module:GetUID() then
+		self.editor:ClearReport()
+		_G.G_BPError = nil
+	end
+
 	self:SetModule(nil)
 
 end
@@ -370,6 +377,28 @@ end
 function PANEL:GetModule()
 
 	return self.module
+
+end
+
+function PANEL:HandleError( errorData )
+
+	local vgraph = self.vgraphs[ errorData.graphID ]
+	if not vgraph then return end
+
+	local edit = vgraph:GetEditor()
+	local nodeset = edit:GetNodeSet()
+	local vnode = nodeset:GetVNodes()[ errorData.nodeID ]
+
+	self.GraphList:Select( errorData.graphID )
+
+	if vnode then
+		local x,y = vnode:GetPos()
+		local w,h = vnode:GetSize()
+		vgraph:SetZoomLevel(0,x,y)
+		timer.Simple(0, function()
+			vgraph:CenterOnPoint(x + w/2,y + h/2)
+		end)
+	end
 
 end
 

@@ -67,8 +67,9 @@ local function FindRemoteFile( file )
 
 end
 
-local function FindFileByUID( uid )
+function FindFileByUID( uid )
 
+	assert(SERVER)
 	print("Find File " .. bpcommon.GUIDToString(uid))
 
 	for _, f in ipairs( GetFiles() ) do
@@ -180,7 +181,7 @@ function NewModuleFile( name )
 
 end
 
-local function PushFiles(ply)
+function PushFiles(ply)
 
 	assert(SERVER)
 
@@ -261,7 +262,7 @@ local function RunLocalFile( file )
 	mod:Load( modulePath )
 	local cmod = mod:Compile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 
-	bpnet.Install( cmod )
+	bpnet.Install( cmod, file:GetOwner() )
 
 	file:SetFlag(bpfile.FL_Running)
 

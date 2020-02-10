@@ -10,7 +10,6 @@ Uninstall = nil
 
 function HandleModuleError( mod, msg, graphID, nodeID )
 
-	Uninstall( mod )
 	hook.Run("BPModuleError", mod, msg, graphID, nodeID)
 
 end

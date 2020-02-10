@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 if SERVER then
 
-	local testPath = "autorun/tests/"
+	local testPath = "blueprints/tests/"
 	local testSuites = {}
 
 	local function RawFail(suite, msg, func, fl)

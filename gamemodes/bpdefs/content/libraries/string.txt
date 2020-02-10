@@ -56,7 +56,14 @@ LIB string
 		OUT start, PN_Number, #Starting position of the found text, or nil if the text wasn't found
 		OUT end, PN_Number, #Ending position of found text, or nil if the text wasn't found
 		OUT matched, PN_String, #Matched text for each group if patterns are enabled and used, or nil if the text wasn't found
-		CODE #2, #3, #4 = string.find($1, $2, $3, $4)\n#1 = #2 ~= nil\n#2 = #2 or 0\n#3 = #3 or 0\n#4 = #4 or ""
+		CODE
+		{
+			#2, #3, #4 = string.find($1, $2, $3, $4)
+			#1 = #2 ~= nil
+			#2 = #2 or 0
+			#3 = #3 or 0
+			#4 = #4 or ""
+		}
 	}
 	PURE format, SHARED
 	{

@@ -277,7 +277,11 @@ CLASS Entity, entity
 	{
 		DESC Returns a table containing all attachments of the given entitys model. Returns an empty table or nil in case it's model has no attachments.
 		OUT attachment, PN_Struct, PNF_Table, AttachmentData, #Attachment data. See AttachmentData structure.
-		CODE #1 = Entity_.GetAttachments($1)\n#1 = #1 or {}
+		CODE
+		{
+			#1 = Entity_.GetAttachments($1)
+			#1 = #1 or {}
+		}
 	}
 	PURE GetBaseVelocity, SHARED
 	{

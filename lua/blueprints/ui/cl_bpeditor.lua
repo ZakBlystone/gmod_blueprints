@@ -155,20 +155,18 @@ end
 derma.DefineControl( "BPEditorPropertySheet", "Blueprint editor property sheet", PANEL, "DPropertySheet" )
 
 local PANEL = {}
-local TITLE = "Blueprint Editor"
+local TITLE = "Blueprint Editor v" .. bpcommon.ENV_VERSION
 
 local deleteOnClose = CreateConVar("bp_delete_editor_on_close", "0", FCVAR_ARCHIVE, "For debugging, re-created editor UI")
 
 LastSavedFile = nil
 
 function PANEL:RunCommand( func, ... )
-	self.StatusText:SetTextColor( Color(255,255,255) )
-	self.StatusText:SetText("")
+	self:ClearReport()
 
 	local b = xpcall( func, function( err )
 		_G.G_BPError = nil
-		self.StatusText:SetTextColor( Color(255,100,100) )
-		self.StatusText:SetText( err )
+		self:Report( err, 1 )
 		print( err )
 		print( debug.traceback() )
 	end, self, ... )
@@ -223,6 +221,7 @@ function PANEL:Init()
 	self.StatusText = vgui.Create("DLabel", self.Status)
 	self.StatusText:SetFont("DermaDefaultBold")
 	self.StatusText:Dock( FILL )
+	self.StatusText:DockMargin(10, 2, 2, 2)
 	self.StatusText:SetText("")
 
 	self.wasActive = false
@@ -365,6 +364,24 @@ function PANEL:FinishImport( import, text )
 
 end
 
+function PANEL:ClearReport()
+
+	self.StatusText:SetText("")
+	self.StatusText:SetTextColor(Color(255,255,255))
+
+end
+
+function PANEL:Report( text, type )
+
+	self.StatusText:SetText( text )
+	if type == 1 then
+		self.StatusText:SetTextColor(Color(255,100,100))
+	else
+		self.StatusText:SetTextColor(Color(255,255,255))
+	end
+
+end
+
 function PANEL:Think()
 
 	self.BaseClass.Think(self)
@@ -372,8 +389,15 @@ function PANEL:Think()
 	if _G.G_BPError ~= nil then
 		if self.BpErrorWasNil then
 			self.BpErrorWasNil = false
-			self.StatusText:SetText( "Blueprint Error: " .. _G.G_BPError.msg .. " [" .. _G.G_BPError.graphID .. "]" )
-			self.GraphList:Select(_G.G_BPError.graphID)
+			self:Report( "Blueprint Error: " .. _G.G_BPError.msg, 1 )
+
+			local localFile = bpfilesystem.GetLocalFiles()[ _G.G_BPError.uid ]
+			if localFile then
+				local sheet = self:OpenFile( localFile )
+				if sheet and sheet.Panel then
+					sheet.Panel:HandleError( _G.G_BPError )
+				end
+			end
 		end
 	else
 		self.BpErrorWasNil = true
@@ -406,7 +430,7 @@ function PANEL:OpenModule( mod, name, file )
 	local existing = self.openModules[mod:GetUID()]
 	if existing then
 		self.Tabs:SetActiveTab( existing.Tab )
-		return
+		return existing
 	end
 
 	local title = name or bpcommon.GUIDToString( mod:GetUID(), true )
@@ -428,10 +452,17 @@ function PANEL:OpenModule( mod, name, file )
 	self.openModules[mod:GetUID()] = sheet
 
 	self.Tabs:SetActiveTab( sheet.Tab )
+	return sheet
 
 end
 
 function PANEL:OpenFile( file )
+
+	local opened = self.openModules[ file:GetUID() ]
+	if opened then
+		self.Tabs:SetActiveTab( opened.Tab )
+		return opened
+	end
 
 	if not bpdefs.Ready() then
 		Derma_Message( "Wait for definitions to download. If download stalls, run 'bp_request_definitions' in console.", "Failed to open module", "OK" )
@@ -441,10 +472,12 @@ function PANEL:OpenFile( file )
 	local mod = bpmodule.New()
 	local b,e = pcall( function()
 		mod:Load(file:GetPath())
-		self:OpenModule( mod, file:GetName(), file )
+		return self:OpenModule( mod, file:GetName(), file )
 	end)
 	if not b then
 		Derma_Message( e, "Failed to open module", "OK" )
+	else
+		return e
 	end
 
 end

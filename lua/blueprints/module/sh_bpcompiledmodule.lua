@@ -51,6 +51,19 @@ function meta:TranslateCode( code )
 
 end
 
+function meta:SetOwner( owner )
+
+	self.owner = owner
+	return self
+
+end
+
+function meta:GetOwner()
+
+	return self.owner
+
+end
+
 function meta:GetType()
 
 	return self.type
@@ -103,6 +116,21 @@ function meta:TryLoad()
 	if type(result) == "string" then return false, result end
 	self.unit = result()
 	return true, self
+
+end
+
+function meta:FormatErrorMessage( msg, graphID, nodeID )
+
+	local dbgGraph = self:LookupGraph( graphID )
+	local dbgNode = self:LookupNode( nodeID )
+	if not dbgNode or not dbgGraph then return msg end
+
+	msg = msg:gsub("bpmodule%[.+%]:%d+:", "")
+	msg = "[%graph]" .. msg
+	msg = msg:gsub("%%node", dbgNode[2] or dbgNode[1])
+	msg = msg:gsub("%%graph", dbgGraph[1])
+
+	return msg
 
 end
 
@@ -202,6 +230,7 @@ function meta:WriteToStream(stream, mode)
 	stream:WriteInt( self.type, false )
 	stream:WriteStr( self.uniqueID )
 	bpdata.WriteValue( self.code, stream )
+	--bpdata.WriteValue( self.debugSymbols, stream )
 	return self
 
 end
@@ -211,7 +240,20 @@ function meta:ReadFromStream(stream, mode)
 	self.type = stream:ReadInt( false )
 	self.uniqueID = stream:ReadStr( 16 )
 	self.code = bpdata.ReadValue(stream)
+	--self.debugSymbols = bpdata.ReadValue(stream)
 	return self
+
+end
+
+function meta:LookupNode(id)
+
+	return self.debugSymbols.nodes[id]
+
+end
+
+function meta:LookupGraph(id)
+
+	return self.debugSymbols.graphs[id]
 
 end
 
@@ -387,7 +429,7 @@ function meta:update()]] .. x .. [[
 		self.delays[i].time = self.delays[i].time - FrameTime()
 		if self.delays[i].time <= 0 then
 			local s,e = pcall(self.delays[i].func)
-			if not s then self.delays = {} __bpm.onError(e:sub((e:find(':', 11) or 0)+2, -1), 0, __dbggraph or -1, __dbgnode or -1) end
+			if not s then self.delays = {} __bpm.onError(e, 0, __dbggraph or -1, __dbgnode or -1) end
 			if type(e) == "number" then self.delays[i].time = e else table.remove(self.delays, i) end
 		end
 	end
@@ -424,12 +466,34 @@ if #cs > 0 then ip = cs[1] table.remove(cs, 1) else goto __terminus end
 ::jumpto::
 ]]
 
+local netChecks = {
+	["0"] = "",
+	["1"] = "\n__svcheck()",
+	["2"] = "\n__clcheck()",
+}
+
 fragments["jump"] = [[if ip == \1 then goto jmp_\1 end]]
-fragments["ilpd"] = [[
-__ilp = __ilp + 1 if __ilp > \1 then __ilptrip = true goto __terminus end
-__dbgnode = \2]]
+fragments["ilpd"] = function(args)
+
+	local ilp = args[1]
+	local nodeID = args[2]
+	local nodeRole = args[3] or "0"
+
+	return [[
+__ilp = __ilp + 1 if __ilp > ]] .. ilp .. [[ then __ilptrip = true goto __terminus end
+__dbgnode = ]] .. nodeID .. netChecks[nodeRole]
+
+end
 
 fragments["ilp"] = [[__ilp = __ilp + 1 if __ilp > \1 then __ilptrip = true goto __terminus end]]
+fragments["dbg"] = function(args)
+
+	local nodeID = args[1]
+	local nodeRole = args[2] or "0"
+
+	return "__dbgnode = " .. nodeID .. netChecks[nodeRole]
+
+end
 
 fragments["jlist"] = function(jumps)
 
@@ -502,6 +566,8 @@ fragments["head"] = function(args)
 	if args[1] == "1" then
 		ret = ret .. [[
 
+local __svcheck = function() if not SERVER then error("Node '%node' can't run on client") end end
+local __clcheck = function() if not CLIENT then error("Node '%node' can't run on server") end end
 local __dbgnode = -1
 local __dbggraph = -1]]
 	end

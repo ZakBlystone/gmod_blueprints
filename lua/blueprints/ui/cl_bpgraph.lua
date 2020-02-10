@@ -129,9 +129,14 @@ function PANEL:ViewCalculate()
 
 end
 
-function PANEL:DoCenterToOrigin()
+function PANEL:CenterOnPoint(x, y)
 
-	print(self:GetSize())
+	self.renderer:Calculate()
+	self.renderer:SetScroll(-x,-y)
+
+end
+
+function PANEL:DoCenterToOrigin()
 
 	self:ViewCalculate()
 	self.renderer:SetScroll(0,0)
