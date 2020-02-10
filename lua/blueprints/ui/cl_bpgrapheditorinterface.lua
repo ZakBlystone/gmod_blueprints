@@ -11,6 +11,8 @@ local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
 local meta = bpcommon.MetaTable("bpgrapheditorinterface")
 
 local TOOLTIP_TIME = .6
+local TOOLTIP_FONT = "HudHintTextLarge"
+local TOOLTIP_MAXWIDTH = 400
 local POPUP_TIME = 4
 
 function meta:Init( editor, vgraph )
@@ -21,6 +23,7 @@ function meta:Init( editor, vgraph )
 	self.hoverTimer = 0
 	self.lastMouseX = 0
 	self.lastMouseY = 0
+	self.tooltipWrap = bptextwrap.New():SetFont(TOOLTIP_FONT):SetMaxWidth(TOOLTIP_MAXWIDTH)
 	self.tooltip = false
 	self.tooltipText = nil
 	self.tooltipLocation = nil
@@ -189,6 +192,7 @@ function meta:DrawTooltip()
 			self.tooltip = true
 			self.tooltipLocation = {mx, my}
 			self.tooltipText = self:GetTooltipUnderCursor(mx, my)
+			self.tooltipWrap:SetText( self.tooltipText )
 		end
 	else
 		self.tooltip = false
@@ -215,13 +219,28 @@ function meta:DrawTooltip()
 		local font = "HudHintTextLarge"
 		local alpha = self.tooltipAlpha
 
-		sy = sy - 20 * alpha
+		sy = sy + 20 * (1-alpha)
 
-		surface.SetFont(font)
+		--[[surface.SetFont(font)
 		local tw, th = surface.GetTextSize( self.tooltipText )
 
 		draw.RoundedBox(6, sx - 5, sy - 5, tw + 10, th + 10, Color(0,0,0,255 * alpha))
-		draw.SimpleText( self.tooltipText, font, sx, sy - 1, Color( 255, 255, 255, 255 * alpha ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		draw.SimpleText( self.tooltipText, font, sx, sy - 1, Color( 255, 255, 255, 255 * alpha ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )]]
+
+		local tw, th = self.tooltipWrap:GetSize()
+
+		sx = sx + 20
+		sy = sy + 20
+
+		sx, sy = self.vgraph:LocalToScreen(sx, sy)
+
+		if sx + tw > ScrW() - 20 then sx = sx - (tw + 40) end
+		if sy + th > ScrH() - 20 then sy = sy - (th + 40) end
+
+		sx, sy = self.vgraph:ScreenToLocal(sx, sy)
+
+		draw.RoundedBox(6, sx - 5, sy - 5, tw + 10, th + 10, Color(0,0,0,255 * alpha))
+		self.tooltipWrap:Draw(sx, sy, 255, 255, 255, 255 * alpha)
 
 	end
 
