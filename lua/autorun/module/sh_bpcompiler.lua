@@ -583,11 +583,21 @@ function meta:CompileNodeSingle(node)
 	-- the context to emit (singlenode_graph#_node#)
 	self.begin(CTX_SingleNode .. self:GetID(self.graph) .. "_" .. nodeID)
 
+	local roleCode = node:GetRole()
+
 	-- emit some infinite-loop-protection code
 	if self.ilp and (codeType == NT_Function or codeType == NT_Special or codeType == NT_FuncOutput) then
-		self.emit((self.debug and "_FR_ILPD" or "_FR_ILP") .. "(" .. self.ilpmax .. ", " .. nodeID .. ")")
+		if roleCode == 0 then
+			self.emit((self.debug and "_FR_ILPD" or "_FR_ILP") .. "(" .. self.ilpmax .. ", " .. nodeID .. ")")
+		else
+			self.emit((self.debug and "_FR_ILPD" or "_FR_ILP") .. "(" .. self.ilpmax .. ", " .. nodeID .. ", " .. roleCode .. ")")
+		end
 	elseif self.debug then
-		self.emit("__dbgnode = " .. nodeID)
+		if roleCode == 0 then
+			self.emit("_FR_DBG(" .. nodeID .. ")")
+		else
+			self.emit("_FR_DBG(" .. nodeID .. ", " .. roleCode ..  ")")
+		end
 	end
 
 	-- if node can compile itself, stop here
@@ -1034,6 +1044,33 @@ function meta:CompileCodeSegment()
 
 end
 
+function meta:CreateDebugSymbols()
+
+	self.debugSymbols = nil
+	if not self.debug then return end
+
+	local sym = { nodes = {}, graphs = {} }
+	for _, graph in ipairs(self.graphs) do
+		for _, node in graph:Nodes() do
+			local id = self:GetID( node )
+			local typename = node:GetTypeName()
+			local name = node:GetDisplayName()
+
+			sym.nodes[id] = {
+				typename,
+				name,
+			}
+		end
+
+		sym.graphs[self:GetID( graph )] = {
+			graph:GetTitle()
+		}
+	end
+
+	self.debugSymbols = sym
+
+end
+
 function meta:RunNodeCompile(node, pass)
 
 	local ntype = node:GetType()
@@ -1233,11 +1270,14 @@ function meta:Compile()
 	-- compile main code segment
 	Profile("code-segment", self.CompileCodeSegment, self)
 
+	-- debugging info
+	Profile("debug-symbols", self.CreateDebugSymbols, self)
+
 	local compiledModule = nil
 
 	Profile("code-build-cm", function()
 		self.compiledCode = table.concat( self.getContext( CTX_Code ), "\n" )
-		compiledModule = bpcompiledmodule.New( self.module, self.compiledCode ) 
+		compiledModule = bpcompiledmodule.New( self.module, self.compiledCode, self.debugSymbols ) 
 	end)
 
 	Profile("write-files", function()

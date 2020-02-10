@@ -308,7 +308,7 @@ function meta:Draw(xOffset, yOffset, alpha)
 	local err = _G.G_BPError
 	if err ~= nil then
 		if err.nodeID == self.node.id and err.graphID == self.graph.id then
-			roundedBox(16, x, y, w, h, 200,80,80,255*alpha, true, true, true, true)
+			roundedBox(16, x-4, y-4, w+8, h+8, 200,80,80,255*alpha, true, true, true, true)
 		end
 	end
 
