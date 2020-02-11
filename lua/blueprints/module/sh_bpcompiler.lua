@@ -122,7 +122,7 @@ function meta:Setup()
 	self.debugcomments = bit.band(self.flags, CF_Comments) ~= 0
 	self.ilp = bit.band(self.flags, CF_ILP) ~= 0
 	self.ilpmax = 10000
-	self.ilpmaxh = 4
+	self.ilpmaxh = 100
 	self.guidString = bpcommon.GUIDToString(self.module:GetUID(), true)
 	self.varscope = nil
 	self.pinRouters = {}
