@@ -388,10 +388,11 @@ __bpm.delayExists = function(key)
 	for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then return true end end
 	return false
 end
-__bpm.delay = function(key, delay, func)
-	for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end
-	__self.delays[#__self.delays+1] = { key = key, func = func, time = delay }
+__bpm.delay = function(key, delay, func, ...)
+	__bpm.delayKill(key)
+	__self.delays[#__self.delays+1] = { key = key, func = func, time = delay, args = {...} }
 end
+__bpm.delayKill = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end end
 __bpm.onError = function(msg, mod, graph, node) end
 __bpm.makeGUID = function()
 	local d,b,g,m=os.date"*t",function(x,y)return x and y or 0 end,system,bit
@@ -413,9 +414,9 @@ fragments["update"] = function(args)
 function meta:update()]] .. x .. [[
 	self:netUpdate()
 	for i=#self.delays, 1, -1 do
-		self.delays[i].time = self.delays[i].time - FrameTime()
-		if self.delays[i].time <= 0 then
-			local s,e = pcall(self.delays[i].func)
+		local d = self.delays[i] d.time = d.time - FrameTime()
+		if d.time <= 0 then
+			local s,e = pcall(d.func, unpack(d.args))
 			if not s then self.delays = {} __bpm.onError(e, 0, __dbggraph or -1, __dbgnode or -1) end
 			if type(e) == "number" then self.delays[i].time = e else table.remove(self.delays, i) end
 		end

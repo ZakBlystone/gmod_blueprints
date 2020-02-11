@@ -1,0 +1,43 @@
+LIB TIMER
+{
+	SPECIAL Create, SHARED
+	{
+		IN Exec, PN_Exec, #Starts the timer
+		IN Delay, PN_Number, #How long until the timer finishes
+		IN Key, PN_Any, #Uniquely identifies the timer
+		OUT Thru, PN_Exec, #Called after the timer finishes
+		LATENT
+		CODE 
+		{
+			__bpm.delay(tostring($3), $2, function() @graph(#_1) end)
+			goto popcall
+		}
+	}
+	SPECIAL CreateBoxed, SHARED
+	{
+		IN Exec, PN_Exec, #Starts the timer
+		IN Delay, PN_Number, #How long until the timer finishes
+		IN Key, PN_Any, #Uniquely identifies the timer
+		IN Value, PN_Any, #Value to pass through the timer
+		OUT Thru, PN_Exec
+		OUT Value, PN_Any
+		INFORM 4,6
+		LATENT
+		CODE
+		{
+			__bpm.delay(tostring($3), $2, function(x) #2 = x @graph(#_1) end, $4)
+			goto popcall
+		}
+	}
+	SPECIAL Cancel, SHARED
+	{
+		IN Exec, PN_Exec, #Cancels the timer
+		IN Key, PN_Any, #Unique ID of the timer to cancel
+		OUT Thru, PN_Exec, #Called after the timer is cancelled
+		CODE
+		{
+			__bpm.delayKill($2)
+			#1
+		}
+	}
+}
