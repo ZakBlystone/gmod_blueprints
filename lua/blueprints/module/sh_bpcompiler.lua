@@ -647,9 +647,13 @@ function meta:CompileNodeSingle(node)
 	-- take all the mapped variables and place them in the code string
 	code = Profile("vct", self.CompileVars, self, code, inVars, outVars, node)
 
-	-- break the code apart and emit each line
-	for _, l in ipairs(string.Explode("\n", code)) do
-		self.emit(l)
+	if string.find(code, "[^%s]") ~= nil then
+
+		-- break the code apart and emit each line
+		for _, l in ipairs(string.Explode("\n", code)) do
+			self.emit(l)
+		end
+
 	end
 
 	self.finish()
@@ -989,33 +993,24 @@ function meta:CompileCodeSegment()
 	self.emitContext( CTX_MetaTables )
 	self.emit("_FR_HEAD(" .. (self.debug and 1 or 0) .. ", " .. (self.ilp and 1 or 0) .. ")")
 
-	self.emitContext( CTX_Network )
-
 	-- emit each graph's entry function
 	for _, graph in ipairs(self.graphs) do
 		local id = self:GetID(graph)
 		self.emitContext( CTX_Graph .. id )
 	end
 
-	-- infinite-loop-protection checker
-	if self.ilp then
-		self.emit("_FR_CHECKILP(" .. self.ilpmaxh .. ")")
+	-- emit all meta events (functions with graph entry points)
+	for k, _ in pairs( self.getFilteredContexts(CTX_MetaEvents) ) do
+		self.emitContext( k )
 	end
 
-	-- metatable for the module
-	self.emit("_FR_SUPPORT()")
-	self.emit("__bpm.guid = __bpm.hexBytes(\"" .. bpcommon.GUIDToString(self.module:GetUID(), true) .. "\")")
+	self.emitContext( CTX_Network )
 
 	-- network meta functions
 	self.emitContext( CTX_NetworkMeta )
 
 	-- update function, runs delays and resets the ilp recursion value for hooks
 	self.emit ("_FR_UPDATE(" .. (self.ilp and 1 or 0) .. ")")
-
-	-- emit all meta events (functions with graph entry points)
-	for k, _ in pairs( self.getFilteredContexts(CTX_MetaEvents) ) do
-		self.emitContext( k )
-	end
 
 	-- constructor
 	self.emit("__bpm.new = function()")
@@ -1033,6 +1028,17 @@ function meta:CompileCodeSegment()
 		self.emitContext( k, 1 )
 	end
 	self.emit("}")
+
+	-- infinite-loop-protection checker
+	if self.ilp then
+		self.emit("_FR_SUPPORT(1, " .. self.ilpmaxh .. ")")
+	else
+		self.emit("_FR_SUPPORT()")
+	end
+
+	-- metatable for the module
+	
+	self.emit("__bpm.guid = __bpm.hexBytes(\"" .. bpcommon.GUIDToString(self.module:GetUID(), true) .. "\")")
 
 	if bit.band(self.flags, CF_Standalone) ~= 0 then
 

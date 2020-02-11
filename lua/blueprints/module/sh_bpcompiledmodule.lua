@@ -270,15 +270,13 @@ net.Receive("bpclosechannel", function(len, pl)
 	print("Net close netchannel: " .. channelID)
 end)
 net.Receive("bphandshake", function(len, pl)
-	local moduleGUID = net.ReadData(16)
-	local instanceGUID = net.ReadData(16)
+	local moduleGUID, instanceGUID = net.ReadData(16), net.ReadData(16)
 	for _, v in ipairs(G_BPNetHandlers) do
 		if v.__bpm.guid == moduleGUID then v:netReceiveHandshake(instanceGUID, len, pl) end
 	end
 end)
 net.Receive("bpmessage", function(len, pl)
-	local channelID = net.ReadUInt(16)
-	local channel = G_BPNetChannels[channelID]
+	local channel = G_BPNetChannels[net.ReadUInt(16)]
 	if channel ~= nil then channel:netReceiveMessage(len, pl) end
 end)]]
 
@@ -295,43 +293,33 @@ function meta:closeChannel(ch)
 	if G_BPNetChannels[ch.id] == nil then return end
 	print("Free netchannel: " .. ch.id)
 	G_BPNetChannels[ch.id] = nil
-	if SERVER then
-		net.Start("bpclosechannel")
-		net.WriteUInt(ch.id, 16)
-		net.Broadcast()
-	end
+	if CLIENT then return end
+	net.Start("bpclosechannel")
+	net.WriteUInt(ch.id, 16)
+	net.Broadcast()
 end
 function meta:netInit()
 	print("Net init")
-	self.netReady = false
-	self.netPendingCalls = {}
-	table.insert(G_BPNetHandlers, self)
-	if CLIENT then
-		net.Start("bphandshake")
-		net.WriteData(__bpm.guid, 16)
-		net.WriteData(self.guid, 16)
-		net.WriteBool(false)
-		net.SendToServer()
-	else
-		self.netChannel = self:allocChannel(nil, self.guid)
-	end
+	self.netReady, self.netCalls = false, {}
+	G_BPNetHandlers[#G_BPNetHandlers+1] = self
+	if SERVER then self.netChannel = self:allocChannel(nil, self.guid) return end
+	net.Start("bphandshake")
+	net.WriteData(__bpm.guid, 16)
+	net.WriteData(self.guid, 16)
+	net.WriteBool(false)
+	net.SendToServer()
 end
 function meta:netShutdown()
 	print("Net shutdown")
-	self:closeChannel(self.netChannel)
+	if self.netChannel then self:closeChannel(self.netChannel) end
 	table.RemoveByValue(G_BPNetHandlers, self)
 end
 function meta:netUpdate()
 	if not self.netReady then return end
-	local pc = self.netPendingCalls[1]
-	while pc ~= nil do
-		pc()
-		table.remove(self.netPendingCalls, 1)
-		pc = self.netPendingCalls[1]
-	end
+	for i, c in ipairs(self.netCalls) do c.f( unpack(c.a) ) self.netCalls[i] = nil end
 end
-function meta:netPostCall(func)
-	table.insert(self.netPendingCalls, func)
+function meta:netPostCall(func, ...)
+	self.netCalls[#self.netCalls+1] = {f = func, a = {...}}
 end
 function meta:netReceiveHandshake(instanceGUID, len, pl)
 	if SERVER then
@@ -363,18 +351,11 @@ function meta:netReceiveHandshake(instanceGUID, len, pl)
 	end
 end
 function meta:netWriteTable(f, t)
-	net.WriteUInt(#t, 24)
-	for i=1, #t do
-		f(t[i])
-	end
+	net.WriteUInt(#t, 24) for i=1, #t do f(t[i]) end
 end
 function meta:netReadTable(f)
-	local t = {}
-	local n = net.ReadUInt(24)
-	for i=1, n do
-		t[#t+1] = f()
-	end
-	return t
+	local t, n = {}, net.ReadUInt(24)
+	for i=1, n do t[#t+1] = f() end return t
 end
 function meta:netStartMessage(id)
 	net.Start("bpmessage")
@@ -382,9 +363,19 @@ function meta:netStartMessage(id)
 	net.WriteUInt(id, 16)
 end]]
 
-fragments["support"] = [[
-local meta = BLUEPRINT_OVERRIDE_META or {}
-if BLUEPRINT_OVERRIDE_META == nil then meta.__index = meta end
+fragments["support"] = function(args) 
+
+	local str = ""
+	if args[1] == "1" then
+		str = [[
+__bpm.checkilp = function()
+	if __ilph > ]] .. args[2] .. [[ then __bpm.onError("Infinite loop in hook", 0, __dbggraph or -1, __dbgnode or -1) return true end
+	if __ilptrip then __bpm.onError("Infinite loop", 0, __dbggraph or -1, __dbgnode or -1) return true end
+end
+]]
+	end
+
+return str .. [[
 __bpm.meta = meta
 __bpm.guidString = function(g)
 	return ("%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X"):format(
@@ -411,15 +402,11 @@ __bpm.makeGUID = function()
 	r(s,8),r(s),r(u,16),r(u,8),r(u),d.sec*4+b(g.IsWindows(),2)+b(g.IsLinux(),1))
 end]]
 
-fragments["checkilp"] = [[
-__bpm.checkilp = function()
-	if __ilph > \1 then __bpm.onError("Infinite loop in hook", 0, __dbggraph or -1, __dbgnode or -1) return true end
-	if __ilptrip then __bpm.onError("Infinite loop", 0, __dbggraph or -1, __dbgnode or -1) return true end
-end]]
+end
 
 fragments["update"] = function(args)
 
-	local x = ""
+	local x = "\n"
 	if args[1] == "1" then x = "\n\t__ilph = 0\n" end
 
 	return [[
@@ -450,6 +437,9 @@ for k,v in pairs(bpm.events) do
 end]]
 
 fragments["standalonehead"] = [[
+
+-------------------------------------------------------- RUNTIME --------------------------------------------------------
+
 if SERVER then
 	AddCSLuaFile()
 	util.AddNetworkString("bphandshake")
@@ -581,6 +571,11 @@ local __ilph = 0]]
 	end
 
 	ret = ret .. "\nlocal __bpm = {}"
+	ret = ret .. [[
+
+local meta = {}
+meta.__index = meta
+]]
 	return ret
 
 end
