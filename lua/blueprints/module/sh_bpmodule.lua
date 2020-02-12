@@ -19,6 +19,8 @@ fmtVersion = 2
 local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes/", "BPModuleClassRefresh")
 local meta = bpcommon.MetaTable("bpmodule")
 
+function GetClassLoader() return moduleClasses end
+
 nextModuleID = nextModuleID or 0
 
 bpcommon.CreateIndexableListIterators(meta, "graphs")

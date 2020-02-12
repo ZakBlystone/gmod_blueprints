@@ -35,6 +35,14 @@ function meta:Register(name, tab)
 
 end
 
+function meta:GetClasses()
+
+	local t = {}
+	for k, v in pairs(self.registered) do t[#t+1] = k end
+	return t
+
+end
+
 function meta:Get(name)
 
 	return self.registered[name:lower()]

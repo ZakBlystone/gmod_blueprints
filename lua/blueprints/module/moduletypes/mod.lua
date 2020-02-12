@@ -2,6 +2,10 @@ AddCSLuaFile()
 
 local MODULE = {}
 
+MODULE.Name = "Mod"
+MODULE.Description = "Behaves like a basic Lua script"
+MODULE.Icon = "icon16/application.png"
+
 function MODULE:Setup()
 
 end

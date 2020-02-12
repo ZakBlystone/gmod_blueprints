@@ -435,7 +435,7 @@ function PANEL:OpenModule( mod, name, file )
 
 	local title = name or bpcommon.GUIDToString( mod:GetUID(), true )
 	local view = vgui.Create("BPModuleEditor")
-	local sheet = self.Tabs:AddSheet( title, view, title, "icon16/application.png", true )
+	local sheet = self.Tabs:AddSheet( title, view, title, mod.Icon or "icon16/application.png", true )
 	view:SetModule( mod )
 	view.editor = self
 	view.file = file

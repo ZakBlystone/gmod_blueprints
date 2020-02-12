@@ -399,7 +399,7 @@ function PANEL:Init()
 	FileViews[#FileViews+1] = self
 
 	self.menu = bpuimenubar.AddTo(self)
-	self.menu:Add("New Module", function() self:CreateModule() end, nil, "icon16/asterisk_yellow.png")
+	self.menu:Add("New Module", function() self:ModuleDropdown() end, nil, "icon16/asterisk_yellow.png")
 	self.menu:Add("Refresh Local Files", function() self.localList:ClearFiles() bpfilesystem.IndexLocalFiles(true) end, nil, "icon16/arrow_refresh.png")
 	self.menu:Add("Import", function() self.editor:OpenImport() end, nil, "icon16/folder_page.png")
 	self.menu:Add("Help", function() self.editor:OpenHelp() end, nil, "icon16/help.png")
@@ -438,7 +438,35 @@ function PANEL:Init()
 
 end
 
-function PANEL:CreateModule()
+function PANEL:ModuleDropdown()
+
+	if IsValid(self.cmenu) then self.cmenu:Remove() end
+	self.cmenu = DermaMenu( false, self )
+
+	local loader = bpmodule.GetClassLoader()
+	local classes = bpcommon.Transform( loader:GetClasses(), {}, function(k) return {name = k, class = loader:Get(k)} end )
+
+	table.sort( classes, function(a,b) return a.class.Name < b.class.Name end )
+
+	for _, v in ipairs( classes ) do
+
+		local cl = v.class
+		local op = self.cmenu:AddOption( cl.Name, function()
+
+			self:CreateModule( v.name )
+
+		end)
+		if cl.Icon then op:SetIcon( cl.Icon ) end
+		if cl.Description then op:SetTooltip( cl.Description ) end
+
+	end
+
+	self.cmenu:SetMinimumWidth( 100 )
+	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, self )
+
+end
+
+function PANEL:CreateModule(type)
 
 	--[[print("Create Module")
 	Derma_StringRequest("New Module", "Module Name", "untitled",
@@ -448,7 +476,7 @@ function PANEL:CreateModule()
 			if file ~= nil then self.editor:OpenFile( file ) end
 		end, nil, "OK", "Cancel")]]
 
-	local mod = bpmodule.New()
+	local mod = bpmodule.New(type)
 	mod:CreateDefaults()
 	self.editor:OpenModule(mod, "unnamed", nil)
 
