@@ -14,8 +14,9 @@ STREAM_FILE = 1
 STREAM_NET = 2
 
 fmtMagic = 0x42504D31
-fmtVersion = 1
+fmtVersion = 2
 
+local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes/", "BPModuleClassRefresh")
 local meta = bpcommon.MetaTable("bpmodule")
 
 nextModuleID = nextModuleID or 0
@@ -33,7 +34,7 @@ function meta:Init(type)
 	self.variables = bplist.New(bpvariable_meta):NamedItems("Var")
 	self.events = bplist.New(bpevent_meta, self, "module"):NamedItems("Event")
 	self.id = nextModuleID
-	self.type = self.type or MT_Game
+	self.type = type or "Mod"
 	self.revision = 1
 	self.uniqueID = bpcommon.GUID()
 	self.suppressGraphNotify = false
@@ -107,6 +108,8 @@ function meta:Init(type)
 
 	bpcommon.MakeObservable(self)
 
+	moduleClasses:Install( self:GetType(), self )
+
 	nextModuleID = nextModuleID + 1
 	return self
 
@@ -169,12 +172,6 @@ end
 function meta:GetType()
 
 	return self.type
-
-end
-
-function meta:SetType( type )
-
-	self.type = type
 
 end
 
@@ -247,15 +244,7 @@ function meta:Clear()
 
 end
 
-function meta:CreateDefaults()
-
-	local id, graph = self:NewGraph("EventGraph")
-	graph:AddNode("CORE_Init", 120, 100)
-	graph:AddNode("GM_Think", 120, 300)
-	graph:AddNode("CORE_Shutdown", 120, 500)
-
-end
-
+function meta:CreateDefaults() end
 function meta:NewVariable(name, type, default, flags, ex)
 
 	return self.variables:Add( bpvariable.New(type, default, flags, ex), name )
@@ -428,9 +417,9 @@ function meta:WriteToStream(stream, mode)
 
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
-	stream:WriteInt( self.type, false )
 	stream:WriteInt( self.revision, false )
 	stream:WriteStr( self.uniqueID )
+	bpdata.WriteValue( self.type, stream )
 
 	if mode == STREAM_FILE then
 		bpdata.WriteValue( bpcommon.ENV_VERSION, stream )
@@ -462,9 +451,10 @@ function meta:ReadFromStream(stream, mode)
 	if version > fmtVersion then error("Blueprint data version is newer") end
 
 	self.version = version
-	self.type = stream:ReadInt( false )
+	if version < 2 then stream:ReadInt( false ) self.type = "Mod" end
 	self.revision = stream:ReadInt( false )
 	self.uniqueID = stream:ReadStr( 16 )
+	if version >= 2 then self.type = bpdata.ReadValue( stream ) end
 
 	if mode == STREAM_FILE then
 		self.envVersion = bpdata.ReadValue( stream )
@@ -484,6 +474,8 @@ function meta:ReadFromStream(stream, mode)
 	end
 
 	self.suppressGraphNotify = false
+
+	moduleClasses:Install( self:GetType(), self )
 
 	return self
 
