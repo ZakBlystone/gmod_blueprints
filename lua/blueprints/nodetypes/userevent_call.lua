@@ -171,4 +171,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-bpnodeclasses.Register("EventCall", NODE)
+RegisterNodeClass("EventCall", NODE)

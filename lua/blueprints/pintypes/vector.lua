@@ -110,4 +110,4 @@ function PIN:OnClicked()
 
 end
 
-bppinclasses.Register("Vector", PIN)
+RegisterPinClass("Vector", PIN)

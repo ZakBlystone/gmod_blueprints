@@ -52,4 +52,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-bpnodeclasses.Register("FuncExit", NODE)
+RegisterNodeClass("FuncExit", NODE)

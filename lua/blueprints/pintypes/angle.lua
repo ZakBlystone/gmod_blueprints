@@ -110,4 +110,4 @@ function PIN:OnClicked()
 
 end
 
-bppinclasses.Register("Angle", PIN)
+RegisterPinClass("Angle", PIN)

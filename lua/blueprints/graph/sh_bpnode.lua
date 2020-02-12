@@ -9,6 +9,7 @@ bpcommon.CallbackList({
 local DummyNodeType = bpnodetype.New()
 DummyNodeType:SetDisplayName("InvalidNode")
 
+local nodeClasses = bpclassloader.New("Node", "blueprints/nodetypes/", "BPNodeClassRefresh")
 local meta = bpcommon.MetaTable("bpnode")
 meta.__tostring = function(self) return self:ToString() end
 
@@ -51,18 +52,7 @@ function meta:PostInit()
 	end
 
 	local nodeClass = ntype:GetNodeClass()
-	if ntype.nodeClass then
-		local class = bpnodeclasses.Get(nodeClass)
-		if class == nil then error("Failed to get class: " .. nodeClass) end
-		if nodeClass and class ~= nil then
-			local base = getmetatable(self)
-			local meta = table.Copy(class)
-			table.Inherit(meta, base)
-			meta.__index = meta
-			setmetatable(self, meta)
-			if meta.Setup then self:Setup() end
-		end
-	end
+	if nodeClass then nodeClasses:Install(nodeClass, self) end
 
 	self:UpdatePins()
 

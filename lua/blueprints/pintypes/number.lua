@@ -2,4 +2,4 @@ AddCSLuaFile()
 
 local PIN = {}
 
-bppinclasses.Register("Number", PIN)
+RegisterPinClass("Number", PIN)

@@ -87,4 +87,4 @@ function NODE:GetCode()
 
 end
 
-bpnodeclasses.Register("VariadicOperator", NODE)
+RegisterNodeClass("VariadicOperator", NODE)

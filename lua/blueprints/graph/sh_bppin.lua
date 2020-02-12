@@ -2,6 +2,7 @@ AddCSLuaFile()
 
 module("bppin", package.seeall)
 
+local pinClasses = bpclassloader.New("Pin", "blueprints/pintypes/", "BPPinClassRefresh")
 local meta = bpcommon.MetaTable("bppin")
 
 meta.__tostring = nil
@@ -20,18 +21,7 @@ end
 function meta:InitPinClass()
 
 	local pinClass = self:GetType():GetPinClass()
-	if pinClass then
-		local class = bppinclasses.Get(pinClass)
-		if class == nil then error("Failed to get class: " .. pinClass) end
-		if pinClass and class ~= nil then
-			local base = getmetatable(self)
-			local meta = table.Copy(class)
-			table.Inherit(meta, base)
-			meta.__index = meta
-			setmetatable(self, meta)
-			if meta.Setup then self:Setup() end
-		end
-	end
+	if pinClass then pinClasses:Install(pinClass, self) end
 
 end
 
