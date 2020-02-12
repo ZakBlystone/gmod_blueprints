@@ -11,9 +11,9 @@ function NODE:GeneratePins(pins)
 
 	local graph = self:GetOuterGraph()
 
-	pins[#pins+1] = MakePin( PD_Out, "Exec", PN_Exec )
+	pins[#pins+1] = MakePin( PD_In, "Exec", PN_Exec )
 
-	bpcommon.Transform(graph.inputs:GetTable(), pins, bppin_meta.Copy, PD_Out)
+	bpcommon.Transform(graph.outputs:GetTable(), pins, bppin_meta.Copy, PD_In)
 
 end
 
@@ -27,7 +27,7 @@ function NODE:Compile(compiler, pass)
 
 	elseif pass == CP_ALLOCVARS then
 
-		for _, pin in self:SidePins(PD_Out) do
+		for _, pin in self:SidePins(PD_In) do
 			compiler:CreatePinVar( pin )
 		end
 
@@ -35,13 +35,16 @@ function NODE:Compile(compiler, pass)
 
 	elseif pass == CP_MAINPASS then
 
-		local ipin = 1
-		for k, pin in self:SidePins(PD_Out) do
+		for k, pin in self:SidePins(PD_In) do
 			if not pin:IsType( PN_Exec ) then
-				compiler.emit( compiler:GetPinCode( pin, true ) .. " = arg[" .. ipin .. "]" )
-				ipin = ipin + 1
+				local var = compiler:FindVarForPin( pin )
+				compiler.emit( compiler:GetVarCode(var) .. " = " .. compiler:GetPinCode( pin ) )
 			end
 		end
+
+		local ret = compiler:FindVarForPin(nil, true)
+		compiler.emit( compiler:GetVarCode(ret) .. " = true" )
+		compiler.emit( "goto __terminus" )
 
 		return true
 
@@ -49,4 +52,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-bpnodeclasses.Register("FuncEntry", NODE)
+RegisterNodeClass("FuncExit", NODE)

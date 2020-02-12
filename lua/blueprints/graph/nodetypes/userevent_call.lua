@@ -38,19 +38,22 @@ function NODE:BuildSendThunk(compiler)
 	local event = self:GetEvent()
 
 	self.send.begin()
-	self.send.emit("__self:netPostCall( function()")
+	self.send.emit("__self:netPostCall( function(...) local arg = {...}")
 	self.send.emit("__self:netStartMessage(" .. self.recv.id .. ")")
 
 	local recipient = self:FindPin(PD_In, "Recipient")
+	local args = {}
 
 	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) and x ~= recipient end) do
 		local nthunk = GetNetworkThunk(pin)
 		if nthunk ~= nil then
 			local vcode = compiler:GetPinCode(pin)
+			local num = #args + 1
+			args[num] = vcode
 			if pin:HasFlag(PNF_Table) then
-				self.send.emit("__self:netWriteTable( function(x) " .. nthunk.write:gsub("@","x") ..  " end, " .. vcode .. ")")
+				self.send.emit("__self:netWriteTable( function(x) " .. nthunk.write:gsub("@","x") ..  " end, arg[" .. num .. "])")
 			else
-				self.send.emit(nthunk.write:gsub("@", vcode ))
+				self.send.emit(nthunk.write:gsub("@", "arg[" .. num .. "]"))
 			end
 		end
 	end
@@ -59,13 +62,15 @@ function NODE:BuildSendThunk(compiler)
 		if event:HasFlag( bpevent.EVF_Broadcast ) then
 			self.send.emit("net.Broadcast()")
 		else
-			self.send.emit("net.Send(" .. compiler:GetPinCode( recipient ) .. ")")
+			args[#args+1] = compiler:GetPinCode( recipient )
+			self.send.emit("net.Send(arg[" .. #args .. "])")
 		end
 	else
 		self.send.emit("net.SendToServer()")
 	end
 
-	self.send.emit("end)")
+	table.insert(args, 1, "end")
+	self.send.emit( table.concat(args, ", ") .. ")")
 
 	self.send.emit( compiler:GetPinCode( self:FindPin(PD_Out, "Thru"), true ) )
 	self.send.finish()
@@ -93,7 +98,7 @@ function NODE:BuildRecvThunk(compiler)
 				t[#t+1] = nthunk.read
 			end
 		else
-			t[#t+1] = nil
+			t[#t+1] = "nil"
 		end
 	end
 
@@ -166,4 +171,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-bpnodeclasses.Register("EventCall", NODE)
+RegisterNodeClass("EventCall", NODE)

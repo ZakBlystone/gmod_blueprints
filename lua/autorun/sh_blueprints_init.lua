@@ -15,6 +15,7 @@ end
 
 -- CORE
 bpinclude("core/sh_bpcommon.lua")
+bpinclude("core/sh_bpclassloader.lua")
 bpinclude("core/sh_bpcollection.lua")
 bpinclude("core/sh_bpindexer.lua")
 bpinclude("core/sh_bpbuffer.lua")
@@ -30,8 +31,6 @@ bpinclude("core/sh_bppaste.lua")
 bpinclude("graph/sh_bppintype.lua")
 bpinclude("graph/sh_bppin.lua")
 bpinclude("graph/sh_bpschema.lua")
-bpinclude("graph/sh_bppinclasses.lua")
-bpinclude("graph/sh_bpnodeclasses.lua")
 bpinclude("graph/sh_bpnodetype.lua")
 bpinclude("graph/sh_bpnodetypegroup.lua")
 bpinclude("graph/sh_bpnode.lua")
@@ -63,6 +62,7 @@ bpinclude("defs/sh_bpdefs.lua")
 bpinclude("ui/sh_bpui.lua")
 bpinclude("ui/cl_bprenderutils.lua")
 bpinclude("ui/cl_bprender2d.lua")
+bpinclude("ui/cl_bptextwrap.lua")
 bpinclude("ui/cl_bpmenubar.lua")
 bpinclude("ui/cl_bpfilemanager.lua")
 bpinclude("ui/cl_bpuser.lua")
@@ -86,6 +86,6 @@ bpinclude("ui/cl_bpassetbrowser.lua")
 bpinclude("ui/cl_bpeditor.lua")
 
 -- TEST
-include("sh_bptest.lua")
+include("sh_blueprints_test.lua")
 
 hook.Run("BPPostInit")

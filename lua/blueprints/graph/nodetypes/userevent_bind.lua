@@ -44,4 +44,4 @@ function NODE:GetCode()
 end
 
 
-bpnodeclasses.Register("EventBind", NODE)
+RegisterNodeClass("EventBind", NODE)

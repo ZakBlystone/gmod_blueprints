@@ -57,4 +57,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-bpnodeclasses.Register("StructMake", NODE)
+RegisterNodeClass("StructMake", NODE)

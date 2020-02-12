@@ -80,4 +80,4 @@ function NODE:GetOptions(tab)
 
 end
 
-bpnodeclasses.Register("Sequence", NODE)
+RegisterNodeClass("Sequence", NODE)

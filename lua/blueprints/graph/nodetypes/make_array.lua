@@ -88,4 +88,4 @@ function NODE:GetCode()
 
 end
 
-bpnodeclasses.Register("MakeArray", NODE)
+RegisterNodeClass("MakeArray", NODE)

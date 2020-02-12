@@ -4,7 +4,7 @@ local PIN = {}
 
 function PIN:Setup()
 
-	self._vector = Vector(0,0,0)
+	self._angle = Vector(0,0,0)
 	self._prec = {1,1,1}
 	self:OnLiteralChanged( nil, self:GetLiteral() )
 
@@ -12,8 +12,8 @@ end
 
 function PIN:NumToStr( i )
 
-	if self._prec[i] == 0 then return string.format("%d", self._vector[i]) end
-	return string.format("%0." .. self._prec[i] .. "f", self._vector[i])
+	if self._prec[i] == 0 then return string.format("%d", self._angle[i]) end
+	return string.format("%0." .. self._prec[i] .. "f", self._angle[i])
 
 end
 
@@ -22,7 +22,7 @@ function PIN:StrToNum( x, i )
 	local _,_,dec = x:find("%-*%d*%.(%d+)")
 	dec = dec and (#dec) or 0
 	self._prec[i] = dec
-	self._vector[i] = tonumber(x)
+	self._angle[i] = tonumber(x)
 
 end
 
@@ -34,7 +34,7 @@ end
 
 function PIN:GetDefault()
 
-	return "Vector(0,0,0)"
+	return "Angle(0,0,0)"
 
 end
 
@@ -42,7 +42,7 @@ function PIN:OnLiteralChanged( old, new )
 
 	if new then
 		local i = 1
-		for x in new:gmatch("%-*[%d%.]+") do
+		for x in new:gmatch("[%-*%d%.]+") do
 			self:StrToNum( x, i )
 			i = i + 1
 		end
@@ -87,10 +87,10 @@ function PIN:OnClicked()
 		end
 		entry.OnValueChange = function(pnl, value)
 			self:StrToNum( value, pnl.index )
-			self:SetLiteral( string.format("Vector(%s,%s,%s)",
+			self:SetLiteral( string.format("Angle(%s,%s,%s)",
 				self:NumToStr(1),
 				self:NumToStr(2),
-				self:NumToStr(3) ))
+				self:NumToStr(3) ) )
 		end
 		entries[i] = entry
 	end
@@ -110,4 +110,4 @@ function PIN:OnClicked()
 
 end
 
-bppinclasses.Register("Vector", PIN)
+RegisterPinClass("Angle", PIN)

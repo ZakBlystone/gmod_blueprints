@@ -68,4 +68,4 @@ function PIN:DrawLiteral(x,y,w,h,alpha)
 
 end
 
-bppinclasses.Register("Color", PIN)
+RegisterPinClass("Color", PIN)

@@ -54,4 +54,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-bpnodeclasses.Register("StructBreak", NODE)
+RegisterNodeClass("StructBreak", NODE)
