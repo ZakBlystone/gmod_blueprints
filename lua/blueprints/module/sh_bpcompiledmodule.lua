@@ -316,10 +316,14 @@ function meta:netShutdown()
 end
 function meta:netUpdate()
 	if not self.netReady then return end
-	for i, c in ipairs(self.netCalls) do c.f( unpack(c.a) ) self.netCalls[i] = nil end
+	for i, c in ipairs(self.netCalls) do
+		local s,e = pcall(c.f, unpack(c.a))
+		if not s then __bpm.onError(e, 0, c.g, c.n) end
+		self.netCalls[i] = nil
+	end
 end
 function meta:netPostCall(func, ...)
-	self.netCalls[#self.netCalls+1] = {f = func, a = {...}}
+	self.netCalls[#self.netCalls+1] = {f = func, a = {...}, g = __dbggraph or -1, n = __dbgnode or -1}
 end
 function meta:netReceiveHandshake(instanceGUID, len, pl)
 	if SERVER then
