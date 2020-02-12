@@ -98,7 +98,7 @@ function NODE:BuildRecvThunk(compiler)
 				t[#t+1] = nthunk.read
 			end
 		else
-			t[#t+1] = nil
+			t[#t+1] = "nil"
 		end
 	end
 
