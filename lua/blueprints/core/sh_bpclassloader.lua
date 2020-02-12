@@ -1,5 +1,7 @@
 AddCSLuaFile()
 
+G_BPClassLoaders = G_BPClassLoaders or {}
+
 module("bpclassloader", package.seeall)
 
 local meta = bpcommon.MetaTable("bpclassloader")
@@ -62,4 +64,9 @@ function meta:Install(classname, parent)
 
 end
 
-function New(...) return bpcommon.MakeInstance(meta, ...) end
+function Get(name, ...)
+
+	G_BPClassLoaders[name] = G_BPClassLoaders[name] or bpcommon.MakeInstance(meta, name, ...)
+	return G_BPClassLoaders[name]
+
+end
