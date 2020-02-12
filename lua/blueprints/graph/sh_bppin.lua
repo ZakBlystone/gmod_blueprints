@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 module("bppin", package.seeall)
 
-local pinClasses = bpclassloader.New("Pin", "blueprints/graph/pintypes/", "BPPinClassRefresh")
+local pinClasses = bpclassloader.Get("Pin", "blueprints/graph/pintypes/", "BPPinClassRefresh")
 local meta = bpcommon.MetaTable("bppin")
 
 meta.__tostring = nil

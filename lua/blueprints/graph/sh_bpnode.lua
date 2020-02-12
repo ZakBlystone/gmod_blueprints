@@ -9,7 +9,7 @@ bpcommon.CallbackList({
 local DummyNodeType = bpnodetype.New()
 DummyNodeType:SetDisplayName("InvalidNode")
 
-local nodeClasses = bpclassloader.New("Node", "blueprints/graph/nodetypes/", "BPNodeClassRefresh")
+local nodeClasses = bpclassloader.Get("Node", "blueprints/graph/nodetypes/", "BPNodeClassRefresh")
 local meta = bpcommon.MetaTable("bpnode")
 meta.__tostring = function(self) return self:ToString() end
 
