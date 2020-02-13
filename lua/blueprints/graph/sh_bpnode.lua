@@ -79,7 +79,7 @@ end
 function meta:ShiftLiterals(d)
 
 	local l = table.Copy(self.literals)
-	for pinID, literal in ipairs(l) do
+	for pinID, literal in pairs(l) do
 		self:SetLiteral(pinID+d, literal)
 	end
 	self:RemoveInvalidLiterals()

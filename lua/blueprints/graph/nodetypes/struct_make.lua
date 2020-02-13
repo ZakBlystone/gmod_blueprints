@@ -43,6 +43,7 @@ function NODE:Compile(compiler, pass)
 		local outValueCode = compiler:GetPinCode( outValuePin, true )
 		compiler.emit( outValueCode .. " = {" )
 		for pinID, pin in self:SidePins(PD_In) do
+			if pin:IsType( PN_Exec ) then continue end
 			local name = pin:GetName()
 			local assignment = "[\"" .. (struct.invNameMap[name:lower()] or name) .. "\"] = " .. compiler:GetPinCode( pin ) .. ","
 			compiler.emit(assignment)
