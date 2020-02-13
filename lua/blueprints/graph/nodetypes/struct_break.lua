@@ -37,6 +37,7 @@ function NODE:Compile(compiler, pass)
 
 		local input = self:FindPin(PD_In, struct:GetName())
 		for pinID, pin in self:SidePins(PD_Out) do
+			if pin:IsType( PN_Exec ) then continue end
 			compiler:CreatePinRouter( pin, function(pin)
 				local name = pin:GetName()
 				return { var = compiler:GetPinCode(input) .. "[\"" .. (struct.invNameMap[name:lower()] or name) .. "\"]" }

@@ -522,7 +522,7 @@ function meta:GetPinVar(pin)
 		if #pins == 1 then
 
 			local var = self:FindVarForPin(pins[1])
-			if var == nil then error("COULDN'T FIND INPUT VAR FOR " .. pins[1]:GetNode():ToString(pins[1])) end
+			if var == nil then error("COULDN'T FIND INPUT VAR FOR " .. pins[1]:GetNode():ToString(pins[1]) .. " -> " .. pin:GetNode():ToString(pin)) end
 			return var
 
 		-- if there are no connections, try to assign literals on this pin
