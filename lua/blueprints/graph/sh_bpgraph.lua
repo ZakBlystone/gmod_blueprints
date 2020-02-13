@@ -285,6 +285,30 @@ function meta:GetCallNodeType()
 
 end
 
+function meta:GetEntryNodeType()
+
+	return self.callEntryNodeType
+
+end
+
+function meta:GetExitNodeType()
+
+	return self.callExitNodeType
+
+end
+
+function meta:GetEntryNode()
+
+	return self:FindNodeByType( self:GetEntryNodeType() )
+
+end
+
+function meta:GetExitNode()
+
+	return self:FindNodeByType( self:GetExitNodeType() )
+
+end
+
 function meta:CacheNodeTypes()
 
 	self.__cachedTypes = nil
@@ -500,6 +524,15 @@ function meta:GetPinType(nodeID, pinID)
 
 end
 
+function meta:FindNodeByType(nodeType)
+
+	for _, node in self:Nodes() do
+		if node:GetType() == nodeType then return node end
+	end
+	return nil
+
+end
+
 function meta:FindConnection(nodeID0, pinID0, nodeID1, pinID1)
 
 	local p0 = self:GetNodePin( nodeID0, pinID0 )
@@ -622,6 +655,8 @@ function meta:Clear()
 end
 
 function meta:CanAddNode(nodeType)
+
+	if not self.module:CanAddNode(nodeType) then return false end
 
 	if self.type == GT_Function then
 		if nodeType:HasFlag(NTF_Latent) then return false end

@@ -177,6 +177,12 @@ function meta:GetType()
 
 end
 
+function meta:CanAddNode(nodeType)
+
+	return true
+
+end
+
 function meta:NodeTypeInUse( nodeType )
 
 	for id, v in self:Graphs() do
@@ -279,7 +285,10 @@ function meta:RequestGraphForEvent( nodeType )
 	local id, graph = self:NewGraph(nodeType:GetDisplayName(), NT_Function)
 	graph:SetFlag(bpgraph.FL_LOCK_PINS)
 	graph:SetFlag(bpgraph.FL_LOCK_NAME)
-	graph:SetFlag(bpgraph.FL_HOOK)
+
+	if not nodeType:HasFlag(NTF_NotHook) then
+		graph:SetFlag(bpgraph.FL_HOOK)
+	end
 
 	if nodeType:GetRole() == ROLE_Server or nodeType:GetRole() == ROLE_Shared then
 		graph:SetFlag(bpgraph.FL_ROLE_SERVER)
@@ -298,6 +307,8 @@ function meta:RequestGraphForEvent( nodeType )
 		end
 
 	end
+
+	return graph
 
 end
 
@@ -346,7 +357,7 @@ function LoadHeader(filename)
 	return {
 		magic = magic,
 		version = version,
-		type = inStream:ReadInt( false ),
+		type = version < 2 and stream:ReadInt( false ) or bpdata.ReadValue( inStream ),
 		revision = inStream:ReadInt( false ),
 		uid = inStream:ReadStr( 16 ),
 		envVersion = bpdata.ReadValue( inStream ),
@@ -419,9 +430,9 @@ function meta:WriteToStream(stream, mode)
 
 	stream:WriteInt( fmtMagic, false )
 	stream:WriteInt( fmtVersion, false )
+	bpdata.WriteValue( self.type, stream )
 	stream:WriteInt( self.revision, false )
 	stream:WriteStr( self.uniqueID )
-	bpdata.WriteValue( self.type, stream )
 
 	if mode == STREAM_FILE then
 		bpdata.WriteValue( bpcommon.ENV_VERSION, stream )
@@ -453,10 +464,13 @@ function meta:ReadFromStream(stream, mode)
 	if version > fmtVersion then error("Blueprint data version is newer") end
 
 	self.version = version
-	if version < 2 then stream:ReadInt( false ) self.type = "Mod" end
+	if version < 2 then
+		stream:ReadInt( false ) self.type = "Mod"
+	else
+		self.type = bpdata.ReadValue( stream )
+	end
 	self.revision = stream:ReadInt( false )
 	self.uniqueID = stream:ReadStr( 16 )
-	if version >= 2 then self.type = bpdata.ReadValue( stream ) end
 
 	if mode == STREAM_FILE then
 		self.envVersion = bpdata.ReadValue( stream )

@@ -100,6 +100,18 @@ function meta:GetConnectedPins()
 
 end
 
+function meta:Connect( other )
+
+	local node = self:GetNode()
+	local otherNode = other:GetNode()
+
+	if node.graph == nil then print("Cannot connect, not in a graph") return end
+	if node.graph ~= otherNode.graph then print("Cannot connect across different graphs") return end
+
+	return node.graph:ConnectNodes( node.id, self.id, otherNode.id, other.id )
+
+end
+
 function meta:WriteToStream(stream)
 
 	assert(stream:IsUsingStringTable())

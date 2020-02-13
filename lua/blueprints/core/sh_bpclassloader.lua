@@ -63,7 +63,7 @@ function meta:Install(classname, parent)
 	local class = self:Get(classname)
 	if class == nil then error("Failed to get class: " .. classname) end
 
-	local base = getmetatable(parent)
+	local base = parent.BaseClass or getmetatable(parent)
 	local meta = table.Copy(class)
 	table.Inherit(meta, base)
 	meta.__index = meta

@@ -7,7 +7,7 @@ HOOKS WEAPON
 		OUT activator, PN_Ref, PNF_None, Entity, #The initial cause for the input getting triggered.
 		OUT called, PN_Ref, PNF_None, Entity, #The entity that directly triggered the input.
 		OUT data, PN_String, #The data passed
-		IN suppress = false, #Suppress the default action
+		IN suppress = false, PN_Bool, #Suppress the default action
 	}
 	HOOK AdjustMouseSensitivity, CLIENT
 	{
@@ -66,6 +66,7 @@ HOOKS WEAPON
 	HOOK Deploy, SHARED
 	{
 		DESC Called when player has just switched to this weapon.
+		IN allow=true, PN_Bool, #Allow the weapon to be deployed
 	}
 	HOOK DoDrawCrosshair, CLIENT
 	{

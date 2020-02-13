@@ -227,8 +227,8 @@ end
 
 function meta:WriteToStream(stream, mode)
 
-	stream:WriteInt( self.type, false )
 	stream:WriteStr( self.uniqueID )
+	bpdata.WriteValue( self.type, stream )
 	bpdata.WriteValue( self.code, stream )
 	--bpdata.WriteValue( self.debugSymbols, stream )
 	return self
@@ -237,8 +237,8 @@ end
 
 function meta:ReadFromStream(stream, mode)
 
-	self.type = stream:ReadInt( false )
 	self.uniqueID = stream:ReadStr( 16 )
+	self.type = bpdata.ReadValue(stream)
 	self.code = bpdata.ReadValue(stream)
 	--self.debugSymbols = bpdata.ReadValue(stream)
 	return self
