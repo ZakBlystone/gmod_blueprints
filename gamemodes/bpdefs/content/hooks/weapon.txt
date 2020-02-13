@@ -1,7 +1,298 @@
 HOOKS WEAPON
 {
+	HOOK AcceptInput, SERVER
+	{
+		DESC Called when another entity fires and event to this entity.
+		OUT inputName, PN_String, #The name of the input that was triggered.
+		OUT activator, PN_Ref, PNF_None, Entity, #The initial cause for the input getting triggered.
+		OUT called, PN_Ref, PNF_None, Entity, #The entity that directly triggered the input.
+		OUT data, PN_String, #The data passed
+		IN suppress = false, #Suppress the default action
+	}
+	HOOK AdjustMouseSensitivity, CLIENT
+	{
+		DESC Allows you to adjust the mouse sensitivity.
+		IN scale=1, PN_Number, #SensitivityScale
+	}
+	HOOK Ammo1, SHARED
+	{
+		DESC Returns how much of primary ammo the player has.
+		IN ammo, PN_Number, #The amount of primary ammo player has
+	}
+	HOOK Ammo2, SHARED
+	{
+		DESC Returns how much of secondary ammo the player has.
+		IN ammo, PN_Number, #The amount of secondary ammo player has
+	}
+	HOOK CalcView, CLIENT
+	{
+		DESC Allows you to adjust player view while this weapon in use.
+		OUT player, PN_Ref, PNF_None, Player, #The owner of the weapon
+		OUT pos, PN_Vector, #The current position of the player's view
+		OUT ang, PN_Angles, #The current angles of player's view
+		OUT fov, PN_Number, #The current FOV of the player's view
+		IN pos, PN_Vector, #New position
+		IN ang, PN_Angles, #New angles
+		IN fov, PN_Number, #New FOV
+	}
+	HOOK CalcViewModelView, CLIENT
+	{
+		DESC Allows you to adjust player view while this weapon in use.
+		OUT viewModel, PN_Ref, PNF_None, Entity, #The viewmodel entity
+		OUT oldEyePos, PN_Vector, #Original position (before viewmodel bobbing and swaying)
+		OUT oldEyeAng, PN_Angles, #Original angles (before viewmodel bobbing and swaying)
+		OUT eyePos, PN_Vector, #Current position
+		OUT eyeAng, PN_Angles, #Current angle
+		IN pos, PN_Vector, #New position
+		IN ang, PN_Angles, #New angles
+	}
+	HOOK CanBePickedUpByNPCs, SERVER
+	{
+		DESC Called when a Citizen NPC is looking around to a (better) weapon to pickup.
+		IN allow, PN_Bool, #Allow NPCs to pick up this weapon
+	}
+	HOOK CanPrimaryAttack, SHARED
+	{
+		IN allow=true, PN_Bool, #Can use primary attack
+	}
+	HOOK CanSecondaryAttack, SHARED
+	{
+		IN allow=true, PN_Bool, #Can use secondary attack
+	}
+	HOOK CustomAmmoDisplay, CLIENT
+	{
+		IN data, PN_Struct, PNF_None, WeaponAmmoDisplay
+	}
+	HOOK Deploy, SHARED
+	{
+		DESC Called when player has just switched to this weapon.
+	}
+	HOOK DoDrawCrosshair, CLIENT
+	{
+		DESC Called when the crosshair is about to get drawn, and allows you to override it.
+		OUT x, PN_Number
+		OUT y, PN_Number
+		IN override=true, PN_Bool, #Override the default crosshair
+	}
+	HOOK DoImpactEffect, SHARED
+	{
+		DESC Called so the weapon can override the impact effects it makes.
+		OUT traceResult, PN_Struct, PNF_None, TraceResult, #Trace result from player's eyes to the impact point.
+		OUT damageType, PN_Enum, PNF_None, DMG, #The damage type of the bullet
+		IN override=true, PN_Bool, #Override the default impact effect
+	}
+	HOOK DrawHUD, CLIENT
+	{
+		DESC This hook allows you to draw on screen while this weapon is in use.
+	}
+	HOOK DrawHUDBackground, CLIENT
+	{
+		DESC 
+		{
+			This hook allows you to draw on screen while this weapon is in use.
+			This hook is called before DrawHUD
+		}
+	}
+	HOOK DrawWeaponSelection, CLIENT
+	{
+		DESC This hook draws the selection icon in the weapon selection menu.
+		OUT x, PN_Number
+		OUT y, PN_Number
+		OUT width, PN_Number
+		OUT height, PN_Number
+		OUT alpha, PN_Number
+	}
+	HOOK DrawWorldModel, CLIENT
+	{
+		DESC Called when we are about to draw the world model.
+	}
+	HOOK DrawWorldModelTranslucent, CLIENT
+	{
+		DESC Called when we are about to draw the translucent world model.
+	}
+	HOOK Equip, SERVER
+	{
+		DESC Called when a player or NPC has picked the weapon up.
+		OUT newOwner, PN_Ref, PNF_None, Entity
+	}
+	HOOK EquipAmmo, SERVER
+	{
+		DESC The player has picked up the weapon and has taken the ammo from it. The weapon will be removed immidiately after this call.
+		OUT player, PN_Ref, PNF_None, Player, #The player who picked up the weapon
+	}
+	HOOK FireAnimationEvent, SHARED
+	{
+		TBD
+		DESC
+		{
+			Called before firing animation events, such as muzzle flashes or shell ejections.
+			This will only be called serverside for 3000-range events, and clientside for 5000-range and other events.
+		}
+	}
+	HOOK FreezeMovement, CLIENT
+	{
+		DESC This hook allows you to freeze players screen.
+		IN freezeView, PN_Bool
+	}
+	HOOK GetCapabilities, SERVER
+	{
+		DESC This hook is for NPCs, you return what they should try to do with it.
+		IN capabilities, PN_Enum, PNF_Bitfield, CAP
+	}
+	HOOK GetNPCBulletSpread, SERVER
+	{
+		DESC Called when the weapon is used by NPCs to determine how accurate the bullets fired should be.
+		OUT proficiency, PN_Enum, PNF_None, WEAPON_PROFICIENCY
+		IN deviation, PN_Number, #How much in degrees the bullets should deviate
+	}
+	HOOK GetNPCBurstSettings, SERVER
+	{
+		DESC
+		{
+			Called when the weapon is used by NPCs to tell the NPC how to use this weapon.
+			Controls how long the NPC can or should shoot continuously.
+		}
+		IN minimum=1, PN_Number, #Minimum amount of bullets per burst.
+		IN maximum=1, PN_Number, #Maximum amount of bullets per burst.
+		IN delay=1, PN_Number, #Delay between each shot, aka firerate.
+	}
+	HOOK GetNPCRestTimes, SERVER
+	{
+		DESC
+		{
+			Called when the weapon is used by NPCs to tell the NPC how to use this weapon.
+			Controls amount of time the NPC can rest (not shoot) between bursts.
+		}
+		IN minimum=0.3, PN_Number, #Minimum amount of time the NPC can rest (not shoot) between bursts in seconds.
+		IN maximum=0.66, PN_Number, #Maximum amount of time the NPC can rest (not shoot) between bursts in seconds.
+	}
+	HOOK GetTracerOrigin, CLIENT
+	{
+		DESC Allows you to override where the tracer effect comes from. ( Visual bullets )
+		IN position, PN_Vector, #New position to start tracer effect from
+	}
+	HOOK GetViewModelPosition, CLIENT
+	{
+		DESC This hook allows you to adjust view model position and angles.
+		OUT eyePos, PN_Vector, #Current position
+		OUT eyeAng, PN_Angles, #Current angle
+		IN pos, PN_Vector, #New position
+		IN ang, PN_Angles, #New angles
+	}
+	HOOK Holster, SHARED
+	{
+		DESC Called when weapon tries to holster.
+		OUT switchingTo, PN_Ref, PNF_None, Weapon, #The weapon we are trying to switch to.
+		IN allow=true, PN_Bool, #Allow the weapon to holster
+	}
+	HOOK HUDShouldDraw, CLIENT
+	{
+		DESC This hook determines which parts of the HUD to draw.
+		OUT element, PN_String
+		IN shouldDraw=true, PN_Bool
+	}
 	HOOK Initialize, SHARED
 	{
 		DESC Called when the weapon entity is created.
+	}
+	HOOK KeyValue, SERVER
+	{
+		DESC Called when the engine sets a value for this scripted weapon.
+		OUT key, PN_String
+		OUT value, PN_String
+		IN suppress=false, PN_Bool
+	}
+	HOOK OnDrop, SERVER
+	{
+		DESC Called when weapon is dropped by Player:DropWeapon.
+	}
+	HOOK OnReloaded, SHARED
+	{
+		TBD
+		DESC Called whenever the weapons Lua script is reloaded.
+	}
+	HOOK OnRemove, SHARED
+	{
+		DESC Called when the swep is about to be removed.
+	}
+	HOOK OnRestore, SHARED
+	{
+		DESC Called when the weapon entity is reloaded from a Source Engine save (not the Sandbox saves or dupes) or on a changelevel (for example Half-Life 2 campaign level transitions).
+	}
+	HOOK OwnerChanged, SHARED
+	{
+		DESC Called when weapon is dropped or picked up by a new player.
+	}
+	HOOK PostDrawViewModel, CLIENT
+	{
+		DESC Called after the view model has been drawn while the weapon in use.
+		OUT viewModel, PN_Ref, PNF_None, Entity
+		OUT weapon, PN_Ref, PNF_None, Weapon
+		OUT player, PN_Ref, PNF_None, Player
+	}
+	HOOK PreDrawViewModel, CLIENT
+	{
+		DESC Allows you to modify viewmodel while the weapon in use before it is drawn.
+		OUT viewModel, PN_Ref, PNF_None, Entity
+		OUT weapon, PN_Ref, PNF_None, Weapon
+		OUT player, PN_Ref, PNF_None, Player
+	}
+	HOOK PrimaryAttack, SHARED
+	{
+		DESC Called when primary attack button ( +attack ) is pressed.
+	}
+	HOOK PrintWeaponInfo, CLIENT
+	{
+		TBD
+		DESC A convenience function that draws the weapon info box, used in WEAPON:DrawWeaponSelection.
+		OUT x, PN_Number
+		OUT y, PN_Number
+		OUT alpha, PN_Number
+	}
+	HOOK Reload, SHARED
+	{
+		DESC Called when the reload key ( +reload ) is pressed.
+	}
+	HOOK RenderScreen, CLIENT
+	{
+		DESC Called every frame just before GM:RenderScene.
+	}
+	HOOK SecondaryAttack, SHARED
+	{
+		DESC Called when secondary attack button ( +attack2 ) is pressed.
+	}
+	HOOK ShouldDrawViewModel, CLIENT
+	{
+		DESC Called to determine if the view model should be drawn or not.
+		IN shouldDraw=true, PN_Bool
+	}
+	HOOK ShouldDropOnDie, SERVER
+	{
+		DESC Should this weapon be dropped when its owner dies?
+		IN allowDrop=true, PN_Bool
+	}
+	HOOK Think, SHARED
+	{
+		DESC Called when the swep thinks.
+	}
+	HOOK TranslateActivity, SHARED
+	{
+		TBD
+		DESC
+		{
+			Translate a player's Activity into a weapon's activity, depending on how you want the player to be holding the weapon.
+			For example, ACT_MP_RUN becomes ACT_HL2MP_RUN_PISTOL.
+		}
+	}
+	HOOK TranslateFOV, SHARED
+	{
+		DESC Allows to change players field of view while player holds the weapon.
+		OUT FOV, PN_Number, #The current FOV
+		IN FOV, PN_Number, #The target FOV
+	}
+	HOOK ViewModelDrawn, CLIENT
+	{
+		DESC Called straight after the view model has been drawn.
+		OUT viewModel, PN_Ref, PNF_None, Entity
 	}
 }
