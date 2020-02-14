@@ -162,4 +162,52 @@ CLASS Weapon
 		DESC Sets when the weapon can alt-fire again. Time should be based on CurTime.
 		IN time, PN_Number, #Time when player should be able to use secondary fire again
 	}
+	FUNC PrintWeaponInfo, CLIENT
+	{
+		MODTYPE SWEP
+		DIRECTCALL
+		DESC A convenience function that draws the weapon info box, used in WEAPON:DrawWeaponSelection.
+		IN x, PN_Number
+		IN y, PN_Number
+		IN alpha, PN_Number
+	}
+	FUNC ShootBullet, SHARED
+	{
+		MODTYPE SWEP
+		DIRECTCALL
+		DESC A convenience function to shoot bullets.
+		IN damage, PN_Number
+		IN numBullets, PN_Number, #Number of bullets to shoot
+		IN aimcone, PN_Number, #Spread
+		IN ammoType, PN_String, PNF_Nullable
+		IN force=1, PN_Number
+		IN tracer=5, PN_Number, #Show a tracer on every x bullets
+	}
+	FUNC ShootEffects, SHARED
+	{
+		MODTYPE SWEP
+		DIRECTCALL
+		DESC A convenience function to create shoot effects.
+	}
+	FUNC TakePrimaryAmmo, SHARED
+	{
+		MODTYPE SWEP
+		DIRECTCALL
+		DESC A convenience function to remove primary ammo from clip.
+		IN amount, PN_Number, #Amount of primary ammo to remove
+	}
+	FUNC TakeSecondaryAmmo, SHARED
+	{
+		MODTYPE SWEP
+		DIRECTCALL
+		DESC A convenience function to remove primary ammo from clip.
+		IN amount, PN_Number, #Amount of primary ammo to remove
+	}
+	FUNC SetDeploySpeed, SHARED
+	{
+		MODTYPE SWEP
+		DIRECTCALL
+		DESC Sets the weapon deploy speed. This value needs to match on client and server.
+		IN speed, PN_Number
+	}
 }

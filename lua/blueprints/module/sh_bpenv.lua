@@ -29,6 +29,7 @@ function Install( mod )
 	print("INSTALL MODULE: " .. GUIDToString(uid))
 
 	mod:SetErrorHandler( HandleModuleError )
+	mod:Initialize()
 	installed[mod:GetUID()] = mod
 
 end
@@ -39,6 +40,8 @@ function Uninstall( uid )
 
 	if installed[uid] ~= nil then
 		print("UNINSTALL MODULE: " .. GUIDToString(uid))
+
+		installed[uid]:Shutdown()
 
 		DestroyAll(uid)
 		installed[uid] = nil
@@ -53,6 +56,8 @@ function Instantiate( uid, forceGUID )
 	if not installed[uid] then error("Tried to instantiate module before it was installed") end
 
 	local instance = installed[uid]:Instantiate( forceGUID )
+	if instance == nil then return nil end
+
 	instance:__Init()
 	active[#active+1] = instance
 	return instance
@@ -71,6 +76,7 @@ end
 
 function Destroy( instance )
 
+	if instance == nil then return end
 	instance:__Shutdown()
 	table.RemoveByValue(active, instance)
 

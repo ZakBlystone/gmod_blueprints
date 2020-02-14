@@ -38,7 +38,7 @@ function PANEL:Init()
 			_G.G_BPError = nil
 			self.editor:ClearReport()
 			--bpnet.SendModule( self.module )
-			local ok, res = self.module:TryCompile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+			local ok, res = self.module:TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 			if ok then
 				ok, res = res:TryLoad()
 				if ok then
@@ -57,7 +57,7 @@ function PANEL:Init()
 				return
 			end
 
-			local ok, res = self.module:TryCompile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+			local ok, res = self.module:TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 			if ok then
 				ok, res = res:TryLoad()
 				if ok then
@@ -79,8 +79,12 @@ function PANEL:Init()
 		end, nil, "icon16/flag_red.png"},
 		{"Export Lua Script", function()
 
-			local result = self.module:Compile( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
-			SetClipboardText(result:GetCode())
+			local ok, res = self.module:TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
+			if ok then
+				SetClipboardText( res:GetCode() )
+			else
+				ErrorNoHalt( res )
+			end
 
 		end, nil, "icon16/page_code.png"},
 	}

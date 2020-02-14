@@ -195,13 +195,30 @@ end
 
 function meta:Instantiate( forceGUID )
 
-	local instance = self:Get().new()
+	local func = self:Get().new
+	if not func then return nil end
+
+	local instance = func()
 	local meta = table.Copy(getmetatable(instance))
 	for k,v in pairs(imeta) do meta[k] = v end
 	setmetatable(instance, meta)
 	instance.__module = self
 	if forceGUID then instance.guid = forceGUID end
 	return instance
+
+end
+
+function meta:Initialize()
+
+	local func = self:Get().init
+	if func then func() end
+
+end
+
+function meta:Shutdown()
+
+	local func = self:Get().shutdown
+	if func then func() end
 
 end
 

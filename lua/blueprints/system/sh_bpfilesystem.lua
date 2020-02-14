@@ -260,7 +260,9 @@ local function RunLocalFile( file )
 	local modulePath = UIDToModulePath( file:GetUID() )
 	local mod = bpmodule.New()
 	mod:Load( modulePath )
-	local cmod = mod:Compile( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	local cmod = mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+
+	assert( cmod ~= nil )
 
 	bpnet.Install( cmod, file:GetOwner() )
 

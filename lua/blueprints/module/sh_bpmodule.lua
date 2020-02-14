@@ -36,7 +36,7 @@ function meta:Init(type)
 	self.variables = bplist.New(bpvariable_meta):NamedItems("Var")
 	self.events = bplist.New(bpevent_meta, self, "module"):NamedItems("Event")
 	self.id = nextModuleID
-	self.type = type or "Mod"
+	self.type = type or "mod"
 	self.revision = 1
 	self.uniqueID = bpcommon.GUID()
 	self.suppressGraphNotify = false
@@ -177,7 +177,16 @@ function meta:GetType()
 
 end
 
+function meta:IsConstructable()
+
+	return true
+
+end
+
 function meta:CanAddNode(nodeType)
+
+	local filter = nodeType:GetModFilter()
+	if filter and filter ~= self:GetType() then print("FILTER MISMATCH: " .. filter .. " ~= " .. self:GetType()) return false end
 
 	return true
 
@@ -478,6 +487,8 @@ function meta:ReadFromStream(stream, mode)
 		self.envVersion = ""
 	end
 
+	moduleClasses:Install( self:GetType(), self )
+
 	print( bpcommon.GUIDToString( self.uniqueID ) .. " v" .. self.revision  )
 
 	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
@@ -490,8 +501,6 @@ function meta:ReadFromStream(stream, mode)
 	end
 
 	self.suppressGraphNotify = false
-
-	moduleClasses:Install( self:GetType(), self )
 
 	return self
 
@@ -509,14 +518,14 @@ function meta:CreateTestModule()
 
 end
 
-function meta:Compile(flags)
+function meta:Build(flags)
 
 	local compiler = bpcompiler.New(self, flags)
 	return compiler:Compile()
 
 end
 
-function meta:TryCompile(flags)
+function meta:TryBuild(flags)
 
 	local compiler = bpcompiler.New(self, flags)
 	local b, e = pcall(compiler.Compile, compiler)

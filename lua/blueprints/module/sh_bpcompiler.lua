@@ -15,6 +15,8 @@ CP_PREPASS = 0
 CP_MAINPASS = 1
 CP_NETCODEMSG = 2
 CP_ALLOCVARS = 3
+CP_MODULEMETA = 4
+CP_MODULEBPM = 5
 
 TK_GENERIC = 0
 TK_NETCODE = 1
@@ -1012,15 +1014,23 @@ function meta:CompileCodeSegment()
 	-- update function, runs delays and resets the ilp recursion value for hooks
 	self.emit ("_FR_UPDATE(" .. (self.ilp and 1 or 0) .. ")")
 
-	-- constructor
-	self.emit("__bpm.new = function()")
-	self.emit("\tlocal instance = setmetatable({}, meta)")
-	self.emit("\tinstance.delays = {}")
-	self.emit("\tinstance.__bpm = __bpm")
-	self.emit("\tinstance.guid = __bpm.makeGUID()")
-	self.emitContext( CTX_Vars .. "global", 1 )
-	self.emit("\treturn instance")
-	self.emit("end")
+	self:RunModuleCompile( CP_MODULEMETA )
+
+	if self.module:IsConstructable() then
+
+		-- constructor
+		self.emit("__bpm.new = function()")
+		self.emit("\tlocal instance = setmetatable({}, meta)")
+		self.emit("\tinstance.delays = {}")
+		self.emit("\tinstance.__bpm = __bpm")
+		self.emit("\tinstance.guid = __bpm.makeGUID()")
+		self.emitContext( CTX_Vars .. "global", 1 )
+		self.emit("\treturn instance")
+		self.emit("end")
+
+	end
+
+	self:RunModuleCompile( CP_MODULEBPM )
 
 	-- event listing
 	self.emit("__bpm.events = {")
@@ -1042,7 +1052,9 @@ function meta:CompileCodeSegment()
 
 	if bit.band(self.flags, CF_Standalone) ~= 0 then
 
-		self.emit("_FR_STANDALONE()")
+		if self.module:IsConstructable() then
+			self.emit("_FR_STANDALONE()")
+		end
 
 	else
 
@@ -1086,6 +1098,13 @@ function meta:RunNodeCompile(node, pass)
 	local ntype = node:GetType()
 	if ntype.Compile then return ntype.Compile(node, self, pass) end
 	if node.Compile then return node:Compile(self, pass) end
+	return false
+
+end
+
+function meta:RunModuleCompile(pass)
+
+	if self.module.Compile then return self.module:Compile(self, pass) end
 	return false
 
 end

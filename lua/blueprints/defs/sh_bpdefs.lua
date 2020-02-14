@@ -266,6 +266,7 @@ local function ParseNodeValue(nodeType, v)
 	if key == "COMPACT" then nodeType:AddFlag(NTF_Compact) end
 	if key == "DEPRECATED" then nodeType:AddFlag(NTF_Deprecated) end
 	if key == "DESC" and WITH_DOCUMENTATION then nodeType:SetDescription(v.literal) end
+	if key == "DIRECTCALL" then nodeType:AddFlag(NTF_DirectCall) end
 	if key == "DISPLAY" then nodeType:SetDisplayName(v.literal) end
 	if key == "INFORM" then for i=2, #v.tuple do nodeType:AddInform(tonumber(v.tuple[i])) end end
 	if key == "JUMP" then nodeType:AddJumpSymbol(v.tuple[2]) end
@@ -273,6 +274,7 @@ local function ParseNodeValue(nodeType, v)
 	if key == "LOCAL" then nodeType:AddLocal(v.tuple[2]) end
 	if key == "GLOBAL" then nodeType:AddGlobal(v.tuple[2]) end
 	if key == "METATABLE" then nodeType:AddRequiredMeta(v.tuple[2]) end
+	if key == "MODTYPE" then nodeType:SetModFilter(v.tuple[2]) end
 	if key == "NOHOOK" then nodeType:AddFlag(NTF_NotHook) end
 	if key == "PARAM" then nodeType:SetNodeParam(v.tuple[2], v.tuple[3]) end
 	if key == "PROTECTED" then nodeType:AddFlag(NTF_Protected) end

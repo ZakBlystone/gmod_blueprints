@@ -43,6 +43,7 @@ NTF_Custom = 32
 NTF_NoDelete = 64
 NTF_Collapse = 128
 NTF_HidePinNames = 256
+NTF_DirectCall = 512
 
 GT_Event = 0
 GT_Function = 1

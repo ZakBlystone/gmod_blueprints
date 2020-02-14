@@ -38,6 +38,7 @@ function meta:Init(context, group)
 	self.warning = nil
 	self.context = context
 	self.group = group
+	self.modFilter = nil
 	return self
 
 end
@@ -49,6 +50,7 @@ function meta:AddJumpSymbol(name) self.jumpSymbols[#self.jumpSymbols+1] = name e
 function meta:AddLocal(name) self.locals[#self.locals+1] = name end
 function meta:AddGlobal(name) self.globals[#self.globals+1] = name end
 function meta:AddInform(pinID) self.informs[#self.informs+1] = pinID end
+function meta:SetModFilter(filter) self.modFilter = filter:lower() end
 function meta:SetRole(role) self.role = role end
 function meta:SetCodeType(codeType) self.codeType = codeType end
 function meta:SetName(name) self.name = name end
@@ -62,6 +64,7 @@ function meta:SetNodeParam(key, value) self.nodeParams[key] = value end
 function meta:SetWarning(msg) self.warning = msg end
 function meta:SetContext(context) self.context = context end
 
+function meta:GetModFilter() return self.modFilter end
 function meta:GetRole() return self.role end
 function meta:GetCodeType() return self.codeType end
 function meta:GetJumpSymbols() return self.jumpSymbols end
@@ -105,18 +108,22 @@ function meta:GetPins()
 		local typeName = self.group:GetParam("typeName")
 		local groupName = self.group:GetName()
 
-		if pinTypeOverride then
-			pins[#pins+1] = MakePin(
-				PD_In,
-				bpcommon.Camelize(typeName or groupName),
-				pinTypeOverride
-			)
-		else
-			pins[#pins+1] =  MakePin(
-				PD_In,
-				bpcommon.Camelize(typeName or groupName),
-				PN_Ref, PNF_None, groupName
-			)
+		if not self:HasFlag(NTF_DirectCall) then
+
+			if pinTypeOverride then
+				pins[#pins+1] = MakePin(
+					PD_In,
+					bpcommon.Camelize(typeName or groupName),
+					pinTypeOverride
+				)
+			else
+				pins[#pins+1] =  MakePin(
+					PD_In,
+					bpcommon.Camelize(typeName or groupName),
+					PN_Ref, PNF_None, groupName
+				)
+			end
+
 		end
 
 	end
@@ -222,6 +229,10 @@ function meta:GetCode()
 	local ret, arg, pins = PinRetArg( self:GetCodeType(), self:GetPins() )
 	local call = groupName .. "_." .. self.name
 
+	if self:GetContext() == NC_Class and self:HasFlag(NTF_DirectCall) then
+		call = "__self:" .. self.name
+	end
+
 	if self:GetContext() == NC_Lib then 
 		call = groupName == "GLOBAL" and self.name or groupName .. "." .. self.name
 	end
@@ -250,6 +261,7 @@ function meta:WriteToStream(stream)
 	bpdata.WriteValue(self.locals, stream)
 	bpdata.WriteValue(self.globals, stream)
 	bpdata.WriteValue(self.informs, stream)
+	bpdata.WriteValue(self.modFilter, stream)
 
 	stream:WriteBits(#self.pins, 8)
 	for i=1, #self.pins do
@@ -280,6 +292,7 @@ function meta:ReadFromStream(stream)
 	self.locals = bpdata.ReadValue(stream)
 	self.globals = bpdata.ReadValue(stream)
 	self.informs = bpdata.ReadValue(stream)
+	self.modFilter = bpdata.ReadValue(stream)
 
 	local numPins = stream:ReadBits(8)
 	for i=1, numPins do
