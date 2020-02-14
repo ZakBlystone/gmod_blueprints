@@ -94,15 +94,17 @@ meta.Spawnable = true
 meta.Primary = {
 	ClipSize = 100,
 	DefaultClip = 69,
-	Automatic = false,
+	Automatic = true,
 	Ammo = "Pistol"
 }
 meta.Secondary = {
-	ClipSize = 100,
-	DefaultClip = 69,
+	ClipSize = 0,
+	DefaultClip = 0,
 	Automatic = false,
 	Ammo = "Pistol"
 }
+meta.ViewModel = "models/weapons/c_smg1.mdl"
+meta.WorldModel = "models/weapons/w_smg1.mdl"
 for k,v in pairs(meta) do
 	local _, _, m = k:find("WEAPON_(.+)")
 	if m then meta[ m ] = v end
@@ -141,10 +143,11 @@ __bpm.playerKey = "bpplayerhadweapon_" .. __bpm.class
 __bpm.init = function()
 	weapons.Register( meta, __bpm.class )
 	if CLIENT then return end
-	timer.Simple(.2, function()
+	timer.Simple(.5, function()
 	for _, pl in ipairs( player.GetAll() ) do
 		if pl[__bpm.playerKey] then
 			pl:Give( __bpm.class )
+			pl:SelectWeapon( __bpm.class )
 			pl[__bpm.playerKey] = false
 		end
 	end
@@ -153,7 +156,13 @@ end
 __bpm.shutdown = function()
 	if CLIENT then return end
 	for _, e in ipairs( ents.FindByClass( __bpm.class ) ) do
-		if IsValid(e) then e:Remove() e.Owner[__bpm.playerKey] = true end
+		if IsValid(e) then 
+			if IsValid(e.Owner) then
+				e.Owner[__bpm.playerKey] = true
+				e.Owner:DropWeapon( e )
+			end
+			e:Remove()
+		end
 	end
 end]])
 

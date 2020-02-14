@@ -343,9 +343,10 @@ function meta:netPostCall(func, ...)
 	self.netCalls[#self.netCalls+1] = {f = func, a = {...}, g = __dbggraph or -1, n = __dbgnode or -1}
 end
 function meta:netReceiveHandshake(instanceGUID, len, pl)
+	if instanceGUID ~= self.guid then return end
 	if SERVER then
 		local ready = net.ReadBool()
-		if not ready and instanceGUID == self.guid then
+		if not ready then
 			print("Recv handshake request from: " .. tostring(pl))
 			net.Start("bphandshake")
 			net.WriteData(__bpm.guid, 16)
@@ -359,16 +360,14 @@ function meta:netReceiveHandshake(instanceGUID, len, pl)
 		end
 	else
 		local id = net.ReadUInt(16)
-		if instanceGUID == self.guid then
-			self.netChannel = self:allocChannel(id, self.guid)
-			print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
-			net.Start("bphandshake")
-			net.WriteData(__bpm.guid, 16)
-			net.WriteData(self.guid, 16)
-			net.WriteBool(true)
-			net.SendToServer()
-			self.netReady = true
-		end
+		self.netChannel = self:allocChannel(id, self.guid)
+		print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+		net.Start("bphandshake")
+		net.WriteData(__bpm.guid, 16)
+		net.WriteData(self.guid, 16)
+		net.WriteBool(true)
+		net.SendToServer()
+		self.netReady = true
 	end
 end
 function meta:netWriteTable(f, t)
