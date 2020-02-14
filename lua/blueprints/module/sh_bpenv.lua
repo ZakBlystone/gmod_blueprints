@@ -24,7 +24,7 @@ function Install( mod )
 
 	local uid = mod:GetUID()
 
-	if installed[uid] then Uninstall( uid ) end
+	if installed[uid] and mod:GetType() == "mod" then Uninstall( uid ) end
 
 	print("INSTALL MODULE: " .. GUIDToString(uid))
 
