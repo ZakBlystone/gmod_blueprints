@@ -527,12 +527,18 @@ function meta:FindConnection(nodeID0, pinID0, nodeID1, pinID1)
 
 end
 
-function meta:IsPinConnected(nodeID, pinID)
+function meta:IsPinConnected(nodeID, pinID, killConnections)
 
-	for _, connection in self:Connections() do
+	for i, connection in self:Connections() do
 
-		if connection[1] == nodeID and connection[2] == pinID then return true, connection end
-		if connection[3] == nodeID and connection[4] == pinID then return true, connection end
+		if connection[1] == nodeID and connection[2] == pinID then
+			if killConnections then self:RemoveConnectionID(i) continue end
+			return true, connection
+		end
+		if connection[3] == nodeID and connection[4] == pinID then
+			if killConnections then self:RemoveConnectionID(i) continue end
+			return true, connection
+		end
 
 	end
 
@@ -551,8 +557,8 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 	local p0 = self:GetNodePin(nodeID0, pinID0) --always PD_Out
 	local p1 = self:GetNodePin(nodeID1, pinID1) --always PD_In
 
-	if p0:IsType(PN_Exec) and self:IsPinConnected(nodeID0, pinID0) then return false, "Only one connection outgoing for exec pins" end
-	if not p1:IsType(PN_Exec) and self:IsPinConnected(nodeID1, pinID1) then return false, "Only one connection for inputs" end
+	if p0:IsType(PN_Exec) and self:IsPinConnected(nodeID0, pinID0, true) then return false, "Only one connection outgoing for exec pins" end
+	if not p1:IsType(PN_Exec) and self:IsPinConnected(nodeID1, pinID1, true) then return false, "Only one connection for inputs" end
 
 	if p0:GetDir() == p1:GetDir() then return false, "Can't connect " .. (p0:IsOut() and "m/m" or "f/f") .. " pins" end
 
@@ -669,6 +675,8 @@ function meta:RemoveConnectionID(id)
 		table.remove(self.connections, id)
 		self:WalkInforms()
 		self:FireListeners(CB_CONNECTION_REMOVE, id, c)
+	else
+		print("Could not find connection: " .. tostring(id))
 	end
 
 end
