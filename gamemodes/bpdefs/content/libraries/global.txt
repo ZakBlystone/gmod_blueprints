@@ -288,6 +288,7 @@ LIB GLOBAL
 	PURE FrameNumber, CLIENT
 	{
 		DESC Returns the number of frames rendered since the game was launched.
+		OUT frameNumber, PN_Number
 	}
 	PURE FrameTime, SHARED
 	{

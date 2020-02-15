@@ -544,6 +544,12 @@ STRUCT SoundData
 	PIN volume=1, PN_Number, #The volume of the sound as a decimal between 0 and 1. Can be a table of two numbers, a minimum and a maximum value.
 	PIN pitch=100, PN_Number, #The pitch of the sound. Can be a table of two numbers, a minimum and a maximum value.
 }
+STRUCT SunInfo
+{
+	DESC Returned by util.GetSunInfo.
+	PIN direction, PN_Vector, #The suns direction relative to 0,0,0
+	PIN obstruction, PN_Number, #Indicates how obstructed the sun is, 1 not visible, 0 fully visible
+}
 STRUCT ToScreenData
 {
 	DESC Table returned by Vector:ToScreen.

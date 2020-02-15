@@ -201,6 +201,7 @@ end
 function meta:GeneratePins(pins)
 
 	table.Add(pins, table.Copy(self:GetType():GetPins()))
+	if pins[1] == nil then return end
 	if self.data.codeTypeOverride == NT_Pure and pins[1]:IsType(PN_Exec) then
 		table.remove(pins, 1)
 		table.remove(pins, 1)
