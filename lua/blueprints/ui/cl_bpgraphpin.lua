@@ -324,6 +324,8 @@ end
 
 function meta:DrawHotspot(x,y,alpha)
 
+	if self.pin:IsType(PN_Dummy) then return end
+
 	local ox, oy = self:GetHotspotOffset()
 	local isTable = self.pin:HasFlag(PNF_Table)
 	local r,g,b,a = self.pin:GetColor():Unpack()

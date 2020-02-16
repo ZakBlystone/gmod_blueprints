@@ -102,6 +102,11 @@ LIB GLOBAL
 		IN materialData, PN_Any, PNF_Table, #Key-value table that contains shader parameters and proxies. See: List of Shader Parameters on Valve Developers Wiki and each shader's page from Category: Shaders. NOTE	 Unlike IMaterial:SetTexture, this table will not accept ITexture values. Instead, use the texture's name (see ITexture:GetName).
 		OUT material, PN_Ref, PNF_None, IMaterial, #Created material
 	}
+	FUNC CreateMaterial2, CLIENT
+	{
+		DESC Creates a new material with the specified name and shader.
+		CLASS CreateMaterial
+	}
 	FUNC CreateParticleSystem, CLIENT
 	{
 		DESC Creates a new particle system.

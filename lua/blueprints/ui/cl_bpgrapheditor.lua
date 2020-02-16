@@ -302,7 +302,7 @@ end
 function meta:TryGetNodePin(node,x,y)
 
 	for k,v in pairs(node:GetVPins()) do
-		if self:TestPoint(v, x, y) then
+		if self:TestPoint(v, x, y) and not v:GetPin():IsType(PN_Dummy) then
 			return v, false
 		end
 

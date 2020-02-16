@@ -43,19 +43,7 @@ function meta:GetDefault()
 
 end
 
-function meta:SetPinClass( class )
-
-	self.pinClass = class
-
-end
-
-function meta:GetPinClass()
-
-	local def = bpschema.PinTypeClasses[ self:GetBaseType() ]
-	return self.pinClass or def
-
-end
-
+function meta:GetPinClass() return bpschema.PinTypeClasses[ self:GetBaseType() ] end
 function meta:ToString()
 	local str = self:GetTypeName()
 	if self:GetSubType() ~= nil then str = str .. ", " .. self:GetSubType() end

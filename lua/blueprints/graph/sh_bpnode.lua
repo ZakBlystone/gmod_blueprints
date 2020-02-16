@@ -60,7 +60,7 @@ function meta:PostInit()
 
 end
 
-function meta:SetLiteralDefaults()
+function meta:SetLiteralDefaults( force )
 
 	local ntype = self:GetType()
 
@@ -68,7 +68,7 @@ function meta:SetLiteralDefaults()
 	for pinID, pin, pos in self:SidePins(PD_In) do
 		if pin:CanHaveLiteral() then
 			local default = pin:GetDefault()
-			if self:GetLiteral(pinID) == nil then
+			if force or self:GetLiteral(pinID) == nil then
 				self:SetLiteral(pinID, default)
 			end
 		end

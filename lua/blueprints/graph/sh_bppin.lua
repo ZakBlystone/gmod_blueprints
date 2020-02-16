@@ -20,11 +20,12 @@ end
 
 function meta:InitPinClass()
 
-	local pinClass = self:GetType():GetPinClass()
+	local pinClass = self.pinClass or self:GetType():GetPinClass()
 	if pinClass then pinClasses:Install(pinClass, self) end
 
 end
 
+function meta:SetPinClass(class) self.pinClass = class return self end
 function meta:SetLiteral(value) self:GetNode():SetLiteral( self.id, value ) end
 function meta:GetLiteral() return self:GetNode():GetLiteral( self.id ) end
 function meta:CanHaveLiteral() return self:GetLiteralType() ~= nil end

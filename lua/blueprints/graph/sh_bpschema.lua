@@ -18,7 +18,8 @@ PN_Enum = 8
 PN_Ref = 9
 PN_Struct = 10
 PN_Func = 11
-PN_Max = 12
+PN_Dummy = 12
+PN_Max = 13
 
 NT_Pure = 0
 NT_Function = 1
@@ -89,6 +90,7 @@ PinTypeNames = {
 	[PN_Ref] = "Ref",
 	[PN_Struct] = "Struct",
 	[PN_Func] = "Function",
+	[PN_Dummy] = "Dummy",
 }
 
 GraphTypeColors = {
@@ -109,6 +111,7 @@ NodePinColors = {
 	[PN_Ref] = Color(0,180,255),
 	[PN_Struct] = Color(40,80,255),
 	[PN_Func] = Color(127,127,127),
+	[PN_Dummy] = Color(0,0,0),
 }
 
 NodePinImplicitConversions = {
