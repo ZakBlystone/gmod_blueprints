@@ -2,6 +2,7 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuipickmenu", package.seeall, bpcommon.rescope(bpschema, bpnodetype))
 
+local G_PickerMenu = nil
 local PANEL = {}
 
 function OrFilter(a,b) return function(n) return a(n) or b(n) end end
@@ -19,10 +20,10 @@ function PANEL:OnEntrySelected( entry )
 
 end
 
-function PANEL:SortedOptions( filter, res )
+function PANEL:SortedOptions( filter, res, customSort )
 
 	local options = {}
-	local sort = self.sorter
+	local sort = customSort or self.sorter
 	for k,v in self.collection:Items() do
 		if filter(v) and not self:IsHidden(v) then options[#options+1] = v end
 	end
@@ -30,6 +31,7 @@ function PANEL:SortedOptions( filter, res )
 	for _, v in ipairs(options) do
 		res( v )
 	end
+	return options
 
 end
 
@@ -72,6 +74,13 @@ end
 function PANEL:IsHidden( entry )
 
 	return false
+
+end
+
+function PANEL:SetSearchRanker( func )
+
+	self.searchRanker = func
+	return self
 
 end
 
@@ -129,7 +138,6 @@ function PANEL:Init()
 	end)
 
 	self.timers = {}
-	self.nextTimer = 0
 
 	local function addTreeNode( p, name, icon, expanded, custom )
 
@@ -156,7 +164,7 @@ function PANEL:Init()
 
 	local function addTreeEntry( p, entry, expanded )
 
-		self.timers[#self.timers+1] = { t = self.nextTimer, f = function()
+		self.timers[#self.timers+1] = { f = function()
 
 			local custom = self:GetEntryPanel(entry)
 			local node = addTreeNode(p, self:GetDisplayName(entry), self:GetIcon(entry), expanded, custom )
@@ -167,7 +175,6 @@ function PANEL:Init()
 			end
 
 		end }
-		self.nextTimer = self.nextTimer + 0.001
 
 	end
 
@@ -192,10 +199,11 @@ function PANEL:Init()
 	self.search:RequestFocus()
 	self.search:SetUpdateOnType(true)
 	self.search.OnValueChange = function(te, ...) self:OnSearchTerm(...) end
-
-	self.tabs = vgui.Create("DPropertySheet", self )
-	self.tabs:DockMargin(5, 0, 5, 5)
-	self.tabs:Dock( FILL )
+	self.search.OnEnter = function()
+		if self.sortedOptions then
+			self:Select( self.sortedOptions[1] )
+		end
+	end
 
 	self.resultList = vgui.Create("DTree", self )
 	self.resultList:DockMargin(5, 0, 5, 5)
@@ -209,18 +217,16 @@ end
 
 function PANEL:RunTimers()
 
-	local ft = FrameTime()
-	for i=1, #self.timers do
+	local range = math.min(#self.timers, 25)
+	if range == 0 then return end
+
+	for i=1, range do
 		local t = self.timers[i]
-		if t.done then continue end
-		t.t = t.t - ft
-		if t.t <= 0 then
-			t.done = true
-			t.f()
-		end
+		t.f()
+		t.done = true
 	end
 
-	for i=#self.timers, 1, -1 do
+	for i=range, 1, -1 do
 		if self.timers[i].done then table.remove(self.timers,i) end
 	end
 
@@ -237,14 +243,40 @@ function PANEL:Setup()
 	if self.collection == nil then return end
 	self.baseFilter = self.baseFilter or function() return true end
 
-	for _,v in ipairs(self.pages) do
+	if #self.pages > 0 then
 
-		local tree = vgui.Create("DTree")
-		tree:SetBackgroundColor(Color(50,50,50))
-		self.tabs:AddSheet( v.name, tree, v.icon, false, false, v.desc )
-		self:SortedOptions( AndFilter(self.baseFilter, v.filter), self.treeInserter(tree, {}, v.expanded) )
+		self.tabs = vgui.Create("DPropertySheet", self )
+		self.tabs:DockMargin(5, 0, 5, 5)
+		self.tabs:Dock( FILL )
+
+		for _,v in ipairs(self.pages) do
+
+			local tree = vgui.Create("DTree")
+			tree:SetBackgroundColor(Color(50,50,50))
+			self.tabs:AddSheet( v.name, tree, v.icon, false, false, v.desc )
+			self:SortedOptions( AndFilter(self.baseFilter, v.filter), self.treeInserter(tree, {}, v.expanded) )
+
+		end
+
+	else
+
+		self.tabs = vgui.Create("DTree", self )
+		self.tabs:DockMargin(5, 0, 5, 5)
+		self.tabs:Dock( FILL )
+		self.tabs:SetBackgroundColor(Color(50,50,50))
+		self:SortedOptions( self.baseFilter, self.treeInserter(self.tabs, {}, true) )
 
 	end
+
+end
+
+local function DefaultSearchRanker( entry, query, queryLength, panel )
+
+	local str = panel:GetDisplayName(entry):lower()
+	local len = str:len() - queryLength
+	if str == query then return len end
+	if str:find(query) == 1 then return len + 100 end
+	return len + 1000
 
 end
 
@@ -258,12 +290,28 @@ function PANEL:OnSearchTerm( text )
 		self.tabs:SetVisible(false)
 
 		self.timers = {}
-		self.nextTimer = 0
-
 		self.resultList:Clear()
-		self:SortedOptions( AndFilter(self.baseFilter, self:FilterBySubstring( text:lower() ) ), self.treeInserter(self.resultList, {}, true) )
+
+
+		local search = text:lower()
+		local searchLen = search:len()
+		local f = self.searchRanker or DefaultSearchRanker
+		local function SearchSort(a,b)
+			local arank = f(a, search, searchLen, self)
+			local brank = f(b, search, searchLen, self)
+			if arank == brank then
+				if self.sorter then return self.sorter(a, b) end
+				return self:GetDisplayName(a) < self:GetDisplayName(b)
+			else
+				return arank < brank
+			end
+		end
+
+		self.sortedOptions = self:SortedOptions( AndFilter(self.baseFilter, self:FilterBySubstring( text:lower() ) ), self.treeInserter(self.resultList, {}, true), SearchSort )
 
 	else
+
+		self.sortedOptions = nil
 
 		self.resultList:SetVisible(false)
 		self.tabs:SetVisible(true)
@@ -289,6 +337,8 @@ vgui.Register( "BPPickMenu", PANEL, "EditablePanel" )
 
 function Create(x, y, w, h)
 
+	if IsValid(G_PickerMenu) then G_PickerMenu:Remove() end
+
 	x = x or gui.MouseX()
 	y = y or gui.MouseY()
 
@@ -309,6 +359,8 @@ function Create(x, y, w, h)
 	createMenu:SetPos(x,y)
 	createMenu:SetVisible( true )
 	createMenu:MakePopup()
+
+	G_PickerMenu = createMenu
 
 	return createMenu
 

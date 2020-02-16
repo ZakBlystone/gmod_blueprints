@@ -32,7 +32,7 @@ PNF_Table = 1
 PNF_Nullable = 2
 PNF_Bitfield = 4
 PNF_Custom = 8
-PNF_All = 7
+PNF_All = 15
 
 NTF_None = 0
 NTF_Deprecated = 1
@@ -140,7 +140,7 @@ PinTypeClasses = {
 	[PN_Bool] = "Boolean",
 	[PN_Number] = "Number",
 	[PN_String] = "String",
-	--[PN_Enum] = "Enum",
+	[PN_Enum] = "Enum",
 	[PN_Vector] = "Vector",
 	[PN_Color] = "Color",
 	[PN_Angles] = "Angle"
@@ -149,12 +149,7 @@ PinTypeClasses = {
 PinType = bppintype.New
 
 function IsPinType(v)
-	if type(v) == "table" then
-		local m = getmetatable(v)
-		if m == bpcommon.FindMetaTable("bppintype") then return true end
-		if m == bpcommon.FindMetaTable("bppin") then return true end
-	end
-	return false
+	return isbppin(v) or isbppintype(v)
 end
 
 NodePinNetworkThunks = {}

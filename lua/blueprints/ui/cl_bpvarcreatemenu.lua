@@ -2,6 +2,36 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuivarcreatemenu", package.seeall, bpcommon.rescope(bpschema))
 
+function VarList( element, window, list, name )
+
+	local module = element.module
+	local vlist = vgui.Create( "BPListView", window )
+	vlist:SetList( list )
+	vlist:SetText( name )
+	vlist:SetNoConfirm()
+	vlist.HandleAddItem = function(pnl)
+		local id, item = list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ), name )
+		pnl:Rename(id)
+	end
+	vlist.OpenMenu = function(pnl, id, item)
+		window.menu = bpuivarcreatemenu.OpenPinSelectionMenu(module, function(pnl, pinType)
+			element:PreModify()
+			item:SetType( pinType )
+			element:PostModify()
+		end)
+	end
+	vlist.ItemBackgroundColor = function( list, id, item, selected )
+		local vcolor = item:GetColor()
+		if selected then
+			return vcolor
+		else
+			return Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5)
+		end
+	end
+
+	return vlist
+
+end
 
 local function PinTypeDisplayName( pinType )
 
@@ -36,12 +66,39 @@ function PaintPinType( btn, w, h, pinType )
 
 end
 
+local categoryOrder = {
+	["Basic"] = 1,
+	["Custom"] = 2,
+	["Classes"] = 3,
+	["Structs"] = 4,
+	["Enums"] = 5,
+}
+
+local tableOrder = {
+	[false] = 1,
+	[true] = 2,
+}
+
+local function SearchRanker( entry, query, queryLength, panel )
+
+	local str = panel:GetDisplayName(entry):lower()
+	local rank = str:len() - queryLength
+	if str == query then rank = 0
+	elseif str:find(query) == 1 then
+		rank = rank + 100
+		rank = rank + categoryOrder[ panel:GetCategory( entry ) ] * 400
+	else rank = rank + 4000
+	end
+	return rank
+
+end
+
 function OpenPinSelectionMenu( module, onSelected )
 
 	local collection = bpcollection.New()
 	module:GetPinTypes( collection )
 
-	local tablePins = bpcommon.Transform( bpdefs.Get():GetPinTypes(), {}, function(t)
+	local tablePins = bpcommon.Transform( function() return collection:Items() end, {}, function(t)
 		return t:AsTable()
 	end)
 
@@ -53,16 +110,24 @@ function OpenPinSelectionMenu( module, onSelected )
 	menu:AddPage( "Table", "Table of this type", nil, function(e) return e:HasFlag(PNF_Table) end, true )
 	menu.OnEntrySelected = onSelected
 	menu.GetDisplayName = function(pnl, e) return PinTypeDisplayName(e) end
+	menu:SetSearchRanker( SearchRanker )
 	menu:SetSorter( function(a,b)
 		local aname = menu:GetDisplayName(a)
 		local bname = menu:GetDisplayName(b)
-		local acat = menu:GetCategory(a)
-		local bcat = menu:GetCategory(b)
-		if acat == bcat then return aname:lower() < bname:lower() end
+		local acat = categoryOrder[menu:GetCategory(a)] or 0
+		local bcat = categoryOrder[menu:GetCategory(b)] or 0
+		if acat == bcat then
+			if aname == bname then
+				return tableOrder[a:HasFlag(PNF_Table)] < tableOrder[b:HasFlag(PNF_Table)]
+			else
+				return aname:lower() < bname:lower()
+			end
+		end
 		return acat < bcat
 	end 
 	)
 	menu.GetCategory = function(pnl, e)
+		if e:HasFlag(PNF_Custom) then return "Custom", "icon16/wrench.png" end
 		if e:IsType(PN_Ref) then return "Classes", "icon16/bricks.png" end
 		if e:IsType(PN_Enum) then return "Enums", "icon16/book_open.png" end
 		if e:IsType(PN_Struct) then return "Structs", "icon16/table.png" end

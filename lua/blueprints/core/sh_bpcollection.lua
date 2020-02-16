@@ -51,6 +51,7 @@ end
 function meta:Add( tab )
 
 	self.tables[#self.tables+1] = tab
+	return self
 
 end
 

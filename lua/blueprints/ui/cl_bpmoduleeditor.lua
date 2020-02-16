@@ -160,8 +160,8 @@ function PANEL:Init()
 	self.VarList = vgui.Create("BPListView", bottomSplit)
 	self.VarList:SetText("Variables")
 	self.VarList.HandleAddItem = function(list)
-		print("TYPE: " .. type(self.module))
-		self.module:NewVariable( "", bpschema.PinType( bpschema.PN_Bool ) )
+		local id, item = self.module:NewVariable( "", bpschema.PinType( bpschema.PN_Bool ) )
+		list:Rename(id)
 	end
 	local d = self.VarList.CreateItemPanel
 	self.VarList.OpenMenu = function(pnl, id, item)
