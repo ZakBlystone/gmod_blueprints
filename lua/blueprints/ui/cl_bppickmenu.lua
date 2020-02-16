@@ -137,7 +137,6 @@ function PANEL:Init()
 	end)
 
 	self.timers = {}
-	self.nextTimer = 0
 
 	local function addTreeNode( p, name, icon, expanded, custom )
 
@@ -164,7 +163,7 @@ function PANEL:Init()
 
 	local function addTreeEntry( p, entry, expanded )
 
-		self.timers[#self.timers+1] = { t = self.nextTimer, f = function()
+		self.timers[#self.timers+1] = { f = function()
 
 			local custom = self:GetEntryPanel(entry)
 			local node = addTreeNode(p, self:GetDisplayName(entry), self:GetIcon(entry), expanded, custom )
@@ -175,7 +174,6 @@ function PANEL:Init()
 			end
 
 		end }
-		self.nextTimer = self.nextTimer + 0.001
 
 	end
 
@@ -213,18 +211,16 @@ end
 
 function PANEL:RunTimers()
 
-	local ft = FrameTime()
-	for i=1, #self.timers do
+	local range = math.min(#self.timers, 25)
+	if range == 0 then return end
+
+	for i=1, range do
 		local t = self.timers[i]
-		if t.done then continue end
-		t.t = t.t - ft
-		if t.t <= 0 then
-			t.done = true
-			t.f()
-		end
+		t.f()
+		t.done = true
 	end
 
-	for i=#self.timers, 1, -1 do
+	for i=range, 1, -1 do
 		if self.timers[i].done then table.remove(self.timers,i) end
 	end
 
@@ -288,8 +284,6 @@ function PANEL:OnSearchTerm( text )
 		self.tabs:SetVisible(false)
 
 		self.timers = {}
-		self.nextTimer = 0
-
 		self.resultList:Clear()
 
 

@@ -686,30 +686,91 @@ function meta:OpenCreationContext( pinFilter )
 	wx = wx / scaleFactor
 	wy = wy / scaleFactor
 
-	local createMenu = vgui.Create("BPCreateMenu")
+	local categoryOrder = {
+		[bpnodetype.NC_Hook] = 1,
+		[bpnodetype.NC_Class] = 2,
+		[bpnodetype.NC_Lib] = 3,
+		[bpnodetype.NC_Struct] = 4,
+		other = 5,
+	}
 
-	if x + createMenu:GetWide() > ScrW() then
-		x = ScrW() - createMenu:GetWide()
+	local graph = self:GetGraph()
+	graph:CacheNodeTypes()
+
+	local nodeTypes = graph:GetNodeTypes()
+
+	local function FilterByType( filterType ) return function(n) return n:GetCodeType() == filterType end end
+	local function FilterByPinType( pinType ) return function(n)
+			for _, pin in ipairs(n.pins) do
+				if pin:GetType():Equal(pinType, 0) then return true end
+			end
+			return false
+		end
 	end
 
-	if y + createMenu:GetTall() > ScrH() then
-		y = ScrH() - createMenu:GetTall()
-	end
-
-	createMenu:SetPos(x,y)
-	createMenu:SetVisible( true )
-	createMenu:MakePopup()
-	createMenu:Setup( self:GetGraph(), pinFilter )
-	createMenu.OnNodeTypeSelected = function( menu, nodeType )
+	local menu = bpuipickmenu.Create(nil, nil, 400, 500)
+	menu:SetCollection( nodeTypes )
+	menu:SetSorter( function(a,b)
+		local acat = categoryOrder[a:GetContext()] or categoryOrder.other
+		local bcat = categoryOrder[b:GetContext()] or categoryOrder.other
+		if acat == bcat then
+			return a:GetDisplayName() < b:GetDisplayName()
+		end
+		return acat < bcat
+	end )
+	menu.OnEntrySelected = function(pnl, e)
 
 		self:CreateUndo("Added Node")
-		local nodeID, node = self:GetGraph():AddNode(nodeType, wx, wy)
+		local nodeID, node = self:GetGraph():AddNode(e, wx, wy)
 		self:ConnectNodeToGrabbedPin( node )
 		self:ResetGrabbedPin()
 
 	end
+	menu.GetDisplayName = function(pnl, e) return e:GetDisplayName() end
+	menu.GetTooltip = function(pnl, e) return e:GetDescription() end
+	menu.GetCategory = function(pnl, e)
+		local context = e:GetContext()
+		if context == bpnodetype.NC_Hook then return "Hooks", "icon16/connect.png"
+		elseif context == bpnodetype.NC_Class then return "Classes", "icon16/bricks.png"
+		elseif context == bpnodetype.NC_Lib then return "Libs", "icon16/brick.png"
+		elseif context == bpnodetype.NC_Struct then return "Structs", "icon16/table.png"
+		end
+		return "Other"
+	end
+	menu.GetSubCategory = function(pnl, e)
+		local category = e:GetCategory()
+		if category then return category, "icon16/bullet_go.png" end
+	end
+	menu.GetIcon = function(pnl, e)
+		local role = e:GetRole()
+		if role == ROLE_Server then return "icon16/bullet_blue.png" end
+		if role == ROLE_Client then return "icon16/bullet_orange.png" end
+		if role == ROLE_Shared then return "icon16/bullet_purple.png" end
+		return "icon16/bullet_white.png"
+	end
+	menu.IsHidden = function(pnl, e)
+		return not graph:CanAddNode(e)
+	end
+	if pinFilter then
+		menu:SetBaseFilter( function(e)
+			local pinID, pin = FindMatchingPin(e, pinFilter)
+			return pin ~= nil
+		end)
+	end
 
-	self.menu = createMenu
+	local entityType = bppintype.New(PN_Ref, PNF_None, "Entity")
+	local playerType = bppintype.New(PN_Ref, PNF_None, "Player")
+	local anyType = bppintype.New(PN_Any, PNF_None)
+
+	menu:AddPage( "All", "All Nodes", "icon16/book.png", nil, false )
+	menu:AddPage( "Hooks", "Hook Nodes", "icon16/connect.png", FilterByType(NT_Event), true )
+	menu:AddPage( "Entity", "Entity Nodes", "icon16/bricks.png", FilterByPinType(entityType), true )
+	menu:AddPage( "Player", "Entity Nodes", "icon16/user.png", FilterByPinType(playerType), true )
+	menu:AddPage( "Special", "Special Nodes", "icon16/plugin.png", bpuipickmenu.OrFilter( FilterByType(NT_Special), FilterByPinType(anyType) ), true )
+	menu:AddPage( "Custom", "User Created Nodes", "icon16/wrench.png", function(n) return n:HasFlag(NTF_Custom) end, true )
+	menu:Setup()
+	self.menu = menu
+	return menu
 
 end
 
