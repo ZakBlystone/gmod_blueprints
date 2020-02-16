@@ -36,11 +36,11 @@ function PinLiteralEditWindow( pin, innerClass, w, h, onClose, xoff, yoff )
 
 end
 
-function EditPinLiteral( vpin )
+function EditPinLiteral( pin )
 
-	local node = vpin:GetVNode():GetNode()
-	local pinID = vpin:GetPinID()
-	local literalType = vpin:GetPin():GetLiteralType()
+	local node = pin:GetNode()
+	local pinID = pin.id
+	local literalType = pin:GetLiteralType()
 
 	local literal = tostring(node:GetLiteral(pinID))
 
@@ -48,7 +48,7 @@ function EditPinLiteral( vpin )
 	local x, y = gui.MouseX(), gui.MouseY()
 
 	local window = vgui.Create( "DFrame" )
-	window:SetTitle( vpin:GetPin():GetDisplayName() )
+	window:SetTitle( pin:GetDisplayName() )
 	window:SetDraggable( false )
 	window:ShowCloseButton( false )
 

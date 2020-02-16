@@ -201,10 +201,6 @@ function PANEL:Init()
 	self.search:SetUpdateOnType(true)
 	self.search.OnValueChange = function(te, ...) self:OnSearchTerm(...) end
 
-	self.tabs = vgui.Create("DPropertySheet", self )
-	self.tabs:DockMargin(5, 0, 5, 5)
-	self.tabs:Dock( FILL )
-
 	self.resultList = vgui.Create("DTree", self )
 	self.resultList:DockMargin(5, 0, 5, 5)
 	self.resultList:Dock( FILL )
@@ -245,12 +241,28 @@ function PANEL:Setup()
 	if self.collection == nil then return end
 	self.baseFilter = self.baseFilter or function() return true end
 
-	for _,v in ipairs(self.pages) do
+	if #self.pages > 0 then
 
-		local tree = vgui.Create("DTree")
-		tree:SetBackgroundColor(Color(50,50,50))
-		self.tabs:AddSheet( v.name, tree, v.icon, false, false, v.desc )
-		self:SortedOptions( AndFilter(self.baseFilter, v.filter), self.treeInserter(tree, {}, v.expanded) )
+		self.tabs = vgui.Create("DPropertySheet", self )
+		self.tabs:DockMargin(5, 0, 5, 5)
+		self.tabs:Dock( FILL )
+
+		for _,v in ipairs(self.pages) do
+
+			local tree = vgui.Create("DTree")
+			tree:SetBackgroundColor(Color(50,50,50))
+			self.tabs:AddSheet( v.name, tree, v.icon, false, false, v.desc )
+			self:SortedOptions( AndFilter(self.baseFilter, v.filter), self.treeInserter(tree, {}, v.expanded) )
+
+		end
+
+	else
+
+		self.tabs = vgui.Create("DTree", self )
+		self.tabs:DockMargin(5, 0, 5, 5)
+		self.tabs:Dock( FILL )
+		self.tabs:SetBackgroundColor(Color(50,50,50))
+		self:SortedOptions( self.baseFilter, self.treeInserter(self.tabs, {}, true) )
 
 	end
 

@@ -573,25 +573,8 @@ end
 
 function meta:EditPinLiteral(vnode, vpin)
 
-	local node = vnode:GetNode()
 	local pin = vpin:GetPin()
-	local pinID = vpin:GetPinID()
-	local literalType = pin:GetLiteralType()
-	local value = node:GetLiteral( pinID )
-
-	if pin.OnClicked then
-		pin:OnClicked()
-	end
-
-	if literalType == "bool" then
-		node:SetLiteral(pinID, value == "true" and "false" or "true")
-	elseif literalType == "string" then
-		bptextliteraledit.EditPinLiteral(vpin)
-	elseif literalType == "number" then
-		bptextliteraledit.EditPinLiteral(vpin)
-	elseif literalType == "enum" then
-		self:OpenEnumContext(node, pin, pinID, value)
-	end
+	if pin.OnClicked then pin:OnClicked() end
 
 end
 
