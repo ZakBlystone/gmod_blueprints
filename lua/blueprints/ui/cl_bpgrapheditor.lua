@@ -749,7 +749,9 @@ function meta:OpenCreationContext( pinFilter )
 		return "icon16/bullet_white.png"
 	end
 	menu.IsHidden = function(pnl, e)
-		return not graph:CanAddNode(e)
+		if e:HasFlag(NTF_Deprecated) then return true end
+		if not graph:CanAddNode(e) then return true end
+		return false
 	end
 	if pinFilter then
 		menu:SetBaseFilter( function(e)

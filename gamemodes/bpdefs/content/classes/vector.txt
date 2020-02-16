@@ -47,6 +47,7 @@ CLASS Vector, vector, PN_Vector
 	}
 	PURE DotProduct, SHARED
 	{
+		DEPRECATED
 		DESC  Vector Vector
 		IN Vector, PN_Vector, #The other vector.
 		OUT dot, PN_Number, #Dot Product

@@ -31,6 +31,7 @@ function PANEL:SortedOptions( filter, res, customSort )
 	for _, v in ipairs(options) do
 		res( v )
 	end
+	return options
 
 end
 
@@ -198,6 +199,11 @@ function PANEL:Init()
 	self.search:RequestFocus()
 	self.search:SetUpdateOnType(true)
 	self.search.OnValueChange = function(te, ...) self:OnSearchTerm(...) end
+	self.search.OnEnter = function()
+		if self.sortedOptions then
+			self:Select( self.sortedOptions[1] )
+		end
+	end
 
 	self.resultList = vgui.Create("DTree", self )
 	self.resultList:DockMargin(5, 0, 5, 5)
@@ -301,9 +307,11 @@ function PANEL:OnSearchTerm( text )
 			end
 		end
 
-		self:SortedOptions( AndFilter(self.baseFilter, self:FilterBySubstring( text:lower() ) ), self.treeInserter(self.resultList, {}, true), SearchSort )
+		self.sortedOptions = self:SortedOptions( AndFilter(self.baseFilter, self:FilterBySubstring( text:lower() ) ), self.treeInserter(self.resultList, {}, true), SearchSort )
 
 	else
+
+		self.sortedOptions = nil
 
 		self.resultList:SetVisible(false)
 		self.tabs:SetVisible(true)
