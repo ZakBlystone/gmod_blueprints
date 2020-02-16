@@ -36,6 +36,33 @@ function PaintPinType( btn, w, h, pinType )
 
 end
 
+local categoryOrder = {
+	["Basic"] = 1,
+	["Custom"] = 2,
+	["Classes"] = 3,
+	["Structs"] = 4,
+	["Enums"] = 5,
+}
+
+local tableOrder = {
+	[false] = 1,
+	[true] = 2,
+}
+
+local function SearchRanker( entry, query, queryLength, panel )
+
+	local str = panel:GetDisplayName(entry):lower()
+	local rank = str:len() - queryLength
+	if str == query then rank = 0
+	elseif str:find(query) == 1 then
+		rank = rank + 100
+		rank = rank + categoryOrder[ panel:GetCategory( entry ) ] * 400
+	else rank = rank + 4000
+	end
+	return rank
+
+end
+
 function OpenPinSelectionMenu( module, onSelected )
 
 	local collection = bpcollection.New()
@@ -47,26 +74,25 @@ function OpenPinSelectionMenu( module, onSelected )
 
 	collection:Add( tablePins )
 
-	local categoryOrder = {
-		["Basic"] = 1,
-		["Custom"] = 2,
-		["Classes"] = 3,
-		["Structs"] = 4,
-		["Enums"] = 5,
-	}
-
 	local menu = bpuipickmenu.Create(nil, nil, 300)
 	menu:SetCollection( collection )
 	menu:AddPage( "Single", "Basic variable", nil, function(e) return not e:HasFlag(PNF_Table) end, true )
 	menu:AddPage( "Table", "Table of this type", nil, function(e) return e:HasFlag(PNF_Table) end, true )
 	menu.OnEntrySelected = onSelected
 	menu.GetDisplayName = function(pnl, e) return PinTypeDisplayName(e) end
+	menu:SetSearchRanker( SearchRanker )
 	menu:SetSorter( function(a,b)
 		local aname = menu:GetDisplayName(a)
 		local bname = menu:GetDisplayName(b)
 		local acat = categoryOrder[menu:GetCategory(a)] or 0
 		local bcat = categoryOrder[menu:GetCategory(b)] or 0
-		if acat == bcat then return aname:lower() < bname:lower() end
+		if acat == bcat then
+			if aname == bname then
+				return tableOrder[a:HasFlag(PNF_Table)] < tableOrder[b:HasFlag(PNF_Table)]
+			else
+				return aname:lower() < bname:lower()
+			end
+		end
 		return acat < bcat
 	end 
 	)

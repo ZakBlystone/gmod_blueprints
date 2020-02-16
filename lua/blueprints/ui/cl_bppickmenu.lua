@@ -20,10 +20,10 @@ function PANEL:OnEntrySelected( entry )
 
 end
 
-function PANEL:SortedOptions( filter, res )
+function PANEL:SortedOptions( filter, res, customSort )
 
 	local options = {}
-	local sort = self.sorter
+	local sort = customSort or self.sorter
 	for k,v in self.collection:Items() do
 		if filter(v) and not self:IsHidden(v) then options[#options+1] = v end
 	end
@@ -73,6 +73,13 @@ end
 function PANEL:IsHidden( entry )
 
 	return false
+
+end
+
+function PANEL:SetSearchRanker( func )
+
+	self.searchRanker = func
+	return self
 
 end
 
@@ -249,6 +256,16 @@ function PANEL:Setup()
 
 end
 
+local function DefaultSearchRanker( entry, query, queryLength, panel )
+
+	local str = panel:GetDisplayName(entry):lower()
+	local len = str:len() - queryLength
+	if str == query then return len end
+	if str:find(query) == 1 then return len + 100 end
+	return len + 1000
+
+end
+
 function PANEL:OnSearchTerm( text )
 
 	if self.collection == nil then return end
@@ -262,7 +279,23 @@ function PANEL:OnSearchTerm( text )
 		self.nextTimer = 0
 
 		self.resultList:Clear()
-		self:SortedOptions( AndFilter(self.baseFilter, self:FilterBySubstring( text:lower() ) ), self.treeInserter(self.resultList, {}, true) )
+
+
+		local search = text:lower()
+		local searchLen = search:len()
+		local f = self.searchRanker or DefaultSearchRanker
+		local function SearchSort(a,b)
+			local arank = f(a, search, searchLen, self)
+			local brank = f(b, search, searchLen, self)
+			if arank == brank then
+				if self.sorter then return self.sorter(a, b) end
+				return self:GetDisplayName(a) < self:GetDisplayName(b)
+			else
+				return arank < brank
+			end
+		end
+
+		self:SortedOptions( AndFilter(self.baseFilter, self:FilterBySubstring( text:lower() ) ), self.treeInserter(self.resultList, {}, true), SearchSort )
 
 	else
 
