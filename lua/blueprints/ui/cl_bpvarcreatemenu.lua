@@ -41,11 +41,19 @@ function OpenPinSelectionMenu( module, onSelected )
 	local collection = bpcollection.New()
 	module:GetPinTypes( collection )
 
-	local tablePins = bpcommon.Transform( bpdefs.Get():GetPinTypes(), {}, function(t)
+	local tablePins = bpcommon.Transform( function() return collection:Items() end, {}, function(t)
 		return t:AsTable()
 	end)
 
 	collection:Add( tablePins )
+
+	local categoryOrder = {
+		["Basic"] = 1,
+		["Custom"] = 2,
+		["Classes"] = 3,
+		["Structs"] = 4,
+		["Enums"] = 5,
+	}
 
 	local menu = bpuipickmenu.Create(nil, nil, 300)
 	menu:SetCollection( collection )
@@ -56,13 +64,14 @@ function OpenPinSelectionMenu( module, onSelected )
 	menu:SetSorter( function(a,b)
 		local aname = menu:GetDisplayName(a)
 		local bname = menu:GetDisplayName(b)
-		local acat = menu:GetCategory(a)
-		local bcat = menu:GetCategory(b)
+		local acat = categoryOrder[menu:GetCategory(a)] or 0
+		local bcat = categoryOrder[menu:GetCategory(b)] or 0
 		if acat == bcat then return aname:lower() < bname:lower() end
 		return acat < bcat
 	end 
 	)
 	menu.GetCategory = function(pnl, e)
+		if e:HasFlag(PNF_Custom) then return "Custom", "icon16/wrench.png" end
 		if e:IsType(PN_Ref) then return "Classes", "icon16/bricks.png" end
 		if e:IsType(PN_Enum) then return "Enums", "icon16/book_open.png" end
 		if e:IsType(PN_Struct) then return "Structs", "icon16/table.png" end

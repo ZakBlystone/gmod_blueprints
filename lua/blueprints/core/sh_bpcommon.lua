@@ -435,8 +435,18 @@ end
 
 function Transform(tab, out, func, ...)
 
-	for _, v in ipairs(tab) do
-		out[#out+1] = func(v, ...)
+	if type(tab) == "function" then
+
+		for _, v in tab() do
+			out[#out+1] = func(v, ...)
+		end
+
+	else
+
+		for _, v in ipairs(tab) do
+			out[#out+1] = func(v, ...)
+		end
+
 	end
 	return out
 

@@ -47,6 +47,20 @@ function meta:Init()
 
 end
 
+function meta:PreModify()
+
+	self.module:PreModifyNodeType( self.makerNodeType )
+	self.module:PreModifyNodeType( self.breakerNodeType )
+
+end
+
+function meta:PostModify()
+
+	self.module:PostModifyNodeType( self.makerNodeType )
+	self.module:PostModifyNodeType( self.breakerNodeType )
+
+end
+
 function meta:AddPin(pin)
 
 	local name = pin:GetName()

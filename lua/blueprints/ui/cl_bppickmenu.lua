@@ -2,6 +2,7 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuipickmenu", package.seeall, bpcommon.rescope(bpschema, bpnodetype))
 
+local G_PickerMenu = nil
 local PANEL = {}
 
 function OrFilter(a,b) return function(n) return a(n) or b(n) end end
@@ -289,6 +290,8 @@ vgui.Register( "BPPickMenu", PANEL, "EditablePanel" )
 
 function Create(x, y, w, h)
 
+	if IsValid(G_PickerMenu) then G_PickerMenu:Remove() end
+
 	x = x or gui.MouseX()
 	y = y or gui.MouseY()
 
@@ -309,6 +312,8 @@ function Create(x, y, w, h)
 	createMenu:SetPos(x,y)
 	createMenu:SetVisible( true )
 	createMenu:MakePopup()
+
+	G_PickerMenu = createMenu
 
 	return createMenu
 
