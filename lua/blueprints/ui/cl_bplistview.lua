@@ -72,7 +72,7 @@ function PANEL:CreateItemPanel( id, item )
 			self:Select(id)
 			pnl:RequestFocus()
 		elseif code == MOUSE_RIGHT then
-			self:OpenMenu(id)
+			self:OpenMenu(id, item)
 		end
 	end
 

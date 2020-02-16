@@ -31,6 +31,7 @@ PNF_None = 0
 PNF_Table = 1
 PNF_Nullable = 2
 PNF_Bitfield = 4
+PNF_Custom = 8
 PNF_All = 7
 
 NTF_None = 0

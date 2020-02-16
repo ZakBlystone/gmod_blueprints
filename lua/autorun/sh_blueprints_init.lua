@@ -60,6 +60,7 @@ bpinclude("defs/sh_bpdefs.lua")
 
 -- UI
 bpinclude("ui/sh_bpui.lua")
+bpinclude("ui/cl_bppickmenu.lua")
 bpinclude("ui/cl_bprenderutils.lua")
 bpinclude("ui/cl_bprender2d.lua")
 bpinclude("ui/cl_bptextwrap.lua")

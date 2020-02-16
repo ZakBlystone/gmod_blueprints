@@ -29,6 +29,7 @@ function meta:SetLiteral(value) self:GetNode():SetLiteral( self.id, value ) end
 function meta:GetLiteral() return self:GetNode():GetLiteral( self.id ) end
 function meta:CanHaveLiteral() return self:GetLiteralType() ~= nil end
 
+function meta:SetType(type) self.type = type return self end
 function meta:SetDir(dir) self.dir = dir return self end
 function meta:SetName(name) self.name = name return self end
 function meta:SetDisplayName(name) self.displayName = name return self end

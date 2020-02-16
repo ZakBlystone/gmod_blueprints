@@ -114,6 +114,48 @@ function meta:GetHooks()
 
 end
 
+function meta:GetPinTypes()
+
+	local types = {}
+
+	local blackList = {
+		[PN_Exec] = true,
+		[PN_Bool] = false,
+		[PN_Vector] = false,
+		[PN_Number] = false,
+		[PN_Any] = true,
+		[PN_String] = false,
+		[PN_Color] = false,
+		[PN_Angles] = false,
+		[PN_Enum] = true,
+		[PN_Ref] = true,
+		[PN_Struct] = true,
+		[PN_Func] = true,
+	}
+
+	for i=0, PN_Max-1 do
+		if blackList[i] then continue end
+		types[#types+1] = PinType(i)
+	end
+
+	for _, v in pairs(self:GetClasses()) do
+		if v:GetParam("pinTypeOverride") then continue end
+		types[#types+1] = PinType(PN_Ref, PNF_None, v.name)
+	end
+
+	for _, v in pairs(self:GetStructs()) do
+		if v:GetPinTypeOverride() then continue end
+		types[#types+1] = PinType(PN_Struct, PNF_None, v.name)
+	end
+
+	for _,v in ipairs(self.enums) do
+		types[#types+1] = PinType(PN_Enum, PNF_None, v.name)
+	end
+
+	return types
+
+end
+
 function meta:AddNodeRedirector(oldNode, newNode)
 
 	print("ADD NODE REDIRECT: " .. oldNode .. " -> " .. newNode)

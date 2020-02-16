@@ -34,6 +34,7 @@ function meta:GetTypeName() return bpschema.PinTypeNames[ self:GetBaseType() ] o
 function meta:GetLiteralType() return bpschema.NodeLiteralTypes[ self:GetBaseType() ] end
 function meta:GetDefault()
 
+	if self:HasFlag(bpschema.PNF_Table) then return "{}" end
 	if self:GetBaseType() == bpschema.PN_Enum and bpdefs and bpdefs.Ready() then
 		local enum = bpdefs.Get():GetEnum( self )
 		if enum and enum.entries[1] then return enum.entries[1].key end

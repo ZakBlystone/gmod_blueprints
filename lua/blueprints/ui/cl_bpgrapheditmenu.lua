@@ -2,16 +2,22 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuigrapheditmenu", package.seeall, bpcommon.rescope(bpschema))
 
-local function GraphVarList( module, window, list, name )
+local function GraphVarList( graph, window, list, name )
 
+	local module = graph.module
 	local vlist = vgui.Create( "BPListView", window )
 	vlist:SetList( list )
 	vlist:SetText( name )
 	vlist:SetNoConfirm()
 	vlist.HandleAddItem = function(pnl)
-		window.spec = bpuivarcreatemenu.RequestVarSpec( module, function(name, type, flags, ex) 
-			list:Add( MakePin(PD_None, nil, type, flags, ex), name )
-		end, window )
+		list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ), name )
+	end
+	vlist.OpenMenu = function(pnl, id, item)
+		window.menu = bpuivarcreatemenu.OpenPinSelectionMenu(module, function(pnl, pinType)
+			graph:PreModify()
+			item:SetType( pinType )
+			graph:PostModify()
+		end)
 	end
 	vlist.ItemBackgroundColor = function( list, id, item, selected )
 		local vcolor = item:GetColor()
@@ -34,23 +40,22 @@ function EditGraphParams( graph )
 	window:SetTitle( "Edit Graph Parameters" )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
+	window.OnRemove = function(self)
+		hook.Remove("BPEditorBecomeActive", tostring(self))
+	end
 
-	local inputs = GraphVarList( graph.module, window, graph.inputs, "Inputs" )
-	local outputs = GraphVarList( graph.module, window, graph.outputs, "Outputs" )
+	hook.Add("BPEditorBecomeActive", tostring(window), function()
+		if IsValid(window) then window:Remove() end
+	end)
+
+	local inputs = GraphVarList( graph, window, graph.inputs, "Inputs" )
+	local outputs = GraphVarList( graph, window, graph.outputs, "Outputs" )
 
 	inputs:SetWide( width / 2 - 10 )
 	outputs:SetWide( width / 2 - 10 )
 
 	inputs:Dock( LEFT )
 	outputs:Dock( RIGHT )
-
-	window.OnFocusChanged = function(self, gained)
-		timer.Simple(.1, function()
-			if not (gained or vgui.FocusedHasParent(window)) then
-				self:Close()
-			end
-		end)
-	end
 
 	window:SetSize( 500, 400 )
 	window:Center()
