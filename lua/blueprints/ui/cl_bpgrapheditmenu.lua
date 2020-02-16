@@ -2,37 +2,6 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuigrapheditmenu", package.seeall, bpcommon.rescope(bpschema))
 
-local function GraphVarList( graph, window, list, name )
-
-	local module = graph.module
-	local vlist = vgui.Create( "BPListView", window )
-	vlist:SetList( list )
-	vlist:SetText( name )
-	vlist:SetNoConfirm()
-	vlist.HandleAddItem = function(pnl)
-		local id, item = list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ), name )
-		pnl:Rename(id)
-	end
-	vlist.OpenMenu = function(pnl, id, item)
-		window.menu = bpuivarcreatemenu.OpenPinSelectionMenu(module, function(pnl, pinType)
-			graph:PreModify()
-			item:SetType( pinType )
-			graph:PostModify()
-		end)
-	end
-	vlist.ItemBackgroundColor = function( list, id, item, selected )
-		local vcolor = item:GetColor()
-		if selected then
-			return vcolor
-		else
-			return Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5)
-		end
-	end
-
-	return vlist
-
-end
-
 function EditGraphParams( graph )
 
 	local width = 500
@@ -49,8 +18,8 @@ function EditGraphParams( graph )
 		if IsValid(window) then window:Remove() end
 	end)
 
-	local inputs = GraphVarList( graph, window, graph.inputs, "Inputs" )
-	local outputs = GraphVarList( graph, window, graph.outputs, "Outputs" )
+	local inputs = bpuivarcreatemenu.VarList( graph, window, graph.inputs, "Inputs" )
+	local outputs = bpuivarcreatemenu.VarList( graph, window, graph.outputs, "Outputs" )
 
 	inputs:SetWide( width / 2 - 10 )
 	outputs:SetWide( width / 2 - 10 )

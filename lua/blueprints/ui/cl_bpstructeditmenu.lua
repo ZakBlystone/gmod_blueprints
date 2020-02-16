@@ -2,37 +2,6 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuistructeditmenu", package.seeall, bpcommon.rescope(bpschema))
 
-local function VarList( element, window, list, name )
-
-	local module = element.module
-	local vlist = vgui.Create( "BPListView", window )
-	vlist:SetList( list )
-	vlist:SetText( name )
-	vlist:SetNoConfirm()
-	vlist.HandleAddItem = function(pnl)
-		local id, item = list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ), name )
-		pnl:Rename(id)
-	end
-	vlist.OpenMenu = function(pnl, id, item)
-		window.menu = bpuivarcreatemenu.OpenPinSelectionMenu(module, function(pnl, pinType)
-			element:PreModify()
-			item:SetType( pinType )
-			element:PostModify()
-		end)
-	end
-	vlist.ItemBackgroundColor = function( list, id, item, selected )
-		local vcolor = item:GetColor()
-		if selected then
-			return vcolor
-		else
-			return Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5)
-		end
-	end
-
-	return vlist
-
-end
-
 function EditStructParams( struct )
 
 	local width = 500
@@ -49,7 +18,7 @@ function EditStructParams( struct )
 		if IsValid(window) then window:Remove() end
 	end)
 
-	local pins = VarList( struct, window, struct.pins, "Pins" )
+	local pins = bpuivarcreatemenu.VarList( struct, window, struct.pins, "Pins" )
 	pins:Dock( FILL )
 
 	window:SetSize( 500, 400 )
@@ -109,7 +78,7 @@ function EditEventParams( event )
 	param:DockMargin(10,10,10,10)
 	param:Dock( TOP )
 
-	local pins = VarList( event, window, event.pins, "Pins" )
+	local pins = bpuivarcreatemenu.VarList( event, window, event.pins, "Pins" )
 	pins:Dock( FILL )
 
 	window:MakePopup()

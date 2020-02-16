@@ -2,6 +2,36 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuivarcreatemenu", package.seeall, bpcommon.rescope(bpschema))
 
+function VarList( element, window, list, name )
+
+	local module = element.module
+	local vlist = vgui.Create( "BPListView", window )
+	vlist:SetList( list )
+	vlist:SetText( name )
+	vlist:SetNoConfirm()
+	vlist.HandleAddItem = function(pnl)
+		local id, item = list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ), name )
+		pnl:Rename(id)
+	end
+	vlist.OpenMenu = function(pnl, id, item)
+		window.menu = bpuivarcreatemenu.OpenPinSelectionMenu(module, function(pnl, pinType)
+			element:PreModify()
+			item:SetType( pinType )
+			element:PostModify()
+		end)
+	end
+	vlist.ItemBackgroundColor = function( list, id, item, selected )
+		local vcolor = item:GetColor()
+		if selected then
+			return vcolor
+		else
+			return Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5)
+		end
+	end
+
+	return vlist
+
+end
 
 local function PinTypeDisplayName( pinType )
 
