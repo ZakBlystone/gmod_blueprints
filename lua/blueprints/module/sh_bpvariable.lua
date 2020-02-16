@@ -4,10 +4,13 @@ module("bpvariable", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bpvariable")
 
-function meta:Init(type, default, flags, ex, repmode)
+function meta:Init(type, repmode)
 
-	self.pintype = bppintype.New(type or PN_Number, flags or PNF_None, ex)
-	self.default = bit.band(flags or 0, PNF_Table) ~= 0 and "{}" or (default or Defaults[type])
+	if type then
+		self.pintype = type
+		self.default = self.pintype:GetDefault()
+	end
+
 	self.repmode = repmode
 
 	self.getterNodeType = bpnodetype.New()
@@ -84,6 +87,16 @@ function meta:GetType()
 
 end
 
+function meta:SetType( type )
+
+	self.module:PreModifyNodeType( self.getterNodeType )
+	self.module:PreModifyNodeType( self.setterNodeType )
+	self.pintype = type
+	self.module:PostModifyNodeType( self.getterNodeType )
+	self.module:PostModifyNodeType( self.setterNodeType )
+
+end
+
 function meta:CreatePin( dir, nameOverride )
 
 	return MakePin(dir, self:GetName(), self.pintype)
@@ -124,7 +137,7 @@ local typeRemap = {
 function meta:ReadFromStream(stream, mode, version)
 
 	self.pintype = bppintype.New():ReadFromStream(stream, mode, version)
-	self.default = bpdata.ReadValue( stream )
+	self.default = bpdata.ReadValue( stream ) or self.pintype:GetDefault()
 	self.repmode = bpdata.ReadValue( stream )
 
 end

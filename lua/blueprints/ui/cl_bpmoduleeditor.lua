@@ -157,8 +157,12 @@ function PANEL:Init()
 	self.VarList:SetText("Variables")
 	self.VarList.HandleAddItem = function(list)
 		print("TYPE: " .. type(self.module))
-		bpuivarcreatemenu.RequestVarSpec( self.module, function(name, type, flags, ex) 
-			self.module:NewVariable( name, type, nil, flags, ex )
+		self.module:NewVariable( "", bpschema.PinType( bpschema.PN_Bool ) )
+	end
+	local d = self.VarList.CreateItemPanel
+	self.VarList.OpenMenu = function(pnl, id, item)
+		bpuivarcreatemenu.OpenPinSelectionMenu(self.module, function(pnl, pinType)
+			item:SetType( pinType )
 		end)
 	end
 	self.VarList.ItemBackgroundColor = function( list, id, item, selected )

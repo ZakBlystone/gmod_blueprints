@@ -30,7 +30,7 @@ function meta:Init(type)
 	self.version = fmtVersion
 	self.graphs = bplist.New(bpgraph_meta, self, "module"):NamedItems("Graph")
 	self.structs = bplist.New(bpstruct_meta, self, "module"):NamedItems("Struct")
-	self.variables = bplist.New(bpvariable_meta):NamedItems("Var")
+	self.variables = bplist.New(bpvariable_meta, self, "module"):NamedItems("Var")
 	self.events = bplist.New(bpevent_meta, self, "module"):NamedItems("Event")
 	self.id = nextModuleID
 	self.type = self.type or MT_Game
@@ -232,6 +232,21 @@ function meta:GetNodeTypes( graph, collection )
 
 end
 
+function meta:GetPinTypes( collection )
+
+	local types = {}
+
+	collection:Add( bpdefs.Get():GetPinTypes() )
+	collection:Add( types )
+
+	for id, v in self:Structs() do
+
+		types[#types+1] = PinType(PN_Struct, PNF_Custom, v.name)
+
+	end
+
+end
+
 function meta:Clear()
 
 	self.graphs:Clear()
@@ -250,9 +265,9 @@ function meta:CreateDefaults()
 
 end
 
-function meta:NewVariable(name, type, default, flags, ex)
+function meta:NewVariable(name, ...)
 
-	return self.variables:Add( bpvariable.New(type, default, flags, ex), name )
+	return self.variables:ConstructNamed( name, ... )
 
 end
 

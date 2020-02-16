@@ -46,30 +46,16 @@ function meta:Init(type)
 	-- Listen for changes in the input variable list (function graph)
 	self.inputs:AddListener(function(cb, action, id, var)
 
-		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( self.callNodeType )
-			self:PreModifyNodeType( self.callEntryNodeType )
-			self:PreModifyNodeType( self.callExitNodeType )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( self.callNodeType )
-			self:PostModifyNodeType( self.callEntryNodeType )
-			self:PostModifyNodeType( self.callExitNodeType )
-		end
+		if cb == bplist.CB_PREMODIFY then self:PreModify()
+		elseif cb == bplist.CB_POSTMODIFY then self:PostModify() end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	-- Listen for changes in the output variable list (function graph)
 	self.outputs:AddListener(function(cb, action, id, var)
 
-		if cb == bplist.CB_PREMODIFY then
-			self.module:PreModifyNodeType( self.callNodeType )
-			self:PreModifyNodeType( self.callEntryNodeType )
-			self:PreModifyNodeType( self.callExitNodeType )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self.module:PostModifyNodeType( self.callNodeType )
-			self:PostModifyNodeType( self.callEntryNodeType )
-			self:PostModifyNodeType( self.callExitNodeType )
-		end
+		if cb == bplist.CB_PREMODIFY then self:PreModify()
+		elseif cb == bplist.CB_POSTMODIFY then self:PostModify() end
 
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
@@ -142,6 +128,22 @@ function meta:PostInit()
 	self:CacheNodeTypes()
 
 	return self
+
+end
+
+function meta:PreModify()
+
+	self.module:PreModifyNodeType( self.callNodeType )
+	self:PreModifyNodeType( self.callEntryNodeType )
+	self:PreModifyNodeType( self.callExitNodeType )
+
+end
+
+function meta:PostModify()
+
+	self.module:PostModifyNodeType( self.callNodeType )
+	self:PostModifyNodeType( self.callEntryNodeType )
+	self:PostModifyNodeType( self.callExitNodeType )
 
 end
 

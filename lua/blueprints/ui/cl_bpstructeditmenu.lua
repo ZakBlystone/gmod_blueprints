@@ -2,16 +2,24 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuistructeditmenu", package.seeall, bpcommon.rescope(bpschema))
 
-local function StructVarList( module, window, list, name )
+local function StructVarList( struct, window, list, name )
 
+	local module = struct.module
 	local vlist = vgui.Create( "BPListView", window )
 	vlist:SetList( list )
 	vlist:SetText( name )
 	vlist:SetNoConfirm()
 	vlist.HandleAddItem = function(pnl)
-		window.spec = bpuivarcreatemenu.RequestVarSpec( module, function(name, type, flags, ex) 
-			list:Add( MakePin(PD_None, nil, type, flags, ex), name )
-		end, window )
+		list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ), name )
+	end
+	vlist.OpenMenu = function(pnl, id, item)
+		window.menu = bpuivarcreatemenu.OpenPinSelectionMenu(module, function(pnl, pinType)
+			module:PreModifyNodeType( struct:MakerNodeType() )
+			module:PreModifyNodeType( struct:BreakerNodeType() )
+			item:SetType( pinType )
+			module:PostModifyNodeType( struct:MakerNodeType() )
+			module:PostModifyNodeType( struct:BreakerNodeType() )
+		end)
 	end
 	vlist.ItemBackgroundColor = function( list, id, item, selected )
 		local vcolor = item:GetColor()
@@ -34,17 +42,16 @@ function EditStructParams( struct )
 	window:SetTitle( "Edit Struct" )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
-
-	local pins = StructVarList( struct.module, window, struct.pins, "Pins" )
-	pins:Dock( FILL )
-
-	window.OnFocusChanged = function(self, gained)
-		timer.Simple(.1, function()
-			if not (gained or vgui.FocusedHasParent(window)) then
-				self:Close()
-			end
-		end)
+	window.OnRemove = function(self)
+		hook.Remove("BPEditorBecomeActive", tostring(self))
 	end
+
+	hook.Add("BPEditorBecomeActive", tostring(window), function()
+		if IsValid(window) then window:Remove() end
+	end)
+
+	local pins = StructVarList( struct, window, struct.pins, "Pins" )
+	pins:Dock( FILL )
 
 	window:SetSize( 500, 400 )
 	window:Center()
@@ -61,14 +68,13 @@ function EditEventParams( event )
 	window:SetTitle( "Edit Event" )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
-
-	window.OnFocusChanged = function(self, gained)
-		timer.Simple(.1, function()
-			if not (gained or vgui.FocusedHasParent(window)) then
-				if IsValid(self) then self:Close() end
-			end
-		end)
+	window.OnRemove = function(self)
+		hook.Remove("BPEditorBecomeActive", tostring(self))
 	end
+
+	hook.Add("BPEditorBecomeActive", tostring(window), function()
+		if IsValid(window) then window:Remove() end
+	end)
 
 	window:SetSize( 500, 400 )
 	window:Center()
