@@ -389,7 +389,7 @@ function LoadHeader(filename)
 	return {
 		magic = magic,
 		version = version,
-		type = version < 2 and stream:ReadInt( false ) or bpdata.ReadValue( inStream ),
+		type = version < 2 and inStream:ReadInt( false ) or bpdata.ReadValue( inStream ),
 		revision = inStream:ReadInt( false ),
 		uid = inStream:ReadStr( 16 ),
 		envVersion = bpdata.ReadValue( inStream ),
