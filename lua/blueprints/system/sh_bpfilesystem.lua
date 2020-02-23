@@ -70,7 +70,7 @@ end
 function FindFileByUID( uid )
 
 	assert(SERVER)
-	print("Find File " .. bpcommon.GUIDToString(uid))
+	--print("Find File " .. bpcommon.GUIDToString(uid))
 
 	for _, f in ipairs( GetFiles() ) do
 		if f:GetUID() == uid then return f end
@@ -83,7 +83,7 @@ function IndexLocalFiles( refresh )
 
 	assert(CLIENT)
 
-	print("Indexing")
+	--print("Indexing")
 
 	if refresh then
 		G_BPLocalFiles = {}
@@ -135,7 +135,7 @@ function IndexLocalFiles( refresh )
 	for k,v in pairs(G_BPLocalFiles) do
 		totalFileCount = totalFileCount + 1
 	end
-	print("TOTAL LOCAL FILES: " .. totalFileCount)
+	--print("TOTAL LOCAL FILES: " .. totalFileCount)
 
 	hook.Run("BPFileTableUpdated", FT_Local)
 
@@ -185,7 +185,7 @@ function PushFiles(ply)
 
 	assert(SERVER)
 
-	print("FileTable: " .. #G_BPFiles)
+	--print("FileTable: " .. #G_BPFiles)
 
 	net.Start("bpfilesystem")
 	net.WriteUInt(CMD_UpdateFileTable, CommandBits)
@@ -225,7 +225,7 @@ local function LoadIndex()
 			f:SetRevision( head.revision )
 		end
 
-		print("Loaded file index: " .. #G_BPFiles)
+		--print("Loaded file index: " .. #G_BPFiles)
 
 		PushFiles()
 
@@ -315,12 +315,12 @@ end
 if SERVER then
 
 	hook.Add("BPClientReady", "bpfilesystem", function(ply)
-		print("CLIENT READY, PUSH FILES: " .. tostring(ply) .. " " .. #G_BPFiles)
+		--print("CLIENT READY, PUSH FILES: " .. tostring(ply) .. " " .. #G_BPFiles)
 		PushFiles(ply)
 	end)
 
 	hook.Add("BPTransferRequest", "bpfilesystem", function(state, data)
-		print( tostring( state:GetPlayer() ) )
+		--print( tostring( state:GetPlayer() ) )
 		if data.tag == "module" then
 			local user = bpusermanager.FindUserForPlayer( state:GetPlayer() )
 			if not user:HasPermission(bpgroup.FL_CanUpload) then
@@ -371,7 +371,7 @@ if SERVER then
 			end
 
 			mod.revision = mod.revision + 1
-			print("Module increment revision: " .. mod.revision)
+			--print("Module increment revision: " .. mod.revision)
 			mod:Save(filename)
 
 			file:SetRevision( mod.revision )
@@ -382,8 +382,8 @@ if SERVER then
 			net.WriteUInt(mod.revision, 32)
 			net.Send( state:GetPlayer() )
 
-			print("Module uploaded: " .. tostring(name) .. " -> " .. filename)
-			print("Module marked for execute: " .. tostring(execute))
+			--print("Module uploaded: " .. tostring(name) .. " -> " .. filename)
+			--print("Module marked for execute: " .. tostring(execute))
 
 			if execute and owner:HasPermission(bpgroup.FL_CanToggle) then
 				RunLocalFile( file )
@@ -599,7 +599,7 @@ net.Receive("bpfilesystem", function(len, ply)
 		local stream = bpdata.InStream(false, true)
 		stream:ReadFromNet(true)
 		G_BPFiles = bpdata.ReadArray(bpfile_meta, stream, STREAM_NET)
-		print("Updated remote files: " .. #G_BPFiles)
+		--print("Updated remote files: " .. #G_BPFiles)
 		hook.Run("BPFileTableUpdated", FT_Remote)
 		IndexLocalFiles()
 	elseif cmd == CMD_TakeLock then

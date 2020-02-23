@@ -486,7 +486,7 @@ function PANEL:CloseFile( file, callback )
 
 	if file == nil then return end
 
-	print("CLOSING FILE: " .. tostring(file:GetName()))
+	--print("CLOSING FILE: " .. tostring(file:GetName()))
 
 	local opened = self.openModules[file:GetUID()]
 	local nop = function() end

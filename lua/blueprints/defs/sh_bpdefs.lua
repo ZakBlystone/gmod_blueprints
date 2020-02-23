@@ -265,6 +265,7 @@ local function ParseNodeValue(nodeType, v)
 	if key == "COLLAPSE" then nodeType:AddFlag(NTF_Collapse) end
 	if key == "COMPACT" then nodeType:AddFlag(NTF_Compact) end
 	if key == "DEPRECATED" then nodeType:AddFlag(NTF_Deprecated) end
+	if key == "EXPERIMENTAL" then nodeType:AddFlag(NTF_Experimental) end
 	if key == "DESC" and WITH_DOCUMENTATION then nodeType:SetDescription(v.literal) end
 	if key == "DIRECTCALL" then nodeType:AddFlag(NTF_DirectCall) end
 	if key == "DISPLAY" then nodeType:SetDisplayName(v.literal) end
@@ -401,7 +402,7 @@ local function LoadDefinitionPack(data)
 	if data == nil then print("No pack to load") end
 	ready = false
 
-	print("Unpacking definitions")
+	--print("Unpacking definitions")
 
 	local co = coroutine.create( function()
 		local stream = bpdata.InStream(false, true)

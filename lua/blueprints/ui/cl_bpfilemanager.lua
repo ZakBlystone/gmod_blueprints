@@ -146,7 +146,7 @@ end
 
 function PANEL:DoDoubleClick()
 
-	print("DoubleClick")
+	--print("DoubleClick")
 
 	if self.file and self.role == bpfilesystem.FT_Local then
 
@@ -182,7 +182,7 @@ end
 
 function PANEL:DoClick()
 
-	print("Clicked")
+	--print("Clicked")
 
 	self.view:GetEditor().selectedFile = self
 

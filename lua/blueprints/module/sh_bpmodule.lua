@@ -512,7 +512,7 @@ function meta:ReadFromStream(stream, mode)
 
 	moduleClasses:Install( self:GetType(), self )
 
-	print( bpcommon.GUIDToString( self.uniqueID ) .. " v" .. self.revision  )
+	--print( bpcommon.GUIDToString( self.uniqueID ) .. " v" .. self.revision  )
 
 	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
 	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)

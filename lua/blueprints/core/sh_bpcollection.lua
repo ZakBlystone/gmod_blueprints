@@ -13,6 +13,13 @@ function meta:Init()
 
 end
 
+function meta:Clear()
+
+	self.tables = {}
+	self.blacklist = {}
+
+end
+
 function meta:Find( name )
 
 	if self.blacklist[name] then return nil end
@@ -56,34 +63,3 @@ function meta:Add( tab )
 end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end
-
-if SERVER then
-
-	print("Collection Test")
-
-	local c = New()
-	local a = {
-		["X"] = 10,
-		["Y"] = 30,
-		["Z"] = 520,
-	}
-
-	local b = {
-		["A"] = 50,
-		["B"] = 100,
-		["C"] = 400,
-	}
-
-	c:Add(a)
-	c:Add(b)
-
-	print( c:Find("Z") )
-
-	local max = 10
-	for x, y in c:Items() do
-		print(x, y)
-		max = max - 1
-		if max <= 0 then break end
-	end
-
-end

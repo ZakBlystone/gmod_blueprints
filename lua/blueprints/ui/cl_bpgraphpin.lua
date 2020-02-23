@@ -119,14 +119,8 @@ function meta:GetLiteralSize()
 		local value = display or self:GetLiteralValue()
 		w = surface.GetTextSize(value)
 
-		if literalType then
-			if literalType == "enum" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
-			elseif literalType == "string" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
-			elseif literalType == "number" then w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
-			elseif literalType == "bool" then w,h = h, h
-			else w,h = 0, h end
-			--if literalType == "vector" then return 100, h end
-		end
+		w,h = math.Clamp( w, LITERAL_MIN_WIDTH, LITERAL_MAX_WIDTH ), h
+
 	end
 
 	self.literalW, self.literalH = w, h
@@ -287,16 +281,6 @@ function meta:GetLiteralValue()
 
 	local literal = node:GetLiteral(self.pinID) or "!!!UNASSIGNED LITERAL!!!"
 
-	if literalType == "bool" then
-		literal = (literal == "true") and "X" or ""
-	elseif literalType == "enum" then
-		local enum = bpdefs.Get():GetEnum( self:GetPin() )
-		if enum then
-			local key = enum.lookup[literal]
-			if key then literal = enum.entries[key].shortkey end
-		end
-	end
-
 	self.literalText = bpcommon.ZipStringLeft(literal, 26)
 
 	return literal
@@ -339,6 +323,8 @@ function meta:DrawLiteral(x, y, alpha)
 end
 
 function meta:DrawHotspot(x,y,alpha)
+
+	if self.pin:IsType(PN_Dummy) then return end
 
 	local ox, oy = self:GetHotspotOffset()
 	local isTable = self.pin:HasFlag(PNF_Table)

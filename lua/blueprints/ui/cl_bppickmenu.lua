@@ -98,6 +98,13 @@ function PANEL:SetBaseFilter( func )
 
 end
 
+function PANEL:SetCustomTop( panel )
+
+	self.customtop = panel
+	return self
+
+end
+
 function PANEL:SetCollection( collection )
 
 	self.collection = collection
@@ -193,9 +200,11 @@ function PANEL:Init()
 
 	self.treeInserter = treeInserter
 
-	self.search = vgui.Create("DTextEntry", self)
-	self.search:DockMargin(5, 5, 5, 5)
-	self.search:Dock( TOP )
+	self.topbar = vgui.Create("DPanel", self)
+	self.topbar.Paint = function() end
+
+	self.search = vgui.Create("DTextEntry", self.topbar)
+	self.search:DockMargin(5, 5, 5, 0)
 	self.search:RequestFocus()
 	self.search:SetUpdateOnType(true)
 	self.search.OnValueChange = function(te, ...) self:OnSearchTerm(...) end
@@ -204,6 +213,10 @@ function PANEL:Init()
 			self:Select( self.sortedOptions[1] )
 		end
 	end
+	self.search:Dock( TOP )
+
+	self.topbar:DockMargin(0, 0, 0, 5)
+	self.topbar:Dock( TOP )
 
 	self.resultList = vgui.Create("DTree", self )
 	self.resultList:DockMargin(5, 0, 5, 5)
@@ -238,12 +251,11 @@ function PANEL:Think()
 
 end
 
-function PANEL:Setup()
-
-	if self.collection == nil then return end
-	self.baseFilter = self.baseFilter or function() return true end
+function PANEL:CreatePages()
 
 	if #self.pages > 0 then
+
+		if IsValid(self.tabs) then self.tabs:Remove() end
 
 		self.tabs = vgui.Create("DPropertySheet", self )
 		self.tabs:DockMargin(5, 0, 5, 5)
@@ -260,11 +272,30 @@ function PANEL:Setup()
 
 	else
 
-		self.tabs = vgui.Create("DTree", self )
+		self.tabs = self.tabs or vgui.Create("DTree", self )
+		self.tabs:Clear()
 		self.tabs:DockMargin(5, 0, 5, 5)
 		self.tabs:Dock( FILL )
 		self.tabs:SetBackgroundColor(Color(50,50,50))
 		self:SortedOptions( self.baseFilter, self.treeInserter(self.tabs, {}, true) )
+
+	end
+
+end
+
+function PANEL:Setup()
+
+	if self.collection == nil then return end
+	self.baseFilter = self.baseFilter or function() return true end
+
+	self:CreatePages()
+
+	if self.customtop then
+
+		self.customtop:SetParent(self.topbar)
+		self.customtop:DockMargin(5, 5, 5, 0)
+		self.customtop:Dock( FILL )
+		self.topbar:SetTall(self.topbar:GetTall() + self.customtop:GetTall())
 
 	end
 

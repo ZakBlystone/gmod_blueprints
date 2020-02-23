@@ -25,7 +25,7 @@ function meta:CreateAllNodes()
 	self.vnodes = {}
 	for id in self:GetGraph():NodeIDs() do self:NodeAdded(id) count = count + 1 end
 
-	print("Created " .. count .. " VNodes")
+	--print("Created " .. count .. " VNodes")
 
 end
 

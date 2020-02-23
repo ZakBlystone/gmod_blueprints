@@ -100,14 +100,14 @@ function meta:AddEntry(entry)
 
 	if self.filePendingAck and self.filePendingAck.name == entry.name then 
 		self.filePendingAck = entry
-		print("Update ack-pending file: " .. entry.name)
+		--print("Update ack-pending file: " .. entry.name)
 		return true
 	end
 
 	for k,v in ipairs(self.pending) do
 		if v.name == entry.name then 
 			self.pending[k] = entry 
-			print("Update pending file: " .. entry.name) 
+			--print("Update pending file: " .. entry.name) 
 			return true
 		end
 	end
@@ -160,9 +160,9 @@ function meta:OnRemoteFinished(entry)
 	hook.Call("BPTransferRemoteReceived", nil, self, entry)
 
 	if SERVER then
-		print(self:GetName() .. " finished downloading file: " .. entry.name)
+		--print(self:GetName() .. " finished downloading file: " .. entry.name)
 	else
-		print(self:GetName() .. " finished uploading file: " .. entry.name)
+		--print(self:GetName() .. " finished uploading file: " .. entry.name)
 	end
 
 end
@@ -205,7 +205,7 @@ function meta:StartFile(entry)
 
 	table.remove(self.pending, 1)
 
-	print("Send file[" .. entry.name .. "] to " .. self:GetName() .. ": " .. entry.chunks .. " chunks " .. (1+bit.rshift(entry.size, 10)) .. " kB")
+	--print("Send file[" .. entry.name .. "] to " .. self:GetName() .. ": " .. entry.chunks .. " chunks " .. (1+bit.rshift(entry.size, 10)) .. " kB")
 
 	net.Start("bptransfer")
 	net.WriteUInt(CMD_FileBegin, CommandBits)
@@ -220,7 +220,7 @@ end
 
 function meta:OnFileRequest(name, tag, size, chunks)
 
-	print("Remote file send request: " .. name .. " - " .. tag .. " " .. chunks .. " chunks " .. (1+bit.rshift(size, 10)) .. " kB")
+	--print("Remote file send request: " .. name .. " - " .. tag .. " " .. chunks .. " chunks " .. (1+bit.rshift(size, 10)) .. " kB")
 
 	self.recv = {
 		buffer = NewBuffer( true ),
@@ -247,7 +247,7 @@ function meta:OnReceiveChunk(index, data, size)
 	if self.recv == nil then self:Cancel("No receive buffer for chunks") return end
 	self.recv.buffer:Write(data)
 
-	print("Recv Chunk: id:" .. index .. " size:" .. size)
+	--print("Recv Chunk: id:" .. index .. " size:" .. size)
 
 	hook.Call("BPTransferProgress", nil, self, index, self.recv.chunks)
 
@@ -350,7 +350,7 @@ net.Receive("bptransfer", function(len, ply)
 		if G_TransferPlayerStates[ply] then return end
 		G_TransferPlayerStates[ply] = TransferState(ply)
 		hook.Call("BPTransferStateReady", nil, ply, GetState(ply))
-		print("!!!Transfer state ready: " .. GetState(ply):GetName())
+		--print("!!!Transfer state ready: " .. GetState(ply):GetName())
 		return 
 	end
 

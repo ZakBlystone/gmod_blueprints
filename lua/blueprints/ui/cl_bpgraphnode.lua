@@ -288,6 +288,33 @@ function meta:GetPinSpotLocation(pinID)
 
 end
 
+function meta:DrawBanner(x, y, alpha)
+
+	local deprecated = self.node:HasFlag(NTF_Deprecated)
+	local shouldDraw = self.node:HasFlag(NTF_Experimental) or deprecated
+	if not shouldDraw then return end
+
+	-- Node banner
+	local bannerW = 200
+	local bannerH = NODE_HEADER_HEIGHT - 5
+	local bannerX = x + 10
+	local bannerY = y - bannerH
+	local cr, cg, cb = 255,190,60
+
+	if deprecated then cg = 60 bannerW = 150 end
+
+	--surface_drawRect(bannerX,bannerY,w,NODE_HEADER_HEIGHT)
+	roundedBox(12, bannerX, bannerY, bannerW, bannerH, cr,cg,cb, 255*alpha, true, true, false, false)
+	surface_setDrawColor(cr/2, cg/2, cb/2, 255*alpha)
+	surface_drawRect(bannerX,bannerY + bannerH,bannerW,2)
+
+	surface_setFont( "NodeTitleFont" )
+	surface_setTextPos( bannerX + 10, bannerY )
+	surface_setTextColor( 0, 0, 0, 255*alpha )
+	surface_drawText( deprecated and "Obsolete" or "Experimental" )
+
+end
+
 function meta:Draw(xOffset, yOffset, alpha)
 
 	--self:Invalidate(true)
@@ -331,6 +358,8 @@ function meta:Draw(xOffset, yOffset, alpha)
 	elseif role == ROLE_Client then
 		roundedBox(4, x + w - 30, y, 10, NODE_HEADER_HEIGHT, 255,160,20,255*alpha)
 	end
+
+	self:DrawBanner(x, y, alpha)
 
 	render_PushFilterMag( TEXFILTER.LINEAR )
 	render_PushFilterMin( TEXFILTER.LINEAR )

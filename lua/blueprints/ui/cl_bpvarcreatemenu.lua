@@ -18,7 +18,7 @@ function VarList( element, window, list, name )
 			element:PreModify()
 			item:SetType( pinType )
 			element:PostModify()
-		end)
+		end, item:GetType())
 	end
 	vlist.ItemBackgroundColor = function( list, id, item, selected )
 		local vcolor = item:GetColor()
@@ -74,11 +74,6 @@ local categoryOrder = {
 	["Enums"] = 5,
 }
 
-local tableOrder = {
-	[false] = 1,
-	[true] = 2,
-}
-
 local function SearchRanker( entry, query, queryLength, panel )
 
 	local str = panel:GetDisplayName(entry):lower()
@@ -93,21 +88,70 @@ local function SearchRanker( entry, query, queryLength, panel )
 
 end
 
-function OpenPinSelectionMenu( module, onSelected )
+local function CreateEntryWidget( pnl, entry )
+
+	local p = vgui.Create("DButton")
+	p.pinType = entry
+	p:SetText( "" )
+	p.DoClick = function(btn) pnl:Select(btn.pinType) end
+
+	p:SetFont("DermaDefaultBold")
+	p:SetTextColor(color_white)
+	p.Paint = function(btn, w, h) PaintPinType(btn, w, h, btn.pinType) end
+	p.SetPinType = function(btn, type) btn.pinType = type end
+
+	return p
+
+end
+
+function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 
 	local collection = bpcollection.New()
 	module:GetPinTypes( collection )
 
-	local tablePins = bpcommon.Transform( function() return collection:Items() end, {}, function(t)
-		return t:AsTable()
-	end)
+	current = current or PinType(PN_Bool)
 
-	collection:Add( tablePins )
+	local currentWidget = nil
+	local function convert( asTable )
+
+		local tablePins = bpcommon.Transform( function() return collection:Items() end, {}, function(t)
+			return asTable and t:AsTable() or t:AsSingle()
+		end)
+
+		collection:Clear()
+		collection:Add( tablePins )
+
+		current = asTable and current:AsTable() or current:AsSingle()
+		currentWidget:SetPinType( current )
+
+	end
 
 	local menu = bpuipickmenu.Create(nil, nil, 300)
+	local top = vgui.Create("DPanel")
+	top:SetBackgroundColor(Color(40,40,40))
+	top:SetTall(30)
+
+	currentWidget = CreateEntryWidget( menu, current )
+	currentWidget:SetWide(120)
+	currentWidget:SetParent(top)
+	currentWidget:DockMargin(2,2,2,2)
+	currentWidget:Dock( FILL )
+
+	local tcheck = vgui.Create("DCheckBoxLabel", top)
+	tcheck:Dock( RIGHT )
+	tcheck:SetEnabled(allowFlagEdit == nil and true or allowFlagEdit)
+	tcheck:SetText("As Table")
+	tcheck:SetChecked( current:HasFlag(PNF_Table) )
+	tcheck:DockMargin(4,4,4,4)
+	tcheck.OnChange = function( check, val )
+		convert( val )
+		menu:CreatePages()
+	end
+
+	if tcheck:GetChecked() then convert( true ) end
+
+	menu:SetCustomTop(top)
 	menu:SetCollection( collection )
-	menu:AddPage( "Single", "Basic variable", nil, function(e) return not e:HasFlag(PNF_Table) end, true )
-	menu:AddPage( "Table", "Table of this type", nil, function(e) return e:HasFlag(PNF_Table) end, true )
 	menu.OnEntrySelected = onSelected
 	menu.GetDisplayName = function(pnl, e) return PinTypeDisplayName(e) end
 	menu:SetSearchRanker( SearchRanker )
@@ -117,11 +161,7 @@ function OpenPinSelectionMenu( module, onSelected )
 		local acat = categoryOrder[menu:GetCategory(a)] or 0
 		local bcat = categoryOrder[menu:GetCategory(b)] or 0
 		if acat == bcat then
-			if aname == bname then
-				return tableOrder[a:HasFlag(PNF_Table)] < tableOrder[b:HasFlag(PNF_Table)]
-			else
-				return aname:lower() < bname:lower()
-			end
+			return aname:lower() < bname:lower()
 		end
 		return acat < bcat
 	end 

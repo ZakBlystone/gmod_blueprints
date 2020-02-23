@@ -18,7 +18,8 @@ PN_Enum = 8
 PN_Ref = 9
 PN_Struct = 10
 PN_Func = 11
-PN_Max = 12
+PN_Dummy = 12
+PN_Max = 13
 
 NT_Pure = 0
 NT_Function = 1
@@ -44,7 +45,8 @@ NTF_Custom = 32
 NTF_NoDelete = 64
 NTF_Collapse = 128
 NTF_HidePinNames = 256
-NTF_DirectCall = 512
+NTF_Experimental = 512
+NTF_DirectCall = 1024
 
 GT_Event = 0
 GT_Function = 1
@@ -90,6 +92,7 @@ PinTypeNames = {
 	[PN_Ref] = "Ref",
 	[PN_Struct] = "Struct",
 	[PN_Func] = "Function",
+	[PN_Dummy] = "Dummy",
 }
 
 GraphTypeColors = {
@@ -110,6 +113,7 @@ NodePinColors = {
 	[PN_Ref] = Color(0,180,255),
 	[PN_Struct] = Color(40,80,255),
 	[PN_Func] = Color(127,127,127),
+	[PN_Dummy] = Color(0,0,0),
 }
 
 NodePinImplicitConversions = {
@@ -143,7 +147,8 @@ PinTypeClasses = {
 	[PN_Enum] = "Enum",
 	[PN_Vector] = "Vector",
 	[PN_Color] = "Color",
-	[PN_Angles] = "Angle"
+	[PN_Angles] = "Angle",
+	[PN_Any] = "Wild",
 }
 
 PinType = bppintype.New

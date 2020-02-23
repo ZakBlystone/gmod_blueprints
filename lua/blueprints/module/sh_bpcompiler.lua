@@ -587,7 +587,7 @@ function meta:CompileNodeSingle(node)
 
 	local roleCode = node:GetRole()
 	if roleCode == nil then
-		print("NO ROLE CODE FOR NODE: " .. node:GetTypeName())
+		--print("NO ROLE CODE FOR NODE: " .. node:GetTypeName())
 		roleCode = 0
 	end
 
@@ -1263,7 +1263,7 @@ end
 
 function meta:Compile()
 
-	print("COMPILING MODULE...")
+	--print("COMPILING MODULE...")
 
 	ProfileStart("bpcompiler:Compile")
 

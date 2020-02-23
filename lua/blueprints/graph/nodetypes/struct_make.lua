@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-module("_", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
+module("node_structmake", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local NODE = {}
 

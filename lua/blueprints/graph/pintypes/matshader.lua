@@ -2,6 +2,7 @@ AddCSLuaFile()
 
 local PIN = {}
 local font = "NodeLiteralFont"
+
 local arrowDown = CLIENT and Material("icon16/bullet_arrow_down.png")
 
 local surface = surface or {}
@@ -15,16 +16,19 @@ local surface_setMaterial = surface.SetMaterial
 local surface_drawTexturedRect = surface.DrawTexturedRect
 local math_ceil = math.ceil
 
+function PIN:Setup()
+
+end
+
+function PIN:CanHaveLiteral()
+
+	return true
+
+end
+
 function PIN:GetLiteralDisplay()
 
-	local literal = self:GetLiteral()
-	local enum = bpdefs.Get():GetEnum( self )
-	if enum then
-		local key = enum.lookup[literal]
-		if key then literal = enum.entries[key].shortkey end
-	end
-
-	return bpcommon.ZipStringLeft(literal, 26)
+	return self:GetNode():GetShader()
 
 end
 
@@ -55,17 +59,11 @@ end
 
 function PIN:OnClicked()
 
-	local enum = bpdefs.Get():GetEnum( self )
-	if enum == nil then
-		ErrorNoHalt("NO ENUM FOR " .. tostring( self ))
-		return
-	end
-
-	local menu = bpuipickmenu.Create(nil, nil, 300, 200)
-	menu:SetCollection( bpcollection.New():Add( enum.entries ) )
-	menu.OnEntrySelected = function(pnl, e) self:SetLiteral(e.key) end
-	menu.GetDisplayName = function(pnl, e) return e.shortkey end
-	menu.GetTooltip = function(pnl, e) return e.desc or "" end
+	local menu = bpuipickmenu.Create(nil, nil, 300, 100)
+	menu:SetCollection( bpcollection.New():Add( node_creatematerial.shaders ) )
+	menu.OnEntrySelected = function(pnl, e) self:GetNode():SetShader( e.shader ) end
+	menu.GetDisplayName = function(pnl, e) return e.shader end
+	menu.GetTooltip = function(pnl, e) return e.shader end
 	menu:SetSorter( function(a,b)
 		local aname = menu:GetDisplayName(a)
 		local bname = menu:GetDisplayName(b)
@@ -77,4 +75,4 @@ function PIN:OnClicked()
 
 end
 
-RegisterPinClass("Enum", PIN)
+RegisterPinClass("MatShader", PIN)

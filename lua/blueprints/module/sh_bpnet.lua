@@ -111,7 +111,7 @@ function Install( mod, owner )
 	net.WriteUInt( CMD_Install, CommandBits )
 	net.WriteData( instanceUID, 16 )
 	local s,p = stream:WriteToNet(true)
-	print("Send compiled module size: " .. p .. " bytes")
+	--print("Send compiled module size: " .. p .. " bytes")
 	net.Broadcast()
 
 end

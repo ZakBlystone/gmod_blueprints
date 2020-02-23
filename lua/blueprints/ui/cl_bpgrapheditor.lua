@@ -302,7 +302,7 @@ end
 function meta:TryGetNodePin(node,x,y)
 
 	for k,v in pairs(node:GetVPins()) do
-		if self:TestPoint(v, x, y) then
+		if self:TestPoint(v, x, y) and not v:GetPin():IsType(PN_Dummy) then
 			return v, false
 		end
 
@@ -448,7 +448,13 @@ function meta:RightMouse(x,y,pressed)
 
 		local vnode, alreadySelected = self:TryGetNode(wx, wy)
 		if vnode ~= nil then
-			self:OpenNodeContext(vnode)
+
+			local vpin, literal = self:TryGetNodePin(vnode, wx, wy)
+			if vpin and not literal then
+				if vpin.pin.OnRightClick then vpin.pin:OnRightClick() end
+			else
+				self:OpenNodeContext(vnode)
+			end
 			return true
 		end
 	end
@@ -479,7 +485,7 @@ end
 
 function meta:KeyPress( code )
 
-	print("KEY PRESSED: " .. code)
+	--print("KEY PRESSED: " .. code)
 
 	if self:IsLocked() then return end
 
