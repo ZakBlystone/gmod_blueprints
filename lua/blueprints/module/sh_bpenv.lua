@@ -26,7 +26,7 @@ function Install( mod )
 
 	if installed[uid] then Uninstall( uid ) end
 
-	print("INSTALL MODULE: " .. GUIDToString(uid))
+	--print("INSTALL MODULE: " .. GUIDToString(uid))
 
 	mod:SetErrorHandler( HandleModuleError )
 	installed[mod:GetUID()] = mod
@@ -38,7 +38,7 @@ function Uninstall( uid )
 	if uid == nil then return end
 
 	if installed[uid] ~= nil then
-		print("UNINSTALL MODULE: " .. GUIDToString(uid))
+		--print("UNINSTALL MODULE: " .. GUIDToString(uid))
 
 		DestroyAll(uid)
 		installed[uid] = nil

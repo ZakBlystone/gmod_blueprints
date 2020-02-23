@@ -26,7 +26,7 @@ end
 
 function meta:Register(name, tab)
 
-	print("Registered [" .. self.name .. "] class: " .. name .. " : " .. tostring(tab))
+	--print("Registered [" .. self.name .. "] class: " .. name .. " : " .. tostring(tab))
 	self.registered[name:lower()] = tab
 
 	if not initializing and self.refreshHook then

@@ -397,7 +397,7 @@ local function LoadDefinitionPack(data)
 	if data == nil then print("No pack to load") end
 	ready = false
 
-	print("Unpacking definitions")
+	--print("Unpacking definitions")
 
 	local co = coroutine.create( function()
 		local stream = bpdata.InStream(false, true)

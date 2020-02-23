@@ -267,7 +267,7 @@ G_BPNetChannels = G_BPNetChannels or {}
 net.Receive("bpclosechannel", function(len, pl)
 	local channelID = net.ReadUInt(16)
 	G_BPNetChannels[channelID] = nil
-	print("Net close netchannel: " .. channelID)
+	--print("Net close netchannel: " .. channelID)
 end)
 net.Receive("bphandshake", function(len, pl)
 	local moduleGUID, instanceGUID = net.ReadData(16), net.ReadData(16)
@@ -291,7 +291,7 @@ end
 function meta:closeChannel(ch)
 	if ch == nil then return end
 	if G_BPNetChannels[ch.id] == nil then return end
-	print("Free netchannel: " .. ch.id)
+	--print("Free netchannel: " .. ch.id)
 	G_BPNetChannels[ch.id] = nil
 	if CLIENT then return end
 	net.Start("bpclosechannel")
@@ -299,7 +299,7 @@ function meta:closeChannel(ch)
 	net.Broadcast()
 end
 function meta:netInit()
-	print("Net init")
+	--print("Net init")
 	self.netReady, self.netCalls = false, {}
 	G_BPNetHandlers[#G_BPNetHandlers+1] = self
 	if SERVER then self.netChannel = self:allocChannel(nil, self.guid) return end
@@ -310,7 +310,7 @@ function meta:netInit()
 	net.SendToServer()
 end
 function meta:netShutdown()
-	print("Net shutdown")
+	--print("Net shutdown")
 	if self.netChannel then self:closeChannel(self.netChannel) end
 	table.RemoveByValue(G_BPNetHandlers, self)
 end
@@ -329,22 +329,22 @@ function meta:netReceiveHandshake(instanceGUID, len, pl)
 	if SERVER then
 		local ready = net.ReadBool()
 		if not ready and instanceGUID == self.guid then
-			print("Recv handshake request from: " .. tostring(pl))
+			--print("Recv handshake request from: " .. tostring(pl))
 			net.Start("bphandshake")
 			net.WriteData(__bpm.guid, 16)
 			net.WriteData(instanceGUID, 16)
 			net.WriteUInt(self.netChannel.id, 16)
 			net.Send(pl)
-			print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+			--print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
 		else
-			print("Channel established on both roles: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+			--print("Channel established on both roles: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
 			self.netReady = true
 		end
 	else
 		local id = net.ReadUInt(16)
 		if instanceGUID == self.guid then
 			self.netChannel = self:allocChannel(id, self.guid)
-			print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+			--print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
 			net.Start("bphandshake")
 			net.WriteData(__bpm.guid, 16)
 			net.WriteData(self.guid, 16)
@@ -593,7 +593,7 @@ fragments["hook"] = [[
 },]]
 
 
-if SERVER then
+if SERVER and false then
 
 	local test = [[
 		print("__FRAGMENT_TEST__")

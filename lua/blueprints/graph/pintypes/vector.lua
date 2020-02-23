@@ -65,7 +65,7 @@ function PIN:OnClicked()
 	local entries = {}
 
 	local function close()
-		print("Close Parent")
+		--print("Close Parent")
 		local window = pnl:GetParent()
 		if IsValid(window) then
 			window:Close()

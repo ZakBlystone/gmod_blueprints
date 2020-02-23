@@ -63,7 +63,7 @@ end
 function meta:Close()
 	if not self.open then return end
 	if self.fileBacked and self.file then
-		print("Close Buffer: " .. tostring(self))
+		--print("Close Buffer: " .. tostring(self))
 		self.file:Close()
 		file.Delete(self.filePath)
 	end

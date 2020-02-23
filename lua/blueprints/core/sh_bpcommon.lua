@@ -6,7 +6,7 @@ module("bpcommon", package.seeall)
 
 file.CreateDir("blueprints")
 
-ENABLE_PROFILING = true
+ENABLE_PROFILING = false
 ENABLE_DEEP_PROFILING = false
 
 STREAM_FILE = 1

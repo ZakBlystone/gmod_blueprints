@@ -159,7 +159,7 @@ end
 
 function meta:AddNodeRedirector(oldNode, newNode)
 
-	print("ADD NODE REDIRECT: " .. oldNode .. " -> " .. newNode)
+	--print("ADD NODE REDIRECT: " .. oldNode .. " -> " .. newNode)
 	self.redirectors[oldNode] = newNode
 
 end

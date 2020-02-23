@@ -80,7 +80,7 @@ end
 
 function PANEL:UpdateGroups()
 
-	print("Updating groups for: " .. tostring(self))
+	--print("Updating groups for: " .. tostring(self))
 
 	local persist = {}
 	for _, v in ipairs( bpusermanager.GetGroups() ) do

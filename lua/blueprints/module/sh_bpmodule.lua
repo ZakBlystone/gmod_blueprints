@@ -481,7 +481,7 @@ function meta:ReadFromStream(stream, mode)
 		self.envVersion = ""
 	end
 
-	print( bpcommon.GUIDToString( self.uniqueID ) .. " v" .. self.revision  )
+	--print( bpcommon.GUIDToString( self.uniqueID ) .. " v" .. self.revision  )
 
 	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
 	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)

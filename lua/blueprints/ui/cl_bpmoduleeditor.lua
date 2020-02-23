@@ -301,7 +301,7 @@ function PANEL:OnModuleCallback( cb, ... )
 	if cb == CB_GRAPH_REMOVE then self:GraphRemoved(...) end
 
 	if self.file and not self.file:HasFlag( bpfile.FL_HasLocalChanges ) then
-		if self.tab then print("MARK SUFFIX") self.tab:SetSuffix("*") end
+		if self.tab then self.tab:SetSuffix("*") end
 		bpfilesystem.MarkFileAsChanged( self.file ) 
 	end
 

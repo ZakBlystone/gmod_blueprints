@@ -321,7 +321,7 @@ function PANEL:OnMouseReleased( mouse )
 
 	if mouse ~= MOUSE_RIGHT then return end
 
-	if RealTime() - (self.LastRelease or 0) < 0.2 then print("DEBOUNCED") self.Dragging = false return end
+	if RealTime() - (self.LastRelease or 0) < 0.2 then --[[print("DEBOUNCED")]] self.Dragging = false return end
 	if RealTime() - self.PressTimeout < 0.2 then
 		self.editor:OpenCreationContext()
 	end

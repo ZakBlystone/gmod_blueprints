@@ -125,7 +125,7 @@ end
 
 function PANEL:OpenMenu( id )
 
-	print("OPEN MENU: " .. id)
+	--print("OPEN MENU: " .. id)
 
 	self:CloseMenu()
 

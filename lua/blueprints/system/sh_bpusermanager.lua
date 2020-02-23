@@ -167,7 +167,7 @@ local function HandleLogin( ply )
 
 		local existing = FindUser( user )
 		if existing then
-			print("Found existing user: " .. user:GetName() .. " -> " .. existing:GetName())
+			--print("Found existing user: " .. user:GetName() .. " -> " .. existing:GetName())
 			existing.name = user:GetName()
 			user = existing
 		else
@@ -177,7 +177,7 @@ local function HandleLogin( ply )
 		end
 
 		if ply:IsAdmin() then
-			print( user:GetName() .. " is an admin, adding to admin group" )
+			--print( user:GetName() .. " is an admin, adding to admin group" )
 			user:AddGroup( GetGroupByName("admins") )
 		end
 
@@ -205,7 +205,7 @@ end
 function Login()
 
 	assert(CLIENT)
-	print("Logging into server")
+	--print("Logging into server")
 
 	net.Start("bpusermanager")
 	net.WriteUInt(CMD_Login, CommandBits)
@@ -316,7 +316,7 @@ net.Receive("bpusermanager", function(len, ply)
 		assert(CLIENT)
 		if not isLoggedIn then
 			isLoggedIn = true
-			print("Logged in!")
+			--print("Logged in!")
 			hook.Run("BPClientReady")
 		end
 	elseif cmd == CMD_UpdateTables then
@@ -324,16 +324,16 @@ net.Receive("bpusermanager", function(len, ply)
 		local flags = net.ReadUInt(TableFlagBits)
 		local stream = bpdata.InStream():ReadFromNet(true)
 		if bit.band(flags, TF_Users) ~= 0 then
-			print("Updating user table")
+			--print("Updating user table")
 			G_BPUsers = bpdata.ReadArray(bpuser_meta, stream, STREAM_NET)
-			PrintTable(G_BPUsers)
+			--PrintTable(G_BPUsers)
 			for _, user in ipairs(G_BPUsers) do
 				if user == _G.G_BPLocalUser then _G.G_BPLocalUser = user end
 			end
 			hook.Run("BPUserTableUpdated")
 		end
 		if bit.band(flags, TF_Groups) ~= 0 then
-			print("Updating group table")
+			--print("Updating group table")
 			G_BPGroups = bpdata.ReadArray(bpgroup_meta, stream, STREAM_NET)
 			hook.Run("BPGroupTableUpdated")
 		end
@@ -412,8 +412,8 @@ if SERVER then
 elseif CLIENT then
 
 	hook.Add("Initialize", "bpusermanager", function()
-		print("INITIALIZE ON CLIENT:::")
-		print(tostring(LocalPlayer()))
+		--print("INITIALIZE ON CLIENT:::")
+		--print(tostring(LocalPlayer()))
 	end)
 
 	local nextLoginAttempt = 0

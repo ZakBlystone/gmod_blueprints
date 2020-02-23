@@ -843,7 +843,7 @@ function meta:ResolveConnectionMeta()
 
 	if self.connectionMeta ~= nil then
 
-		print("Resolving connection meta...")
+		--print("Resolving connection meta...")
 		for i, c in self:Connections(true) do
 			local meta = self.connectionMeta[i]
 			local nt0 = self:GetNode(c[1])
@@ -1017,7 +1017,7 @@ function meta:AddSubGraph( subgraph, x, y )
 
 	end
 
-	print("Added " .. nodeCount .. " nodes and " .. connectionCount .. " connections.")
+	--print("Added " .. nodeCount .. " nodes and " .. connectionCount .. " connections.")
 
 end
 

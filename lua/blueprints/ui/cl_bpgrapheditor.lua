@@ -451,7 +451,6 @@ function meta:RightMouse(x,y,pressed)
 
 			local vpin, literal = self:TryGetNodePin(vnode, wx, wy)
 			if vpin and not literal then
-				print("WANT RIGHT CLICK")
 				if vpin.pin.OnRightClick then vpin.pin:OnRightClick() end
 			else
 				self:OpenNodeContext(vnode)
@@ -486,7 +485,7 @@ end
 
 function meta:KeyPress( code )
 
-	print("KEY PRESSED: " .. code)
+	--print("KEY PRESSED: " .. code)
 
 	if self:IsLocked() then return end
 
