@@ -43,7 +43,6 @@ function meta:SetInformedType(type)
 		self:InitPinClass()
 	else
 		setmetatable(self, meta)
-		self.pinClass = nil
 		self:InitPinClass()
 	end
 
