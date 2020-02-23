@@ -106,6 +106,7 @@ LIB GLOBAL
 	{
 		DESC Creates a new material with the specified name and shader.
 		CLASS CreateMaterial
+		EXPERIMENTAL
 	}
 	FUNC CreateParticleSystem, CLIENT
 	{

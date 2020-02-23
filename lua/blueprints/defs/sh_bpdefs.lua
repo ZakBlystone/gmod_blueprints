@@ -265,6 +265,7 @@ local function ParseNodeValue(nodeType, v)
 	if key == "COLLAPSE" then nodeType:AddFlag(NTF_Collapse) end
 	if key == "COMPACT" then nodeType:AddFlag(NTF_Compact) end
 	if key == "DEPRECATED" then nodeType:AddFlag(NTF_Deprecated) end
+	if key == "EXPERIMENTAL" then nodeType:AddFlag(NTF_Experimental) end
 	if key == "DESC" and WITH_DOCUMENTATION then nodeType:SetDescription(v.literal) end
 	if key == "DISPLAY" then nodeType:SetDisplayName(v.literal) end
 	if key == "INFORM" then for i=2, #v.tuple do nodeType:AddInform(tonumber(v.tuple[i])) end end
