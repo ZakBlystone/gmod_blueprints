@@ -104,7 +104,7 @@ local function CreateEntryWidget( pnl, entry )
 
 end
 
-function OpenPinSelectionMenu( module, onSelected, current )
+function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 
 	local collection = bpcollection.New()
 	module:GetPinTypes( collection )
@@ -139,6 +139,7 @@ function OpenPinSelectionMenu( module, onSelected, current )
 
 	local tcheck = vgui.Create("DCheckBoxLabel", top)
 	tcheck:Dock( RIGHT )
+	tcheck:SetEnabled(allowFlagEdit == nil and true or allowFlagEdit)
 	tcheck:SetText("As Table")
 	tcheck:SetChecked( current:HasFlag(PNF_Table) )
 	tcheck:DockMargin(4,4,4,4)

@@ -146,7 +146,8 @@ PinTypeClasses = {
 	[PN_Enum] = "Enum",
 	[PN_Vector] = "Vector",
 	[PN_Color] = "Color",
-	[PN_Angles] = "Angle"
+	[PN_Angles] = "Angle",
+	[PN_Any] = "Wild",
 }
 
 PinType = bppintype.New

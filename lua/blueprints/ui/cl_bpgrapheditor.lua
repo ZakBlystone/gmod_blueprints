@@ -448,7 +448,14 @@ function meta:RightMouse(x,y,pressed)
 
 		local vnode, alreadySelected = self:TryGetNode(wx, wy)
 		if vnode ~= nil then
-			self:OpenNodeContext(vnode)
+
+			local vpin, literal = self:TryGetNodePin(vnode, wx, wy)
+			if vpin and not literal then
+				print("WANT RIGHT CLICK")
+				if vpin.pin.OnRightClick then vpin.pin:OnRightClick() end
+			else
+				self:OpenNodeContext(vnode)
+			end
 			return true
 		end
 	end

@@ -29,6 +29,7 @@ function meta:SetPinClass(class) self.pinClass = class return self end
 function meta:SetLiteral(value) self:GetNode():SetLiteral( self.id, value ) end
 function meta:GetLiteral() return self:GetNode():GetLiteral( self.id ) end
 function meta:CanHaveLiteral() return self:GetLiteralType() ~= nil end
+function meta:OnRightClick() end
 
 function meta:SetType(type) self.type = type return self end
 function meta:SetDir(dir) self.dir = dir return self end
@@ -42,6 +43,8 @@ function meta:SetInformedType(type)
 		self:InitPinClass()
 	else
 		setmetatable(self, meta)
+		self.pinClass = nil
+		self:InitPinClass()
 	end
 
 	return self 

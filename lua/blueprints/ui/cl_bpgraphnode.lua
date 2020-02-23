@@ -313,9 +313,6 @@ function meta:DrawBanner(x, y, alpha)
 	surface_setTextColor( 0, 0, 0, 255*alpha )
 	surface_drawText( deprecated and "Obsolete" or "Experimental" )
 
-	render_PushFilterMag( TEXFILTER.LINEAR )
-	render_PushFilterMin( TEXFILTER.LINEAR )
-
 end
 
 function meta:Draw(xOffset, yOffset, alpha)
@@ -363,6 +360,9 @@ function meta:Draw(xOffset, yOffset, alpha)
 	end
 
 	self:DrawBanner(x, y, alpha)
+
+	render_PushFilterMag( TEXFILTER.LINEAR )
+	render_PushFilterMin( TEXFILTER.LINEAR )
 
 	local b,e = pcall( function()
 
