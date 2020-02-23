@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-module("bpcreatematerialnode", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
+module("node_creatematerial", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 shaders = {
 	{

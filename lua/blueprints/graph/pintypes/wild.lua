@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-module("_", package.seeall, bpcommon.rescope(bpschema))
+module("pin_wildcard", package.seeall, bpcommon.rescope(bpschema))
 
 local PIN = {}
 

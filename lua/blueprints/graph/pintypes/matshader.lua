@@ -60,7 +60,7 @@ end
 function PIN:OnClicked()
 
 	local menu = bpuipickmenu.Create(nil, nil, 300, 100)
-	menu:SetCollection( bpcollection.New():Add( bpcreatematerialnode.shaders ) )
+	menu:SetCollection( bpcollection.New():Add( node_creatematerial.shaders ) )
 	menu.OnEntrySelected = function(pnl, e) self:GetNode():SetShader( e.shader ) end
 	menu.GetDisplayName = function(pnl, e) return e.shader end
 	menu.GetTooltip = function(pnl, e) return e.shader end

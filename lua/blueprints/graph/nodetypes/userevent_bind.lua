@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-module("_", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
+module("node_usereventbind", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local NODE = {}
 
