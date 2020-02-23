@@ -163,7 +163,7 @@ function PANEL:Init()
 	self.VarList.OpenMenu = function(pnl, id, item)
 		bpuivarcreatemenu.OpenPinSelectionMenu(self.module, function(pnl, pinType)
 			item:SetType( pinType )
-		end)
+		end, item:GetType())
 	end
 	self.VarList.ItemBackgroundColor = function( list, id, item, selected )
 		local vcolor = item:GetType():GetColor()

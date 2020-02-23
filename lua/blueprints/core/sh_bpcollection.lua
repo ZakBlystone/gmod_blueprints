@@ -13,6 +13,13 @@ function meta:Init()
 
 end
 
+function meta:Clear()
+
+	self.tables = {}
+	self.blacklist = {}
+
+end
+
 function meta:Find( name )
 
 	if self.blacklist[name] then return nil end
