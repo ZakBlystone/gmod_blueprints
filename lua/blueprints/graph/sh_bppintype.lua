@@ -63,6 +63,7 @@ end
 
 function meta:Equal(other, flagMask, ignoreSubType)
 	flagMask = flagMask or bpschema.PNF_All
+	if other == nil then return false end
 	if self:GetBaseType() ~= other:GetBaseType() then return false end
 	if bit.band( self:GetFlags(), flagMask ) ~= bit.band( other:GetFlags(), flagMask ) then return false end
 	if self:GetSubType() ~= other:GetSubType() and not ignoreSubType then return false end

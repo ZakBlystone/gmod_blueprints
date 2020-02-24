@@ -123,6 +123,9 @@ function meta:UpdatePins()
 	for k, v in ipairs(self:GetPins()) do
 		v.node = self
 		v.id = k
+	end
+
+	for k, v in ipairs(self:GetPins()) do
 		v:InitPinClass()
 	end
 
@@ -154,6 +157,8 @@ end
 
 function meta:ClearInforms()
 
+	if self.informType == nil then return end
+
 	--print("Cleared informs on node: " .. self:ToString())
 
 	self.informType = nil
@@ -162,6 +167,9 @@ function meta:ClearInforms()
 end
 
 function meta:SetInform(type)
+
+	if self.informType == nil and type == nil then return end
+	if self.informType ~= nil and self.informType:Equal(type) then return end
 
 	--print("Set informs on node: " .. self:ToString() .. " : " .. type:ToString())
 

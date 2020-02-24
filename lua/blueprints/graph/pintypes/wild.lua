@@ -28,6 +28,32 @@ function PIN:SetGhost( pinType )
 
 end
 
+local function SetAllInforms( fromPin, node, pinType )
+
+	local isInformed = false
+
+	node:GetPin(fromPin):SetInformedType( pinType )
+
+	--[[for k, v in ipairs(node:GetInforms()) do
+		if v == fromPin then isInformed = true break end
+	end
+
+	if isInformed then
+		node.customInformed = pinType ~= nil
+		for k, v in ipairs(node:GetInforms()) do
+			if v ~= fromPin then
+				local pin = node:GetPin(v)
+				if pin:GetInformedType() ~= pinType then
+					local base = pin:GetType(true)
+					pin:SetInformedType( pinType ~= nil and pinType:WithFlags(base:GetFlags()) or pinType )
+					pin:SetLiteral( pin:GetDefault() )
+				end
+			end
+		end
+	end]]
+
+end
+
 function PIN:UpdateGhost()
 
 	local gt = self:GetGhostTable()
@@ -39,11 +65,11 @@ function PIN:UpdateGhost()
 
 		setmetatable(self, bppin_meta)
 		gt[self.id] = nil
-		self:SetInformedType( nil )
+
+		SetAllInforms( self.id, self:GetNode(), nil )
 
 	else
 
-		self.pinClass = nil
 		local pmeta = table.Copy(bppin_meta)
 
 		pmeta.OnRightClick = PIN.OnRightClick
@@ -52,7 +78,8 @@ function PIN:UpdateGhost()
 		pmeta.UpdateGhost = PIN.UpdateGhost
 
 		setmetatable(self, pmeta)
-		self:SetInformedType( gt[self.id] )
+
+		SetAllInforms( self.id, self:GetNode(), gt[self.id] )
 
 	end
 
@@ -63,11 +90,18 @@ function PIN:OnRightClick()
 	local gt = self:GetGhostTable()
 	if self.informed and (not gt or not gt[self.id]) then return end
 
+	-- Doesn't work properly with inform system yet
+	for k, v in ipairs(self:GetNode():GetInforms()) do
+		if v == self.id then return end
+	end
+
 	local node = self:GetNode()
 	local mod = node:GetModule()
 	bpuivarcreatemenu.OpenPinSelectionMenu( mod, function( pnl, pinType )
+		node:PreModify()
 		self:SetGhost( pinType )
 		self:SetLiteral( self:GetDefault() )
+		node:PostModify()
 	end, self:GetType(true), false )
 
 end

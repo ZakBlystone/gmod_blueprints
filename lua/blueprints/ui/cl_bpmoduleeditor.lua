@@ -158,24 +158,20 @@ function PANEL:Init()
 	end
 
 	self.VarList = vgui.Create("BPListView", bottomSplit)
+	self.VarList.CreateItemPanel = function(pnl, id, item)
+		local entry = vgui.Create("BPPinListEntry", pnl)
+		entry.vlist = pnl
+		entry.id = id
+		entry.module = self.module
+		function entry:SetPinType(t) item:SetType( t ) end
+		function entry:GetPinType() return item:GetType() end
+		function entry:SetPinName(n) pnl.list:Rename( id, n ) end
+		function entry:GetPinName() return item.name end
+		return entry
+	end
 	self.VarList:SetText("Variables")
 	self.VarList.HandleAddItem = function(list)
 		local id, item = self.module:NewVariable( "", bpschema.PinType( bpschema.PN_Bool ) )
-		list:Rename(id)
-	end
-	local d = self.VarList.CreateItemPanel
-	self.VarList.OpenMenu = function(pnl, id, item)
-		bpuivarcreatemenu.OpenPinSelectionMenu(self.module, function(pnl, pinType)
-			item:SetType( pinType )
-		end, item:GetType())
-	end
-	self.VarList.ItemBackgroundColor = function( list, id, item, selected )
-		local vcolor = item:GetType():GetColor()
-		if selected then
-			return vcolor
-		else
-			return Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5)
-		end
 	end
 
 	self.StructList = vgui.Create("BPListView", bottomSplit)
