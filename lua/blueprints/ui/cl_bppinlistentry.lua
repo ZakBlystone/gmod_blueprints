@@ -104,21 +104,15 @@ function PANEL:OpenMenu()
 
 	self.menu:AddOption( "Edit Type", function() self.typeSelector:DoClick() end )
 	self.menu:AddOption( "Rename", function() self:EditName() end )
-	self.menu:AddOption( "Remove", function() self.rmv:DoClick() end )
+	self.menu:AddOption( "Delete", function() self.rmv:DoClick() end )
 
 	self.menu:SetMinimumWidth( 100 )
 	self.menu:Open( gui.MouseX(), gui.MouseY(), false, self )
 
 end
 
-function PANEL:SetPinType( type )
-
-end
-
-function PANEL:SetPinName( name )
-
-end
-
+function PANEL:SetPinType( type ) end
+function PANEL:SetPinName( name ) end
 function PANEL:GetPinType() return PinType( PN_Bool ) end
 function PANEL:GetPinName() return "PIN" end
 
