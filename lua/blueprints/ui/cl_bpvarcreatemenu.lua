@@ -6,28 +6,23 @@ function VarList( element, window, list, name )
 
 	local module = element.module
 	local vlist = vgui.Create( "BPListView", window )
+	vlist.HandleAddItem = function(pnl)
+		local id, item = list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ), name )
+	end
+	vlist.CreateItemPanel = function(pnl, id, item)
+		local entry = vgui.Create("BPPinListEntry", pnl)
+		entry.vlist = pnl
+		entry.id = id
+		entry.module = module
+		function entry:SetPinType(t) element:PreModify() item:SetType( t ) element:PostModify() end
+		function entry:GetPinType() return item:GetType() end
+		function entry:SetPinName(n) pnl.list:Rename( id, n ) end
+		function entry:GetPinName() return item.name end
+		return entry
+	end
 	vlist:SetList( list )
 	vlist:SetText( name )
 	vlist:SetNoConfirm()
-	vlist.HandleAddItem = function(pnl)
-		local id, item = list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ), name )
-		pnl:Rename(id)
-	end
-	vlist.OpenMenu = function(pnl, id, item)
-		window.menu = bpuivarcreatemenu.OpenPinSelectionMenu(module, function(pnl, pinType)
-			element:PreModify()
-			item:SetType( pinType )
-			element:PostModify()
-		end, item:GetType())
-	end
-	vlist.ItemBackgroundColor = function( list, id, item, selected )
-		local vcolor = item:GetColor()
-		if selected then
-			return vcolor
-		else
-			return Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5)
-		end
-	end
 
 	return vlist
 

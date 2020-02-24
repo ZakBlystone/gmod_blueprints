@@ -216,6 +216,10 @@ function PANEL:ItemAdded(id, item)
 
 	self.listview:AddItem( panel )
 
+	if self.invokeAdd and panel.OnJustAdded then
+		panel:OnJustAdded()
+	end
+
 	self.vitems[id] = panel
 
 	if self.selectedID == nil then
@@ -229,7 +233,9 @@ end
 
 function PANEL:ItemRenamed(id, prev, new)
 
-	self.vitems[id].label:SetText(new)
+	if self.vitems[id].label then
+		self.vitems[id].label:SetText(new)
+	end
 
 end
 
@@ -304,7 +310,9 @@ function PANEL:Init()
 	self.controls:SetTall(20)
 
 	self.btnAdd.DoClick = function()
+		self.invokeAdd = true
 		self:HandleAddItem(self.list)
+		self.invokeAdd = false
 	end
 
 	self.selectedID = nil

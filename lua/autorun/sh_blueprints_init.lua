@@ -82,6 +82,7 @@ bpinclude("ui/cl_bpstructeditmenu.lua")
 bpinclude("ui/cl_bpvarcreatemenu.lua")
 bpinclude("ui/cl_bpmoduleeditor.lua")
 bpinclude("ui/cl_bpassetbrowser.lua")
+bpinclude("ui/cl_bppinlistentry.lua")
 bpinclude("ui/cl_bpeditor.lua")
 
 -- TEST
