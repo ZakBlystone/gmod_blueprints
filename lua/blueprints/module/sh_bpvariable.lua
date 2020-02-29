@@ -92,6 +92,7 @@ function meta:SetType( type )
 	self.module:PreModifyNodeType( self.getterNodeType )
 	self.module:PreModifyNodeType( self.setterNodeType )
 	self.pintype = type
+	self.default = self.pintype:GetDefault()
 	self.module:PostModifyNodeType( self.getterNodeType )
 	self.module:PostModifyNodeType( self.setterNodeType )
 
@@ -137,8 +138,9 @@ local typeRemap = {
 function meta:ReadFromStream(stream, mode, version)
 
 	self.pintype = bppintype.New():ReadFromStream(stream, mode, version)
-	self.default = bpdata.ReadValue( stream ) or self.pintype:GetDefault()
+	self.default = bpdata.ReadValue( stream )
 	self.repmode = bpdata.ReadValue( stream )
+	self.default = self.pintype:GetDefault()
 
 end
 
