@@ -1,0 +1,55 @@
+AddCSLuaFile()
+
+module("value_number", package.seeall)
+
+local VALUE = {}
+
+VALUE.Match = function( v ) return type(v) == "number" end
+
+function VALUE:Setup()
+
+	self._prec = 1
+
+end
+
+function VALUE:GetDefault() return 0 end
+
+function VALUE:CreateVGUI( info )
+
+	local entry = self.BaseClass.CreateVGUI(self, info)
+	entry:SetNumeric(true)
+	return entry
+
+end
+
+function VALUE:ToString()
+
+	if self._prec == 0 then return string.format("%d", self:Get()) end
+	return string.format("%0." .. self._prec .. "f", self:Get())
+
+end
+
+function VALUE:SetFromString( str )
+
+	local _,_,dec = str:find("%-*%d*%.(%d+)")
+	dec = dec and (#dec) or 0
+	self._prec = dec
+	self:Set( tonumber(str) )
+
+end
+
+function VALUE:WriteToStream(stream)
+
+	bpdata.WriteValue( self._prec, stream )
+	return self.BaseClass.WriteToStream( self, stream )
+
+end
+
+function VALUE:ReadFromStream(stream)
+
+	self._prec = bpdata.ReadValue( stream )
+	return self.BaseClass.ReadFromStream( self, stream )
+
+end
+
+RegisterValueClass("number", VALUE)

@@ -26,6 +26,7 @@ bpinclude("core/sh_bpstringtable.lua")
 bpinclude("core/sh_bpdata.lua")
 bpinclude("core/sh_bptransfer.lua")
 bpinclude("core/sh_bppaste.lua")
+bpinclude("core/sh_bpvalue.lua")
 
 -- GRAPH
 bpinclude("graph/sh_bppintype.lua")
@@ -83,6 +84,7 @@ bpinclude("ui/cl_bpvarcreatemenu.lua")
 bpinclude("ui/cl_bpmoduleeditor.lua")
 bpinclude("ui/cl_bpassetbrowser.lua")
 bpinclude("ui/cl_bppinlistentry.lua")
+bpinclude("ui/cl_bpvaluepanel.lua")
 bpinclude("ui/cl_bpeditor.lua")
 
 -- TEST
