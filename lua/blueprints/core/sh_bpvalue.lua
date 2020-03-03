@@ -9,15 +9,31 @@ bpcommon.CallbackList({
 local valueClasses = bpclassloader.Get("Value", "blueprints/core/valuetypes/", "BPValueTypeClassRefresh")
 local meta = bpcommon.MetaTable("bpvaluetype")
 
-function meta:Init( class )
+FL_NONE = 0
+FL_MANDATORY_OPTIONS = 1
+FL_HINT_MODEL = 2
+FL_HINT_SOUND = 4
+FL_HINT_MATERIAL = 8
+
+bpcommon.AddFlagAccessors(meta)
+
+meta.Match = function( v ) return false end
+
+function meta:Init( class, setter, getter )
 
 	bpcommon.MakeObservable(self)
+
+	self.flags = FL_NONE
 
 	if class then
 		self._class = class
 		valueClasses:Install(self._class, self)
-		self:Set( self:GetDefault() )
 	end
+
+	if setter then self._Set = function(s, v) setter(v) end end
+	if getter then self._Get = function(s) return getter() end end
+
+	if self:_Get() == nil then self:_Set( self:GetDefault() ) end
 
 	return self
 
@@ -29,20 +45,44 @@ function meta:GetDefault()
 
 end
 
-function meta:Set(v)
+function meta:GetOptions()
 
-	if v ~= self._value then
-		self:FireListeners(CB_VALUE_CHANGED, self._value, v)
+	return self._options or {}
+
+end
+
+function meta:SetOptions( opt, mandatory )
+
+	self._options = opt
+	return self
+
+end
+
+function meta:OnChanged(old, new, key)
+
+	if new ~= old or key ~= nil then
+		self:FireListeners(CB_VALUE_CHANGED, old, new, key)
 	end
 
-	self._value = v
+end
+
+function meta:_Set(v) end
+function meta:_Get() return self:GetDefault() end
+
+function meta:Set(v)
+
+	if not self.Match(v) then error("Invalid value for type: " .. self._class) end
+
+	local p = self:_Get()
+	self:_Set(v)
+	self:OnChanged( p, self:_Get() )
 	return self
 
 end
 
 function meta:Get()
 
-	return self._value
+	return self:_Get()
 
 end
 
@@ -82,16 +122,16 @@ end
 
 function meta:WriteToStream(stream)
 
-	bpdata.WriteValue( self._value, stream )
 	bpdata.WriteValue( self._class, stream )
+	stream:WriteBits( self.flags, 8 )
 	return self
 
 end
 
 function meta:ReadFromStream(stream)
 
-	self._value = bpdata.ReadValue( stream )
 	self._class = bpdata.ReadValue( stream )
+	self.flags = stream:ReadBits(8)
 	valueClasses:Install(self._class, self)
 	return self
 
@@ -99,10 +139,10 @@ end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end
 
-function FromValue( val )
+function FromValue( val, ... )
 
 	for k,v in pairs(valueClasses.registered) do
-		if v.Match(val) then return New( k ):Set(val) end
+		if v.Match(val) then return New( k, ... ):Set(val) end
 	end
 	error("No value type for: " .. tostring(val))
 	return nil
@@ -123,13 +163,15 @@ local test = {
 		DefaultClip = 32,
 		Automatic = false,
 		Ammo = "Pistol",
-	}
+	},
+	Vec = Vector(1,2,3),
 }
 
 if SERVER then
 
-	print("TESTING")
-	local t = FromValue(test)
-	PrintTable(t)
+	local tab = nil
+	local t = FromValue(test, function(v) tab = v end, function() return tab end)
+
+	print(t:ToString())
 
 end

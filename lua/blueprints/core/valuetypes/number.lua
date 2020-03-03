@@ -8,7 +8,14 @@ VALUE.Match = function( v ) return type(v) == "number" end
 
 function VALUE:Setup()
 
-	self._prec = 1
+	self._prec = 0
+
+end
+
+function VALUE:SetPrecision( p )
+
+	self._prec = p
+	return self
 
 end
 

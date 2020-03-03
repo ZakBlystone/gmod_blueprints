@@ -24,10 +24,12 @@ function meta:Init(name, path, refreshHook)
 
 end
 
-function meta:Register(name, tab)
+function meta:Register(name, tab, base)
 
 	--print("Registered [" .. self.name .. "] class: " .. name .. " : " .. tostring(tab))
 	self.registered[name:lower()] = tab
+
+	if base then tab.__baseName = base:lower() end
 
 	if not initializing and self.refreshHook then
 		hook.Run(self.refreshHook, name)
@@ -57,6 +59,13 @@ function meta:Install(classname, parent)
 
 	local base = getmetatable(parent)
 	local meta = table.Copy(class)
+	if meta.__baseName then
+		local baseTable = self:Get(meta.__baseName)
+		if not baseTable then error("Couldn't locate baseclass: " .. tostring(meta.__baseName)) end
+		for k, v in pairs(baseTable) do
+			meta[k] = meta[k] or v
+		end
+	end
 	table.Inherit(meta, base)
 	meta.__index = meta
 	setmetatable(parent, meta)
