@@ -15,15 +15,15 @@ function VALUE:Setup()
 	self._children = {}
 	for i=1, self.Num do
 		local child = bpvaluetype.New( self.InnerType,
+			function()
+				local k = self.Accessors[i] or i
+				return self:_Get()[ k ]
+			end,
 			function(v)
 				local k = self.Accessors[i] or i
 				local p = self:_Get()[ k ]
 				self:_Get()[ k ] = v
 				self:OnChanged( p, v, k )
-			end,
-			function()
-				local k = self.Accessors[i] or i
-				return self:_Get()[ k ]
 			end
 		)
 
@@ -34,6 +34,45 @@ end
 
 function VALUE:CreateVGUI( info )
 
+	local zone = vgui.Create("DPanel")
+	local newInfo = table.Copy(info)
+	newInfo.outer = self
+
+	local inner = {}
+	for i=1, self:GetNumChildren() do
+		local ch = self:GetChild(i)
+		local k = self.Accessors[i] or i
+
+		local sub = vgui.Create("DPanel", zone)
+		local l = vgui.Create("DLabel", sub)
+		local p = ch:CreateVGUI( newInfo )
+		p:SetParent(sub)
+		l:Dock( LEFT )
+		l:SetText( tostring(k) .. ": " )
+		l:SizeToContents()
+		p:Dock( FILL )
+		sub.Paint = function() end
+		inner[#inner+1] = sub
+	end
+
+	zone.Paint = function() end
+	zone.PerformLayout = function( pnl )
+
+		local count = #inner
+		if count <= 0 then return end
+
+		local w, h = pnl:GetSize()
+		local x = 0
+		for i=1, count do
+			local p = inner[i]
+			p:SetPos(x, h/2 - p:GetTall()/2)
+			p:SetWide(w / count)
+			x = x + p:GetWide()
+		end
+
+	end
+
+	return zone
 
 end
 

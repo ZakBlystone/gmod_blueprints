@@ -19,7 +19,7 @@ bpcommon.AddFlagAccessors(meta)
 
 meta.Match = function( v ) return false end
 
-function meta:Init( class, setter, getter )
+function meta:Init( class, getter, setter )
 
 	bpcommon.MakeObservable(self)
 
@@ -66,6 +66,12 @@ function meta:OnChanged(old, new, key)
 
 end
 
+function meta:IsReadOnly()
+
+	return self._Set == meta._Set
+
+end
+
 function meta:_Set(v) end
 function meta:_Get() return self:GetDefault() end
 
@@ -91,7 +97,7 @@ function meta:CreateVGUI( info )
 	local entry = vgui.Create("DTextEntry")
 	entry:SetText( self:ToString() )
 	entry:SelectAllOnFocus()
-	entry:SetUpdateOnType(true)
+	if info.live then entry:SetUpdateOnType(true) end
 
 	if info.onFinished then
 		local detour = entry.OnKeyCodeTyped
@@ -102,7 +108,7 @@ function meta:CreateVGUI( info )
 	end
 	entry.OnValueChange = function(pnl, value)
 		self:SetFromString( value )
-		pnl:SetText( self:ToString() )
+		--pnl:SetText( self:ToString() )
 		if info.onChanged then info.onChanged() end
 	end
 
@@ -139,39 +145,81 @@ end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end
 
-function FromValue( val, ... )
+function FromValue( val, getter, setter, ... )
+
+	if type(val) ~= "table" and not getter then error("Non-table values require at least a getter") end
+	getter = getter or function() return val end
 
 	for k,v in pairs(valueClasses.registered) do
-		if v.Match(val) then return New( k, ... ):Set(val) end
+		if v.Match(val) then return New( k, getter, setter, ... ):Set(val) end
 	end
 	error("No value type for: " .. tostring(val))
 	return nil
 
 end
 
-local test = {
-	Spawnable = false,
-	AdminOnly = false,
-	Primary = {
-		ClipSize = 8,
-		DefaultClip = 32,
-		Automatic = false,
-		Ammo = "Pistol",
-	},
-	Secondary = {
-		ClipSize = 8,
-		DefaultClip = 32,
-		Automatic = false,
-		Ammo = "Pistol",
-	},
-	Vec = Vector(1,2,3),
-}
+if CLIENT then
 
-if SERVER then
+	local ent = {
+		ClassName = "my_entity",
+		SENT = {
+			Type = "anim",
+			AutomaticFrameAdvance = false,
+			Category = "",
+			Spawnable = true,
+			Editable = false,
+			AdminOnly = false,
+			PrintName = "My Entity",
+			Author = "",
+			Contact = "",
+			Purpose = "",
+			Instructions = "",
+			RenderGroup = 1,
+			DisableDuplicator = false,
+			ScriptedEntityType = "",
+			DoNotDuplicate = false,
+		}
+	}
 
-	local tab = nil
-	local t = FromValue(test, function(v) tab = v end, function() return tab end)
+	local swep = {
+		ClassName = "weapon_test",
+		SWEP = {
+			Spawnable = true,
+			AdminOnly = false,
+			Primary = {
+				ClipSize = 8,
+				DefaultClip = 32,
+				Automatic = false,
+				Ammo = "Pistol",
+			},
+			Secondary = {
+				ClipSize = 8,
+				DefaultClip = 32,
+				Automatic = false,
+				Ammo = "Pistol",
+			},
+		},
+	}
 
-	print(t:ToString())
+	local both = { ["Scripted Weapon"] = swep, ["Scripted Entity"] = ent, }
+	concommand.Add("valuetest", function()
+
+		local typeEdit = bpvaluetype.FromValue( both )
+		typeEdit:AddListener( function(cb, old, new, k)
+			if cb ~= bpvaluetype.CB_VALUE_CHANGED then return end
+			print(tostring(k) .. ": ", tostring(old) .. " => " .. tostring(new))
+		end )
+
+		local window = vgui.Create( "DFrame" )
+		window:SetSizable( true )
+		window:SetPos( 400, 0 )
+		window:SetSize( 400, 700 )
+		window:MakePopup()
+
+		local inner = typeEdit:CreateVGUI({})
+		inner:SetParent(window)
+		inner:Dock(FILL)
+
+	end)
 
 end
