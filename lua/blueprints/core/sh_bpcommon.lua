@@ -259,7 +259,7 @@ function MetaTable(name, extends)
 		end
 	end
 
-	_G["is" .. name] = function(tbl) return tbl.BaseClass == mt or getmetatable(tbl) == mt end
+	_G["is" .. name] = function(tbl) return (getmetatable(tbl) or {}).__hash == mt.__hash end
 	_G[name .. "_meta"] = mt
 
 	return mt

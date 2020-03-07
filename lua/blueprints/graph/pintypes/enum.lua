@@ -57,7 +57,7 @@ function PIN:OnClicked()
 
 	local enum = bpdefs.Get():GetEnum( self )
 	if enum == nil then
-		ErrorNoHalt("NO ENUM FOR " .. tostring( self ))
+		ErrorNoHalt("NO ENUM FOR " .. self:ToString(true) .. "\n")
 		return
 	end
 
