@@ -41,6 +41,7 @@ end
 function VALUE:SetFromString( str )
 
 	self:Set( str:lower() == "true" )
+	return self
 
 end
 

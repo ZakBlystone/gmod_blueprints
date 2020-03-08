@@ -133,6 +133,7 @@ Defaults = {
 	[PN_Bool] = "false",
 	[PN_Vector] = "Vector()",
 	[PN_Angles] = "Angle()",
+	[PN_Color] = "Color()",
 	[PN_Number] = "0",
 	[PN_String] = "",
 	[PN_Enum] = "0",
@@ -151,10 +152,27 @@ PinTypeClasses = {
 	[PN_Any] = "Wild",
 }
 
+PinValueTypes = {
+	[PN_Bool] = "boolean",
+	[PN_Number] = "number",
+	[PN_String] = "string",
+	[PN_Vector] = "vector",
+	[PN_Color] = "color",
+	[PN_Angles] = "angles",
+	[PN_Struct] = "struct",
+}
+
 PinType = bppintype.New
 
 function IsPinType(v)
 	return isbppin(v) or isbppintype(v)
+end
+
+function GetPinValueTypeClass(pintype)
+
+	local class = PinValueTypes[ pintype:GetBaseType() ]
+	return class
+
 end
 
 NodePinNetworkThunks = {}

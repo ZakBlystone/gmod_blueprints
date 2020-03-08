@@ -31,8 +31,9 @@ end
 
 function VALUE:ToString()
 
-	if self._prec == 0 then return string.format("%d", self:Get()) end
-	return string.format("%0." .. self._prec .. "f", self:Get())
+	--if self._prec == 0 then return string.format("%d", self:Get()) end
+	--return string.format("%0." .. self._prec .. "f", self:Get())
+	return tostring( self:Get() )
 
 end
 
@@ -42,6 +43,7 @@ function VALUE:SetFromString( str )
 	dec = dec and (#dec) or 0
 	self._prec = dec
 	self:Set( tonumber(str) )
+	return self
 
 end
 

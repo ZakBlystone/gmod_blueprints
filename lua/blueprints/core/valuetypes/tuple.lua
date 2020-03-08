@@ -105,6 +105,7 @@ function VALUE:SetFromString( str )
 		ch:SetFromString( x )
 		i = i + 1
 	end
+	return self
 
 end
 

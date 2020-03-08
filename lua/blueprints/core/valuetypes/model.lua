@@ -8,6 +8,8 @@ VALUE.Match = function( v ) return false end
 
 function VALUE:Setup()
 
+	self:AddFlag( bpvaluetype.FL_HINT_BROWSER )
+
 end
 
 function VALUE:CheckType( v )
@@ -48,59 +50,12 @@ function VALUE:GetPriority( text )
 
 end
 
-function VALUE:CreateVGUI( info )
+function VALUE:BrowserClick( panel, textEntry )
 
-	local panel = vgui.Create("DPanel")
-
-	local entry = vgui.Create("DTextEntry", panel)
-	entry:SetText( self:Get() )
-	entry:SelectAllOnFocus()
-	if info.live then entry:SetUpdateOnType(true) end
-
-	if info.onFinished then
-		local detour = entry.OnKeyCodeTyped
-		entry.OnKeyCodeTyped = function(pnl, code)
-			if code == KEY_ENTER then return info.onFinished() end
-			detour(pnl, code)
-		end
-	end
-	entry.OnValueChange = function(pnl, value)
-		self:Set( value )
-		--pnl:SetText( self:ToString() )
-		if info.onChanged then info.onChanged() end
-	end
-
-	local button = vgui.Create("DButton", panel)
-	button:SetText("...")
-
-	button.DoClick = function()
-
-		self:OpenSearch( function( newText )
-			entry:SetText(newText)
-		end )
-
-	end
-
-	entry:Dock( FILL )
-	button:Dock( RIGHT )
-
-	return panel
+	self:OpenSearch( function( newText )
+		textEntry:SetText(newText)
+	end )
 
 end
 
-
-function VALUE:GetDefault() return "" end
-
-function VALUE:ToString()
-
-	return "\"" .. tostring( self:Get() ) .. "\""
-
-end
-
-function VALUE:SetFromString( str )
-
-	self:Set( str:sub(2, -2) )
-
-end
-
-RegisterValueClass("model", VALUE)
+RegisterValueClass("model", VALUE, "string")

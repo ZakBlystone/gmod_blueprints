@@ -67,12 +67,14 @@ function meta:Install(classname, parent)
 
 	local base = parent.BaseClass or getmetatable(parent)
 	local meta = table.Copy(class)
-	if meta.__baseName then
-		local baseTable = self:Get(meta.__baseName)
+	local baseName = meta.__baseName
+	while baseName do
+		local baseTable = self:Get(baseName)
 		if not baseTable then error("Couldn't locate baseclass: " .. tostring(meta.__baseName)) end
 		for k, v in pairs(baseTable) do
 			meta[k] = meta[k] or v
 		end
+		baseName = baseTable.__baseName
 	end
 	table.Inherit(meta, base)
 	meta.__index = meta

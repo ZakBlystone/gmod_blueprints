@@ -26,6 +26,12 @@ function meta:WithFlags(flags)
 	return New(self:GetBaseType(), flags, self:GetSubType())
 end
 
+function meta:WithModule( module )
+	local pinType = New(self:GetBaseType(), self:GetFlags(), self:GetSubType())
+	pinType.module = module
+	return pinType
+end
+
 function meta:GetBaseType() return self.basetype end
 function meta:GetSubType() return self.subtype end
 function meta:GetFlags(mask) return bit.band(self.flags, mask or bpschema.PNF_All) end
@@ -40,6 +46,27 @@ function meta:GetDefault()
 		if enum and enum.entries[1] then return enum.entries[1].key end
 	end
 	return bpschema.Defaults[ self:GetBaseType() ]
+
+end
+
+function meta:FindStruct()
+
+	local res = nil
+	bpcommon.Profile("bppintype-get-struct", function()
+
+		if self.module and self:HasFlag(bpschema.PNF_Custom) then
+			for id, v in self.module:Structs() do
+				if v.name == self:GetSubType() then res = v break end
+			end
+		end
+
+		if not res then
+			res = bpdefs.Get():GetStruct( self:GetSubType() )
+		end
+
+	end)
+
+	return res
 
 end
 

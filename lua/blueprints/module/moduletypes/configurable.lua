@@ -6,13 +6,13 @@ MODULE = {}
 
 MODULE.Creatable = false
 MODULE.Name = "Configurable"
+MODULE.AdditionalConfig = false
 
 function MODULE:Setup()
 
-	self.config = self.config or self:GetDefaultConfigTable()
-	self.editvalues = bpvaluetype.FromValue(self.config, function() return self.config end)
-
-	self:SetupEditValues( self.editvalues )
+	if self.AdditionalConfig then
+		self.config = self.config or self:GetDefaultConfigTable()
+	end
 
 end
 
@@ -23,24 +23,33 @@ end
 function MODULE:GetMenuItems( tab )
 
 	tab[#tab+1] = {
-		name = "Configure",
+		name = "Set Defaults",
 		func = function(...) self:OpenVGUI(...) end,
-		color = Color(100,100,0),
+		color = Color(160,130,30),
 	}
 
 end
 
 function MODULE:OpenVGUI( parent )
 
+	bpcommon.ProfileStart("edit defaults")
+
 	local window = vgui.Create( "DFrame" )
 	window:SetSizable( true )
 	window:SetSize( ScrW()/3, ScrH()/2 )
 	window:MakePopup()
+	window:SetTitle("Set Defaults")
 	window:Center()
 
-	local inner = self:GetConfigEdit():CreateVGUI({})
-	inner:SetParent(window)
-	inner:Dock(FILL)
+	local edit = self:GetConfigEdit( true )
+
+	bpcommon.Profile("create-gui", function()
+		local inner = edit:CreateVGUI({})
+		inner:SetParent(window)
+		inner:Dock(FILL)
+	end)
+
+	bpcommon.ProfileEnd()
 
 end
 
@@ -52,27 +61,65 @@ end
 
 function MODULE:GetConfig()
 
-	return self.config
+	return self.config or {}
 
 end
 
-function MODULE:GetConfigEdit()
+function MODULE:GetConfigEdit( refresh )
 
-	return self.editvalues
+	if self.configEdit and not refresh then return self.configEdit end
+
+	local values = bpvaluetype.FromValue(self:GetConfig(), function() return self:GetConfig() end)
+	local varDefaults = bpvaluetype.FromValue({}, function() return {} end)
+
+	for _,v in self:Variables() do
+		--local b,e = pcall( function()
+			local value = nil
+			local vt = bpvaluetype.FromPinType(
+				v:GetType():WithModule(v.module),
+				function() return value end,
+				function(newValue) value = newValue end
+			)
+
+			if vt == nil then continue end
+			
+			vt:SetFromString( tostring(v:GetDefault()) )
+			vt:AddListener( function(cb, old, new, k)
+				if cb ~= bpvaluetype.CB_VALUE_CHANGED then return end
+				v:SetDefault( vt:ToString() )
+			end )
+
+			varDefaults:AddCosmeticChild( v:GetName(), vt )
+		--end)
+		--if not b then print("Failed to add pintype: " .. tostring(e)) end
+	end
+
+	values:AddCosmeticChild("defaults", varDefaults)
+	values:SortChildren()
+
+	self:SetupEditValues( values )
+
+	self.configEdit = values
+
+	return values
 
 end
 
 function MODULE:WriteData( stream, mode, version )
 
-	bpdata.WriteValue( self.config or {}, stream )
+	if self.AdditionalConfig then
+		bpdata.WriteValue( self:GetConfig(), stream )
+	end
 
 end
 
 function MODULE:ReadData( stream, mode, version )
 
-	local config = bpdata.ReadValue( stream )
-	local defaults = self:GetDefaultConfigTable()
-	self.config = table.Merge(defaults, config)
+	if self.AdditionalConfig then
+		local config = bpdata.ReadValue( stream )
+		local defaults = self:GetDefaultConfigTable()
+		self.config = table.Merge(defaults, config)
+	end
 
 end
 

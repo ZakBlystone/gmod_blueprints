@@ -38,4 +38,4 @@ function MODULE:CanAddNode(nodeType)
 
 end
 
-RegisterModuleClass("Mod", MODULE)
+RegisterModuleClass("Mod", MODULE, "Configurable")

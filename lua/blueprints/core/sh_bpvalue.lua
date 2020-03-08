@@ -11,17 +11,21 @@ local meta = bpcommon.MetaTable("bpvaluetype")
 
 FL_NONE = 0
 FL_MANDATORY_OPTIONS = 1
-FL_HINT_MODEL = 2
-FL_HINT_SOUND = 4
-FL_HINT_MATERIAL = 8
+FL_HINT_BROWSER = 2
 
 bpcommon.AddFlagAccessors(meta)
 
 meta.Match = function( v ) return false end
 
-function meta:Init( class, getter, setter )
+function meta:Init( class, getter, setter, outer )
 
 	bpcommon.MakeObservable(self)
+
+	self.outer = outer
+	self.outermost = self
+	while self.outermost.outer ~= nil do
+		self.outermost = self.outermost.outer
+	end
 
 	self.flags = FL_NONE
 
@@ -161,16 +165,47 @@ end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end
 
-function FromValue( val, getter, setter, ... )
+function FromValue( val, getter, setter, outer )
+
+	if type(val) == "table" and isbpvaluetype(val) then
+		return val
+	end
 
 	if type(val) ~= "table" and not getter then error("Non-table values require at least a getter") end
 	getter = getter or function() return val end
 
 	for k,v in pairs(valueClasses.registered) do
-		if v.Match(val) then return New( k, getter, setter, ... ):Set(val) end
+		if v.Match(val) then return New( k, getter, setter, outer ):Set(val) end
 	end
 	error("No value type for: " .. tostring(val))
 	return nil
+
+end
+
+function FromPinType( pinType, getter, setter, outer )
+
+	return bpcommon.Profile("value-from-pintype", function()
+
+		local class = bpschema.GetPinValueTypeClass( pinType )
+		if not class then
+			print("No value type for: " .. pinType:ToString() )
+			return New( "none", getter, setter, outer )
+		end
+
+		local vt = New( class, getter, setter, outer )
+		if class == "struct" then
+			local struct = pinType:FindStruct()
+			if struct == nil then
+				print("Couldn't find struct for type: " .. pinType:ToString())
+				return nil
+			end
+			vt:SetStruct( pinType:FindStruct() )
+		end
+
+		if pinType:HasFlag( bpschema.PNF_Table ) then return nil end
+		return vt
+
+	end)
 
 end
 
@@ -237,5 +272,13 @@ if CLIENT then
 		inner:Dock(FILL)
 
 	end)
+
+	--[[local tab = {}
+	local vt = FromPinType(bpschema.PinType(bpschema.PN_Struct, 0, "AddonInfo"), function() return tab end)
+	if vt then
+		vt:Set({})
+
+		print(vt:ToString())
+	end]]
 
 end

@@ -261,7 +261,9 @@ function meta:GetPinTypes( collection )
 
 	for id, v in self:Structs() do
 
-		types[#types+1] = PinType(PN_Struct, PNF_Custom, v.name)
+		local pinType = PinType(PN_Struct, PNF_Custom, v.name)
+		pinType.module = self
+		types[#types+1] = pinType
 
 	end
 

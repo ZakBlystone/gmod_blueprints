@@ -1,14 +1,71 @@
 AddCSLuaFile()
 
-module("value_table", package.seeall)
+module("value_struct", package.seeall)
 
 local VALUE = {}
 
-VALUE.Match = function( v ) return type(v) == "table" and getmetatable(v) == nil end
+VALUE.Match = function( v ) return false end
 
 function VALUE:Setup()
 
 	self._children = {}
+
+end
+
+function VALUE:SetStruct( struct )
+
+	self._children = {}
+
+	self.outermost.visitedStructs = self.outermost.visitedStructs or {}
+	local visited = self.outermost.visitedStructs
+
+	-- prevent infinite recursion
+	if visited[struct.name] then
+
+		return self
+
+	end
+
+	visited[struct.name] = true
+
+	bpcommon.Profile("create-struct-children", function()
+
+	for _,v in struct.pins:Items() do
+		local k = v:GetName()
+
+		local pinType = v:GetType():WithModule( struct.module )
+		print(pinType:ToString())
+
+		local vt = bpvaluetype.FromPinType(pinType,
+			function()
+				return self:_Get()[ k ]
+			end,
+			function(v)
+				local p = self:_Get()[ k ]
+				self:_Get()[ k ] = v
+			end,
+			self
+		)
+		self._children[#self._children+1] = {
+			k = k,
+			vt = vt,
+		}
+		vt:AddListener( function(cb, old, new, key)
+			if cb == bpvaluetype.CB_VALUE_CHANGED then
+				local ak = (key ~= nil) and k .. "." .. tostring(key) or k
+				self:OnChanged(old, new, ak)
+			end 
+		end )
+	end
+
+	end)
+
+	return self
+
+end
+
+function VALUE:CheckType(v)
+
 
 end
 
@@ -75,7 +132,7 @@ function VALUE:CreateVGUI( info )
 
 				local h = inner:GetTall()
 
-				if ch._class == "table" then
+				if ch._class == "struct" then
 					inner:DockMargin(8,0,0,0)
 					label:DockMargin(6,2,2,2)
 					label:Dock(TOP)
@@ -110,76 +167,21 @@ function VALUE:CreateVGUI( info )
 
 end
 
-function VALUE:GetDefault() return {} end
+function VALUE:GetDefault()
+
+	local t = {}
+	for k,v in ipairs( self._children ) do
+		t[v.k] = v:GetDefault()
+	end
+	return t
+
+end
 function VALUE:GetChild(i) return self._children[i].vt, self._children[i].k end
 function VALUE:GetNumChildren() return #self._children end
-
-function VALUE:Find(key)
-
-	for _,v in ipairs(self._children) do
-		if tostring(v.k) == key then return v.vt end
-	end
-	return nil
-
-end
-
-function VALUE:Index(str)
-
-	local ch = self
-	for x in str:gmatch("[^%.]+") do
-		ch = ch:Find(x)
-		if not ch then error("Couldn't find: " .. x .. " in " .. str) end
-	end
-	return ch
-
-end
-
-function VALUE:AddCosmeticChild( key, valueType )
-
-	self._children[#self._children+1] = {
-		k = key,
-		vt = valueType,
-	}
-	return #self._children
-
-end
-
-function VALUE:SortChildren()
-
-	table.sort(self._children, function(a,b) return tostring(a.k) < tostring(b.k) end)
-	return self
-
-end
 
 function VALUE:Set(v)
 
 	self.BaseClass.Set(self, v)
-
-	self._children = {}
-
-	for k,v in pairs(v) do
-		local vt = bpvaluetype.FromValue(v,
-			function()
-				return self:_Get()[ k ]
-			end,
-			function(v)
-				local p = self:_Get()[ k ]
-				self:_Get()[ k ] = v
-			end
-		)
-		self._children[#self._children+1] = {
-			k = k,
-			vt = vt,
-		}
-		vt:AddListener( function(cb, old, new, key)
-			if cb == bpvaluetype.CB_VALUE_CHANGED then
-				local ak = (key ~= nil) and k .. "." .. tostring(key) or k
-				self:OnChanged(old, new, ak)
-			end 
-		end )
-	end
-
-	self:SortChildren()
 
 	return self
 
@@ -212,6 +214,23 @@ end
 
 function VALUE:SetFromString( str )
 
+	--print("Set from string: " .. tostring(str) .. debug.traceback())
+	if str:find("{%s*}") then self:Set({}) end
+
+	for _, line in ipairs( string.Explode("\n", str) ) do
+		for x, y in line:gmatch("(%w+)%s*=%s*([^,]*)") do
+			--print("'" .. x .. "'", "'" .. y .. "'")
+
+			for _, ch in ipairs(self._children) do
+				if ch.k == x then
+					ch.vt:SetFromString( y )
+				end
+			end
+		end
+	end
+
+	return self
+
 end
 
-RegisterValueClass("table", VALUE)
+RegisterValueClass("struct", VALUE)

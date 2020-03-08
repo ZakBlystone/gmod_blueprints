@@ -8,7 +8,6 @@ function meta:Init(type, repmode)
 
 	if type then
 		self.pintype = type
-		self.default = self.pintype:GetDefault()
 	end
 
 	self.repmode = repmode
@@ -72,6 +71,18 @@ function meta:Init(type, repmode)
 	end
 
 	return self
+
+end
+
+function meta:SetDefault( def )
+
+	self.default = def
+
+end
+
+function meta:GetDefault()
+
+	return self.default or self.pintype:GetDefault()
 
 end
 
@@ -140,7 +151,6 @@ function meta:ReadFromStream(stream, mode, version)
 	self.pintype = bppintype.New():ReadFromStream(stream, mode, version)
 	self.default = bpdata.ReadValue( stream )
 	self.repmode = bpdata.ReadValue( stream )
-	self.default = self.pintype:GetDefault()
 
 end
 

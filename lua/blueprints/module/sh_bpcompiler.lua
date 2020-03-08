@@ -868,12 +868,22 @@ function meta:CompileGlobalVarListing()
 	end
 
 	for id, var in self.module:Variables() do
-		local def = var.default
+		local def = var:GetDefault()
 		local vtype = var:GetType()
 		if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 		local varName = var:GetName()
 		if self.compactVars then varName = id end
-		self.emit("instance.__" .. varName .. " = " .. tostring(def))
+		if type(def) == "string" then
+			self.emit("instance.__" .. varName .. " = " .. tostring(def))
+		else
+			print("Emit variable as non-string")
+			local pt = bpvaluetype.FromPinType( vtype, function() return def end )
+			if pt then
+				self.emit("instance.__" .. varName .. " = " .. pt:ToString())
+			else
+				self.emit("instance.__" .. varName .. " = " .. tostring(def))
+			end
+		end
 	end
 
 	self.finish()

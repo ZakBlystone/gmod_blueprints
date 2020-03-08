@@ -8,6 +8,7 @@ MODULE.Name = "Scripted Weapon"
 MODULE.Description = "Behaves like a SWEP"
 MODULE.Icon = "icon16/gun.png"
 MODULE.Creatable = true
+MODULE.AdditionalConfig = true
 
 function MODULE:Setup()
 
@@ -49,6 +50,7 @@ end
 function MODULE:GetDefaultConfigTable()
 
 	return {
+		classname = "my_weapon",
 		weapon = {
 			Author = "",
 			Category = "Blueprint",
@@ -143,9 +145,11 @@ function MODULE:IsConstructable() return false end
 
 function MODULE:Compile(compiler, pass)
 
+	local edit = self:GetConfigEdit()
+
 	if pass == CP_MODULEMETA then
 
-		local weaponTable = self:GetConfigEdit():Index("weapon")
+		local weaponTable = edit:Index("weapon")
 		compiler.emit( "meta = table.Merge( meta, " .. weaponTable:ToString() .. " )")
 
 		compiler.emit([[
@@ -181,8 +185,10 @@ end]])
 
 	elseif pass == CP_MODULEBPM then
 
+		local classname = edit:Index("classname")
+
+		compiler.emit("__bpm.class = " .. classname:ToString())
 		compiler.emit([[
-__bpm.class = "weapon_bptest"
 __bpm.playerKey = "bpplayerhadweapon_" .. __bpm.class
 __bpm.init = function()
 	weapons.Register( meta, __bpm.class )
