@@ -451,6 +451,8 @@ function PANEL:ModuleDropdown()
 	for _, v in ipairs( classes ) do
 
 		local cl = v.class
+		if not cl.Creatable then continue end
+
 		local op = self.cmenu:AddOption( cl.Name, function()
 
 			self:CreateModule( v.name )

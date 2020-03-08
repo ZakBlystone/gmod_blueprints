@@ -39,6 +39,16 @@ function meta:Init( class, getter, setter )
 
 end
 
+function meta:OverrideClass( class )
+
+	if class then
+		self._class = class
+		valueClasses:Install(self._class, self)
+	end
+	return self
+
+end
+
 function meta:GetDefault()
 
 	return nil
@@ -75,9 +85,15 @@ end
 function meta:_Set(v) end
 function meta:_Get() return self:GetDefault() end
 
-function meta:Set(v)
+function meta:CheckType( v )
 
 	if not self.Match(v) then error("Invalid value for type: " .. self._class) end
+
+end
+
+function meta:Set(v)
+
+	self:CheckType(v)
 
 	local p = self:_Get()
 	self:_Set(v)

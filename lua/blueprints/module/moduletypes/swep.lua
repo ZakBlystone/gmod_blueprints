@@ -7,8 +7,11 @@ local MODULE = {}
 MODULE.Name = "Scripted Weapon"
 MODULE.Description = "Behaves like a SWEP"
 MODULE.Icon = "icon16/gun.png"
+MODULE.Creatable = true
 
 function MODULE:Setup()
+
+	mod_configurable.MODULE.Setup(self)
 
 	self.getSelfNodeType = bpnodetype.New()
 	self.getSelfNodeType:SetCodeType(NT_Pure)
@@ -36,14 +39,71 @@ function MODULE:Setup()
 
 end
 
+function MODULE:SetupEditValues( values )
+
+	values:Index("weapon.ViewModel"):OverrideClass( "weaponviewmodel" )
+	values:Index("weapon.WorldModel"):OverrideClass( "weaponworldmodel" )
+
+end
+
+function MODULE:GetDefaultConfigTable()
+
+	return {
+		weapon = {
+			Author = "",
+			Category = "Blueprint",
+			Contact = "",
+			Purpose = "",
+			Instructions = "",
+			UseHands = true,
+			PrintName = "BP Scripted Weapon",
+			Spawnable = true,
+			AdminOnly = false,
+			Primary = {
+				ClipSize = 50,
+				DefaultClip = 20,
+				Automatic = true,
+				Ammo = "Pistol",
+			},
+			Secondary = {
+				ClipSize = 50,
+				DefaultClip = 20,
+				Automatic = true,
+				Ammo = "Pistol",
+			},
+			ViewModel = "models/weapons/c_smg1.mdl",
+			WorldModel = "models/weapons/w_smg1.mdl",
+			ViewModelFlip = false,
+			ViewModelFlip1 = false,
+			ViewModelFlip2 = false,
+			ViewModelFOV = 62,
+			AutoSwitchFrom = true,
+			AutoSwitchTo = true,
+			Weight = 5,
+			BobScale = 1.0,
+			SwayScale = 1.0,
+			BounceWeaponIcon = true,
+			DrawWeaponInfoBox = true,
+			DrawAmmo = true,
+			DrawCrosshair = true,
+			m_WeaponDeploySpeed = 1.0,
+			m_bPlayPickupSound = true,
+			AccurateCrosshair = false,
+		}
+	}
+
+end
+
 function MODULE:CreateDefaults()
 
 	local id, graph = self:NewGraph("EventGraph")
 	local _, init = graph:AddNode("WEAPON_Initialize", 120, 100)
 	local _, hold = graph:AddNode("Weapon_SetHoldType", 250, 100)
+	local _, selfNode = graph:AddNode(self.getSelfNodeType, 128,160)
 
 	init:FindPin( PD_Out, "Exec" ):Connect( hold:FindPin( PD_In, "Exec" ) )
 	hold:FindPin( PD_In, "Name" ):SetLiteral("pistol")
+	hold:FindPin( PD_In, "Weapon" ):Connect( selfNode:FindPin( PD_Out, "Self" ) )
 
 	--local _, primary = graph:AddNode("WEAPON_PrimaryAttack", 120, 300)
 	--local _, secondary = graph:AddNode("WEAPON_SecondaryAttack", 120, 500)
@@ -83,28 +143,12 @@ function MODULE:IsConstructable() return false end
 
 function MODULE:Compile(compiler, pass)
 
-	print("COMPILE HOOKED: " .. pass .. " : " .. tostring(CP_MODULEMETA))
-
 	if pass == CP_MODULEMETA then
 
+		local weaponTable = self:GetConfigEdit():Index("weapon")
+		compiler.emit( "meta = table.Merge( meta, " .. weaponTable:ToString() .. " )")
+
 		compiler.emit([[
-meta.UseHands = true
-meta.PrintName = "BP Scripted Weapon"
-meta.Spawnable = true
-meta.Primary = {
-	ClipSize = 100,
-	DefaultClip = 69,
-	Automatic = true,
-	Ammo = "Pistol"
-}
-meta.Secondary = {
-	ClipSize = 0,
-	DefaultClip = 0,
-	Automatic = false,
-	Ammo = "Pistol"
-}
-meta.ViewModel = "models/weapons/c_smg1.mdl"
-meta.WorldModel = "models/weapons/w_smg1.mdl"
 for k,v in pairs(meta) do
 	local _, _, m = k:find("WEAPON_(.+)")
 	if m then meta[ m ] = v end
@@ -142,6 +186,7 @@ __bpm.class = "weapon_bptest"
 __bpm.playerKey = "bpplayerhadweapon_" .. __bpm.class
 __bpm.init = function()
 	weapons.Register( meta, __bpm.class )
+	if CLIENT and bpsandbox then bpsandbox.RefreshSWEPs() end
 	if CLIENT then return end
 	timer.Simple(.5, function()
 	for _, pl in ipairs( player.GetAll() ) do
@@ -170,4 +215,21 @@ end]])
 
 end
 
-RegisterModuleClass("SWEP", MODULE)
+RegisterModuleClass("SWEP", MODULE, "Configurable")
+
+if CLIENT then
+	concommand.Add("bp_testrefreshspawnmenu", function()
+
+		if g_SpawnMenu then
+			for _, v in ipairs( g_SpawnMenu.CreateMenu:GetItems() ) do
+				if v.Name == "#spawnmenu.category.weapons" then
+					v.Panel:GetChildren()[1]:Remove()
+					local newchild = spawnmenu.GetCreationTabs()[v.Name].Function()
+					newchild:SetParent( v.Panel )
+					newchild:Dock( FILL )
+				end
+			end
+		end
+
+	end)
+end

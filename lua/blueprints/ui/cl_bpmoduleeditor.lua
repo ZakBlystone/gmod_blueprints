@@ -362,6 +362,13 @@ function PANEL:SetModule( mod )
 		self:GraphAdded( id )
 	end
 
+	local menu = {}
+	self.module:GetMenuItems( menu )
+
+	for k,v in ipairs(menu) do
+		self.Menu:Add(v.name, v.func, v.color, v.icon)
+	end
+
 	hook.Add("BPPinClassRefresh", "pinrefresh_" .. self.module:GetUID(), function(class)
 		print("PIN CLASS UPDATED, INVALIDATE: " .. class)
 		for _, graph in self.module:Graphs() do

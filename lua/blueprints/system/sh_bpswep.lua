@@ -1,3 +1,5 @@
+if true then return end
+
 AddCSLuaFile()
 
 module("bpswep", package.seeall)

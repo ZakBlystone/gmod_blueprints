@@ -210,4 +210,18 @@ CLASS Weapon
 		DESC Sets the weapon deploy speed. This value needs to match on client and server.
 		IN speed, PN_Number
 	}
+	FUNC CanPrimaryAttack, SHARED
+	{
+		MODTYPE SWEP
+		DIRECTCALL
+		DESC Helper function for checking for no ammo.
+		OUT canAttack, PN_Bool
+	}
+	FUNC CanSecondaryAttack, SHARED
+	{
+		MODTYPE SWEP
+		DIRECTCALL
+		DESC Helper function for checking for no ammo.
+		OUT canAttack, PN_Bool
+	}
 }

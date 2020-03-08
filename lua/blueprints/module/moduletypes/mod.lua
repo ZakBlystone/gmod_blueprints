@@ -7,6 +7,7 @@ local MODULE = {}
 MODULE.Name = "Mod"
 MODULE.Description = "Behaves like a basic Lua script"
 MODULE.Icon = "icon16/joystick.png"
+MODULE.Creatable = true
 
 function MODULE:Setup()
 

@@ -50,10 +50,11 @@ bpinclude("module/sh_bpcompiler.lua")
 -- SYSTEM
 bpinclude("system/sh_bpuser.lua")
 bpinclude("system/sh_bpgroup.lua")
+bpinclude("system/sh_bpsandbox.lua")
 bpinclude("system/sh_bpusermanager.lua")
 bpinclude("system/sh_bpfile.lua")
 bpinclude("system/sh_bpfilesystem.lua")
-bpinclude("system/sh_bpswep.lua")
+--bpinclude("system/sh_bpswep.lua")
 
 -- DEFS
 bpinclude("defs/sh_bpdefpack.lua")

@@ -267,6 +267,10 @@ function meta:GetPinTypes( collection )
 
 end
 
+function meta:GetMenuItems( tab )
+
+end
+
 function meta:Clear()
 
 	self.graphs:Clear()
@@ -475,6 +479,8 @@ function meta:WriteToStream(stream, mode)
 	Profile("write-structs", self.structs.WriteToStream, self.structs, stream, mode, fmtVersion)
 	Profile("write-events", self.events.WriteToStream, self.events, stream, mode, fmtVersion)
 
+	if self.WriteData then self:WriteData(stream, mode, fmtVersion ) end
+
 end
 
 function meta:ReadFromStream(stream, mode)
@@ -524,6 +530,8 @@ function meta:ReadFromStream(stream, mode)
 	end
 
 	self.suppressGraphNotify = false
+
+	if self.ReadData then self:ReadData(stream, mode, fmtVersion ) end
 
 	return self
 
