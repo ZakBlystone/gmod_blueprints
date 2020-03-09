@@ -431,10 +431,11 @@ fragments["update"] = function(args)
 	if args[1] == "1" then x = "\n\t__ilph = 0\n" end
 
 	return [[
-function meta:update()]] .. x .. [[
+function meta:update( rate )]] .. x .. [[
+	rate = rate or FrameTime()
 	self:netUpdate()
 	for i=#self.delays, 1, -1 do
-		local d = self.delays[i] d.time = d.time - FrameTime()
+		local d = self.delays[i] d.time = d.time - rate
 		if d.time <= 0 then
 			local s,e = pcall(d.func, unpack(d.args))
 			if not s then self.delays = {} __bpm.onError(e, 0, __dbggraph or -1, __dbgnode or -1) end

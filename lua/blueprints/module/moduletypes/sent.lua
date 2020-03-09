@@ -161,6 +161,7 @@ end]])
 		compiler.emit("\tinstance.guid = __bpm.hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
 		compiler.emitContext( CTX_Vars .. "global", 1 )
 		compiler.emit("\tself.bInitialized = true")
+		compiler.emit("\tself.lastThink = CurTime()")
 		compiler.emit("\tself:netInit()")
 		compiler.emit("\tif self.ENTITY_Initialize then self:ENTITY_Initialize() end")
 		compiler.emit("end")
@@ -170,7 +171,8 @@ function meta:Think()
 	local r = nil
 	if CLIENT and not self.bInitialized then self:Initialize() end
 	if self.ENTITY_Think then r = self:ENTITY_Think() end
-	self:update()
+	if self.lastThink then self:update( CurTime() - self.lastThink ) end
+	self.lastThink = CurTime()
 	return r
 end
 function meta:OnRemove()
