@@ -1,0 +1,17 @@
+CLASS Effect
+{
+	PURE GetTracerShootPos, CLIENT
+	{
+		MODTYPE EFFECT
+		DIRECTCALL
+		DESC
+		{
+			Used to get the "real" start position of a trace, for weapon tracer effects.
+			"real" meaning in 3rd person, the 3rd person position will be used, in first person the first person position will be used.
+		}
+		IN pos, PN_Vector, #Default position if failed
+		IN ent, PN_Ref, PNF_None, Weapon, #The weapon to use
+		IN attachment, PN_Number, #The attachment ID of the weapon "muzzle"
+		OUT realPos, PN_Vector, #The "real" start position
+	}
+}

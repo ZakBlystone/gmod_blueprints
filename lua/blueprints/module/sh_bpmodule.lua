@@ -549,18 +549,6 @@ function meta:ReadFromStream(stream, mode)
 
 end
 
-function meta:CreateTestModule()
-
-	local a = self:GetGraph( self:NewGraph("Function") )
-	local b = self:GetGraph( self:NewGraph("EventGraph") )
-
-	a:CreateTestGraph()
-	b:CreateTestGraph()
-
-	return self
-
-end
-
 function meta:Build(flags)
 
 	local compiler = bpcompiler.New(self, flags)
@@ -588,8 +576,4 @@ end
 
 function New(...)
 	return setmetatable({}, meta):Init(...)
-end
-
-function CreateTestModule()
-	return New():CreateTestModule()
 end

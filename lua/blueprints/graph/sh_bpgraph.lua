@@ -1074,10 +1074,4 @@ function meta:AddSubGraph( subgraph, x, y )
 
 end
 
-function meta:CreateTestGraph()
-
-	-- Rewrite this
-
-end
-
 New = function(...) return bpcommon.MakeInstance(meta, ...) end

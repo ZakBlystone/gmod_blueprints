@@ -1,0 +1,34 @@
+HOOKS EFFECT
+{
+	HOOK EndTouch, CLIENT
+	{
+
+	}
+	HOOK Init, CLIENT
+	{
+		DESC Called when the effect is created.
+	}
+	HOOK PhysicsCollide, CLIENT
+	{
+		DESC Called when the effect collides with anything.
+		OUT collision, PN_Struct, PNF_None, CollisionData
+		OUT collider, PN_Ref, PNF_None, PhysObj
+	}
+	HOOK Render, CLIENT
+	{
+		DESC Called when the effect should be rendered.
+	}
+	HOOK StartTouch, CLIENT
+	{
+
+	}
+	HOOK Think, CLIENT
+	{
+		DESC Called when the effect should think, return false to kill the effect.
+		IN keepAlive = true, PN_Bool
+	}
+	HOOK Touch, CLIENT
+	{
+
+	}
+}

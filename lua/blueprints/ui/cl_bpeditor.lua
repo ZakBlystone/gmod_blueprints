@@ -559,7 +559,6 @@ local function OpenEditor()
 	--local mod = bpmodule.New()
 	--editor:OpenModule( mod )
 	--editor:SetModule(mod)
-	--mod:CreateTestModule()
 
 	--bpnet.DownloadServerModule( mod )
 	--graph:CreateTestGraph()

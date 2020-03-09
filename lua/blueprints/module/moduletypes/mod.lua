@@ -5,7 +5,7 @@ module("_", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 local MODULE = {}
 
 MODULE.Name = "Mod"
-MODULE.Description = "Behaves like a basic Lua script"
+MODULE.Description = "A Basic Script"
 MODULE.Icon = "icon16/joystick.png"
 MODULE.Creatable = true
 

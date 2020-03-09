@@ -4,8 +4,8 @@ module("module_sent", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local MODULE = {}
 
-MODULE.Name = "Scripted Entity"
-MODULE.Description = "Behaves like a SENT"
+MODULE.Name = "Entity"
+MODULE.Description = "A Scripted Entity you can spawn in the world"
 MODULE.Icon = "icon16/bricks.png"
 MODULE.Creatable = true
 MODULE.AdditionalConfig = true
