@@ -215,8 +215,13 @@ function meta:Layout()
 		x = x + titleWidth * d
 	end
 
+	if self.pin:IsIn() then
+		self.autoPin = node:GetModule():AutoFillsPinClass( self.pin:GetSubType() )
+	end
 	if not self:IsConnected() then
 		self.literalPos = LITERAL_OFFSET + x
+	else
+		self.autoPin = false
 	end
 
 end
@@ -340,6 +345,13 @@ function meta:DrawHotspot(x,y,alpha)
 		surface_drawRect(x+ox-PIN_SIZE*.25 - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
 	end
 
+	if self.autoPin then
+
+		surface_setDrawColor( 0,0,0,250 )
+		surface_drawRect(x+ox-PIN_SIZE/2 + 5,y+oy-PIN_SIZE/2 + 5,PIN_SIZE-10,PIN_SIZE-10)
+
+	end
+
 end
 
 function meta:DrawHitBox()
@@ -398,7 +410,7 @@ function meta:Draw(xOffset, yOffset, alpha)
 		local hx,hy = self:GetHotspotOffset()
 		surface_setFont( self.font )
 		surface_setTextPos( math_ceil( x + self.titlePos ), math_ceil( hy + y-(self.titleHeight)/2 ) )
-		surface_setTextColor( 255, 255, 255, 255*alpha )
+		surface_setTextColor( self.autoPin and 40 or 255, self.autoPin and 220 or 255, 255, 255*alpha )
 		surface_drawText( title )
 	end
 

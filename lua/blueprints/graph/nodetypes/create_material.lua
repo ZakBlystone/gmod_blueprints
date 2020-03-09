@@ -32,6 +32,7 @@ shaders = {
 			MakePin(PD_None, "translucent", PN_Bool),
 			MakePin(PD_None, "vertexcolor", PN_Bool),
 			MakePin(PD_None, "vertexalpha", PN_Bool),
+			MakePin(PD_None, "additive", PN_Bool),
 		},
 	},
 	{

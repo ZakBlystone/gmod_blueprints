@@ -34,6 +34,7 @@ function meta:Init(type)
 
 	self.flags = FL_NONE
 	self.type = type or GT_Event
+	self.hookNodeType = nil
 
 	-- Create lists for graph elements
 	self.deferredNodes = bplist.New(bpnode_meta, self, "graph")
@@ -248,6 +249,18 @@ function meta:PostModifyNodeType( nodeType )
 		end
 
 	end
+
+end
+
+function meta:SetHookType( nodeType )
+
+	self.hookNodeType = nodeType
+
+end
+
+function meta:GetHookType()
+
+	return self.hookNodeType
 
 end
 
@@ -838,6 +851,8 @@ function meta:WriteToStream(stream, mode, version)
 			bpdata.WriteValue( connnectionMeta, stream )
 		end
 
+		bpdata.WriteValue( self.hookNodeType, stream )
+
 	end)
 
 end
@@ -869,6 +884,8 @@ function meta:ReadFromStream(stream, mode, version)
 			self.connectionMeta = bpdata.ReadValue( stream )
 
 		end
+
+		if version >= 3 then self.hookNodeType = bpdata.ReadValue( stream ) end
 
 	end)
 
@@ -959,6 +976,7 @@ function meta:CopyInto(other)
 		other.name = self.name
 		other.type = self.type
 		other.flags = self.flags
+		other.hookNodeType = self.hookNodeType
 
 		-- Deep copy will copy all members including graph which includes module etc...
 		-- So clear graph variable and set it on the other side of the deep copy

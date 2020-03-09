@@ -14,7 +14,7 @@ STREAM_FILE = 1
 STREAM_NET = 2
 
 fmtMagic = 0x42504D31
-fmtVersion = 2
+fmtVersion = 3
 
 local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes/", "BPModuleClassRefresh")
 local meta = bpcommon.MetaTable("bpmodule")
@@ -183,10 +183,16 @@ function meta:IsConstructable()
 
 end
 
+function meta:AutoFillsPinClass( class )
+
+	return false
+
+end
+
 function meta:CanAddNode(nodeType)
 
 	local filter = nodeType:GetModFilter()
-	if filter and filter ~= self:GetType() then print("FILTER MISMATCH: " .. filter .. " ~= " .. self:GetType()) return false end
+	if filter and filter ~= self:GetType() then return false end
 
 	return true
 
@@ -316,6 +322,8 @@ end
 
 function meta:RequestGraphForEvent( nodeType )
 
+	print("REQUEST GRAPH FOR: " .. nodeType:GetName())
+
 	for _, graph in self:Graphs() do
 		if graph:GetName() == nodeType:GetDisplayName() then return end
 	end
@@ -327,6 +335,8 @@ function meta:RequestGraphForEvent( nodeType )
 	if not nodeType:HasFlag(NTF_NotHook) then
 		graph:SetFlag(bpgraph.FL_HOOK)
 	end
+
+	graph:SetHookType( nodeType:GetName() )
 
 	if nodeType:GetRole() == ROLE_Server or nodeType:GetRole() == ROLE_Shared then
 		graph:SetFlag(bpgraph.FL_ROLE_SERVER)

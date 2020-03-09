@@ -1,12 +1,12 @@
 AddCSLuaFile()
 
-module("_", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
+module("module_sent", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local MODULE = {}
 
-MODULE.Name = "Scripted Weapon"
-MODULE.Description = "Behaves like a SWEP"
-MODULE.Icon = "icon16/gun.png"
+MODULE.Name = "Scripted Entity"
+MODULE.Description = "Behaves like a SENT"
+MODULE.Icon = "icon16/bricks.png"
 MODULE.Creatable = true
 MODULE.AdditionalConfig = true
 
@@ -21,7 +21,7 @@ function MODULE:Setup()
 	self.getSelfNodeType.GetRole = function() return ROLE_Shared end
 	self.getSelfNodeType.GetRawPins = function()
 		return {
-			MakePin(PD_Out, "Self", PN_Ref, PNF_None, "Weapon"),
+			MakePin(PD_Out, "Self", PN_Ref, PNF_None, "Entity"),
 		}
 	end
 	self.getSelfNodeType:SetCode( "#1 = __self" )
@@ -42,55 +42,27 @@ end
 
 function MODULE:SetupEditValues( values )
 
-	values:Index("weapon.ViewModel"):OverrideClass( "weaponviewmodel" )
-	values:Index("weapon.WorldModel"):OverrideClass( "weaponworldmodel" )
+	--values:Index("weapon.ViewModel"):OverrideClass( "weaponviewmodel" )
+	--values:Index("weapon.WorldModel"):OverrideClass( "weaponworldmodel" )
 
 end
 
 function MODULE:GetDefaultConfigTable()
 
 	return {
-		classname = "my_weapon",
-		weapon = {
+		classname = "my_entity",
+		entity = {
+			Base = "base_anim",
+			Type = "anim",
 			Author = "",
 			Category = "Blueprint",
 			Contact = "",
 			Purpose = "",
 			Instructions = "",
-			UseHands = true,
-			PrintName = "BP Scripted Weapon",
+			PrintName = "BP Scripted Entity",
+			AutomaticFrameAdvance = false,
 			Spawnable = true,
 			AdminOnly = false,
-			Primary = {
-				ClipSize = 50,
-				DefaultClip = 20,
-				Automatic = true,
-				Ammo = "Pistol",
-			},
-			Secondary = {
-				ClipSize = 50,
-				DefaultClip = 20,
-				Automatic = true,
-				Ammo = "Pistol",
-			},
-			ViewModel = "models/weapons/c_smg1.mdl",
-			WorldModel = "models/weapons/w_smg1.mdl",
-			ViewModelFlip = false,
-			ViewModelFlip1 = false,
-			ViewModelFlip2 = false,
-			ViewModelFOV = 62,
-			AutoSwitchFrom = true,
-			AutoSwitchTo = true,
-			Weight = 5,
-			BobScale = 1.0,
-			SwayScale = 1.0,
-			BounceWeaponIcon = true,
-			DrawWeaponInfoBox = true,
-			DrawAmmo = true,
-			DrawCrosshair = true,
-			m_WeaponDeploySpeed = 1.0,
-			m_bPlayPickupSound = true,
-			AccurateCrosshair = false,
 		}
 	}
 
@@ -99,11 +71,13 @@ end
 function MODULE:CreateDefaults()
 
 	local id, graph = self:NewGraph("EventGraph")
-	local _, init = graph:AddNode("WEAPON_Initialize", 120, 100)
-	local _, hold = graph:AddNode("Weapon_SetHoldType", 250, 100)
+	--local _, init = graph:AddNode("WEAPON_Initialize", 120, 100)
+	--local _, hold = graph:AddNode("Weapon_SetHoldType", 250, 100)
+	--local _, selfNode = graph:AddNode(self.getSelfNodeType, 128,160)
 
-	init:FindPin( PD_Out, "Exec" ):Connect( hold:FindPin( PD_In, "Exec" ) )
-	hold:FindPin( PD_In, "Name" ):SetLiteral("pistol")
+	--init:FindPin( PD_Out, "Exec" ):Connect( hold:FindPin( PD_In, "Exec" ) )
+	--hold:FindPin( PD_In, "Name" ):SetLiteral("pistol")
+	--hold:FindPin( PD_In, "Weapon" ):Connect( selfNode:FindPin( PD_Out, "Self" ) )
 
 	--local _, primary = graph:AddNode("WEAPON_PrimaryAttack", 120, 300)
 	--local _, secondary = graph:AddNode("WEAPON_SecondaryAttack", 120, 500)
@@ -112,7 +86,7 @@ end
 
 local allowedHooks = {
 	["GM"] = false,
-	["WEAPON"] = true,
+	["ENTITY"] = true,
 }
 
 function MODULE:CanAddNode(nodeType)
@@ -143,7 +117,8 @@ function MODULE:IsConstructable() return false end
 
 function MODULE:AutoFillsPinClass( class )
 
-	if class == "Weapon" then return true end
+	if class == "Entity" then return true end
+	if class == "PhysObj" then return true end
 
 end
 
@@ -158,8 +133,11 @@ function MODULE:Compile(compiler, pass)
 			for _, node in v:Nodes() do
 				for _, pin in node:SidePins(PD_In) do
 					if pin:GetBaseType() ~= PN_Ref then continue end
-					if pin:GetSubType() == "Weapon" and #pin:GetConnectedPins() == 0 then
+					if pin:GetSubType() == "Entity" and #pin:GetConnectedPins() == 0 then
 						pin:SetLiteral("__self")
+					end
+					if pin:GetSubType() == "PhysObj" and #pin:GetConnectedPins() == 0 then
+						pin:SetLiteral("__self:GetPhysicsObject()")
 					end
 				end
 			end
@@ -167,12 +145,12 @@ function MODULE:Compile(compiler, pass)
 
 	elseif pass == CP_MODULEMETA then
 
-		local weaponTable = edit:Index("weapon")
-		compiler.emit( "meta = table.Merge( meta, " .. weaponTable:ToString() .. " )")
+		local entityTable = edit:Index("entity")
+		compiler.emit( "meta = table.Merge( meta, " .. entityTable:ToString() .. " )")
 
 		compiler.emit([[
 for k,v in pairs(meta) do
-	local _, _, m = k:find("WEAPON_(.+)")
+	local _, _, m = k:find("ENTITY_(.+)")
 	if m then meta[ m ] = v end
 end]])
 
@@ -184,18 +162,20 @@ end]])
 		compiler.emitContext( CTX_Vars .. "global", 1 )
 		compiler.emit("\tself.bInitialized = true")
 		compiler.emit("\tself:netInit()")
-		compiler.emit("\tif self.WEAPON_Initialize then self:WEAPON_Initialize() end")
+		compiler.emit("\tif self.ENTITY_Initialize then self:ENTITY_Initialize() end")
 		compiler.emit("end")
 
 		compiler.emit([[
 function meta:Think()
+	local r = nil
 	if CLIENT and not self.bInitialized then self:Initialize() end
-	if self.WEAPON_Think then self:WEAPON_Think() end
+	if self.ENTITY_Think then r = self:ENTITY_Think() end
 	self:update()
+	return r
 end
 function meta:OnRemove()
 	if not self.bInitialized then return end
-	if self.WEAPON_OnRemove then self:WEAPON_OnRemove() end
+	if self.ENTITY_OnRemove then self:ENTITY_OnRemove() end
 	self:netShutdown()
 end]])
 
@@ -207,29 +187,15 @@ end]])
 
 		compiler.emit("__bpm.class = " .. classname:ToString())
 		compiler.emit([[
-__bpm.playerKey = "bpplayerhadweapon_" .. __bpm.class
 __bpm.init = function()
-	weapons.Register( meta, __bpm.class )
-	if CLIENT and bpsandbox then bpsandbox.RefreshSWEPs() end
+	scripted_ents.Register( meta, __bpm.class )
+	if CLIENT and bpsandbox then bpsandbox.RefreshSENTs() end
 	if CLIENT then return end
-	timer.Simple(.5, function()
-	for _, pl in ipairs( player.GetAll() ) do
-		if pl[__bpm.playerKey] then
-			pl:Give( __bpm.class )
-			pl:SelectWeapon( __bpm.class )
-			pl[__bpm.playerKey] = false
-		end
-	end
-	end )
 end
 __bpm.shutdown = function()
 	if CLIENT then return end
 	for _, e in ipairs( ents.FindByClass( __bpm.class ) ) do
 		if IsValid(e) then 
-			if IsValid(e.Owner) then
-				e.Owner[__bpm.playerKey] = true
-				e.Owner:DropWeapon( e )
-			end
 			e:Remove()
 		end
 	end
@@ -239,4 +205,4 @@ end]])
 
 end
 
-RegisterModuleClass("SWEP", MODULE, "Configurable")
+RegisterModuleClass("SENT", MODULE, "Configurable")

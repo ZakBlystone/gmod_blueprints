@@ -25,7 +25,7 @@ function MODULE:GetMenuItems( tab )
 	tab[#tab+1] = {
 		name = "Set Defaults",
 		func = function(...) self:OpenVGUI(...) end,
-		color = Color(160,130,30),
+		color = Color(60,120,200),
 	}
 
 end

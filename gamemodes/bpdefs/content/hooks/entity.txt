@@ -1,0 +1,70 @@
+HOOKS ENTITY
+{
+	HOOK AcceptInput, SERVER
+	{
+		DESC Called when another entity fires and event to this entity.
+		OUT inputName, PN_String, #The name of the input that was triggered.
+		OUT activator, PN_Ref, PNF_None, Entity, #The initial cause for the input getting triggered.
+		OUT called, PN_Ref, PNF_None, Entity, #The entity that directly triggered the input.
+		OUT data, PN_String, #The data passed
+		IN suppress = false, PN_Bool, #Suppress the default action
+	}
+	HOOK CalcAbsolutePosition, SHARED
+	{
+		DESC Called whenever the entity's position changes. A callback for when an entity's angle changes is available.
+		OUT pos, PN_Vector, #The entity's actual position.
+		OUT ang, PN_Angles, #The entity's actual angles.
+		IN newPos, PN_Vector, #New position
+		IN newAngles, PN_Angles, #New angles
+	}
+	HOOK CanProperty, SHARED
+	{
+		DESC Controls if a property can be used on this entity or not.
+		OUT player, PN_Ref, PNF_None, Player, #Player that tried to use the property
+		OUT property, PN_String, #Class of the property that the player tried to use
+		IN allow, PN_Bool
+	}
+	HOOK Draw, CLIENT
+	{
+		DESC Called if and when the entity should be drawn opaquely.
+		OUT flags, PN_Enum, PNF_Bitfield, STUDIO
+	}
+	HOOK DrawTranslucent, CLIENT
+	{
+		DESC Called when the entity should be drawn translucently.
+		OUT flags, PN_Enum, PNF_Bitfield, STUDIO
+	}
+	HOOK EndTouch, SERVER
+	{
+		DESC Called when the entity stops touching another entity.
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that touched it.
+	}
+	HOOK Initialize, SHARED
+	{
+		DESC Called when the entity is created.
+	}
+	HOOK OnRemove, SHARED
+	{
+		DESC Called when the entity is about to be removed.
+	}
+	HOOK OnTakeDamage, SERVER
+	{
+		DESC Called when the entity is taking damage.
+		OUT damage, PN_Ref, PNF_None, CTakeDamageInfo, #The damage to be applied to the entity.
+	}
+	HOOK StartTouch, SERVER
+	{
+		DESC Called when the entity starts touching another entity.
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that touched it.
+	}
+	HOOK Think, SHARED
+	{
+		DESC Called every frame on the client. Called every tick on the server.
+		IN overrideNextThink = false, PN_Bool
+	}
+	HOOK Touch, SERVER
+	{
+		DESC Called every tick for every entity being "touched".
+		OUT entity, PN_Ref, PNF_None, Entity, #The entity that touched it.
+	}
+}

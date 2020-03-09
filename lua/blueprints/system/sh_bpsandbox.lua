@@ -22,3 +22,9 @@ function RefreshSWEPs()
 	RefreshCreationMenu("#spawnmenu.category.weapons")
 
 end
+
+function RefreshSENTs()
+
+	RefreshCreationMenu("#spawnmenu.category.entities")
+
+end

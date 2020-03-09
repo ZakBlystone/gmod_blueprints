@@ -1239,7 +1239,8 @@ function meta:CompileGraph(graph)
 		if codeType == NT_Event then
 			self:CompileGraphMetaHook(graph, node, node:GetTypeName())
 		elseif codeType == NT_FuncInput then
-			self:CompileGraphMetaHook(graph, node, graph:GetName())
+			local name = graph:GetHookType() or graph:GetName()
+			self:CompileGraphMetaHook(graph, node, name)
 		end
 	end
 
@@ -1263,7 +1264,7 @@ function meta:CompileGraph(graph)
 	end
 
 	if graph:HasFlag(bpgraph.FL_HOOK) then
-		local args = {graph:GetName(), graph:GetName(), graphID, -1}
+		local args = {graph:GetHookType(), graph:GetName(), graphID, -1}
 		self.emit("_FR_HOOK(" .. table.concat(args, ",") .. ")")
 	end
 
@@ -1288,6 +1289,8 @@ function meta:Compile()
 		end
 
 	end)
+
+	self:RunModuleCompile( CP_PREPASS )
 
 	-- pre-compile all graphs in the module
 	-- each graph shares a unique key table to ensure global variable names are distinct

@@ -11,8 +11,6 @@ MODULE.Creatable = true
 
 function MODULE:Setup()
 
-	print( "IS MODULE: " .. tostring( isbpmodule(self) ))
-
 end
 
 function MODULE:CreateDefaults()
