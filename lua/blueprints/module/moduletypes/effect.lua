@@ -35,7 +35,7 @@ end
 function MODULE:GetDefaultConfigTable()
 
 	return {
-		classname = "my_effect",
+		classname = bpcommon.GUIDToString(self:GetUID(), true):lower(),
 	}
 
 end

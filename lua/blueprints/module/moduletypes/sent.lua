@@ -50,7 +50,7 @@ end
 function MODULE:GetDefaultConfigTable()
 
 	return {
-		classname = "my_entity",
+		classname = bpcommon.GUIDToString(self:GetUID(), true):lower(),
 		entity = {
 			Base = "base_anim",
 			Type = "anim",

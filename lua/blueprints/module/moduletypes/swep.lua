@@ -50,7 +50,7 @@ end
 function MODULE:GetDefaultConfigTable()
 
 	return {
-		classname = "my_weapon",
+		classname = bpcommon.GUIDToString(self:GetUID(), true):lower(),
 		weapon = {
 			Author = "",
 			Category = "Blueprint",
@@ -62,16 +62,16 @@ function MODULE:GetDefaultConfigTable()
 			Spawnable = true,
 			AdminOnly = false,
 			Primary = {
-				ClipSize = 50,
+				ClipSize = 20,
 				DefaultClip = 20,
-				Automatic = true,
+				Automatic = false,
 				Ammo = "Pistol",
 			},
 			Secondary = {
-				ClipSize = 50,
-				DefaultClip = 20,
-				Automatic = true,
-				Ammo = "Pistol",
+				ClipSize = 0,
+				DefaultClip = 0,
+				Automatic = false,
+				Ammo = "",
 			},
 			ViewModel = "models/weapons/c_smg1.mdl",
 			WorldModel = "models/weapons/w_smg1.mdl",
