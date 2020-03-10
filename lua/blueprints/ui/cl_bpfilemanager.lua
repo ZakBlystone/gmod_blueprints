@@ -69,7 +69,9 @@ function PANEL:SetFile(file, role)
 
 	if file.header then
 		local fileType = file.header.type
-		self.typeImage:SetImage( self:GetTypeIcon(fileType) )
+		if type(fileType) == "string" then
+			self.typeImage:SetImage( self:GetTypeIcon(fileType) )
+		end
 	end
 
 	if self.file:HasFlag( bpfile.FL_IsServerFile ) then

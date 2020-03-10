@@ -402,10 +402,13 @@ function LoadHeader(filename)
 		version = 1
 	end
 
+	local modtype = version < 2 and inStream:ReadInt( false ) or bpdata.ReadValue( inStream )
+	if type(modtype) == "number" then modtype = "Mod" end
+
 	return {
 		magic = magic,
 		version = version,
-		type = version < 2 and inStream:ReadInt( false ) or bpdata.ReadValue( inStream ),
+		type = modtype,
 		revision = inStream:ReadInt( false ),
 		uid = inStream:ReadStr( 16 ),
 		envVersion = bpdata.ReadValue( inStream ),
