@@ -10,6 +10,7 @@ local lockIconUnlocked = "icon16/page.png"
 local statusIconHasChanges = "icon16/asterisk_yellow.png"
 local statusIconRunning = "icon16/resultset_next.png"
 local statusIconStopped = "icon16/stop.png"
+local typeIconDefault = "icon16/joystick.png"
 
 function PANEL:OnFileOpen( file )
 
@@ -29,6 +30,9 @@ function PANEL:Init()
 	self.statusImage = vgui.Create("DImage", self)
 	self.statusImage:SetImage(statusIconHasChanges)
 
+	self.typeImage = vgui.Create("DImage", self)
+	self.typeImage:SetImage(typeIconDefault)
+
 end
 
 function PANEL:GetName()
@@ -40,6 +44,14 @@ end
 function PANEL:GetFile()
 
 	return self.file
+
+end
+
+function PANEL:GetTypeIcon(type)
+
+	local loader = bpmodule.GetClassLoader()
+	local class = loader:Get(type)
+	return class and class.Icon or typeIconDefault
 
 end
 
@@ -55,6 +67,11 @@ function PANEL:SetFile(file, role)
 		title = tostring(self.file:GetName()) .. " --- by: " .. tostring( self.file:GetOwner() )
 	end
 
+	if file.header then
+		local fileType = file.header.type
+		self.typeImage:SetImage( self:GetTypeIcon(fileType) )
+	end
+
 	if self.file:HasFlag( bpfile.FL_IsServerFile ) then
 		title = title .. " r" .. tostring(self.file:GetRevision())
 	end
@@ -63,6 +80,7 @@ function PANEL:SetFile(file, role)
 	if role == bpfilesystem.FT_Local then
 		self.statusImage:SetVisible( self.file:HasFlag( bpfile.FL_HasLocalChanges) )
 	else
+		self.typeImage:SetVisible(false)
 		self.statusImage:SetVisible( true )
 		self.statusImage:SetImage( self.file:HasFlag( bpfile.FL_Running ) and statusIconRunning or statusIconStopped )
 	end
@@ -102,6 +120,14 @@ function PANEL:PerformLayout()
 
 	self.statusImage:SizeToContents()
 	self.statusImage:SetPos(w-32-4, h/2 - self.lockImage:GetTall()/2)
+
+	self.typeImage:SizeToContents()
+
+	if self.statusImage:IsVisible() then
+		self.typeImage:SetPos(w-48-4, h/2 - self.typeImage:GetTall()/2)
+	else
+		self.typeImage:SetPos(w-32-4, h/2 - self.typeImage:GetTall()/2)
+	end
 
 end
 

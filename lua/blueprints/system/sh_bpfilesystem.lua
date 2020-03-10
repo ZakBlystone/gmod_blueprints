@@ -102,11 +102,13 @@ function IndexLocalFiles( refresh )
 				local entry = bpfile.New(head.uid, bpfile.FT_Module, f)
 				entry:SetPath( ClientFileDirectory .. f )
 				entry:SetRevision( head.revision )
+				entry.header = head
 				G_BPLocalFiles[head.uid] = entry
 
 			else
 
 				existing:SetName(f)
+				existing.header = head
 
 			end
 
