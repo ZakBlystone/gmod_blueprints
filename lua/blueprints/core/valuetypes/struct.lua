@@ -46,16 +46,19 @@ function VALUE:SetStruct( struct )
 			end,
 			self
 		)
-		self._children[#self._children+1] = {
-			k = k,
-			vt = vt,
-		}
-		vt:AddListener( function(cb, old, new, key)
-			if cb == bpvaluetype.CB_VALUE_CHANGED then
-				local ak = (key ~= nil) and k .. "." .. tostring(key) or k
-				self:OnChanged(old, new, ak)
-			end 
-		end )
+
+		if vt ~= nil then
+			self._children[#self._children+1] = {
+				k = k,
+				vt = vt,
+			}
+			vt:AddListener( function(cb, old, new, key)
+				if cb == bpvaluetype.CB_VALUE_CHANGED then
+					local ak = (key ~= nil) and k .. "." .. tostring(key) or k
+					self:OnChanged(old, new, ak)
+				end 
+			end )
+		end
 	end
 
 	end)

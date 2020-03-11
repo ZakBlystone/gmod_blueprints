@@ -1264,7 +1264,7 @@ function meta:CompileGraph(graph)
 	end
 
 	if graph:HasFlag(bpgraph.FL_HOOK) then
-		local args = {graph:GetHookType(), graph:GetName(), graphID, -1}
+		local args = {graph:GetHookType() or graph:GetName(), graph:GetName(), graphID, -1}
 		self.emit("_FR_HOOK(" .. table.concat(args, ",") .. ")")
 	end
 
