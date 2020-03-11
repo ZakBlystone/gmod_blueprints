@@ -33,6 +33,7 @@ function meta:Register(name, tab, base)
 	local registered = self.registered
 	local parentMeta = self.meta
 
+	tab.__hash = parentMeta.__hash
 	tab.__index = function(s, k)
 		local v = rawget(tab, k) if v then return v end
 		local b = base and registered[base] if b then return b.__index(s, k) end
@@ -94,7 +95,9 @@ function meta:Install(classname, parent)
 	if class == nil then error("Failed to get class: " .. classname) end
 
 	setmetatable(parent, class)
-	if class.Setup then parent:Setup() end
+
+	local idx = class.__indexer
+	if idx.Setup then parent:Setup() end
 
 end
 
