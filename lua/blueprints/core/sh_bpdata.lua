@@ -68,8 +68,21 @@ local FLOAT_DO_ROUNDING = false
 InStream = nil
 OutStream = nil
 
-local function SBRSH(v, b) return string.char(band(rshift(v, b), 0xFF)) end
-local function SBLSH(s, e, b) return lshift(s:byte(e), b) end
+local string_char = string.char
+local string_byte = string.byte
+local bit_lshift = bit.lshift
+local bit_rshift = bit.rshift
+local bit_band = bit.band
+local bit_bor = bit.bor
+local bit_bnot = bit.bnot
+local math_ldexp = math.ldexp
+local math_abs = math.abs
+local math_floor = math.floor
+local math_ceil = math.ceil
+local math_frexp = math.frexp
+
+local function SBRSH(v, b) return string_char(bit_band(bit_rshift(v, b), 0xFF)) end
+local function SBLSH(s, e, b) return bit_lshift(string_byte(s, e), b) end
 
 local function PrintBin(v, bits)
 	local s = ""
@@ -83,39 +96,39 @@ end
 local INF = 1/0
 function Float2Str(value)
 	local s=value<0 and 1 or 0
-	if math.abs(value)==INF then return (s==1 and "\0\0\0\255" or "\0\0\0\127") end
+	if math_abs(value)==INF then return (s==1 and "\0\0\0\255" or "\0\0\0\127") end
 	if value~=value then return "\170\170\170\255" end
 
 	local fr, exp = 0, 0
 	if value ~= 0.0 then
-		fr,exp=math.frexp(math.abs(value))
-		fr = math.floor(math.ldexp(fr, 24))
+		fr,exp=math_frexp(math_abs(value))
+		fr = math_floor(math_ldexp(fr, 24))
 		exp = exp + 126
 	end
-	local ec = band(lshift(exp, 7), 0x80)
-	local mc = band(rshift(fr, 16), 0x7f)
+	local ec = bit_band(bit_lshift(exp, 7), 0x80)
+	local mc = bit_band(bit_rshift(fr, 16), 0x7f)
 
 	local a = SBRSH(fr, 0)
 	local b = SBRSH(fr, 8)
-	local c = string.char( bor(ec, mc) )
-	local d = string.char( bor(s==1 and 0x80 or 0x00, rshift(exp, 1)) )
+	local c = string_char( bit_bor(ec, mc) )
+	local d = string_char( bit_bor(s==1 and 0x80 or 0x00, bit_rshift(exp, 1)) )
 
 	return a .. b .. c .. d
 end
 
 function Str2Float(str)
-	local b4, b3 = str:byte(4), str:byte(3)
-	local fr = lshift(band(b3, 0x7F), 16) + SBLSH(str, 2, 8) + SBLSH(str, 1, 0)
-	local exp = band(b4, 0x7F) * 2 + rshift(b3, 7)
+	local b4, b3 = string_byte(str, 4), string_byte(str, 3)
+	local fr = bit_lshift(bit_band(b3, 0x7F), 16) + SBLSH(str, 2, 8) + SBLSH(str, 1, 0)
+	local exp = bit_band(b4, 0x7F) * 2 + bit_rshift(b3, 7)
 	if exp == 0 then return 0 end
 
 	local s = (b4 > 127) and -1 or 1
-	local n = math.ldexp((math.ldexp(fr, -23) + 1) * s, exp - 127)
+	local n = math_ldexp((math_ldexp(fr, -23) + 1) * s, exp - 127)
 
 	--fix wonky rounding
-	if FLOAT_DO_ROUNDING and n - math.ceil(n) < FLOAT_ROUNDING_ACCURACY then
+	if FLOAT_DO_ROUNDING and n - math_ceil(n) < FLOAT_ROUNDING_ACCURACY then
 		n = n + FLOAT_ROUNDING_ACCURACY
-		return math.floor(n*FLOAT_ROUNDING_FIX)/FLOAT_ROUNDING_FIX
+		return math_floor(n*FLOAT_ROUNDING_FIX)/FLOAT_ROUNDING_FIX
 	end
 
 	return n
@@ -154,8 +167,8 @@ function Str2Num(str, signed, bytes)
 		value = value + SBLSH(str, i, (i-1) * 8)
 	end
 	
-	if value < 0 then value = (2 ^ sig) - 1 - bnot(value) end
-	if signed and band( value, lshift( 1, sig - 1 ) ) ~= 0 then
+	if value < 0 then value = (2 ^ sig) - 1 - bit_bnot(value) end
+	if signed and bit_band( value, bit_lshift( 1, sig - 1 ) ) ~= 0 then
 		value = -(2 ^ sig) + value
 	end
 	return value
@@ -297,7 +310,7 @@ end
 
 function OUT:WriteBits(v, bits)
 	if not self.bitstream then
-		self:WriteStr(Num2Str( v, false, rshift(bits+7, 3) ), true)
+		self:WriteStr(Num2Str( v, false, bit_rshift(bits+7, 3) ), true)
 		return
 	end
 	if bits > 32 or bits <= 0 then return end
@@ -318,7 +331,7 @@ end
 
 function OUT:WriteStr(str, raw)
 	if self.bitstream then
-		for i=1, string.len(str) do self:WriteBits(str:byte(i), 8) end
+		for i=1, string.len(str) do self:WriteBits(string_byte(str, i), 8) end
 	else
 		if self.stringTable and not raw then self:WriteBits( self.stringTable:Add( str ), 24 ) return end
 		self.buffer:Write(str)

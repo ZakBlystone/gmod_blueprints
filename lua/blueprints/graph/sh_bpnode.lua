@@ -422,10 +422,22 @@ end
 
 function meta:WriteToStream(stream, mode, version)
 
+	assert(stream:IsUsingStringTable())
+
 	Profile("write-node", function()
 
-		bpdata.WriteValue( self.nodeType, stream )
-		bpdata.WriteValue( self.literals, stream )
+		if version < 4 then
+			bpdata.WriteValue( self.nodeType, stream )
+			bpdata.WriteValue( self.literals, stream )
+		else
+			stream:WriteStr( self.nodeType )
+			for k,v in pairs(self.literals) do
+				stream:WriteBits(k, 16)
+				stream:WriteStr(v)
+			end
+			stream:WriteBits(0, 16)
+		end
+
 		bpdata.WriteValue( self.data, stream )
 		stream:WriteFloat( self.x )
 		stream:WriteFloat( self.y )
@@ -436,8 +448,22 @@ end
 
 function meta:ReadFromStream(stream, mode, version)
 
-	self.nodeType = bpdata.ReadValue(stream)
-	self.literals = bpdata.ReadValue(stream)
+	assert(stream:IsUsingStringTable())
+
+	if version < 4 then
+		self.nodeType = bpdata.ReadValue(stream)
+		self.literals = bpdata.ReadValue(stream)
+	else
+		self.nodeType = stream:ReadStr()
+		self.literals = {}
+
+		local r = stream:ReadBits(16)
+		while r ~= 0 do
+			self.literals[r] = stream:ReadStr()
+			r = stream:ReadBits(16)
+		end
+	end
+
 	self.data = bpdata.ReadValue(stream)
 	self.x = stream:ReadFloat()
 	self.y = stream:ReadFloat()

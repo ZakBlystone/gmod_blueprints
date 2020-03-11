@@ -14,7 +14,7 @@ STREAM_FILE = 1
 STREAM_NET = 2
 
 fmtMagic = 0x42504D31
-fmtVersion = 3
+fmtVersion = 4
 
 local meta = bpcommon.MetaTable("bpmodule")
 local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes/", "BPModuleClassRefresh", meta)
