@@ -710,8 +710,7 @@ function meta:AddNode(nodeTypeName, ...)
 	if not self:CanAddNode(nodeType) then return end
 
 	if nodeType:GetCodeType() == NT_Event and nodeType:ReturnsValues() then
-		self.module:RequestGraphForEvent(nodeType)
-		return
+		return self.module:RequestGraphForEvent(nodeType)
 	end
 
 	return self.nodes:Construct( nodeType, ... )

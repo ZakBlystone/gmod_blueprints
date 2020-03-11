@@ -88,7 +88,7 @@ end
 
 function NODE:GeneratePins(pins)
 
-	self.BaseClass.GeneratePins(self, pins)
+	BaseClass.GeneratePins(self, pins)
 
 	pins[#pins+1] = MakePin(
 		PD_In,

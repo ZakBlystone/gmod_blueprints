@@ -19,7 +19,7 @@ function NODE:GeneratePins(pins)
 
 	bpcommon.Transform(struct.pins:GetTable(), pins, bppin_meta.Copy, PD_Out)
 
-	self.BaseClass.GeneratePins(self, pins)
+	BaseClass.GeneratePins(self, pins)
 
 end
 

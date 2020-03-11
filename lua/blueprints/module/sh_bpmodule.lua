@@ -16,8 +16,8 @@ STREAM_NET = 2
 fmtMagic = 0x42504D31
 fmtVersion = 3
 
-local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes/", "BPModuleClassRefresh")
 local meta = bpcommon.MetaTable("bpmodule")
+local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes/", "BPModuleClassRefresh", meta)
 
 function GetClassLoader() return moduleClasses end
 

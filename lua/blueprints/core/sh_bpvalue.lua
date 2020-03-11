@@ -6,8 +6,8 @@ bpcommon.CallbackList({
 	"VALUE_CHANGED",
 })
 
-local valueClasses = bpclassloader.Get("Value", "blueprints/core/valuetypes/", "BPValueTypeClassRefresh")
 local meta = bpcommon.MetaTable("bpvaluetype")
+local valueClasses = bpclassloader.Get("Value", "blueprints/core/valuetypes/", "BPValueTypeClassRefresh", meta)
 
 FL_NONE = 0
 FL_MANDATORY_OPTIONS = 1

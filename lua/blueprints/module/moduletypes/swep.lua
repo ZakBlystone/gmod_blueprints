@@ -12,7 +12,7 @@ MODULE.AdditionalConfig = true
 
 function MODULE:Setup()
 
-	mod_configurable.MODULE.Setup(self)
+	BaseClass.Setup(self)
 
 	self.getSelfNodeType = bpnodetype.New()
 	self.getSelfNodeType:SetCodeType(NT_Pure)
@@ -73,8 +73,8 @@ function MODULE:GetDefaultConfigTable()
 				Automatic = false,
 				Ammo = "",
 			},
-			ViewModel = "models/weapons/c_smg1.mdl",
-			WorldModel = "models/weapons/w_smg1.mdl",
+			ViewModel = "models/weapons/c_pistol.mdl",
+			WorldModel = "models/weapons/w_pistol.mdl",
 			ViewModelFlip = false,
 			ViewModelFlip1 = false,
 			ViewModelFlip2 = false,
@@ -102,6 +102,19 @@ function MODULE:CreateDefaults()
 	local _, init = graph:AddNode("WEAPON_Initialize", 120, 100)
 	local _, hold = graph:AddNode("Weapon_SetHoldType", 250, 100)
 
+	--local _, primary = graph:AddNode("WEAPON_PrimaryAttack", 120, 300)
+	--local _, secondary = graph:AddNode("WEAPON_SecondaryAttack", 120, 500)
+	--local _, canPrimary = graph:AddNode("Weapon_CanPrimaryAttack", 300, 300)
+	--local _, cpIf = graph:AddNode("LOGIC_If", 550, 300)
+	--local _, cpShootEffects = graph:AddNode("Weapon_ShootEffects", 750, 300)
+
+	--primary:FindPin( PD_Out, "Exec" ):Connect( canPrimary:FindPin( PD_In, "Exec" ) )
+	--canPrimary:FindPin( PD_Out, "Thru" ):Connect( cpIf:FindPin( PD_In, "Exec" ) )
+	--canPrimary:FindPin( PD_Out, "CanAttack" ):Connect( cpIf:FindPin( PD_In, "Condition" ) )
+	--cpIf:FindPin( PD_Out, "True" ):Connect( cpShootEffects:FindPin( PD_In, "Exec" ) )
+
+	--local canPrimaryGraph = graph:AddNode("WEAPON_CanPrimaryAttack", 150, 300)
+
 	init:FindPin( PD_Out, "Exec" ):Connect( hold:FindPin( PD_In, "Exec" ) )
 	hold:FindPin( PD_In, "Name" ):SetLiteral("pistol")
 
@@ -120,13 +133,13 @@ function MODULE:CanAddNode(nodeType)
 	local group = nodeType:GetGroup()
 	if group and nodeType:GetContext() == bpnodetype.NC_Hook and not allowedHooks[group:GetName()] then return false end
 
-	return self.BaseClass.CanAddNode( self, nodeType )
+	return BaseClass.CanAddNode( self, nodeType )
 
 end
 
 function MODULE:GetNodeTypes( graph, collection )
 
-	self.BaseClass.GetNodeTypes( self, graph, collection )
+	BaseClass.GetNodeTypes( self, graph, collection )
 
 	local types = {}
 

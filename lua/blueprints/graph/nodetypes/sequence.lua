@@ -54,7 +54,7 @@ end
 
 function NODE:GetOptions(tab)
 
-	self.BaseClass.GetOptions(self, tab)
+	BaseClass.GetOptions(self, tab)
 
 	tab[#tab+1] = {
 		"AddPin",

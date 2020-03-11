@@ -23,7 +23,7 @@ function VALUE:GetDefault() return 0 end
 
 function VALUE:CreateVGUI( info )
 
-	local entry = self.BaseClass.CreateVGUI(self, info)
+	local entry = BaseClass.CreateVGUI(self, info)
 	entry:SetNumeric(true)
 	return entry
 
@@ -50,14 +50,14 @@ end
 function VALUE:WriteToStream(stream)
 
 	bpdata.WriteValue( self._prec, stream )
-	return self.BaseClass.WriteToStream( self, stream )
+	return BaseClass.WriteToStream( self, stream )
 
 end
 
 function VALUE:ReadFromStream(stream)
 
 	self._prec = bpdata.ReadValue( stream )
-	return self.BaseClass.ReadFromStream( self, stream )
+	return BaseClass.ReadFromStream( self, stream )
 
 end
 

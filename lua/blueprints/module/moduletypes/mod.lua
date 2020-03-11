@@ -32,7 +32,7 @@ function MODULE:CanAddNode(nodeType)
 	local group = nodeType:GetGroup()
 	if group and nodeType:GetContext() == bpnodetype.NC_Hook and not allowedHooks[group:GetName()] then return false end
 
-	return self.BaseClass.CanAddNode( self, nodeType )
+	return BaseClass:CanAddNode( nodeType )
 
 end
 

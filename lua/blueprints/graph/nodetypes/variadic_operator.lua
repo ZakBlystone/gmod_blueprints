@@ -10,7 +10,7 @@ end
 
 function NODE:GeneratePins(pins)
 
-	self.BaseClass.GeneratePins(self, pins)
+	BaseClass.GeneratePins(self, pins)
 
 	local dataPin = nil
 	local dataPinID = nil
@@ -40,7 +40,7 @@ end
 
 function NODE:GetOptions(tab)
 
-	self.BaseClass.GetOptions(self, tab)
+	BaseClass.GetOptions(self, tab)
 
 	tab[#tab+1] = {
 		"AddPin",

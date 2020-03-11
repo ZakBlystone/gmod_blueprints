@@ -25,13 +25,13 @@ function NODE:GeneratePins(pins)
 		anyPin:AsTable()
 	)
 
-	self.BaseClass.GeneratePins(self, pins)
+	BaseClass.GeneratePins(self, pins)
 
 end
 
 function NODE:GetOptions(tab)
 
-	self.BaseClass.GetOptions(self, tab)
+	BaseClass.GetOptions(self, tab)
 
 	tab[#tab+1] = {
 		"AddPin",
@@ -71,7 +71,7 @@ end
 
 function NODE:GetFlags()
 
-	return bit.bor(self.BaseClass.GetFlags(self), bpschema.NTF_HidePinNames)
+	return bit.bor(BaseClass.GetFlags(self), bpschema.NTF_HidePinNames)
 
 end
 

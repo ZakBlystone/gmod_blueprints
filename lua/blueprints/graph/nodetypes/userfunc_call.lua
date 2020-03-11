@@ -11,7 +11,7 @@ function NODE:GeneratePins(pins)
 
 	local graph = self:GetOuterGraph()
 
-	self.BaseClass.GeneratePins(self, pins)
+	BaseClass.GeneratePins(self, pins)
 
 	bpcommon.Transform(graph.inputs:GetTable(), pins, bppin_meta.Copy, PD_In)
 	bpcommon.Transform(graph.outputs:GetTable(), pins, bppin_meta.Copy, PD_Out)

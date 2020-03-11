@@ -12,7 +12,7 @@ MODULE.AdditionalConfig = true
 
 function MODULE:Setup()
 
-	mod_configurable.MODULE.Setup(self)
+	BaseClass.Setup(self)
 
 	self.getSelfNodeType = bpnodetype.New()
 	self.getSelfNodeType:SetCodeType(NT_Pure)
@@ -59,13 +59,13 @@ function MODULE:CanAddNode(nodeType)
 	local group = nodeType:GetGroup()
 	if group and nodeType:GetContext() == bpnodetype.NC_Hook and not allowedHooks[group:GetName()] then return false end
 
-	return self.BaseClass.CanAddNode( self, nodeType )
+	return BaseClass.CanAddNode( self, nodeType )
 
 end
 
 function MODULE:GetNodeTypes( graph, collection )
 
-	self.BaseClass.GetNodeTypes( self, graph, collection )
+	BaseClass.GetNodeTypes( self, graph, collection )
 
 	local types = {}
 

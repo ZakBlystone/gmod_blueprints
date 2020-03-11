@@ -6,8 +6,9 @@ module("bpclassloader", package.seeall)
 
 local meta = bpcommon.MetaTable("bpclassloader")
 
-function meta:Init(name, path, refreshHook)
+function meta:Init(name, path, refreshHook, meta)
 
+	self.meta = meta
 	self.registered = {}
 	self.initializing = false
 	self.path = path
@@ -26,14 +27,41 @@ end
 
 function meta:Register(name, tab, base)
 
-	--print("Registered [" .. self.name .. "] class: " .. name .. " : " .. tostring(tab))
-	self.registered[name:lower()] = tab
+	if base then base = base:lower() end
 
-	if base then tab.__baseName = base:lower() end
+	local scriptEnv = getfenv(2)
+	local registered = self.registered
+	local parentMeta = self.meta
+
+	tab.__index = function(s, k)
+		local v = rawget(tab, k) if v then return v end
+		local b = base and registered[base] if b then return b.__index(s, k) end
+		return parentMeta[k]
+	end
+
+	tab.__indexer = setmetatable({}, tab)
+
+	local env = setmetatable({},{
+		__index = function(s,k)
+			if k == "BaseClass" then
+				local b = base and registered[base] if b then return b.__indexer end
+				return parentMeta
+			end
+			return scriptEnv[k]
+		end
+	})
+
+	for _, func in pairs(tab) do
+		if type(func) == "function" then setfenv(func, env) end
+	end
+
+	registered[name:lower()] = tab
 
 	if not initializing and self.refreshHook then
 		hook.Run(self.refreshHook, name)
 	end
+
+	print("Registered [" .. self.name .. "] class: " .. name .. " : " .. tostring(tab))
 
 end
 
@@ -65,21 +93,8 @@ function meta:Install(classname, parent)
 	local class = self:Get(classname)
 	if class == nil then error("Failed to get class: " .. classname) end
 
-	local base = parent.BaseClass or getmetatable(parent)
-	local meta = table.Copy(class)
-	local baseName = meta.__baseName
-	while baseName do
-		local baseTable = self:Get(baseName)
-		if not baseTable then error("Couldn't locate baseclass: " .. tostring(meta.__baseName)) end
-		for k, v in pairs(baseTable) do
-			meta[k] = meta[k] or v
-		end
-		baseName = baseTable.__baseName
-	end
-	table.Inherit(meta, base)
-	meta.__index = meta
-	setmetatable(parent, meta)
-	if meta.Setup then parent:Setup() end
+	setmetatable(parent, class)
+	if class.Setup then parent:Setup() end
 
 end
 

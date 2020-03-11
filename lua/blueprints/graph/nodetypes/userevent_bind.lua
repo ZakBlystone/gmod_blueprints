@@ -9,7 +9,7 @@ function NODE:GetEvent() return self:GetType().event end
 
 function NODE:GeneratePins(pins)
 
-	self.BaseClass.GeneratePins(self, pins)
+	BaseClass.GeneratePins(self, pins)
 
 	local event = self:GetEvent()
 

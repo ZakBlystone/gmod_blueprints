@@ -153,7 +153,7 @@ end
 
 function VALUE:Set(v)
 
-	self.BaseClass.Set(self, v)
+	BaseClass.Set(self, v)
 
 	self._children = {}
 
