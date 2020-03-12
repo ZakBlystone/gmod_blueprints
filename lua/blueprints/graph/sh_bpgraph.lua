@@ -349,7 +349,7 @@ function meta:GetNodeTypes()
 	local collection = bpcollection.New()
 
 	Profile("cache-node-types", function()
-		self:GetModule():GetNodeTypes( self, collection )
+		self:GetModule():GetNodeTypes( collection, self )
 
 		if self.type == GT_Function then
 			local types = {}

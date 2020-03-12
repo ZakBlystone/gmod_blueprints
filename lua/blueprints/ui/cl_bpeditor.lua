@@ -470,12 +470,16 @@ function PANEL:OpenFile( file )
 	end
 
 	local mod = bpmodule.New()
-	local b,e = pcall( function()
-		mod:Load(file:GetPath())
-		return self:OpenModule( mod, file:GetName(), file )
-	end)
+	local b,e = xpcall( 
+		function()
+			mod:Load(file:GetPath())
+			return self:OpenModule( mod, file:GetName(), file )
+		end, 
+		function(err)
+			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), "Failed to open module", "OK" )
+		end)
 	if not b then
-		Derma_Message( e, "Failed to open module", "OK" )
+		
 	else
 		return e
 	end

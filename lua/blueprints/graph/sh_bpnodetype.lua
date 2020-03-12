@@ -78,6 +78,8 @@ function meta:GetNodeParam(key) return self.nodeParams[key] end
 function meta:GetRequiredMeta() return self.requiredMeta end
 function meta:GetContext() return self.context end
 function meta:GetGroup() return self.group end
+function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
+
 function meta:ReturnsValues()
 
 	for _, v in ipairs(self.pins) do

@@ -98,9 +98,9 @@ function MODULE:CanAddNode(nodeType)
 
 end
 
-function MODULE:GetNodeTypes( graph, collection )
+function MODULE:GetNodeTypes( collection, graph )
 
-	BaseClass.GetNodeTypes( self, graph, collection )
+	BaseClass.GetNodeTypes( self, collection, graph )
 
 	local types = {}
 

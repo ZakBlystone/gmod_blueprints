@@ -10,6 +10,8 @@ MODULE.AdditionalConfig = false
 
 function MODULE:Setup()
 
+	BaseClass.Setup(self)
+
 	if self.AdditionalConfig then
 		self.config = self.config or self:GetDefaultConfigTable()
 	end
@@ -107,6 +109,8 @@ end
 
 function MODULE:WriteData( stream, mode, version )
 
+	BaseClass.WriteData( self, stream, mode, version )
+
 	if self.AdditionalConfig then
 		bpdata.WriteValue( self:GetConfig(), stream )
 	end
@@ -114,6 +118,8 @@ function MODULE:WriteData( stream, mode, version )
 end
 
 function MODULE:ReadData( stream, mode, version )
+
+	BaseClass.ReadData( self, stream, mode, version )
 
 	if self.AdditionalConfig then
 		local config = bpdata.ReadValue( stream )
@@ -123,4 +129,4 @@ function MODULE:ReadData( stream, mode, version )
 
 end
 
-RegisterModuleClass("Configurable", MODULE)
+RegisterModuleClass("Configurable", MODULE, "GraphModule")

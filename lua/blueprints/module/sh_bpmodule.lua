@@ -23,90 +23,13 @@ function GetClassLoader() return moduleClasses end
 
 nextModuleID = nextModuleID or 0
 
-bpcommon.CreateIndexableListIterators(meta, "graphs")
-bpcommon.CreateIndexableListIterators(meta, "variables")
-bpcommon.CreateIndexableListIterators(meta, "structs")
-bpcommon.CreateIndexableListIterators(meta, "events")
-
 function meta:Init(type)
 
 	self.version = fmtVersion
-	self.graphs = bplist.New(bpgraph_meta, self, "module"):NamedItems("Graph")
-	self.structs = bplist.New(bpstruct_meta, self, "module"):NamedItems("Struct")
-	self.variables = bplist.New(bpvariable_meta, self, "module"):NamedItems("Var")
-	self.events = bplist.New(bpevent_meta, self, "module"):NamedItems("Event")
 	self.id = nextModuleID
 	self.type = type or "mod"
 	self.revision = 1
 	self.uniqueID = bpcommon.GUID()
-	self.suppressGraphNotify = false
-
-	self.graphs:AddListener(function(cb, id, graph)
-
-		if cb == bplist.CB_ADD then
-			graph:AddListener(function() self:PostModifyGraph(graph) end)
-			self:FireListeners(CB_GRAPH_ADD, id)
-		elseif cb == bplist.CB_REMOVE then
-			self:RemoveNodeTypes({ graph:GetCallNodeType() })
-			self:FireListeners(CB_GRAPH_REMOVE, id)
-			self:RecacheNodeTypes()
-		end
-
-	end, bplist.CB_ALL)
-
-	self.structs:AddListener(function(cb, id, struct)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ struct:MakerNodeType(), struct:BreakerNodeType() }) end
-		self:RecacheNodeTypes()
-	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
-
-	self.structs:AddListener(function(cb, action, id, struct)
-
-		if action ~= bplist.MODIFY_RENAME then return end
-		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( struct:MakerNodeType() )
-			self:PreModifyNodeType( struct:BreakerNodeType() )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( struct:MakerNodeType() )
-			self:PostModifyNodeType( struct:BreakerNodeType() )
-		end
-
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
-
-	self.events:AddListener(function(cb, id, event)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ event:EventNodeType(), event:CallNodeType() }) end
-		self:RecacheNodeTypes()
-	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
-
-	self.events:AddListener(function(cb, action, id, event)
-
-		if action ~= bplist.MODIFY_RENAME then return end
-		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( event:EventNodeType() )
-			self:PreModifyNodeType( event:CallNodeType() )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( event:EventNodeType() )
-			self:PostModifyNodeType( event:CallNodeType() )
-		end
-
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
-
-	self.variables:AddListener(function(cb, id, var)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ var:SetterNodeType(), var:GetterNodeType() }) end
-		self:RecacheNodeTypes()
-	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
-
-	self.variables:AddListener(function(cb, action, id, var)
-
-		if action ~= bplist.MODIFY_RENAME then return end
-		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( var:SetterNodeType() )
-			self:PreModifyNodeType( var:GetterNodeType() )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( var:SetterNodeType() )
-			self:PostModifyNodeType( var:GetterNodeType() )
-		end
-
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	bpcommon.MakeObservable(self)
 
@@ -114,48 +37,6 @@ function meta:Init(type)
 
 	nextModuleID = nextModuleID + 1
 	return self
-
-end
-
-function meta:PreModifyNodeType( nodeType )
-
-	for _, graph in self:Graphs() do
-		graph:PreModifyNodeType( nodeType )
-	end
-
-end
-
-function meta:PostModifyNodeType( nodeType )
-
-	for _, graph in self:Graphs() do
-		graph:PostModifyNodeType( nodeType )
-	end
-
-	self:FireListeners(CB_NODETYPE_MODIFIED, nodeType)
-
-end
-
-function meta:RemoveNodeTypes( nodeTypes )
-
-	for _, graph in self:Graphs() do
-		graph.nodes:RemoveIf( function(node) return table.HasValue( nodeTypes, node:GetType() ) end )
-	end
-
-end
-
-function meta:RecacheNodeTypes()
-
-	for _, graph in self:Graphs() do
-		graph:CacheNodeTypes()
-	end
-
-end
-
-function meta:PostModifyGraph( graph )
-
-	if not self.suppressGraphNotify then
-		self:FireListeners(CB_GRAPH_MODIFIED, graph)
-	end
 
 end
 
@@ -198,79 +79,31 @@ function meta:CanAddNode(nodeType)
 
 end
 
+function meta:PreModifyNodeType( nodeType )
+
+end
+
+function meta:PostModifyNodeType( nodeType )
+
+	self:FireListeners(CB_NODETYPE_MODIFIED, nodeType)
+
+end
+
 function meta:NodeTypeInUse( nodeType )
-
-	for id, v in self:Graphs() do
-
-		for _, node in v:Nodes() do
-
-			if node:GetTypeName() == nodeType then return true end
-
-		end
-
-	end
 
 	return false
 
 end
 
-function meta:GetNodeTypes( graph, collection )
-
-	local types = {}
+function meta:GetNodeTypes( collection )
 
 	collection:Add( bpdefs.Get():GetNodeTypes() )
-	collection:Add( types )
-
-	for id, v in self:Variables() do
-
-		local name = v:GetName()
-		types["__VSet" .. id] = v:SetterNodeType()
-		types["__VGet" .. id] = v:GetterNodeType()
-
-	end
-
-	for id, v in self:Graphs() do
-
-		if v:GetType() == GT_Function and v ~= graph then
-
-			types["__Call" .. id] = v:GetCallNodeType()
-			if not types["__Call" .. id] then print("FUNCTION GRAPH WITHOUT CALL NODE: " .. id) end
-
-		end
-
-	end
-
-	for id, v in self:Structs() do
-
-		types["__Make" .. id] = v:MakerNodeType()
-		types["__Break" .. id] = v:BreakerNodeType()
-
-	end
-
-	for id, v in self:Events() do
-
-		types["__EventCall" .. id] = v:CallNodeType()
-		types["__Event" .. id] = v:EventNodeType()
-
-	end
-
-	for k,v in pairs(types) do v.name = k end
 
 end
 
 function meta:GetPinTypes( collection )
 
-	local types = {}
-
 	collection:Add( bpdefs.Get():GetPinTypes() )
-	collection:Add( types )
-
-	for id, v in self:Structs() do
-
-		local pinType = PinType(PN_Struct, PNF_Custom, v.name)
-		types[#types+1] = pinType
-
-	end
 
 end
 
@@ -280,82 +113,17 @@ end
 
 function meta:Clear()
 
-	self.graphs:Clear()
-	self.variables:Clear()
-
 	self:FireListeners(CB_MODULE_CLEAR)
 
 end
 
 function meta:CreateDefaults()
 
-	local id, graph = self:NewGraph("EventGraph")
-	graph:AddNode("CORE_Init", 120, 100)
-	graph:AddNode("GM_Think", 120, 300)
-	graph:AddNode("CORE_Shutdown", 120, 500)
-
-end
-
-function meta:NewVariable(name, ...)
-
-	return self.variables:ConstructNamed( name, ... )
-
-end
-
-function meta:NewGraph(name, type)
-
-	local id, graph = self.graphs:ConstructNamed( name, type )
-	return id, graph
-
 end
 
 function meta:GetUsedPinTypes(used, noFlags)
 
-	used = used or {}
-	for graphID, graph in self:Graphs() do
-		graph:GetUsedPinTypes(used, noFlags)
-	end
-	return used
-
-end
-
-function meta:RequestGraphForEvent( nodeType )
-
-	print("REQUEST GRAPH FOR: " .. nodeType:GetName())
-
-	for _, graph in self:Graphs() do
-		if graph:GetName() == nodeType:GetDisplayName() then return end
-	end
-
-	local id, graph = self:NewGraph(nodeType:GetDisplayName(), NT_Function)
-	graph:SetFlag(bpgraph.FL_LOCK_PINS)
-	graph:SetFlag(bpgraph.FL_LOCK_NAME)
-
-	if not nodeType:HasFlag(NTF_NotHook) then
-		graph:SetFlag(bpgraph.FL_HOOK)
-	end
-
-	graph:SetHookType( nodeType:GetName() )
-
-	if nodeType:GetRole() == ROLE_Server or nodeType:GetRole() == ROLE_Shared then
-		graph:SetFlag(bpgraph.FL_ROLE_SERVER)
-	end
-	if nodeType:GetRole() == ROLE_Client or nodeType:GetRole() == ROLE_Shared then
-		graph:SetFlag(bpgraph.FL_ROLE_CLIENT)
-	end
-
-	for _, v in ipairs(nodeType:GetPins()) do
-
-		if v:IsType(PN_Exec) then continue end
-		if v:IsOut() then
-			graph.inputs:Add(v:Copy(), v:GetName())
-		else
-			graph.outputs:Add(v:Copy(), v:GetName())
-		end
-
-	end
-
-	return graph
+	return used or {}
 
 end
 
@@ -476,6 +244,7 @@ function meta:Save(filename)
 
 end
 
+function meta:WriteData( stream, mode, version ) end
 function meta:WriteToStream(stream, mode)
 
 	stream:WriteInt( fmtMagic, false )
@@ -488,20 +257,12 @@ function meta:WriteToStream(stream, mode)
 		bpdata.WriteValue( bpcommon.ENV_VERSION, stream )
 	end
 
-	Profile("write-variables", self.variables.WriteToStream, self.variables, stream, mode, fmtVersion)
-	Profile("write-graphs", self.graphs.WriteToStream, self.graphs, stream, mode, fmtVersion)
-	Profile("write-structs", self.structs.WriteToStream, self.structs, stream, mode, fmtVersion)
-	Profile("write-events", self.events.WriteToStream, self.events, stream, mode, fmtVersion)
-
-	if self.WriteData then self:WriteData(stream, mode, fmtVersion ) end
+	self:WriteData(stream, mode, fmtVersion )
 
 end
 
+function meta:ReadData( stream, mode, version ) end
 function meta:ReadFromStream(stream, mode)
-
-	self:Clear()
-
-	self.suppressGraphNotify = true
 
 	local magic = stream:ReadInt( false )
 	local version = stream:ReadInt( false )
@@ -530,22 +291,15 @@ function meta:ReadFromStream(stream, mode)
 		self.envVersion = ""
 	end
 
+	print("INSTALL CLASS FOR: " .. tostring(self:GetType()))
+
 	moduleClasses:Install( self:GetType(), self )
+
+	self:Clear()
 
 	--print( bpcommon.GUIDToString( self.uniqueID ) .. " v" .. self.revision  )
 
-	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
-	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
-	Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version)
-	Profile("read-events", self.events.ReadFromStream, self.events, stream, mode, version)
-
-	for _, graph in self:Graphs() do
-		graph:CreateDeferredData()
-	end
-
-	self.suppressGraphNotify = false
-
-	if self.ReadData then self:ReadData(stream, mode, fmtVersion ) end
+	self:ReadData(stream, mode, version )
 
 	return self
 

@@ -340,7 +340,7 @@ function meta:Draw(xOffset, yOffset, alpha)
 	end
 
 
-	local ntc = NodeTypeColors[ node:GetCodeType() ]
+	local ntc = node:GetColor()
 	local isCompact = self:ShouldBeCompact()
 	local offset = isCompact and 0 or NODE_HEADER_HEIGHT
 	roundedBox(12, x, y + offset, w, h - offset, 20,20,20,(selected and 252 or 230)*alpha, isCompact, isCompact, true, true)
