@@ -15,9 +15,9 @@ bpcommon.CreateIndexableListIterators(MODULE, "events")
 function MODULE:Setup()
 
 	self.graphs = bplist.New(bpgraph_meta, self, "module"):NamedItems("Graph")
-	self.structs = bplist.New(bpstruct_meta, self, "module"):NamedItems("Struct")
-	self.variables = bplist.New(bpvariable_meta, self, "module"):NamedItems("Var")
-	self.events = bplist.New(bpevent_meta, self, "module"):NamedItems("Event")
+	if self:CanHaveStructs() then self.structs = bplist.New(bpstruct_meta, self, "module"):NamedItems("Struct") end
+	if self:CanHaveVariables() then self.variables = bplist.New(bpvariable_meta, self, "module"):NamedItems("Var") end
+	if self:CanHaveEvents() then self.events = bplist.New(bpevent_meta, self, "module"):NamedItems("Event") end
 	self.suppressGraphNotify = false
 
 	self.graphs:AddListener(function(cb, id, graph)
@@ -33,61 +33,76 @@ function MODULE:Setup()
 
 	end, bplist.CB_ALL)
 
-	self.structs:AddListener(function(cb, id, struct)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ struct:MakerNodeType(), struct:BreakerNodeType() }) end
-		self:RecacheNodeTypes()
-	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
+	-- Structs
+	if self:CanHaveStructs() then
+		
+		self.structs:AddListener(function(cb, id, struct)
+			if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ struct:MakerNodeType(), struct:BreakerNodeType() }) end
+			self:RecacheNodeTypes()
+		end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
-	self.structs:AddListener(function(cb, action, id, struct)
+		self.structs:AddListener(function(cb, action, id, struct)
 
-		if action ~= bplist.MODIFY_RENAME then return end
-		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( struct:MakerNodeType() )
-			self:PreModifyNodeType( struct:BreakerNodeType() )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( struct:MakerNodeType() )
-			self:PostModifyNodeType( struct:BreakerNodeType() )
-		end
+			if action ~= bplist.MODIFY_RENAME then return end
+			if cb == bplist.CB_PREMODIFY then
+				self:PreModifyNodeType( struct:MakerNodeType() )
+				self:PreModifyNodeType( struct:BreakerNodeType() )
+			elseif cb == bplist.CB_POSTMODIFY then
+				self:PostModifyNodeType( struct:MakerNodeType() )
+				self:PostModifyNodeType( struct:BreakerNodeType() )
+			end
 
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+		end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
-	self.events:AddListener(function(cb, id, event)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ event:EventNodeType(), event:CallNodeType() }) end
-		self:RecacheNodeTypes()
-	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
+	end
 
-	self.events:AddListener(function(cb, action, id, event)
+	-- Events
+	if self:CanHaveEvents() then
 
-		if action ~= bplist.MODIFY_RENAME then return end
-		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( event:EventNodeType() )
-			self:PreModifyNodeType( event:CallNodeType() )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( event:EventNodeType() )
-			self:PostModifyNodeType( event:CallNodeType() )
-		end
+		self.events:AddListener(function(cb, id, event)
+			if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ event:EventNodeType(), event:CallNodeType() }) end
+			self:RecacheNodeTypes()
+		end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
 
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+		self.events:AddListener(function(cb, action, id, event)
 
-	self.variables:AddListener(function(cb, id, var)
-		if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ var:SetterNodeType(), var:GetterNodeType() }) end
-		self:RecacheNodeTypes()
-	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
+			if action ~= bplist.MODIFY_RENAME then return end
+			if cb == bplist.CB_PREMODIFY then
+				self:PreModifyNodeType( event:EventNodeType() )
+				self:PreModifyNodeType( event:CallNodeType() )
+			elseif cb == bplist.CB_POSTMODIFY then
+				self:PostModifyNodeType( event:EventNodeType() )
+				self:PostModifyNodeType( event:CallNodeType() )
+			end
 
-	self.variables:AddListener(function(cb, action, id, var)
+		end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
-		if action ~= bplist.MODIFY_RENAME then return end
-		if cb == bplist.CB_PREMODIFY then
-			self:PreModifyNodeType( var:SetterNodeType() )
-			self:PreModifyNodeType( var:GetterNodeType() )
-		elseif cb == bplist.CB_POSTMODIFY then
-			self:PostModifyNodeType( var:SetterNodeType() )
-			self:PostModifyNodeType( var:GetterNodeType() )
-		end
+	end
 
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+	-- Variables
+	if self:CanHaveVariables() then
 
-	print("GRAPH MODULE INITIALIZED")
+		self.variables:AddListener(function(cb, id, var)
+			if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ var:SetterNodeType(), var:GetterNodeType() }) end
+			self:RecacheNodeTypes()
+		end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
+
+		self.variables:AddListener(function(cb, action, id, var)
+
+			if action ~= bplist.MODIFY_RENAME then return end
+			if cb == bplist.CB_PREMODIFY then
+				self:PreModifyNodeType( var:SetterNodeType() )
+				self:PreModifyNodeType( var:GetterNodeType() )
+			elseif cb == bplist.CB_POSTMODIFY then
+				self:PostModifyNodeType( var:SetterNodeType() )
+				self:PostModifyNodeType( var:GetterNodeType() )
+			end
+
+		end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+
+	end
+
+	print("SETUP GRAPH MODULE")
 
 end
 
@@ -159,11 +174,15 @@ function MODULE:GetNodeTypes( collection, graph )
 
 	collection:Add( types )
 
-	for id, v in self:Variables() do
+	if self:CanHaveVariables() then
 
-		local name = v:GetName()
-		types["__VSet" .. id] = v:SetterNodeType()
-		types["__VGet" .. id] = v:GetterNodeType()
+		for id, v in self:Variables() do
+
+			local name = v:GetName()
+			types["__VSet" .. id] = v:SetterNodeType()
+			types["__VGet" .. id] = v:GetterNodeType()
+
+		end
 
 	end
 
@@ -178,17 +197,25 @@ function MODULE:GetNodeTypes( collection, graph )
 
 	end
 
-	for id, v in self:Structs() do
+	if self:CanHaveStructs() then
 
-		types["__Make" .. id] = v:MakerNodeType()
-		types["__Break" .. id] = v:BreakerNodeType()
+		for id, v in self:Structs() do
+
+			types["__Make" .. id] = v:MakerNodeType()
+			types["__Break" .. id] = v:BreakerNodeType()
+
+		end
 
 	end
 
-	for id, v in self:Events() do
+	if self:CanHaveEvents() then
 
-		types["__EventCall" .. id] = v:CallNodeType()
-		types["__Event" .. id] = v:EventNodeType()
+		for id, v in self:Events() do
+
+			types["__EventCall" .. id] = v:CallNodeType()
+			types["__Event" .. id] = v:EventNodeType()
+
+		end
 
 	end
 
@@ -204,10 +231,14 @@ function MODULE:GetPinTypes( collection )
 
 	collection:Add( types )
 
-	for id, v in self:Structs() do
+	if self:CanHaveStructs() then
 
-		local pinType = PinType(PN_Struct, PNF_Custom, v.name)
-		types[#types+1] = pinType
+		for id, v in self:Structs() do
+
+			local pinType = PinType(PN_Struct, PNF_Custom, v.name)
+			types[#types+1] = pinType
+
+		end
 
 	end
 
@@ -243,7 +274,7 @@ end
 function MODULE:Clear()
 
 	self.graphs:Clear()
-	self.variables:Clear()
+	if self:CanHaveVariables() then self.variables:Clear() end
 
 	BaseClass.Clear( self )
 
@@ -251,6 +282,7 @@ end
 
 function MODULE:NewVariable(name, ...)
 
+	if not self:CanHaveVariables() then return end
 	return self.variables:ConstructNamed( name, ... )
 
 end
@@ -312,14 +344,18 @@ function MODULE:RequestGraphForEvent( nodeType )
 
 end
 
+function MODULE:CanHaveVariables() return true end
+function MODULE:CanHaveStructs() return true end
+function MODULE:CanHaveEvents() return true end
+
 function MODULE:WriteData( stream, mode, version )
 
 	BaseClass.WriteData( self, stream, mode, version )
 
-	Profile("write-variables", self.variables.WriteToStream, self.variables, stream, mode, version)
+	if self:CanHaveVariables() then Profile("write-variables", self.variables.WriteToStream, self.variables, stream, mode, version) end
 	Profile("write-graphs", self.graphs.WriteToStream, self.graphs, stream, mode, version)
-	Profile("write-structs", self.structs.WriteToStream, self.structs, stream, mode, version)
-	Profile("write-events", self.events.WriteToStream, self.events, stream, mode, version)
+	if self:CanHaveStructs() then Profile("write-structs", self.structs.WriteToStream, self.structs, stream, mode, version) end
+	if self:CanHaveEvents() then Profile("write-events", self.events.WriteToStream, self.events, stream, mode, version) end
 
 end
 
@@ -329,16 +365,57 @@ function MODULE:ReadData( stream, mode, version )
 
 	self.suppressGraphNotify = true
 
-	Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version)
+	if self:CanHaveVariables() then Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version) end
 	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
-	Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version)
-	Profile("read-events", self.events.ReadFromStream, self.events, stream, mode, version)
+	if self:CanHaveStructs() then Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version) end
+	if self:CanHaveEvents() then Profile("read-events", self.events.ReadFromStream, self.events, stream, mode, version) end
 
 	for _, graph in self:Graphs() do
 		graph:CreateDeferredData()
 	end
 
 	self.suppressGraphNotify = false
+
+end
+
+function MODULE:CompileVariable( compiler, var )
+
+	local def = var:GetDefault()
+	local vtype = var:GetType()
+
+	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+
+	local varName = var:GetName()
+	if compiler.compactVars then varName = id end
+	if type(def) == "string" then
+		compiler.emit("instance.__" .. varName .. " = " .. tostring(def))
+	else
+		print("Emit variable as non-string")
+		local pt = bpvaluetype.FromPinType( vtype, function() return def end )
+		if pt then
+			compiler.emit("instance.__" .. varName .. " = " .. pt:ToString())
+		else
+			compiler.emit("instance.__" .. varName .. " = " .. tostring(def))
+		end
+	end
+
+end
+
+function MODULE:Compile( compiler, pass )
+
+	if pass == CP_MODULEGLOBALS then
+
+		if self:CanHaveVariables() then
+
+			for id, var in self:Variables() do
+
+				self:CompileVariable( compiler, var )
+
+			end
+
+		end
+
+	end
 
 end
 

@@ -54,7 +54,7 @@ function meta:FindStruct()
 	local res = nil
 	bpcommon.Profile("bppintype-get-struct", function()
 
-		if self.module and self:HasFlag(bpschema.PNF_Custom) then
+		if self.module and self:HasFlag(bpschema.PNF_Custom) and self.module.structs then
 			for id, v in self.module:Structs() do
 				if v.name == self:GetSubType() then res = v break end
 			end

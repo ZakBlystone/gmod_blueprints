@@ -89,6 +89,8 @@ function MODULE:Compile(compiler, pass)
 
 	local edit = self:GetConfigEdit()
 
+	BaseClass.Compile( self, compiler, pass )
+
 	if pass == CP_PREPASS then
 
 		-- All unconnected entity pins point to self

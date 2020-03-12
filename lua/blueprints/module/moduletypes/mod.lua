@@ -9,10 +9,6 @@ MODULE.Description = "A Basic Script"
 MODULE.Icon = "icon16/joystick.png"
 MODULE.Creatable = true
 
-function MODULE:Setup()
-
-end
-
 function MODULE:CreateDefaults()
 
 	local id, graph = self:NewGraph("EventGraph")

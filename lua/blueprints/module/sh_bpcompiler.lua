@@ -17,6 +17,7 @@ CP_NETCODEMSG = 2
 CP_ALLOCVARS = 3
 CP_MODULEMETA = 4
 CP_MODULEBPM = 5
+CP_MODULEGLOBALS = 6
 
 TK_GENERIC = 0
 TK_NETCODE = 1
@@ -867,24 +868,7 @@ function meta:CompileGlobalVarListing()
 		end
 	end
 
-	for id, var in self.module:Variables() do
-		local def = var:GetDefault()
-		local vtype = var:GetType()
-		if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-		local varName = var:GetName()
-		if self.compactVars then varName = id end
-		if type(def) == "string" then
-			self.emit("instance.__" .. varName .. " = " .. tostring(def))
-		else
-			print("Emit variable as non-string")
-			local pt = bpvaluetype.FromPinType( vtype, function() return def end )
-			if pt then
-				self.emit("instance.__" .. varName .. " = " .. pt:ToString())
-			else
-				self.emit("instance.__" .. varName .. " = " .. tostring(def))
-			end
-		end
-	end
+	self:RunModuleCompile(CP_MODULEGLOBALS)
 
 	self.finish()
 
