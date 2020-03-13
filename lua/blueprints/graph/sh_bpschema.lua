@@ -19,7 +19,9 @@ PN_Ref = 9
 PN_Struct = 10
 PN_Func = 11
 PN_Dummy = 12
-PN_Max = 13
+PN_BPRef = 13
+PN_BPClass = 14
+PN_Max = 15
 
 NT_Pure = 0
 NT_Function = 1
@@ -93,6 +95,8 @@ PinTypeNames = {
 	[PN_Struct] = "Struct",
 	[PN_Func] = "Function",
 	[PN_Dummy] = "Dummy",
+	[PN_BPRef] = "BPRef",
+	[PN_BPClass] = "BPClass",
 }
 
 GraphTypeColors = {
@@ -114,6 +118,8 @@ NodePinColors = {
 	[PN_Struct] = Color(40,80,255),
 	[PN_Func] = Color(127,127,127),
 	[PN_Dummy] = Color(0,0,0),
+	[PN_BPRef] = Color(150,200,100),
+	[PN_BPClass] = Color(180,80,255),
 }
 
 NodePinImplicitConversions = {
@@ -139,6 +145,8 @@ Defaults = {
 	[PN_Enum] = "0",
 	[PN_Ref] = "nil",
 	[PN_Func] = "nil",
+	[PN_BPRef] = "nil",
+	[PN_BPClass] = "nil",
 }
 
 PinTypeClasses = {
@@ -310,7 +318,7 @@ function PinRetArg( codeType, nodePins, infmt, outfmt, concat )
 
 end
 
-function FindMatchingPin(ntype, pf)
+function FindMatchingPin(ntype, pf, module)
 
 	local informs = ntype:GetInforms()
 	local ignoreNullable = bit.band( PNF_All, bit.bnot( PNF_Nullable ) )
@@ -338,7 +346,7 @@ function FindMatchingPin(ntype, pf)
 		local tableMatch = informs ~= nil and #informs > 0 and pin:HasFlag(PNF_Table) and pf:HasFlag(PNF_Table) and pin:IsType(PN_Any)
 		local anyMatch = informs ~= nil and #informs > 0 and not pin:HasFlag(PNF_Table) and not pf:HasFlag(PNF_Table) and pin:GetBaseType() ~= PN_Exec
 		local typeFlagTableMatch = ((sameType and sameFlags) or tableMatch or anyMatch)
-		local castMatch = sameType or CanCast(outPin:GetType(), inPin:GetType())
+		local castMatch = sameType or module:CanCast(outPin:GetType(), inPin:GetType())
 		if pin:GetDir() ~= pf:GetDir() and (ntype:GetName() == "CORE_Pin" or typeFlagTableMatch or castMatch) then return id, pin end
 
 	end

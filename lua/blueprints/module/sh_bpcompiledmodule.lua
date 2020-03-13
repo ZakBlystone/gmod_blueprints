@@ -199,7 +199,7 @@ function meta:Instantiate( forceGUID )
 	if not func then return nil end
 
 	local instance = func()
-	local meta = table.Copy(getmetatable(instance))
+	local meta = bpcommon.CopyTable(getmetatable(instance))
 	for k,v in pairs(imeta) do meta[k] = v end
 	setmetatable(instance, meta)
 	instance.__module = self

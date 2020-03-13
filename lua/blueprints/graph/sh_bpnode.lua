@@ -79,7 +79,7 @@ end
 
 function meta:ShiftLiterals(d)
 
-	local l = table.Copy(self.literals)
+	local l = bpcommon.CopyTable(self.literals)
 	for pinID, literal in pairs(l) do
 		self:SetLiteral(pinID+d, literal)
 	end
@@ -209,7 +209,7 @@ end
 
 function meta:GeneratePins(pins)
 
-	table.Add(pins, table.Copy(self:GetType():GetPins()))
+	table.Add(pins, bpcommon.CopyTable(self:GetType():GetPins()))
 	if pins[1] == nil then return end
 	if self.data.codeTypeOverride == NT_Pure and pins[1]:IsType(PN_Exec) then
 		table.remove(pins, 1)
@@ -409,8 +409,8 @@ function meta:Copy()
 	local newNode = setmetatable({}, meta)
 	newNode.x = self.x
 	newNode.y = self.y
-	newNode.literals = table.Copy(self.literals)
-	newNode.data = table.Copy(self.data)
+	newNode.literals = bpcommon.CopyTable(self.literals)
+	newNode.data = bpcommon.CopyTable(self.data)
 	newNode.nodeType = self.nodeType
 	newNode.nodeTypeObject = self.nodeTypeObject
 	newNode.graph = self.graph

@@ -132,6 +132,8 @@ function meta:GetPinTypes()
 		[PN_Struct] = true,
 		[PN_Func] = true,
 		[PN_Dummy] = true,
+		[PN_BPRef] = true,
+		[PN_BPClass] = true,
 	}
 
 	for i=0, PN_Max-1 do

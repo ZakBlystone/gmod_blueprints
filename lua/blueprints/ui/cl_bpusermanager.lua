@@ -55,7 +55,7 @@ end
 
 function PANEL:UpdateUsers()
 
-	local userList = table.Copy( bpusermanager.GetUsers() )
+	local userList = bpcommon.CopyTable( bpusermanager.GetUsers() )
 
 	for _, v in ipairs( userList ) do
 		local id = v:GetSteamID()

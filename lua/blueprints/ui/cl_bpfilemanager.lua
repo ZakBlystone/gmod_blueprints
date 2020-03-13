@@ -165,7 +165,7 @@ end
 
 function PANEL:UploadFile()
 
-	local mod = bpmodule.New()
+	local mod = bpmodule.New():WithOuter(self.file)
 	local name = bpfilesystem.ModulePathToName( self.file:GetPath() )
 	mod:Load(self.file:GetPath())
 	bpfilesystem.UploadObject(mod, name or self.file:GetPath())

@@ -469,7 +469,7 @@ function PANEL:OpenFile( file )
 		return
 	end
 
-	local mod = bpmodule.New()
+	local mod = bpmodule.New():WithOuter(file)
 	local b,e = xpcall( 
 		function()
 			mod:Load(file:GetPath())

@@ -14,7 +14,7 @@ end
 
 function VALUE:CreateVGUI( info )
 
-	local newInfo = table.Copy(info)
+	local newInfo = bpcommon.CopyTable(info)
 	newInfo.outer = self
 	newInfo.depth = (info.depth or 0) + 1
 

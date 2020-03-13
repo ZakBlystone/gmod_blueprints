@@ -348,6 +348,12 @@ function MODULE:CanHaveVariables() return true end
 function MODULE:CanHaveStructs() return true end
 function MODULE:CanHaveEvents() return true end
 
+function MODULE:CanCast( outPinType, inPinType )
+
+	return bpschema.CanCast( outPinType, inPinType )
+
+end
+
 function MODULE:WriteData( stream, mode, version )
 
 	BaseClass.WriteData( self, stream, mode, version )
@@ -378,12 +384,14 @@ function MODULE:ReadData( stream, mode, version )
 
 end
 
-function MODULE:CompileVariable( compiler, var )
+function MODULE:CompileVariable( compiler, id, var )
 
 	local def = var:GetDefault()
 	local vtype = var:GetType()
 
 	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+
+	print("COMPILE VARIABLE: " .. vtype:ToString(true))
 
 	local varName = var:GetName()
 	if compiler.compactVars then varName = id end
@@ -409,7 +417,7 @@ function MODULE:Compile( compiler, pass )
 
 			for id, var in self:Variables() do
 
-				self:CompileVariable( compiler, var )
+				self:CompileVariable( compiler, id, var )
 
 			end
 

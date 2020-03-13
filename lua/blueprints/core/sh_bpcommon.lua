@@ -240,12 +240,42 @@ function CreateIndexableListIterators(meta, variable)
 
 end
 
+local function WithOuter(self, outer)
+	rawset(self, "__outer", outer)
+	return self
+end
+local function GetOuter(self, check)
+	local outer = rawget(self, "__outer")
+	if outer and check and getmetatable(outer).__hash ~= check.__hash then return nil end
+	return outer
+end
+local function GetOutermost(self, check)
+	local outer = rawget(self, "__outer")
+	if not outer then
+		if check and getmetatable(self).__hash ~= check.__hash then return nil end
+		return self
+	end
+
+	return GetOutermost(outer, check)
+end
+local function FindOuter(self, check)
+	local outer = rawget(self, "__outer")
+	if outer then
+		if getmetatable(outer).__hash == check.__hash then return outer end
+		return FindOuter(outer, check)
+	end
+end
+
 function MetaTable(name, extends)
 
 	G_BPMetaRegistry[name] = G_BPMetaRegistry[name] or {}
 	local mt = G_BPMetaRegistry[name]
 	mt.__index = mt
 	mt.__hash = util.CRC(name)
+	mt.WithOuter = WithOuter
+	mt.GetOuter = GetOuter
+	mt.GetOutermost = GetOutermost
+	mt.FindOuter = FindOuter
 
 	if extends then
 		local base = G_BPMetaRegistry[name]
@@ -449,5 +479,28 @@ function Transform(tab, out, func, ...)
 
 	end
 	return out
+
+end
+
+function CopyTable( tab, lookup_table )
+
+	if ( tab == nil ) then return nil end
+
+	local copy = {}
+	setmetatable( copy, debug.getmetatable( tab ) )
+	for i, v in pairs( tab ) do
+		if ( !istable( v ) ) then
+			copy[ i ] = v
+		elseif i ~= "__outer" then
+			lookup_table = lookup_table or {}
+			lookup_table[ tab ] = copy
+			if ( lookup_table[ v ] ) then
+				copy[ i ] = lookup_table[ v ] -- we already copied this table. reuse the copy.
+			else
+				copy[ i ] = CopyTable( v, lookup_table ) -- not yet copied. copy it.
+			end
+		end
+	end
+	return copy
 
 end

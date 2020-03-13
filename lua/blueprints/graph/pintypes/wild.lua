@@ -70,7 +70,7 @@ function PIN:UpdateGhost()
 
 	else
 
-		local pmeta = table.Copy(bppin_meta)
+		local pmeta = bpcommon.CopyTable(bppin_meta)
 
 		pmeta.OnRightClick = PIN.OnRightClick
 		pmeta.SetGhost = PIN.SetGhost

@@ -155,6 +155,7 @@ function AddLocalModule( mod, name )
 	mod:Save( path )
 	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, fileName)
 	entry:SetPath( path )
+	mod:WithOuter( entry )
 	G_BPLocalFiles[mod:GetUID()] = entry
 	hook.Run("BPFileTableUpdated", FT_Local)
 
@@ -176,6 +177,7 @@ function NewModuleFile( name )
 	mod:Save( path )
 	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, fileName)
 	entry:SetPath( path )
+	mod:WithOuter( entry )
 	G_BPLocalFiles[mod:GetUID()] = entry
 	hook.Run("BPFileTableUpdated", FT_Local)
 
@@ -260,7 +262,7 @@ end
 local function RunLocalFile( file )
 
 	local modulePath = UIDToModulePath( file:GetUID() )
-	local mod = bpmodule.New()
+	local mod = bpmodule.New():WithOuter( file )
 	mod:Load( modulePath )
 	local cmod = mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 
@@ -301,7 +303,7 @@ local function DownloadLocalFile( file, ply )
 	local stream = bpdata.OutStream(false, true, true):UseStringTable()
 
 	local modulePath = UIDToModulePath( file:GetUID() )
-	local mod = bpmodule.New()
+	local mod = bpmodule.New():WithOuter( file )
 	mod:Load( modulePath )
 	mod:WriteToStream(stream, STREAM_NET)
 
@@ -372,6 +374,8 @@ if SERVER then
 
 			end
 
+			mod:WithOuter(file)
+
 			mod.revision = mod.revision + 1
 			--print("Module increment revision: " .. mod.revision)
 			mod:Save(filename)
@@ -431,6 +435,8 @@ else
 				entry:SetPath( path )
 				entry:SetRevision( mod.revision )
 				G_BPLocalFiles[mod:GetUID()] = entry
+
+				mod:WithOuter(entry)
 			end
 
 			IndexLocalFiles()
@@ -676,7 +682,7 @@ net.Receive("bpfilesystem", function(len, ply)
 		local rev = net.ReadUInt(32)
 		local file = G_BPLocalFiles[uid]
 		if file then
-			local mod = bpmodule.New()
+			local mod = bpmodule.New():WithOuter( file )
 			mod:Load( file:GetPath() )
 			assert(mod.revision <= rev)
 			mod.revision = rev

@@ -35,7 +35,7 @@ end
 function VALUE:CreateVGUI( info )
 
 	local zone = vgui.Create("DPanel")
-	local newInfo = table.Copy(info)
+	local newInfo = bpcommon.CopyTable(info)
 	newInfo.outer = self
 
 	local inner = {}

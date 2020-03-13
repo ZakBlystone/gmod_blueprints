@@ -9,36 +9,17 @@ MODULE.Description = "A Scripted Weapon you can pick up and shoot"
 MODULE.Icon = "icon16/gun.png"
 MODULE.Creatable = true
 MODULE.AdditionalConfig = true
+MODULE.HasOwner = true
+MODULE.SelfPinSubClass = "Weapon"
 
 function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
-	self.getSelfNodeType = bpnodetype.New()
-	self.getSelfNodeType:SetCodeType(NT_Pure)
-	self.getSelfNodeType.GetDisplayName = function() return "Self" end
-	self.getSelfNodeType.GetGraphThunk = function() return self end
-	self.getSelfNodeType.GetRole = function() return ROLE_Shared end
-	self.getSelfNodeType.GetRawPins = function()
-		return {
-			MakePin(PD_Out, "Self", PN_Ref, PNF_None, "Weapon"),
-		}
-	end
-	self.getSelfNodeType:SetCode( "#1 = __self" )
-
-	self.getOwnerNodeType = bpnodetype.New()
-	self.getOwnerNodeType:SetCodeType(NT_Pure)
-	self.getOwnerNodeType.GetDisplayName = function() return "Owner" end
-	self.getOwnerNodeType.GetGraphThunk = function() return self end
-	self.getOwnerNodeType.GetRole = function() return ROLE_Shared end
-	self.getOwnerNodeType.GetRawPins = function()
-		return {
-			MakePin(PD_Out, "Owner", PN_Ref, PNF_None, "Entity"),
-		}
-	end
-	self.getOwnerNodeType:SetCode( "#1 = __self.Owner" )
-
 end
+
+function MODULE:GetSelfPinType() return PinType( PN_Ref, PNF_None, "Weapon" ) end
+function MODULE:GetOwnerPinType() return PinType( PN_Ref, PNF_None, "Entity" ) end
 
 function MODULE:SetupEditValues( values )
 
@@ -136,23 +117,6 @@ function MODULE:CanAddNode(nodeType)
 	return BaseClass.CanAddNode( self, nodeType )
 
 end
-
-function MODULE:GetNodeTypes( collection, graph )
-
-	BaseClass.GetNodeTypes( self, collection, graph )
-
-	local types = {}
-
-	collection:Add( types )
-
-	types["__Self"] = self.getSelfNodeType
-	types["__Owner"] = self.getOwnerNodeType
-
-	for k,v in pairs(types) do v.name = k end
-
-end
-
-function MODULE:IsConstructable() return false end
 
 function MODULE:AutoFillsPinClass( class )
 
@@ -254,4 +218,4 @@ end]])
 
 end
 
-RegisterModuleClass("SWEP", MODULE, "Configurable")
+RegisterModuleClass("SWEP", MODULE, "MetaType")

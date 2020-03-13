@@ -620,7 +620,7 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 		if p0:IsType(PN_Any) and not p1:IsType(PN_Exec) then return true end
 		if p1:IsType(PN_Any) and not p0:IsType(PN_Exec) then return true end
 
-		if bpschema.CanCast(p0:GetType(), p1:GetType()) then
+		if self.module:CanCast(p0:GetType(), p1:GetType()) then
 			return true
 		else
 			return false, "No explicit conversion between " .. self:NodePinToString(nodeID0, pinID0) .. " and " .. self:NodePinToString(nodeID1, pinID1)

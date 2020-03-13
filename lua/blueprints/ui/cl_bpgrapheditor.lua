@@ -659,13 +659,19 @@ function meta:OpenMultiNodeContext(selected)
 
 end
 
+function meta:FindMatchingPin(nodeType, pinFilter)
+
+	return bpschema.FindMatchingPin( nodeType, pinFilter, self.graph:GetModule() )
+
+end
+
 function meta:ConnectNodeToGrabbedPin( node )
 
 	if self.grabPin ~= nil and node ~= nil then
 
 		local grabbedNode = self.grabPin:GetVNode():GetNode()
 		local pf = self.grabPin:GetPin()
-		local match = FindMatchingPin(node:GetType(), pf)
+		local match = bpschema.FindMatchingPin( node:GetType(), pf, self.graph:GetModule() )
 		if match ~= nil then
 			self:GetGraph():ConnectNodes(grabbedNode.id, self.grabPin:GetPinID(), node.id, match)
 		end
@@ -760,8 +766,9 @@ function meta:OpenCreationContext( pinFilter )
 		return false
 	end
 	if pinFilter then
+		local mod = self.graph:GetModule()
 		menu:SetBaseFilter( function(e)
-			local pinID, pin = FindMatchingPin(e, pinFilter)
+			local pinID, pin = bpschema.FindMatchingPin( e, pinFilter, mod )
 			return pin ~= nil
 		end)
 	end

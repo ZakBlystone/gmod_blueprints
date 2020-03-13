@@ -30,6 +30,10 @@ end
 
 local function PinTypeDisplayName( pinType )
 
+	if pinType:IsType(PN_BPRef) then
+		return bpcommon.GUIDToString(pinType:GetSubType(), true)
+	end
+
 	if pinType:IsType(PN_Ref) or pinType:IsType(PN_Enum) or pinType:IsType(PN_Struct) then
 		return pinType:GetSubType()
 	else
@@ -163,7 +167,7 @@ function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 	)
 	menu.GetCategory = function(pnl, e)
 		if e:HasFlag(PNF_Custom) then return "Custom", "icon16/wrench.png" end
-		if e:IsType(PN_Ref) then return "Classes", "icon16/bricks.png" end
+		if e:IsType(PN_Ref) or e:IsType(PN_BPRef) then return "Classes", "icon16/bricks.png" end
 		if e:IsType(PN_Enum) then return "Enums", "icon16/book_open.png" end
 		if e:IsType(PN_Struct) then return "Structs", "icon16/table.png" end
 		return "Basic", "icon16/brick.png"

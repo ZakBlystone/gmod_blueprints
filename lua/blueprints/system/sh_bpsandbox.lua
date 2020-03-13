@@ -42,7 +42,7 @@ if CLIENT then
 	end
 
 	local function wrapClass(t, base)
-		t = table.Copy(t)
+		t = bpcommon.CopyTable(t)
 		t.__index = function(s, k) return rawget(t, k) or classes[base].__index(s, k) end
 		for _, func in pairs(t) do
 			if type(func) ~= "function" then continue end
