@@ -1057,7 +1057,7 @@ end
 
 function meta:CreateSubGraph(subNodeIds)
 
-	local copy = self:CopyInto( New() )
+	local copy = self:CopyInto( New():WithOuter( self:GetModule() ) )
 	local hold = {}
 
 	for i, c in self:Connections() do
