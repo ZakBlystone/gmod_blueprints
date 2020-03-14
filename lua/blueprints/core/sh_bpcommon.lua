@@ -261,7 +261,8 @@ end
 local function FindOuter(self, check)
 	local outer = rawget(self, "__outer")
 	if outer then
-		if getmetatable(outer).__hash == check.__hash then return outer end
+		if type(check) == "function" then if check(outer) then return outer end
+		elseif getmetatable(outer).__hash == check.__hash then return outer end
 		return FindOuter(outer, check)
 	end
 end

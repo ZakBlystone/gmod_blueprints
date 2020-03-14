@@ -180,7 +180,8 @@ function meta:GetID(tbl)
 			return id[graph](tbl)
 		end
 
-		local mt = tbl.BaseClass or getmetatable(tbl)
+		local mt = getmetatable(tbl)
+		mt = bpcommon.GetMetaTableFromHash( mt.__hash )
 		local classID = self.metaClasses[mt]
 		if not classID then error("Tried to ID invalid class: " .. tostring(mt) .. " -> " .. bpcommon.GetMetaTableName(mt)) end
 
