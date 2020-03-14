@@ -5,13 +5,16 @@ module("node_userfunccall", package.seeall, bpcommon.rescope(bpschema, bpcompile
 local NODE = {}
 
 function NODE:Setup() end
-function NODE:GetOuterGraph() return self:FindOuter( bpgraph_meta ) end
-
 function NODE:GeneratePins(pins)
 
-	local graph = self:GetOuterGraph()
+	local graph = self:GetGraphThunk()
 
 	BaseClass.GeneratePins(self, pins)
+
+	local mod = graph:GetModule()
+	if mod and mod.HasSelfPin then
+		pins[#pins+1] = MakePin( PD_In, "Self", mod:GetModulePinType() )
+	end
 
 	bpcommon.Transform(graph.inputs:GetTable(), pins, bppin_meta.Copy, PD_In)
 	bpcommon.Transform(graph.outputs:GetTable(), pins, bppin_meta.Copy, PD_Out)
@@ -45,12 +48,17 @@ function NODE:Compile(compiler, pass)
 
 		local arg = {}
 		for k, pin in self:SidePins(PD_In) do
-			if not pin:IsType( PN_Exec ) then
+			if not pin:IsType( PN_Exec ) and pin:GetName() ~= "Self" then
 				arg[#arg+1] = compiler:GetPinCode( pin, true )
 			end
 		end
 
-		compiler.emit( table.concat(ret, ",") .. (#ret > 0 and " = " or "") ..  "__self:" .. graph:GetName() .. "(" .. table.concat(arg, ",") .. ")"  )
+		local selfPinCode = "__self"
+		if graph:GetModule().HasSelfPin then
+			selfPinCode = compiler:GetPinCode( self:FindPin( PD_In, "Self" ) )
+		end
+
+		compiler.emit( table.concat(ret, ",") .. (#ret > 0 and " = " or "") .. selfPinCode .. ":" .. graph:GetName() .. "(" .. table.concat(arg, ",") .. ")"  )
 
 		if self:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( self:FindPin(PD_Out, "Thru"), true ) ) end
 		return true

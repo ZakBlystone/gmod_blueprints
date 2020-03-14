@@ -16,6 +16,8 @@ function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
+	self:AddAutoFill( self:GetSelfPinType(), "__self" )
+
 end
 
 function MODULE:GetSelfPinType() return PinType( PN_Ref, PNF_None, "Weapon" ) end
@@ -118,33 +120,13 @@ function MODULE:CanAddNode(nodeType)
 
 end
 
-function MODULE:AutoFillsPinClass( class )
-
-	if class == "Weapon" then return true end
-
-end
-
 function MODULE:Compile(compiler, pass)
 
 	local edit = self:GetConfigEdit()
 
 	BaseClass.Compile( self, compiler, pass )
 
-	if pass == CP_PREPASS then
-
-		-- All unconnected entity pins point to self
-		for k, v in ipairs( compiler.graphs ) do
-			for _, node in v:Nodes() do
-				for _, pin in node:SidePins(PD_In) do
-					if pin:GetBaseType() ~= PN_Ref then continue end
-					if pin:GetSubType() == "Weapon" and #pin:GetConnectedPins() == 0 then
-						pin:SetLiteral("__self")
-					end
-				end
-			end
-		end
-
-	elseif pass == CP_MODULEMETA then
+	if pass == CP_MODULEMETA then
 
 		local weaponTable = edit:Index("weapon")
 		compiler.emit( "meta = table.Merge( meta, " .. weaponTable:ToString() .. " )")

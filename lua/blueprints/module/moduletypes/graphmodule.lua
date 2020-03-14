@@ -6,6 +6,7 @@ local MODULE = {}
 
 MODULE.Creatable = false
 MODULE.Name = "GraphModule"
+MODULE.HasSelfPin = false
 
 bpcommon.CreateIndexableListIterators(MODULE, "graphs")
 bpcommon.CreateIndexableListIterators(MODULE, "variables")
@@ -166,6 +167,13 @@ function MODULE:PostModifyGraph( graph )
 
 end
 
+function MODULE:AutoFillsPinType( pinType )
+
+	return false
+
+end
+
+function MODULE:GetModulePinType() return nil end
 function MODULE:GetNodeTypes( collection, graph )
 
 	BaseClass.GetNodeTypes( self, collection )

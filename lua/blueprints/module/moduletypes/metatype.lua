@@ -8,14 +8,16 @@ MODULE.Name = "Metatype"
 MODULE.Creatable = false
 MODULE.HasOwner = false
 MODULE.SelfPinSubClass = nil
+MODULE.HasSelfPin = true
 
 function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
+	self.autoFills = {}
 	self.modulePinType = PinType( PN_BPRef, PNF_None, self:GetUID() ):WithOuter(self)
 
-	self.getSelfNodeType = bpnodetype.New()
+	self.getSelfNodeType = bpnodetype.New():WithOuter(self)
 	self.getSelfNodeType:SetCodeType(NT_Pure)
 	self.getSelfNodeType.GetDisplayName = function() return "Self" end
 	self.getSelfNodeType.GetGraphThunk = function() return self end
@@ -27,21 +29,21 @@ function MODULE:Setup()
 	end
 	self.getSelfNodeType:SetCode( "#1 = __self" )
 
-	self.getClassNodeType = bpnodetype.New()
+	self.getClassNodeType = bpnodetype.New():WithOuter(self)
 	self.getClassNodeType:SetCodeType(NT_Pure)
 	self.getClassNodeType.GetDisplayName = function() return "Class" end
 	self.getClassNodeType.GetGraphThunk = function() return self end
 	self.getClassNodeType.GetRole = function() return ROLE_Shared end
 	self.getClassNodeType.GetRawPins = function()
 		return {
-			MakePin(PD_Out, "Class", PN_BPClass, PNF_None),
+			MakePin(PD_Out, "Class", PN_BPClass, PNF_None, self:GetUID() ),
 		}
 	end
 	self.getClassNodeType:SetCode( "#1 = __bpm.guid" )
 
 	if self.HasOwner then
 
-		self.getOwnerNodeType = bpnodetype.New()
+		self.getOwnerNodeType = bpnodetype.New():WithOuter(self)
 		self.getOwnerNodeType:SetCodeType(NT_Pure)
 		self.getOwnerNodeType.GetDisplayName = function() return "Owner" end
 		self.getOwnerNodeType.GetGraphThunk = function() return self end
@@ -55,10 +57,51 @@ function MODULE:Setup()
 
 	end
 
+	self:AddAutoFill( self:GetModulePinType(), "__self" )
+
+end
+
+function MODULE:AddAutoFill( pinType, literal )
+
+	if pinType:GetBaseType() == PN_Dummy then return end
+
+	table.insert(self.autoFills,
+	{
+		pinType = pinType,
+		literal = literal,
+	})
+
+end
+
+function MODULE:TryAutoFillPin( pin )
+
+	for _, v in ipairs(self.autoFills) do
+
+		if pin:GetType():Equal( v.pinType ) and #pin:GetConnectedPins() == 0 then
+
+			pin:SetLiteral( v.literal )
+			return
+
+		end
+
+	end
+
+end
+
+function MODULE:AutoFillsPinType( pinType )
+
+	for _, v in ipairs(self.autoFills) do
+
+		if pinType:Equal( v.pinType ) then return true end
+
+	end
+
+	return false
+
 end
 
 function MODULE:GetModulePinType() return self.modulePinType end
-function MODULE:GetOwnerPinType() return PinType( PN_Ref, PNF_None, "" ) end
+function MODULE:GetOwnerPinType() return PinType( PN_Dummy, PNF_None, "" ) end
 
 function MODULE:GetSelfNodeType() return self.getSelfNodeType end
 function MODULE:GetClassNodeType() return self.getClassNodeType end
@@ -107,6 +150,26 @@ function MODULE:GetPinTypes( collection )
 
 	collection:Add( types )
 	types[#types+1] = self:GetModulePinType()
+
+end
+
+function MODULE:Compile(compiler, pass)
+
+	local edit = self:GetConfigEdit()
+
+	BaseClass.Compile( self, compiler, pass )
+
+	if pass == CP_PREPASS then
+
+		for k, v in ipairs( compiler.graphs ) do
+			for _, node in v:Nodes() do
+				for _, pin in node:SidePins(PD_In) do
+					self:TryAutoFillPin( pin )
+				end
+			end
+		end
+
+	end
 
 end
 

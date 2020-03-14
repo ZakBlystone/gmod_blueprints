@@ -15,6 +15,8 @@ function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
+	self:AddAutoFill( PinType( PN_Ref, PNF_None, "CEffectData" ), "__self.__data" )
+
 end
 
 function MODULE:GetSelfPinType() return PinType( PN_Ref, PNF_None, "Entity" ) end
@@ -47,13 +49,9 @@ function MODULE:CanAddNode(nodeType)
 	local group = nodeType:GetGroup()
 	if group and nodeType:GetContext() == bpnodetype.NC_Hook and not allowedHooks[group:GetName()] then return false end
 
+	if nodeType:GetRole() == ROLE_Server then return false end
+
 	return BaseClass.CanAddNode( self, nodeType )
-
-end
-
-function MODULE:AutoFillsPinClass( class )
-
-	if class == "CEffectData" then return true end
 
 end
 
@@ -63,21 +61,7 @@ function MODULE:Compile(compiler, pass)
 
 	BaseClass.Compile( self, compiler, pass )
 
-	if pass == CP_PREPASS then
-
-		-- All unconnected entity pins point to self
-		for k, v in ipairs( compiler.graphs ) do
-			for _, node in v:Nodes() do
-				for _, pin in node:SidePins(PD_In) do
-					if pin:GetBaseType() ~= PN_Ref then continue end
-					if pin:GetSubType() == "CEffectData" and #pin:GetConnectedPins() == 0 then
-						pin:SetLiteral("__self.__data")
-					end
-				end
-			end
-		end
-
-	elseif pass == CP_MODULEMETA then
+	if pass == CP_MODULEMETA then
 
 		compiler.emit([[
 for k,v in pairs(meta) do

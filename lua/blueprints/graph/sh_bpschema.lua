@@ -326,7 +326,7 @@ function FindMatchingPin(ntype, pf, module)
 
 	local nodeClass = ntype:GetNodeClass()
 	if nodeClass ~= nil then
-		local node = bpnode.New(ntype)
+		local node = bpnode.New(ntype):WithOuter( module )
 		node:PostInit()
 		pins = node:GetPins()
 	end

@@ -58,15 +58,17 @@ function meta:GetType()
 
 end
 
-function meta:IsConstructable()
+function meta:GetName()
 
-	return true
+	local outerFile = self:FindOuter( bpfile_meta )
+	if outerFile then return outerFile:GetName() end
+	return "unnamed"
 
 end
 
-function meta:AutoFillsPinClass( class )
+function meta:IsConstructable()
 
-	return false
+	return true
 
 end
 

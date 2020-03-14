@@ -1,5 +1,6 @@
 AddCSLuaFile()
 
+-- Can't rescope bpschema, because it's not loaded yet
 module("bppintype", package.seeall)
 
 local meta = bpcommon.MetaTable("bppintype")
@@ -47,6 +48,23 @@ function meta:GetDefault()
 
 end
 
+function meta:GetDisplayName()
+
+	if self:IsType(bpschema.PN_BPRef) then
+		local mod = self:FindOuter( bpmodule_meta )
+		if mod then return mod:GetName() end
+		local sub = self:GetSubType()
+		return sub and bpcommon.GUIDToString(self:GetSubType(), true) or "unknown blueprint"
+	end
+
+	if self:IsType(bpschema.PN_Ref) or self:IsType(bpschema.PN_Enum) or self:IsType(bpschema.PN_Struct) then
+		return self:GetSubType()
+	else
+		return self:GetTypeName()
+	end
+
+end
+
 function meta:FindStruct()
 
 	local res = nil
@@ -74,8 +92,8 @@ end
 
 function meta:GetPinClass() return bpschema.PinTypeClasses[ self:GetBaseType() ] end
 function meta:ToString()
-	local str = self:GetTypeName()
-	if self:GetSubType() ~= nil then str = str .. ", " .. self:GetSubType() end
+	local str = self:GetDisplayName() --self:GetTypeName()
+	--if self:GetSubType() ~= nil then str = str .. ", " .. self:GetSubType() end
 	if self:HasFlag(bpschema.PNF_Table) then str = str .. " -table" end
 	if self:HasFlag(bpschema.PNF_Nullable) then str = str .. " -null" end
 	if self:HasFlag(bpschema.PNF_Bitfield) then str = str .. " -bitfield" end

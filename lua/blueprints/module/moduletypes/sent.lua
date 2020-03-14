@@ -16,6 +16,9 @@ function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
+	self:AddAutoFill( PinType( PN_Ref, PNF_None, "PhysObj" ), "__self:GetPhysicsObject()" )
+	self:AddAutoFill( PinType( PN_Ref, PNF_None, "Entity" ), "__self" )
+
 end
 
 function MODULE:GetOwnerPinType() return PinType( PN_Ref, PNF_None, "Entity" ) end
@@ -78,37 +81,13 @@ function MODULE:CanAddNode(nodeType)
 
 end
 
-function MODULE:AutoFillsPinClass( class )
-
-	if class == "Entity" then return true end
-	if class == "PhysObj" then return true end
-
-end
-
 function MODULE:Compile(compiler, pass)
 
 	local edit = self:GetConfigEdit()
 
 	BaseClass.Compile( self, compiler, pass )
 
-	if pass == CP_PREPASS then
-
-		-- All unconnected entity pins point to self
-		for k, v in ipairs( compiler.graphs ) do
-			for _, node in v:Nodes() do
-				for _, pin in node:SidePins(PD_In) do
-					if pin:GetBaseType() ~= PN_Ref then continue end
-					if pin:GetSubType() == "Entity" and #pin:GetConnectedPins() == 0 then
-						pin:SetLiteral("__self")
-					end
-					if pin:GetSubType() == "PhysObj" and #pin:GetConnectedPins() == 0 then
-						pin:SetLiteral("__self:GetPhysicsObject()")
-					end
-				end
-			end
-		end
-
-	elseif pass == CP_MODULEMETA then
+	if pass == CP_MODULEMETA then
 
 		local entityTable = edit:Index("entity")
 		compiler.emit( "meta = table.Merge( meta, " .. entityTable:ToString() .. " )")

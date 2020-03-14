@@ -30,15 +30,7 @@ end
 
 local function PinTypeDisplayName( pinType )
 
-	if pinType:IsType(PN_BPRef) then
-		return bpcommon.GUIDToString(pinType:GetSubType(), true)
-	end
-
-	if pinType:IsType(PN_Ref) or pinType:IsType(PN_Enum) or pinType:IsType(PN_Struct) then
-		return pinType:GetSubType()
-	else
-		return pinType:GetTypeName()
-	end
+	return pinType:GetDisplayName()
 
 end
 
@@ -67,10 +59,11 @@ end
 
 local categoryOrder = {
 	["Basic"] = 1,
-	["Custom"] = 2,
-	["Classes"] = 3,
-	["Structs"] = 4,
-	["Enums"] = 5,
+	["Blueprints"] = 2,
+	["Custom"] = 3,
+	["Classes"] = 4,
+	["Structs"] = 5,
+	["Enums"] = 6,
 }
 
 local function SearchRanker( entry, query, queryLength, panel )
@@ -167,7 +160,8 @@ function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 	)
 	menu.GetCategory = function(pnl, e)
 		if e:HasFlag(PNF_Custom) then return "Custom", "icon16/wrench.png" end
-		if e:IsType(PN_Ref) or e:IsType(PN_BPRef) then return "Classes", "icon16/bricks.png" end
+		if e:IsType(PN_BPRef) then return "Blueprints", "icon16/bricks.png" end
+		if e:IsType(PN_Ref) then return "Classes", "icon16/bricks.png" end
 		if e:IsType(PN_Enum) then return "Enums", "icon16/book_open.png" end
 		if e:IsType(PN_Struct) then return "Structs", "icon16/table.png" end
 		return "Basic", "icon16/brick.png"
