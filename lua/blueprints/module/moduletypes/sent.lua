@@ -50,11 +50,13 @@ function MODULE:CreateDefaults()
 	local id, graph = self:NewGraph("EventGraph")
 	local _, init = graph:AddNode("ENTITY_Initialize", 120, 100)
 	local _, model = graph:AddNode("Entity_SetModel", 250, 100)
-	local _, phys = graph:AddNode("Entity_PhysicsInit", 700, 100)
+	local _, so = graph:AddNode("CORE_ServerOnly", 650, 100)
+	local _, phys = graph:AddNode("Entity_PhysicsInit", 800, 100)
 
 	init:FindPin( PD_Out, "Exec" ):Connect( model:FindPin( PD_In, "Exec") )
 	model:FindPin( PD_In, "model" ):SetLiteral( "models/props_junk/watermelon01.mdl" )
-	model:FindPin( PD_Out, "Thru" ):Connect( phys:FindPin( PD_In, "Exec") )
+	model:FindPin( PD_Out, "Thru" ):Connect( so:FindPin( PD_In, "Exec") )
+	so:FindPin( PD_Out, "Thru" ):Connect( phys:FindPin( PD_In, "Exec") )
 	phys:FindPin( PD_In, "SolidType" ):SetLiteral( "SOLID_VPHYSICS" )
 
 end
