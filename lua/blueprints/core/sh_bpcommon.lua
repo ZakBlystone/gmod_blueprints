@@ -314,7 +314,7 @@ end
 function GetMetaTableName(tbl)
 
 	for k,v in pairs(G_BPMetaRegistry) do
-		if v == tbl then return k end
+		if v.__hash == tbl.__hash then return k end
 	end
 	return "unknown"
 

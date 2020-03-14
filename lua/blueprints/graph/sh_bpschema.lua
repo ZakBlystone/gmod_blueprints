@@ -320,12 +320,19 @@ end
 
 function FindMatchingPin(ntype, pf, module)
 
+	assert(module ~= nil)
+
 	local informs = ntype:GetInforms()
 	local ignoreNullable = bit.band( PNF_All, bit.bnot( PNF_Nullable ) )
 	local pins = ntype:GetPins()
 
 	local nodeClass = ntype:GetNodeClass()
 	if nodeClass ~= nil then
+		--local outer = ntype:GetOuter()
+		--local outerName = outer and bpcommon.GetMetaTableName( getmetatable(outer) ) or "no-outer"
+		--print("FIND MATCHING PIN CLASS " .. nodeClass .. " WITHIN MODULE: " .. module:GetName())
+		--print("  NODE TYPE OUTER: " .. outerName)
+		--print("  GRAPH THUNK: " .. tostring(ntype:GetGraphThunk()))
 		local node = bpnode.New(ntype):WithOuter( module )
 		node:PostInit()
 		pins = node:GetPins()
