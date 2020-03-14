@@ -471,6 +471,12 @@ STRUCT PhysEnvPerformanceSettings
 	PIN MaxVelocity, PN_Number, #Maximum speed of an object.
 	PIN MinFrictionMass, PN_Number, #Minimum mass of an object to be affected by friction.
 }
+STRUCT PhysProperties
+{
+	DESC Structure used by construct.SetPhysProp.
+	PIN GravityToggle, PN_Bool, #Enables or disables gravity for the entity
+	PIN Material, PN_String, #Sets the physics material for the entity
+}
 STRUCT PropertyAdd
 {
 	DESC TODO: Very incomplete, properties are complicated
