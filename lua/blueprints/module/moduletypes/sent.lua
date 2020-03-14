@@ -23,13 +23,7 @@ end
 
 function MODULE:GetOwnerPinType() return PinType( PN_Ref, PNF_None, "Entity" ) end
 
-function MODULE:SetupEditValues( values )
-
-	--values:Index("weapon.ViewModel"):OverrideClass( "weaponviewmodel" )
-	--values:Index("weapon.WorldModel"):OverrideClass( "weaponworldmodel" )
-
-end
-
+function MODULE:SetupEditValues( values ) end
 function MODULE:GetDefaultConfigTable()
 
 	return {
@@ -54,16 +48,14 @@ end
 function MODULE:CreateDefaults()
 
 	local id, graph = self:NewGraph("EventGraph")
-	--local _, init = graph:AddNode("WEAPON_Initialize", 120, 100)
-	--local _, hold = graph:AddNode("Weapon_SetHoldType", 250, 100)
-	--local _, selfNode = graph:AddNode(self.getSelfNodeType, 128,160)
+	local _, init = graph:AddNode("ENTITY_Initialize", 120, 100)
+	local _, model = graph:AddNode("Entity_SetModel", 250, 100)
+	local _, phys = graph:AddNode("Entity_PhysicsInit", 700, 100)
 
-	--init:FindPin( PD_Out, "Exec" ):Connect( hold:FindPin( PD_In, "Exec" ) )
-	--hold:FindPin( PD_In, "Name" ):SetLiteral("pistol")
-	--hold:FindPin( PD_In, "Weapon" ):Connect( selfNode:FindPin( PD_Out, "Self" ) )
-
-	--local _, primary = graph:AddNode("WEAPON_PrimaryAttack", 120, 300)
-	--local _, secondary = graph:AddNode("WEAPON_SecondaryAttack", 120, 500)
+	init:FindPin( PD_Out, "Exec" ):Connect( model:FindPin( PD_In, "Exec") )
+	model:FindPin( PD_In, "model" ):SetLiteral( "models/props_junk/watermelon01.mdl" )
+	model:FindPin( PD_Out, "Thru" ):Connect( phys:FindPin( PD_In, "Exec") )
+	phys:FindPin( PD_In, "SolidType" ):SetLiteral( "SOLID_VPHYSICS" )
 
 end
 
@@ -136,7 +128,6 @@ end]])
 __bpm.init = function()
 	scripted_ents.Register( meta, __bpm.class )
 	if CLIENT and bpsandbox then bpsandbox.RefreshSENTs() end
-	if CLIENT then return end
 end
 __bpm.shutdown = function()
 	if CLIENT then return end
