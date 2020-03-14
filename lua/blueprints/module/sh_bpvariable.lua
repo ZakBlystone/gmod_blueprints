@@ -7,12 +7,12 @@ local meta = bpcommon.MetaTable("bpvariable")
 function meta:Init(type, repmode)
 
 	if type then
-		self.pintype = type
+		self.pintype = type:WithOuter( self )
 	end
 
 	self.repmode = repmode
 
-	self.getterNodeType = bpnodetype.New()
+	self.getterNodeType = bpnodetype.New():WithOuter( self )
 	self.getterNodeType:AddFlag( NTF_Compact )
 	self.getterNodeType:AddFlag( NTF_Custom )
 	self.getterNodeType:SetCodeType( NT_Pure )
@@ -41,7 +41,7 @@ function meta:Init(type, repmode)
 
 	end
 
-	self.setterNodeType = bpnodetype.New()
+	self.setterNodeType = bpnodetype.New():WithOuter( self )
 	self.setterNodeType:AddFlag( NTF_Compact )
 	self.setterNodeType:AddFlag( NTF_Custom )
 	self.setterNodeType:SetCodeType( NT_Function )
@@ -74,6 +74,13 @@ function meta:Init(type, repmode)
 
 end
 
+function meta:GetModule()
+
+	return self:FindOuter( bpmodule_meta )
+
+end
+
+
 function meta:SetDefault( def )
 
 	self.default = def
@@ -100,18 +107,13 @@ end
 
 function meta:SetType( type )
 
-	self.module:PreModifyNodeType( self.getterNodeType )
-	self.module:PreModifyNodeType( self.setterNodeType )
-	self.pintype = type
+	local mod = self:GetModule()
+	mod:PreModifyNodeType( self.getterNodeType )
+	mod:PreModifyNodeType( self.setterNodeType )
+	self.pintype = type:Copy():WithOuter(self)
 	self.default = self.pintype:GetDefault()
-	self.module:PostModifyNodeType( self.getterNodeType )
-	self.module:PostModifyNodeType( self.setterNodeType )
-
-end
-
-function meta:CreatePin( dir, nameOverride )
-
-	return MakePin(dir, self:GetName(), self.pintype)
+	mod:PostModifyNodeType( self.getterNodeType )
+	mod:PostModifyNodeType( self.setterNodeType )
 
 end
 
@@ -148,7 +150,7 @@ local typeRemap = {
 
 function meta:ReadFromStream(stream, mode, version)
 
-	self.pintype = bppintype.New():ReadFromStream(stream, mode, version)
+	self.pintype = bppintype.New():WithOuter(self):ReadFromStream(stream, mode, version)
 	self.default = bpdata.ReadValue( stream )
 	self.repmode = bpdata.ReadValue( stream )
 

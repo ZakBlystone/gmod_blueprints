@@ -6,18 +6,19 @@ local meta = bpcommon.MetaTable("bpstruct")
 
 function meta:Init()
 
-	self.pins = bplist.New(bppin_meta):NamedItems("Pins")
+	self.pins = bplist.New(bppin_meta):NamedItems("Pins"):WithOuter(self)
 	self.nameMap = {}
 	self.invNameMap = {}
 	self.pins:AddListener(function(cb, action, id, var)
 
-		if self.module then
+		local mod = self:GetModule()
+		if mod then
 			if cb == bplist.CB_PREMODIFY then
-				self.module:PreModifyNodeType( self.makerNodeType )
-				self.module:PreModifyNodeType( self.breakerNodeType )
+				mod:PreModifyNodeType( self.makerNodeType )
+				mod:PreModifyNodeType( self.breakerNodeType )
 			elseif cb == bplist.CB_POSTMODIFY then
-				self.module:PostModifyNodeType( self.makerNodeType )
-				self.module:PostModifyNodeType( self.breakerNodeType )
+				mod:PostModifyNodeType( self.makerNodeType )
+				mod:PostModifyNodeType( self.breakerNodeType )
 			end
 		end
 
@@ -47,17 +48,25 @@ function meta:Init()
 
 end
 
+function meta:GetModule()
+
+	return self:FindOuter( bpmodule_meta )
+
+end
+
 function meta:PreModify()
 
-	self.module:PreModifyNodeType( self.makerNodeType )
-	self.module:PreModifyNodeType( self.breakerNodeType )
+	local mod = self:GetModule()
+	mod:PreModifyNodeType( self.makerNodeType )
+	mod:PreModifyNodeType( self.breakerNodeType )
 
 end
 
 function meta:PostModify()
 
-	self.module:PostModifyNodeType( self.makerNodeType )
-	self.module:PostModifyNodeType( self.breakerNodeType )
+	local mod = self:GetModule()
+	mod:PostModifyNodeType( self.makerNodeType )
+	mod:PostModifyNodeType( self.breakerNodeType )
 
 end
 

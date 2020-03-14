@@ -24,7 +24,7 @@ bpcommon.AddFlagAccessors(meta)
 function meta:Init()
 
 	self.flags = 0
-	self.pins = bplist.New(bppin_meta):NamedItems("Pins")
+	self.pins = bplist.New(bppin_meta):NamedItems("Pins"):WithOuter(self)
 	self.pins:AddListener(function(cb, action, id, var)
 
 		if self.module then
@@ -38,7 +38,7 @@ function meta:Init()
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	-- Event node on receiving end
-	self.eventNodeType = bpnodetype.New()
+	self.eventNodeType = bpnodetype.New():WithOuter(self)
 	self.eventNodeType:AddFlag(NTF_Custom)
 	self.eventNodeType:AddFlag(NTF_NotHook)
 	self.eventNodeType:SetCodeType(NT_Event)
@@ -49,7 +49,7 @@ function meta:Init()
 	self.eventNodeType.event = self
 
 	-- Event calling node
-	self.callNodeType = bpnodetype.New()
+	self.callNodeType = bpnodetype.New():WithOuter(self)
 	self.callNodeType:AddFlag(NTF_Custom)
 	self.callNodeType:SetCodeType(NT_Function)
 	self.callNodeType:SetNodeClass("EventCall")
@@ -62,17 +62,25 @@ function meta:Init()
 
 end
 
+function meta:GetModule()
+
+	return self:FindOuter( bpmodule_meta )
+
+end
+
 function meta:PreModify()
 
-	self.module:PreModifyNodeType( self.eventNodeType )
-	self.module:PreModifyNodeType( self.callNodeType )
+	local mod = self:GetModule()
+	mod:PreModifyNodeType( self.eventNodeType )
+	mod:PreModifyNodeType( self.callNodeType )
 
 end
 
 function meta:PostModify()
 
-	self.module:PostModifyNodeType( self.eventNodeType )
-	self.module:PostModifyNodeType( self.callNodeType )
+	local mod = self:GetModule()
+	mod:PostModifyNodeType( self.eventNodeType )
+	mod:PostModifyNodeType( self.callNodeType )
 
 end
 

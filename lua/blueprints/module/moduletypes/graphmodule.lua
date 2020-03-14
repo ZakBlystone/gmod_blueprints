@@ -14,10 +14,10 @@ bpcommon.CreateIndexableListIterators(MODULE, "events")
 
 function MODULE:Setup()
 
-	self.graphs = bplist.New(bpgraph_meta, self, "module"):NamedItems("Graph")
-	if self:CanHaveStructs() then self.structs = bplist.New(bpstruct_meta, self, "module"):NamedItems("Struct") end
-	if self:CanHaveVariables() then self.variables = bplist.New(bpvariable_meta, self, "module"):NamedItems("Var") end
-	if self:CanHaveEvents() then self.events = bplist.New(bpevent_meta, self, "module"):NamedItems("Event") end
+	self.graphs = bplist.New(bpgraph_meta):NamedItems("Graph"):WithOuter(self)
+	if self:CanHaveStructs() then self.structs = bplist.New(bpstruct_meta):NamedItems("Struct"):WithOuter(self) end
+	if self:CanHaveVariables() then self.variables = bplist.New(bpvariable_meta):NamedItems("Var"):WithOuter(self) end
+	if self:CanHaveEvents() then self.events = bplist.New(bpevent_meta):NamedItems("Event"):WithOuter(self) end
 	self.suppressGraphNotify = false
 
 	self.graphs:AddListener(function(cb, id, graph)
@@ -235,7 +235,7 @@ function MODULE:GetPinTypes( collection )
 
 		for id, v in self:Structs() do
 
-			local pinType = PinType(PN_Struct, PNF_Custom, v.name)
+			local pinType = PinType(PN_Struct, PNF_Custom, v.name):WithOuter( v )
 			types[#types+1] = pinType
 
 		end
@@ -391,7 +391,7 @@ function MODULE:CompileVariable( compiler, id, var )
 
 	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 
-	print("COMPILE VARIABLE: " .. vtype:ToString(true))
+	print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
 
 	local varName = var:GetName()
 	if compiler.compactVars then varName = id end
@@ -399,11 +399,11 @@ function MODULE:CompileVariable( compiler, id, var )
 		compiler.emit("instance.__" .. varName .. " = " .. tostring(def))
 	else
 		print("Emit variable as non-string")
-		local pt = bpvaluetype.FromPinType( vtype, function() return def end )
-		if pt then
+		local pt = bpvaluetype.FromPinType( vtype, function() return def end, function(v) def = v end )
+		if def then
 			compiler.emit("instance.__" .. varName .. " = " .. pt:ToString())
 		else
-			compiler.emit("instance.__" .. varName .. " = " .. tostring(def))
+			compiler.emit("instance.__" .. varName .. " = nil")
 		end
 	end
 

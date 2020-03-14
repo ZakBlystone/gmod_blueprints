@@ -78,13 +78,15 @@ function MODULE:GetConfigEdit( refresh )
 		--local b,e = pcall( function()
 			local value = nil
 			local vt = bpvaluetype.FromPinType(
-				v:GetType():WithModule(v.module),
+				v:GetType():Copy(v.module),
 				function() return value end,
 				function(newValue) value = newValue end
 			)
 
 			if vt == nil then continue end
 			
+			print( v:GetName() .. " = " .. tostring(v:GetDefault()) )
+
 			vt:SetFromString( tostring(v:GetDefault()) )
 			vt:AddListener( function(cb, old, new, k)
 				if cb ~= bpvaluetype.CB_VALUE_CHANGED then return end

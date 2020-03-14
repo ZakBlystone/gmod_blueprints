@@ -5,7 +5,7 @@ module("node_userfunccall", package.seeall, bpcommon.rescope(bpschema, bpcompile
 local NODE = {}
 
 function NODE:Setup() end
-function NODE:GetOuterGraph() return self:GetType().graph end
+function NODE:GetOuterGraph() return self:FindOuter( bpgraph_meta ) end
 
 function NODE:GeneratePins(pins)
 
@@ -20,7 +20,7 @@ end
 
 function NODE:Compile(compiler, pass)
 
-	local graph = self:GetOuterGraph()
+	local graph = self:GetGraphThunk()
 
 	if pass == CP_PREPASS then
 

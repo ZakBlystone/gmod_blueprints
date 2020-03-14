@@ -13,7 +13,7 @@ function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
-	self.modulePinType = PinType( PN_BPRef, PNF_None, self:GetUID() ):WithModule(self)
+	self.modulePinType = PinType( PN_BPRef, PNF_None, self:GetUID() ):WithOuter(self)
 
 	self.getSelfNodeType = bpnodetype.New()
 	self.getSelfNodeType:SetCodeType(NT_Pure)

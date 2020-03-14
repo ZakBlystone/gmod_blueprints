@@ -13,7 +13,7 @@ end]]
 function meta:Init(dir, name, type, desc)
 	self.dir = dir
 	self.name = name
-	self.type = type
+	self.type = type and type:Copy( self ) or nil
 	self.desc = desc
 	return self
 end
@@ -31,7 +31,7 @@ function meta:GetLiteral() return self:GetNode():GetLiteral( self.id ) end
 function meta:CanHaveLiteral() return self:GetLiteralType() ~= nil end
 function meta:OnRightClick() end
 
-function meta:SetType(type) self.type = type return self end
+function meta:SetType(type) self.type = type:Copy( self ) return self end
 function meta:SetDir(dir) self.dir = dir return self end
 function meta:SetName(name) self.name = name return self end
 function meta:SetDisplayName(name) self.displayName = name return self end
@@ -83,14 +83,14 @@ end]]
 
 function meta:GetNode()
 
-	return self.node
+	return self:FindOuter( bpnode_meta )
 
 end
 
 function meta:GetConnectedPins()
 
 	local node = self:GetNode()
-	local graph = node.graph
+	local graph = node:GetGraph()
 	local nodeID = node.id
 	local pinID = self.id
 	local out = {}
@@ -108,11 +108,12 @@ function meta:Connect( other )
 
 	local node = self:GetNode()
 	local otherNode = other:GetNode()
+	local graph = node:GetGraph()
 
-	if node.graph == nil then print("Cannot connect, not in a graph") return end
-	if node.graph ~= otherNode.graph then print("Cannot connect across different graphs") return end
+	if graph == nil then print("Cannot connect, not in a graph") return end
+	if graph ~= otherNode:GetGraph() then print("Cannot connect across different graphs") return end
 
-	return node.graph:ConnectNodes( node.id, self.id, otherNode.id, other.id )
+	return graph:ConnectNodes( node.id, self.id, otherNode.id, other.id )
 
 end
 

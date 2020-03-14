@@ -37,10 +37,10 @@ function meta:Init(type)
 	self.hookNodeType = nil
 
 	-- Create lists for graph elements
-	self.deferredNodes = bplist.New(bpnode_meta, self, "graph")
-	self.nodes = bplist.New(bpnode_meta, self, "graph")
-	self.inputs = bplist.New(bppin_meta):NamedItems("Inputs")
-	self.outputs = bplist.New(bppin_meta):NamedItems("Outputs")
+	self.deferredNodes = bplist.New(bpnode_meta):WithOuter(self)
+	self.nodes = bplist.New(bpnode_meta):WithOuter(self)
+	self.inputs = bplist.New(bppin_meta):NamedItems("Inputs"):WithOuter(self)
+	self.outputs = bplist.New(bppin_meta):NamedItems("Outputs"):WithOuter(self)
 	self.connections = {}
 	self.heldConnections = {}
 
@@ -83,36 +83,39 @@ function meta:Init(type)
 
 	-- For function graphs
 	-- Function to call graph entry point
-	self.callNodeType = bpnodetype.New()
+	self.callNodeType = bpnodetype.New():WithOuter( self )
 	self.callNodeType:AddFlag(NTF_Custom)
 	self.callNodeType:SetCodeType(NT_Function)
 	self.callNodeType:SetNodeClass("FuncCall")
 	self.callNodeType.GetDisplayName = function() return self:GetName() end
 	self.callNodeType.GetGraphThunk = function() return self end
 	self.callNodeType.GetRole = function() return self:GetNetworkRole() end
-	self.callNodeType.graph = self
 
 	-- Entry point node
-	self.callEntryNodeType = bpnodetype.New()
+	self.callEntryNodeType = bpnodetype.New():WithOuter( self )
 	self.callEntryNodeType:SetCodeType(NT_FuncInput)
 	self.callEntryNodeType:SetName("__Entry")
 	self.callEntryNodeType:AddFlag(NTF_NoDelete)
 	self.callEntryNodeType:SetNodeClass("FuncEntry")
 	self.callEntryNodeType.GetDisplayName = function() return self:GetName() end
 	self.callEntryNodeType.GetRole = function() return self:GetNetworkRole() end
-	self.callEntryNodeType.graph = self
 
 	-- Return node
-	self.callExitNodeType = bpnodetype.New()
+	self.callExitNodeType = bpnodetype.New():WithOuter( self )
 	self.callExitNodeType:SetCodeType(NT_FuncOutput)
 	self.callExitNodeType:SetDisplayName("Return")
 	self.callExitNodeType:SetName("__Exit")
 	self.callExitNodeType:SetNodeClass("FuncExit")
-	self.callExitNodeType.graph = self
 
 	bpcommon.MakeObservable(self)
 
 	return self
+
+end
+
+function meta:GetModule()
+
+	return self:FindOuter( bpmodule_meta )
 
 end
 
@@ -134,7 +137,7 @@ end
 
 function meta:PreModify()
 
-	self.module:PreModifyNodeType( self.callNodeType )
+	self:GetModule():PreModifyNodeType( self.callNodeType )
 	self:PreModifyNodeType( self.callEntryNodeType )
 	self:PreModifyNodeType( self.callExitNodeType )
 
@@ -142,7 +145,7 @@ end
 
 function meta:PostModify()
 
-	self.module:PostModifyNodeType( self.callNodeType )
+	self:GetModule():PostModifyNodeType( self.callNodeType )
 	self:PostModifyNodeType( self.callEntryNodeType )
 	self:PostModifyNodeType( self.callExitNodeType )
 
@@ -290,7 +293,7 @@ end
 
 function meta:GetModule()
 
-	return self.module
+	return self:FindOuter( bpmodule_meta )
 
 end
 
@@ -620,7 +623,7 @@ function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 		if p0:IsType(PN_Any) and not p1:IsType(PN_Exec) then return true end
 		if p1:IsType(PN_Any) and not p0:IsType(PN_Exec) then return true end
 
-		if self.module:CanCast(p0:GetType(), p1:GetType()) then
+		if self:GetModule():CanCast(p0:GetType(), p1:GetType()) then
 			return true
 		else
 			return false, "No explicit conversion between " .. self:NodePinToString(nodeID0, pinID0) .. " and " .. self:NodePinToString(nodeID1, pinID1)
@@ -677,19 +680,19 @@ end
 
 function meta:CanAddNode(nodeType)
 
-	if not self.module:CanAddNode(nodeType) then return false end
+	if not self:GetModule():CanAddNode(nodeType) then return false end
 
 	if self.type == GT_Function then
 		if nodeType:HasFlag(NTF_Latent) then return false end
 		if nodeType:GetCodeType() == NT_Event then return false end
 	end
 
-	if nodeType:GetCodeType() == NT_Event and self.module:NodeTypeInUse(nodeType:GetName()) then
+	if nodeType:GetCodeType() == NT_Event and self:GetModule():NodeTypeInUse(nodeType:GetName()) then
 		return false
 	end
 
 	if nodeType:GetCodeType() == NT_FuncInput or nodeType:GetCodeType() == NT_FuncOutput then
-		if nodeType.graph ~= self then return false end
+		if nodeType:FindOuter( bpgraph_meta ) ~= self then return false end
 	end
 
 	if nodeType:GetCodeType() == NT_FuncInput then
@@ -710,10 +713,11 @@ function meta:AddNode(nodeTypeName, ...)
 	if not self:CanAddNode(nodeType) then return end
 
 	if nodeType:GetCodeType() == NT_Event and nodeType:ReturnsValues() then
-		return self.module:RequestGraphForEvent(nodeType)
+		return self:GetModule():RequestGraphForEvent(nodeType)
 	end
 
-	return self.nodes:Construct( nodeType, ... )
+	local id, newNode = self.nodes:Construct( nodeType, ... )
+	return id, newNode
 
 end
 
@@ -1000,8 +1004,7 @@ function meta:CreateDeferredData()
 
 	Profile("create-deferred", function()
 
-		self.deferredNodes:CopyInto(self.nodes)
-		self.deferredNodes:Clear()
+		self.deferredNodes:MoveInto(self.nodes)
 
 		self:CacheNodeTypes()
 		self:RemoveNodeIf( function(node) return not node:PostInit() end )
@@ -1027,7 +1030,6 @@ function meta:CopyInto(other)
 	Profile("copy-graph", function()
 
 		other:Clear()
-		other.module = self.module
 		other.id = self.id
 		other.name = self.name
 		other.type = self.type
@@ -1036,14 +1038,12 @@ function meta:CopyInto(other)
 
 		-- Deep copy will copy all members including graph which includes module etc...
 		-- So clear graph variable and set it on the other side of the deep copy
-		for _, node in self:Nodes() do node.graph = nil end
 
-		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes, true )
-		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs, true )
-		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs, true )
+		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes )
+		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )
+		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs )
 
-		for _, node in other:Nodes() do node.graph = other node:PostInit() end
-		for _, node in self:Nodes() do node.graph = self end
+		for _, node in other:Nodes() do node:PostInit() end
 
 		for _, c in self:Connections() do
 			other.connections[#other.connections+1] = {c[1], c[2], c[3], c[4]}
@@ -1104,7 +1104,6 @@ function meta:AddSubGraph( subgraph, x, y )
 			node.id = nil
 			node.BaseClass = bpcommon.MetaTable("bpnode")
 			local newID = self.nodes:Add( node )
-			node.graph = self
 			connectionRemap[id] = newID
 			nodeCount = nodeCount + 1
 

@@ -1269,7 +1269,7 @@ function meta:Compile()
 
 		-- make local copies of all module graphs so they can be edited without changing the module
 		for id, graph in self.module:Graphs() do
-			self.graphs[#self.graphs+1] = graph:CopyInto( bpgraph.New() )
+			self.graphs[#self.graphs+1] = graph:CopyInto( bpgraph.New():WithOuter( self.module ) )
 		end
 
 	end)

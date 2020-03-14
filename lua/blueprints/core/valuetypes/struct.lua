@@ -33,7 +33,7 @@ function VALUE:SetStruct( struct )
 	for _,v in struct.pins:Items() do
 		local k = v:GetName()
 
-		local pinType = v:GetType():WithModule( struct.module )
+		local pinType = v:GetType():Copy( struct )
 		print(pinType:ToString())
 
 		local vt = bpvaluetype.FromPinType(pinType,
@@ -221,8 +221,8 @@ function VALUE:SetFromString( str )
 	if str:find("{%s*}") then self:Set({}) end
 
 	for _, line in ipairs( string.Explode("\n", str) ) do
-		for x, y in line:gmatch("(%w+)%s*=%s*([^,]*)") do
-			--print("'" .. x .. "'", "'" .. y .. "'")
+		for x, y in line:gmatch("(%w+)%s*=%s*([^\n]*),") do
+			print("'" .. x .. "'", "'" .. y .. "'")
 
 			for _, ch in ipairs(self._children) do
 				if ch.k == x then

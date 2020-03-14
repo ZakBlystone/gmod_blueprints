@@ -5,7 +5,7 @@ module("node_userfuncentry", package.seeall, bpcommon.rescope(bpschema, bpcompil
 local NODE = {}
 
 function NODE:Setup() end
-function NODE:GetOuterGraph() return self:GetType().graph end
+function NODE:GetOuterGraph() return self:FindOuter( bpgraph_meta ) end
 
 function NODE:GeneratePins(pins)
 

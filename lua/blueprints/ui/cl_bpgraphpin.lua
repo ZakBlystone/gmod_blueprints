@@ -269,7 +269,7 @@ function meta:IsConnected()
 	if self.connectionState ~= nil then return self.connectionState end
 
 	local node = self.vnode:GetNode()
-	local graph = node.graph
+	local graph = node:GetGraph()
 	self.connectionState = graph:IsPinConnected( node.id, self.pinID )
 
 	return self.connectionState

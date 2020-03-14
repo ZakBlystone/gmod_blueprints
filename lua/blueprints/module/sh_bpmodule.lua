@@ -314,13 +314,12 @@ end
 
 function meta:TryBuild(flags)
 
+	local errStr = nil
 	local compiler = bpcompiler.New(self, flags)
-	local b, e = pcall(compiler.Compile, compiler)
-	if not b then
-		return false, e
-	else
-		return true, e
-	end
+	local b, e = xpcall(compiler.Compile, function(err)
+		errStr = tostring(err) .. "\n" .. debug.traceback()
+	end, compiler)
+	return errStr == nil, errStr or e
 
 end
 

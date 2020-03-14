@@ -103,7 +103,8 @@ function meta:ToString(pinID)
 		end
 	end
 
-	if self.graph then str = self.graph:GetName() .. ":" .. str end
+	local outerGraph = self:GetGraph()
+	if outerGraph then str = outerGraph:GetName() .. ":" .. str end
 
 	return str
 
@@ -111,8 +112,9 @@ end
 
 function meta:IsPinConnected( pinID )
 
-	if self.graph == nil then return false end
-	return self.graph:IsPinConnected( self.id, pinID )
+	local outerGraph = self:GetGraph()
+	if outerGraph == nil then return false end
+	return outerGraph:IsPinConnected( self.id, pinID )
 
 end
 
@@ -122,7 +124,7 @@ function meta:UpdatePins()
 	self:GeneratePins(self.pinCache)
 
 	for k, v in ipairs(self:GetPins()) do
-		v.node = self
+		v:WithOuter( self )
 		v.id = k
 	end
 
@@ -195,15 +197,17 @@ end
 
 function meta:PreModify()
 
-	if not self.graph then return end
-	self.graph:PreModifyNode( self )
+	local outerGraph = self:GetGraph()
+	if not outerGraph then return end
+	outerGraph:PreModifyNode( self )
 
 end
 
 function meta:PostModify()
 
-	if not self.graph then return end
-	self.graph:PostModifyNode( self )
+	local outerGraph = self:GetGraph()
+	if not outerGraph then return end
+	outerGraph:PostModifyNode( self )
 
 end
 
@@ -310,8 +314,9 @@ function meta:SetLiteral(pinID, value)
 		pins[pinID]:OnLiteralChanged( prevValue, value )
 	end
 	
-	if self.graph == nil then return end
-	self.graph:FireListeners(bpgraph.CB_PIN_EDITLITERAL, self.id, pinID, value)
+	local outerGraph = self:GetGraph()
+	if outerGraph == nil then return end
+	outerGraph:FireListeners(bpgraph.CB_PIN_EDITLITERAL, self.id, pinID, value)
 
 end
 
@@ -328,7 +333,7 @@ function meta:GetType()
 
 	if self.nodeTypeObject then return self.nodeTypeObject end
 
-	local nodeTypes = self.graph:GetNodeTypes()
+	local nodeTypes = self:GetGraph():GetNodeTypes()
 	local ntype = nodeTypes:Find( self.nodeType )
 	if self.nodeType ~= "invalid" and ntype == nil then --[[print("Unable to find node type: " .. tostring(self.nodeType))]] end
 	self.nodeTypeObject = ntype
@@ -383,8 +388,8 @@ function meta:GetPins() return self.pinCache or {} end
 function meta:GetFlags() return self:GetType():GetFlags() end
 function meta:HasFlag(fl) return bit.band(self:GetFlags(), fl) ~= 0 end
 
-function meta:GetGraph() return self.graph end
-function meta:GetModule() return self:GetGraph():GetModule() end
+function meta:GetGraph() return self:FindOuter( bpgraph_meta ) end
+function meta:GetModule() return self:FindOuter( bpmodule_meta ) end
 
 function meta:Move(x, y)
 
@@ -397,8 +402,9 @@ function meta:Move(x, y)
 	self.x = x
 	self.y = y
 
-	if self.graph == nil then return px ~= self.x or py ~= self.y end
-	self.graph:FireListeners(bpgraph.CB_NODE_MOVE, self.id, x, y)
+	local outerGraph = self:GetGraph()
+	if outerGraph == nil then return px ~= self.x or py ~= self.y end
+	outerGraph:FireListeners(bpgraph.CB_NODE_MOVE, self.id, x, y)
 
 	return px ~= self.x or py ~= self.y
 
@@ -413,7 +419,7 @@ function meta:Copy()
 	newNode.data = bpcommon.CopyTable(self.data)
 	newNode.nodeType = self.nodeType
 	newNode.nodeTypeObject = self.nodeTypeObject
-	newNode.graph = self.graph
+	newNode:WithOuter( self:GetOuter() )
 
 	bpcommon.MakeObservable(newNode)
 	return newNode

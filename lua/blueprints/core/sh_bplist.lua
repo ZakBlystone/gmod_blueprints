@@ -20,11 +20,9 @@ local meta = bpcommon.MetaTable("bplist")
 meta.__tostring = function(self) return self:ToString() end
 meta.__index = meta
 
-function meta:Init( meta, outer, alias )
+function meta:Init( meta )
 
 	self.itemMeta = meta
-	self.outer = outer
-	self.outerAlias = alias
 	bpcommon.MakeObservable(self)
 	return self:Clear()
 
@@ -137,27 +135,34 @@ function meta:GetNameForItem( name, item )
 
 end
 
-function meta:CopyInto( other, deep )
+function meta:MoveInto( other )
+
+	other:Clear()
+
+	local nextID = 0
+	for id, item in self:Items() do
+		item:WithOuter( other )
+		other.items[#other.items+1] = item
+		other.itemLookup[id] = item
+		nextID = math.max(id+1, nextID)
+	end
+
+	other.nextID = nextID
+	self:Clear()
+
+end
+
+function meta:CopyInto( other )
 
 	other.items = {}
 	other.itemLookup = {}
 
-	if deep then
-
-		for id, item in self:Items() do
-			local copy = item.Copy and item:Copy() or bpcommon.CopyTable( item )
-			copy.id = item.id
-			other.items[#other.items+1] = copy
-			other.itemLookup[id] = copy
-		end
-
-	else
-
-		for id, item in self:Items() do
-			other.items[#other.items+1] = item
-			other.itemLookup[id] = item
-		end
-
+	for id, item in self:Items() do
+		local copy = item.Copy and item:Copy() or bpcommon.CopyTable( item )
+		copy:WithOuter( other )
+		copy.id = item.id
+		other.items[#other.items+1] = copy
+		other.itemLookup[id] = copy
 	end
 
 	other.nextID = self.nextID
@@ -173,11 +178,7 @@ end
 
 function meta:ConstructObject( ... )
 
-	local obj = bpcommon.MakeInstance( self.itemMeta, ... )
-	if self.outer then
-		local key = self.outerAlias or "outer"
-		obj[key] = self.outer
-	end
+	local obj = bpcommon.MakeInstance( self.itemMeta, ... ):WithOuter( self )
 	return obj
 
 end
@@ -203,6 +204,8 @@ function meta:Add( item, optName, forceIndex )
 	if self.namedItems then
 		item.name = self:GetNameForItem( optName, item )
 	end
+
+	item:WithOuter( self )
 
 	self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
 

@@ -26,9 +26,8 @@ function meta:WithFlags(flags)
 	return New(self:GetBaseType(), flags, self:GetSubType())
 end
 
-function meta:WithModule( module )
-	local pinType = New(self:GetBaseType(), self:GetFlags(), self:GetSubType()):WithOuter( module )
-	return pinType
+function meta:Copy( outer )
+	return New(self:GetBaseType(), self:GetFlags(), self:GetSubType()):WithOuter( outer or self:GetOuter() )
 end
 
 function meta:GetBaseType() return self.basetype end
@@ -53,7 +52,10 @@ function meta:FindStruct()
 	local res = nil
 	bpcommon.Profile("bppintype-get-struct", function()
 
-		local mod = self:GetOuter(bpmodule_meta)
+		--local struct = self:FindOuter(bpstruct_meta)
+		--if struct then return struct end
+
+		local mod = self:FindOuter(bpmodule_meta)
 		if mod and self:HasFlag(bpschema.PNF_Custom) and mod.structs then
 			for id, v in mod:Structs() do
 				if v.name == self:GetSubType() then res = v break end
