@@ -220,11 +220,11 @@ function meta:ReadFromStream(stream)
 	local structCount = stream:ReadInt(false)
 
 	for i=1, groupCount do
-		self.nodeGroups[#self.nodeGroups+1] = bpnodetypegroup.New():ReadFromStream(stream)
+		self.nodeGroups[#self.nodeGroups+1] = bpnodetypegroup.New():WithOuter(self):ReadFromStream(stream)
 	end
 
 	for i=1, structCount do
-		local struct = bpstruct.New():ReadFromStream(stream)
+		local struct = bpstruct.New():WithOuter(self):ReadFromStream(stream)
 		local structName = stream:ReadStr()
 		local pinTypeOverride = stream:ReadInt(true)
 

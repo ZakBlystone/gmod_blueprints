@@ -524,8 +524,12 @@ function WriteValue(t, buf, thread)
 			WriteValue(v, buf, thread)
 			mrk[k] = true
 		end
-		
+
 		for k,v in pairs(t) do
+			if k == "__outer" then
+				print("TRIED TO WRITE '__outer' TO STREAM!!!")
+				continue
+			end
 			if not mrk[k] and not keys then buf:WriteBits(DT_KEYS, DT_STATUSBITS) keys = true end
 			if not mrk[k] then WriteValue(k, buf, thread) WriteValue(v, buf, thread) end
 		end

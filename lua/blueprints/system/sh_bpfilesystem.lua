@@ -422,6 +422,7 @@ else
 						mod:Save( path )
 						local f = G_BPLocalFiles[ mod:GetUID() ]
 						f:SetRevision( mod.revision )
+						mod:WithOuter( f )
 					else
 						print("Local module is newer : " .. path)
 					end

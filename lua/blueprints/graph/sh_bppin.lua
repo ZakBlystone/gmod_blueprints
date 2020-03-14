@@ -132,7 +132,7 @@ end
 function meta:ReadFromStream(stream)
 
 	assert(stream:IsUsingStringTable())
-	self.type = bppintype.New():ReadFromStream(stream)
+	self.type = bppintype.New():WithOuter(self):ReadFromStream(stream)
 	self.dir = stream:ReadBits(8)
 	self.name = stream:ReadStr()
 	self.desc = stream:ReadStr()

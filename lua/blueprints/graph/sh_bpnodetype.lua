@@ -17,7 +17,7 @@ local PIN_INPUT_EXEC = MakePin( PD_In, "Exec", PN_Exec )
 local PIN_OUTPUT_EXEC = MakePin( PD_Out, "Exec", PN_Exec )
 local PIN_OUTPUT_THRU = MakePin( PD_Out, "Thru", PN_Exec )
 
-function meta:Init(context, group)
+function meta:Init(context)
 
 	self.flags = 0
 	self.role = 0
@@ -37,7 +37,6 @@ function meta:Init(context, group)
 	self.pins = {}
 	self.warning = nil
 	self.context = context
-	self.group = group
 	self.modFilter = nil
 	return self
 
@@ -77,7 +76,7 @@ function meta:GetNodeClass() return self.nodeClass end
 function meta:GetNodeParam(key) return self.nodeParams[key] end
 function meta:GetRequiredMeta() return self.requiredMeta end
 function meta:GetContext() return self.context end
-function meta:GetGroup() return self.group end
+function meta:GetGroup() return self:GetOuter( bpnodetypegroup_meta ) end
 function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
 
 function meta:ReturnsValues()
@@ -103,12 +102,13 @@ end
 
 function meta:GetPins()
 	local pins = {}
+	local group = self:GetGroup()
 
-	if self:GetContext() == NC_Class and self.group then
+	if self:GetContext() == NC_Class and group then
 
-		local pinTypeOverride = self.group:GetParam("pinTypeOverride")
-		local typeName = self.group:GetParam("typeName")
-		local groupName = self.group:GetName()
+		local pinTypeOverride = group:GetParam("pinTypeOverride")
+		local typeName = group:GetParam("typeName")
+		local groupName = group:GetName()
 
 		if not self:HasFlag(NTF_DirectCall) then
 
@@ -168,10 +168,12 @@ end
 
 function meta:GetCategory()
 
-	if self.category then return self.category end
-	if self.group == nil then return nil end
+	local group = self:GetGroup()
 
-	return self.group:GetName()
+	if self.category then return self.category end
+	if group == nil then return nil end
+
+	return group:GetName()
 
 end
 
@@ -185,9 +187,10 @@ end
 
 function meta:GetName()
 
-	if self.group == nil then return self.name end
+	local group = self:GetGroup()
+	if group == nil then return self.name end
 
-	local groupName = self.group:GetName()
+	local groupName = group:GetName()
 	if self:GetContext() ~= NC_Class then
 		if groupName == "GLOBAL" then return self.name end
 	end
@@ -198,9 +201,10 @@ end
 
 function meta:GetDisplayName()
 
-	if self.group == nil then return self.displayName or self.name end
+	local group = self:GetGroup()
+	if group == nil then return self.displayName or self.name end
 
-	local groupName = self.group:GetName()
+	local groupName = group:GetName()
 	if self:GetContext() == NC_Class then
 		return self.displayName or (groupName .. ":" .. self.name)
 	elseif self:GetContext() == NC_Hook then
@@ -213,10 +217,11 @@ end
 
 function meta:GetCode() 
 
+	local group = self:GetGroup()
 	if self.code then return self.code end
-	if self.group == nil then return nil end
+	if group == nil then return nil end
 
-	local groupName = self.group:GetName()
+	local groupName = group:GetName()
 
 	if self:GetContext() == NC_Hook then
 

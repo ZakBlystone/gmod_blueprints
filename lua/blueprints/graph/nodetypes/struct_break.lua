@@ -5,7 +5,7 @@ module("node_structbreak", package.seeall, bpcommon.rescope(bpschema, bpcompiler
 local NODE = {}
 
 function NODE:Setup() end
-function NODE:GetStruct() return self:GetType().struct end
+function NODE:GetStruct() return self:GetType():FindOuter( bpstruct_meta ) end
 
 function NODE:GeneratePins(pins)
 

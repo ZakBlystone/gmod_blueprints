@@ -25,7 +25,7 @@ function meta:Init()
 	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	-- Struct maker node
-	self.makerNodeType = bpnodetype.New()
+	self.makerNodeType = bpnodetype.New():WithOuter(self)
 	self.makerNodeType:SetContext(bpnodetype.NC_Struct)
 	self.makerNodeType:SetNodeClass("StructMake")
 	self.makerNodeType.GetDisplayName = function() return "Make" .. self:GetName() end
@@ -35,7 +35,7 @@ function meta:Init()
 	self.makerNodeType.struct = self
 
 	-- Struct breaker node
-	self.breakerNodeType = bpnodetype.New()
+	self.breakerNodeType = bpnodetype.New():WithOuter(self)
 	self.breakerNodeType:SetContext(bpnodetype.NC_Struct)
 	self.breakerNodeType:SetNodeClass("StructBreak")
 	self.breakerNodeType.GetDisplayName = function() return "Break" .. self:GetName() end

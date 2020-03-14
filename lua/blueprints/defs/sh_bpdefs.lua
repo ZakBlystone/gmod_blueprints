@@ -290,7 +290,7 @@ RegisterBlock("STRUCT", 0, function(block, parent)
 
 	local name = block.tuple[2]
 	local pinTypeOverride = pinTypeLookup[ block.tuple[3] ]
-	block.struct = bpstruct.New()
+	block.struct = bpstruct.New():WithOuter(defpack)
 	block.struct:SetName(name)
 	block.struct:SetPinTypeOverride(pinTypeOverride)
 	block.struct.pins:PreserveNames(true)
@@ -344,7 +344,7 @@ end
 
 RegisterBlock("HOOKS", 0, function(block, parent)
 
-	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_Hooks)
+	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_Hooks):WithOuter(defpack)
 	block.group:SetName( block.tuple[2] )
 
 	defpack:AddNodeGroup(block.group)
@@ -352,7 +352,7 @@ RegisterBlock("HOOKS", 0, function(block, parent)
 end, topLevelHandlers)
 RegisterBlock("LIB", 0, function(block, parent)
 
-	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_Lib)
+	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_Lib):WithOuter(defpack)
 	block.group:SetName( block.tuple[2] )
 
 	defpack:AddNodeGroup(block.group)
@@ -360,7 +360,7 @@ RegisterBlock("LIB", 0, function(block, parent)
 end, topLevelHandlers)
 RegisterBlock("CLASS", 0, function(block, parent)
 
-	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_Class)
+	block.group = bpnodetypegroup.New(bpnodetypegroup.TYPE_Class):WithOuter(defpack)
 	block.group:SetName( block.tuple[2] )
 
 	if block.tuple[3] then block.group:SetParam("typeName", block.tuple[3]) end

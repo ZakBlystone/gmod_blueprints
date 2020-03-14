@@ -46,7 +46,7 @@ function meta:GetEntries() return self.entries end
 
 function meta:NewEntry()
 
-	local entry = bpnodetype.New(GroupContexts[self:GetType()], self)
+	local entry = bpnodetype.New(GroupContexts[self:GetType()]):WithOuter(self)
 	return self:AddEntry( entry )
 
 end
@@ -88,7 +88,7 @@ function meta:ReadFromStream(stream)
 
 	local count = stream:ReadInt(false)
 
-	if self.entryType == TYPE_STRUCTS then
+	if self.entryType == TYPE_STRUCTS then -- DEAD CODE???
 		for i=1, count do self.entries[#self.entries+1] = bpstruct.New():ReadFromStream(stream) end
 	else
 		for i=1, count do self:NewEntry():ReadFromStream(stream) end
