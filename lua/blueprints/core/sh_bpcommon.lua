@@ -410,7 +410,15 @@ function MakeObservable(obj, cblist)
 	end
 end
 
+function IsGUID( guid )
+
+	return type(guid) == "string" and #guid == 16
+
+end
+
 function GUIDToString( guid, raw )
+
+	if not IsGUID( guid ) then return "<invalid-guid>" end
 
 	local fmt = nil
 	if raw then
@@ -435,6 +443,16 @@ function GUIDToString( guid, raw )
 		guid[14]:byte(),
 		guid[15]:byte(),
 		guid[16]:byte())
+
+end
+
+function EscapedGUID( guid )
+
+	local out = "\""
+	for i=1, 16 do
+		out = out .. string.format("\\x%0.2X", guid[i]:byte())
+	end
+	return out .. "\""
 
 end
 

@@ -90,7 +90,11 @@ end
 function meta:GetConnectedPins()
 
 	local node = self:GetNode()
+	if node == nil then return {} end
+
 	local graph = node:GetGraph()
+	if graph == nil then return {} end
+
 	local nodeID = node.id
 	local pinID = self.id
 	local out = {}

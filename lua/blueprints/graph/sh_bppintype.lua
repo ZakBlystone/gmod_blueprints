@@ -57,6 +57,13 @@ function meta:GetDisplayName()
 		return sub and bpcommon.GUIDToString(self:GetSubType(), true) or "unknown blueprint"
 	end
 
+	if self:IsType(bpschema.PN_BPClass) then
+		local sub = self:GetSubType()
+		local cl = bpmodule.GetClassLoader():Get( sub )
+		if cl then return "Class[" .. sub .. "]" end
+		return sub and bpcommon.GUIDToString(sub, true) or "unknown blueprint"
+	end
+
 	if self:IsType(bpschema.PN_Ref) or self:IsType(bpschema.PN_Enum) or self:IsType(bpschema.PN_Struct) then
 		return self:GetSubType()
 	else

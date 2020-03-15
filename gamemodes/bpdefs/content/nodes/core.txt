@@ -327,4 +327,20 @@ LIB CORE
 		COMPACT false
 		CODE #1 = (type($1) == type($2)) and $1 or $2
 	}
+	FUNC BPEntities, SHARED
+	{
+		IN Class, PN_BPClass, PNF_None, sent, #Class to look for
+		OUT Entities, PN_BPRef, PNF_Table, #Entities found
+		CLASS ClassInformed
+		PARAM target, Entities
+		CODE
+		{
+			#1 = {}
+			for k,v in ipairs(ents.GetAll()) do
+				if v.__bpm and v.__bpm.guid == $1 then
+					#1[__CH~HA__#1+1] = v
+				end
+			end
+		}
+	}
 }

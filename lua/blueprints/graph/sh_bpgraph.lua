@@ -658,6 +658,12 @@ function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 
 	self.connections[#self.connections+1] = { nodeID0, pinID0, nodeID1, pinID1 }
 
+	local node0 = self:GetNode(nodeID0)
+	local node1 = self:GetNode(nodeID1)
+
+	if node0.ConnectionAdded then node0:ConnectionAdded( p0 ) end
+	if node1.ConnectionAdded then node1:ConnectionAdded( p1 ) end
+
 	--print("CONNECTED: " .. self:GetNode(nodeID0):ToString(pinID0) .. " -> " .. self:GetNode(nodeID1):ToString(pinID1))
 
 	self:WalkInforms()

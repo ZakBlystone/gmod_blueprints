@@ -38,7 +38,7 @@ function meta:TranslateCode( code )
 				for y in string.gmatch(args, "([^%),]+)[,%s]*") do
 					t[#t+1] = y
 				end
-				fr = fr(t)
+				fr = fr(t, self)
 			end
 		end
 		return a .. fr:gsub("\n", "\n" .. a:gsub("\n", ""))

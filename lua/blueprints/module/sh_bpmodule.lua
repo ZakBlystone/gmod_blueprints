@@ -129,6 +129,19 @@ function meta:GetUsedPinTypes(used, noFlags)
 
 end
 
+function meta:ResolveModuleUID( uid )
+
+	if uid == self:GetUID() then return self end
+	return nil
+
+end
+
+function meta:GetAllModules()
+
+	return { self }
+
+end
+
 function meta:NetSend()
 
 	bpcommon.ProfileStart("module:NetSend")

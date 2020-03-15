@@ -158,6 +158,7 @@ PinTypeClasses = {
 	[PN_Color] = "Color",
 	[PN_Angles] = "Angle",
 	[PN_Any] = "Wild",
+	[PN_BPClass] = "Class",
 }
 
 PinValueTypes = {
