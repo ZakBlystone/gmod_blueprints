@@ -713,7 +713,7 @@ function meta:OpenCreationContext( pinFilter )
 
 	local function FilterByType( filterType ) return function(n) return n:GetCodeType() == filterType end end
 	local function FilterByPinType( pinType ) return function(n)
-			for _, pin in ipairs(n.pins) do
+			for _, pin in ipairs(n:GetPins()) do
 				if pin:GetType():Equal(pinType, 0) then return true end
 			end
 			return false
