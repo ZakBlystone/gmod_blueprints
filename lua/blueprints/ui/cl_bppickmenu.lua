@@ -253,6 +253,7 @@ end
 
 function PANEL:CreatePages()
 
+
 	if #self.pages > 0 then
 
 		if IsValid(self.tabs) then self.tabs:Remove() end
@@ -260,13 +261,29 @@ function PANEL:CreatePages()
 		self.tabs = vgui.Create("DPropertySheet", self )
 		self.tabs:DockMargin(5, 0, 5, 5)
 		self.tabs:Dock( FILL )
+		self.tabs.OnActiveTabChanged = function(pnl, old, new)
 
-		for _,v in ipairs(self.pages) do
+			if not new.__populated then
+
+				new.__populated = true
+				local tree = new:GetPanel()
+				local v = new.entry
+				bpcommon.ProfileStart("pickmenu-populate")
+				self:SortedOptions( AndFilter(self.baseFilter, v.filter), self.treeInserter(tree, {}, v.expanded) )
+				bpcommon.ProfileEnd()
+
+			end
+
+		end
+
+		for i, v in ipairs(self.pages) do
 
 			local tree = vgui.Create("DTree")
 			tree:SetBackgroundColor(Color(50,50,50))
-			self.tabs:AddSheet( v.name, tree, v.icon, false, false, v.desc )
-			self:SortedOptions( AndFilter(self.baseFilter, v.filter), self.treeInserter(tree, {}, v.expanded) )
+			local sheet = self.tabs:AddSheet( v.name, tree, v.icon, false, false, v.desc )
+			sheet.Tab.entry = v
+
+			if i == 1 then self.tabs:OnActiveTabChanged(nil, sheet.Tab) end
 
 		end
 

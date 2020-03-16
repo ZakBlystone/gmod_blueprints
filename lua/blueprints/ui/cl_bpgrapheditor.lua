@@ -777,7 +777,7 @@ function meta:OpenCreationContext( pinFilter )
 	local playerType = bppintype.New(PN_Ref, PNF_None, "Player")
 	local anyType = bppintype.New(PN_Any, PNF_None)
 
-	menu:AddPage( "All", "All Nodes", "icon16/book.png", nil, false )
+	menu:AddPage( "All", "All Nodes", "icon16/book.png", nil, pinFilter ~= nil )
 	menu:AddPage( "Hooks", "Hook Nodes", "icon16/connect.png", FilterByType(NT_Event), true )
 	menu:AddPage( "Entity", "Entity Nodes", "icon16/bricks.png", FilterByPinType(entityType), true )
 	menu:AddPage( "Player", "Entity Nodes", "icon16/user.png", FilterByPinType(playerType), true )
