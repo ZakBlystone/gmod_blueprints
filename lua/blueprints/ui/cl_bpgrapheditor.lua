@@ -419,6 +419,10 @@ function meta:LeftMouse(x,y,pressed)
 			if targetPin then
 				self:CreateUndo("Connect Pins")
 				if not self:ConnectPins(self.grabPin, targetPin) then self:DeleteLastUndo() end
+			elseif input.IsKeyDown( KEY_LALT ) then
+				local scaleFactor = self:GetCoordinateScaleFactor()
+				local _, pinNode = self:GetGraph():AddNode("CORE_Pin", wx/scaleFactor, wy/scaleFactor - 15)
+				pinNode:FindPin(PD_In, "In"):Connect( self.grabPin:GetPin() )
 			elseif not self.takingGrabbedPin then
 				self:OpenCreationContext(self.grabPin:GetPin())
 				return
