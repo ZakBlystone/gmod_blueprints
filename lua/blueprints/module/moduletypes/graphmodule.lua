@@ -21,6 +21,7 @@ function MODULE:Setup()
 	if self:CanHaveEvents() then self.events = bplist.New(bpevent_meta):NamedItems("Event"):WithOuter(self) end
 	self.suppressGraphNotify = false
 
+	-- Graphs
 	self.graphs:AddListener(function(cb, id, graph)
 
 		if cb == bplist.CB_ADD then
@@ -32,7 +33,18 @@ function MODULE:Setup()
 			self:RecacheNodeTypes()
 		end
 
-	end, bplist.CB_ALL)
+	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
+
+	self.graphs:AddListener(function(cb, action, id, graph)
+
+		if action ~= bplist.MODIFY_RENAME then return end
+		if cb == bplist.CB_PREMODIFY then
+			graph:PreModify()
+		elseif cb == bplist.CB_POSTMODIFY then
+			graph:PostModify()
+		end
+
+	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
 
 	-- Structs
 	if self:CanHaveStructs() then
