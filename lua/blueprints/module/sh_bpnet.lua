@@ -8,6 +8,7 @@ local CMD_Uninstall = 1
 local CMD_Instantiate = 2
 local CMD_Destroy = 3
 local CMD_ErrorReport = 4
+local CMD_InstallMultiple = 5
 
 local CompileFlags = CF_Default
 local PlayerKey = bpcommon.PlayerKey
@@ -114,6 +115,9 @@ function Install( mod, owner )
 	--print("Send compiled module size: " .. p .. " bytes")
 	net.Broadcast()
 
+	local instances = bpenv.GetInstances( mod:GetUID() )
+	print("NUM INSTANCES: " .. #instances)
+
 end
 
 function Uninstall( uid )
@@ -128,6 +132,93 @@ function Uninstall( uid )
 	net.Broadcast()
 
 end
+
+if SERVER then
+
+	function InstallRunningModules( ply )
+
+		if not IsValid(ply) then print("Failed to send blueprints to unknown player") end
+		print("SENDING BLUEPRINTS TO CLIENT: " .. ply:Nick() )
+
+		local files = bpfilesystem.GetFiles()
+		local agg = bpdata.OutStream(false, true, true):UseStringTable()
+
+		local count = 0
+		for k,v in ipairs(files) do
+			local uid = v:GetUID()
+			if bpenv.IsInstalled( uid ) then count = count + 1 end
+		end
+
+		agg:WriteInt(count, false)
+		print("Send " .. count .. " blueprints...")
+
+		for k,v in ipairs(files) do
+
+			local uid = v:GetUID()
+			if bpenv.IsInstalled( uid ) then
+
+				local instances = bpenv.GetInstances( uid )
+
+				print("Packing Blueprint " .. v:GetName() .. "...")
+				local cmod = bpenv.Get( v:GetUID() )  --mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+				cmod:WriteToStream(agg, STREAM_NET)
+
+				print("Write " .. #instances .. " instances.")
+				agg:WriteInt(#instances, false)
+				for _, inst in ipairs(instances) do
+					agg:WriteStr(inst.guid)
+				end
+			end
+		end
+
+		net.Start("bpnet")
+		net.WriteUInt( CMD_InstallMultiple, CommandBits )
+		local s,p = agg:WriteToNet(true)
+		print("Send compiled chunk size: " .. p .. " bytes")
+		net.Send( ply )
+
+	end
+
+	hook.Add("BPClientReady", "transmitAllModules", function(ply)
+
+		InstallRunningModules(ply)
+
+	end)
+
+end
+
+-- Creates placeholder entities for blueprint classes which haven't been networked yet
+hook.Add("NetworkEntityCreated", "handleNetEnts", function(ent)
+
+	if IsValid(ent) then
+		if ent:IsScripted() then
+
+			if ent:IsWeapon() then
+
+				print("Network Weapon Created: " .. ent:GetClass())
+				local t = weapons.Get( ent:GetClass() )
+				if t == nil then
+					print("Registering interim weapon for: " .. ent:GetClass())
+					weapons.Register({ Base = "weapon_base" }, ent:GetClass())
+				end
+
+			else
+
+				print("Network Entity Created: " .. ent:GetClass())
+				local t = scripted_ents.Get( ent:GetClass() )
+				if t == nil then
+					print("Registering interim entity for: " .. ent:GetClass())
+					scripted_ents.Register({ Type = "anim" }, ent:GetClass())
+				end
+
+			end
+
+		end
+
+	end
+
+end)
+
 
 net.Receive("bpnet", function(len, ply)
 
@@ -162,6 +253,40 @@ net.Receive("bpnet", function(len, ply)
 			local ply = nil
 			if clientSide then ply = net.ReadEntity() end
 			HandleRemoteErrorReport( uid, msg, graphID, nodeID, ply )
+		end
+
+	elseif cmd == CMD_InstallMultiple then
+
+		assert(CLIENT)
+
+		print("Module pack " .. len .. " bytes.")
+		local stream = bpdata.InStream(false, true, true):UseStringTable()
+		stream:ReadFromNet(true)
+
+		local count = stream:ReadInt(false)
+		print("Reading " .. count .. " blueprints")
+
+		for i=1, count do
+
+			print("Reading module " .. i)
+			local mod = bpcompiledmodule.New():ReadFromStream( stream, STREAM_NET )
+			local numInstances = stream:ReadInt(false)
+
+			print(numInstances .. " instances")
+
+			local instances = {}
+			for i=1, numInstances do
+				instances[#instances+1] = stream:ReadStr()
+			end
+
+			print("Loading module")
+			mod:Load()
+			bpenv.Install( mod )
+
+			for _, inst in ipairs(instances) do
+				bpenv.Instantiate( mod:GetUID(), inst )
+			end
+
 		end
 
 	end

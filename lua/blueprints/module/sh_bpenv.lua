@@ -51,6 +51,12 @@ function Uninstall( uid )
 
 end
 
+function IsInstalled( uid )
+
+	return installed[uid] ~= nil
+
+end
+
 function Instantiate( uid, forceGUID )
 
 	if not installed[uid] then error("Tried to instantiate module before it was installed") end
@@ -61,6 +67,16 @@ function Instantiate( uid, forceGUID )
 	instance:__Init()
 	active[#active+1] = instance
 	return instance
+
+end
+
+function GetInstances( uid )
+
+	local tab = {}
+	for i=#active, 1, -1 do
+		if active[i]:__GetModule():GetUID() == uid then tab[#tab+1] = active[i] end
+	end
+	return tab
 
 end
 

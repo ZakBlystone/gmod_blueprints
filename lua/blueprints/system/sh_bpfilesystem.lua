@@ -259,6 +259,17 @@ local function AddFile( newFile )
 
 end
 
+function LoadServerFile( file )
+
+	assert(SERVER)
+
+	local modulePath = UIDToModulePath( file:GetUID() )
+	local mod = bpmodule.New():WithOuter( file )
+	mod:Load( modulePath )
+	return mod
+
+end
+
 local function RunLocalFile( file )
 
 	local modulePath = UIDToModulePath( file:GetUID() )
