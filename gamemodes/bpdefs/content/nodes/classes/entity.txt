@@ -169,7 +169,7 @@ CLASS Entity, entity
 	FUNC EmitSound, SHARED
 	{
 		DESC Plays a sound on an entity. If run clientside, the sound will only be heard locally.
-		IN sound, PN_String, #The name of the sound to be played.
+		IN sound, PN_Asset, PNF_None, Sound, #The name of the sound to be played.
 		IN soundLevel=75, PN_Number, PNF_Nullable, #A modifier for the distance this sound will reach, acceptable range is 0 to 511. 100 means no adjustment to the level. See SNDLVL_ Enums
 		IN pitch=100, PN_Number, PNF_Nullable, #The pitch applied to the sound. The acceptable range is from 0 to 255. 100 means the pitch is not changed.
 		IN volume=1, PN_Number, PNF_Nullable, #The volume, from 0 to 1.
@@ -634,12 +634,12 @@ CLASS Entity, entity
 	PURE GetMaterial, SHARED
 	{
 		DESC Returns the material override for this entity.
-		OUT material, PN_String, #material
+		OUT material, PN_Asset, PNF_None, Material, #material
 	}
 	PURE GetMaterials, SHARED
 	{
 		DESC Returns all materials of the entity's model.
-		OUT materials, PN_String, PNF_Table, #A table containing full paths to the materials of the model.
+		OUT materials, PN_Asset, PNF_Table, Material, #A table containing full paths to the materials of the model.
 	}
 	PURE GetMaterialType, SERVER
 	{
@@ -654,7 +654,7 @@ CLASS Entity, entity
 	PURE GetModel, SHARED
 	{
 		DESC Gets the model of given entity.
-		OUT model, PN_String, #The entity's model. Will be a filesystem path for most models. This will be nil for entities which cannot have models, such as point entities.
+		OUT model, PN_Asset, PNF_None, Model, #The entity's model. Will be a filesystem path for most models. This will be nil for entities which cannot have models, such as point entities.
 		CODE
 		{
 			#1 = Entity_.GetModel($1)
@@ -1759,7 +1759,7 @@ CLASS Entity, entity
 	{
 		REDIRECTPIN materialName, materialPath
 		DESC Sets the rendering material override of the entity.
-		IN materialPath, PN_String, #New material name. Use an empty string ("") to reset to the default materials.
+		IN materialPath, PN_Asset, PNF_None, Material, #New material name. Use an empty string ("") to reset to the default materials.
 		IN forceMaterial=false, PN_Bool, PNF_Nullable, #Use it if you wish to apply material other than VertexLitGeneric (such as tools/toolswhite).
 	}
 	FUNC SetMaxHealth, SERVER
@@ -1770,7 +1770,7 @@ CLASS Entity, entity
 	FUNC SetModel, SHARED
 	{
 		DESC Sets the model of the entity.
-		IN model, PN_String, #New model value.
+		IN model, PN_Asset, PNF_None, Model, #New model value.
 	}
 	FUNC SetModelName, SHARED
 	{

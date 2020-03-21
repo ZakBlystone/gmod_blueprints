@@ -412,6 +412,7 @@ function meta:GetPinLiteral(pin)
 	if node and node.literals[pin.id] ~= nil and not noLiteral then
 		local l = tostring(node.literals[pin.id])
 		if pin:IsType(PN_String) then l = "\"" .. SanitizeString(l) .. "\"" end
+		if pin:IsType(PN_Asset) then l = "\"" .. SanitizeString(l) .. "\"" end
 		if pin:IsType(PN_BPClass) then l = EscapedGUID(l) end
 
 		return { var = l }

@@ -21,7 +21,8 @@ PN_Func = 11
 PN_Dummy = 12
 PN_BPRef = 13
 PN_BPClass = 14
-PN_Max = 15
+PN_Asset = 15
+PN_Max = 16
 
 NT_Pure = 0
 NT_Function = 1
@@ -97,6 +98,7 @@ PinTypeNames = {
 	[PN_Dummy] = "Dummy",
 	[PN_BPRef] = "BPRef",
 	[PN_BPClass] = "BPClass",
+	[PN_Asset] = "Asset",
 }
 
 GraphTypeColors = {
@@ -120,11 +122,7 @@ NodePinColors = {
 	[PN_Dummy] = Color(0,0,0),
 	[PN_BPRef] = Color(150,200,100),
 	[PN_BPClass] = Color(180,80,255),
-}
-
-NodePinImplicitConversions = {
-	[PN_Enum] = { PN_Number },
-	[PN_Number] = { PN_Enum, PN_String },
+	[PN_Asset] = Color(255,210,120),
 }
 
 NodeLiteralTypes = {
@@ -132,6 +130,7 @@ NodeLiteralTypes = {
 	[PN_Number] = "number",
 	[PN_String] = "string",
 	[PN_Enum] = "enum",
+	[PN_Asset] = "string",
 	--[PN_Vector] = "vector",
 }
 
@@ -147,6 +146,7 @@ Defaults = {
 	[PN_Func] = "nil",
 	[PN_BPRef] = "nil",
 	[PN_BPClass] = "nil",
+	[PN_Asset] = "",
 }
 
 PinTypeClasses = {
@@ -159,6 +159,7 @@ PinTypeClasses = {
 	[PN_Angles] = "Angle",
 	[PN_Any] = "Wild",
 	[PN_BPClass] = "Class",
+	[PN_Asset] = "Asset",
 }
 
 PinValueTypes = {
@@ -169,6 +170,7 @@ PinValueTypes = {
 	[PN_Color] = "color",
 	[PN_Angles] = "angles",
 	[PN_Struct] = "struct",
+	[PN_Asset] = "asset",
 }
 
 PinType = bppintype.New
@@ -241,6 +243,7 @@ AddPinCast(PinType(PN_Ref, PNF_None, "Entity"), {
 	PinType(PN_Ref, PNF_None, "NPC"),
 	PinType(PN_Ref, PNF_None, "Vehicle"),
 }, true)
+AddPinCast(PinType(PN_String), { PinType(PN_Asset) }, true, nil, true )
 
 AddNetworkThunk(PinType(PN_Bool), "net.ReadBool()", "net.WriteBool(@)")
 AddNetworkThunk(PinType(PN_Vector), "net.ReadVector()", "net.WriteVector(@)")

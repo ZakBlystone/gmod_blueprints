@@ -43,6 +43,15 @@ function meta:Init( class, getter, setter, outer )
 
 end
 
+function meta:InitPinType( pinType )
+
+	if self.SetupPinType then
+		self:SetupPinType( pinType )
+	end
+	return self
+
+end
+
 function meta:OverrideClass( class )
 
 	if class then
@@ -189,10 +198,10 @@ function FromPinType( pinType, getter, setter, outer )
 		local class = bpschema.GetPinValueTypeClass( pinType )
 		if not class then
 			print("No value type for: " .. pinType:ToString() )
-			return New( "none", getter, setter, outer )
+			return New( "none", getter, setter, outer ):InitPinType( pinType )
 		end
 
-		local vt = New( class, getter, setter, outer )
+		local vt = New( class, getter, setter, outer ):InitPinType( pinType )
 		if class == "struct" then
 			local struct = pinType:FindStruct()
 			if struct == nil then

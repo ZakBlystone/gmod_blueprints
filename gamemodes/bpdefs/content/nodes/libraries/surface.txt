@@ -150,7 +150,7 @@ LIB surface
 	FUNC PlaySound, CLIENT
 	{
 		DESC Play a sound file directly on the client (such as UI sounds, etc).
-		IN soundfile, PN_String, #The path to the sound file, which must be relative to the sound/ folder.
+		IN soundfile, PN_Asset, PNF_None, Sound, #The path to the sound file, which must be relative to the sound/ folder.
 	}
 	FUNC SetAlphaMultiplier, CLIENT
 	{

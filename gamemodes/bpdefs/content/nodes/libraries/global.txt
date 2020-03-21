@@ -135,7 +135,7 @@ LIB GLOBAL
 	{
 		DESC Returns a sound parented to the specified entity.
 		IN targetEnt, PN_Ref, PNF_None, Entity, #The target entity.
-		IN soundName, PN_String, #The sound to play.
+		IN soundName, PN_Asset, PNF_None, Sound, #The sound to play.
 		IN filter, PN_Ref, PNF_Nullable, CRecipientFilter, #A CRecipientFilter of the players that will have this sound networked to them. NOTE	 This argument only works serverside.
 		OUT soundPatch, PN_Ref, PNF_None, CSoundPatch, #The sound object
 	}

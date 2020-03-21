@@ -188,10 +188,15 @@ function meta:Open()
 
 	if IsValid(self.window) then return self.window end
 
+	local w = ScrW() * .8
+	local h = ScrH() * .8
+	local x = (ScrW() - w)/2
+	local y = (ScrH() - h)/2
+
 	local window = vgui.Create( "DFrame" )
 	window:SetSizable( true )
-	window:SetPos( 400, 0 )
-	window:SetSize( 800, 500 )
+	window:SetPos( x, y )
+	window:SetSize( w, h )
 	window:SetTitle( "Asset Browser (" .. self.Title .. ")" )
 	window:MakePopup()
 	window:Center()
