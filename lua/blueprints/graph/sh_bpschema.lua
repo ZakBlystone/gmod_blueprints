@@ -322,13 +322,12 @@ function PinRetArg( codeType, nodePins, infmt, outfmt, concat )
 
 end
 
-function FindMatchingPin(ntype, pf, module)
+function FindMatchingPin(ntype, pf, module, cache)
 
 	assert(module ~= nil)
 
 	local informs = ntype:GetInforms()
 	local ignoreNullable = bit.band( PNF_All, bit.bnot( PNF_Nullable ) )
-	local pins = ntype:GetPins()
 
 	local nodeClass = ntype:GetNodeClass()
 	if nodeClass ~= nil then
@@ -340,26 +339,62 @@ function FindMatchingPin(ntype, pf, module)
 		local node = bpnode.New(ntype):WithOuter( module )
 		node:PostInit()
 		pins = node:GetPins()
+	else
+		pins = ntype:GetPins()
 	end
 
-	local inPin = nil
-	local outPin = nil
+	if cache and cache[ntype] ~= nil then
+		local id = cache[ntype]
+		if id == -1 then return end
+		return id, pins[id]
+	end
 
-	if pf:GetDir() == PD_In then inPin = pf end
-	if pf:GetDir() == PD_Out then outPin = pf end
+	local inType = nil
+	local outType = nil
+	local fdir = pf:GetDir()
+
+	if fdir == PD_In then inType = pf end
+	if fdir == PD_Out then outType = pf end
 
 	for id, pin in ipairs(pins) do
 
-		if pf:GetDir() == PD_In then outPin = pin end
-		if pf:GetDir() == PD_Out then inPin = pin end
-		local sameType = pin:GetType():Equal(pf:GetType(), 0)
-		local sameFlags = pin:GetFlags(ignoreNullable) == pf:GetFlags(ignoreNullable)
-		local tableMatch = informs ~= nil and #informs > 0 and pin:HasFlag(PNF_Table) and pf:HasFlag(PNF_Table) and pin:IsType(PN_Any)
-		local anyMatch = informs ~= nil and #informs > 0 and not pin:HasFlag(PNF_Table) and not pf:HasFlag(PNF_Table) and pin:GetBaseType() ~= PN_Exec
-		local typeFlagTableMatch = ((sameType and sameFlags) or tableMatch or anyMatch)
-		local castMatch = sameType or module:CanCast(outPin:GetType(), inPin:GetType())
-		if pin:GetDir() ~= pf:GetDir() and (ntype:GetName() == "CORE_Pin" or typeFlagTableMatch or castMatch) then return id, pin end
+		if pin:GetDir() ~= fdir then
+
+			if fdir == PD_In then outType = pin:GetType() else inType = pin:GetType() end
+
+			local sameType = inType:Equal(outType, 0)
+			local sameFlags = inType:GetFlags(ignoreNullable) == outType:GetFlags(ignoreNullable)
+			local tableMatch = informs ~= nil and #informs > 0 and pin:HasFlag(PNF_Table) and pf:HasFlag(PNF_Table) and pin:IsType(PN_Any)
+			local anyMatch = informs ~= nil and #informs > 0 and not pin:HasFlag(PNF_Table) and not pf:HasFlag(PNF_Table) and pin:GetBaseType() ~= PN_Exec
+			local typeFlagTableMatch = ((sameType and sameFlags) or tableMatch or anyMatch)
+			local castMatch = sameType
+			if not castMatch then
+
+				if cache then
+					local outH = outType:GetHash()
+					local inH = inType:GetHash()
+					cache[outH] = cache[outH] or {}
+					if cache[outH][inH] ~= nil then 
+						castMatch = cache[outH][inH]
+					else
+						castMatch = module:CanCast(outType, inType)
+						cache[outH][inH] = castMatch
+					end
+				else
+					module:CanCast(outType, inType)
+				end
+
+			end
+
+			if (ntype:GetName() == "CORE_Pin" or typeFlagTableMatch or castMatch) then
+				if cache then cache[ntype] = id end
+				return id, pin
+			end
+
+		end
 
 	end
+
+	if cache then cache[ntype] = -1 end
 
 end

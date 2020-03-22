@@ -120,6 +120,19 @@ function MODULE:CanAddNode(nodeType)
 
 end
 
+local EntityPin = PinType( PN_Ref, PNF_None, "Entity" )
+function MODULE:CanCast( outPinType, inPinType )
+
+	if outPinType:Equal(self:GetModulePinType()) then
+
+		if inPinType:Equal(EntityPin) then return true end
+
+	end
+
+	return BaseClass.CanCast( self, outPinType, inPinType )
+
+end
+
 function MODULE:Compile(compiler, pass)
 
 	local edit = self:GetConfigEdit()

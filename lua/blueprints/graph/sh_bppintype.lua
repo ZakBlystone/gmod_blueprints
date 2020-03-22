@@ -12,7 +12,15 @@ function meta:Init(type, flags, subtype)
 	self.basetype = type
 	self.flags = flags or bpschema.PNF_None
 	self.subtype = subtype
+
+	local hashStr = string.format("%0.2d_%0.2x_%s", self.basetype or -1, self.flags, tostring(self.subtype) )
+	self.hash = util.CRC( hashStr )
+
 	return self
+end
+
+function meta:GetHash()
+	return self.hash
 end
 
 function meta:AsTable()

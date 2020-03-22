@@ -770,9 +770,10 @@ function meta:OpenCreationContext( pinFilter )
 		return false
 	end
 	if pinFilter then
+		local __cache = {}
 		local mod = self.graph:GetModule()
 		menu:SetBaseFilter( function(e)
-			local pinID, pin = bpschema.FindMatchingPin( e, pinFilter, mod )
+			local pinID, pin = bpschema.FindMatchingPin( e, pinFilter, mod, __cache )
 			return pin ~= nil
 		end)
 	end
