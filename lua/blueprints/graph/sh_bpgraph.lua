@@ -1055,6 +1055,8 @@ function meta:CopyInto(other)
 			other.connections[#other.connections+1] = {c[1], c[2], c[3], c[4]}
 		end
 
+		other:WalkInforms()
+
 	end)
 
 	return other
