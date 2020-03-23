@@ -3,6 +3,8 @@ local browserClasses = bpclassloader.Get("AssetBrowser", "blueprints/ui/browsers
 
 if SERVER then AddCSLuaFile() return end
 
+G_BPAssetFolderCache = G_BPAssetFolderCache or {}
+
 module("bpuiassetbrowser", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
 print("asset browser")
@@ -15,6 +17,21 @@ function meta:Init( type, callback )
 
 	browserClasses:Install( type, self )
 	self.callback = callback
+	self.vgui = {}
+
+	bpcommon.ProfileStart("asset-browser-build")
+
+	local cached = G_BPAssetFolderCache[type]
+	if not cached then
+		self.rootNode = { file = "", isRoot = true, children = {}, numFolders = 0, numFiles = 0, }
+		self:BuildRootFolders( self.rootNode )
+		G_BPAssetFolderCache[type] = self.rootNode
+	else
+		self.rootNode = cached
+	end
+
+	bpcommon.ProfileEnd()
+
 	return self
 
 end
@@ -78,9 +95,31 @@ function meta:CreateLayout( parent )
 
 	self.results:Dock( FILL )
 
-	local structure = { children = {}, numFolders = 0, numFiles = 0, }
-	self:BuildRootFolders( structure )
-	self:BuildTreeNodes( self.tree:Root(), structure, self.AssetPath )
+	self:BuildTreeNodes( self.tree:Root(), self.rootNode, self.AssetPath )
+
+	if self.cookie then
+		local path = cookie.GetString( self.cookie .. "_path", "" )
+		self:ExpandPath( path )
+	end
+
+end
+
+function meta:ExpandPath( path )
+
+	local last = nil
+	for node in self:PathIterator( path ) do
+		local vgui = self.vgui[node]
+		if vgui then
+			last = vgui
+		end
+	end
+	if last then
+		if last:GetParentNode() then
+			last:GetParentNode():ExpandTo( true )
+		end
+		last:GetRoot():SetSelectedItem( last )
+		last:DoClick()
+	end
 
 end
 
@@ -99,6 +138,7 @@ function meta:BuildTreeNodes( node, fnode, path )
 		if v.numFolders > 0 then
 			local folder = node:AddFolder( v.name, v.file )
 			folder:SetFolder( innerPath )
+			self.vgui[v] = folder
 			if v.icon then folder:SetIcon( v.icon ) end
 			self:BuildTreeNodes( folder, v, innerPath )
 			folder.DoClick = function()
@@ -106,6 +146,7 @@ function meta:BuildTreeNodes( node, fnode, path )
 			end
 		elseif v.isFolder and v.numFiles > 0 then
 			local folder = node:AddNode( v.name, v.icon )
+			self.vgui[v] = folder
 			folder.DoClick = function()
 				self:FolderClicked( v, innerPath )
 			end
@@ -115,9 +156,46 @@ function meta:BuildTreeNodes( node, fnode, path )
 
 end
 
+function meta:Find( node, file )
+
+	for _, ch in ipairs(node.children) do
+		if ch.file == file then return ch end
+	end
+
+end
+
+function meta:PathIterator( path )
+
+	local node = self.rootNode
+	local matchiter = string.gmatch(path, "/([^/]+)")
+	return function()
+		local x = matchiter()
+		if not x then return end
+		node = self:Find( node, x )
+		return node
+	end
+
+end
+
+function meta:GetNodePath( node )
+
+	local ptr = node.parent
+	local pstr = node.file
+	while ptr do
+		pstr = ptr.file .. "/" .. pstr
+		ptr = ptr.parent
+	end
+	return pstr
+
+end
+
 function meta:FolderClicked( folder, path )
 
 	self:PopulateFromFolder( folder, path )
+
+	if self.cookie then
+		cookie.Set( self.cookie .. "_path", self:GetNodePath( folder ) )
+	end
 
 end
 
@@ -181,6 +259,14 @@ function meta:ChooseAsset( path )
 
 	if self.callback then self.callback( true, path ) end
 	if IsValid( self.window ) then self.window:Close() end
+
+end
+
+function meta:SetCookie( cookie )
+
+	if not cookie then self.cookie = nil return self end
+	self.cookie = "bpassetbrowser_" .. cookie
+	return self
 
 end
 

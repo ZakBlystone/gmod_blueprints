@@ -251,6 +251,7 @@ end
 
 function meta:GetLiteralHitBox()
 
+	self:Layout()
 	if self:ShouldDrawLiteral() then
 		local ex = PIN_LITERAL_HITBOX_EXPAND
 		local nx,ny = self.vnode:GetPos()
