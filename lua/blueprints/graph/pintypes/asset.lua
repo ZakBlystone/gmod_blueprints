@@ -14,6 +14,13 @@ local browseW = 32
 
 local browseIcon = CLIENT and Material("icon16/magnifier.png")
 
+function PIN:Setup()
+
+	BaseClass.Setup( self )
+	self.wrap:SetPattern("[%s/%._]")
+
+end
+
 function PIN:GetLiteralSize()
 
 	local w,h = self.wrap:GetSize()

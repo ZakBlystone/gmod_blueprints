@@ -13,7 +13,7 @@ local paddingV = 0
 function PIN:Setup()
 
 	if CLIENT then
-		self.wrap = bptextwrap.New():SetFont(font):SetMaxWidth(400):SetText("TEXT")
+		self.wrap = bptextwrap.New():SetFont(font):SetMaxWidth(350):SetText("TEXT")
 		self:OnLiteralChanged( nil, self:GetLiteral() )
 	end
 
