@@ -13,7 +13,7 @@ end
 
 function PANEL:SetInner( pnl )
 
-	if pnl == nil then return end
+	if not IsValid(pnl) then return end
 	pnl:SetParent(self)
 	pnl:SetMouseInputEnabled( false )
 	pnl:SetKeyboardInputEnabled( false )

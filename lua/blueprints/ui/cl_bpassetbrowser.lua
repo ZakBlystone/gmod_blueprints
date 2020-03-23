@@ -60,7 +60,8 @@ function meta:RecursiveBuildFolders( node, path, pathType )
 	end
 
 	for _,v in ipairs(files) do
-		if self:FileExtensionAllowed( v:match("%.%w+") ) then
+		local ext = v:match("%.%w+")
+		if self:FileExtensionAllowed( ext ) then
 			local entry = self:EntryNode( node, v )
 			entry.path = self:DoPathFixup( path .. "/" .. v )
 			entry.pathType = pathType
@@ -247,9 +248,12 @@ end
 
 function meta:CreateResultsPanel( parent )
 
-	local panel = vgui.Create( "DTileLayout", parent )
-	panel:SetBaseSize( 64 )
+	local panel = vgui.Create( "DIconLayout", parent )
+	--panel:SetBaseSize( 64 )
 	panel:SetSelectionCanvas( true )
+	panel.OnChildAdded = function(pnl, child)
+		child:SetSelectable( true )
+	end
 
 	return panel
 
@@ -259,6 +263,9 @@ function meta:ClearResults()
 
 	local res = self:GetResultsPanel()
 	res:Clear()
+
+	self.pendingResults = {}
+	self.pendingMark = 1
 
 end
 
@@ -285,11 +292,40 @@ function meta:PopulateFromFolder( folder, path )
 
 	for _, child in ipairs(folder.children) do
 		if not child.isFile then continue end
-		local pnl = self:CreateResultEntry( child )
-		self:AddResult( child, pnl )
+		self.pendingResults[#self.pendingResults+1] = child
 	end
 
-	self:GetResultsPanel():InvalidateLayout(true)
+end
+
+function meta:Tick()
+
+	if self.pendingResults ~= nil and #self.pendingResults ~= 0 then
+
+		local doUpdate = false
+		for i=1, 5 do
+
+			local remain = #self.pendingResults - (self.pendingMark-1)
+			if remain > 0 then
+
+				local entry = self.pendingResults[self.pendingMark]
+				self.pendingMark = self.pendingMark + 1
+
+				local pnl = self:CreateResultEntry( entry )
+				self:AddResult( entry, pnl )
+				doUpdate = true
+			else
+
+				break
+
+			end
+
+		end
+
+		if doUpdate then
+			self:GetResultsPanel():Layout()
+		end
+
+	end
 
 end
 
@@ -333,7 +369,7 @@ function meta:Open()
 	local inner = vgui.Create( "DPanel" )
 	inner:SetParent(window)
 	inner:Dock(FILL)
-	inner.Paint = function() end
+	inner.Paint = function() self:Tick() end
 	self:CreateLayout( inner )
 
 	self.window = window

@@ -51,7 +51,7 @@ function BROWSER:CreateResultEntry( node )
 		mat:SetTexture("$basetexture", texVTF)
 		--print("Make material for: " .. texVTF)
 	elseif texPNG then
-		return Material(texPNG)
+		mat = Material(texPNG .. ".png")
 	end
 
 	local icon = vgui.Create( "DImage" )
