@@ -25,6 +25,7 @@ function meta:Init( type, callback )
 	local cached = G_BPAssetFolderCache[type]
 	if not cached then
 		self.rootNode = { file = "", isRoot = true, children = {}, numFolders = 0, numFiles = 0, }
+		self.__nodePtr = self.rootNode
 		self:BuildRootFolders( self.rootNode )
 		G_BPAssetFolderCache[type] = self.rootNode
 	else
@@ -32,6 +33,10 @@ function meta:Init( type, callback )
 	end
 
 	bpcommon.ProfileEnd()
+
+	for f in self:FileIterator( self.rootNode ) do
+		print(f.path)
+	end
 
 	return self
 
@@ -86,11 +91,12 @@ function meta:CreateLayout( parent )
 	self.search:Dock( TOP )
 	self.search:SelectAllOnFocus()
 	self.search:SetTabPosition( 1 )
-	self.search.OnEnter = function( pnl )
-
-		--pnl:GetText()
-
+	self.search:SetUpdateOnType( true )
+	self.search.OnValueChange = function( pnl, value )
+		self:PopulateSearchTerm( value )
 	end
+
+	self.search:RequestFocus()
 
 	self.tree = vgui.Create( "DTree", self.explorer )
 	self.tree:Dock( FILL )
@@ -182,6 +188,19 @@ function meta:PathIterator( path )
 
 end
 
+function meta:FileIterator( node )
+
+	local ptr = node
+	return function()
+		ptr = ptr.next
+		while ptr ~= nil and not ptr.isFile do
+			ptr = ptr.next
+		end
+		return ptr
+	end
+
+end
+
 function meta:GetNodePath( node )
 
 	local ptr = node.parent
@@ -207,6 +226,9 @@ end
 function meta:FolderNode( node, name, folder, icon, isRootLevel )
 
 	local folder = { parent = node, name = name, file = folder, icon = icon, children = {}, isFolder = true, isRootLevel = isRootLevel, numFolders = 0, numFiles = 0, }
+	self.__nodePtr.next = folder
+	self.__nodePtr = folder
+
 	node.numFolders = node.numFolders + 1
 	node.children[#node.children+1] = folder
 	return folder
@@ -216,6 +238,9 @@ end
 function meta:EntryNode( node, file, icon )
 
 	local entry = { parent = node, name = file, file = file, icon = icon, children = {}, isFile = true, numFolders = 0, numFiles = 0, }
+	self.__nodePtr.next = entry
+	self.__nodePtr = entry
+
 	node.numFiles = node.numFiles + 1
 	node.children[#node.children+1] = entry
 	return entry
@@ -274,7 +299,7 @@ function meta:AddResult( node, pnl )
 	local tile = vgui.Create("BPAssetTile")
 	tile:SetSize(128,128)
 	tile:SetText( name )
-	tile:SetTooltip( name )
+	tile:SetTooltip( node.path )
 	tile.DoClick = function() self:ChooseAsset( node.path ) end
 	tile:SetInner( pnl )
 
@@ -289,11 +314,56 @@ function meta:PopulateFromFolder( folder, path )
 
 	self.pendingResults = {}
 	self.pendingMark = 1
+	self.wasSearch = false
 
 	for _, child in ipairs(folder.children) do
 		if not child.isFile then continue end
 		self.pendingResults[#self.pendingResults+1] = child
 	end
+
+end
+
+function meta:SearchRanker( node, query, queryLength )
+
+	local str = node.file
+	local len = str:len() - queryLength
+	if str == query then return len end
+	if str:find(query) == 1 then return len + 100 end
+	return len + 1000
+
+end
+
+function meta:WasSearch()
+
+	return self.wasSearch
+
+end
+
+function meta:PopulateSearchTerm( term )
+
+	self:ClearResults()
+
+	self.pendingResults = {}
+	self.pendingMark = 1
+	self.wasSearch = true
+
+	if term == "" or term:len() < 2 then return end
+
+	term = term:PatternSafe()
+	local tl = term:len()
+
+	for node in self:FileIterator( self.rootNode ) do
+		if string.find(node.path, term) then
+			self.pendingResults[#self.pendingResults+1] = node
+		end
+	end
+
+	table.sort(self.pendingResults, function(a,b)
+		local aRank = self:SearchRanker(a, term, tl)
+		local bRank = self:SearchRanker(b, term, tl)
+		if aRank == bRank then return a.path < b.path end
+		return aRank < bRank
+	end)
 
 end
 
@@ -322,7 +392,10 @@ function meta:Tick()
 		end
 
 		if doUpdate then
-			self:GetResultsPanel():InvalidateLayout( true )
+			local res = self:GetResultsPanel()
+			res.LastW = 0
+			res.LastH = 0
+			res:InvalidateLayout( true )
 		end
 
 	end

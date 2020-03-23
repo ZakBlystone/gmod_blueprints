@@ -161,7 +161,7 @@ function BROWSER:DoPathFixup( path ) return path:gsub("^sound/", "") end
 function BROWSER:CreateResultEntry( node )
 
 	local snd = vgui.Create("BPSoundClip")
-	snd:SetSoundFile( node.path, node.file )
+	snd:SetSoundFile( node.path, self:WasSearch() and node.path or node.file )
 	snd.Select = function() self:ChooseAsset( node.path ) end
 	return snd
 
