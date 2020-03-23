@@ -65,6 +65,8 @@ function meta:SetLiteralDefaults( force )
 
 	local ntype = self:GetType()
 
+	self.suppressPinEvents = true
+
 	local base = self:GetCodeType() == NT_Function and -1 or 0
 	for pinID, pin, pos in self:SidePins(PD_In) do
 		if pin:CanHaveLiteral() then
@@ -75,15 +77,21 @@ function meta:SetLiteralDefaults( force )
 		end
 	end
 
+	self.suppressPinEvents = false
+
 end
 
 function meta:ShiftLiterals(d)
+
+	self.suppressPinEvents = true
 
 	local l = bpcommon.CopyTable(self.literals)
 	for pinID, literal in pairs(l) do
 		self:SetLiteral(pinID+d, literal)
 	end
 	self:RemoveInvalidLiterals()
+
+	self.suppressPinEvents = false
 
 end
 
@@ -308,15 +316,21 @@ function meta:SetLiteral(pinID, value)
 	value = tostring(value)
 	local prevValue = self.literals[pinID]
 	local changed = value ~= prevValue
+	local outerGraph = self:GetGraph()
+
+	if not self.suppressPinEvents and outerGraph then
+		outerGraph:FireListeners(bpgraph.CB_PIN_PREMODIFY_LITERAL, self.id, pinID, value)
+	end
+
 	self.literals[pinID] = value
+
+	if not self.suppressPinEvents and outerGraph then
+		outerGraph:FireListeners(bpgraph.CB_PIN_POSTMODIFY_LITERAL, self.id, pinID, value)
+	end
 
 	if changed and pins[pinID].OnLiteralChanged then
 		pins[pinID]:OnLiteralChanged( prevValue, value )
 	end
-	
-	local outerGraph = self:GetGraph()
-	if outerGraph == nil then return end
-	outerGraph:FireListeners(bpgraph.CB_PIN_EDITLITERAL, self.id, pinID, value)
 
 end
 

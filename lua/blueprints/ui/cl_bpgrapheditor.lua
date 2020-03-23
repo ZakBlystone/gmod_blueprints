@@ -141,7 +141,8 @@ function meta:OnGraphCallback( cb, ... )
 	if cb == CB_NODE_ADD then return self:NodeAdded(...) end
 	if cb == CB_NODE_REMOVE then return self:NodeRemoved(...) end
 	if cb == CB_NODE_MOVE then return self:NodeMove(...) end
-	if cb == CB_PIN_EDITLITERAL then return self:PinEditLiteral(...) end
+	if cb == CB_PIN_PREMODIFY_LITERAL then return self:PinPreEditLiteral(...) end
+	if cb == CB_PIN_POSTMODIFY_LITERAL then return self:PinPostEditLiteral(...) end
 	if cb == CB_CONNECTION_ADD then return self:ConnectionAdded(...) end
 	if cb == CB_CONNECTION_REMOVE then return self:ConnectionRemoved(...) end
 	if cb == CB_GRAPH_CLEAR then return self:GraphCleared(...) end
@@ -154,7 +155,12 @@ function meta:NodeAdded( id ) self.nodeSet:NodeAdded(id) end
 function meta:NodeRemoved( id ) self.nodeSet:NodeRemoved(id) end
 function meta:NodeMove( id, x, y ) end
 
-function meta:PinEditLiteral( nodeID, pinID, value )
+function meta:PinPreEditLiteral( nodeID, pinID, value )
+	local node = self.nodeSet:GetVNodes()[nodeID]:GetNode()
+	self:CreateUndo("Edit: " .. node:GetDisplayName() .. "." .. node:GetPin(pinID):GetDisplayName())
+end
+
+function meta:PinPostEditLiteral( nodeID, pinID, value )
 	local node = self.nodeSet:GetVNodes()[nodeID]
 	if node then node:Invalidate(true) end
 end
@@ -396,7 +402,7 @@ function meta:LeftMouse(x,y,pressed)
 			local vpin, literal = self:TryGetNodePin(vnode, wx, wy)
 			if vpin then
 				if literal then
-					self:EditPinLiteral(vnode, vpin)
+					self:EditPinLiteral(vnode, vpin, wx, wy)
 				else
 					self.grabPin = vpin
 					if input.IsKeyDown( KEY_LCONTROL ) then
@@ -581,10 +587,10 @@ function meta:Think()
 
 end
 
-function meta:EditPinLiteral(vnode, vpin)
+function meta:EditPinLiteral(vnode, vpin, wx, wy)
 
 	local pin = vpin:GetPin()
-	if pin.OnClicked then pin:OnClicked() end
+	if pin.OnClicked then pin:OnClicked(vpin, wx, wy) end
 
 end
 
