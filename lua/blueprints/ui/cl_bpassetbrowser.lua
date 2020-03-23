@@ -264,9 +264,6 @@ function meta:ClearResults()
 	local res = self:GetResultsPanel()
 	res:Clear()
 
-	self.pendingResults = {}
-	self.pendingMark = 1
-
 end
 
 function meta:AddResult( node, pnl )
@@ -289,6 +286,9 @@ function meta:CreateResultEntry( node ) end
 function meta:PopulateFromFolder( folder, path )
 
 	self:ClearResults()
+
+	self.pendingResults = {}
+	self.pendingMark = 1
 
 	for _, child in ipairs(folder.children) do
 		if not child.isFile then continue end
@@ -322,7 +322,7 @@ function meta:Tick()
 		end
 
 		if doUpdate then
-			self:GetResultsPanel():Layout()
+			self:GetResultsPanel():InvalidateLayout( true )
 		end
 
 	end
