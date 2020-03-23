@@ -16,6 +16,7 @@ meta.Title = "None"
 function meta:Init( type, callback )
 
 	browserClasses:Install( type, self )
+	self.type = type
 	self.callback = callback
 	self.vgui = {}
 
@@ -265,7 +266,7 @@ end
 function meta:SetCookie( cookie )
 
 	if not cookie then self.cookie = nil return self end
-	self.cookie = "bpassetbrowser_" .. cookie
+	self.cookie = "bpassetbrowser_" .. self.type .. "_" .. cookie
 	return self
 
 end
