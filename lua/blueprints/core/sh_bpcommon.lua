@@ -12,7 +12,7 @@ ENABLE_DEEP_PROFILING = false
 STREAM_FILE = 1
 STREAM_NET = 2
 
-ENV_VERSION = "1.4"
+ENV_VERSION = "1.5"
 
 function rescope(...)
 	local scopes = {...}
@@ -469,6 +469,8 @@ end
 
 function HexBytes(str)
 
+	if str == nil or str == "" or str:len() % 2 ~= 0 then return "" end
+	if string.find(str, "[^%x]") then return "" end
 	return str:gsub("%w%w", function(x)
 		return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16))
 	end)

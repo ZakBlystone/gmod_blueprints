@@ -72,7 +72,7 @@ LIB cam
 		IN Exec, PN_Exec
 		IN pos, PN_Vector, #Origin of the 3D2D context, ie. the top left corner, (0, 0).
 		IN angles, PN_Angles, #Angles of the 3D2D context. +x in the 2d context corresponds to +x of the angle (its forward direction). +y in the 2d context corresponds to -y of the angle (its right direction). If (dx, dy) are your desired (+x, +y) unit vectors, the angle you want is dx:AngleEx(dx:Cross(-dy)).
-		IN scale, PN_Number, #The scale of the render context. If scale is 1 then 1 pixel in 2D context will equal to 1 unit in 3D context.
+		IN scale=1, PN_Number, #The scale of the render context. If scale is 1 then 1 pixel in 2D context will equal to 1 unit in 3D context.
 		OUT Thru, PN_Exec
 		OUT Draw, PN_Exec
 		JUMP finish

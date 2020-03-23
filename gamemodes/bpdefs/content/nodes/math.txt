@@ -90,6 +90,16 @@ LIB MATH
 		PARAM operator, +
 		COMPACT
 	}
+	PURE MulVector, SHARED
+	{
+		DISPLAY vector * vector
+		OUT Result, PN_Vector
+		CLASS VariadicOperator
+		REDIRECTPIN A, In_1
+		REDIRECTPIN B, In_2
+		PARAM operator, *
+		COMPACT
+	}
 	PURE SubVector, SHARED
 	{
 		DISPLAY vector - vector

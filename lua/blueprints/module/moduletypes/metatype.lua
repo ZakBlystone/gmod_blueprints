@@ -69,7 +69,7 @@ function MODULE:GenerateNewUID()
 
 	if self.HasUIDClassname then
 		local classname = self:GetConfigEdit():Index("classname")
-		if classname and bpcommon.HexBytes(classname:Get()) == previousUID then
+		if classname and bpcommon.HexBytes(classname:Get() or "") == previousUID then
 			print("Propegate new UID: " .. bpcommon.GUIDToString( previousUID ) .. " -> " .. bpcommon.GUIDToString(self:GetUID()) )
 			classname:Set( bpcommon.GUIDToString( self:GetUID(), true ):lower() )
 		end
