@@ -60,10 +60,11 @@ end
 local categoryOrder = {
 	["Basic"] = 1,
 	["Blueprints"] = 2,
-	["Custom"] = 3,
-	["Classes"] = 4,
-	["Structs"] = 5,
-	["Enums"] = 6,
+	["Assets"] = 3,
+	["Custom"] = 4,
+	["Classes"] = 5,
+	["Structs"] = 6,
+	["Enums"] = 7,
 }
 
 local function SearchRanker( entry, query, queryLength, panel )
@@ -161,6 +162,7 @@ function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 	menu.GetCategory = function(pnl, e)
 		if e:HasFlag(PNF_Custom) then return "Custom", "icon16/wrench.png" end
 		if e:IsType(PN_BPRef) then return "Blueprints", "icon16/bricks.png" end
+		if e:IsType(PN_Asset) then return "Assets", "icon16/bricks.png" end
 		if e:IsType(PN_Ref) then return "Classes", "icon16/bricks.png" end
 		if e:IsType(PN_Enum) then return "Enums", "icon16/book_open.png" end
 		if e:IsType(PN_Struct) then return "Structs", "icon16/table.png" end

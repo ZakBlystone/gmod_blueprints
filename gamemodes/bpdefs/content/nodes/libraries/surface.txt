@@ -137,7 +137,7 @@ LIB surface
 	PURE GetTextureID, CLIENT
 	{
 		DESC Returns the texture id of the material with the given name/path.
-		IN name/path, PN_String, #Name or path of the texture.
+		IN name/path, PN_Asset, PNF_None, Texture, #Name or path of the texture.
 		OUT id, PN_Number, #The texture ID
 	}
 	PURE GetTextureSize, CLIENT

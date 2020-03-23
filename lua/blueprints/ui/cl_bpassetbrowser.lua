@@ -43,6 +43,7 @@ function meta:FileExtensionAllowed( fileExt )
 
 end
 
+function meta:DoPathFixup( path ) return path end
 function meta:RecursiveBuildFolders( node, path, pathType )
 
 	local files, folders = file.Find(path .. "/*", pathType)
@@ -53,14 +54,14 @@ function meta:RecursiveBuildFolders( node, path, pathType )
 	for _, v in ipairs(folders) do
 		local folder = self:FolderNode( node, v, v )
 		local inner = path .. "/" .. v
-		folder.path = inner
+		folder.path = self:DoPathFixup(inner)
 		self:RecursiveBuildFolders( folder, inner, pathType )
 	end
 
 	for _,v in ipairs(files) do
 		if self:FileExtensionAllowed( v:gsub("^[^%.]+","") ) then
 			local entry = self:EntryNode( node, v )
-			entry.path = path .. "/" .. v
+			entry.path = self:DoPathFixup( path .. "/" .. v )
 		end
 	end
 

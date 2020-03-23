@@ -35,6 +35,10 @@ function PANEL:PerformLayout()
 
 		self:SetTextInset(16,h/2 - math.min(bottom/2,16 ))
 
+	else
+
+		self:SetTextInset(16,0)
+
 	end
 
 end

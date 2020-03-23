@@ -76,7 +76,7 @@ end
 
 function PANEL:SetSoundFile( file, name )
 
-	self.soundFile = file:gsub("^sound/", "")
+	self.soundFile = file
 	self.nameLabel:SetText( name )
 
 end
@@ -157,11 +157,12 @@ function BROWSER:ClearResults()
 
 end
 
+function BROWSER:DoPathFixup( path ) return path:gsub("^sound/", "") end
 function BROWSER:CreateResultEntry( node )
 
 	local snd = vgui.Create("BPSoundClip")
 	snd:SetSoundFile( node.path, node.file )
-	snd.Select = function() self:ChooseAsset( node.path:gsub("^sound/", "") ) end
+	snd.Select = function() self:ChooseAsset( node.path ) end
 	return snd
 
 end

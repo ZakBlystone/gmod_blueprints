@@ -134,6 +134,7 @@ function meta:GetPinTypes()
 		[PN_Dummy] = true,
 		[PN_BPRef] = true,
 		[PN_BPClass] = true,
+		[PN_Asset] = true,
 	}
 
 	for i=0, PN_Max-1 do
@@ -154,6 +155,11 @@ function meta:GetPinTypes()
 	for _,v in ipairs(self.enums) do
 		types[#types+1] = PinType(PN_Enum, PNF_None, v.name)
 	end
+
+	types[#types+1] = PinType( PN_Asset, PNF_None, "Material")
+	types[#types+1] = PinType( PN_Asset, PNF_None, "Model")
+	types[#types+1] = PinType( PN_Asset, PNF_None, "Sound")
+	types[#types+1] = PinType( PN_Asset, PNF_None, "Texture")
 
 	return types
 
