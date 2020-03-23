@@ -6,11 +6,18 @@ local VALUE = {}
 
 VALUE.Match = function( v ) return false end
 
-function VALUE:GetPriority( text )
+function VALUE:Setup()
 
-	if text:find("^w_") then return 1 end
-	return 0
+	BaseClass.Setup( self )
+	self:SetAssetType( "Model" )
 
 end
 
-RegisterValueClass("weaponworldmodel", VALUE, "model")
+function VALUE:GetPriority( text )
+
+	if text:find("^w_") then return 0 end
+	return 1
+
+end
+
+RegisterValueClass("weaponworldmodel", VALUE, "asset")

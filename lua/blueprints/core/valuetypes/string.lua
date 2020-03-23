@@ -36,6 +36,12 @@ function VALUE:CreateTextEntry( info, parent )
 
 	entry:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
 
+	self:AddListener( function(cb, old, new, key)
+		if cb == bpvaluetype.CB_VALUE_CHANGED then
+			entry:SetText( new )
+		end 
+	end )
+
 	return entry
 
 end
