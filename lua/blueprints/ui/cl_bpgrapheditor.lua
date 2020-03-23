@@ -663,12 +663,6 @@ function meta:OpenMultiNodeContext(selected)
 
 end
 
-function meta:FindMatchingPin(nodeType, pinFilter)
-
-	return bpschema.FindMatchingPin( nodeType, pinFilter, self.graph:GetModule() )
-
-end
-
 function meta:ConnectNodeToGrabbedPin( node )
 
 	if self.grabPin ~= nil and node ~= nil then

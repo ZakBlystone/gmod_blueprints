@@ -381,7 +381,7 @@ function FindMatchingPin(ntype, pf, module, cache)
 						cache[outH][inH] = castMatch
 					end
 				else
-					module:CanCast(outType, inType)
+					castMatch = module:CanCast(outType, inType)
 				end
 
 			end
