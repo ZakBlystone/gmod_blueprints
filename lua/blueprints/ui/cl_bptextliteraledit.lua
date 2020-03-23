@@ -98,39 +98,6 @@ function EditPinLiteral( pin )
 		end)
 	end
 
-	local function matchSubpath(text, fileType)
-
-		local partial = text:gsub("/[%w_]*$","") .. "/"
-		local remaining = text:gmatch("/([%w_]*)$")()
-		local _, folders = file.Find(partial .. "*", "GAME")
-		local files, _ = file.Find(partial .. "*." .. fileType, "GAME")
-		local t = {}
-		for _, v in ipairs(folders or {}) do
-			if not remaining or v:StartWith(remaining) then t[#t+1] = partial .. v end
-		end
-		for _, v in ipairs(files or {}) do
-			if not remaining or v:StartWith(remaining) then t[#t+1] = partial .. v end
-		end
-		return t
-
-	end
-
-	-- Dumb quick stupid hack to make asset path entry easier
-	text.GetAutoComplete = function(pnl, text)
-
-		local _, _, root = text:find("^(%w+)/")
-		if root == "models" then
-			return matchSubpath(text, "mdl")
-		elseif root == "sound" then
-			return matchSubpath(text, "wav")
-		elseif root == "sounds" then -- because I keep accidentally typing this
-			return matchSubpath(text:gsub("^sounds", "sound"), "wav")
-		elseif root == "materials" then
-			return matchSubpath(text, "vmt")
-		end
-
-	end
-
 	text.UpdateFromMenu = function( pnl )
 
 		local pos = pnl.HistoryPos
