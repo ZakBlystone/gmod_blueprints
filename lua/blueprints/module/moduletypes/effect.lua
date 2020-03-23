@@ -10,6 +10,7 @@ MODULE.Icon = "icon16/lightning.png"
 MODULE.Creatable = true
 MODULE.AdditionalConfig = true
 MODULE.SelfPinSubClass = "Entity"
+MODULE.HasUIDClassname = true
 
 function MODULE:Setup()
 

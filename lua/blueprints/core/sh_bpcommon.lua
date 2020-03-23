@@ -467,6 +467,14 @@ function GUID()
 
 end
 
+function HexBytes(str)
+
+	return str:gsub("%w%w", function(x)
+		return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16))
+	end)
+
+end
+
 function GCHandle(func)
 
 	local prx = newproxy(true)

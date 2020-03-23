@@ -11,6 +11,7 @@ MODULE.Creatable = true
 MODULE.AdditionalConfig = true
 MODULE.HasOwner = true
 MODULE.SelfPinSubClass = "Entity"
+MODULE.HasUIDClassname = true
 
 function MODULE:Setup()
 
