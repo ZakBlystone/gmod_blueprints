@@ -100,12 +100,18 @@ function meta:CheckType( v )
 
 end
 
+function meta:Validate( v )
+
+	return v
+
+end
+
 function meta:Set(v)
 
 	self:CheckType(v)
 
 	local p = self:_Get()
-	self:_Set(v)
+	self:_Set( self:Validate(v) )
 	self:OnChanged( p, self:_Get() )
 	return self
 
@@ -132,7 +138,9 @@ function meta:CreateVGUI( info )
 		end
 	end
 	entry.OnValueChange = function(pnl, value)
+		local cp = entry:GetCaretPos()
 		self:SetFromString( value )
+		entry:SetCaretPos(cp)
 		--pnl:SetText( self:ToString() )
 		if info.onChanged then info.onChanged() end
 	end

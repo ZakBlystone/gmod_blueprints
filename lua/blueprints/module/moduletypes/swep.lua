@@ -28,6 +28,7 @@ function MODULE:SetupEditValues( values )
 
 	values:Index("weapon.ViewModel"):OverrideClass( "weaponviewmodel" )
 	values:Index("weapon.WorldModel"):OverrideClass( "weaponworldmodel" )
+	values:Index("classname"):SetRuleFlags( value_string.RULE_NOUPPERCASE, value_string.RULE_NOSPACES, value_string.RULE_NOSPECIAL )
 
 end
 

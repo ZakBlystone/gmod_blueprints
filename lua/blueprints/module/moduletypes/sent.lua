@@ -28,6 +28,7 @@ function MODULE:SetupEditValues( values )
 
 	values:Index("entity.Type"):SetFlag( bpvaluetype.FL_HIDDEN )
 	values:Index("entity.Base"):SetFlag( bpvaluetype.FL_HIDDEN )
+	values:Index("classname"):SetRuleFlags( value_string.RULE_NOUPPERCASE, value_string.RULE_NOSPACES, value_string.RULE_NOSPECIAL )
 
 end
 

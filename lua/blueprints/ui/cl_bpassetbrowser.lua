@@ -435,9 +435,16 @@ function meta:Open()
 	window:Center()
 	local detour = window.OnRemove
 	window.OnRemove = function(pnl)
+		hook.Remove("BPEditorBecomeActive", tostring(window))
 		if detour then detour(pnl) end
 		if self.callback then self.callback( false, "" ) end
 	end
+
+	hook.Add("BPEditorBecomeActive", tostring(window), function()
+		if IsValid(window) then
+			window:Close() 
+		end
+	end)
 
 	local inner = vgui.Create( "DPanel" )
 	inner:SetParent(window)

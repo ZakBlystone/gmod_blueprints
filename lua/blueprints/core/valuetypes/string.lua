@@ -2,15 +2,48 @@ AddCSLuaFile()
 
 module("value_string", package.seeall)
 
+RULE_NONE = 0
+RULE_NOUPPERCASE = 1
+RULE_NOSPACES = 2
+RULE_NOSPECIAL = 4
+
 local VALUE = {}
 
 VALUE.Match = function( v ) return type(v) == "string" end
 
 function VALUE:Setup()
 
+	self.ruleFlags = 0
+
 end
 
 function VALUE:BrowserClick( panel, textEntry )
+
+end
+
+function VALUE:Validate( v )
+
+	if self.ruleFlags ~= 0 then
+		if bit.band(self.ruleFlags, RULE_NOUPPERCASE) ~= 0 then
+			v = string.gsub(v, "%u", function(x) return x:lower() end)
+		end
+		if bit.band(self.ruleFlags, RULE_NOSPACES) ~= 0 then
+			v = string.gsub(v, "%s", function(x) return "_" end)
+		end
+		if bit.band(self.ruleFlags, RULE_NOSPECIAL) ~= 0 then
+			v = string.gsub(v, "[^%l%u%d_]", function(x) return "_" end)
+		end
+	end
+	return v
+
+end
+
+function VALUE:SetRuleFlags( ... )
+
+	local flags = 0
+	for _, fl in ipairs({...}) do flags = bit.bor(flags, fl) end
+
+	self.ruleFlags = flags
 
 end
 
@@ -29,7 +62,9 @@ function VALUE:CreateTextEntry( info, parent )
 		end
 	end
 	entry.OnValueChange = function(pnl, value)
+		local cp = entry:GetCaretPos()
 		self:Set( value )
+		entry:SetCaretPos(cp)
 		--pnl:SetText( self:ToString() )
 		if info.onChanged then info.onChanged() end
 	end

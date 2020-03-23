@@ -22,7 +22,12 @@ end
 
 function MODULE:GetSelfPinType() return PinType( PN_Ref, PNF_None, "Entity" ) end
 
-function MODULE:SetupEditValues( values ) end
+function MODULE:SetupEditValues( values )
+
+	values:Index("classname"):SetRuleFlags( value_string.RULE_NOUPPERCASE, value_string.RULE_NOSPACES, value_string.RULE_NOSPECIAL )
+
+end
+
 function MODULE:GetDefaultConfigTable()
 
 	return {

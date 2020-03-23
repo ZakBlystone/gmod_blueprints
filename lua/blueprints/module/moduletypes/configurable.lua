@@ -42,11 +42,22 @@ function MODULE:OpenVGUI( parent )
 	window:MakePopup()
 	window:SetTitle("Set Defaults")
 	window:Center()
+	local detour = window.OnRemove
+	window.OnRemove = function(pnl)
+		hook.Remove("BPEditorBecomeActive", tostring(window))
+		if detour then detour(pnl) end
+	end
+
+	hook.Add("BPEditorBecomeActive", tostring(window), function()
+		if IsValid(window) then
+			window:Close() 
+		end
+	end)
 
 	local edit = self:GetConfigEdit( true )
 
 	bpcommon.Profile("create-gui", function()
-		local inner = edit:CreateVGUI({})
+		local inner = edit:CreateVGUI({ live = true, })
 		inner:SetParent(window)
 		inner:Dock(FILL)
 	end)
