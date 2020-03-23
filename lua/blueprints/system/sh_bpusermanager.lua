@@ -344,6 +344,7 @@ net.Receive("bpusermanager", function(len, ply)
 			local user = G_BPUsers[ net.ReadUInt(32) + 1 ]
 			user:AddGroup( group )
 			PushTables(TF_Users)
+			SaveTables()
 		end
 	elseif cmd == CMD_RemoveUser then
 		assert(SERVER)
@@ -357,6 +358,7 @@ net.Receive("bpusermanager", function(len, ply)
 			end
 			user:RemoveGroup( group )
 			PushTables(TF_Users)
+			SaveTables()
 		end
 	elseif cmd == CMD_AddGroup then
 		assert(SERVER)
@@ -364,6 +366,7 @@ net.Receive("bpusermanager", function(len, ply)
 			local name = net.ReadString()
 			LocalAddGroup(name)
 			PushTables(TF_Groups)
+			SaveTables()
 		end
 	elseif cmd == CMD_RemoveGroup then
 		assert(SERVER)
@@ -371,6 +374,7 @@ net.Receive("bpusermanager", function(len, ply)
 			local group = G_BPGroups[ net.ReadUInt(GroupBits) + 1 ]
 			RemoveGroup(group)
 			PushTables(TF_Groups)
+			SaveTables()
 		end
 	elseif cmd == CMD_SetGroupFlag then
 		assert(SERVER)
@@ -381,6 +385,7 @@ net.Receive("bpusermanager", function(len, ply)
 			if flag == bpgroup.FL_Locked then return end
 			group:SetFlag( flag )
 			PushTables(TF_Groups)
+			SaveTables()
 		end
 	elseif cmd == CMD_ClearGroupFlag then
 		assert(SERVER)
@@ -390,6 +395,7 @@ net.Receive("bpusermanager", function(len, ply)
 			if group:HasFlag( bpgroup.FL_Locked ) then return end
 			group:ClearFlag( flag )
 			PushTables(TF_Groups)
+			SaveTables()
 		end
 	end
 
