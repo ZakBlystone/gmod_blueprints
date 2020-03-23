@@ -34,6 +34,8 @@ function VALUE:CreateTextEntry( info, parent )
 		if info.onChanged then info.onChanged() end
 	end
 
+	entry:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
+
 	return entry
 
 end

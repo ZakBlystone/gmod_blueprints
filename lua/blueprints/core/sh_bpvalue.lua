@@ -12,6 +12,8 @@ local valueClasses = bpclassloader.Get("Value", "blueprints/core/valuetypes/", "
 FL_NONE = 0
 FL_MANDATORY_OPTIONS = 1
 FL_HINT_BROWSER = 2
+FL_READONLY = 4
+FL_HIDDEN = 8
 
 bpcommon.AddFlagAccessors(meta)
 
@@ -89,12 +91,6 @@ function meta:OnChanged(old, new, key)
 
 end
 
-function meta:IsReadOnly()
-
-	return self._Set == meta._Set
-
-end
-
 function meta:_Set(v) end
 function meta:_Get() return self:GetDefault() end
 
@@ -140,6 +136,8 @@ function meta:CreateVGUI( info )
 		--pnl:SetText( self:ToString() )
 		if info.onChanged then info.onChanged() end
 	end
+
+	entry:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
 
 	return entry
 

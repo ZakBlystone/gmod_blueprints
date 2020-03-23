@@ -24,7 +24,13 @@ end
 
 function MODULE:GetOwnerPinType() return PinType( PN_Ref, PNF_None, "Entity" ) end
 
-function MODULE:SetupEditValues( values ) end
+function MODULE:SetupEditValues( values ) 
+
+	values:Index("entity.Type"):SetFlag( bpvaluetype.FL_HIDDEN )
+	values:Index("entity.Base"):SetFlag( bpvaluetype.FL_HIDDEN )
+
+end
+
 function MODULE:GetDefaultConfigTable()
 
 	return {

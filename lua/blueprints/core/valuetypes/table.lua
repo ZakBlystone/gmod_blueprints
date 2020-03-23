@@ -48,6 +48,8 @@ function VALUE:CreateVGUI( info )
 		for i=1, self:GetNumChildren() do
 
 			local ch, key = self:GetChild(i)
+			if ch:HasFlag( bpvaluetype.FL_HIDDEN ) then continue end
+
 			local inner = ch:CreateVGUI(newInfo)
 			local label = labels[i]
 
