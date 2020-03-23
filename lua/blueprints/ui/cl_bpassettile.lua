@@ -21,6 +21,17 @@ function PANEL:SetInner( pnl )
 
 end
 
+function PANEL:SetIcon( icon )
+
+	if icon and icon ~= "" then
+
+		self.icon = self.icon or vgui.Create("DImage", self)
+		self.icon:SetImage( icon )
+
+	end
+
+end
+
 function PANEL:PerformLayout()
 
 	if self.inner then
@@ -38,6 +49,12 @@ function PANEL:PerformLayout()
 	else
 
 		self:SetTextInset(16,0)
+
+	end
+
+	if self.icon then
+
+		self.icon:SetSize(16,16)
 
 	end
 

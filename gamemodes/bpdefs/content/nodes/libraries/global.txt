@@ -256,7 +256,7 @@ LIB GLOBAL
 	FUNC EmitSound, SHARED
 	{
 		DESC Emits the specified sound at the specified position.
-		IN soundName, PN_String, #The sound to play
+		IN soundName, PN_Asset, PNF_None, Sound, #The sound to play
 		IN position, PN_Vector, #The position to play at
 		IN entity, PN_Number, #The entity to emit the sound from. Can be an Entity:EntIndex or one of the following: 0 - Plays sound on the world (Position set to 0,0,0) -1 - Plays sound on the local player (on server acts as 0) -2 - Plays UI sound (Position set to 0,0,0, no spatial sound,on server acts as 0)
 		IN channel=CHAN_AUTO, PN_Enum, PNF_Nullable, CHAN, #The sound channel, see CHAN_ Enums.

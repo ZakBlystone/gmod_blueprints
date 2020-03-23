@@ -12,6 +12,7 @@ print("asset browser")
 meta.AssetPath = ""
 meta.AllowedExtensions = {}
 meta.Title = "None"
+meta.MaxSearchResults = 500
 
 function meta:Init( type, callback )
 
@@ -19,6 +20,7 @@ function meta:Init( type, callback )
 	self.type = type
 	self.callback = callback
 	self.vgui = {}
+	self.pendingCount = 0
 
 	bpcommon.ProfileStart("asset-browser-build")
 
@@ -213,6 +215,19 @@ function meta:GetNodePath( node )
 
 end
 
+function meta:FindIconForNode( node )
+
+	if node.icon then return node.icon end
+	local ptr = node.parent
+	while ptr do
+		if ptr.icon then return ptr.icon end
+		ptr = ptr.parent
+	end
+
+	return ""
+
+end
+
 function meta:FolderClicked( folder, path )
 
 	self:PopulateFromFolder( folder, path )
@@ -303,6 +318,10 @@ function meta:AddResult( node, pnl )
 	tile.DoClick = function() self:ChooseAsset( node.path ) end
 	tile:SetInner( pnl )
 
+	if self:WasSearch() then
+		tile:SetIcon( self:FindIconForNode( node ) )
+	end
+
 	res:Add( tile )
 
 end
@@ -321,11 +340,13 @@ function meta:PopulateFromFolder( folder, path )
 		self.pendingResults[#self.pendingResults+1] = child
 	end
 
+	self.pendingCount = #self.pendingResults
+
 end
 
 function meta:SearchRanker( node, query, queryLength )
 
-	local str = node.file
+	local str = node.path
 	local len = str:len() - queryLength
 	if str == query then return len end
 	if str:find(query) == 1 then return len + 100 end
@@ -365,6 +386,8 @@ function meta:PopulateSearchTerm( term )
 		return aRank < bRank
 	end)
 
+	self.pendingCount = math.min(#self.pendingResults, self.MaxSearchResults)
+
 end
 
 function meta:Tick()
@@ -374,7 +397,7 @@ function meta:Tick()
 		local doUpdate = false
 		for i=1, 5 do
 
-			local remain = #self.pendingResults - (self.pendingMark-1)
+			local remain = self.pendingCount - (self.pendingMark-1)
 			if remain > 0 then
 
 				local entry = self.pendingResults[self.pendingMark]

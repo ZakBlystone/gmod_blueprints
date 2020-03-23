@@ -18,10 +18,21 @@ function PANEL:Init()
 	self.playButton = vgui.Create("DImage", self)
 	self.playButton:SetImage("icon16/control_play.png")
 
+	self.icon = vgui.Create("DImage", self)
+
 	self.playTime = 0
 	self.duration = 0
 
 	self:SetText("")
+
+end
+
+function PANEL:SetIcon( icon )
+
+	if icon and icon ~= "" then
+		self.icon = vgui.Create("DImage", self)
+		self.icon:SetImage( icon )
+	end
 
 end
 
@@ -119,6 +130,13 @@ function PANEL:PerformLayout()
 	self.playButton:SetPos(4,2)
 	self.playButton:SetSize(16,16)
 
+	if self.icon then
+
+		self.icon:SetPos( self:GetWide() - 20, (self:GetTall() - 16)/2 )
+		self.icon:SetSize(16,16)
+
+	end
+
 	self:SetTall(20)
 
 end
@@ -163,6 +181,14 @@ function BROWSER:CreateResultEntry( node )
 	local snd = vgui.Create("BPSoundClip")
 	snd:SetSoundFile( node.path, self:WasSearch() and node.path or node.file )
 	snd.Select = function() self:ChooseAsset( node.path ) end
+
+	if self:WasSearch() then
+
+		local icon = self:FindIconForNode(node)
+		snd:SetIcon(icon)
+
+	end
+
 	return snd
 
 end
