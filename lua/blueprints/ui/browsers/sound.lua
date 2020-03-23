@@ -145,7 +145,7 @@ function BROWSER:CreateResultsPanel( parent )
 
 end
 
-function BROWSER:PopulateFromFolder( folder, path )
+function BROWSER:ClearResults()
 
 	local res = self:GetResultsPanel()
 
@@ -155,17 +155,20 @@ function BROWSER:PopulateFromFolder( folder, path )
 
 	res:Clear()
 
-	for _, child in ipairs(folder.children) do
-		if not child.isFile then continue end
+end
 
-		local snd = vgui.Create("BPSoundClip")
-		snd:SetSoundFile( child.path, child.file )
-		snd.Select = function() self:ChooseAsset( child.path:gsub("^sound/", "") ) end
-		res:AddItem( snd )
+function BROWSER:CreateResultEntry( node )
 
-	end
+	local snd = vgui.Create("BPSoundClip")
+	snd:SetSoundFile( node.path, node.file )
+	snd.Select = function() self:ChooseAsset( node.path:gsub("^sound/", "") ) end
+	return snd
 
-	res:InvalidateLayout(true)
+end
+
+function BROWSER:AddResult( node, pnl )
+
+	self:GetResultsPanel():AddItem( pnl )
 
 end
 

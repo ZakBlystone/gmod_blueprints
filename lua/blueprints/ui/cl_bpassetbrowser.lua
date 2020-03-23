@@ -252,7 +252,41 @@ function meta:CreateResultsPanel( parent )
 
 end
 
+function meta:ClearResults()
+
+	local res = self:GetResultsPanel()
+	res:Clear()
+
+end
+
+function meta:AddResult( node, pnl )
+
+	local res = self:GetResultsPanel()
+
+	local name = string.GetFileFromFilename( node.path ):gsub("%.%w+", "")
+	local tile = vgui.Create("BPAssetTile")
+	tile:SetSize(128,128)
+	tile:SetText( name )
+	tile:SetTooltip( name )
+	tile.DoClick = function() self:ChooseAsset( node.path ) end
+	tile:SetInner( pnl )
+
+	res:Add( tile )
+
+end
+
+function meta:CreateResultEntry( node ) end
 function meta:PopulateFromFolder( folder, path )
+
+	self:ClearResults()
+
+	for _, child in ipairs(folder.children) do
+		if not child.isFile then continue end
+		local pnl = self:CreateResultEntry( child )
+		self:AddResult( child, pnl )
+	end
+
+	self:GetResultsPanel():InvalidateLayout(true)
 
 end
 
