@@ -36,10 +36,6 @@ function meta:Init( type, callback )
 
 	bpcommon.ProfileEnd()
 
-	for f in self:FileIterator( self.rootNode ) do
-		print(f.path)
-	end
-
 	return self
 
 end
