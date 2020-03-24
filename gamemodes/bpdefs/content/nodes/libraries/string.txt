@@ -114,14 +114,12 @@ LIB string
 	}
 	PURE gsub, SHARED
 	{
-		TBD
 		DESC This functions main purpose is to replace certain character sequences in a string using Patterns.
 		IN string, PN_String, #String which should be modified.
 		IN pattern, PN_String, #The pattern that defines what should be matched and eventually be replaced.
 		IN replacement, PN_String, #In case of a string the matches sequence will be replaced with it. In case of a table, the matched sequence will be used as key and the table will tested for the key, if a value exists it will be used as replacement. In case of a function all matches will be passed as parameters to the function, the return value(s) of the function will then be used as replacement.
-		IN maxReplaces, PN_Number, PNF_Nullable, #Maximum number of replacements to be made.
-		OUT out_0, PN_String, #replaceResult
-		OUT out_1, PN_Number, #replaceCount
+		OUT result, PN_String, #replaceResult
+		OUT replacements, PN_Number, #replaceCount
 	}
 	PURE Left, SHARED
 	{
