@@ -46,8 +46,6 @@ function LoadTemplates()
 		templates[#templates+1] = ParseTemplate( unpack(v) )
 	end
 
-	PrintTable( files )
-
 end
 
 function Get()

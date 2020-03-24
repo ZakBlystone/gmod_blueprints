@@ -62,7 +62,7 @@ function meta:Register(name, tab, base)
 		hook.Run(self.refreshHook, name)
 	end
 
-	print("Registered [" .. self.name .. "] class: " .. name .. " : " .. tostring(tab))
+	--print("Registered [" .. self.name .. "] class: " .. name .. " : " .. tostring(tab))
 
 end
 

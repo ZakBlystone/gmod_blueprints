@@ -7,8 +7,6 @@ G_BPAssetFolderCache = G_BPAssetFolderCache or {}
 
 module("bpuiassetbrowser", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
-print("asset browser")
-
 meta.AssetPath = ""
 meta.AllowedExtensions = {}
 meta.Title = "None"

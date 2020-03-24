@@ -195,19 +195,19 @@ hook.Add("NetworkEntityCreated", "handleNetEnts", function(ent)
 
 			if ent:IsWeapon() then
 
-				print("Network Weapon Created: " .. ent:GetClass())
+				--print("Network Weapon Created: " .. ent:GetClass())
 				local t = weapons.Get( ent:GetClass() )
 				if t == nil then
-					print("Registering interim weapon for: " .. ent:GetClass())
+					--print("Registering interim weapon for: " .. ent:GetClass())
 					weapons.Register({ Base = "weapon_base" }, ent:GetClass())
 				end
 
 			else
 
-				print("Network Entity Created: " .. ent:GetClass())
+				--print("Network Entity Created: " .. ent:GetClass())
 				local t = scripted_ents.Get( ent:GetClass() )
 				if t == nil then
-					print("Registering interim entity for: " .. ent:GetClass())
+					--print("Registering interim entity for: " .. ent:GetClass())
 					scripted_ents.Register({ Type = "anim" }, ent:GetClass())
 				end
 
@@ -259,27 +259,27 @@ net.Receive("bpnet", function(len, ply)
 
 		assert(CLIENT)
 
-		print("Module pack " .. len .. " bytes.")
+		--print("Module pack " .. len .. " bytes.")
 		local stream = bpdata.InStream(false, true, true):UseStringTable()
 		stream:ReadFromNet(true)
 
 		local count = stream:ReadInt(false)
-		print("Reading " .. count .. " blueprints")
+		--print("Reading " .. count .. " blueprints")
 
 		for i=1, count do
 
-			print("Reading module " .. i)
+			--print("Reading module " .. i)
 			local mod = bpcompiledmodule.New():ReadFromStream( stream, STREAM_NET )
 			local numInstances = stream:ReadInt(false)
 
-			print(numInstances .. " instances")
+			--print(numInstances .. " instances")
 
 			local instances = {}
 			for i=1, numInstances do
 				instances[#instances+1] = stream:ReadStr()
 			end
 
-			print("Loading module")
+			--print("Loading module")
 			mod:Load()
 			bpenv.Install( mod )
 
