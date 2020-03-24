@@ -15,15 +15,13 @@ end
 
 local function ParseTemplate( filePath, pathType )
 
-	local f = file.Open( filePath, "r", pathType )
+	local str = file.Read( filePath, pathType )
+	if str == nil then error("Failed to read template: " .. tostring(filePath)) end
+
 	local template = {}
 
-	local x = 1000
-	while x > 0 do
-		x = x - 1
-		local line = f:ReadLine()
-		if line == nil then break end
-		for x,y in string.gmatch(line, "(.+)%s*:%s*([^%c]+)") do
+	for _, line in ipairs( string.Explode("\n", str) ) do
+		for x,y in string.gmatch(line, "(%w+)%s*:%s*([^%c]+)") do
 			template[x] = y
 		end
 	end
@@ -43,7 +41,10 @@ function LoadTemplates()
 	templates = {}
 
 	for k,v in ipairs(files) do
-		templates[#templates+1] = ParseTemplate( unpack(v) )
+		xpcall( function()
+			local template = ParseTemplate( unpack(v) )
+			templates[#templates+1] = template
+		end, function(err) print(tostring(err) .. "\n" .. debug.traceback()) end )
 	end
 
 end
