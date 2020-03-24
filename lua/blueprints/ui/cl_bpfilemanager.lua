@@ -491,6 +491,33 @@ function PANEL:ModuleDropdown()
 
 	end
 
+	self.cmenu:AddSpacer()
+	local templateMenu, op = self.cmenu:AddSubMenu( "Examples" )
+	op:SetIcon( "icon16/book.png" )
+
+	for _, v in ipairs( classes ) do
+
+		local cl = v.class
+		if not cl.Creatable then continue end
+
+		local templates = bptemplates.GetByType( v.name )
+		if #templates > 0 then
+			local sub, op = templateMenu:AddSubMenu( cl.Name )
+			if cl.Icon then op:SetIcon( cl.Icon ) end
+
+			for _, t in ipairs( templates ) do
+				local op = sub:AddOption( t.name, function()
+					local mod = bptemplates.CreateTemplate( t )
+					self.editor:OpenModule(mod, "unnamed", nil)
+				end )
+				if cl.Icon then op:SetIcon( cl.Icon ) end
+				op:SetTooltip( tostring(t.description) .. "\nby " .. tostring(t.author) )
+			end
+		end
+
+	end
+
+
 	self.cmenu:SetMinimumWidth( 100 )
 	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, self )
 

@@ -88,6 +88,7 @@ bpinclude("ui/cl_bpassettile.lua")
 bpinclude("ui/cl_bpassetbrowser.lua")
 bpinclude("ui/cl_bppinlistentry.lua")
 bpinclude("ui/cl_bpvaluepanel.lua")
+bpinclude("ui/cl_bptemplates.lua")
 bpinclude("ui/cl_bpeditor.lua")
 
 -- TEST

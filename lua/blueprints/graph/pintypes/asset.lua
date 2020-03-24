@@ -17,7 +17,10 @@ local browseIcon = CLIENT and Material("icon16/magnifier.png")
 function PIN:Setup()
 
 	BaseClass.Setup( self )
-	self.wrap:SetPattern("[%s/%._]")
+
+	if CLIENT then
+		self.wrap:SetPattern("[%s/%._]")
+	end
 
 end
 
