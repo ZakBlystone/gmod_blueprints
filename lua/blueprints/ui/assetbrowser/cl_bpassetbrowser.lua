@@ -1,5 +1,5 @@
 local meta = bpcommon.MetaTable("bpassetbrowser")
-local browserClasses = bpclassloader.Get("AssetBrowser", "blueprints/ui/browsers/", "BPAssetBrowserClassRefresh", meta)
+local browserClasses = bpclassloader.Get("AssetBrowser", "blueprints/ui/assetbrowser/browsers/", "BPAssetBrowserClassRefresh", meta)
 
 if SERVER then AddCSLuaFile() return end
 
