@@ -109,19 +109,14 @@ function PANEL:Init()
 	self.Content = vgui.Create("DHorizontalDivider", self.ContentPanel)
 	self.Content:Dock( FILL )
 	self.Content:SetBackgroundColor( Color(30,30,30) )
+	self.Content:SetDividerWidth( 3 )
 
-	local menu = vgui.Create("DVerticalDivider", self.Content)
-	menu:SetTopHeight(300)
-	local topSplit = vgui.Create("DVerticalDivider", menu)
-	topSplit:SetTopHeight(200)
-	local bottomSplit = vgui.Create("DVerticalDivider", menu)
-	bottomSplit:SetTopHeight(200)
+	self.SideBar = vgui.Create("BPCategoryList", self.Content)
 
-	self.Content:SetLeft(menu)
+	self.Content:SetLeft(self.SideBar)
 	self.Content:Dock( FILL )
 
-	self.GraphList = vgui.Create("BPListView", topSplit)
-	self.GraphList:SetText("Graphs")
+	self.GraphList = self:AddSidebarList("Graphs")
 	self.GraphList.HandleAddItem = function(list)
 
 		local function MakeGraph(graphType)
@@ -157,7 +152,7 @@ function PANEL:Init()
 		end
 	end
 
-	self.VarList = vgui.Create("BPListView", bottomSplit)
+	self.VarList = self:AddSidebarList("Variables")
 	self.VarList.CreateItemPanel = function(pnl, id, item)
 		local entry = vgui.Create("BPPinListEntry", pnl)
 		entry.vlist = pnl
@@ -169,13 +164,11 @@ function PANEL:Init()
 		function entry:GetPinName() return item.name end
 		return entry
 	end
-	self.VarList:SetText("Variables")
 	self.VarList.HandleAddItem = function(list)
 		local id, item = self.module:NewVariable( "", bpschema.PinType( bpschema.PN_Bool ) )
 	end
 
-	self.StructList = vgui.Create("BPListView", bottomSplit)
-	self.StructList:SetText("Structs")
+	self.StructList = self:AddSidebarList("Structs")
 	self.StructList.HandleAddItem = function(pnl, list)
 		local itemID, item = list:Construct()
 		pnl:Rename(itemID)
@@ -189,8 +182,7 @@ function PANEL:Init()
 		}
 	end
 
-	self.EventList = vgui.Create("BPListView", bottomSplit)
-	self.EventList:SetText("Events")
+	self.EventList = self:AddSidebarList("Events")
 	self.EventList.HandleAddItem = function(pnl, list)
 		local itemID, item = list:Construct()
 		pnl:Rename(itemID)
@@ -204,15 +196,23 @@ function PANEL:Init()
 		}
 	end
 
-	menu:SetTop(topSplit)
-	menu:SetBottom(bottomSplit)
-	topSplit:SetTop(self.GraphList)
-	topSplit:SetBottom(self.VarList)
-	bottomSplit:SetTop(self.StructList)
-	bottomSplit:SetBottom(self.EventList)
+	self.SideBar:InvalidateLayout( true )
 
 	self.vvars = {}
 	self.vgraphs = {}
+
+end
+
+function PANEL:AddSidebarList( name )
+
+	local view = vgui.Create("BPListPanel")
+
+	local cat = self.SideBar:Add( name or "Unnamed" )
+	local add = cat:CreateAddButton()
+	cat:SetContents( view )
+	add.DoClick = function() view:InvokeAdd() end
+
+	return view
 
 end
 

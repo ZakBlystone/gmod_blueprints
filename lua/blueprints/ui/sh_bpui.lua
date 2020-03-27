@@ -56,4 +56,15 @@ function HexColor(hex)
 
 end
 
+function LerpColors(t, a, b)
+
+	return Color(
+		a.r * (1-t) + b.r * t,
+		a.g * (1-t) + b.g * t,
+		a.b * (1-t) + b.b * t,
+		a.a * (1-t) + b.a * t
+	)
+
+end
+
 end
