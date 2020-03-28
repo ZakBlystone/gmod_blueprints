@@ -7,6 +7,7 @@ local MODULE = {}
 MODULE.Creatable = false
 MODULE.Name = "GraphModule"
 MODULE.HasSelfPin = false
+MODULE.EditorClass = "graphmodule"
 
 bpcommon.CreateIndexableListIterators(MODULE, "graphs")
 bpcommon.CreateIndexableListIterators(MODULE, "variables")

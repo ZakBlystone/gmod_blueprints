@@ -228,6 +228,14 @@ function PANEL:ItemIcon( id, item )
 
 end
 
+function PANEL:CloseMenu()
+
+	if IsValid( self.menu ) then
+		self.menu:Remove()
+	end
+
+end
+
 function PANEL:OpenMenu( id )
 
 	--print("OPEN MENU: " .. id)
@@ -237,6 +245,8 @@ function PANEL:OpenMenu( id )
 	self.menu = DermaMenu( false, self )
 
 	local t = {}
+	t[#t+1] = { name = "Rename", func = function() self:Rename(id) end }
+
 	self:PopulateMenuItems(t, id)
 	for _, v in ipairs(t) do
 		self.menu:AddOption( v.name, v.func )
@@ -248,8 +258,6 @@ function PANEL:OpenMenu( id )
 end
 
 function PANEL:PopulateMenuItems( items, id )
-
-	items[#items+1] = { name = "Rename", func = function() self:Rename(id) end }
 
 end
 

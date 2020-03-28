@@ -3,6 +3,7 @@ if SERVER then AddCSLuaFile() return end
 module("bpuicategorycollapse", package.seeall)
 
 local PANEL = {}
+local backgroundColor = HexColor("#2d3436")
 local headerColor = HexColor("#2d3436")
 local headerColorExpand = HexColor("#34495e")
 local addButtonColor = HexColor("#2c3e50")
@@ -23,7 +24,7 @@ function PANEL:CreateAddButton()
 	if self.btnAdd then return self.btnAdd end
 	self.btnAdd = vgui.Create("DButton", self)
 	self.btnAdd:SetFont("DermaDefaultBold")
-	self.btnAdd:SetSize(20,20)
+	self.btnAdd:SetSize(20,19)
 	self.btnAdd:SetTextColor( Color(255,255,255) )
 	self.btnAdd:SetText("+")
 	self.btnAdd:SetDrawBorder(false)
@@ -68,10 +69,10 @@ function PANEL:Paint( w, h )
 
 	local expand = 0
 
-	draw.RoundedBoxEx(8, 0, 0, w, 20, self.headerColor, false, true, false, h < 21)
+	draw.RoundedBoxEx(8, 0, 0, w, 19, self.headerColor, false, true, false, h < 21)
 	if h >= 21 then
-		surface.SetDrawColor( HexColor("#0F0F0F") )
-		surface.DrawRect(0, 21, w, h-21)
+		surface.SetDrawColor( backgroundColor )
+		surface.DrawRect(0, 19, w, h-19)
 	end
 	return false
 

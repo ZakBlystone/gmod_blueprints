@@ -17,6 +17,15 @@ function PANEL:RunCommand( func, panel )
 
 end
 
+function PANEL:Clear()
+
+	for _, item in ipairs(self.items) do
+		if IsValid(item) then item:Remove() end
+	end
+	self.items = {}
+
+end
+
 function PANEL:Add( name, func, color, icon )
 
 	color = color or Color(80,80,80)

@@ -23,6 +23,8 @@ function GetClassLoader() return moduleClasses end
 
 nextModuleID = nextModuleID or 0
 
+meta.EditorClass = ""
+
 function meta:Init(type)
 
 	self.version = fmtVersion
