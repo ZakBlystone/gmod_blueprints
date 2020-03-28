@@ -31,7 +31,7 @@ function PANEL:Add( name, func, color, icon )
 	color = color or Color(80,80,80)
 	local textColor = Color(240,240,240)
 	local opt = vgui.Create("DButton", self)
-	local text = name
+	local text = tostring(name)
 	if icon then text = "    " .. text end
 	opt:SetFont("DermaDefaultBold")
 	opt:SetText(text)

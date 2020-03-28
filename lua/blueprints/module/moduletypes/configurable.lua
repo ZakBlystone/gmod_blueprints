@@ -4,13 +4,11 @@ module("mod_configurable", package.seeall, bpcommon.rescope(bpschema, bpcompiler
 
 MODULE = {}
 
+
 MODULE.Creatable = false
-MODULE.Name = "Configurable"
 MODULE.AdditionalConfig = false
 
 function MODULE:Setup()
-
-	BaseClass.Setup(self)
 
 	if self.AdditionalConfig then
 		self.config = self.config or self:GetDefaultConfigTable()
@@ -19,16 +17,6 @@ function MODULE:Setup()
 end
 
 function MODULE:SetupEditValues( values )
-
-end
-
-function MODULE:GetMenuItems( tab )
-
-	tab[#tab+1] = {
-		name = "Set Defaults",
-		func = function(...) self:OpenVGUI(...) end,
-		color = Color(60,120,200),
-	}
 
 end
 
@@ -78,37 +66,18 @@ function MODULE:GetConfig()
 
 end
 
+function MODULE:BuildCosmeticVars( values )
+
+end
+
 function MODULE:GetConfigEdit( refresh )
 
 	if self.configEdit and not refresh then return self.configEdit end
 
 	local values = bpvaluetype.FromValue(self:GetConfig(), function() return self:GetConfig() end)
-	local varDefaults = bpvaluetype.FromValue({}, function() return {} end)
 
-	for _,v in self:Variables() do
-		--local b,e = pcall( function()
-			local value = nil
-			local vt = bpvaluetype.FromPinType(
-				v:GetType():Copy(v.module),
-				function() return value end,
-				function(newValue) value = newValue end
-			)
+	self:BuildCosmeticVars( values )
 
-			if vt == nil then continue end
-			
-			print( v:GetName() .. " = " .. tostring(v:GetDefault()) )
-
-			vt:SetFromString( tostring(v:GetDefault()) )
-			vt:BindRaw( "valueChanged", self, function(old, new, k)
-				v:SetDefault( vt:ToString() )
-			end )
-
-			varDefaults:AddCosmeticChild( v:GetName(), vt )
-		--end)
-		--if not b then print("Failed to add pintype: " .. tostring(e)) end
-	end
-
-	values:AddCosmeticChild("defaults", varDefaults)
 	values:SortChildren()
 
 	self:SetupEditValues( values )
@@ -121,8 +90,6 @@ end
 
 function MODULE:WriteData( stream, mode, version )
 
-	BaseClass.WriteData( self, stream, mode, version )
-
 	if self.AdditionalConfig then
 		bpdata.WriteValue( self:GetConfig(), stream )
 	end
@@ -130,8 +97,6 @@ function MODULE:WriteData( stream, mode, version )
 end
 
 function MODULE:ReadData( stream, mode, version )
-
-	BaseClass.ReadData( self, stream, mode, version )
 
 	if self.AdditionalConfig then
 		local config = bpdata.ReadValue( stream )
@@ -141,4 +106,4 @@ function MODULE:ReadData( stream, mode, version )
 
 end
 
-RegisterModuleClass("Configurable", MODULE, "GraphModule")
+RegisterModuleClass("Configurable", MODULE)

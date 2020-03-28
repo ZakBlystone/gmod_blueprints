@@ -14,6 +14,7 @@ local function bpinclude(path)
 end
 
 -- CORE
+bpinclude("core/sh_bplocalization.lua")
 bpinclude("core/sh_bpcommon.lua")
 bpinclude("core/sh_bpclassloader.lua")
 bpinclude("core/sh_bpcollection.lua")

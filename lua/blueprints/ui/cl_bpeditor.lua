@@ -16,7 +16,7 @@ end
 function PANEL:SetLabel( text )
 
 	self.labelText = text
-	self:SetText( self.labelText )
+	self:SetText( tostring(self.labelText) )
 	self:InvalidateLayout()
 	self:GetParent():InvalidateLayout()
 	self:GetParent():GetParent():InvalidateLayout()
@@ -128,7 +128,7 @@ function PANEL:AddSheet( label, panel, Tooltip, material, closeButton )
 	Sheet.Name = label
 
 	Sheet.Tab = vgui.Create( "BPEditorTab", self )
-	Sheet.Tab:SetTooltip( Tooltip )
+	Sheet.Tab:SetTooltip( tostring(Tooltip) )
 	Sheet.Tab:Setup( label, self, panel, material, closeButton )
 
 	Sheet.Panel = panel
@@ -235,8 +235,8 @@ function PANEL:Init()
 	self.FileManager.editor = self
 
 	--self.Tabs:AddSheet( "Assets", self.AssetBrowser, "Assets", "icon16/zoom.png")
-	self.Tabs:AddSheet( "Users", self.UserManager, "Users", "icon16/group.png" )
-	self.Tabs:SetActiveTab( self.Tabs:AddSheet( "Files", self.FileManager, "Files", "icon16/folder.png" ).Tab )
+	self.Tabs:AddSheet( LOCTEXT("file_users","Users"), self.UserManager, LOCTEXT("file_users_desc","Users"), "icon16/group.png" )
+	self.Tabs:SetActiveTab( self.Tabs:AddSheet( LOCTEXT("file_files","Files"), self.FileManager, LOCTEXT("file_files_desc","Users"), "icon16/folder.png" ).Tab )
 
 	local openCount = cookie.GetNumber("bp_editor_open_count", 0)
 	local lastVersion = cookie.GetString("bp_editor_last_version", "")

@@ -134,7 +134,7 @@ function PANEL:OpenMenu( id )
 	local t = {}
 	self:PopulateMenuItems(t, id)
 	for _, v in ipairs(t) do
-		self.menu:AddOption( v.name, v.func )
+		self.menu:AddOption( tostring(v.name), v.func )
 	end
 
 	self.menu:SetMinimumWidth( 100 )
@@ -144,7 +144,7 @@ end
 
 function PANEL:PopulateMenuItems( items, id )
 
-	items[#items+1] = { name = "Rename", func = function() self:Rename(id) end }
+	items[#items+1] = { name = LOCTEXT("list_rename","Rename"), func = function() self:Rename(id) end }
 
 end
 

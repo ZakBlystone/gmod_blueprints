@@ -4,7 +4,6 @@ module("module_metatype", package.seeall, bpcommon.rescope(bpschema, bpcompiler)
 
 local MODULE = {}
 
-MODULE.Name = "Metatype"
 MODULE.Creatable = false
 MODULE.HasOwner = false
 MODULE.SelfPinSubClass = nil
@@ -202,4 +201,4 @@ function MODULE:Compile(compiler, pass)
 
 end
 
-RegisterModuleClass("MetaType", MODULE, "Configurable")
+RegisterModuleClass("MetaType", MODULE, "GraphModule")

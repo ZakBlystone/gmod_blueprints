@@ -80,7 +80,7 @@ end
 
 function PANEL:AddSidebarPanel( name, panel )
 
-	local cat = self.SideBar:Add( name or "Unnamed" )
+	local cat = self.SideBar:Add( tostring(name or "Unnamed") )
 	cat:SetContents( panel )
 
 	return cat
@@ -91,7 +91,7 @@ function PANEL:AddSidebarList( name )
 
 	local view = vgui.Create("BPListPanel")
 
-	local cat = self:AddSidebarPanel( name, view )
+	local cat = self:AddSidebarPanel( tostring(name), view )
 	local add = cat:CreateAddButton()
 	add.DoClick = function() view:InvokeAdd() end
 

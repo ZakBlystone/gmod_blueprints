@@ -13,28 +13,28 @@ function EDITOR:PopulateMenuBar( t )
 
 	if self.CanSave then
 
-		t[#t+1] = { name = "Save", func = function() self:Save() end, icon = "icon16/disk.png" }
-		t[#t+1] = { name = "Export", func = function() self:Export() end, icon = "icon16/folder_go.png" }
-		t[#t+1] = { name = "Export shareable key", func = function(...) self:ExportShareableKey(...) end, icon = "icon16/folder_go.png" }
+		t[#t+1] = { name = LOCTEXT("menu_save", "Save"), func = function() self:Save() end, icon = "icon16/disk.png" }
+		t[#t+1] = { name = LOCTEXT("menu_export", "Export"), func = function() self:Export() end, icon = "icon16/folder_go.png" }
+		t[#t+1] = { name = LOCTEXT("menu_export_shareable", "Export shareable key"), func = function(...) self:ExportShareableKey(...) end, icon = "icon16/folder_go.png" }
 
 	end
 
 	if self.CanSendToServer then
 
-		t[#t+1] = { name = "Send to server", func = function(...) self:SendToServer(...) end, color = Color(80,180,80), icon = "icon16/server_go.png" }
+		t[#t+1] = { name = LOCTEXT("menu_sendtoserver","Send to server"), func = function(...) self:SendToServer(...) end, color = Color(80,180,80), icon = "icon16/server_go.png" }
 
 	end
 
 	if self.CanInstallLocally then
 
-		t[#t+1] = { name = "Local: Install", func = function(...) self:InstallLocally(...) end, icon = "icon16/flag_green.png" }
-		t[#t+1] = { name = "Local: Uninstall", func = function(...) self:UninstallLocally(...) end, icon = "icon16/flag_red.png" }
+		t[#t+1] = { name = LOCTEXT("menu_localinstall","Local: Install"), func = function(...) self:InstallLocally(...) end, icon = "icon16/flag_green.png" }
+		t[#t+1] = { name = LOCTEXT("menu_localuninstall","Local: Uninstall"), func = function(...) self:UninstallLocally(...) end, icon = "icon16/flag_red.png" }
 
 	end
 
 	if self.CanExportLuaScript then
 
-		t[#t+1] = { name = "Export Lua script", func = function(...) self:ExportLua(...) end, icon = "icon16/page_code.png" }
+		t[#t+1] = { name = LOCTEXT("menu_export_lua","Export Lua script"), func = function(...) self:ExportLua(...) end, icon = "icon16/page_code.png" }
 
 	end
 

@@ -16,6 +16,8 @@ function GetClassLoader() return moduleClasses end
 
 nextModuleID = nextModuleID or 0
 
+meta.Name = LOCTEXT"module_default_name","unnamed"
+meta.Description = LOCTEXT"module_default_desc","description"
 meta.EditorClass = ""
 
 function meta:Init(type)

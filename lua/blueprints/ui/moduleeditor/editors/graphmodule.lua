@@ -78,7 +78,7 @@ end
 function EDITOR:PopulateSideBar()
 
 	-- Graph List
-	self.GraphList = self:AddSidebarList("Graphs")
+	self.GraphList = self:AddSidebarList(LOCTEXT("editor_graphmodule_graphlist","Graphs"))
 	self.GraphList.HandleAddItem = function(list)
 
 		local function MakeGraph(graphType)
@@ -110,7 +110,7 @@ function EDITOR:PopulateSideBar()
 		local graph = self:GetModule():GetGraph(id)
 		if graph.type == bpschema.GT_Function and not graph:HasFlag(bpgraph.FL_LOCK_PINS) then
 			items[#items+1] = {
-				name = "Edit Pins",
+				name = LOCTEXT("editor_graphmodule_editgraphpins","Edit Pins"),
 				func = function() bpuigrapheditmenu.EditGraphParams( graph ) end,
 			}
 		end
@@ -120,7 +120,7 @@ function EDITOR:PopulateSideBar()
 	-- Variable List
 	if self:GetModule():CanHaveVariables() then
 
-		self.VarList = self:AddSidebarList("Variables")
+		self.VarList = self:AddSidebarList(LOCTEXT("editor_graphmodule_variablelist","Variables"))
 		self.VarList.CreateItemPanel = function(pnl, id, item)
 
 			local entry = vgui.Create("BPPinListEntry", pnl)
@@ -144,7 +144,7 @@ function EDITOR:PopulateSideBar()
 	-- Structure List
 	if self:GetModule():CanHaveStructs() then
 
-		self.StructList = self:AddSidebarList("Structs")
+		self.StructList = self:AddSidebarList(LOCTEXT("editor_graphmodule_structlist","Structs"))
 		self.StructList.HandleAddItem = function(pnl, list)
 			local itemID, item = list:Construct()
 			pnl:Rename(itemID)
@@ -153,7 +153,7 @@ function EDITOR:PopulateSideBar()
 		self.StructList.PopulateMenuItems = function(pnl, items, id)
 
 			items[#items+1] = {
-				name = "Edit Struct",
+				name = LOCTEXT("editor_graphmodule_editstruct","Edit Struct"),
 				func = function() bpuistructeditmenu.EditStructParams( self:GetModule():GetStruct(id) ) end,
 			}
 
@@ -165,7 +165,7 @@ function EDITOR:PopulateSideBar()
 	-- Event List
 	if self:GetModule():CanHaveEvents() then
 
-		self.EventList = self:AddSidebarList("Events")
+		self.EventList = self:AddSidebarList(LOCTEXT("editor_graphmodule_eventlist","Events"))
 		self.EventList.HandleAddItem = function(pnl, list)
 			local itemID, item = list:Construct()
 			pnl:Rename(itemID)
@@ -174,7 +174,7 @@ function EDITOR:PopulateSideBar()
 		self.EventList.PopulateMenuItems = function(pnl, items, id)
 
 			items[#items+1] = {
-				name = "Edit Event",
+				name = LOCTEXT("editor_graphmodule_editevent","Edit Event"),
 				func = function() bpuistructeditmenu.EditEventParams( self:GetModule():GetEvent(id) ) end,
 			}
 

@@ -364,7 +364,7 @@ end
 
 function PANEL:SetTitle( title )
 
-	self.label:SetText( title )
+	self.label:SetText( tostring(title) )
 	return self
 
 end
@@ -427,11 +427,11 @@ function PANEL:Init()
 	FileViews[#FileViews+1] = self
 
 	self.menu = bpuimenubar.AddTo(self)
-	self.menu:Add("New Module", function() self:ModuleDropdown() end, nil, "icon16/asterisk_yellow.png")
-	self.menu:Add("Refresh Local Files", function() self.localList:ClearFiles() bpfilesystem.IndexLocalFiles(true) end, nil, "icon16/arrow_refresh.png")
-	self.menu:Add("Import", function() self.editor:OpenImport() end, nil, "icon16/folder_page.png")
-	self.menu:Add("Help", function() self.editor:OpenHelp() end, nil, "icon16/help.png")
-	self.menu:Add("About", function() self.editor:OpenAbout() end, nil)
+	self.menu:Add(LOCTEXT("file_newmodule","New Module"), function() self:ModuleDropdown() end, nil, "icon16/asterisk_yellow.png")
+	self.menu:Add(LOCTEXT("file_refresh_local","Refresh Local Files"), function() self.localList:ClearFiles() bpfilesystem.IndexLocalFiles(true) end, nil, "icon16/arrow_refresh.png")
+	self.menu:Add(LOCTEXT("file_import","Import"), function() self.editor:OpenImport() end, nil, "icon16/folder_page.png")
+	self.menu:Add(LOCTEXT("file_help","Help"), function() self.editor:OpenHelp() end, nil, "icon16/help.png")
+	self.menu:Add(LOCTEXT("file_about","About"), function() self.editor:OpenAbout() end, nil)
 	--self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
 
 	self.middle = vgui.Create("DPanel")
@@ -445,8 +445,8 @@ function PANEL:Init()
 	self.content:Dock( FILL )
 	self.content:SetBackgroundColor( Color(30,30,30) )
 
-	self.remoteList = vgui.Create("BPFileList"):SetTitle("Server Files")
-	self.localList = vgui.Create("BPFileList"):SetTitle("Local Files")
+	self.remoteList = vgui.Create("BPFileList"):SetTitle(LOCTEXT"file_list_server","Server Files")
+	self.localList = vgui.Create("BPFileList"):SetTitle(LOCTEXT"file_list_client","Local Files")
 
 	self.remoteList.GetEditor = function() return self.editor end
 	self.localList.GetEditor = function() return self.editor end
@@ -474,25 +474,25 @@ function PANEL:ModuleDropdown()
 	local loader = bpmodule.GetClassLoader()
 	local classes = bpcommon.Transform( loader:GetClasses(), {}, function(k) return {name = k, class = loader:Get(k)} end )
 
-	table.sort( classes, function(a,b) return a.class.Name < b.class.Name end )
+	table.sort( classes, function(a,b) return tostring(a.class.Name) < tostring(b.class.Name) end )
 
 	for _, v in ipairs( classes ) do
 
 		local cl = v.class
 		if not cl.Creatable then continue end
 
-		local op = self.cmenu:AddOption( cl.Name, function()
+		local op = self.cmenu:AddOption( tostring(cl.Name), function()
 
 			self:CreateModule( v.name )
 
 		end)
 		if cl.Icon then op:SetIcon( cl.Icon ) end
-		if cl.Description then op:SetTooltip( cl.Description ) end
+		if cl.Description then op:SetTooltip( tostring(cl.Description) ) end
 
 	end
 
 	self.cmenu:AddSpacer()
-	local templateMenu, op = self.cmenu:AddSubMenu( "Examples" )
+	local templateMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"module_submenu_examples","Examples" ) )
 	op:SetIcon( "icon16/book.png" )
 
 	for _, v in ipairs( classes ) do
@@ -502,7 +502,7 @@ function PANEL:ModuleDropdown()
 
 		local templates = bptemplates.GetByType( v.name )
 		if #templates > 0 then
-			local sub, op = templateMenu:AddSubMenu( cl.Name )
+			local sub, op = templateMenu:AddSubMenu( tostring(cl.Name) )
 			if cl.Icon then op:SetIcon( cl.Icon ) end
 
 			for _, t in ipairs( templates ) do

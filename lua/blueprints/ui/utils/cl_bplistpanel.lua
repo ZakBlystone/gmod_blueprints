@@ -241,7 +241,7 @@ function PANEL:OpenMenu( id )
 
 	self:PopulateMenuItems(t, id)
 	for _, v in ipairs(t) do
-		self.menu:AddOption( v.name, v.func )
+		self.menu:AddOption( tostring(v.name), v.func )
 	end
 
 	self.menu:SetMinimumWidth( 100 )

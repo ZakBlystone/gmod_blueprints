@@ -4,8 +4,8 @@ module("_", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local MODULE = {}
 
-MODULE.Name = "Weapon"
-MODULE.Description = "A Scripted Weapon you can pick up and shoot"
+MODULE.Name = LOCTEXT"module_swep_name","Weapon"
+MODULE.Description = LOCTEXT"module_swep_desc","A Scripted Weapon you can pick up and shoot"
 MODULE.Icon = "icon16/gun.png"
 MODULE.Creatable = true
 MODULE.AdditionalConfig = true

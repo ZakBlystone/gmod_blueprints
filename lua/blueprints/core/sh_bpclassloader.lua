@@ -40,6 +40,7 @@ function meta:Register(name, tab, base)
 		return parentMeta[k]
 	end
 
+	tab.__raw = tab
 	tab.__indexer = setmetatable({}, tab)
 
 	local env = setmetatable({},{
@@ -56,7 +57,7 @@ function meta:Register(name, tab, base)
 		if type(func) == "function" then setfenv(func, env) end
 	end
 
-	registered[name:lower()] = tab
+	registered[name:lower()] = tab.__indexer
 
 	if not initializing and self.refreshHook then
 		hook.Run(self.refreshHook, name)
@@ -94,10 +95,9 @@ function meta:Install(classname, parent)
 	local class = self:Get(classname)
 	if class == nil then error("Failed to get class: " .. classname) end
 
-	setmetatable(parent, class)
+	setmetatable(parent, class.__raw)
 
-	local idx = class.__indexer
-	if idx.Setup then parent:Setup() end
+	if class.Setup then class.Setup(parent) end
 
 end
 
