@@ -2,15 +2,6 @@ AddCSLuaFile()
 
 module("bplist", package.seeall)
 
-bpcommon.CallbackList({
-	"ADD",
-	"REMOVE",
-	"CLEAR",
-	"RENAME",
-	"PREMODIFY",
-	"POSTMODIFY",
-})
-
 MODIFY_ADD = 0
 MODIFY_REMOVE = 1
 MODIFY_RENAME = 2
@@ -47,7 +38,7 @@ function meta:Clear()
 	self.items = {}
 	self.itemLookup = {}
 	self.nextID = 1
-	self:FireListeners(CB_CLEAR)
+	self:Broadcast("cleared")
 	return self
 
 end
@@ -207,7 +198,7 @@ function meta:Add( item, optName, forceIndex )
 
 	item:WithOuter( self )
 
-	self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
+	self:Broadcast("preModify", MODIFY_ADD, item.id, item)
 
 	self.items[#self.items+1] = item
 	self.itemLookup[item.id] = item
@@ -215,8 +206,8 @@ function meta:Add( item, optName, forceIndex )
 
 	if item.PostInit then item:PostInit() end
 
-	self:FireListeners(CB_ADD, item.id, item)
-	self:FireListeners(CB_POSTMODIFY, MODIFY_ADD, item.id, item)
+	self:Broadcast("added", item.id, item)
+	self:Broadcast("postModify", MODIFY_ADD, item.id, item)
 
 	return item.id, item
 
@@ -237,11 +228,11 @@ function meta:RemoveIf( cond )
 		local item = items[i]
 		if cond( item ) then
 
-			self:FireListeners(CB_PREMODIFY, MODIFY_REMOVE, item.id, item)
+			self:Broadcast("preModify", MODIFY_REMOVE, item.id, item)
 
 			table.remove( items, i ) 
-			self:FireListeners(CB_REMOVE, item.id, item)
-			self:FireListeners(CB_POSTMODIFY, MODIFY_REMOVE, item.id, item)
+			self:Broadcast("removed", item.id, item)
+			self:Broadcast("postModify", MODIFY_REMOVE, item.id, item)
 			self.itemLookup[item.id] = nil
 			item.id = nil
 			removed = removed + 1
@@ -262,12 +253,12 @@ function meta:Rename( id, newName, force )
 
 	if newName == item.name then return false end
 
-	self:FireListeners(CB_PREMODIFY, MODIFY_RENAME, item.id, item)
+	self:Broadcast("preModify", MODIFY_RENAME, item.id, item)
 
 	local prev = item.name
 	item.name = self:GetNameForItem( newName, item )
-	self:FireListeners(CB_RENAME, item.id, prev, item.name)
-	self:FireListeners(CB_POSTMODIFY, MODIFY_RENAME, item.id, item)
+	self:Broadcast("renamed", item.id, prev, item.name)
+	self:Broadcast("postModify", MODIFY_RENAME, item.id, item)
 
 end
 
@@ -284,10 +275,10 @@ function meta:Replace( id, item )
 
 	if not oldItem then error("Attempt to replace invalid index: " .. id .. " " .. tostring(oldItemIdx)) end
 
-	self:FireListeners(CB_PREMODIFY, MODIFY_REPLACE, item.id, item)
+	self:Broadcast("preModify", MODIFY_REPLACE, item.id, item)
 	self.itemLookup[id] = item
 	self.items[oldItemIdx] = item
-	self:FireListeners(CB_POSTMODIFY, MODIFY_REPLACE, item.id, item)
+	self:Broadcast("postModify", MODIFY_REPLACE, item.id, item)
 
 end
 
@@ -322,10 +313,10 @@ function meta:ReadFromStream(stream, mode, version)
 			if self.namedItems then item.name = bpdata.ReadValue( stream ) end
 			if not item.ReadFromStream then error("Need stream implementation for list item") end
 			item:ReadFromStream(stream, mode, version)
-			self:FireListeners(CB_PREMODIFY, MODIFY_ADD, item.id, item)
+			self:Broadcast("preModify", MODIFY_ADD, item.id, item)
 			self.items[#self.items+1] = item
-			self:FireListeners(CB_ADD, item.id, item)
-			self:FireListeners(CB_POSTMODIFY, MODIFY_ADD, item.id, item)
+			self:Broadcast("added", item.id, item)
+			self:Broadcast("postModify", MODIFY_ADD, item.id, item)
 		end
 
 	end)

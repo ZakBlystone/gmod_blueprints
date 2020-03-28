@@ -52,11 +52,9 @@ function VALUE:SetStruct( struct )
 				k = k,
 				vt = vt,
 			}
-			vt:AddListener( function(cb, old, new, key)
-				if cb == bpvaluetype.CB_VALUE_CHANGED then
-					local ak = (key ~= nil) and k .. "." .. tostring(key) or k
-					self:OnChanged(old, new, ak)
-				end 
+			vt:BindRaw( "valueChanged", function(old, new, key)
+				local ak = (key ~= nil) and k .. "." .. tostring(key) or k
+				self:OnChanged(old, new, ak)
 			end )
 		end
 	end

@@ -2,13 +2,6 @@ AddCSLuaFile()
 
 module("bpmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema))
 
-bpcommon.CallbackList({
-	"MODULE_CLEAR",
-	"GRAPH_ADD",
-	"GRAPH_REMOVE",
-	"NODETYPE_MODIFIED",
-	"GRAPH_MODIFIED",
-})
 
 STREAM_FILE = 1
 STREAM_NET = 2
@@ -89,7 +82,7 @@ end
 
 function meta:PostModifyNodeType( nodeType )
 
-	self:FireListeners(CB_NODETYPE_MODIFIED, nodeType)
+	self:Broadcast("nodetypeModified", nodeType)
 
 end
 
@@ -117,7 +110,7 @@ end
 
 function meta:Clear()
 
-	self:FireListeners(CB_MODULE_CLEAR)
+	self:Broadcast("cleared")
 
 end
 

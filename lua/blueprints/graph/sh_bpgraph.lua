@@ -2,19 +2,6 @@ AddCSLuaFile()
 
 module("bpgraph", package.seeall, bpcommon.rescope(bpcommon, bpschema))
 
-bpcommon.CallbackList({
-	"NODE_ADD",
-	"NODE_REMOVE",
-	"NODE_MOVE",
-	"PIN_PREMODIFY_LITERAL",
-	"PIN_POSTMODIFY_LITERAL",
-	"CONNECTION_ADD",
-	"CONNECTION_REMOVE",
-	"GRAPH_CLEAR",
-	"PREMODIFY_NODE",
-	"POSTMODIFY_NODE",
-})
-
 FL_NONE = 0
 FL_LOCK_PINS = 1
 FL_LOCK_NAME = 2
@@ -46,39 +33,24 @@ function meta:Init(type)
 	self.heldConnections = {}
 
 	-- Listen for changes in the input variable list (function graph)
-	self.inputs:AddListener(function(cb, action, id, var)
-
-		if cb == bplist.CB_PREMODIFY then self:PreModify()
-		elseif cb == bplist.CB_POSTMODIFY then self:PostModify() end
-
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+	self.inputs:Bind("preModify", self, self.PreModify)
+	self.inputs:Bind("postModify", self, self.PostModify)
 
 	-- Listen for changes in the output variable list (function graph)
-	self.outputs:AddListener(function(cb, action, id, var)
-
-		if cb == bplist.CB_PREMODIFY then self:PreModify()
-		elseif cb == bplist.CB_POSTMODIFY then self:PostModify() end
-
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+	self.outputs:Bind("preModify", self, self.PreModify)
+	self.outputs:Bind("postModify", self, self.PostModify)
 
 	-- Listen for changes in the node list
-	self.nodes:AddListener(function(cb, id)
-
-		if cb == bplist.CB_ADD then
-			self:FireListeners(CB_NODE_ADD, id)
-		elseif cb == bplist.CB_REMOVE then
-
-			-- Remove connections to the node that is being removed
-			for i, c in self:Connections() do
-				if c[1] == id or c[3] == id then
-					self:RemoveConnectionID(i)
-				end
+	self.nodes:BindRaw("added", self, function(id) self:Broadcast("nodeAdded", id) end)
+	self.nodes:BindRaw("removed", self, function(id)
+		for i, c in self:Connections() do
+			if c[1] == id or c[3] == id then
+				self:RemoveConnectionID(i)
 			end
-
-			self:FireListeners(CB_NODE_REMOVE, id)
 		end
 
-	end, bplist.CB_ALL)
+		self:Broadcast("nodeRemoved", id)
+	end)
 
 	local pinmeta = bpcommon.FindMetaTable("bppin")
 
@@ -156,7 +128,7 @@ function meta:CanRename() return not self:HasFlag(FL_LOCK_NAME) end
 
 function meta:PreModifyNode( node, action, subaction )
 
-	self:FireListeners(CB_PREMODIFY_NODE, node.id, action)
+	self:Broadcast("preModifyNode", node.id, action)
 
 	self.heldConnections[node.id] = {}
 	local held = self.heldConnections[node.id]
@@ -187,7 +159,7 @@ function meta:PostModifyNode( node )
 	--print("NODE MODIFICATION: " .. node:ToString() )
 
 	node:UpdatePins()
-	self:FireListeners(CB_POSTMODIFY_NODE, node.id)
+	self:Broadcast("postModifyNode", node.id)
 
 	local ntype = node:GetType()
 	local held = self.heldConnections[node.id]
@@ -668,7 +640,7 @@ function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 	--print("CONNECTED: " .. self:GetNode(nodeID0):ToString(pinID0) .. " -> " .. self:GetNode(nodeID1):ToString(pinID1))
 
 	self:WalkInforms()
-	self:FireListeners(CB_CONNECTION_ADD, #self.connections, self.connections[#self.connections])
+	self:Broadcast("connectionAdded", #self.connections, self.connections[#self.connections])
 
 	return true
 
@@ -676,7 +648,7 @@ end
 
 function meta:Clear()
 
-	self:FireListeners(CB_GRAPH_CLEAR)
+	self:Broadcast("cleared")
 
 	self.nodes:Clear()
 	self.inputs:Clear()
@@ -734,7 +706,7 @@ function meta:RemoveConnectionID(id)
 	if c ~= nil then
 		table.remove(self.connections, id)
 		self:WalkInforms()
-		self:FireListeners(CB_CONNECTION_REMOVE, id, c)
+		self:Broadcast("connectionRemoved", id, c)
 	else
 		print("Could not find connection: " .. tostring(id))
 	end
@@ -910,12 +882,12 @@ function meta:ReadFromStream(stream, mode, version)
 
 		if self.type == GT_Function then
 
-			self.inputs:SuppressEvents(true)
-			self.outputs:SuppressEvents(true)
+			self.inputs:SuppressAllEvents(true)
+			self.outputs:SuppressAllEvents(true)
 			self.inputs:ReadFromStream(stream, mode, version)
 			self.outputs:ReadFromStream(stream, mode, version)
-			self.inputs:SuppressEvents(false)
-			self.outputs:SuppressEvents(false)
+			self.inputs:SuppressAllEvents(false)
+			self.outputs:SuppressAllEvents(false)
 		end
 
 		self.deferredNodes:ReadFromStream(stream, mode, version)
@@ -1017,14 +989,14 @@ function meta:CreateDeferredData()
 		self:RemoveNodeIf( function(node) return not node:PostInit() end )
 
 		for id, node in self:Nodes() do
-			self:FireListeners(CB_NODE_ADD, id)
+			self:Broadcast("nodeAdded", id)
 		end
 
 		self:ResolveConnectionMeta()
 		self:WalkInforms()
 		self:RemoveInvalidConnections()
 		for i, connection in self:Connections() do
-			self:FireListeners(CB_CONNECTION_ADD, i, connection)
+			self:Broadcast("connectionAdded", i, connection)
 		end
 
 	end)

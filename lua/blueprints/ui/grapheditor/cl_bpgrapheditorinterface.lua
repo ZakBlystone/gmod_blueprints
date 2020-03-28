@@ -30,12 +30,7 @@ function meta:Init( editor, vgraph )
 	self.tooltipAlpha = 0
 	self.popups = {}
 
-	self.editor:AddListener(function(cb, ...)
-
-		if cb == bpgrapheditor.CB_POPUP then self:OnPopup(...) end
-
-	end, bpgrapheditor.CB_ALL)
-
+	self.editor:Bind("popup", self, self.OnPopup)
 	return self
 
 end

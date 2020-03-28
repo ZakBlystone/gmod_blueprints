@@ -2,9 +2,6 @@ AddCSLuaFile()
 
 module("bpvaluetype", package.seeall)
 
-bpcommon.CallbackList({
-	"VALUE_CHANGED",
-})
 
 local meta = bpcommon.MetaTable("bpvaluetype")
 local valueClasses = bpclassloader.Get("Value", "blueprints/core/valuetypes/", "BPValueTypeClassRefresh", meta)
@@ -86,7 +83,7 @@ end
 function meta:OnChanged(old, new, key)
 
 	if new ~= old or key ~= nil then
-		self:FireListeners(CB_VALUE_CHANGED, old, new, key)
+		self:Broadcast("valueChanged", old, new, key)
 	end
 
 end
@@ -147,11 +144,7 @@ function meta:CreateVGUI( info )
 
 	entry:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
 
-	self:AddListener( function(cb, old, new, key)
-		if cb == bpvaluetype.CB_VALUE_CHANGED then
-			entry:SetText( new )
-		end 
-	end )
+	self:BindRaw( "valueChanged", self, function(old, new, key) entry:SetText( new ) end )
 
 	return entry
 
@@ -277,10 +270,9 @@ if CLIENT then
 	concommand.Add("valuetest", function()
 
 		local typeEdit = bpvaluetype.FromValue( both )
-		typeEdit:AddListener( function(cb, old, new, k)
-			if cb ~= bpvaluetype.CB_VALUE_CHANGED then return end
+		typeEdit:BindRaw("valueChanged", "test", function(old, new, k)
 			print(tostring(k) .. ": ", tostring(old) .. " => " .. tostring(new))
-		end )
+		end)
 
 		local window = vgui.Create( "DFrame" )
 		window:SetSizable( true )

@@ -8,7 +8,6 @@ function PANEL:Init()
 
 	self:SetKeyboardInputEnabled( true )
 	self:SetBackgroundColor( Color(30,30,30) )
-	self.callback = function(...) self:OnListCallback(...) end
 	self.selectedID = nil
 	self.vitems = {}
 
@@ -117,9 +116,11 @@ function PANEL:SetList( list )
 
 	self:Clear()
 
-	if self.list then self.list:RemoveListener(self.callback) end
 	self.list = list
-	self.list:AddListener(self.callback, bplist.CB_ALL)
+	self.list:Bind("added", self, self.ItemAdded)
+	self.list:Bind("removed", self, self.ItemRemoved)
+	self.list:Bind("renamed", self, self.ItemRenamed)
+	self.list:Bind("cleared", self, self.Clear)
 
 	for id, item in self.list:Items() do
 		self:ItemAdded(id, item)
@@ -129,16 +130,7 @@ end
 
 function PANEL:OnRemove()
 
-	if self.list then self.list:RemoveListener(self.callback) end
-
-end
-
-function PANEL:OnListCallback(cb, ...)
-
-	if cb == bplist.CB_ADD then self:ItemAdded(...) end
-	if cb == bplist.CB_REMOVE then self:ItemRemoved(...) end
-	if cb == bplist.CB_RENAME then self:ItemRenamed(...) end
-	if cb == bplist.CB_CLEAR then self:Clear() end
+	if self.list then self.list:UnbindAll(self) end
 
 end
 

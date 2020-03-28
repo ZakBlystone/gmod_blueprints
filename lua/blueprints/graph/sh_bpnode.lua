@@ -2,10 +2,6 @@ AddCSLuaFile()
 
 module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema))
 
-bpcommon.CallbackList({
-	"NODE_PINS_UPDATED",
-})
-
 local DummyNodeType = bpnodetype.New()
 DummyNodeType:SetDisplayName("InvalidNode")
 
@@ -141,7 +137,7 @@ function meta:UpdatePins()
 	end
 
 	self:SetLiteralDefaults()
-	self:FireListeners(CB_NODE_PINS_UPDATED)
+	self:Broadcast("pinsUpdated")
 
 end
 
@@ -162,7 +158,7 @@ function meta:UpdatePinInforms()
 		--MsgC(Color(80,255,20), pin:ToString(true,true) .. "\n")
 	end
 	self:SetLiteralDefaults()
-	self:FireListeners(CB_NODE_PINS_UPDATED)
+	self:Broadcast("pinsUpdated")
 
 end
 
@@ -319,13 +315,13 @@ function meta:SetLiteral(pinID, value)
 	local outerGraph = self:GetGraph()
 
 	if not self.suppressPinEvents and outerGraph then
-		outerGraph:FireListeners(bpgraph.CB_PIN_PREMODIFY_LITERAL, self.id, pinID, value)
+		outerGraph:Broadcast("preModifyLiteral", self.id, pinID, value)
 	end
 
 	self.literals[pinID] = value
 
 	if not self.suppressPinEvents and outerGraph then
-		outerGraph:FireListeners(bpgraph.CB_PIN_POSTMODIFY_LITERAL, self.id, pinID, value)
+		outerGraph:Broadcast("postModifyLiteral", self.id, pinID, value)
 	end
 
 	if changed and pins[pinID].OnLiteralChanged then
@@ -418,7 +414,7 @@ function meta:Move(x, y)
 
 	local outerGraph = self:GetGraph()
 	if outerGraph == nil then return px ~= self.x or py ~= self.y end
-	outerGraph:FireListeners(bpgraph.CB_NODE_MOVE, self.id, x, y)
+	outerGraph:Broadcast("nodeMoved", self.id, x, y)
 
 	return px ~= self.x or py ~= self.y
 

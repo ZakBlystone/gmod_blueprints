@@ -22,8 +22,8 @@ function DIFF_BASIC()
 
 
 	local listenerExecuted = false
-	shadow:AddListener(function(cb, action, id, var)
-		if cb == bplist.CB_POSTMODIFY and action == bplist.MODIFY_REPLACE then
+	shadow:BindRaw("postModify", "test", function(action, id, var)
+		if action == bplist.MODIFY_REPLACE then
 			listenerExecuted = true
 		end
 	end)

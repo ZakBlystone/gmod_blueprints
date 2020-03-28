@@ -365,49 +365,89 @@ function AddFlagAccessors(meta, readOnly, var)
 end
 
 --Makes the object observable (creates listener system)
-function MakeObservable(obj, cblist)
-	local env = getfenv(2)
-	cblist = cblist or env
+function MakeObservable(obj)
 
 	obj.__callbacks = {}
 	obj.__deferred = {}
 	obj.__incall = false
-	obj.__handleDeferred = false
 	obj.__suppressed = false
+	obj.__handleDeferred = false
 
-	obj.SuppressEvents   = function(self, suppressed) 
-		self.__suppressed = suppressed 
+	local __any = "__any"
+
+	local function GetCB(name, target)
+		local t = obj.__callbacks
+		t[name] = t[name] or {}
+		if target then
+			t[name][target] = t[name][target] or {}
+			return t[name][target]
+		end
+		return t[name]
 	end
 
-	obj.AddListener 	= function(self, func, mask)
-		if self.__incall then table.insert(self.__deferred, {1, func, mask or cblist.CB_ALL}) self.__handleDeferred = true return true end
-		self.__callbacks[func] = mask or cblist.CB_ALL
+	function obj:SuppressAllEvents( suppressed )
+		self.__suppressed = suppressed
 	end
-	
-	obj.RemoveListener 	= function(self, func) 
-		if self.__incall then table.insert(self.__deferred, {2, func}) self.__handleDeferred = true return true end
-		self.__callbacks[func] = nil
-	end
-	
-	obj.FireListeners 	= function(self, cb, ...)
+
+	function obj:Broadcast( name, ... )
 		if self.__suppressed then return end
 		self.__incall = true
-		for k,v in pairs(self.__callbacks) do 
-			if bit.band(cb, v) ~= 0 then 
-			local b,e = xpcall(k, function(err) print(err) print(debug.traceback()) end, cb, ...)
+		for k, v in pairs(GetCB(name)) do
+			for _, t in ipairs(v) do
+				xpcall(t, function(err) print(err) print(debug.traceback()) end, ...)
+			end
+		end
+		for k, v in pairs(GetCB(__any)) do
+			for _, t in ipairs(v) do
+				xpcall(t, function(err) print(err) print(debug.traceback()) end, name, ...)
 			end
 		end
 		self.__incall = false
 		if self.__handleDeferred then
 			for i=#self.__deferred, 1, -1 do
 				local v = self.__deferred[i]
-				if v[1] == 1 then self:AddListener(v[2], v[3]) end
-				if v[1] == 2 then self:RemoveListener(v[2]) end
+				if v.mode == 0 then self:BindRaw(unpack(v)) end
+				if v.mode == 1 then self:Bind(unpack(v)) end
+				if v.mode == 2 then self:BindAny(unpack(v)) end
+				if v.mode == 3 then self:Unbind(unpack(v)) end
+				if v.mode == 4 then self:UnbindAll(unpack(v)) end
 				table.remove(self.__deferred, i)
 			end
 			self.__handleDeferred = false
 		end
 	end
+
+	function obj:BindRaw( name, target, func )
+		if self.__incall then table.insert(self.__deferred, {mode=0, name, target, func}) self.__handleDeferred = true return true end
+		local t = GetCB(name, target)
+		t[#t+1] = func
+	end
+
+	function obj:Bind( name, target, func )
+		if self.__incall then table.insert(self.__deferred, {mode=1, name, target, func}) self.__handleDeferred = true return true end
+		local t = GetCB(name, target)
+		t[#t+1] = function(...) func(target, ...) end
+	end
+
+	function obj:BindAny( target, func )
+		if self.__incall then table.insert(self.__deferred, {mode=2, target, func}) self.__handleDeferred = true return true end
+		local t = GetCB(__any, target)
+		t[#t+1] = function(...) func(target, ...) end
+	end
+
+	function obj:Unbind( name, target )
+		if self.__incall then table.insert(self.__deferred, {mode=3, name, target}) self.__handleDeferred = true return true end
+		local t = GetCB(name)
+		t[target] = nil
+	end
+
+	function obj:UnbindAll( target )
+		if self.__incall then table.insert(self.__deferred, {mode=4, target}) self.__handleDeferred = true return true end
+		for k, v in pairs(obj.__callbacks) do
+			v[target] = nil
+		end
+	end
+
 end
 
 function IsGUID( guid )

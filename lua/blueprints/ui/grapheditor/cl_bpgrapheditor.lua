@@ -4,10 +4,6 @@ G_BPGraphEditorCopyState = nil
 
 module("bpgrapheditor", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
-bpcommon.CallbackList({
-	"POPUP",
-})
-
 local meta = bpcommon.MetaTable("bpgrapheditor")
 
 function meta:Init( vgraph )
@@ -32,7 +28,26 @@ function meta:Init( vgraph )
 		G_BPGraphEditorCopyState.painter.vgraph = vgraph
 	end
 
+	self.graph:Bind("nodeAdded", self, self.NodeAdded)
+	self.graph:Bind("nodeRemoved", self, self.NodeRemoved)
+	self.graph:Bind("nodeMoved", self, self.NodeMove)
+	self.graph:Bind("preModifyLiteral", self, self.PinPreEditLiteral)
+	self.graph:Bind("postModifyLiteral", self, self.PinPostEditLiteral)
+	self.graph:Bind("connectionAdded", self, self.ConnectionAdded)
+	self.graph:Bind("connectionRemoved", self, self.ConnectionRemoved)
+	self.graph:Bind("cleared", self, self.GraphCleared)
+	self.graph:Bind("postModifyNode", self, self.PostModifyNode)
+
 	return self
+
+end
+
+function meta:Shutdown()
+
+	self.graph:UnbindAll(self)
+	self:CloseCreationContext()
+	self:CloseNodeContext()
+	self:CloseEnumContext()
 
 end
 
@@ -65,7 +80,7 @@ end
 
 function meta:Popup(text)
 
-	self:FireListeners(CB_POPUP, text)
+	self:Broadcast("popup", text)
 
 end
 
@@ -112,14 +127,6 @@ function meta:GetGraph()
 
 end
 
-function meta:Cleanup()
-
-	self:CloseCreationContext()
-	self:CloseNodeContext()
-	self:CloseEnumContext()
-
-end
-
 function meta:GetSelectedNodes()
 
 	local selection = {}
@@ -136,19 +143,6 @@ function meta:IsNodeSelected(vnode) return self.selectedNodes[vnode] == true end
 function meta:GetNodeSet() return self.nodeSet end
 function meta:GetCoordinateScaleFactor() return 2 end
 function meta:GetVNodes() return self.nodeSet:GetVNodes() end
-function meta:OnGraphCallback( cb, ... )
-
-	if cb == CB_NODE_ADD then return self:NodeAdded(...) end
-	if cb == CB_NODE_REMOVE then return self:NodeRemoved(...) end
-	if cb == CB_NODE_MOVE then return self:NodeMove(...) end
-	if cb == CB_PIN_PREMODIFY_LITERAL then return self:PinPreEditLiteral(...) end
-	if cb == CB_PIN_POSTMODIFY_LITERAL then return self:PinPostEditLiteral(...) end
-	if cb == CB_CONNECTION_ADD then return self:ConnectionAdded(...) end
-	if cb == CB_CONNECTION_REMOVE then return self:ConnectionRemoved(...) end
-	if cb == CB_GRAPH_CLEAR then return self:GraphCleared(...) end
-	if cb == CB_POSTMODIFY_NODE then return self:PostModifyNode(...) end
-
-end
 
 function meta:CreateAllNodes() self.nodeSet:CreateAllNodes() end
 function meta:NodeAdded( id ) self.nodeSet:NodeAdded(id) end

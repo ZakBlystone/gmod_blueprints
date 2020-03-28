@@ -41,21 +41,7 @@ function PANEL:Init()
 	self.mouseDragging = 0
 	self.PressTimeout = 0
 
-	self.callback = function(...)
-		local editor = self:GetEditor()
-		if editor == nil then return end
-		editor:OnGraphCallback(...)
-	end
-
 	self:InitRenderer()
-
-end
-
-function PANEL:OnRemove()
-
-	if self.graph then
-		self.graph:RemoveListener(self.callback)
-	end
 
 end
 
@@ -73,12 +59,9 @@ end
 
 function PANEL:SetGraph( graph )
 
-	if self.graph then self.graph:RemoveListener(self.callback) end
+	if self.editor then self.editor:Shutdown() end
 
 	self.graph = graph
-
-	graph:AddListener(self.callback, bpgraph.CB_ALL)
-
 	self.editor = bpgrapheditor.New( self )
 	self.interface = bpgrapheditorinterface.New( self.editor, self )
 
@@ -227,7 +210,7 @@ end
 
 function PANEL:Think()
 
-	self.editor:Think()
+	if self.editor then self.editor:Think() end
 
 	if bit.band(self.mouseDragging, MD_Left) ~= 0 and not input.IsMouseDown(MOUSE_LEFT) then
 		self:OnMouseReleased(MOUSE_LEFT)
@@ -237,7 +220,7 @@ end
 
 function PANEL:OnRemove()
 
-	self.editor:Cleanup()
+	if self.editor then self.editor:Shutdown() end
 
 end
 

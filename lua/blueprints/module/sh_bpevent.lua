@@ -25,17 +25,8 @@ function meta:Init()
 
 	self.flags = 0
 	self.pins = bplist.New(bppin_meta):NamedItems("Pins"):WithOuter(self)
-	self.pins:AddListener(function(cb, action, id, var)
-
-		if self.module then
-			if cb == bplist.CB_PREMODIFY then
-				self:PreModify()
-			elseif cb == bplist.CB_POSTMODIFY then
-				self:PostModify()
-			end
-		end
-
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+	self.pins:Bind("preModify", self, self.PreModify)
+	self.pins:Bind("postModify", self, self.PostModify)
 
 	-- Event node on receiving end
 	self.eventNodeType = bpnodetype.New():WithOuter(self)

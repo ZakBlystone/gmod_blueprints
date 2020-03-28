@@ -17,102 +17,74 @@ bpcommon.CreateIndexableListIterators(MODULE, "events")
 function MODULE:Setup()
 
 	self.graphs = bplist.New(bpgraph_meta):NamedItems("Graph"):WithOuter(self)
-	if self:CanHaveStructs() then self.structs = bplist.New(bpstruct_meta):NamedItems("Struct"):WithOuter(self) end
-	if self:CanHaveVariables() then self.variables = bplist.New(bpvariable_meta):NamedItems("Var"):WithOuter(self) end
-	if self:CanHaveEvents() then self.events = bplist.New(bpevent_meta):NamedItems("Event"):WithOuter(self) end
 	self.suppressGraphNotify = false
 
 	-- Graphs
-	self.graphs:AddListener(function(cb, id, graph)
+	self.graphs:BindRaw("added", self, function(id, graph)
+		graph:BindAny(self, function() self:PostModifyGraph(graph) end)
+		self:Broadcast("graphAdded", id)
+	end)
+	self.graphs:BindRaw("removed", self, function(id, graph)
+		self:RemoveNodeTypes({ graph:GetCallNodeType() })
+		self:Broadcast("graphRemoved", id)
+		self:RecacheNodeTypes()
+	end)
+	self.graphs:BindRaw("preModify", self, function(action, id, graph)
+		if action == bplist.MODIFY_RENAME then graph:PreModify() end
+	end)
+	self.graphs:BindRaw("postModify", self, function(action, id, graph)
+		if action == bplist.MODIFY_RENAME then graph:PostModify() end
+	end)
 
-		if cb == bplist.CB_ADD then
-			graph:AddListener(function() self:PostModifyGraph(graph) end)
-			self:FireListeners(bpmodule.CB_GRAPH_ADD, id)
-		elseif cb == bplist.CB_REMOVE then
-			self:RemoveNodeTypes({ graph:GetCallNodeType() })
-			self:FireListeners(bpmodule.CB_GRAPH_REMOVE, id)
+	local function BindNodeTypeEvents( list, t )
+
+		local cv =  function(v, e) return e[v](e) end 
+		list:BindRaw("added", self, function(id, e)
 			self:RecacheNodeTypes()
-		end
+		end)
 
-	end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
+		list:BindRaw("removed", self, function(id, e)
+			self:RemoveNodeTypes(bpcommon.Transform(t, {}, cv, e))
+			self:RecacheNodeTypes()
+		end)
 
-	self.graphs:AddListener(function(cb, action, id, graph)
+		list:BindRaw("preModify", self, function(action, id, e)
+			if action ~= bplist.MODIFY_RENAME then return end
+			for _, v in ipairs(bpcommon.Transform(t, {}, cv, e)) do
+				self:PreModifyNodeType( v )
+			end
+		end)
 
-		if action ~= bplist.MODIFY_RENAME then return end
-		if cb == bplist.CB_PREMODIFY then
-			graph:PreModify()
-		elseif cb == bplist.CB_POSTMODIFY then
-			graph:PostModify()
-		end
+		list:BindRaw("postModify", self, function(action, id, e)
+			if action ~= bplist.MODIFY_RENAME then return end
+			for _, v in ipairs(bpcommon.Transform(t, {}, cv, e)) do
+				self:PostModifyNodeType( v )
+			end
+		end)
 
-	end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+	end
 
 	-- Structs
 	if self:CanHaveStructs() then
 		
-		self.structs:AddListener(function(cb, id, struct)
-			if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ struct:MakerNodeType(), struct:BreakerNodeType() }) end
-			self:RecacheNodeTypes()
-		end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
-
-		self.structs:AddListener(function(cb, action, id, struct)
-
-			if action ~= bplist.MODIFY_RENAME then return end
-			if cb == bplist.CB_PREMODIFY then
-				self:PreModifyNodeType( struct:MakerNodeType() )
-				self:PreModifyNodeType( struct:BreakerNodeType() )
-			elseif cb == bplist.CB_POSTMODIFY then
-				self:PostModifyNodeType( struct:MakerNodeType() )
-				self:PostModifyNodeType( struct:BreakerNodeType() )
-			end
-
-		end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+		self.structs = bplist.New(bpstruct_meta):NamedItems("Struct"):WithOuter(self)
+		BindNodeTypeEvents( self.structs, {"MakerNodeType", "BreakerNodeType"} )
 
 	end
 
 	-- Events
 	if self:CanHaveEvents() then
 
-		self.events:AddListener(function(cb, id, event)
-			if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ event:EventNodeType(), event:CallNodeType() }) end
-			self:RecacheNodeTypes()
-		end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
-
-		self.events:AddListener(function(cb, action, id, event)
-
-			if action ~= bplist.MODIFY_RENAME then return end
-			if cb == bplist.CB_PREMODIFY then
-				self:PreModifyNodeType( event:EventNodeType() )
-				self:PreModifyNodeType( event:CallNodeType() )
-			elseif cb == bplist.CB_POSTMODIFY then
-				self:PostModifyNodeType( event:EventNodeType() )
-				self:PostModifyNodeType( event:CallNodeType() )
-			end
-
-		end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+		self.events = bplist.New(bpevent_meta):NamedItems("Event"):WithOuter(self)
+		BindNodeTypeEvents( self.events, {"EventNodeType", "CallNodeType"} )
 
 	end
 
 	-- Variables
 	if self:CanHaveVariables() then
 
-		self.variables:AddListener(function(cb, id, var)
-			if cb == bplist.CB_REMOVE then self:RemoveNodeTypes({ var:SetterNodeType(), var:GetterNodeType() }) end
-			self:RecacheNodeTypes()
-		end, bit.bor(bplist.CB_REMOVE, bplist.CB_ADD))
-
-		self.variables:AddListener(function(cb, action, id, var)
-
-			if action ~= bplist.MODIFY_RENAME then return end
-			if cb == bplist.CB_PREMODIFY then
-				self:PreModifyNodeType( var:SetterNodeType() )
-				self:PreModifyNodeType( var:GetterNodeType() )
-			elseif cb == bplist.CB_POSTMODIFY then
-				self:PostModifyNodeType( var:SetterNodeType() )
-				self:PostModifyNodeType( var:GetterNodeType() )
-			end
-
-		end, bplist.CB_PREMODIFY + bplist.CB_POSTMODIFY)
+		self.variables = bplist.New(bpvariable_meta):NamedItems("Var"):WithOuter(self)
+		BindNodeTypeEvents( self.variables, {"SetterNodeType", "GetterNodeType"} )
 
 	end
 
@@ -175,7 +147,7 @@ end
 function MODULE:PostModifyGraph( graph )
 
 	if not self.suppressGraphNotify then
-		self:FireListeners(bpmodule.CB_GRAPH_MODIFIED, graph)
+		self:Broadcast("graphModified", graph)
 	end
 
 end

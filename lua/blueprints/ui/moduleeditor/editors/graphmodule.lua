@@ -16,11 +16,8 @@ function EDITOR:Setup()
 	self.vvars = {}
 	self.vgraphs = {}
 
-	self.callback = function(...)
-		self:OnModuleCallback(...)
-	end
-
-	self:GetModule():AddListener(self.callback, bpmodule.CB_ALL)
+	self:GetModule():Bind("graphAdded", self, self.GraphAdded)
+	self:GetModule():Bind("graphRemoved", self, self.GraphRemoved)
 
 end
 
@@ -29,6 +26,18 @@ function EDITOR:PostInit()
 	for id, graph in self:GetModule().graphs:Items() do
 		self:GraphAdded( id )
 	end
+
+	hook.Add("BPPinClassRefresh", "pinrefresh_" .. self:GetModule():GetUID(), function(class)
+		print("PIN CLASS UPDATED, INVALIDATE: " .. class)
+		for _, graph in self.module:Graphs() do
+			for _, node in graph:Nodes() do
+				node:UpdatePins()
+			end
+		end
+		for _, ed in pairs( self.vgraphs ) do
+			ed:GetEditor():InvalidateAllNodes( true )
+		end
+	end)
 
 end
 
@@ -40,7 +49,8 @@ function EDITOR:Shutdown()
 	self.vvars = {}
 	self.vgraphs = {}
 
-	self:GetModule():RemoveListener(self.callback)
+	self:GetModule():UnbindAll(self)
+	hook.Remove("BPPinClassRefresh", "pinrefresh_" .. self:GetModule():GetUID())
 
 end
 
@@ -201,10 +211,25 @@ function EDITOR:GraphRemoved( id )
 
 end
 
-function EDITOR:OnModuleCallback( cb, ... )
+function EDITOR:HandleError( errorData )
 
-	if cb == bpmodule.CB_GRAPH_ADD then self:GraphAdded(...) end
-	if cb == bpmodule.CB_GRAPH_REMOVE then self:GraphRemoved(...) end
+	local vgraph = self.vgraphs[ errorData.graphID ]
+	if not vgraph then return end
+
+	local edit = vgraph:GetEditor()
+	local nodeset = edit:GetNodeSet()
+	local vnode = nodeset:GetVNodes()[ errorData.nodeID ]
+
+	self.GraphList:Select( errorData.graphID )
+
+	if vnode then
+		local x,y = vnode:GetPos()
+		local w,h = vnode:GetSize()
+		vgraph:SetZoomLevel(0,x,y)
+		timer.Simple(0, function()
+			vgraph:CenterOnPoint(x + w/2,y + h/2)
+		end)
+	end
 
 end
 

@@ -99,8 +99,7 @@ function MODULE:GetConfigEdit( refresh )
 			print( v:GetName() .. " = " .. tostring(v:GetDefault()) )
 
 			vt:SetFromString( tostring(v:GetDefault()) )
-			vt:AddListener( function(cb, old, new, k)
-				if cb ~= bpvaluetype.CB_VALUE_CHANGED then return end
+			vt:BindRaw( "valueChanged", self, function(old, new, k)
 				v:SetDefault( vt:ToString() )
 			end )
 
