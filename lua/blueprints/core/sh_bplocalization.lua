@@ -60,11 +60,15 @@ end
 
 function ParseScript(script)
 
+	MsgC(Color(255,180,0), "Parsing: " .. tostring(script) .. "... ")
 	local str = file.Read(script, "LUA")
+	if str == nil then MsgC(Color(255,100,100), "Failed\n") return end
 
 	for m,d in string.gmatch(str, "LOCTEXT%(?\"([^\"]+)\",+%s*\"([^\"]+)\"") do
 		data[m] = d
 	end
+
+	MsgC(Color(100,255,100), "Ok\n")
 
 end
 
@@ -83,9 +87,12 @@ function ProcessScripts(dir)
 end
 
 _G.LOCTEXT = Get
-ProcessScripts("blueprints")
 
 if CLIENT then
+
+	hook.Add("BPPostInit", "initLocalization", function()
+		ProcessScripts("blueprints")
+	end)
 
 	concommand.Add("bp_refresh_localization", function()
 
