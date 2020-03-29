@@ -436,7 +436,7 @@ function MODULE:CompileVariable( compiler, id, var )
 	else
 		print("Emit variable as non-string")
 		local pt = bpvaluetype.FromPinType( vtype, function() return def end, function(v) def = v end )
-		if def then
+		if def and pt then
 			compiler.emit("instance.__" .. varName .. " = " .. pt:ToString())
 		else
 			compiler.emit("instance.__" .. varName .. " = nil")
