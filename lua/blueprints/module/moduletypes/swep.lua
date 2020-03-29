@@ -46,6 +46,8 @@ function MODULE:GetDefaultConfigTable()
 			PrintName = "BP Scripted Weapon",
 			Spawnable = true,
 			AdminOnly = false,
+			Slot = 0,
+			SlotPos = 0,
 			Primary = {
 				ClipSize = 20,
 				DefaultClip = 20,
