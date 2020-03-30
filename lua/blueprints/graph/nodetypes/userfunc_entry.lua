@@ -5,21 +5,15 @@ module("node_userfuncentry", package.seeall, bpcommon.rescope(bpschema, bpcompil
 local NODE = {}
 
 function NODE:Setup() end
-function NODE:GetOuterGraph() return self:GetType():FindOuter( bpgraph_meta ) end
-
 function NODE:GeneratePins(pins)
-
-	local graph = self:GetOuterGraph()
 
 	pins[#pins+1] = MakePin( PD_Out, "Exec", PN_Exec )
 
-	bpcommon.Transform(graph.inputs:GetTable(), pins, bppin_meta.Copy, PD_Out)
+	bpcommon.Transform(self:GetGraph().inputs:GetTable(), pins, bppin_meta.Copy, PD_Out)
 
 end
 
 function NODE:Compile(compiler, pass)
-
-	local graph = self:GetOuterGraph()
 
 	if pass == CP_PREPASS then
 

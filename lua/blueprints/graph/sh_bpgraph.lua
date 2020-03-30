@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-module("bpgraph", package.seeall, bpcommon.rescope(bpcommon, bpschema))
+module("bpgraph", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpcompiler))
 
 FL_NONE = 0
 FL_LOCK_PINS = 1
@@ -1107,6 +1107,27 @@ function meta:AddSubGraph( subgraph, x, y )
 	end
 
 	--print("Added " .. nodeCount .. " nodes and " .. connectionCount .. " connections.")
+
+end
+
+function meta:PreCompile( compiler, uniqueKeys )
+
+	self:CacheNodeTypes()
+	self:CollapseRerouteNodes()
+	compiler:EnumerateGraphVars(self, uniqueKeys)
+
+	if self.type == GT_Function then
+		compiler:CreateFunctionGraphVars(self, uniqueKeys)
+	end
+
+	compiler:CompileGraphJumpTable(self)
+	compiler:CompileGraphVarListing(self)
+
+	for id, node in self:Nodes() do
+		compiler:RunNodeCompile(node, CP_PREPASS)
+	end
+
+	return self
 
 end
 

@@ -51,7 +51,7 @@ function NODE:BuildSendThunk(compiler)
 			local num = #args + 1
 			args[num] = vcode
 			if pin:HasFlag(PNF_Table) then
-				self.send.emit("__self:netWriteTable( function(x) " .. nthunk.write:gsub("@","x") ..  " end, arg[" .. num .. "])")
+				self.send.emit("__netWriteTable( function(x) " .. nthunk.write:gsub("@","x") ..  " end, arg[" .. num .. "])")
 			else
 				self.send.emit(nthunk.write:gsub("@", "arg[" .. num .. "]"))
 			end
@@ -93,7 +93,7 @@ function NODE:BuildRecvThunk(compiler)
 		local nthunk = GetNetworkThunk(pin)
 		if nthunk ~= nil then
 			if pin:HasFlag(PNF_Table) then
-				t[#t+1] = "__self:netReadTable( function(x) return " .. nthunk.read .. " end )"
+				t[#t+1] = "__netReadTable( function(x) return " .. nthunk.read .. " end )"
 			else
 				t[#t+1] = nthunk.read
 			end

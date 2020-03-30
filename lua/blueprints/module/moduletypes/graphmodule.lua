@@ -445,9 +445,79 @@ function MODULE:CompileVariable( compiler, id, var )
 
 end
 
+function MODULE:PreCompileGraph( compiler, graph, uniqueKeys )
+
+	graph:CacheNodeTypes()
+	graph:CollapseRerouteNodes()
+	compiler:EnumerateGraphVars(graph, uniqueKeys)
+
+	if graph.type == GT_Function then
+		compiler:CreateFunctionGraphVars(graph, uniqueKeys)
+	end
+
+	compiler:CompileGraphJumpTable(graph)
+	compiler:CompileGraphVarListing(graph)
+
+	for id, node in graph:Nodes() do
+		compiler:RunNodeCompile(node, CP_PREPASS)
+	end
+
+end
+
 function MODULE:Compile( compiler, pass )
 
-	if pass == CP_MODULEGLOBALS then
+	if pass == CP_PREPASS then
+
+		-- make local copies of all module graphs so they can be edited without changing the module
+		self.cgraphs = {}
+		self.uniqueKeys = {}
+		for id, graph in self:Graphs() do
+			local cgraph = graph:CopyInto( bpgraph.New():WithOuter( self ) )
+			cgraph:PreCompile( compiler, self.uniqueKeys )
+			self.cgraphs[#self.cgraphs+1] = cgraph
+		end
+
+	elseif pass == CP_MAINPASS then
+
+		for _, graph in ipairs(self.cgraphs) do
+			compiler:CompileGraph( graph )
+		end
+
+	elseif pass == CP_MODULECODE then
+
+		compiler.emit("_FR_UTILS()")
+
+		-- network boilerplate
+		compiler.emitContext( CTX_Network )
+
+		compiler.emit("_FR_MODHEAD()")
+
+		-- emit each graph's entry function
+		for _, graph in ipairs(self.cgraphs) do
+			local id = compiler:GetID(graph)
+			compiler.emitContext( CTX_Graph .. id )
+		end
+
+		-- emit all meta events (functions with graph entry points)
+		for k, _ in pairs( compiler.getFilteredContexts(CTX_MetaEvents) ) do
+			compiler.emitContext( k )
+		end
+
+		-- network meta functions
+		compiler.emitContext( CTX_NetworkMeta )
+
+		-- update function, runs delays and resets the ilp recursion value for hooks
+		compiler.emit("_FR_UPDATE(" .. (compiler.ilp and 1 or 0) .. ")")
+
+	elseif pass == CP_NETCODEMSG then
+
+		for _, graph in ipairs(self.cgraphs) do
+			for _, node in graph:Nodes() do
+				compiler:RunNodeCompile(node, CP_NETCODEMSG)
+			end
+		end
+
+	elseif pass == CP_MODULEGLOBALS then
 
 		if self:CanHaveVariables() then
 
@@ -457,6 +527,13 @@ function MODULE:Compile( compiler, pass )
 
 			end
 
+		end
+		return true
+
+	elseif pass == CP_MODULEDEBUG then
+
+		for _, graph in ipairs(self.cgraphs) do
+			compiler:AddGraphSymbols( graph )
 		end
 
 	end

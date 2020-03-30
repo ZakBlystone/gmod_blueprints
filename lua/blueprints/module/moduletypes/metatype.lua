@@ -189,7 +189,7 @@ function MODULE:Compile(compiler, pass)
 
 	if pass == CP_PREPASS then
 
-		for k, v in ipairs( compiler.graphs ) do
+		for k, v in ipairs( self.cgraphs ) do
 			for _, node in v:Nodes() do
 				for _, pin in node:SidePins(PD_In) do
 					self:TryAutoFillPin( pin )

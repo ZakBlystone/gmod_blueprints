@@ -104,7 +104,7 @@ end]])
 		compiler.emit("\tlocal instance = self")
 		compiler.emit("\tinstance.delays = {}")
 		compiler.emit("\tinstance.__bpm = __bpm")
-		compiler.emit("\tinstance.guid = __bpm.hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
+		compiler.emit("\tinstance.guid = __hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
 		compiler.emitContext( CTX_Vars .. "global", 1 )
 		compiler.emit("\tself.bInitialized = true")
 		compiler.emit("\tself.lastThink = CurTime()")
@@ -112,7 +112,7 @@ end]])
 		compiler.emit("\tif self.ENTITY_Initialize then self:ENTITY_Initialize() end")
 		compiler.emit([[
 local bpm = instance.__bpm
-local key = "bphook_" .. bpm.guidString(instance.guid)
+local key = "bphook_" .. __guidString(instance.guid)
 for k,v in pairs(bpm.events) do
 	if v.hook and type(meta[k]) == "function" then
 		local function call(...) return instance[k](instance, ...) end
@@ -136,7 +136,7 @@ function meta:OnRemove()
 	local bpm = self.__bpm
 	for k,v in pairs(bpm.events) do
 		if not v.hook or type(meta[k]) ~= "function" then continue end
-		local key = "bphook_" .. bpm.guidString(self.guid, true)
+		local key = "bphook_" .. __guidString(self.guid, true)
 		hook.Remove(v.hook, key, false)
 	end
 	if self.ENTITY_OnRemove then self:ENTITY_OnRemove() end

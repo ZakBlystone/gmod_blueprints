@@ -281,45 +281,41 @@ end
 fragments["nethead"] = [[
 G_BPNetHandlers = G_BPNetHandlers or {}
 G_BPNetChannels = G_BPNetChannels or {}
-net.Receive("bpclosechannel", function(len, pl)
-	local channelID = net.ReadUInt(16)
-	G_BPNetChannels[channelID] = nil
-	--print("Net close netchannel: " .. channelID)
-end)
+net.Receive("bpclosechannel", function(len, pl) G_BPNetChannels[net.ReadUInt(16)] = nil end)
 net.Receive("bphandshake", function(len, pl)
 	local moduleGUID, instanceGUID = net.ReadData(16), net.ReadData(16)
 	for _, v in ipairs(G_BPNetHandlers) do
 		if v.__bpm.guid == moduleGUID then v:netReceiveHandshake(instanceGUID, len, pl) end
 	end
 end)
-net.Receive("bpmessage", function(len, pl)
+net.Receive("bpmessage", function(...)
 	local channel = G_BPNetChannels[net.ReadUInt(16)]
-	if channel ~= nil then channel:netReceiveMessage(len, pl) end
-end)]]
-
-fragments["netmain"] = [[
-function meta:allocChannel(id, guid)
+	if channel ~= nil then channel:netReceiveMessage(...) end
+end)
+local function __netWriteTable(f, t) net.WriteUInt(#t, 24) for i=1, #t do f(t[i]) end end
+local function __netReadTable(f) local t = {} for i=1, net.ReadUInt(24) do t[#t+1] = f() end return t end
+local function __netAllocChannel(id, module)
 	if (id or -1) == -1 then for i=0, 65535 do if G_BPNetChannels[i] == nil then id = i break end end end
 	if id == -1 then error("Unable to allocate network channel") end
 	if G_BPNetChannels[id] then print("WARNING: Network channel already allocated: " .. id) end
-	G_BPNetChannels[id] = self
-	return { id = id, guid = guid }
+	G_BPNetChannels[id] = module
+	return { id = id, guid = module.guid }
 end
-function meta:closeChannel(ch)
-	if ch == nil then return end
-	if G_BPNetChannels[ch.id] == nil then return end
-	--print("Free netchannel: " .. ch.id)
+local function __netCloseChannel(ch)
+	if not ch or not G_BPNetChannels[ch.id] then return end
 	G_BPNetChannels[ch.id] = nil
 	if CLIENT then return end
 	net.Start("bpclosechannel")
 	net.WriteUInt(ch.id, 16)
 	net.Broadcast()
 end
+]]
+
+fragments["netmain"] = [[
 function meta:netInit()
-	--print("Net init")
 	self.netReady, self.netCalls = false, {}
 	G_BPNetHandlers[#G_BPNetHandlers+1] = self
-	if SERVER then self.netChannel = self:allocChannel(nil, self.guid) return end
+	if SERVER then self.netChannel = __netAllocChannel(nil, self) return end
 	net.Start("bphandshake")
 	net.WriteData(__bpm.guid, 16)
 	net.WriteData(self.guid, 16)
@@ -327,8 +323,7 @@ function meta:netInit()
 	net.SendToServer()
 end
 function meta:netShutdown()
-	--print("Net shutdown")
-	if self.netChannel then self:closeChannel(self.netChannel) end
+	if self.netChannel then __netCloseChannel(self.netChannel) end
 	table.RemoveByValue(G_BPNetHandlers, self)
 end
 function meta:netUpdate()
@@ -353,15 +348,15 @@ function meta:netReceiveHandshake(instanceGUID, len, pl)
 			net.WriteData(instanceGUID, 16)
 			net.WriteUInt(self.netChannel.id, 16)
 			net.Send(pl)
-			--print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+			--print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __guidString(self.guid))
 		else
-			--print("Channel established on both roles: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+			--print("Channel established on both roles: " .. self.netChannel.id .. " -> " .. __guidString(self.guid))
 			self.netReady = true
 		end
 	else
 		local id = net.ReadUInt(16)
-		self.netChannel = self:allocChannel(id, self.guid)
-		--print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __bpm.guidString(self.guid))
+		self.netChannel = __netAllocChannel(id, self)
+		--print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __guidString(self.guid))
 		net.Start("bphandshake")
 		net.WriteData(__bpm.guid, 16)
 		net.WriteData(self.guid, 16)
@@ -369,13 +364,6 @@ function meta:netReceiveHandshake(instanceGUID, len, pl)
 		net.SendToServer()
 		self.netReady = true
 	end
-end
-function meta:netWriteTable(f, t)
-	net.WriteUInt(#t, 24) for i=1, #t do f(t[i]) end
-end
-function meta:netReadTable(f)
-	local t, n = {}, net.ReadUInt(24)
-	for i=1, n do t[#t+1] = f() end return t
 end
 function meta:netStartMessage(id)
 	net.Start("bpmessage")
@@ -397,31 +385,11 @@ end
 
 return str .. [[
 __bpm.meta = meta
-__bpm.guidString = function(g)
-	return ("%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X%0.2X"):format(
-		g[1]:byte(),g[2]:byte(),g[3]:byte(),g[4]:byte(),g[5]:byte(),g[6]:byte(),g[7]:byte(),g[8]:byte(),
-		g[9]:byte(),g[10]:byte(),g[11]:byte(),g[12]:byte(),g[13]:byte(),g[14]:byte(),g[15]:byte(),g[16]:byte())
-end
-__bpm.hexBytes = function(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
 __bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end
-__bpm.delayExists = function(key)
-	for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then return true end end
-	return false
-end
-__bpm.delay = function(key, delay, func, ...)
-	__bpm.delayKill(key)
-	__self.delays[#__self.delays+1] = { key = key, func = func, time = delay, args = {...} }
-end
+__bpm.delayExists = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then return true end end end
+__bpm.delay = function(key, delay, func, ...) __bpm.delayKill(key) __self.delays[#__self.delays+1] = { key = key, func = func, time = delay, args = {...} } end
 __bpm.delayKill = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end end
-__bpm.onError = function(msg, mod, graph, node) end
-__bpm.makeGUID = function()
-	local d,b,g,m=os.date"*t",function(x,y)return x and y or 0 end,system,bit
-	local r,n,s,u,x,y=function(x,y)return m.band(m.rshift(x,y or 0),0xFF)end,
-	math.random(2^32-1),_G.__guidsalt or b(CLIENT,2^31),os.clock()*1000,
-	d.min*1024+d.hour*32+d.day,d.year*16+d.month;_G.__guidsalt=s+1;return
-	string.char(r(x),r(x,8),r(y),r(y,8),r(n,24),r(n,16),r(n,8),r(n),r(s,24),r(s,16),
-	r(s,8),r(s),r(u,16),r(u,8),r(u),d.sec*4+b(g.IsWindows(),2)+b(g.IsLinux(),1))
-end]]
+__bpm.onError = function(msg, mod, graph, node) end]]
 
 end
 
@@ -450,7 +418,7 @@ fragments["standalone"] = [[
 local instance = __bpm.new()
 if instance.CORE_Init then instance:CORE_Init() end
 local bpm = instance.__bpm
-local key = "bphook_" .. bpm.guidString(instance.guid)
+local key = "bphook_" .. __guidString(instance.guid)
 for k,v in pairs(bpm.events) do
 	if v.hook and type(meta[k]) == "function" then
 		local function call(...) return instance[k](instance, ...) end
@@ -458,10 +426,9 @@ for k,v in pairs(bpm.events) do
 	end
 end]]
 
-fragments["standalonehead"] = [[
-
 -------------------------------------------------------- RUNTIME --------------------------------------------------------
 
+fragments["standalonehead"] = [[
 if SERVER then
 	AddCSLuaFile()
 	util.AddNetworkString("bphandshake")
@@ -592,15 +559,27 @@ local __ilp = 0
 local __ilph = 0]]
 	end
 
-	ret = ret .. "\nlocal __bpm = {}"
-	ret = ret .. [[
-
-local meta = {}
-meta.__index = meta
-]]
 	return ret
 
 end
+
+fragments["modhead"] = [[
+local __bpm = {}
+local meta = {}
+meta.__index = meta]]
+
+fragments["utils"] = [[
+local __hex = "0123456789ABCDEF"
+local function __guidString(str) return str:gsub(".", function(x) local b = string.byte(x) return __hex[1+b/16] .. __hex[1+b%16] end) end
+local function __hexBytes(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
+local function __makeGUID()
+	local d,b,g,m=os.date"*t",function(x,y)return x and y or 0 end,system,bit
+	local r,n,s,u,x,y=function(x,y)return m.band(m.rshift(x,y or 0),0xFF)end,
+	math.random(2^32-1),_G.__guidsalt or b(CLIENT,2^31),os.clock()*1000,
+	d.min*1024+d.hour*32+d.day,d.year*16+d.month;_G.__guidsalt=s+1;return
+	string.char(r(x),r(x,8),r(y),r(y,8),r(n,24),r(n,16),r(n,8),r(n),r(s,24),r(s,16),
+	r(s,8),r(s),r(u,16),r(u,8),r(u),d.sec*4+b(g.IsWindows(),2)+b(g.IsLinux(),1))
+end]]
 
 fragments["hook"] = [[
 ["\1"] = {
