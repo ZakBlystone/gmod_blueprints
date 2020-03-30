@@ -110,4 +110,13 @@ function PIN:OnClicked()
 
 end
 
+function PIN:GetNetworkThunk()
+
+	return {
+		read = "net.ReadVector()",
+		write = "net.WriteVector(@)",
+	}
+
+end
+
 RegisterPinClass("Vector", PIN)

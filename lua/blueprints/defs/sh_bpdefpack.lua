@@ -139,27 +139,27 @@ function meta:GetPinTypes()
 
 	for i=0, PN_Max-1 do
 		if blackList[i] then continue end
-		types[#types+1] = PinType(i)
+		types[#types+1] = bppintype.New(i)
 	end
 
 	for _, v in pairs(self:GetClasses()) do
 		if v:GetParam("pinTypeOverride") then continue end
-		types[#types+1] = PinType(PN_Ref, PNF_None, v.name)
+		types[#types+1] = bppintype.New(PN_Ref, PNF_None, v.name)
 	end
 
 	for _, v in pairs(self:GetStructs()) do
 		if v:GetPinTypeOverride() then continue end
-		types[#types+1] = PinType(PN_Struct, PNF_None, v.name)
+		types[#types+1] = bppintype.New(PN_Struct, PNF_None, v.name)
 	end
 
 	for _,v in ipairs(self.enums) do
-		types[#types+1] = PinType(PN_Enum, PNF_None, v.name)
+		types[#types+1] = bppintype.New(PN_Enum, PNF_None, v.name)
 	end
 
-	types[#types+1] = PinType( PN_Asset, PNF_None, "Material")
-	types[#types+1] = PinType( PN_Asset, PNF_None, "Model")
-	types[#types+1] = PinType( PN_Asset, PNF_None, "Sound")
-	types[#types+1] = PinType( PN_Asset, PNF_None, "Texture")
+	types[#types+1] = bppintype.New( PN_Asset, PNF_None, "Material")
+	types[#types+1] = bppintype.New( PN_Asset, PNF_None, "Model")
+	types[#types+1] = bppintype.New( PN_Asset, PNF_None, "Sound")
+	types[#types+1] = bppintype.New( PN_Asset, PNF_None, "Texture")
 
 	return types
 

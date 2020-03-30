@@ -21,8 +21,8 @@ function MODULE:Setup()
 
 end
 
-function MODULE:GetSelfPinType() return PinType( PN_Ref, PNF_None, "Weapon" ) end
-function MODULE:GetOwnerPinType() return PinType( PN_Ref, PNF_None, "Entity" ) end
+function MODULE:GetSelfPinType() return bppintype.New( PN_Ref, PNF_None, "Weapon" ) end
+function MODULE:GetOwnerPinType() return bppintype.New( PN_Ref, PNF_None, "Entity" ) end
 
 function MODULE:SetupEditValues( values )
 
@@ -124,7 +124,7 @@ function MODULE:CanAddNode(nodeType)
 
 end
 
-local EntityPin = PinType( PN_Ref, PNF_None, "Entity" )
+local EntityPin = bppintype.New( PN_Ref, PNF_None, "Entity" )
 function MODULE:CanCast( outPinType, inPinType )
 
 	if outPinType:Equal(self:GetModulePinType()) then

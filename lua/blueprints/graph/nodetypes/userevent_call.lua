@@ -14,7 +14,7 @@ function NODE:GeneratePins(pins)
 	local event = self:GetEvent()
 
 	if event:HasFlag( bpevent.EVF_RPC ) and not event:HasFlag( bpevent.EVF_Broadcast ) and event:HasFlag( bpevent.EVF_Server ) then
-		table.insert(pins, MakePin(PD_In, "Recipient", PinType(PN_Ref, PNF_None, "Player")))
+		table.insert(pins, MakePin(PD_In, "Recipient", bppintype.New(PN_Ref, PNF_None, "Player")))
 	end
 
 	bpcommon.Transform( event.pins:GetTable(), pins, bppin_meta.Copy, PD_In )
@@ -45,7 +45,7 @@ function NODE:BuildSendThunk(compiler)
 	local args = {}
 
 	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) and x ~= recipient end) do
-		local nthunk = GetNetworkThunk(pin)
+		local nthunk = pin.GetNetworkThunk and pin:GetNetworkThunk()
 		if nthunk ~= nil then
 			local vcode = compiler:GetPinCode(pin)
 			local num = #args + 1
@@ -90,7 +90,7 @@ function NODE:BuildRecvThunk(compiler)
 	local t = {}
 	if event:HasFlag( bpevent.EVF_Client ) then t[#t+1] = "pl" end
 	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) and x ~= recipient end) do
-		local nthunk = GetNetworkThunk(pin)
+		local nthunk = pin.GetNetworkThunk and pin:GetNetworkThunk()
 		if nthunk ~= nil then
 			if pin:HasFlag(PNF_Table) then
 				t[#t+1] = "__netReadTable( function(x) return " .. nthunk.read .. " end )"

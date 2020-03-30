@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-module("bppin", package.seeall)
+module("bppin", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bppin")
 local pinClasses = bpclassloader.Get("Pin", "blueprints/graph/pintypes/", "BPPinClassRefresh", meta)
@@ -72,8 +72,8 @@ function meta:GetDisplayName()
 	return self.displayName or self:GetName()
 end
 
-function meta:IsIn() return self:GetDir() == bpschema.PD_In end
-function meta:IsOut() return self:GetDir() == bpschema.PD_Out end
+function meta:IsIn() return self:GetDir() == PD_In end
+function meta:IsOut() return self:GetDir() == PD_Out end
 function meta:GetDefault(...) return self.default or self:GetType():GetDefault(...) end
 
 -- Funky colors!
@@ -100,9 +100,9 @@ function meta:GetConnectedPins()
 	local out = {}
 	local dir = self:GetDir()
 	for k, v in graph:Connections() do
-		if dir == bpschema.PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
-		if dir == bpschema.PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
-		out[#out+1] = graph:GetNode( dir == bpschema.PD_In and v[1] or v[3] ):GetPin( dir == bpschema.PD_In and v[2] or v[4] )
+		if dir == PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
+		if dir == PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
+		out[#out+1] = graph:GetNode( dir == PD_In and v[1] or v[3] ):GetPin( dir == PD_In and v[2] or v[4] )
 	end
 	return out
 
@@ -147,7 +147,7 @@ end
 
 function meta:ToString(printTypeInfo, printDir)
 	local str = self:GetName()
-	if printDir then str = str .. " (" .. (self:GetDir() == bpschema.PD_In and "IN" or "OUT") .. ")" end
+	if printDir then str = str .. " (" .. (self:GetDir() == PD_In and "IN" or "OUT") .. ")" end
 	if printTypeInfo then str = str .. " [" .. self:GetType():ToString() .. "]" end
 	return str
 end

@@ -1154,11 +1154,15 @@ function meta:CompileEntrypoint( compiler )
 	compiler.emit("end")
 	compiler.finish()
 
+	print("COMPILED GRAPH: " .. graphID)
+
 end
 
 function meta:CompileNodes( compiler )
 
 	local graphID = compiler:GetID(self)
+
+	print("COMPILING NODES FOR GRAPH: " .. graphID)
 
 	-- compile each single-node context in the graph
 	for id, node in self:Nodes() do
@@ -1185,7 +1189,11 @@ end
 
 function meta:Compile( compiler, pass )
 
+	print("COMPILING GRAPH: " .. self:GetName())
+
 	if pass == CP_MAINPASS then
+
+		print("COMPILING GRAPH MAIN-PASS: " .. self:GetName())
 
 		self:CompileNodes( compiler )
 		self:CompileEntrypoint( compiler )

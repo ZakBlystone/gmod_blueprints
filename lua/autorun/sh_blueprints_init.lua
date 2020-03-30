@@ -30,9 +30,11 @@ bpinclude("core/sh_bppaste.lua")
 bpinclude("core/sh_bpvalue.lua")
 
 -- GRAPH
+bpinclude("graph/sh_bpschema.lua")
 bpinclude("graph/sh_bppintype.lua")
 bpinclude("graph/sh_bppin.lua")
-bpinclude("graph/sh_bpschema.lua")
+bpinclude("graph/sh_bpcast.lua")
+bpinclude("graph/sh_bpcompiler.lua")
 bpinclude("graph/sh_bpnodetype.lua")
 bpinclude("graph/sh_bpnodetypegroup.lua")
 bpinclude("graph/sh_bpnode.lua")
@@ -46,7 +48,6 @@ bpinclude("module/sh_bpmodule.lua")
 bpinclude("module/sh_bpcompiledmodule.lua")
 bpinclude("module/sh_bpenv.lua")
 bpinclude("module/sh_bpnet.lua")
-bpinclude("module/sh_bpcompiler.lua")
 
 -- SYSTEM
 bpinclude("system/sh_bpuser.lua")

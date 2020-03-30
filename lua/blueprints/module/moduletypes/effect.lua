@@ -16,11 +16,11 @@ function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
-	self:AddAutoFill( PinType( PN_Ref, PNF_None, "CEffectData" ), "__self.__data" )
+	self:AddAutoFill( bppintype.New( PN_Ref, PNF_None, "CEffectData" ), "__self.__data" )
 
 end
 
-function MODULE:GetSelfPinType() return PinType( PN_Ref, PNF_None, "Entity" ) end
+function MODULE:GetSelfPinType() return bppintype.New( PN_Ref, PNF_None, "Entity" ) end
 
 function MODULE:SetupEditValues( values )
 

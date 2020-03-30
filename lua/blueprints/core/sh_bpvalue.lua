@@ -287,7 +287,7 @@ if CLIENT then
 	end)
 
 	--[[local tab = {}
-	local vt = FromPinType(bpschema.PinType(bpschema.PN_Struct, 0, "AddonInfo"), function() return tab end)
+	local vt = FromPinType(bppintype.New(bpschema.PN_Struct, 0, "AddonInfo"), function() return tab end)
 	if vt then
 		vt:Set({})
 

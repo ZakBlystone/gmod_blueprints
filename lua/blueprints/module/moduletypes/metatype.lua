@@ -15,7 +15,7 @@ function MODULE:Setup()
 	BaseClass.Setup(self)
 
 	self.autoFills = {}
-	self.modulePinType = PinType( PN_BPRef, PNF_None, self:GetUID() ):WithOuter(self)
+	self.modulePinType = bppintype.New( PN_BPRef, PNF_None, self:GetUID() ):WithOuter(self)
 
 	self.getSelfNodeType = bpnodetype.New():WithOuter(self)
 	self.getSelfNodeType:SetCodeType(NT_Pure)
@@ -116,7 +116,7 @@ function MODULE:AutoFillsPinType( pinType )
 end
 
 function MODULE:GetModulePinType() return self.modulePinType end
-function MODULE:GetOwnerPinType() return PinType( PN_Dummy, PNF_None, "" ) end
+function MODULE:GetOwnerPinType() return bppintype.New( PN_Dummy, PNF_None, "" ) end
 
 function MODULE:GetSelfNodeType() return self.getSelfNodeType end
 function MODULE:GetClassNodeType() return self.getClassNodeType end

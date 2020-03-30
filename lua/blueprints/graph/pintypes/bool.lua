@@ -32,4 +32,13 @@ function PIN:OnClicked()
 
 end
 
+function PIN:GetNetworkThunk()
+
+	return {
+		read = "net.ReadBool()",
+		write = "net.WriteBool(@)",
+	}
+
+end
+
 RegisterPinClass("Boolean", PIN)

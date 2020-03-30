@@ -1,7 +1,7 @@
 AddCSLuaFile()
 
 -- Can't rescope bpschema, because it's not loaded yet
-module("bppintype", package.seeall)
+module("bppintype", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bppintype")
 meta.__tostring = function(self)
@@ -10,7 +10,7 @@ end
 
 function meta:Init(type, flags, subtype)
 	self.basetype = type
-	self.flags = flags or bpschema.PNF_None
+	self.flags = flags or PNF_None
 	self.subtype = subtype
 
 	local hashStr = string.format("%0.2d_%0.2x_%s", self.basetype or -1, self.flags, tostring(self.subtype) )
@@ -24,11 +24,11 @@ function meta:GetHash()
 end
 
 function meta:AsTable()
-	return New(self:GetBaseType(), bit.bor(self:GetFlags(), bpschema.PNF_Table), self:GetSubType())
+	return New(self:GetBaseType(), bit.bor(self:GetFlags(), PNF_Table), self:GetSubType())
 end
 
 function meta:AsSingle()
-	return New(self:GetBaseType(), bit.band(self:GetFlags(), bit.bnot(bpschema.PNF_Table)), self:GetSubType())
+	return New(self:GetBaseType(), bit.band(self:GetFlags(), bit.bnot(PNF_Table)), self:GetSubType())
 end
 
 function meta:WithFlags(flags)
@@ -41,42 +41,42 @@ end
 
 function meta:GetBaseType() return self.basetype end
 function meta:GetSubType() return self.subtype end
-function meta:GetFlags(mask) return bit.band(self.flags, mask or bpschema.PNF_All) end
-function meta:GetColor() return bpschema.NodePinColors[ self:GetBaseType() ] or Color(0,0,0,255) end
-function meta:GetTypeName() return bpschema.PinTypeNames[ self:GetBaseType() ] or "UNKNOWN" end
-function meta:GetLiteralType() return bpschema.NodeLiteralTypes[ self:GetBaseType() ] end
+function meta:GetFlags(mask) return bit.band(self.flags, mask or PNF_All) end
+function meta:GetColor() return NodePinColors[ self:GetBaseType() ] or Color(0,0,0,255) end
+function meta:GetTypeName() return PinTypeNames[ self:GetBaseType() ] or "UNKNOWN" end
+function meta:GetLiteralType() return NodeLiteralTypes[ self:GetBaseType() ] end
 function meta:GetDefault()
 
-	if self:HasFlag(bpschema.PNF_Table) then return "{}" end
-	if self:GetBaseType() == bpschema.PN_Enum and bpdefs and bpdefs.Ready() then
+	if self:HasFlag(PNF_Table) then return "{}" end
+	if self:GetBaseType() == PN_Enum and bpdefs and bpdefs.Ready() then
 		local enum = bpdefs.Get():GetEnum( self )
 		if enum and enum.entries[1] then return enum.entries[1].key end
 	end
-	return bpschema.Defaults[ self:GetBaseType() ]
+	return Defaults[ self:GetBaseType() ]
 
 end
 
 function meta:GetDisplayName()
 
-	if self:IsType(bpschema.PN_BPRef) then
+	if self:IsType(PN_BPRef) then
 		local mod = self:FindOuter( bpmodule_meta )
 		if mod then return mod:GetName() end
 		local sub = self:GetSubType()
 		return sub and bpcommon.GUIDToString(self:GetSubType(), true) or "unknown blueprint"
 	end
 
-	if self:IsType(bpschema.PN_BPClass) then
+	if self:IsType(PN_BPClass) then
 		local sub = self:GetSubType()
 		local cl = bpmodule.GetClassLoader():Get( sub )
 		if cl then return "Class[" .. sub .. "]" end
 		return sub and bpcommon.GUIDToString(sub, true) or "unknown blueprint"
 	end
 
-	if self:IsType(bpschema.PN_Asset) then
+	if self:IsType(PN_Asset) then
 		return self:GetSubType()
 	end
 
-	if self:IsType(bpschema.PN_Ref) or self:IsType(bpschema.PN_Enum) or self:IsType(bpschema.PN_Struct) then
+	if self:IsType(PN_Ref) or self:IsType(PN_Enum) or self:IsType(PN_Struct) then
 		return self:GetSubType()
 	else
 		return self:GetTypeName()
@@ -93,7 +93,7 @@ function meta:FindStruct()
 		--if struct then return struct end
 
 		local mod = self:FindOuter(bpmodule_meta)
-		if mod and self:HasFlag(bpschema.PNF_Custom) and mod.structs then
+		if mod and self:HasFlag(PNF_Custom) and mod.structs then
 			for id, v in mod:Structs() do
 				if v.name == self:GetSubType() then res = v break end
 			end
@@ -109,13 +109,13 @@ function meta:FindStruct()
 
 end
 
-function meta:GetPinClass() return bpschema.PinTypeClasses[ self:GetBaseType() ] end
+function meta:GetPinClass() return PinTypeClasses[ self:GetBaseType() ] end
 function meta:ToString()
 	local str = self:GetDisplayName() --self:GetTypeName()
 	--if self:GetSubType() ~= nil then str = str .. ", " .. self:GetSubType() end
-	if self:HasFlag(bpschema.PNF_Table) then str = str .. " -table" end
-	if self:HasFlag(bpschema.PNF_Nullable) then str = str .. " -null" end
-	if self:HasFlag(bpschema.PNF_Bitfield) then str = str .. " -bitfield" end
+	if self:HasFlag(PNF_Table) then str = str .. " -table" end
+	if self:HasFlag(PNF_Nullable) then str = str .. " -null" end
+	if self:HasFlag(PNF_Bitfield) then str = str .. " -bitfield" end
 	return str
 end
 
@@ -128,7 +128,7 @@ function meta:HasFlag(fl)
 end
 
 function meta:Equal(other, flagMask, ignoreSubType)
-	flagMask = flagMask or bpschema.PNF_All
+	flagMask = flagMask or PNF_All
 	if other == nil then return false end
 	if self:GetBaseType() ~= other:GetBaseType() then return false end
 	if bit.band( self:GetFlags(), flagMask ) ~= bit.band( other:GetFlags(), flagMask ) then return false end

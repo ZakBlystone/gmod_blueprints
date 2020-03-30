@@ -68,4 +68,13 @@ function PIN:DrawLiteral(x,y,w,h,alpha)
 
 end
 
+function PIN:GetNetworkThunk()
+
+	return {
+		read = "net.ReadColor()",
+		write = "net.WriteColor(Color(@.r, @.g, @.b, @.a))",
+	}
+
+end
+
 RegisterPinClass("Color", PIN)

@@ -230,7 +230,7 @@ function MODULE:GetPinTypes( collection )
 
 		for id, v in self:Structs() do
 
-			local pinType = PinType(PN_Struct, PNF_Custom, v.name):WithOuter( v )
+			local pinType = bppintype.New(PN_Struct, PNF_Custom, v.name):WithOuter( v )
 			types[#types+1] = pinType
 
 		end
@@ -345,7 +345,7 @@ function MODULE:CanHaveEvents() return true end
 
 function MODULE:CanCast( outPinType, inPinType )
 
-	return bpschema.CanCast( outPinType, inPinType )
+	return bpcast.CanCast( outPinType, inPinType )
 
 end
 
@@ -485,6 +485,7 @@ function MODULE:Compile( compiler, pass )
 
 	if pass == CP_PREPASS then
 
+		print("MODULE PRE-COMPILE")
 		-- make local copies of all module graphs so they can be edited without changing the module
 		self.cgraphs = {}
 		self.uniqueKeys = {}
@@ -498,6 +499,7 @@ function MODULE:Compile( compiler, pass )
 
 	elseif pass == CP_MAINPASS then
 
+		print("MODULE COMPILE: " .. #self.cgraphs)
 		for _, graph in ipairs(self.cgraphs) do
 			graph:Compile( compiler, pass )
 		end

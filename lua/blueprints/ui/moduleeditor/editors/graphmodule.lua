@@ -135,7 +135,7 @@ function EDITOR:PopulateSideBar()
 
 		end
 		self.VarList.HandleAddItem = function(list)
-			local id, item = self:GetModule():NewVariable( "", bpschema.PinType( bpschema.PN_Bool ) )
+			local id, item = self:GetModule():NewVariable( "", bppintype.New( bpschema.PN_Bool ) )
 		end
 		self.VarList:SetList( self:GetModule().variables )
 

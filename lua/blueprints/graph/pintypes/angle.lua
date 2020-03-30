@@ -110,4 +110,13 @@ function PIN:OnClicked()
 
 end
 
+function PIN:GetNetworkThunk()
+
+	return {
+		read = "net.ReadAngle()",
+		write = "net.WriteAngle(@)",
+	}
+
+end
+
 RegisterPinClass("Angle", PIN)

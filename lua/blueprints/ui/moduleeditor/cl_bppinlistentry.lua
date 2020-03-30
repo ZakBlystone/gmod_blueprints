@@ -113,7 +113,7 @@ end
 
 function PANEL:SetPinType( type ) end
 function PANEL:SetPinName( name ) end
-function PANEL:GetPinType() return PinType( PN_Bool ) end
+function PANEL:GetPinType() return bppintype.New( PN_Bool ) end
 function PANEL:GetPinName() return "PIN" end
 
 function PANEL:EditName()

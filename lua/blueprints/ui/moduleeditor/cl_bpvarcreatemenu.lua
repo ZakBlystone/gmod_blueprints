@@ -102,7 +102,7 @@ function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 	local collection = bpcollection.New()
 	module:GetPinTypes( collection )
 
-	current = current or PinType(PN_Bool)
+	current = current or bppintype.New(PN_Bool)
 
 	local currentWidget = nil
 	local function convert( asTable )

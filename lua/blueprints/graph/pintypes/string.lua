@@ -49,5 +49,13 @@ function PIN:OnClicked()
 
 end
 
+function PIN:GetNetworkThunk()
+
+	return {
+		read = "net.ReadString()",
+		write = "net.WriteString(@)",
+	}
+
+end
 
 RegisterPinClass("String", PIN)

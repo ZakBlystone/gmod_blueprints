@@ -669,7 +669,7 @@ function meta:ConnectNodeToGrabbedPin( node )
 
 		local grabbedNode = self.grabPin:GetVNode():GetNode()
 		local pf = self.grabPin:GetPin()
-		local match = bpschema.FindMatchingPin( node:GetType(), pf, self.graph:GetModule() )
+		local match = bpcast.FindMatchingPin( node:GetType(), pf, self.graph:GetModule() )
 		if match ~= nil then
 			self:GetGraph():ConnectNodes(grabbedNode.id, self.grabPin:GetPinID(), node.id, match)
 		end
@@ -767,7 +767,7 @@ function meta:OpenCreationContext( pinFilter )
 		local __cache = {}
 		local mod = self.graph:GetModule()
 		menu:SetBaseFilter( function(e)
-			local pinID, pin = bpschema.FindMatchingPin( e, pinFilter, mod, __cache )
+			local pinID, pin = bpcast.FindMatchingPin( e, pinFilter, mod, __cache )
 			return pin ~= nil
 		end)
 	end

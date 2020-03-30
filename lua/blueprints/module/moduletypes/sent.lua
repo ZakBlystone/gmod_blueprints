@@ -17,12 +17,12 @@ function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
-	self:AddAutoFill( PinType( PN_Ref, PNF_None, "PhysObj" ), "__self:GetPhysicsObject()" )
-	self:AddAutoFill( PinType( PN_Ref, PNF_None, "Entity" ), "__self" )
+	self:AddAutoFill( bppintype.New( PN_Ref, PNF_None, "PhysObj" ), "__self:GetPhysicsObject()" )
+	self:AddAutoFill( bppintype.New( PN_Ref, PNF_None, "Entity" ), "__self" )
 
 end
 
-function MODULE:GetOwnerPinType() return PinType( PN_Ref, PNF_None, "Entity" ) end
+function MODULE:GetOwnerPinType() return bppintype.New( PN_Ref, PNF_None, "Entity" ) end
 
 function MODULE:SetupEditValues( values ) 
 

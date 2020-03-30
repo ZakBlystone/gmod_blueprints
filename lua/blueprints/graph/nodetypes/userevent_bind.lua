@@ -14,7 +14,7 @@ function NODE:GeneratePins(pins)
 	local event = self:GetEvent()
 
 	if event:HasFlag( bpevent.EVF_RPC ) and event:HasFlag( bpevent.EVF_Client ) then
-		table.insert(pins, MakePin(PD_Out, "Sender", PinType(PN_Ref, PNF_None, "Player")))
+		table.insert(pins, MakePin(PD_Out, "Sender", bppintype.New(PN_Ref, PNF_None, "Player")))
 	end
 
 	bpcommon.Transform( event.pins:GetTable(), pins, bppin_meta.Copy, PD_Out )

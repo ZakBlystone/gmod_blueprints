@@ -77,4 +77,13 @@ function PIN:OnClicked()
 
 end
 
+function PIN:GetNetworkThunk()
+
+	return {
+		read = "net.ReadUInt(24)",
+		write = "net.WriteUInt(@, 24)",
+	}
+
+end
+
 RegisterPinClass("Enum", PIN)
