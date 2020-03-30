@@ -5,11 +5,12 @@ module("node_userfuncexit", package.seeall, bpcommon.rescope(bpschema, bpcompile
 local NODE = {}
 
 function NODE:Setup() end
+function NODE:GetOuterGraph() return self:GetType():FindOuter( bpgraph_meta ) end
 function NODE:GeneratePins(pins)
 
 	pins[#pins+1] = MakePin( PD_In, "Exec", PN_Exec )
 
-	bpcommon.Transform(self:GetGraph().outputs:GetTable(), pins, bppin_meta.Copy, PD_In)
+	bpcommon.Transform(self:GetOuterGraph().outputs:GetTable(), pins, bppin_meta.Copy, PD_In)
 
 end
 
