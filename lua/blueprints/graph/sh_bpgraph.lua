@@ -59,7 +59,7 @@ function meta:Init(type)
 	self.callNodeType = bpnodetype.New():WithOuter( self )
 	self.callNodeType:AddFlag(NTF_Custom)
 	self.callNodeType:SetCodeType(NT_Function)
-	self.callNodeType:SetNodeClass("FuncCall")
+	self.callNodeType:SetNodeClass("UserFuncCall")
 	self.callNodeType.GetDisplayName = function() return self:GetName() end
 	self.callNodeType.GetGraphThunk = function() return self end
 	self.callNodeType.GetRole = function() return self:GetNetworkRole() end
@@ -69,7 +69,7 @@ function meta:Init(type)
 	self.callEntryNodeType:SetCodeType(NT_FuncInput)
 	self.callEntryNodeType:SetName("__Entry")
 	self.callEntryNodeType:AddFlag(NTF_NoDelete)
-	self.callEntryNodeType:SetNodeClass("FuncEntry")
+	self.callEntryNodeType:SetNodeClass("UserFuncEntry")
 	self.callEntryNodeType.GetDisplayName = function() return self:GetName() end
 	self.callEntryNodeType.GetRole = function() return self:GetNetworkRole() end
 
@@ -78,7 +78,7 @@ function meta:Init(type)
 	self.callExitNodeType:SetCodeType(NT_FuncOutput)
 	self.callExitNodeType:SetDisplayName("Return")
 	self.callExitNodeType:SetName("__Exit")
-	self.callExitNodeType:SetNodeClass("FuncExit")
+	self.callExitNodeType:SetNodeClass("UserFuncExit")
 
 	bpcommon.MakeObservable(self)
 

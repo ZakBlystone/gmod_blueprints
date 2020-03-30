@@ -33,15 +33,23 @@ function NODE:GetRole()
 
 end
 
-function NODE:GetCode()
+function NODE:Compile(compiler, pass)
 
-	local ret, arg, pins = PinRetArg( self:GetCodeType(), self:GetPins(), nil, function(s,v,k)
-		return s.. " = " .. "arg[" .. (k-1) .. "]"
-	end, "\n" )
+	if pass == CP_MAINPASS then
 
-	return ret
+		local arg = {}
+		for k, pin in self:SidePins(PD_Out) do
+			if not pin:IsType( PN_Exec ) then
+				arg[#arg+1] = compiler:GetPinCode( pin, true )
+			end
+		end
+
+		if #arg > 0 then compiler.emit( table.concat(arg, ",\n\t") .. " = ..." ) end
+
+		return true
+
+	end
 
 end
 
-
-RegisterNodeClass("EventBind", NODE)
+RegisterNodeClass("UserEventBind", NODE)

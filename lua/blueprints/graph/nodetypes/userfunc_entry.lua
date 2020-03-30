@@ -35,13 +35,14 @@ function NODE:Compile(compiler, pass)
 
 	elseif pass == CP_MAINPASS then
 
-		local ipin = 1
+		local arg = {}
 		for k, pin in self:SidePins(PD_Out) do
 			if not pin:IsType( PN_Exec ) then
-				compiler.emit( compiler:GetPinCode( pin, true ) .. " = arg[" .. ipin .. "]" )
-				ipin = ipin + 1
+				arg[#arg+1] = compiler:GetPinCode( pin, true )
 			end
 		end
+
+		if #arg > 0 then compiler.emit( table.concat(arg, ",\n\t") .. " = ..." ) end
 
 		return true
 
@@ -49,4 +50,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-RegisterNodeClass("FuncEntry", NODE)
+RegisterNodeClass("UserFuncEntry", NODE)

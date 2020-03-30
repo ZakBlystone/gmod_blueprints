@@ -171,4 +171,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-RegisterNodeClass("EventCall", NODE)
+RegisterNodeClass("UserEventCall", NODE)

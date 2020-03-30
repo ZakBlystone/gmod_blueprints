@@ -10,6 +10,9 @@ meta.__tostring = function(self) return self:ToString() end
 
 local nodeClasses = bpclassloader.Get("Node", "blueprints/graph/nodetypes/", "BPNodeClassRefresh", meta)
 
+--Common pin filters
+PF_NoExec = function( pin ) return not pin:IsType( PN_Exec ) end
+
 function meta:Init(nodeType, x, y, literals)
 
 	if type(nodeType) == "table" then

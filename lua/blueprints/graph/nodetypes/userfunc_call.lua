@@ -67,4 +67,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-RegisterNodeClass("FuncCall", NODE)
+RegisterNodeClass("UserFuncCall", NODE)

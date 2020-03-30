@@ -72,12 +72,23 @@ function meta:GetGlobals() return self.globals end
 function meta:GetInforms() return self.informs end
 function meta:GetDescription() return self.desc end
 function meta:GetGraphThunk() return self.graphThunk end
-function meta:GetNodeClass() return self.nodeClass end
 function meta:GetNodeParam(key) return self.nodeParams[key] end
 function meta:GetRequiredMeta() return self.requiredMeta end
 function meta:GetContext() return self.context end
 function meta:GetGroup() return self:GetOuter( bpnodetypegroup_meta ) end
 function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
+
+function meta:GetNodeClass()
+
+	if self.nodeClass ~= nil then return self.nodeClass end
+	if (self:GetCodeType() == NT_Function or self:GetCodeType() == NT_Pure) and self.code == nil then
+		return "FuncCall"
+	end
+	if (self:GetCodeType() == NT_Event and self.code == nil) then
+		return "EventBind"
+	end
+
+end
 
 function meta:ReturnsValues()
 
@@ -185,6 +196,7 @@ function meta:GetHook()
 
 end
 
+function meta:GetRawName() return self.name end
 function meta:GetName()
 
 	local group = self:GetGroup()
@@ -215,39 +227,7 @@ function meta:GetDisplayName()
 
 end
 
-function meta:GetCode() 
-
-	local group = self:GetGroup()
-	if self.code then return self.code end
-	if group == nil then return nil end
-
-	local groupName = group:GetName()
-
-	if self:GetContext() == NC_Hook then
-
-		local ret, arg, pins = PinRetArg( self:GetCodeType(), self:GetPins(), nil, function(s,v,k)
-			return s.. " = " .. "arg[" .. (k-1) .. "]"
-		end, "\n" )
-
-		return ret
-
-	end
-
-	local ret, arg, pins = PinRetArg( self:GetCodeType(), self:GetPins() )
-	local call = groupName .. "_." .. self.name
-
-	if self:GetContext() == NC_Class and self:HasFlag(NTF_DirectCall) then
-		call = "__self:" .. self.name
-	end
-
-	if self:GetContext() == NC_Lib then 
-		call = groupName == "GLOBAL" and self.name or groupName .. "." .. self.name
-	end
-
-	return (ret .. (#pins[PD_Out] ~= 0 and " = " or "") .. call .. "(" .. arg .. ")")
-
-end
-
+function meta:GetCode() return self.code end
 function meta:WriteToStream(stream)
 
 	assert(stream:IsUsingStringTable())

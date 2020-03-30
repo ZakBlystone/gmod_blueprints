@@ -52,4 +52,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-RegisterNodeClass("FuncExit", NODE)
+RegisterNodeClass("UserFuncExit", NODE)

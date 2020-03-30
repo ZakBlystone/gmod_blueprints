@@ -406,14 +406,16 @@ function meta:FindVarForPin(pin, noLiteral)
 
 end
 
-function meta:GetPinLiteral(pin)
+function meta:GetPinLiteral(pin, sanitize)
 
 	local node = pin:GetNode()
 	if node and node.literals[pin.id] ~= nil and not noLiteral then
 		local l = tostring(node.literals[pin.id])
-		if pin:IsType(PN_String) then l = "\"" .. SanitizeString(l) .. "\"" end
-		if pin:IsType(PN_Asset) then l = "\"" .. SanitizeString(l) .. "\"" end
+
 		if pin:IsType(PN_BPClass) then l = EscapedGUID(l) end
+		if sanitize then l = SanitizeString(l) end
+		if pin:IsType(PN_String) then l = "\"" .. l .. "\"" end
+		if pin:IsType(PN_Asset) then l = "\"" .. l .. "\"" end
 
 		return { var = l }
 	else
@@ -517,14 +519,14 @@ function meta:CompileVars(code, inVars, outVars, node)
 end
 
 -- If pin is connected, gets the connected var. Otherwise creates a literal if applicable
-function meta:GetPinVar(pin)
+function meta:GetPinVar(pin, sanitize)
 
 	local node = pin:GetNode()
 	local codeType = node:GetCodeType()
-	local pins = pin:GetConnectedPins()
 
 	if pin:IsIn() then
 
+		local pins = pin:GetConnectedPins()
 		if #pins == 1 then
 
 			local var = self:FindVarForPin(pins[1])
@@ -534,7 +536,7 @@ function meta:GetPinVar(pin)
 		-- if there are no connections, try to assign literals on this pin
 		elseif #pins == 0 then
 
-			local literalVar = self:GetPinLiteral(pin)
+			local literalVar = self:GetPinLiteral(pin, sanitize)
 			if literalVar ~= nil then
 				return literalVar
 			else
@@ -559,6 +561,7 @@ function meta:GetPinVar(pin)
 			if pin:IsType(PN_Exec) then
 
 				-- unconnected exec pins jump to ::jmp_0:: which just pops the stack
+				local pins = pin:GetConnectedPins()
 				return {
 					var = #pins == 0 and "0" or self:GetID(pins[1]:GetNode()),
 					jump = true,
@@ -631,14 +634,14 @@ function meta:CompileNodeSingle(node)
 			outVars[pos] = self:FindVarForPin(pin, true)
 		end
 
-		inVars[pos] = self:GetPinVar(pin)
+		inVars[pos] = self:GetPinVar(pin, true)
 
 	end
 
 	-- iterate through all output pins
 	for pinID, pin, pos in node:SidePins(PD_Out) do
 
-		outVars[pos] = self:GetPinVar(pin)
+		outVars[pos] = self:GetPinVar(pin, true)
 
 	end
 
@@ -1159,7 +1162,6 @@ function meta:CompileGraphMetaHook(graph, node, name)
 	self.pushIndent()
 
 	-- build argument table and store reference to 'self'
-	self.emit("local arg = {...}")
 	self.emit("__self = self")
 
 	-- emit the code for the event node

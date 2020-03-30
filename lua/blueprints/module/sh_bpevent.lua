@@ -33,7 +33,7 @@ function meta:Init()
 	self.eventNodeType:AddFlag(NTF_Custom)
 	self.eventNodeType:AddFlag(NTF_NotHook)
 	self.eventNodeType:SetCodeType(NT_Event)
-	self.eventNodeType:SetNodeClass("EventBind")
+	self.eventNodeType:SetNodeClass("UserEventBind")
 	self.eventNodeType.GetDisplayName = function() return self:GetName() end
 	self.eventNodeType.GetDescription = function() return "Custom Event: " .. self:GetName() end
 	self.eventNodeType.GetCategory = function() return self:GetName() end
@@ -43,7 +43,7 @@ function meta:Init()
 	self.callNodeType = bpnodetype.New():WithOuter(self)
 	self.callNodeType:AddFlag(NTF_Custom)
 	self.callNodeType:SetCodeType(NT_Function)
-	self.callNodeType:SetNodeClass("EventCall")
+	self.callNodeType:SetNodeClass("UserEventCall")
 	self.callNodeType.GetDisplayName = function() return "Call " .. self:GetName() end
 	self.callNodeType.GetDescription = function() return "Call " .. self:GetName() .. " event" end
 	self.callNodeType.GetCategory = function() return self:GetName() end

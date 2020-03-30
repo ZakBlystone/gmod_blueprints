@@ -2,10 +2,12 @@ AddCSLuaFile()
 
 module("bpschema", package.seeall)
 
+-- Pin directions
 PD_None = -1
 PD_In = 0
 PD_Out = 1
 
+-- Pin types
 PN_Exec = 0
 PN_Bool = 1
 PN_Vector = 2
@@ -24,6 +26,7 @@ PN_BPClass = 14
 PN_Asset = 15
 PN_Max = 16
 
+-- Core node types
 NT_Pure = 0
 NT_Function = 1
 NT_Event = 2
@@ -31,6 +34,7 @@ NT_Special = 3
 NT_FuncInput = 4
 NT_FuncOutput = 5
 
+-- Pin flags
 PNF_None = 0
 PNF_Table = 1
 PNF_Nullable = 2
@@ -38,6 +42,7 @@ PNF_Bitfield = 4
 PNF_Custom = 8
 PNF_All = 15
 
+-- Nodetype flags
 NTF_None = 0
 NTF_Deprecated = 1
 NTF_NotHook = 2
@@ -51,23 +56,16 @@ NTF_HidePinNames = 256
 NTF_Experimental = 512
 NTF_DirectCall = 1024
 
+-- Graph types
 GT_Event = 0
 GT_Function = 1
 
-MT_Library = 0
-MT_Game = 1
-MT_Entity = 2
-MT_Weapon = 3
-MT_NPC = 4
-
-RM_None = 0
-RM_Replicated = 1
-RM_RepNotify = 2
-
+-- Node roles
 ROLE_Shared = 0
 ROLE_Server = 1
 ROLE_Client = 2
 
+-- Node header colors
 NodeTypeColors = {
 	[NT_Pure] = Color(60,150,60),
 	[NT_Function] = Color(60,80,150),
@@ -77,11 +75,7 @@ NodeTypeColors = {
 	[NT_FuncOutput] = Color(120,100,250),
 }
 
-GraphTypeNames = {
-	[GT_Event] = "EventGraph",
-	[GT_Function] = "Function",
-}
-
+-- Pin type names
 PinTypeNames = {
 	[PN_Exec] = "Exec",
 	[PN_Bool] = "Boolean",
@@ -101,11 +95,13 @@ PinTypeNames = {
 	[PN_Asset] = "Asset",
 }
 
+-- Colors the graph entries in the sidebar
 GraphTypeColors = {
 	[GT_Event] = Color(120,80,80),
 	[GT_Function] = Color(60,80,150),
 }
 
+-- Pin colors in the graph editor
 NodePinColors = {
 	[PN_Exec] = Color(255,255,255),
 	[PN_Bool] = Color(255,80,80),
@@ -125,6 +121,7 @@ NodePinColors = {
 	[PN_Asset] = Color(255,210,120),
 }
 
+-- Equivalent Lua type for pin
 NodeLiteralTypes = {
 	[PN_Bool] = "bool",
 	[PN_Number] = "number",
@@ -134,6 +131,7 @@ NodeLiteralTypes = {
 	--[PN_Vector] = "vector",
 }
 
+-- Pin default values when compiled
 Defaults = {
 	[PN_Bool] = "false",
 	[PN_Vector] = "Vector()",
@@ -149,6 +147,7 @@ Defaults = {
 	[PN_Asset] = "",
 }
 
+-- Pin class to instantiate when pin is created
 PinTypeClasses = {
 	[PN_Bool] = "Boolean",
 	[PN_Number] = "Number",
@@ -162,6 +161,7 @@ PinTypeClasses = {
 	[PN_Asset] = "Asset",
 }
 
+-- Valuetype class to use for pin
 PinValueTypes = {
 	[PN_Bool] = "boolean",
 	[PN_Number] = "number",
@@ -175,10 +175,12 @@ PinValueTypes = {
 
 PinType = bppintype.New
 
+-- Determines if value is, or can be use like a bppintype
 function IsPinType(v)
 	return isbppin(v) or isbppintype(v)
 end
 
+-- Wrapper for PinValueTypes
 function GetPinValueTypeClass(pintype)
 
 	local class = PinValueTypes[ pintype:GetBaseType() ]
@@ -297,29 +299,6 @@ function MakePin(dir, name, pintype, flags, ex, desc)
 		istype and pintype or bppintype.New(pintype, flags, ex),
 		desc
 	)
-end
-
-function PinRetArg( codeType, nodePins, infmt, outfmt, concat )
-
-	concat = concat or ","
-	--print(nodeType.name)
-	local base = (codeType == NT_Event) and 2 or 1
-	local pins = {[PD_In] = {}, [PD_Out] = {}}
-	for _, v in ipairs(nodePins) do
-		if v:GetBaseType() == PN_Exec then continue end
-		local dir = v:GetDir()
-		local num = (base+#pins[dir])
-		local s = (dir == PD_In and "$" or "#") .. num
-		if infmt and dir == PD_In then s = infmt(s, v, num) end
-		if outfmt and dir == PD_Out then s = outfmt(s, v, num) end
-		local p = pins[dir]
-		p[#p+1] = s
-	end
-
-	local ret = table.concat(pins[PD_Out], concat)
-	local arg = table.concat(pins[PD_In], concat)
-	return ret, arg, pins
-
 end
 
 function FindMatchingPin(ntype, pf, module, cache)
