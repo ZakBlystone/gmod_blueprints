@@ -76,5 +76,26 @@ function MODULE:ReadData( stream, mode, version )
 
 end
 
+function MODULE:Compile( compiler, pass )
+
+	if pass == CP_MODULECODE then
+
+		-- header for module
+		if bit.band(compiler.flags, CF_Standalone) == 0 then
+			compiler.emit("_FR_MODHEAD()")
+		end
+
+		compiler.emit("local data = " .. bpvaluetype.FromValue(self.data, function() return self.data end):ToString() )
+		if bit.band(compiler.flags, CF_Standalone) ~= 0 then
+			compiler.emit("bplocalization.AddLocTable(data)")
+		else
+			compiler.emit("__bpm.init = function() bplocalization.AddLocTable(data) end")
+			compiler.emit("__bpm.shutdown = function() bplocalization.RemoveLocTable(data) end")
+			compiler.emit("return __bpm")
+		end
+
+	end
+
+end
 
 RegisterModuleClass("LocModule", MODULE, "Configurable")

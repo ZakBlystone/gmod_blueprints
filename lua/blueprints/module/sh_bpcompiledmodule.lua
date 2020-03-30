@@ -23,6 +23,8 @@ function meta:TranslateCode( code )
 
 	if self.translated then return self.translated end
 
+	if code[1] ~= '\n' then code = "\n" .. code end
+
 	code = code:gsub("([\n%s]+)_FR_(%w+)%(([^%)]*)%)", function(a, b, args)
 
 		local fr = fragments[b:lower()]
@@ -181,14 +183,14 @@ end
 
 function imeta:__Init( )
 
-	self:netInit()
+	if self.netInit then self:netInit() end
 	self:__BindGamemodeHooks()
 
 end
 
 function imeta:__Shutdown()
 
-	self:netShutdown()
+	if self.netShutdown then self:netShutdown() end
 	self:__UnbindGamemodeHooks()
 
 end
@@ -377,8 +379,8 @@ fragments["support"] = function(args)
 	if args[1] == "1" then
 		str = [[
 __bpm.checkilp = function()
-	if __ilph > ]] .. args[2] .. [[ then __bpm.onError("Infinite loop in hook", 0, __dbggraph or -1, __dbgnode or -1) return true end
-	if __ilptrip then __bpm.onError("Infinite loop", 0, __dbggraph or -1, __dbgnode or -1) return true end
+	if __ilph > ]] .. args[2] .. [[ then __bpm.error("Infinite loop in hook") return true end
+	if __ilptrip then __bpm.error("Infinite loop") return true end
 end
 ]]
 	end
@@ -387,9 +389,10 @@ return str .. [[
 __bpm.meta = meta
 __bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end
 __bpm.delayExists = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then return true end end end
-__bpm.delay = function(key, delay, func, ...) __bpm.delayKill(key) __self.delays[#__self.delays+1] = { key = key, func = func, time = delay, args = {...} } end
+__bpm.delay = function(key, delay, func, ...) __bpm.delayKill(key) __self.delays[#__self.delays+1] = { key = key, f = func, t = delay, a = {...} } end
 __bpm.delayKill = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end end
-__bpm.onError = function(msg, mod, graph, node) end]]
+__bpm.onError = function(msg, mod, graph, node) end
+__bpm.error = function(msg) __bpm.onError(e, 0, __dbggraph or -1, __dbgnode or -1) end]]
 
 end
 
@@ -402,14 +405,8 @@ fragments["update"] = function(args)
 function meta:update( rate )]] .. x .. [[
 	rate = rate or FrameTime()
 	self:netUpdate()
-	for i=#self.delays, 1, -1 do
-		local d = self.delays[i] d.time = d.time - rate
-		if d.time <= 0 then
-			local s,e = pcall(d.func, unpack(d.args))
-			if not s then self.delays = {} __bpm.onError(e, 0, __dbggraph or -1, __dbgnode or -1) end
-			if type(e) == "number" then self.delays[i].time = e else table.remove(self.delays, i) end
-		end
-	end
+	local t,d = self.delays
+	for i=#t, 1, -1 do d = t[i] d.t = d.t - rate if d.t <= 0 then d.t = d.f(unpack(d.a)) if not d.t then table.remove(t,i) end end end
 end]]
 
 end
@@ -563,10 +560,13 @@ local __ilph = 0]]
 
 end
 
-fragments["modhead"] = [[
-local __bpm = {}
-local meta = {}
-meta.__index = meta]]
+fragments["modhead"] = function(args, mod)
+
+	return [[
+local __bpm = { guid = ]] .. bpcommon.EscapedGUID(mod:GetUID()) .. [[ }
+local meta = {} meta.__index = meta]]
+
+end
 
 fragments["utils"] = [[
 local __hex = "0123456789ABCDEF"

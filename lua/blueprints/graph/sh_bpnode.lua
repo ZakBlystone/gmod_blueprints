@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema))
+module("bpnode", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpcompiler))
 
 local DummyNodeType = bpnodetype.New()
 DummyNodeType:SetDisplayName("InvalidNode")
@@ -486,6 +486,19 @@ function meta:ReadFromStream(stream, mode, version)
 	self.data = bpdata.ReadValue(stream)
 	self.x = stream:ReadFloat()
 	self.y = stream:ReadFloat()
+
+end
+
+function meta:Compile(compiler, pass)
+
+	if pass == CP_METAPASS then
+
+		local rm = self:GetRequiredMeta()
+		if rm == nil then return end
+
+		for _, m in ipairs(rm) do print("REQUIRE: " .. m) compiler:AddRequiredMetaTable( m ) end
+
+	end
 
 end
 

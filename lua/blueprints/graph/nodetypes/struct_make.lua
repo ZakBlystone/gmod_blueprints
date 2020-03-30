@@ -25,6 +25,8 @@ end
 
 function NODE:Compile(compiler, pass)
 
+	BaseClass.Compile( self, compiler, pass )
+
 	local struct = self:GetStruct()
 
 	if pass == CP_PREPASS then

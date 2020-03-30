@@ -130,6 +130,8 @@ end
 
 function NODE:Compile(compiler, pass)
 
+	BaseClass.Compile( self, compiler, pass )
+
 	local event = self:GetEvent()
 	if pass == bpcompiler.CP_PREPASS then
 

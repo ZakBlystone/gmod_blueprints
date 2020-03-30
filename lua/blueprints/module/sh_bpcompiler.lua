@@ -15,11 +15,13 @@ CP_PREPASS = 0
 CP_MAINPASS = 1
 CP_NETCODEMSG = 2
 CP_ALLOCVARS = 3
-CP_MODULEMETA = 4
-CP_MODULEBPM = 5
-CP_MODULEGLOBALS = 6
-CP_MODULECODE = 7
-CP_MODULEDEBUG = 8
+CP_METAPASS = 4
+CP_MODULEMETA = 5
+CP_MODULEBPM = 6
+CP_MODULEGLOBALS = 7
+CP_MODULECODE = 8
+CP_MODULEDEBUG = 9
+CP_MODULEFOOTER = 10
 
 TK_GENERIC = 0
 TK_NETCODE = 1
@@ -80,12 +82,17 @@ function meta:Init( mod, flags )
 		self.emitIndented( self.getContext( context ), tabcount )
 	end
 	self.finish = function()
-		self.contexts[self.current_context] = self.buffer
+		local c = self.contexts[self.current_context]
+		if c ~= nil then
+			for _, v in ipairs(self.buffer) do c[#c+1] = v end
+		else
+			self.contexts[self.current_context] = self.buffer
+		end
 		self.buffer = {}
 		self.current_context = nil
 	end
-	self.getContext = function(ctx)
-		if not self.contexts[ctx] then error("Compiler context not found: '" .. ctx .. "'") end
+	self.getContext = function(ctx, noError)
+		if not self.contexts[ctx] and not noError then error("Compiler context not found: '" .. ctx .. "'") end
 		return self.contexts[ctx]
 	end
 	self.getFilteredContexts = function(filter)
@@ -357,6 +364,10 @@ function meta:EnumerateGraphVars(graph, uniqueKeys)
 
 		self.varscope = nil
 
+	end
+
+	if graph.type == GT_Function then
+		self:CreateFunctionGraphVars(graph, uniqueKeys)
 	end
 
 end
@@ -730,6 +741,8 @@ function meta:CompileNodeFunction(node)
 	local graphID = self:GetID(node:GetGraph())
 	local nodeID = self:GetID(node)
 
+	self:RunNodeCompile( node, CP_METAPASS )
+
 	self.begin(CTX_FunctionNode .. graphID .. "_" .. nodeID)
 	if self.debugcomments then self.emit("-- " .. node:ToString()) end
 	self.emit("::jmp_" .. nodeID .. "::")
@@ -771,59 +784,24 @@ function meta:CompileNodeFunction(node)
 
 end
 
+function meta:AddRequiredMetaTable(t)
+
+	self.requiredMetaTables = self.requiredMetaTables or {}
+	self.requiredMetaTables[t] = true
+
+end
+
 -- emits some boilerplate code for indexing gmod's metatables
 function meta:CompileMetaTableLookup()
 
 	self.begin(CTX_MetaTables)
 
 	local tables = {}
-
-	-- Collect all used types from module and write out the needed meta tables
-	local types = self.module:GetUsedPinTypes(nil, true)
-	for _, t in ipairs(types) do
-
-		local baseType = t:GetBaseType()
-		if baseType == PN_Ref then
-
-			local class = bpdefs.Get():GetClass(t)
-			tables[#tables+1] = class.name
-
-		elseif baseType == PN_Struct then
-
-			local struct = bpdefs.Get():GetStruct(t)
-			local metaTable = struct and struct:GetMetaTable() or nil
-			if metaTable then
-				tables[#tables+1] = metaTable
-			end
-
-		elseif baseType == PN_Vector then
-
-			tables[#tables+1] = "Vector"
-
-		elseif baseType == PN_Angles then
-
-			tables[#tables+1] = "Angle"
-
-		elseif baseType == PN_Color then
-
-			tables[#tables+1] = "Color"
-
-		end
-
+	for k,v in pairs(self.requiredMetaTables or {}) do
+		tables[#tables+1] = k
 	end
 
-	-- Some nodes require access to additional metatables, process them here
-	for _, graph in self.module:Graphs() do
-		for _, node in graph:Nodes() do
-			local rm = node:GetRequiredMeta()
-			if not rm then continue end
-			for _, m in ipairs(rm) do
-				if not table.HasValue(tables, m) then tables[#tables+1] = m end
-			end
-		end
-	end
-
-	self.emit("\n_FR_MTL(" .. table.concat(tables, ",") .. ")")
+	if #tables ~= 0 then self.emit("_FR_MTL(" .. table.concat(tables, ",") .. ")") end
 
 	self.finish()
 
@@ -902,45 +880,6 @@ function meta:CompileGraphVarListing(graph)
 
 end
 
--- compiles the graph entry function
-function meta:CompileGraphEntry(graph)
-
-	local graphID = self:GetID(graph)
-
-	self.begin(CTX_Graph .. graphID)
-
-	-- graph function header and callstack
-	self.emit("\nlocal function graph_" .. graphID .. "_entry( ip )\n")
-
-	-- debugging info
-	if self.debug then
-		self.emit( "\t__dbggraph = " .. graphID)
-	end
-
-	-- emit graph-local variables
-	self.emitContext( CTX_Vars .. graphID, 1 )
-
-	-- emit jump table
-	self.emit( "\t_FR_CALLSTACK()")
-
-	self.emitContext( CTX_JumpTable .. graphID, 1 )
-
-	-- emit all functions belonging to this graph
-	local code = self.getFilteredContexts( CTX_FunctionNode .. graphID )
-	for k, _ in pairs(code) do
-		self.emitContext( k, 1 )
-	end
-
-	-- emit terminus jump vector
-	self.emit("\n\t::__terminus::\n")
-	self.emit("end")
-
-	self.finish()
-
-	--print(table.concat( self.getContext( CTX_Graph .. graphID ), "\n" ))
-
-end
-
 function meta:CompileNetworkCode()
 
 	self.begin(CTX_Network)
@@ -986,56 +925,10 @@ function meta:CompileCodeSegment()
 	end
 
 	self.emitContext( CTX_MetaTables )
-	self.emit("_FR_HEAD(" .. (self.debug and 1 or 0) .. ", " .. (self.ilp and 1 or 0) .. ")")
-
 	self:RunModuleCompile( CP_MODULECODE )
 	self:RunModuleCompile( CP_MODULEMETA )
-
-	if self.module:IsConstructable() then
-
-		-- constructor
-		self.emit("__bpm.new = function()")
-		self.emit("\tlocal instance = setmetatable({}, meta)")
-		self.emit("\tinstance.delays = {}")
-		self.emit("\tinstance.__bpm = __bpm")
-		self.emit("\tinstance.guid = __makeGUID()")
-		self.emitContext( CTX_Vars .. "global", 1 )
-		self.emit("\treturn instance")
-		self.emit("end")
-
-	end
-
 	self:RunModuleCompile( CP_MODULEBPM )
-
-	-- event listing
-	self.emit("__bpm.events = {")
-	for k, _ in pairs( self.getFilteredContexts(CTX_Hooks) ) do
-		self.emitContext( k, 1 )
-	end
-	self.emit("}")
-
-	-- infinite-loop-protection checker
-	if self.ilp then
-		self.emit("_FR_SUPPORT(1, " .. self.ilpmaxh .. ")")
-	else
-		self.emit("_FR_SUPPORT()")
-	end
-
-	-- metatable for the module
-	
-	self.emit("__bpm.guid = " .. bpcommon.EscapedGUID(self.module:GetUID()))
-
-	if bit.band(self.flags, CF_Standalone) ~= 0 then
-
-		if self.module:IsConstructable() then
-			self.emit("_FR_STANDALONE()")
-		end
-
-	else
-
-		self.emit("return __bpm")
-
-	end
+	self:RunModuleCompile( CP_MODULEFOOTER )
 
 	self.finish()
 
@@ -1086,41 +979,6 @@ function meta:RunModuleCompile(pass)
 
 	if self.module.Compile then return self.module:Compile(self, pass) end
 	return false
-
-end
-
--- called on all graphs before main compile pass, generates all potentially shared data between graphs
-function meta:PreCompileGraph(graph, uniqueKeys)
-
-	Profile("cache-node-types", function()
-		graph:CacheNodeTypes()
-	end)
-
-	Profile("collapse-reroutes", function()
-		graph:CollapseRerouteNodes()
-	end)
-
-	Profile("enumerate-graph-vars", function()
-
-		-- 'uniqueKeys' is a table for keeping keys distinct, global variables must be distinct when each graph generates them.
-		-- pure node variables do not need exclusive keys between graphs because they are local
-		self:EnumerateGraphVars(graph, uniqueKeys)
-
-	end)
-
-	if graph.type == GT_Function then
-		Profile("create-function-vars", self.CreateFunctionGraphVars, self, graph, uniqueKeys)
-	end
-
-	-- compile jump table and variable listing for this graph
-	Profile("jump-table", self.CompileGraphJumpTable, self, graph)
-	Profile("var-listing", self.CompileGraphVarListing, self, graph)
-
-	Profile("graph-prepass", function()
-		for id, node in graph:Nodes() do
-			self:RunNodeCompile(node, CP_PREPASS)
-		end
-	end)
 
 end
 
@@ -1180,63 +1038,6 @@ function meta:CompileGraphMetaHook(graph, node, name)
 
 end
 
--- compile a full graph
-function meta:CompileGraph(graph)
-
-	local graphID = self:GetID(graph)
-	local moduleID = self:GetID(self.module)
-
-	-- compile each single-node context in the graph
-	for id, node in graph:Nodes() do
-		Profile("single-node", self.CompileNodeSingle, self, node)
-	end
-
-	-- compile all non-pure function nodes in the graph (and events / special nodes)
-	for id, node in graph:Nodes() do
-		if node:GetCodeType() ~= NT_Pure then
-			Profile("functions", self.CompileNodeFunction, self, node)
-		end
-	end
-
-	-- compile all events nodes in the graph
-	for id, node in graph:Nodes() do
-		local codeType = node:GetCodeType()
-		if codeType == NT_Event then
-			self:CompileGraphMetaHook(graph, node, node:GetTypeName())
-		elseif codeType == NT_FuncInput then
-			local name = graph:GetHookType() or graph:GetName()
-			self:CompileGraphMetaHook(graph, node, name)
-		end
-	end
-
-	-- compile graph's entry function
-	Profile("graph-entries", self.CompileGraphEntry, self, graph)
-
-	--print("COMPILING GRAPH: " .. graph:GetName() .. " [" .. graph:GetFlags() .. "]")
-
-	-- compile hook listing for each event (only events that have hook designations)
-	self.begin(CTX_Hooks .. graphID)
-
-	for id, node in graph:Nodes() do
-		local codeType = node:GetCodeType()
-		local hook = node:GetHook()
-		if codeType == NT_Event and hook then
-
-			local args = {node:GetTypeName(), hook, graphID, id}
-			self.emit("_FR_HOOK(" .. table.concat(args, ",") .. ")")
-
-		end
-	end
-
-	if graph:HasFlag(bpgraph.FL_HOOK) then
-		local args = {graph:GetHookType() or graph:GetName(), graph:GetName(), graphID, -1}
-		self.emit("_FR_HOOK(" .. table.concat(args, ",") .. ")")
-	end
-
-	self.finish()
-
-end
-
 function meta:Compile()
 
 	--print("COMPILING MODULE...")
@@ -1244,8 +1045,6 @@ function meta:Compile()
 	ProfileStart("bpcompiler:Compile")
 
 	self:Setup()
-
-	Profile("meta-lookup", self.CompileMetaTableLookup, self)
 
 	self:RunModuleCompile( CP_PREPASS )
 
@@ -1255,6 +1054,9 @@ function meta:Compile()
 	self:RunModuleCompile( CP_MAINPASS )
 
 	Profile("netcode", self.CompileNetworkCode, self)
+
+	-- required metatables
+	Profile("meta-lookup", self.CompileMetaTableLookup, self)
 
 	-- compile main code segment
 	Profile("code-segment", self.CompileCodeSegment, self)

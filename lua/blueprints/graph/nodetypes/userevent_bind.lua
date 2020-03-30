@@ -35,6 +35,8 @@ end
 
 function NODE:Compile(compiler, pass)
 
+	BaseClass.Compile( self, compiler, pass )
+
 	if pass == CP_MAINPASS then
 
 		local arg = {}
@@ -47,6 +49,11 @@ function NODE:Compile(compiler, pass)
 		if #arg > 0 then compiler.emit( table.concat(arg, ",\n\t") .. " = ..." ) end
 
 		return true
+
+	elseif pass == CP_METAPASS then
+
+		local graph = self:GetGraph()
+		compiler:CompileGraphMetaHook(graph, self, self:GetTypeName())
 
 	end
 

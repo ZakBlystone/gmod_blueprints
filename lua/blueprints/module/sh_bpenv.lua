@@ -109,7 +109,7 @@ end
 hook.Add("Think", "BPUpdateModules", function()
 
 	for _, instance in ipairs(active) do
-		instance:update()
+		if instance.update then instance:update() end
 	end
 
 end)

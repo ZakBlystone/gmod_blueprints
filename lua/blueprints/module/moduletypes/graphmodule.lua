@@ -438,28 +438,45 @@ function MODULE:CompileVariable( compiler, id, var )
 		local pt = bpvaluetype.FromPinType( vtype, function() return def end, function(v) def = v end )
 		if def and pt then
 			compiler.emit("instance.__" .. varName .. " = " .. pt:ToString())
-		else
-			compiler.emit("instance.__" .. varName .. " = nil")
 		end
 	end
 
 end
 
-function MODULE:PreCompileGraph( compiler, graph, uniqueKeys )
+function MODULE:AddRequiredMetaTables( compiler )
 
-	graph:CacheNodeTypes()
-	graph:CollapseRerouteNodes()
-	compiler:EnumerateGraphVars(graph, uniqueKeys)
+	-- Collect all used types from module and write out the needed meta tables
+	local types = self:GetUsedPinTypes(nil, true)
+	for _, t in ipairs(types) do
 
-	if graph.type == GT_Function then
-		compiler:CreateFunctionGraphVars(graph, uniqueKeys)
-	end
+		local baseType = t:GetBaseType()
+		if baseType == PN_Ref then
 
-	compiler:CompileGraphJumpTable(graph)
-	compiler:CompileGraphVarListing(graph)
+			local class = bpdefs.Get():GetClass(t)
+			compiler:AddRequiredMetaTable( class.name )
 
-	for id, node in graph:Nodes() do
-		compiler:RunNodeCompile(node, CP_PREPASS)
+		elseif baseType == PN_Struct then
+
+			local struct = bpdefs.Get():GetStruct(t)
+			local metaTable = struct and struct:GetMetaTable() or nil
+			if metaTable then
+				compiler:AddRequiredMetaTable( metaTable )
+			end
+
+		elseif baseType == PN_Vector then
+
+			compiler:AddRequiredMetaTable( "Vector" )
+
+		elseif baseType == PN_Angles then
+
+			compiler:AddRequiredMetaTable( "Angle" )
+
+		elseif baseType == PN_Color then
+
+			compiler:AddRequiredMetaTable( "Color" )
+
+		end
+
 	end
 
 end
@@ -477,20 +494,23 @@ function MODULE:Compile( compiler, pass )
 			self.cgraphs[#self.cgraphs+1] = cgraph
 		end
 
+		self:AddRequiredMetaTables( compiler )
+
 	elseif pass == CP_MAINPASS then
 
 		for _, graph in ipairs(self.cgraphs) do
-			compiler:CompileGraph( graph )
+			graph:Compile( compiler, pass )
 		end
 
 	elseif pass == CP_MODULECODE then
 
-		compiler.emit("_FR_UTILS()")
-
-		-- network boilerplate
-		compiler.emitContext( CTX_Network )
-
-		compiler.emit("_FR_MODHEAD()")
+		local bDebug = compiler.debug and 1 or 0
+		local bILP = compiler.ilp and 1 or 0
+		local args = bDebug .. ", " .. bILP
+		compiler.emit("_FR_HEAD(" .. args .. ")")   -- script header
+		compiler.emit("_FR_UTILS()")                -- utilities
+		compiler.emitContext( CTX_Network )         -- network boilerplate
+		compiler.emit("_FR_MODHEAD()")              -- header for module
 
 		-- emit each graph's entry function
 		for _, graph in ipairs(self.cgraphs) do
@@ -507,7 +527,7 @@ function MODULE:Compile( compiler, pass )
 		compiler.emitContext( CTX_NetworkMeta )
 
 		-- update function, runs delays and resets the ilp recursion value for hooks
-		compiler.emit("_FR_UPDATE(" .. (compiler.ilp and 1 or 0) .. ")")
+		compiler.emit("_FR_UPDATE(" .. bILP .. ")")
 
 	elseif pass == CP_NETCODEMSG then
 
@@ -522,9 +542,7 @@ function MODULE:Compile( compiler, pass )
 		if self:CanHaveVariables() then
 
 			for id, var in self:Variables() do
-
 				self:CompileVariable( compiler, id, var )
-
 			end
 
 		end
@@ -532,8 +550,50 @@ function MODULE:Compile( compiler, pass )
 
 	elseif pass == CP_MODULEDEBUG then
 
-		for _, graph in ipairs(self.cgraphs) do
-			compiler:AddGraphSymbols( graph )
+		for _, graph in ipairs(self.cgraphs) do compiler:AddGraphSymbols( graph ) end
+
+	elseif pass == CP_MODULEBPM then
+
+		if self:IsConstructable() then
+
+			-- constructor
+			compiler.emit("__bpm.new = function()")
+			compiler.emit("\tlocal instance = setmetatable({}, meta)")
+			compiler.emit("\tinstance.delays = {}")
+			compiler.emit("\tinstance.__bpm = __bpm")
+			compiler.emit("\tinstance.guid = __makeGUID()")
+			compiler.emitContext( CTX_Vars .. "global", 1 )
+			compiler.emit("\treturn instance")
+			compiler.emit("end")
+
+		end
+
+		-- event listing
+		compiler.emit("__bpm.events = {")
+		for k, _ in pairs( compiler.getFilteredContexts(CTX_Hooks) ) do
+			compiler.emitContext( k, 1 )
+		end
+		compiler.emit("}")
+
+		-- infinite-loop-protection checker
+		if compiler.ilp then
+			compiler.emit("_FR_SUPPORT(1, " .. compiler.ilpmaxh .. ")")
+		else
+			compiler.emit("_FR_SUPPORT()")
+		end
+
+	elseif pass == CP_MODULEFOOTER then
+
+		if bit.band(compiler.flags, CF_Standalone) ~= 0 then
+
+			if self:IsConstructable() then
+				compiler.emit("_FR_STANDALONE()")
+			end
+
+		else
+
+			compiler.emit("return __bpm")
+
 		end
 
 	end

@@ -10,19 +10,49 @@ module("bplocalization", package.seeall)
 local data = {}
 local cache = {}
 local meta = {}
-local locModule = nil
+local locale = {}
+local currentLocale = "en"
 
-function InstallModule(mod)
+function SetLocale(l)
 
-	locModule = mod
+	if locale[l] == nil then print("Language not supported: " .. tostring(l)) return end
+	currentLocale = l
+
+end
+
+function GetSupported()
+
+	local t = {}
+	for _,v in ipairs(locale) do
+		t[#t+1] = v.language
+	end
+
+end
+
+function AddLocTable(t)
+
+	if t == nil or t.language == nil or t.keys == nil then error("Malformed language data") end
+	locale[t.language] = t
+
+end
+
+function RemoveLocTable(t)
+
+	if t == nil or t.language == nil then error("Malformed language data") end
+	locale[t.language] = nil
+
+end
+
+function GetData()
+
+	return locale[currentLocale]
 
 end
 
 function GetLocString(key)
 
-	if locModule then
-		return locModule:GetLocString(key) or data[key] or key
-	end
+	local d = GetData()
+	if d then return d.keys[key] or data[key] or key end
 
 	return data[key] or key
 

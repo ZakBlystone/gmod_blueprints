@@ -4,6 +4,9 @@ module("editor_locmodule", package.seeall, bpcommon.rescope(bpschema))
 
 local EDITOR = {}
 
+EDITOR.CanInstallLocally = true
+EDITOR.CanExportLuaScript = true
+
 function EDITOR:Setup()
 
 	local mod = self:GetModule()
@@ -24,16 +27,6 @@ function EDITOR:Setup()
 	end
 
 	self.values:SortChildren()
-
-end
-
-function EDITOR:PopulateMenuBar( t )
-
-	BaseClass.PopulateMenuBar( self, t )
-
-	t[#t+1] = { name = LOCTEXT("loc_install", "Install"), func = function() bplocalization.InstallModule( self:GetModule() ) end, icon = "icon16/disk.png" }
-	t[#t+1] = { name = LOCTEXT("loc_reset", "Reset"), func = function() bplocalization.InstallModule( nil ) end, icon = "icon16/disk.png" }
-
 
 end
 

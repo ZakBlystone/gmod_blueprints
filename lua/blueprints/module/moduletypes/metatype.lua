@@ -197,6 +197,14 @@ function MODULE:Compile(compiler, pass)
 			end
 		end
 
+	elseif pass == CP_MODULEFOOTER then
+
+		if bit.band(compiler.flags, CF_Standalone) ~= 0 then
+
+			compiler.emit("__bpm.init()")
+
+		end
+
 	end
 
 end

@@ -1112,22 +1112,85 @@ end
 
 function meta:PreCompile( compiler, uniqueKeys )
 
+	-- prepare graph
 	self:CacheNodeTypes()
 	self:CollapseRerouteNodes()
 	compiler:EnumerateGraphVars(self, uniqueKeys)
-
-	if self.type == GT_Function then
-		compiler:CreateFunctionGraphVars(self, uniqueKeys)
-	end
-
 	compiler:CompileGraphJumpTable(self)
 	compiler:CompileGraphVarListing(self)
 
+	-- compile prepass on all nodes
 	for id, node in self:Nodes() do
 		compiler:RunNodeCompile(node, CP_PREPASS)
 	end
 
 	return self
+
+end
+
+function meta:CompileEntrypoint( compiler )
+
+	local graphID = compiler:GetID(self)
+
+	compiler.begin(CTX_Graph .. graphID)
+
+	-- graph function header and callstack
+	compiler.emit("\nlocal function graph_" .. graphID .. "_entry( ip )\n")
+
+	-- debugging info
+	if compiler.debug then compiler.emit( "\t__dbggraph = " .. graphID) end
+
+	-- emit graph-local variables, callstack, and jumptable
+	compiler.emitContext( CTX_Vars .. graphID, 1 )
+	compiler.emit( "\t_FR_CALLSTACK()")
+	compiler.emitContext( CTX_JumpTable .. graphID, 1 )
+
+	-- emit all functions belonging to this graph
+	local code = compiler.getFilteredContexts( CTX_FunctionNode .. graphID )
+	for k, _ in pairs(code) do compiler.emitContext( k, 1 ) end
+
+	-- emit terminus jump vector
+	compiler.emit("\n\t::__terminus::\n")
+	compiler.emit("end")
+	compiler.finish()
+
+end
+
+function meta:CompileNodes( compiler )
+
+	local graphID = compiler:GetID(self)
+
+	-- compile each single-node context in the graph
+	for id, node in self:Nodes() do
+		Profile("single-node", compiler.CompileNodeSingle, compiler, node)
+	end
+
+	-- compile all non-pure function nodes in the graph (and events / special nodes)
+	for id, node in self:Nodes() do
+		if node:GetCodeType() == NT_Pure then continue end
+		Profile("functions", compiler.CompileNodeFunction, compiler, node)
+	end
+
+	-- compile hook listing for this graph if it is an event hook
+	compiler.begin(CTX_Hooks .. graphID)
+
+	if self:HasFlag(bpgraph.FL_HOOK) then
+		local args = {self:GetHookType() or self:GetName(), self:GetName(), graphID, -1}
+		compiler.emit("_FR_HOOK(" .. table.concat(args, ",") .. ")")
+	end
+
+	compiler.finish()
+
+end
+
+function meta:Compile( compiler, pass )
+
+	if pass == CP_MAINPASS then
+
+		self:CompileNodes( compiler )
+		self:CompileEntrypoint( compiler )
+
+	end
 
 end
 

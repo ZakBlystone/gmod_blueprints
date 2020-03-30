@@ -129,6 +129,8 @@ end
 
 function NODE:Compile(compiler, pass)
 
+	BaseClass.Compile( self, compiler, pass )
+
 	if pass == CP_PREPASS then
 
 		return true

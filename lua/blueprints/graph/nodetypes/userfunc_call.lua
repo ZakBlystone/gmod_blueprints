@@ -23,6 +23,8 @@ end
 
 function NODE:Compile(compiler, pass)
 
+	BaseClass.Compile( self, compiler, pass )
+
 	local graph = self:GetGraphThunk()
 
 	if pass == CP_PREPASS then
