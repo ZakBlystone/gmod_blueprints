@@ -14,7 +14,8 @@ function EDITOR:Setup()
 
 	local rank = {
 		["language"] = 1,
-		["keys"] = 2,
+		["locale"] = 2,
+		["keys"] = 3,
 	}
 	function self.values:SortChildren()
 		table.sort(self._children, function(a,b)

@@ -11,7 +11,7 @@ local data = {}
 local cache = {}
 local meta = {}
 local locale = {}
-local currentLocale = "en"
+local currentLocale = "en_us"
 
 function SetLocale(l)
 
@@ -24,22 +24,23 @@ function GetSupported()
 
 	local t = {}
 	for _,v in ipairs(locale) do
-		t[#t+1] = v.language
+		t[#t+1] = v.locale
 	end
+	return t
 
 end
 
 function AddLocTable(t)
 
-	if t == nil or t.language == nil or t.keys == nil then error("Malformed language data") end
-	locale[t.language] = t
+	if t == nil or t.locale == nil or t.keys == nil then error("Malformed language data") end
+	locale[t.locale] = t
 
 end
 
 function RemoveLocTable(t)
 
-	if t == nil or t.language == nil then error("Malformed language data") end
-	locale[t.language] = nil
+	if t == nil or t.locale == nil then error("Malformed language data") end
+	locale[t.locale] = nil
 
 end
 

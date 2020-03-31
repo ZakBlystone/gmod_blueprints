@@ -21,7 +21,8 @@ function MODULE:Setup()
 		t[v] = tostring(bplocalization.Get(v))
 	end
 
-	self.data.language = "en"
+	self.data.locale = "en_us"
+	self.data.language = "English"
 	self.data.keys = t
 
 end
@@ -83,6 +84,8 @@ function MODULE:Compile( compiler, pass )
 		-- header for module
 		if bit.band(compiler.flags, CF_Standalone) == 0 then
 			compiler.emit("_FR_MODHEAD()")
+		else
+			compiler.emit("AddCSLuaFile()")
 		end
 
 		compiler.emit("local data = " .. bpvaluetype.FromValue(self.data, function() return self.data end):ToString() )
