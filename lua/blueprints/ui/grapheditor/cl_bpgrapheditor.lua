@@ -376,11 +376,33 @@ function meta:PasteGraph()
 
 end
 
+function meta:CheckNodeSpawn(key, nodeType, wx, wy)
+	if input.IsKeyDown ( key ) then
+		local scaleFactor = self:GetCoordinateScaleFactor()
+		local _, pinNode = self:GetGraph():AddNode(nodeType, wx/scaleFactor, wy/scaleFactor - 15)
+		if pinNode == nil then
+			self:Popup("Cannot create delay node inside function!")
+		end
+		return true
+	end
+end
+
+local nodeSpawners = {
+	[KEY_B] = "LOGIC_If",
+	[KEY_D] = "CORE_Delay",
+	[KEY_S] = "CORE_Sequence",
+}
+
 function meta:LeftMouse(x,y,pressed)
 
 	local wx, wy = self:PointToWorld(x,y)
 
 	if pressed then
+		for k, v in pairs(nodeSpawners) do
+			if self:CheckNodeSpawn(k, v, wx, wy) then
+				return true;
+			end
+		end
 
 		if self:PasteGraph() then return true end
 
