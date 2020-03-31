@@ -538,7 +538,7 @@ end
 
 fragments["head"] = function(args)
 
-	local ret = "local __self = nil"
+	local ret = "local __self = nil\nlocal __targetPin = nil"
 	if args[1] == "1" then
 		ret = ret .. [[
 

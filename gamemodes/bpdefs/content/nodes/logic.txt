@@ -9,6 +9,29 @@ LIB LOGIC
 		OUT False, PN_Exec, #Executes if false
 		CODE if $2 then #1 end #2
 	}
+	SPECIAL DoN, SHARED
+	{
+		DESC Only runs the output N times
+		IN Exec, PN_Exec
+		IN N=1, PN_Number, #Number of times to run
+		IN Reset, PN_Exec, #Reset the internal counter
+		OUT Thru, PN_Exec
+		OUT Counter, PN_Number, #The current counter value
+		EXPERIMENTAL
+		GLOBAL counter
+		CODE
+		{
+			if __targetPin == 3 then %counter = $2 goto popcall end
+			%counter = %counter or $2
+			#2 = %counter
+			if %counter > 0 then
+			%counter = %counter - 1
+			#1
+			else
+			goto popcall
+			end
+		}
+	}
 	PURE And, SHARED
 	{
 		OUT Result, PN_Bool
