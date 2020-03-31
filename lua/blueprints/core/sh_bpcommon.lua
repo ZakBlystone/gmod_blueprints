@@ -573,12 +573,3 @@ function CopyTable( tab, lookup_table )
 	return copy
 
 end
-
-if SERVER then
-
-	local t = {{t=1}, {t=2}, {t=1}}
-	t[3].t = nil
-	t[3] = t[3].t and t[3]
-	PrintTable(t)
-
-end
