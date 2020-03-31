@@ -432,7 +432,16 @@ function meta:GetVarCode(var, jump)
 	end
 
 	local s = ""
-	if jump and var.jump then s = "goto jmp_" end
+
+	if jump and var.jump and var.pin then
+		local execCount = 0
+		for _, p in var.pin:GetNode():SidePins(PD_In) do
+			if p:IsType(PN_Exec) then execCount = execCount + 1 end
+		end
+		if execCount > 1 then s = "__targetPin = " .. var.pin.id .. " " end
+	end
+
+	if jump and var.jump then s = s .. "goto jmp_" end
 	if var.literal then return s .. var.var end
 	if var.global or var.isFunc or var.keyAsGlobal then return "__self." .. var.var end
 	return s .. var.var
@@ -562,6 +571,7 @@ function meta:GetPinVar(pin)
 				return {
 					var = #pins == 0 and "0" or self:GetID(pins[1]:GetNode()),
 					jump = true,
+					pin = #pins > 0 and pins[1],
 				}
 
 			else
@@ -732,6 +742,13 @@ function meta:CompileNodeFunction(node)
 			-- get the exec pin's connection and jump to the node it's connected to
 			local connection = pin:GetConnectedPins()[1]
 			if connection ~= nil then
+
+				local execCount = 0
+				for _, p in connection:GetNode():SidePins(PD_In) do
+					if p:IsType(PN_Exec) then execCount = execCount + 1 end
+				end
+
+				if execCount > 1 then self.emit("\t__targetPin = " .. connection.id) end
 				self.emit("\tgoto jmp_" .. self:GetID(connection:GetNode()))
 				self.finish()
 				return
