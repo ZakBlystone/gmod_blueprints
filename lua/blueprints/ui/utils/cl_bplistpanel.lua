@@ -261,7 +261,7 @@ function PANEL:Rename( id )
 
 	local item = self.list:Get(id)
 
-	for _, v in ipairs(self:GetItems()) do
+	for _, v in pairs(self.vitems) do
 		if v.id == id then
 			v.btn:SetVisible(false)
 			v.edit = vgui.Create("DTextEntry", v)
