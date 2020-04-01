@@ -14,6 +14,7 @@ end
 
 function VALUE:Setup()
 
+	BaseClass.Setup(self)
 	self:AddFlag( bpvaluetype.FL_HINT_BROWSER )
 
 end
