@@ -410,6 +410,7 @@ function MODULE:CompileVariable( compiler, id, var )
 	local vtype = var:GetType()
 
 	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+	if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 
 	print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
 
