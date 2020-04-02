@@ -8,10 +8,14 @@ local surface_setTextPos = surface.SetTextPos
 local surface_setTextColor = surface.SetTextColor
 local surface_drawText = surface.DrawText
 local surface_drawRect = surface.DrawRect
+local surface_drawTexturedRect = surface.DrawTexturedRect
+local surface_setTexture = surface.SetTexture
 local math_ceil = math.ceil
 
 local meta = bpcommon.MetaTable("bpuigraphpin")
 
+local TEX_PIN = Material("materials/pins/pin.png")
+local TEX_PIN_LINE = Material("materials/pins/pin_line.png")
 local TEXT_OFFSET = 8
 local LITERAL_OFFSET = 10
 local LITERAL_HEIGHT = 24
@@ -309,9 +313,9 @@ function meta:DrawLiteral(x, y, alpha)
 				self.pin:DrawLiteral(x + self.literalPos,y,w,h,alpha)
 
 			else
-
 				surface_setDrawColor( 50,50,50,150*alpha )
-				surface_drawRect(x + self.literalPos,y,w,h)
+				surface_setTexture(TEX_PIN)
+				surface_drawTexturedRect(x + self.literalPos,y,w,h)
 
 				surface_setFont( font )
 				surface_setTextPos( math_ceil( x + self.literalPos ), math_ceil( y+(PIN_SIZE - LITERAL_HEIGHT - 2)/2 ) )
@@ -337,7 +341,8 @@ function meta:DrawHotspot(x,y,alpha)
 	local r,g,b,a = self.pin:GetColor():Unpack()
 
 	surface_setDrawColor( r, g, b, 255 * alpha )
-	surface_drawRect(x+ox-PIN_SIZE/2,y+oy-PIN_SIZE/2,PIN_SIZE,PIN_SIZE)
+	surface.SetMaterial(TEX_PIN)
+	surface_drawTexturedRect(x+ox-PIN_SIZE/2,y+oy-PIN_SIZE/2,PIN_SIZE,PIN_SIZE)
 
 	if isTable then
 		surface_setDrawColor( 0,0,0,255 )
@@ -349,7 +354,8 @@ function meta:DrawHotspot(x,y,alpha)
 	if self.autoPin then
 
 		surface_setDrawColor( 0,0,0,250 )
-		surface_drawRect(x+ox-PIN_SIZE/2 + 5,y+oy-PIN_SIZE/2 + 5,PIN_SIZE-10,PIN_SIZE-10)
+		surface.SetMaterial(TEX_PIN)
+		surface_drawTexturedRect(x+ox-PIN_SIZE/2 + 5,y+oy-PIN_SIZE/2 + 5,PIN_SIZE-10,PIN_SIZE-10)
 
 	end
 
