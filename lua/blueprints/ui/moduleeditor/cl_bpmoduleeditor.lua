@@ -217,10 +217,10 @@ function PANEL:SetModule( mod )
 
 		self:Refresh()
 
-	end, Color(10,100,5), nil)
+	end, Color(10,100,5), nil, false)
 
 	for k,v in ipairs(menu) do
-		self.Menu:Add(v.name, v.func, v.color, v.icon)
+		self.Menu:Add(v.name, v.func, v.color, v.icon, v.right)
 	end
 
 	self.moduleEditor:PostInit()

@@ -26,7 +26,7 @@ function PANEL:Clear()
 
 end
 
-function PANEL:Add( name, func, color, icon )
+function PANEL:Add( name, func, color, icon, right )
 
 	color = color or Color(80,80,80)
 	local textColor = Color(240,240,240)
@@ -40,6 +40,7 @@ function PANEL:Add( name, func, color, icon )
 	if icon then opt:SetIcon(icon) opt:SetWide( opt:GetWide() + 24 ) end
 	opt:SetTall( 25 )
 	opt:SetTextColor(textColor)
+	opt.right = right
 	opt.Paint = function(btn, w, h)
 		local col = color
 
@@ -65,10 +66,16 @@ end
 function PANEL:PerformLayout()
 
 	local x = 2
+	local r = self:GetWide() - 2
 	local h = 25
 	for _, item in ipairs(self.items) do
-		item:SetPos(x, 2)
-		x = x + item:GetWide() + 2
+		if not item.right then
+			item:SetPos(x, 2)
+			x = x + item:GetWide() + 2
+		else
+			r = r - item:GetWide() - 2
+			item:SetPos(r, 2)
+		end
 		h = math.max(h, item:GetTall())
 	end
 

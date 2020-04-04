@@ -37,7 +37,6 @@ function EDITOR:PopulateMenuBar( t )
 		t[#t+1] = { name = LOCTEXT("menu_export_lua","Export Lua script"), func = function(...) self:ExportLua(...) end, icon = "icon16/page_code.png" }
 
 	end
-
 end
 
 function EDITOR:Export()
