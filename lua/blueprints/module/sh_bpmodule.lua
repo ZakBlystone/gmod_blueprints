@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-module("bpmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema))
+module("bpmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpstream))
 
 
 STREAM_FILE = 1
@@ -139,14 +139,19 @@ function meta:GetAllModules()
 
 end
 
+function meta:CreateStream(mode, file)
+
+	return bpstream.New("module", mode, file):Version( fmtVersion ):AddFlags(FL_Compressed + FL_Checksum)
+
+end
+
 function meta:NetSend()
 
 	bpcommon.ProfileStart("module:NetSend")
 	bpcommon.Profile("module-net-write", function()
-		local outStream = bpdata.OutStream()
-		outStream:UseStringTable()
-		bpcommon.Profile( "write-module", self.WriteToStream, self, outStream, STREAM_NET )
-		bpcommon.Profile( "write-net-stream", outStream.WriteToNet, outStream, true )
+		local stream = self:CreateStream(MODE_Network):Out()
+		bpcommon.Profile( "write-module", self.WriteToStream, self, stream, STREAM_NET )
+		stream:Finish()
 	end)
 	bpcommon.ProfileEnd()
 
@@ -156,10 +161,9 @@ function meta:NetRecv()
 
 	bpcommon.ProfileStart("module:NetRecv")
 	bpcommon.Profile("module-net-read", function()
-		local inStream = bpdata.InStream()
-		inStream:UseStringTable()
-		bpcommon.Profile( "read-net-stream", inStream.ReadFromNet, inStream, true )
-		bpcommon.Profile( "read-module", self.ReadFromStream, self, inStream, STREAM_NET )
+		local stream = self:CreateStream(MODE_Network):In()
+		bpcommon.Profile( "read-module", self.ReadFromStream, self, stream, STREAM_NET )
+		stream:Finish()
 	end)
 	bpcommon.ProfileEnd()
 
@@ -167,13 +171,9 @@ end
 
 function LoadHeader(filename)
 
-	local inStream = bpdata.InStream(false, true):UseStringTable()
-	if not inStream:LoadFile(filename, true, true) then
-		error("Failed to load blueprint, try using 'Convert'")
-	end
-
-	local magic = inStream:ReadInt( false )
-	local version = inStream:ReadInt( false )
+	local stream = bpstream.New("module", MODE_File, filename):AddFlags(FL_Compressed + FL_Checksum + FL_Base64):In()
+	local magic = stream:ReadInt( false )
+	local version = stream:ReadInt( false )
 
 	-- Compat for pre-release blueprints
 	if magic == 0x42504D30 then
@@ -181,17 +181,20 @@ function LoadHeader(filename)
 		version = 1
 	end
 
-	local modtype = version < 2 and inStream:ReadInt( false ) or bpdata.ReadValue( inStream )
+	local modtype = version < 2 and stream:ReadInt( false ) or bpdata.ReadValue( stream )
 	if type(modtype) == "number" then modtype = "Mod" end
 
-	return {
+	local header = {
 		magic = magic,
 		version = version,
 		type = modtype,
-		revision = inStream:ReadInt( false ),
-		uid = inStream:ReadStr( 16 ),
-		envVersion = bpdata.ReadValue( inStream ),
+		revision = stream:ReadInt( false ),
+		uid = stream:ReadStr( 16 ),
+		envVersion = bpdata.ReadValue( stream ),
 	}
+
+	stream:Finish()
+	return header
 
 end
 
@@ -199,12 +202,9 @@ function meta:LoadFromText(text)
 
 	bpcommon.ProfileStart("bpmodule:Load")
 
-	local inStream = bpdata.InStream(false, true):UseStringTable()
-	if not inStream:LoadString(text, true, true) then
-		error("Failed to load blueprint")
-	end
-
-	self:ReadFromStream( inStream, STREAM_FILE )
+	local stream = self:CreateStream(MODE_String, text):AddFlag(FL_Base64):In()
+	self:ReadFromStream( stream, STREAM_FILE )
+	stream:Finish()
 
 	bpcommon.ProfileEnd()
 
@@ -218,12 +218,9 @@ function meta:Load(filename)
 	local magic = head.magic
 	local version = head.version
 
-	local inStream = bpdata.InStream(false, true):UseStringTable()
-	if not inStream:LoadFile(filename, true, true) then
-		error("Failed to load blueprint, try using 'Convert'")
-	end
-
-	self:ReadFromStream( inStream, STREAM_FILE )
+	local stream = self:CreateStream(MODE_File, filename):AddFlag(FL_Base64):In()
+	self:ReadFromStream( stream, STREAM_FILE )
+	stream:Finish()
 
 	bpcommon.ProfileEnd()
 
@@ -233,10 +230,9 @@ function meta:SaveToText()
 
 	bpcommon.ProfileStart("bpmodule:Save")
 
-	local outStream = bpdata.OutStream(false, true)
-	outStream:UseStringTable()
-	self:WriteToStream( outStream, STREAM_FILE )
-	local out = outStream:GetString(true, true)
+	local stream = self:CreateStream(MODE_String, text):AddFlag(FL_Base64):Out()
+	self:WriteToStream( stream, STREAM_FILE )
+	local out = stream:Finish()
 
 	bpcommon.ProfileEnd()
 	return out
@@ -247,10 +243,9 @@ function meta:Save(filename)
 
 	bpcommon.ProfileStart("bpmodule:Save")
 
-	local outStream = bpdata.OutStream(false, true)
-	outStream:UseStringTable()
-	self:WriteToStream( outStream, STREAM_FILE )
-	outStream:WriteToFile(filename, true, true)
+	local stream = self:CreateStream(MODE_File, filename):AddFlag(FL_Base64):Out()
+	self:WriteToStream( stream, STREAM_FILE )
+	stream:Finish()
 
 	bpcommon.ProfileEnd()
 

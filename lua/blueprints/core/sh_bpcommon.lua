@@ -353,6 +353,7 @@ function AddFlagAccessors(meta, readOnly, var)
 	if not readOnly then
 		meta["Set" .. key] = function(self, fl) self[var] = fl return self end
 		meta["Set" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) return self end
+		meta["Add" .. key] = function(self, fl) self[var] = bit.bor(self[var], fl) return self end
 		meta["Add" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) return self end
 		meta["Clear" .. singular] = function(self, fl) self[var] = bit.band(self[var], bit.bnot(fl)) return self end
 	end

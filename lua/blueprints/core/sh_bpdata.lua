@@ -228,8 +228,8 @@ end
 -- Input / Output streams
 
 
-local OUT = {} OUT.__index = OUT
-local IN = {} IN.__index = IN
+OUT = {} OUT.__index = OUT
+IN = {} IN.__index = IN
 
 function OUT:Init(bitstream, crc, fileBacked)
 	if bitstream then
@@ -566,7 +566,7 @@ function WriteValue(t, buf, thread)
 		end
 	elseif ttype == "string" then
 		buf:WriteBits(DT_STRING, DT_STATUSBITS)
-		if not buf.stringTable then buf:WriteInt( t:len(), false ) end
+		if not buf:IsUsingStringTable() then buf:WriteInt( t:len(), false ) end
 		buf:WriteStr( t )
 	elseif ttype == "boolean" then
 		buf:WriteBits(DT_BOOL, DT_STATUSBITS)
@@ -636,7 +636,7 @@ function ReadValue(buf, thread)
 		local index = buf:ReadBits(ENTITY_BITS)
 		return ents.GetByIndex(index)
 	elseif ttype == DT_STRING then
-		if not buf.stringTable then 
+		if not buf:IsUsingStringTable() then
 			local len = buf:ReadInt(false)
 			return buf:ReadStr( len )
 		else
