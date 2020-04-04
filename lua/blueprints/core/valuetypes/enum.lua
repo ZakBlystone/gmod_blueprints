@@ -4,12 +4,16 @@ module("value_enum", package.seeall)
 
 local VALUE = {}
 
-VALUE.Match = function( v ) return type(v) == "number" end
+VALUE.Match = function( v ) return false end
 VALUE.Type = "Enum"
 
 function VALUE:Setup()
 
 	self.options = { "None", 0 }
+
+end
+
+function VALUE:CheckType(v)
 
 end
 
