@@ -301,7 +301,7 @@ end
 
 function MODULE:RequestGraphForEvent( nodeType )
 
-	print("REQUEST GRAPH FOR: " .. nodeType:GetName())
+	print("REQUEST GRAPH FOR: " .. nodeType:GetFullName())
 
 	for _, graph in self:Graphs() do
 		if graph:GetName() == nodeType:GetDisplayName() then return end
@@ -315,7 +315,7 @@ function MODULE:RequestGraphForEvent( nodeType )
 		graph:SetFlag(bpgraph.FL_HOOK)
 	end
 
-	graph:SetHookType( nodeType:GetName() )
+	graph:SetHookType( nodeType:GetFullName() )
 
 	if nodeType:GetRole() == ROLE_Server or nodeType:GetRole() == ROLE_Shared then
 		graph:SetFlag(bpgraph.FL_ROLE_SERVER)

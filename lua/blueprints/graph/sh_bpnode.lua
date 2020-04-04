@@ -17,7 +17,7 @@ function meta:Init(nodeType, x, y, literals)
 
 	if type(nodeType) == "table" then
 		self.nodeTypeObject = nodeType
-		self.nodeType = self.nodeTypeObject:GetName()
+		self.nodeType = self.nodeTypeObject:GetFullName()
 	else
 		self.nodeType = nodeType or "invalid"
 	end
@@ -102,7 +102,7 @@ function meta:ToString(pinID)
 	if not ntype then 
 		str = "<unknown>"
 	else
-		str = ntype:GetName() or "unnamed"
+		str = ntype:GetFullName() or "unnamed"
 		if pinID then
 			local p = type(pinID) == "table" and pinID or self:GetPin(pinID)
 			if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end

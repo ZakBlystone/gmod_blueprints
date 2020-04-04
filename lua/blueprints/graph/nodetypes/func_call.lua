@@ -22,7 +22,7 @@ function NODE:Compile(compiler, pass)
 
 	elseif pass == CP_MAINPASS then
 
-		local name = self:GetRawName()
+		local name = self:GetName()
 		local group = self:GetGroup()
 		local context = self:GetContext()
 		if group == nil then error("Function call without group!") end

@@ -666,7 +666,7 @@ function meta:CanAddNode(nodeType)
 		if nodeType:GetCodeType() == NT_Event then return false end
 	end
 
-	if nodeType:GetCodeType() == NT_Event and self:GetModule():NodeTypeInUse(nodeType:GetName()) then
+	if nodeType:GetCodeType() == NT_Event and self:GetModule():NodeTypeInUse(nodeType:GetFullName()) then
 		return false
 	end
 

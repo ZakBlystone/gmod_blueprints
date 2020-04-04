@@ -14,6 +14,7 @@ meta.__index = meta
 function meta:Init( meta )
 
 	self.itemMeta = meta
+	self.indexed = true
 	bpcommon.MakeObservable(self)
 	return self:Clear()
 
@@ -29,6 +30,13 @@ function meta:NamedItems( prefix )
 
 	self.namedItems = true
 	self.namePrefix = (prefix or "Item") .. "_"
+	return self
+
+end
+
+function meta:Indexed( bIndexed )
+
+	self.indexed = bIndexed
 	return self
 
 end
@@ -164,6 +172,7 @@ end
 function meta:PreserveNames(preserve)
 
 	self.preserveNames = preserve
+	return self
 
 end
 
@@ -285,10 +294,10 @@ end
 function meta:WriteToStream(stream, mode, version)
 
 	stream:WriteBool(self.namedItems)
-	stream:WriteInt(self.nextID, false)
+	if self.indexed then stream:WriteInt(self.nextID, false) end
 	stream:WriteInt(self:Size(), false)
 	for _,v in ipairs(self.items) do
-		stream:WriteInt(v.id, false)
+		if self.indexed then stream:WriteInt(v.id, false) end
 		if self.namedItems then bpdata.WriteValue( v.name, stream ) end
 		if not v.WriteToStream then error("Need stream implementation for list item") end
 		v:WriteToStream(stream, mode, version)
@@ -302,12 +311,12 @@ function meta:ReadFromStream(stream, mode, version)
 
 		self:Clear()
 		self.namedItems = stream:ReadBool()
-		self.nextID = stream:ReadInt(false)
+		if self.indexed then self.nextID = stream:ReadInt(false) end
 		local count = stream:ReadInt(false)
 		if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
 		for i=1, count do
 			local item = self:ConstructObject()
-			item.id = stream:ReadInt(false)
+			item.id = self.indexed and stream:ReadInt(false) or i
 			if item.PostInit then item:PostInit() end
 			self.itemLookup[item.id] = item
 			if self.namedItems then item.name = bpdata.ReadValue( stream ) end

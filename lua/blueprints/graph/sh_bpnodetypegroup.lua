@@ -5,14 +5,12 @@ module("bpnodetypegroup", package.seeall, bpcommon.rescope(bpschema))
 TYPE_Class = 0
 TYPE_Lib = 1
 TYPE_Hooks = 2
-TYPE_Structs = 3
 TYPE_Callbacks = 4
 
 GroupTypeNames = {
 	[TYPE_Class] = "Class",
 	[TYPE_Lib] = "Lib",
 	[TYPE_Hooks] = "Hooks",
-	[TYPE_Structs] = "Structs",
 	[TYPE_Callbacks] = "Callbacks",
 }
 
@@ -22,6 +20,12 @@ local GroupContexts = {
 	[TYPE_Hooks] = bpnodetype.NC_Hook,
 }
 
+function NodeContextFromGroupType( type )
+
+	return GroupContexts[type]
+
+end
+
 local meta = bpcommon.MetaTable("bpnodetypegroup")
 meta.__tostring = function(self) return self:ToString() end
 
@@ -29,7 +33,7 @@ function meta:Init(entryType)
 
 	self.entryType = entryType
 	self.name = ""
-	self.entries = {}
+	self.entries = bplist.New(bpnodetype_meta):WithOuter(self):Indexed(false):PreserveNames(true)
 	self.params = {}
 	return self
 
@@ -46,21 +50,21 @@ function meta:GetEntries() return self.entries end
 
 function meta:NewEntry()
 
-	local entry = bpnodetype.New(GroupContexts[self:GetType()]):WithOuter(self)
+	local entry = bpnodetype.New():WithOuter(self)
 	return self:AddEntry( entry )
 
 end
 
 function meta:AddEntry(entry)
 
-	self.entries[#self.entries+1] = entry
+	self.entries:Add( entry )
 	return entry
 
 end
 
 function meta:RemoveEntry( entry )
 
-	table.RemoveByValue(self.entries, entry)
+	self.entries:RemoveIf( function(e) return e == entry end )
 
 end
 
@@ -71,9 +75,8 @@ function meta:WriteToStream(stream)
 	stream:WriteStr(self.name)
 	bpdata.WriteValue(self.params, stream)
 
-	local count = #self.entries
-	stream:WriteInt(count, false)
-	for i=1, count do self.entries[i]:WriteToStream(stream) end
+	print("WRITE GROUP: " .. self.entries:Size())
+	self.entries:WriteToStream(stream)
 
 	return self
 
@@ -85,14 +88,7 @@ function meta:ReadFromStream(stream)
 	self.entryType = stream:ReadBits(8)
 	self.name = stream:ReadStr()
 	self.params = bpdata.ReadValue(stream)
-
-	local count = stream:ReadInt(false)
-
-	if self.entryType == TYPE_STRUCTS then -- DEAD CODE???
-		for i=1, count do self.entries[#self.entries+1] = bpstruct.New():ReadFromStream(stream) end
-	else
-		for i=1, count do self:NewEntry():ReadFromStream(stream) end
-	end
+	self.entries:ReadFromStream(stream)
 
 	return self
 

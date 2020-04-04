@@ -134,7 +134,7 @@ function FindMatchingPin(ntype, pf, module, cache)
 
 			end
 
-			if (ntype:GetName() == "CORE_Pin" or typeFlagTableMatch or castMatch) then
+			if (ntype:GetFullName() == "CORE_Pin" or typeFlagTableMatch or castMatch) then
 				if cache then cache[ntype] = id end
 				return id, pin
 			end

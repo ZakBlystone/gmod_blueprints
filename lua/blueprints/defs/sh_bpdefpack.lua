@@ -45,8 +45,8 @@ function meta:PostInit()
 	end
 
 	for _,v in ipairs(self.nodeGroups) do
-		for _, e in ipairs(v:GetEntries()) do
-			tab[e:GetName()] = e
+		for _, e in v:GetEntries():Items() do
+			tab[e:GetFullName()] = e
 		end
 
 		if v:GetType() == bpnodetypegroup.TYPE_Class then

@@ -172,6 +172,7 @@ PinValueTypes = {
 	[PN_Angles] = "angles",
 	[PN_Struct] = "struct",
 	[PN_Asset] = "asset",
+	[PN_Enum] = "enum",
 }
 
 -- Determines if value is, or can be use like a bppintype

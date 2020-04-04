@@ -205,6 +205,7 @@ function PANEL:Clear()
 		self:RemoveItem( v )
 	end
 	self.vitems = {}
+	self:GetParent():InvalidateLayout(true)
 
 end
 

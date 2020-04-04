@@ -24,6 +24,7 @@ function meta:GetTab() return self:GetPanel().tab end
 function meta:GetModule() return self:GetPanel():GetModule() end
 function meta:GetFile() return self:GetModule():FindOuter( bpfile_meta ) end
 function meta:SetContent( panel ) self:GetPanel():SetContent( panel ) end
+function meta:SetDetails( panel ) self:GetPanel():SetDetails( panel ) end
 function meta:PopulateMenuBar( menu ) end
 function meta:PopulateSideBar() end
 function meta:AddSidebarPanel( ... ) return self:GetPanel():AddSidebarPanel(...) end
@@ -51,10 +52,27 @@ function PANEL:Init()
 
 end
 
+function PANEL:SetDetails( panel )
+
+	if IsValid(self.ContentSplit2) then
+		self.ContentSplit2:SetRight( panel )
+	end
+
+end
+
 function PANEL:SetContent( panel )
+
+	if IsValid(self.ContentSplit2) and not IsValid(self.ContentSplit) then
+
+		print("SET LEFT")
+		self.ContentSplit2:SetLeft( panel )
+		return
+
+	end
 
 	if IsValid(self.ContentSplit) then
 
+		print("SET RIGHT")
 		self.ContentSplit:SetRight( panel )
 
 	else
@@ -157,11 +175,20 @@ function PANEL:SetModule( mod )
 	self.Menu:Clear()
 	self:CreateContentPanel()
 
+	if self.moduleEditor.HasDetails then
+
+		self.ContentSplit2 = vgui.Create("DHorizontalDivider", self.ContentPanel)
+		self.ContentSplit2:Dock( FILL )
+		self.ContentSplit2:SetBackgroundColor( Color(30,30,30) )
+		self.ContentSplit2:SetDividerWidth( 3 )
+		self.ContentSplit2:SetLeftWidth(self:GetParent():GetWide() - 400)
+
+	end
+
 	if IsValid(self.SideBar) then self.SideBar:Remove() end
 	if self.moduleEditor.HasSideBar then
 
 		self.ContentSplit = vgui.Create("DHorizontalDivider", self.ContentPanel)
-		self.ContentSplit:Dock( FILL )
 		self.ContentSplit:SetBackgroundColor( Color(30,30,30) )
 		self.ContentSplit:SetDividerWidth( 3 )
 
@@ -169,8 +196,16 @@ function PANEL:SetModule( mod )
 		self.moduleEditor:PopulateSideBar()
 
 		self.SideBar:InvalidateLayout( true )
-		self.ContentSplit:SetLeftWidth(150)
+
+		if IsValid(self.ContentSplit2) then
+			self.ContentSplit2:SetLeft(self.ContentSplit)
+			--self.ContentSplit:Dock( FILL )
+		else
+			self.ContentSplit:Dock( FILL )
+		end
+
 		self.ContentSplit:SetLeft(self.SideBar)
+		self.ContentSplit:SetLeftWidth(150)
 
 	end
 

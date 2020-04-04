@@ -17,10 +17,10 @@ local PIN_INPUT_EXEC = MakePin( PD_In, "Exec", PN_Exec )
 local PIN_OUTPUT_EXEC = MakePin( PD_Out, "Exec", PN_Exec )
 local PIN_OUTPUT_THRU = MakePin( PD_Out, "Thru", PN_Exec )
 
-function meta:Init(context)
+function meta:Init()
 
 	self.flags = 0
-	self.role = 0
+	self.role = ROLE_Shared
 	self.codeType = NT_Pure
 	self.code = nil
 	self.category = nil
@@ -36,7 +36,6 @@ function meta:Init(context)
 	self.informs = {}
 	self.pins = {}
 	self.warning = nil
-	self.context = context
 	self.modFilter = nil
 	return self
 
@@ -74,9 +73,18 @@ function meta:GetDescription() return self.desc end
 function meta:GetGraphThunk() return self.graphThunk end
 function meta:GetNodeParam(key) return self.nodeParams[key] end
 function meta:GetRequiredMeta() return self.requiredMeta end
-function meta:GetContext() return self.context end
-function meta:GetGroup() return self:GetOuter( bpnodetypegroup_meta ) end
+function meta:GetGroup() return self:FindOuter( bpnodetypegroup_meta ) end
 function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
+function meta:GetContext()
+
+	if self.context then return self.context end
+
+	local group = self:GetGroup()
+	if group then return bpnodetypegroup.NodeContextFromGroupType( group:GetType() ) end
+
+	return nil
+
+end
 
 function meta:GetNodeClass()
 
@@ -196,8 +204,8 @@ function meta:GetHook()
 
 end
 
-function meta:GetRawName() return self.name end
-function meta:GetName()
+function meta:GetName() return self.name end
+function meta:GetFullName()
 
 	local group = self:GetGroup()
 	if group == nil then return self.name end
@@ -292,7 +300,7 @@ end
 
 function meta:ToString()
 
-	return tostring( self:GetName() )
+	return tostring( self:GetFullName() )
 
 end
 

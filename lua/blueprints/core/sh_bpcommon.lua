@@ -351,10 +351,10 @@ function AddFlagAccessors(meta, readOnly, var)
 	local singular = GetSingular(key)
 	local getter = "Get" .. key
 	if not readOnly then
-		meta["Set" .. key] = function(self, fl) self[var] = fl end
-		meta["Set" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) end
-		meta["Add" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) end
-		meta["Clear" .. singular] = function(self, fl) self[var] = bit.band(self[var], bit.bnot(fl)) end
+		meta["Set" .. key] = function(self, fl) self[var] = fl return self end
+		meta["Set" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) return self end
+		meta["Add" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) return self end
+		meta["Clear" .. singular] = function(self, fl) self[var] = bit.band(self[var], bit.bnot(fl)) return self end
 	end
 
 	meta["Has" .. singular] = function(self, fl) return bit.band(self[getter](self), fl) ~= 0 end
@@ -418,21 +418,24 @@ function MakeObservable(obj)
 	end
 
 	function obj:BindRaw( name, target, func )
-		if self.__incall then table.insert(self.__deferred, {mode=0, name, target, func}) self.__handleDeferred = true return true end
+		if self.__incall then table.insert(self.__deferred, {mode=0, name, target, func}) self.__handleDeferred = true return self, true end
 		local t = GetCB(name, target)
 		t[#t+1] = func
+		return self
 	end
 
 	function obj:Bind( name, target, func )
-		if self.__incall then table.insert(self.__deferred, {mode=1, name, target, func}) self.__handleDeferred = true return true end
+		if self.__incall then table.insert(self.__deferred, {mode=1, name, target, func}) self.__handleDeferred = true return self, true end
 		local t = GetCB(name, target)
 		t[#t+1] = function(...) func(target, ...) end
+		return self
 	end
 
 	function obj:BindAny( target, func )
-		if self.__incall then table.insert(self.__deferred, {mode=2, target, func}) self.__handleDeferred = true return true end
+		if self.__incall then table.insert(self.__deferred, {mode=2, target, func}) self.__handleDeferred = true return self, true end
 		local t = GetCB(__any, target)
 		t[#t+1] = function(...) func(target, ...) end
+		return self
 	end
 
 	function obj:Unbind( name, target )
