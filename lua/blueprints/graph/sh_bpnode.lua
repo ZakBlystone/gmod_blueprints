@@ -68,12 +68,7 @@ function meta:SetLiteralDefaults( force )
 
 	local base = self:GetCodeType() == NT_Function and -1 or 0
 	for pinID, pin, pos in self:SidePins(PD_In) do
-		if pin:CanHaveLiteral() then
-			local default = pin:GetDefault()
-			if force or self:GetLiteral(pinID) == nil then
-				self:SetLiteral(pinID, default)
-			end
-		end
+		pin:SetDefaultLiteral( force )
 	end
 
 	self.suppressPinEvents = false
@@ -127,6 +122,8 @@ end
 
 function meta:UpdatePins()
 
+	local prev = self.pinCache
+
 	self.pinCache = {}
 	self:GeneratePins(self.pinCache)
 
@@ -137,6 +134,12 @@ function meta:UpdatePins()
 
 	for k, v in ipairs(self:GetPins()) do
 		v:InitPinClass()
+
+		if prev ~= nil and prev[k] ~= nil and v:GetLiteral() ~= nil and not prev[k]:Equal(v) then
+			v:SetDefaultLiteral(true)
+			--print("Force default literal on pin: " .. v:ToString(true) .. " : " .. tostring(v:GetLiteral()) .. "->" .. tostring(v:GetDefault()) )
+		end
+
 	end
 
 	self:SetLiteralDefaults()

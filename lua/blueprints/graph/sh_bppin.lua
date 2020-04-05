@@ -121,6 +121,17 @@ function meta:Connect( other )
 
 end
 
+function meta:SetDefaultLiteral( force )
+
+	if self:CanHaveLiteral() then
+		local default = self:GetDefault()
+		if force or self:GetLiteral() == nil then
+			self:SetLiteral(default)
+		end
+	end
+
+end
+
 function meta:WriteToStream(stream)
 
 	assert(stream:IsUsingStringTable())
