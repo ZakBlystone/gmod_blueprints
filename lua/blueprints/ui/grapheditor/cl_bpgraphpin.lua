@@ -313,9 +313,7 @@ function meta:DrawLiteral(x, y, alpha)
 
 			else
 				surface_setDrawColor( 50,50,50,150*alpha )
-				surface_setMaterial(TEX_PIN)
-				surface_drawTexturedRect(x + self.literalPos,y,w,h)
-
+				surface_drawRect(x + self.literalPos,y,w,h)
 				surface_setFont( font )
 				surface_setTextPos( math_ceil( x + self.literalPos ), math_ceil( y+(PIN_SIZE - LITERAL_HEIGHT - 2)/2 ) )
 				surface_setTextColor( 255, 255, 255, 255*alpha )
