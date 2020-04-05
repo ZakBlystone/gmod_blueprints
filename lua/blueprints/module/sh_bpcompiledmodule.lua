@@ -244,23 +244,13 @@ function meta:SetErrorHandler(errorHandler)
 
 end
 
-function meta:WriteToStream(stream, mode)
+function meta:Serialize(stream)
 
-	stream:WriteStr( self.uniqueID )
-	bpdata.WriteValue( self.type, stream )
-	bpdata.WriteValue( self.code, stream )
-	--bpdata.WriteValue( self.debugSymbols, stream )
-	return self
-
-end
-
-function meta:ReadFromStream(stream, mode)
-
-	self.uniqueID = stream:ReadStr( 16 )
-	self.type = bpdata.ReadValue(stream)
-	self.code = bpdata.ReadValue(stream)
-	--self.debugSymbols = bpdata.ReadValue(stream)
-	return self
+	self.uniqueID = stream:GUID(self.uniqueID)
+	self.type = stream:Value(self.type)
+	self.code = stream:Value(self.code)
+	--self.debugSymbols = stream:Value(self.debugSymbols)
+	return stream
 
 end
 

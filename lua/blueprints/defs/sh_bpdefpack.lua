@@ -202,7 +202,31 @@ function meta:GetNodeTypes()
 
 end
 
-function meta:WriteToStream(stream)
+function meta:Serialize(stream)
+
+	local groupCount = stream:UInt(#self.nodeGroups)
+	local structCount = stream:UInt(#self.structs)
+
+	for i=1, groupCount do
+		self.nodeGroups[i] = stream:Object( self.nodeGroups[i] or bpnodetypegroup.New():WithOuter(self), true )
+	end
+
+	for i=1, structCount do
+		self.structs[i] = stream:Object( self.structs[i] or bpstruct.New():WithOuter(self), true )
+		self.structs[i].name = stream:String(self.structs[i].name)
+		self.structs[i].pinTypeOverride = stream:Int(self.structs[i].pinTypeOverride or -1)
+		if self.structs[i].pinTypeOverride == -1 then self.structs[i].pinTypeOverride = nil end
+	end
+
+	self.enums = stream:Value(self.enums)
+	self.redirectors = stream:Value(self.redirectors)
+
+	if stream:IsReading() then self:PostInit() end
+	return stream
+
+end
+
+function meta:WriteToStream(stream) -- deprecate
 
 	assert(stream:IsUsingStringTable())
 	stream:WriteInt(#self.nodeGroups, false)
@@ -220,7 +244,7 @@ function meta:WriteToStream(stream)
 
 end
 
-function meta:ReadFromStream(stream)
+function meta:ReadFromStream(stream) -- deprecate
 
 	local groupCount = stream:ReadInt(false)
 	local structCount = stream:ReadInt(false)

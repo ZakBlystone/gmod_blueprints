@@ -152,23 +152,12 @@ meta.__le = function(a, b)
 	return true
 end
 
-function meta:WriteToStream(stream)
+function meta:Serialize(stream)
 
-	assert(stream:IsUsingStringTable())
-	stream:WriteBits(self.basetype, 8)
-	stream:WriteBits(self.flags, 8)
-	stream:WriteStr(self.subtype)
-	return self
-
-end
-
-function meta:ReadFromStream(stream)
-
-	assert(stream:IsUsingStringTable())
-	self.basetype = stream:ReadBits(8)
-	self.flags = stream:ReadBits(8)
-	self.subtype = stream:ReadStr()
-	return self
+	self.basetype = stream:Bits(self.basetype, 8)
+	self.flags = stream:Bits(self.flags, 8)
+	self.subtype = stream:String(self.subtype)
+	return stream
 
 end
 

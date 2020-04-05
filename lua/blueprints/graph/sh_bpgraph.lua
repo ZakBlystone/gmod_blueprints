@@ -803,34 +803,32 @@ function meta:CollapseRerouteNodes()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:ReadConnectionMeta(stream)
 
-	Profile("write-single-graph", function()
-
-		stream:WriteInt( self.type, false )
-		stream:WriteInt( self.flags, false )
-
-		if self.type == GT_Function then
-			Profile("write-inputs", self.inputs.WriteToStream, self.inputs, stream, mode, version)
-			Profile("write-outputs", self.outputs.WriteToStream, self.outputs, stream, mode, version)
+	if stream:GetVersion() >= 4 then
+		local cmeta = {}
+		local ids = {}
+		local bits = stream:ReadBits(8)
+		local id = stream:ReadBits(bits)
+		local k = 0
+		while id ~= 0 and k ~= 100000 do
+			k = k + 1
+			ids[#ids+1] = id
+			id = stream:ReadBits(bits)
 		end
-
-		Profile("write-nodes", self.nodes.WriteToStream, self.nodes, stream, mode, version)
-		Profile("write-connections", bpdata.WriteValue, self.connections, stream )
-
-		if mode == bpmodule.STREAM_FILE then
-
-			Profile("write-connection-meta", self.WriteConnectionMeta, self, stream, version)
-
+		if k == 100000 then error("NO STOP BIT!!!") end
+		for i=1, #ids do
+			cmeta[ids[i]] = {stream:ReadStr(), stream:ReadStr(), stream:ReadStr(), stream:ReadStr()}
 		end
+		self.connectionMeta = cmeta
 
-		bpdata.WriteValue( self.hookNodeType, stream )
-
-	end)
+	else
+		self.connectionMeta = bpdata.ReadValue( stream )
+	end
 
 end
 
-function meta:WriteConnectionMeta(stream, version)
+function meta:WriteConnectionMeta(stream)
 
 	local connnectionMeta = {}
 	local n = 0
@@ -871,62 +869,41 @@ function meta:WriteConnectionMeta(stream, version)
 
 end
 
-function meta:ReadFromStream(stream, mode, version)
+function meta:Serialize(stream)
 
-	Profile("read-single-graph", function()
+	self.type = stream:UInt(self.type)
+	self.flags = stream:UInt(self.flags)
 
-		self:Clear()
+	if self.type == GT_Function then
 
-		self.type = stream:ReadInt( false )
-		self.flags = stream:ReadInt( false )
+		self.inputs:SuppressAllEvents(true)
+		self.outputs:SuppressAllEvents(true)
+		self.inputs:Serialize(stream)
+		self.outputs:Serialize(stream)
+		self.inputs:SuppressAllEvents(false)
+		self.outputs:SuppressAllEvents(false)
 
-		if self.type == GT_Function then
-
-			self.inputs:SuppressAllEvents(true)
-			self.outputs:SuppressAllEvents(true)
-			self.inputs:ReadFromStream(stream, mode, version)
-			self.outputs:ReadFromStream(stream, mode, version)
-			self.inputs:SuppressAllEvents(false)
-			self.outputs:SuppressAllEvents(false)
-		end
-
-		self.deferredNodes:ReadFromStream(stream, mode, version)
-		self.connections = bpdata.ReadValue( stream )
-
-		if mode == bpmodule.STREAM_FILE then
-
-			self:ReadConnectionMeta(stream, version)
-
-		end
-
-		if version >= 3 then self.hookNodeType = bpdata.ReadValue( stream ) end
-
-	end)
-
-end
-
-function meta:ReadConnectionMeta(stream, version)
-
-	if version >= 4 then
-		local cmeta = {}
-		local ids = {}
-		local bits = stream:ReadBits(8)
-		local id = stream:ReadBits(bits)
-		local k = 0
-		while id ~= 0 and k ~= 100000 do
-			k = k + 1
-			ids[#ids+1] = id
-			id = stream:ReadBits(bits)
-		end
-		if k == 100000 then error("NO STOP BIT!!!") end
-		for i=1, #ids do
-			cmeta[ids[i]] = {stream:ReadStr(), stream:ReadStr(), stream:ReadStr(), stream:ReadStr()}
-		end
-		self.connectionMeta = cmeta
-
-	else
-		self.connectionMeta = bpdata.ReadValue( stream )
 	end
+
+	if stream:IsWriting() then
+		self.nodes:Serialize(stream)
+	elseif stream:IsReading() then
+		self.deferredNodes:Serialize(stream)
+	end
+
+	self.connections = stream:Value(self.connections)
+
+	if stream:IsFile() then
+		if stream:IsWriting() then
+			self:WriteConnectionMeta(stream)
+		elseif stream:IsReading() then
+			self:ReadConnectionMeta(stream)
+		end
+	end
+
+	if stream:GetVersion() >= 3 then self.hookNodeType = stream:Value(self.hookNodeType) end
+
+	return stream
 
 end
 

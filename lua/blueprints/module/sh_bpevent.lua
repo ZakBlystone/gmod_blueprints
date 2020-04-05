@@ -99,19 +99,12 @@ function meta:EventNodeType()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
 
-	self.pins:WriteToStream(stream, mode, version)
-	stream:WriteBits(self.flags, 8)
-	return self
+	self.pins:Serialize(stream)
+	self.flags = stream:Bits(self.flags, 8)
 
-end
-
-function meta:ReadFromStream(stream, mode, version)
-
-	self.pins:ReadFromStream(stream, mode, version)
-	self.flags = stream:ReadBits(8)
-	return self
+	return stream
 
 end
 

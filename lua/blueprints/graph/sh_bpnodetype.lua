@@ -236,65 +236,35 @@ function meta:GetDisplayName()
 end
 
 function meta:GetCode() return self.code end
-function meta:WriteToStream(stream)
 
-	assert(stream:IsUsingStringTable())
-	stream:WriteBits(self.flags, 16)
-	stream:WriteBits(self.role, 8)
-	stream:WriteBits(self.codeType, 8)
-	stream:WriteStr(self.name)
-	stream:WriteStr(self.code)
-	stream:WriteStr(self.category)
-	stream:WriteStr(self.displayName)
-	stream:WriteStr(self.nodeClass)
-	stream:WriteStr(self.warning)
-	stream:WriteStr(self.desc)
-	bpdata.WriteValue(self.nodeParams, stream)
-	bpdata.WriteValue(self.requiredMeta, stream)
-	bpdata.WriteValue(self.pinRedirects, stream)
-	bpdata.WriteValue(self.jumpSymbols, stream)
-	bpdata.WriteValue(self.locals, stream)
-	bpdata.WriteValue(self.globals, stream)
-	bpdata.WriteValue(self.informs, stream)
-	bpdata.WriteValue(self.modFilter, stream)
+function meta:Serialize(stream)
 
-	stream:WriteBits(#self.pins, 8)
-	for i=1, #self.pins do
-		self.pins[i]:WriteToStream(stream)
-	end
+	self.flags = stream:Bits(self.flags, 16)
+	self.role = stream:Bits(self.role, 8)
+	self.codeType = stream:Bits(self.codeType, 8)
+	self.name = stream:String(self.name)
+	self.code = stream:String(self.code)
+	self.category = stream:String(self.category)
+	self.displayName = stream:String(self.displayName)
+	self.nodeClass = stream:String(self.nodeClass)
+	self.warning = stream:String(self.warning)
+	self.desc = stream:String(self.desc)
 
-	return self
+	self.nodeParams = stream:Value(self.nodeParams)
+	self.requiredMeta = stream:Value(self.requiredMeta)
+	self.pinRedirects = stream:Value(self.pinRedirects)
+	self.jumpSymbols = stream:Value(self.jumpSymbols)
+	self.locals = stream:Value(self.locals)
+	self.globals = stream:Value(self.globals)
+	self.informs = stream:Value(self.informs)
+	self.modFilter = stream:Value(self.modFilter)
 
-end
-
-function meta:ReadFromStream(stream)
-
-	assert(stream:IsUsingStringTable())
-	self.flags = stream:ReadBits(16)
-	self.role = stream:ReadBits(8)
-	self.codeType = stream:ReadBits(8)
-	self.name = stream:ReadStr()
-	self.code = stream:ReadStr()
-	self.category = stream:ReadStr()
-	self.displayName = stream:ReadStr()
-	self.nodeClass = stream:ReadStr()
-	self.warning = stream:ReadStr()
-	self.desc = stream:ReadStr()
-	self.nodeParams = bpdata.ReadValue(stream)
-	self.requiredMeta = bpdata.ReadValue(stream)
-	self.pinRedirects = bpdata.ReadValue(stream)
-	self.jumpSymbols = bpdata.ReadValue(stream)
-	self.locals = bpdata.ReadValue(stream)
-	self.globals = bpdata.ReadValue(stream)
-	self.informs = bpdata.ReadValue(stream)
-	self.modFilter = bpdata.ReadValue(stream)
-
-	local numPins = stream:ReadBits(8)
+	local numPins = stream:Bits(#self.pins, 8)
 	for i=1, numPins do
-		self.pins[#self.pins+1] = bppin.New():ReadFromStream(stream)
+		self.pins[i] = stream:Object(self.pins[i] or bppin.New(), true)
 	end
 
-	return self
+	return stream
 
 end
 

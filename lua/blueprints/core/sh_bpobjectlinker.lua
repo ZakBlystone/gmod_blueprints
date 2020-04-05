@@ -14,54 +14,6 @@ end
 
 function meta:Serialize(stream)
 
-	if stream:IsReading() then
-
-		local numSets = stream:UByte()
-		for i=1, numSets do
-
-			local setID = stream:UByte()
-			local hash = stream:UInt()
-			local numObjects = stream:Bits(nil, 24)
-			self.objects[setID] = {}
-
-			for j=1, numObjects do
-				local obj = self:Construct(hash)
-				obj:Serialize(stream)
-				self.objects[setID][j] = obj
-			end
-
-		end
-
-	end
-
-	if stream:IsWriting() then
-
-		local numSets = 0
-		for hash, set in pairs(self.objects) do
-			numSets = numSets + 1
-		end
-		stream:UByte(numSets)
-
-		for hash, set in pairs(self.objects) do
-
-			stream:UByte(set.id)
-			stream:UInt(hash)
-
-			local numObjects = 0
-			for obj, id in pairs(set) do
-				numObjects = numObjects + 1
-			end
-			stream:Bits(numObjects, 24)
-
-			for obj, id in pairs(set) do
-				obj:Serialize(stream)
-			end
-
-		end
-		return
-
-	end
-
 end
 
 function meta:Construct(hash)
@@ -76,7 +28,7 @@ function meta:GetSetForHash(hash)
 
 	local t = self.objects[hash]
 	if not t then
-		self.objects[hash] = {next = 0, id = self.nextSetID}
+		self.objects[hash] = {next = 1, id = self.nextSetID, objects = {}}
 		self.nextSetID = self.nextSetID + 1
 		if self.nextSetID >= 256 then error("Max object hash set exceeded!!!") end
 		t = self.objects[hash]
@@ -85,7 +37,7 @@ function meta:GetSetForHash(hash)
 
 end
 
-function meta:RecordObject(obj)
+--[[function meta:RecordObject(obj)
 
 	if obj == nil then return end
 	if not type(obj) == "table" then error("Tried to record non-table object") end
@@ -93,26 +45,49 @@ function meta:RecordObject(obj)
 
 	local set = self:GetSetForHash( obj.__hash )
 	if not set[obj] then
-		set[obj] = set.next
+		set.objects[obj] = set.next
 		set.next = set.next + 1
 	end
 
-end
+end]]
 
 function meta:WriteObject(stream, obj)
 
 	if obj == nil then stream:UInt(0) return obj end
 	if not type(obj) == "table" then error("Tried to write non-table object") end
-	if obj.__hash == nil then error("Object is not a metatype") end
+	local meta = getmetatable(obj)
+	if meta == nil or meta.__hash == nil then error("Object is not a metatype") end
 
-	local set = self:GetSetForHash( obj.__hash )
-	if set[obj] then
+	assert(bpcommon.GetMetaTableFromHash(meta.__hash), "Issue with metatable hashes")
+
+	local set = self:GetSetForHash( meta.__hash )
+	if obj == nil then
+		stream:UByte(0)
+		stream:Bits(0,24)
+		return
+	end
+
+	local hash = obj
+	local hashed = false
+
+	if obj.GetHash then hash = obj:GetHash() hashed = true end
+
+	local existing = set.objects[hash]
+	if not hashed and not existing and meta.__eq then
+		for k, v in pairs(set.objects) do
+			if meta.__eq(obj, k) then existing = v end
+		end
+	end
+
+	if existing then
 		stream:UByte(set.id)
-		stream:Bits(set[obj],24)
+		stream:Bits(existing,24)
 	else
-		set[obj] = set.next
+		set.objects[hash] = set.next
 		stream:UByte(set.id)
 		stream:Bits(set.next, 24)
+		stream:UInt(meta.__hash)
+		obj:Serialize(stream)
 		set.next = set.next + 1
 	end
 
@@ -123,10 +98,36 @@ function meta:ReadObject(stream)
 	local setID = stream:UByte()
 	local objID = stream:Bits(nil, 24)
 
+	if objID == 0 then return nil end
+
+	self.objects[setID] = self.objects[setID] or {}
 	local set = self.objects[setID]
-	if not set then error("No set for object class: " .. setID) end
-	return set[objID]
+	if not set[objID] then
+		local hash = stream:UInt()
+		local obj = self:Construct(hash)
+		obj:Serialize(stream)
+		set[objID] = obj
+		return obj
+	else
+		return set[objID]
+	end
 
 end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end
+
+--[[if CLIENT then
+
+	local stream = bpstream.New("test", bpstream.MODE_String):Out()
+	local pt = bppintype.New(bpschema.PN_Ref,nil,"Entity")
+	local pt2 = bppintype.New(bpschema.PN_Ref,nil,"Entity")
+	stream:Object( pt )
+	stream:Object( pt2 )
+	local data = stream:Finish()
+
+	stream = bpstream.New("test2", bpstream.MODE_String, data):In()
+	local t = stream:Object()
+	local t = stream:Object()
+	print(tostring(t))
+
+end]]

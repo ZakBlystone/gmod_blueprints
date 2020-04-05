@@ -405,11 +405,12 @@ local function LoadDefinitionPack(data)
 	--print("Unpacking definitions")
 
 	local co = coroutine.create( function()
-		local stream = bpdata.InStream(false, true)
-		stream:UseStringTable()
-		stream:LoadString(data, true, false)
-		defpack = bpdefpack.New():ReadFromStream(stream)
 
+		local stream = bpstream.New("defs", bpstream.MODE_String, data)
+			:AddFlags(bpstream.FL_Compressed + bpstream.FL_Checksum + bpstream.FL_FileBacked + bpstream.FL_NoHeader)
+			:In()
+
+		defpack = stream:Object( bpdefpack.New(), true )
 		defpack:PostInit()
 		ready = true
 	end)
@@ -436,12 +437,12 @@ elseif SERVER then
 		bpcommon.ProfileStart("parse definitions")
 		LoadAndParseDefs()
 
-		local stream = bpdata.OutStream(false, true, true)
-		stream:UseStringTable()
+		local stream = bpstream.New("defs", bpstream.MODE_File, DEFPACK_LOCATION)
+			:AddFlags(bpstream.FL_Compressed + bpstream.FL_Checksum + bpstream.FL_FileBacked + bpstream.FL_NoHeader)
+			:Out()
 
-		defpack:WriteToStream(stream)
-
-		stream:WriteToFile(DEFPACK_LOCATION, true, false)
+		stream:Object(defpack, true)
+		stream:Finish()
 		bpcommon.ProfileEnd()
 
 		defpack:PostInit()

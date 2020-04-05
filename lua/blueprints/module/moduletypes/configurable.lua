@@ -88,21 +88,16 @@ function MODULE:GetConfigEdit( refresh )
 
 end
 
-function MODULE:WriteData( stream, mode, version )
+function MODULE:SerializeData(stream)
 
 	if self.AdditionalConfig then
-		bpdata.WriteValue( self:GetConfig(), stream )
+		self.config = stream:Value(self.config or {})
+		if stream:IsReading() then
+			self.config = table.Merge(self:GetDefaultConfigTable(), config)
+		end
 	end
 
-end
-
-function MODULE:ReadData( stream, mode, version )
-
-	if self.AdditionalConfig then
-		local config = bpdata.ReadValue( stream )
-		local defaults = self:GetDefaultConfigTable()
-		self.config = table.Merge(defaults, config)
-	end
+	return stream
 
 end
 

@@ -62,7 +62,17 @@ end
 function meta:AddUser(user) bpusermanager.AddUser(self, user) end
 function meta:RemoveUser(user) bpusermanager.RemoveUser(self, user) end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
+
+	self.name = stream:Value(self.name)
+	self.color = stream:Value(self.color)
+	self.flags = stream:Bits(self.flags, 16)
+
+	return stream
+
+end
+
+function meta:WriteToStream(stream, mode, version) -- deprecate
 
 	bpdata.WriteValue( self.name, stream )
 	bpdata.WriteValue( self.color, stream )
@@ -72,7 +82,7 @@ function meta:WriteToStream(stream, mode, version)
 
 end
 
-function meta:ReadFromStream(stream, mode, version)
+function meta:ReadFromStream(stream, mode, version) -- deprecate
 
 	self.name = bpdata.ReadValue( stream )
 	self.color = bpdata.ReadValue( stream )

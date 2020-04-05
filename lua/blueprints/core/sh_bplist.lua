@@ -291,7 +291,39 @@ function meta:Replace( id, item )
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
+
+	if stream:IsReading() then self:Clear() end
+
+	self.namedItems = stream:Bool(self.namedItems)
+	if self.indexed then self.nextID = stream:UInt(self.nextID) end
+	local count = stream:UInt(self:Size())
+	--print("List serialize " .. count .. " items")
+	for i=1, count do
+
+		local item = self.items[i] or self:ConstructObject()
+		if self.indexed then item.id = stream:UInt(item.id) end
+		if self.namedItems then item.name = stream:Value(item.name) end
+		stream:Object(item, true)
+
+		if stream:IsReading() then
+
+			if item.PostInit then item:PostInit() end
+			if self.indexed then self.itemLookup[item.id] = item end
+			self:Broadcast("preModify", MODIFY_ADD, item.id, item)
+			self.items[i] = item
+			self:Broadcast("added", item.id, item)
+			self:Broadcast("postModify", MODIFY_ADD, item.id, item)
+
+		end
+
+	end
+
+	return stream
+
+end
+
+function meta:WriteToStream(stream, mode, version) -- deprecate
 
 	stream:WriteBool(self.namedItems)
 	if self.indexed then stream:WriteInt(self.nextID, false) end
@@ -305,7 +337,7 @@ function meta:WriteToStream(stream, mode, version)
 
 end
 
-function meta:ReadFromStream(stream, mode, version)
+function meta:ReadFromStream(stream, mode, version) -- deprecate
 
 	bpcommon.Profile("list-read", function()
 

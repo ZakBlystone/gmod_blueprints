@@ -129,30 +129,13 @@ function meta:SetterNodeType()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
 
-	self.pintype:WriteToStream(stream, mode, version)
-	bpdata.WriteValue( self.default, stream )
-	bpdata.WriteValue( self.repmode, stream )
+	self.pintype = stream:Object(self.pintype or bppintype.New():WithOuter(self), true)
+	self.default = stream:Value(self.default)
+	self.repmode = stream:Value(self.repmode)
 
-end
-
--- v1 -> v2 the schema typelist changed
-local typeRemap = {
-	[10] = PN_String,
-	[11] = PN_Color,
-	[13] = PN_Angles,
-	[14] = PN_Enum,
-	[15] = PN_Ref,
-	[16] = PN_Struct,
-	[17] = PN_Func,
-}
-
-function meta:ReadFromStream(stream, mode, version)
-
-	self.pintype = bppintype.New():WithOuter(self):ReadFromStream(stream, mode, version)
-	self.default = bpdata.ReadValue( stream )
-	self.repmode = bpdata.ReadValue( stream )
+	return stream
 
 end
 

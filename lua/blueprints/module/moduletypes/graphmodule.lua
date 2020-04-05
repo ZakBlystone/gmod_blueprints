@@ -390,33 +390,30 @@ function MODULE:BuildCosmeticVars( values )
 
 end
 
-function MODULE:WriteData( stream, mode, version )
-
-	if self:CanHaveVariables() then Profile("write-variables", self.variables.WriteToStream, self.variables, stream, mode, version) end
-	Profile("write-graphs", self.graphs.WriteToStream, self.graphs, stream, mode, version)
-	if self:CanHaveStructs() then Profile("write-structs", self.structs.WriteToStream, self.structs, stream, mode, version) end
-	if self:CanHaveEvents() then Profile("write-events", self.events.WriteToStream, self.events, stream, mode, version) end
-
-	BaseClass.WriteData( self, stream, mode, version )
-
-end
-
-function MODULE:ReadData( stream, mode, version )
+function MODULE:SerializeData( stream )
 
 	self.suppressGraphNotify = true
 
-	if self:CanHaveVariables() then Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version) end
-	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
-	if self:CanHaveStructs() then Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version) end
-	if self:CanHaveEvents() then Profile("read-events", self.events.ReadFromStream, self.events, stream, mode, version) end
+	print("Serialize graph module")
 
-	BaseClass.ReadData( self, stream, mode, version )
+	if self:CanHaveVariables() then self.variables:Serialize( stream ) end
 
-	for _, graph in self:Graphs() do
-		graph:CreateDeferredData()
+	self.graphs:Serialize( stream )
+
+	if self:CanHaveStructs() then self.structs:Serialize( stream ) end
+	if self:CanHaveEvents() then self.events:Serialize( stream ) end
+
+	BaseClass.SerializeData( self, stream )
+
+	if stream:IsReading() then
+		for _, graph in self:Graphs() do
+			graph:CreateDeferredData()
+		end
 	end
 
 	self.suppressGraphNotify = false
+
+	return stream
 
 end
 

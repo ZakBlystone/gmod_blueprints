@@ -34,7 +34,51 @@ function meta:Get(id)
 
 end
 
-function meta:WriteToStream(stream)
+function meta:Serialize(stream)
+
+	if stream:IsWriting() then
+
+		local longStrings = {}
+		local longLookup = {}
+		local count = #self.strings
+		for i, str in ipairs(self.strings) do
+			if str:len() >= 256 then
+				longLookup[i] = true
+				longStrings[#longStrings+1] = i
+			end
+		end
+
+		stream:UInt(count)
+		stream:UInt(#longStrings)
+
+		for _,v in ipairs(longStrings) do stream:Bits(v, 24) end
+
+		for i=1, count do stream:Bits(self.strings[i]:len(), longLookup[i] and 16 or 8) end
+		for i=1, count do stream:String(self.strings[i], true, 0) end
+
+	elseif stream:IsReading() then
+
+		local count = stream:UInt()
+		local longCount = stream:UInt()
+		local strings = {}
+
+		local longLookup = {}
+		for i=1, longCount do
+			longLookup[ stream:Bits(nil, 24) ] = true
+		end
+
+		for i=1, count do strings[i] = stream:Bits(nil, longLookup[i] and 16 or 8) end
+		for i=1, count do strings[i] = stream:String(nil, true, strings[i]) end
+
+		self.strings = strings
+
+	end
+
+	return stream
+
+end
+
+function meta:WriteToStream(stream) -- deprecate
 
 	local longStrings = {}
 	local longLookup = {}
@@ -58,7 +102,7 @@ function meta:WriteToStream(stream)
 
 end
 
-function meta:ReadFromStream(stream)
+function meta:ReadFromStream(stream) -- deprecate
 
 	local count = stream:ReadInt(false)
 	local longCount = stream:ReadInt(false)

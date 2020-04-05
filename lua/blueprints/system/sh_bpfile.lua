@@ -139,7 +139,33 @@ function meta:GetName()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
+
+	self.flags = stream:Bits(self.flags, 8)
+	self.uid = stream:GUID(self.uid)
+	self.name = stream:Value(self.name)
+
+	if stream:IsFile() and stream:IsReading() then
+		if not self:HasFlag( FL_AlwaysRun ) then self:ClearFlag( FL_Running ) end
+	end
+
+	if stream:IsNetwork() then
+		self.revision = stream:UInt(self.revision or 0)
+	end
+
+	if self:HasFlag(FL_HasOwner) then
+		self.owner = stream:Object( self.owner or bpuser.New(), true )
+	end
+
+	if self:HasFlag(FL_HasLock) then
+		self.lock = stream:Object( self.lock or bpuser.New(), true )
+	end
+
+	return stream
+
+end
+
+function meta:WriteToStream(stream, mode, version) -- deprecate
 
 	stream:WriteBits(self.flags, 8)
 	stream:WriteStr(self.uid)
@@ -159,7 +185,7 @@ function meta:WriteToStream(stream, mode, version)
 
 end
 
-function meta:ReadFromStream(stream, mode, version)
+function meta:ReadFromStream(stream, mode, version) -- deprecate
 
 	self.flags = stream:ReadBits(8)
 	self.uid = stream:ReadStr(16)

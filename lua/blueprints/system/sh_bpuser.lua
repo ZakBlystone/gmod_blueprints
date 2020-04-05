@@ -130,7 +130,34 @@ function meta:GetName()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
+
+	self.steamID = stream:Value(self.steamID)
+	self.name = stream:Value(self.name)
+	self.flags = stream:Bits(self.flags, 8)
+	self.groups = stream:Bits(self.groups, 32)
+
+	if stream:IsFile() and stream:IsReading() then
+		self:ClearFlag( FL_LoggedIn )
+		self:ClearFlag( FL_NewUser )
+	end
+
+	if stream:IsReading() and CLIENT then
+
+		-- Get up-to-date name
+		steamworks.RequestPlayerInfo( self:GetSteamID64(), function( name )
+
+			self.name = name
+
+		end )
+
+	end
+
+	return stream
+
+end
+
+function meta:WriteToStream(stream, mode, version) -- deprecate
 
 	bpdata.WriteValue( self.steamID, stream )
 	bpdata.WriteValue( self.name, stream )
@@ -141,7 +168,7 @@ function meta:WriteToStream(stream, mode, version)
 
 end
 
-function meta:ReadFromStream(stream, mode, version)
+function meta:ReadFromStream(stream, mode, version) -- deprecate
 
 	self.steamID = bpdata.ReadValue( stream )
 	self.name = bpdata.ReadValue( stream )

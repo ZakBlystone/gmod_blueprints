@@ -300,7 +300,7 @@ end
 function GetMetaTableFromHash(hash)
 
 	for k,v in pairs(G_BPMetaRegistry) do
-		if v.__hash == hash then return v end
+		if v.__hash - hash == 0 then return v end
 	end
 
 end

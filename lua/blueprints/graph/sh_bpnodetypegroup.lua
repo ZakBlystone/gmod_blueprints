@@ -68,29 +68,13 @@ function meta:RemoveEntry( entry )
 
 end
 
-function meta:WriteToStream(stream)
+function meta:Serialize(stream)
 
-	assert(stream:IsUsingStringTable())
-	stream:WriteBits(self.entryType, 8)
-	stream:WriteStr(self.name)
-	bpdata.WriteValue(self.params, stream)
-
-	print("WRITE GROUP: " .. self.entries:Size())
-	self.entries:WriteToStream(stream)
-
-	return self
-
-end
-
-function meta:ReadFromStream(stream)
-
-	assert(stream:IsUsingStringTable())
-	self.entryType = stream:ReadBits(8)
-	self.name = stream:ReadStr()
-	self.params = bpdata.ReadValue(stream)
-	self.entries:ReadFromStream(stream)
-
-	return self
+	self.entryType = stream:Bits(self.entryType, 8)
+	self.name = stream:String(self.name)
+	self.params = stream:Value(self.params)
+	self.entries:Serialize(stream)
+	return stream
 
 end
 

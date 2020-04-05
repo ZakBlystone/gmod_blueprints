@@ -442,53 +442,34 @@ function meta:Copy()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
 
-	if version < 5 then assert(stream:IsUsingStringTable()) end
-
-	Profile("write-node", function()
-
-		if version < 4 then
-			bpdata.WriteValue( self.nodeType, stream )
-			bpdata.WriteValue( self.literals, stream )
-		else
-			stream:WriteStr( self.nodeType )
-			for k,v in pairs(self.literals) do
-				stream:WriteBits(k, 16)
-				stream:WriteStr(v)
-			end
-			stream:WriteBits(0, 16)
-		end
-
-		bpdata.WriteValue( self.data, stream )
-		stream:WriteFloat( self.x )
-		stream:WriteFloat( self.y )
-
-	end)
-
-end
-
-function meta:ReadFromStream(stream, mode, version)
-
-	if version < 5 then assert(stream:IsUsingStringTable()) end
-
-	if version < 4 then
-		self.nodeType = bpdata.ReadValue(stream)
-		self.literals = bpdata.ReadValue(stream)
+	if stream:GetVersion() < 4 then
+		self.nodeType = stream:Value(self.nodeType)
+		self.literals = stream:Value(self.literals)
 	else
-		self.nodeType = stream:ReadStr()
+		self.nodeType = stream:String(self.nodeType)
 		self.literals = {}
 
-		local r = stream:ReadBits(16)
-		while r ~= 0 do
-			self.literals[r] = stream:ReadStr()
-			r = stream:ReadBits(16)
+		if stream:IsWriting() then
+			for k,v in pairs(self.literals) do
+				stream:Bits(k, 16)
+				stream:String(v)
+			end
+			stream:Bits(0, 16)
+		elseif stream:IsReading() then
+			local r = stream:Bits(nil, 16)
+			while r ~= 0 do
+				self.literals[r] = stream:String()
+				r = stream:Bits(nil, 16)
+			end
 		end
 	end
 
-	self.data = bpdata.ReadValue(stream)
-	self.x = stream:ReadFloat()
-	self.y = stream:ReadFloat()
+	self.x = stream:Float(self.x)
+	self.y = stream:Float(self.y)
+
+	return stream
 
 end
 

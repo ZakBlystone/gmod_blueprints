@@ -105,13 +105,13 @@ function Install( mod, owner )
 	bpenv.Install( mod )
 	bpenv.Instantiate( mod:GetUID(), instanceUID )
 
-	local stream = bpdata.OutStream(false, true, true):UseStringTable()
-	mod:WriteToStream(stream, STREAM_NET)
+	local stream = bpstream.New("bpnet", bpstream.MODE_Network):Out()
+	stream:Object(mod, true)
 
 	net.Start("bpnet")
 	net.WriteUInt( CMD_Install, CommandBits )
 	net.WriteData( instanceUID, 16 )
-	local s,p = stream:WriteToNet(true)
+	stream:Finish()
 	--print("Send compiled module size: " .. p .. " bytes")
 	net.Broadcast()
 
@@ -141,7 +141,7 @@ if SERVER then
 		print("SENDING BLUEPRINTS TO CLIENT: " .. ply:Nick() )
 
 		local files = bpfilesystem.GetFiles()
-		local agg = bpdata.OutStream(false, true, true):UseStringTable()
+		local agg = bpstream.New("bpnet", bpstream.MODE_Network):Out()
 
 		local count = 0
 		for k,v in ipairs(files) do
@@ -149,7 +149,7 @@ if SERVER then
 			if bpenv.IsInstalled( uid ) then count = count + 1 end
 		end
 
-		agg:WriteInt(count, false)
+		agg:UInt(count)
 		print("Send " .. count .. " blueprints...")
 
 		for k,v in ipairs(files) do
@@ -161,19 +161,19 @@ if SERVER then
 
 				print("Packing Blueprint " .. v:GetName() .. "...")
 				local cmod = bpenv.Get( v:GetUID() )  --mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
-				cmod:WriteToStream(agg, STREAM_NET)
+				agg:Object(cmod, true)
 
 				print("Write " .. #instances .. " instances.")
-				agg:WriteInt(#instances, false)
+				agg:UInt(#instances)
 				for _, inst in ipairs(instances) do
-					agg:WriteStr(inst.guid)
+					agg:GUID(inst.guid)
 				end
 			end
 		end
 
 		net.Start("bpnet")
 		net.WriteUInt( CMD_InstallMultiple, CommandBits )
-		local s,p = agg:WriteToNet(true)
+		local p = agg:Finish()
 		print("Send compiled chunk size: " .. p .. " bytes")
 		net.Send( ply )
 
@@ -226,13 +226,13 @@ net.Receive("bpnet", function(len, ply)
 	if cmd == CMD_Install then
 
 		local uid = net.ReadData( 16 )
-		local stream = bpdata.InStream(false, true, true):UseStringTable()
-		stream:ReadFromNet(true)
-		local mod = bpcompiledmodule.New():ReadFromStream( stream, STREAM_NET )
+		local stream = bpstream.New("bpnet", bpstream.MODE_Network):In()
+		local mod = stream:Object( bpcompiledmodule.New(), true )
 
 		mod:Load()
 		bpenv.Install( mod )
 		bpenv.Instantiate( mod:GetUID(), uid )
+		stream:Finish()
 
 	elseif cmd == CMD_Uninstall then
 
@@ -260,23 +260,21 @@ net.Receive("bpnet", function(len, ply)
 		assert(CLIENT)
 
 		--print("Module pack " .. len .. " bytes.")
-		local stream = bpdata.InStream(false, true, true):UseStringTable()
-		stream:ReadFromNet(true)
-
-		local count = stream:ReadInt(false)
+		local stream = bpstream.New("bpnet", bpstream.MODE_Network):In()
+		local count = stream:UInt()
 		--print("Reading " .. count .. " blueprints")
 
 		for i=1, count do
 
 			--print("Reading module " .. i)
-			local mod = bpcompiledmodule.New():ReadFromStream( stream, STREAM_NET )
-			local numInstances = stream:ReadInt(false)
+			local mod = stream:Object( bpcompiledmodule.New(), true )
+			local numInstances = stream:UInt()
 
 			--print(numInstances .. " instances")
 
 			local instances = {}
 			for i=1, numInstances do
-				instances[#instances+1] = stream:ReadStr()
+				instances[#instances+1] = stream:GUID()
 			end
 
 			--print("Loading module")
@@ -288,6 +286,8 @@ net.Receive("bpnet", function(len, ply)
 			end
 
 		end
+
+		stream:Finish()
 
 	end
 

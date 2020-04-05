@@ -43,6 +43,14 @@ function MODULE:Setup()
 
 end
 
+function MODULE:SerializeData( stream )
+
+	BaseClass.SerializeData(self, stream)
+
+	return stream
+
+end
+
 function MODULE:GetNodeTypes()
 
 end
@@ -50,18 +58,6 @@ end
 function MODULE:AutoFillsPinType( pinType )
 
 	return false
-
-end
-
-function MODULE:WriteData( stream, mode, version )
-
-	BaseClass.WriteData( self, stream, mode, version )
-
-end
-
-function MODULE:ReadData( stream, mode, version )
-
-	BaseClass.ReadData( self, stream, mode, version )
 
 end
 

@@ -39,41 +39,40 @@ function MODULE:GetLocString( key )
 
 end
 
-function MODULE:WriteData( stream, mode, version )
+function MODULE:SerializeData(stream)
 
-	BaseClass.WriteData( self, stream, mode, version )
+	BaseClass.SerializeData( self, stream )
 
-	stream:WriteStr( self.data.language )
+	self.data.language = stream:String( self.data.language )
 
-	local num = 0
-	for k,v in pairs(self.data.keys) do
-		num = num + 1
-	end
+	if stream:IsWriting() then
 
-	stream:WriteInt( num, false )
+		local num = 0
+		for k,v in pairs(self.data.keys) do
+			num = num + 1
+		end
 
-	for k,v in pairs(self.data.keys) do
-		stream:WriteStr( k )
-		stream:WriteStr( v )
-	end
+		stream:UInt( num )
 
-end
+		for k,v in pairs(self.data.keys) do
+			stream:String( k )
+			stream:String( v )
+		end
 
-function MODULE:ReadData( stream, mode, version )
+	elseif stream:IsReading() then
 
-	BaseClass.ReadData( self, stream, mode, version )
+		local num = stream:UInt()
+		for i=1, num do
 
-	self.data.language = stream:ReadStr()
+			local k = stream:String()
+			local v = stream:String()
+			self.data.keys[k] = v
 
-	local num = stream:ReadInt()
-
-	for i=1, num do
-
-		local k = stream:ReadStr()
-		local v = stream:ReadStr()
-		self.data.keys[k] = v
+		end
 
 	end
+
+	return stream
 
 end
 

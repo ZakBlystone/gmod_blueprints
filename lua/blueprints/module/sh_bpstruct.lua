@@ -133,24 +133,14 @@ function meta:PostInit()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
 
-	self.pins:WriteToStream(stream, mode, version)
-	bpdata.WriteValue(self.nameMap, stream)
-	bpdata.WriteValue(self.invNameMap, stream)
-	bpdata.WriteValue(self.metaTable, stream)
-	return self
+	self.pins:Serialize(stream)
+	self.nameMap = stream:Value(self.nameMap)
+	self.invNameMap = stream:Value(self.invNameMap)
+	self.metaTable = stream:Value(self.metaTable)
 
-end
-
-function meta:ReadFromStream(stream, mode, version)
-
-	self.pins:ReadFromStream(stream, mode, version)
-	self.nameMap = bpdata.ReadValue(stream)
-	self.invNameMap = bpdata.ReadValue(stream)
-	self.metaTable = bpdata.ReadValue(stream)
-
-	return self
+	return stream
 
 end
 

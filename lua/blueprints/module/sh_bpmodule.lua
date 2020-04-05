@@ -6,9 +6,6 @@ module("bpmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpstream
 STREAM_FILE = 1
 STREAM_NET = 2
 
-fmtMagic = 0x42504D31
-fmtVersion = 5
-
 local meta = bpcommon.MetaTable("bpmodule")
 local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes/", "BPModuleClassRefresh", meta)
 
@@ -22,7 +19,7 @@ meta.EditorClass = ""
 
 function meta:Init(type)
 
-	self.version = fmtVersion
+	self.version = bpstream.fmtVersion
 	self.id = nextModuleID
 	self.type = type or "mod"
 	self.revision = 1
@@ -142,8 +139,6 @@ end
 function meta:CreateStream(mode, file)
 
 	return bpstream.New("module", mode, file)
-		:Magic( fmtMagic )
-		:Version( fmtVersion )
 		:AddFlags( FL_Compressed + FL_Checksum )
 
 end
@@ -175,8 +170,6 @@ end
 function LoadHeader(filename)
 
 	local stream = bpstream.New("module", MODE_File, filename)
-		:Magic( fmtMagic )
-		:Version( fmtVersion )
 		:AddFlags( FL_Compressed + FL_Checksum + FL_Base64 ):In()
 
 	local modtype = stream:GetVersion() < 2 and stream:ReadInt( false ) or stream:Value()
@@ -187,7 +180,7 @@ function LoadHeader(filename)
 		version = stream:GetVersion(),
 		type = modtype,
 		revision = stream:ReadInt( false ),
-		uid = stream:ReadStr( 16 ),
+		uid = stream:GUID(),
 		envVersion = stream:Value(),
 	}
 
@@ -249,16 +242,11 @@ function meta:Save(filename)
 
 end
 
-function meta:WriteData( stream, mode, version ) end
-function meta:ReadData( stream, mode, version ) end
-
+function meta:SerializeData(stream) end
 function meta:Serialize(stream)
 
 	local magic = stream:GetMagic()
 	local version = stream:GetVersion()
-
-	if magic ~= fmtMagic then error("Invalid blueprint data: " .. fmtMagic .. " != " .. magic) end
-	if version > fmtVersion then error("Blueprint data version is newer") end
 
 	if version < 2 and stream:IsReading() then
 		stream:UInt() self.type = "Mod"
@@ -287,8 +275,7 @@ function meta:Serialize(stream)
 	local mode = STREAM_FILE
 	if stream:IsNetwork() then mode = STREAM_NET end
 
-	if stream:IsReading() then self:ReadData( stream, mode, version ) end
-	if stream:IsWriting() then self:WriteData( stream, mode, version ) end
+	self:SerializeData( stream )
 
 	return stream
 

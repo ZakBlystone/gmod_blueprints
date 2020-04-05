@@ -132,26 +132,13 @@ function meta:SetDefaultLiteral( force )
 
 end
 
-function meta:WriteToStream(stream)
+function meta:Serialize(stream)
 
-	assert(stream:IsUsingStringTable())
-	self.type:WriteToStream(stream)
-	stream:WriteBits(self.dir, 8)
-	stream:WriteStr(self.name)
-	stream:WriteStr(self.desc)
-	stream:WriteStr(self.default)
-	return self
-
-end
-
-function meta:ReadFromStream(stream)
-
-	assert(stream:IsUsingStringTable())
-	self.type = bppintype.New():WithOuter(self):ReadFromStream(stream)
-	self.dir = stream:ReadBits(8)
-	self.name = stream:ReadStr()
-	self.desc = stream:ReadStr()
-	self.default = stream:ReadStr()
+	self.type = stream:Object(self.type)
+	self.dir = stream:Bits(self.dir, 8)
+	self.name = stream:String(self.name)
+	self.desc = stream:String(self.desc)
+	self.default = stream:String(self.default)
 	return self
 
 end

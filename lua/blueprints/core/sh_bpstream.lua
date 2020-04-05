@@ -28,7 +28,10 @@ IO_None = 0
 IO_Out = 1
 IO_In = 2
 
-DEBUG_MODE = true
+DEBUG_MODE = false
+
+fmtMagic = 0x42504D31
+fmtVersion = 5
 
 
 function meta:Init(context, mode, file)
@@ -38,6 +41,15 @@ function meta:Init(context, mode, file)
 	self.io = IO_None
 	self.file = file
 	self.flags = 0
+	self.version = fmtVersion
+	self.magic = fmtMagic
+
+	if mode == MODE_Network or mode == MODE_NetworkString then
+		self:AddFlag(FL_NoHeader)
+		self:AddFlag(FL_Compressed)
+		self:AddFlag(FL_Checksum)
+	end
+
 	return self
 
 end
@@ -63,6 +75,11 @@ function meta:SerializeHeader()
 
 	self.magic = self:UInt(self.magic)
 	self.version = self:UInt(self.version)
+
+	if self:IsReading() then
+		if self.magic ~= fmtMagic then error("Invalid blueprint data: " .. fmtMagic .. " != " .. tostring(self.magic)) end
+		if self.version > fmtVersion then error("Blueprint data version is newer") end
+	end
 
 end
 
@@ -149,14 +166,16 @@ function meta:In( noRead )
 
 	end
 
-	if not self:HasFlag(FL_NoHeader) then print("Write Header") self:SerializeHeader() else print("Skip Header") end
+	if not self:HasFlag(FL_NoHeader) then print("Read Header") self:SerializeHeader() else print("Skip Header") end
 	if not self:HasFlag(FL_NoObjectLinker) then
+		print("READ LINKER")
 		self.linker = bpobjectlinker.New():WithOuter(self)
 		self.linker:Serialize(self)
 	end
 	if not self:HasFlag(FL_NoStringTable) then
+		print("READ STRINGTABLE")
 		self.stringTable = bpstringtable.New():WithOuter(self)
-		self.stringTable:ReadFromStream(self)
+		self.stringTable:Serialize(self)
 	end
 
 	return self
@@ -171,7 +190,7 @@ function meta:Finish( noWrite )
 
 		self:MetaState(true)
 		if self.linker then self.linker:Serialize(self) end
-		if self.stringTable then self.stringTable:WriteToStream(self) end
+		if self.stringTable then self.stringTable:Serialize(self) end
 		if self.dataStream then self.stream:WriteStr( self.dataStream:GetString(false, false) ) end
 		self:MetaState(false)
 
@@ -180,7 +199,7 @@ function meta:Finish( noWrite )
 			if self.mode == MODE_File then
 
 				assert(self.file)
-				self.stream:WriteToFile(self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
+				out = self.stream:WriteToFile(self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
 
 			elseif self.mode == MODE_String or self.mode == MODE_NetworkString then
 
@@ -188,7 +207,9 @@ function meta:Finish( noWrite )
 
 			elseif self.mode == MODE_Network then
 
-				self:WriteToNet( self:HasFlag(FL_Compressed) )
+				print("Write to network")
+				local s, p = self.stream:WriteToNet( self:HasFlag(FL_Compressed) )
+				out = p
 
 			else
 
@@ -323,7 +344,7 @@ function meta:String(v, raw, n)
 		if usingStringTable and not raw then
 			return self:Data():ReadStr()
 		else
-			local n = self:UInt()
+			n = n or self:UInt()
 			return self:Data():ReadStr(n, true)
 		end
 	end
@@ -332,7 +353,7 @@ function meta:String(v, raw, n)
 		if usingStringTable and not raw then
 			self:Data():WriteStr(v)
 		else
-			self:UInt(string.len(v))
+			if not n then self:UInt(string.len(v)) end
 			self:Data():WriteStr(v, true)
 		end
 		return v 
@@ -361,15 +382,12 @@ function meta:Object(v, noLinker)
 
 	if self:IsWriting() then
 
-		if v == nil then self:UInt(0) return v end
-		if not type(v) == "table" then error("Tried to write non-table object") end
-		if v.__hash == nil then error("Object is not a metatype") end
-
 		if noLinker or self.linker == nil then
-			if self.linker then self.linker:RecordObject(v) end
+			if not type(v) == "table" then error("Tried to write non-table object") end
+			if v.__hash == nil then error("Object is not a metatype") end
 			v:Serialize(self)
 		else
-			self.linker:WriteObject(v, self)
+			self.linker:WriteObject(self, v)
 		end
 		return v
 
