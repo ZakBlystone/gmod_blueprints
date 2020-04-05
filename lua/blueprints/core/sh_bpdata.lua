@@ -238,8 +238,10 @@ function OUT:Init(bitstream, crc, fileBacked)
 	else
 		self.buffer = NewBuffer(fileBacked) --""
 	end
+	self.fileBacked = fileBacked
 	self.signedCRC = crc
 	self.bitstream = bitstream
+	self.prepended = {}
 	return self
 end
 
@@ -260,14 +262,13 @@ function OUT:GetString(compressed, base64encoded)
 			str = str .. string.char(self.buffer[i])
 		end
 	else
+		str = self.buffer:GetString()
 		if self.stringTable then
 			-- Prepend string table
 			local b = OutStream(false, false, true)
 			self.stringTable:WriteToStream(b)
-			b:WriteStr(self.buffer:GetString(), true)
+			b:WriteStr(str, true)
 			str = b:GetString(false, false)
-		else
-			str = self.buffer:GetString()
 		end
 		self.buffer:Close()
 	end

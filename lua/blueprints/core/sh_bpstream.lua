@@ -10,6 +10,7 @@ bpcommon.AddFlagAccessors(meta)
 MODE_File = 0
 MODE_Network = 1
 MODE_String = 2
+MODE_NetworkString = 3
 
 -- Flags
 FL_None = 0
@@ -19,11 +20,15 @@ FL_Checksum = 4
 FL_FileBacked = 8
 FL_BitStream = 16
 FL_NoStringTable = 32
+FL_NoObjectLinker = 64
+FL_NoHeader = 128
 
 -- IO
 IO_None = 0
 IO_Out = 1
 IO_In = 2
+
+DEBUG_MODE = true
 
 
 function meta:Init(context, mode, file)
@@ -40,11 +45,32 @@ end
 function meta:Version(v)
 
 	self.version = v
+
+	if v < 5 then self:AddFlag(FL_NoObjectLinker) end
+
 	return self
 
 end
 
+function meta:Magic(v)
+
+	self.magic = v
+	return self
+
+end
+
+function meta:SerializeHeader()
+
+	self.magic = self:UInt(self.magic)
+	self.version = self:UInt(self.version)
+
+end
+
 function meta:Out()
+
+	if DEBUG_MODE then self:ClearFlag( FL_Compressed ) end
+	if DEBUG_MODE then self:ClearFlag( FL_Base64 ) end
+	if DEBUG_MODE then self:ClearFlag( FL_Checksum ) end
 
 	self.io = IO_Out
 	self.stream = bpdata.OutStream(
@@ -53,15 +79,41 @@ function meta:Out()
 		self:HasFlag(FL_FileBacked)
 	)
 
-	if not self:HasFlag(FL_NoStringTable) then
-		self.stream:UseStringTable()
+	if self.version >= 5 then
+		self.dataStream = bpdata.OutStream(false, false, self:HasFlag(FL_FileBacked))
+		
+		if not self:HasFlag(FL_NoObjectLinker) then self.linker = bpobjectlinker.New():WithOuter(self) end
+		if not self:HasFlag(FL_NoStringTable) then self.stringTable = bpstringtable.New():WithOuter(self) end
+	else
+		if not self:HasFlag(FL_NoStringTable) then self.stream:UseStringTable() end
 	end
+
+	self:MetaState( true )
+	if not self:HasFlag(FL_NoHeader) then print("Write Header") self:SerializeHeader() else print("Skip Header") end
+	self:MetaState( false )
 
 	return self
 
 end
 
-function meta:In()
+function meta:Data()
+
+	if self.metaState then return self.stream end
+	return self.dataStream or self.stream
+
+end
+
+function meta:MetaState( state )
+
+	self.metaState = state
+
+end
+
+function meta:In( noRead )
+
+	if DEBUG_MODE then self:ClearFlag( FL_Compressed ) end
+	if DEBUG_MODE then self:ClearFlag( FL_Base64 ) end
+	if DEBUG_MODE then self:ClearFlag( FL_Checksum ) end
 
 	self.io = IO_In
 	self.stream = bpdata.InStream(
@@ -69,55 +121,80 @@ function meta:In()
 		self:HasFlag(FL_Checksum)
 	)
 
-	if not self:HasFlag(FL_NoStringTable) then
-		self.stream:UseStringTable()
+	if self.version < 5 then
+		if not self:HasFlag(FL_NoStringTable) then self.stream:UseStringTable() end
 	end
 
-	if self.mode == MODE_File then
+	if not noRead then
 
-		assert(self.file)
-		assert(self.stream:LoadFile( self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) ))
+		if self.mode == MODE_File then
 
-	elseif self.mode == MODE_String then
+			assert(self.file)
+			assert(self.stream:LoadFile( self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) ))
 
-		assert(self.file)
-		assert(self.stream:LoadString( self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) ))
+		elseif self.mode == MODE_String or self.mode == MODE_NetworkString then
 
-	elseif self.mode == MODE_Network then
+			assert(self.file)
+			assert(self.stream:LoadString( self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) ))
 
-		self.stream:ReadFromNet( self:HasFlag(FL_Compressed) )
+		elseif self.mode == MODE_Network then
 
-	else
+			self.stream:ReadFromNet( self:HasFlag(FL_Compressed) )
 
-		error("Invalid mode for reading")
+		else
 
+			error("Invalid mode for reading")
+
+		end
+
+	end
+
+	if not self:HasFlag(FL_NoHeader) then print("Write Header") self:SerializeHeader() else print("Skip Header") end
+	if not self:HasFlag(FL_NoObjectLinker) then
+		self.linker = bpobjectlinker.New():WithOuter(self)
+		self.linker:Serialize(self)
+	end
+	if not self:HasFlag(FL_NoStringTable) then
+		self.stringTable = bpstringtable.New():WithOuter(self)
+		self.stringTable:ReadFromStream(self)
 	end
 
 	return self
 
 end
 
-function meta:Finish()
+function meta:Finish( noWrite )
 
 	local out = nil
+
 	if self:IsWriting() then
 
-		if self.mode == MODE_File then
+		self:MetaState(true)
+		if self.linker then self.linker:Serialize(self) end
+		if self.stringTable then self.stringTable:WriteToStream(self) end
+		if self.dataStream then self.stream:WriteStr( self.dataStream:GetString(false, false) ) end
+		self:MetaState(false)
 
-			assert(self.file)
-			self.stream:WriteToFile(self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
+		if not noWrite then
 
-		elseif self.mode == MODE_String then
+			if self.mode == MODE_File then
 
-			out = self:GetString()
+				assert(self.file)
+				self.stream:WriteToFile(self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
 
-		elseif self.mode == MODE_Network then
+			elseif self.mode == MODE_String or self.mode == MODE_NetworkString then
 
-			self:WriteToNet( self:HasFlag(FL_Compressed) )
+				out = self:GetString()
 
-		else
+			elseif self.mode == MODE_Network then
 
-			error("Invalid mode for writing")
+				self:WriteToNet( self:HasFlag(FL_Compressed) )
+
+			else
+
+				error("Invalid mode for writing")
+
+			end
 
 		end
 
@@ -130,12 +207,13 @@ function meta:Finish()
 end
 
 function meta:IsFile() return self.mode == MODE_File end
-function meta:IsNetwork() return self.mode == MODE_Network end
+function meta:IsNetwork() return self.mode == MODE_Network or self.mode == MODE_NetworkString end
 function meta:IsString() return self.mode == MODE_String end
 function meta:IsReading() return self.io == IO_In end
 function meta:IsWriting() return self.io == IO_Out end
 function meta:GetContext() return self.context end
 function meta:GetMode() return self.mode end
+function meta:GetMagic() return self.magic end
 function meta:GetVersion() return self.version end
 
 function meta:GetString()
@@ -147,94 +225,115 @@ end
 
 function meta:UByte(v)
 
-	if self:IsReading() then return self.stream:ReadByte(false) end
-	if self:IsWriting() then self.stream:WriteByte(v, false) return v end
+	if self:IsReading() then return self:Data():ReadByte(false) end
+	if self:IsWriting() then self:Data():WriteByte(v, false) return v end
 	error("Tried to use closed stream")
 
 end
 
 function meta:Byte(v)
 
-	if self:IsReading() then return self.stream:ReadByte(true) end
-	if self:IsWriting() then self.stream:WriteByte(v, true) return v end
+	if self:IsReading() then return self:Data():ReadByte(true) end
+	if self:IsWriting() then self:Data():WriteByte(v, true) return v end
 	error("Tried to use closed stream")
 
 end
 
 function meta:Bits(v, num)
 
-	if self:IsReading() then return self.stream:ReadBits(num) end
-	if self:IsWriting() then self.stream:WriteBits(v, num) return v end
+	if self:IsReading() then return self:Data():ReadBits(num) end
+	if self:IsWriting() then self:Data():WriteBits(v, num) return v end
 	error("Tried to use closed stream")
 
 end
 
 function meta:Float(v)
 
-	if self:IsReading() then return self.stream:ReadFloat() end
-	if self:IsWriting() then self.stream:WriteFloat(v) return v end
+	if self:IsReading() then return self:Data():ReadFloat() end
+	if self:IsWriting() then self:Data():WriteFloat(v) return v end
 	error("Tried to use closed stream")
 
 end
 
 function meta:UInt(v)
 
-	if self:IsReading() then return self.stream:ReadInt(false) end
-	if self:IsWriting() then self.stream:WriteInt(v, false) return v end
+	if self:IsReading() then return self:Data():ReadInt(false) end
+	if self:IsWriting() then self:Data():WriteInt(v, false) return v end
 	error("Tried to use closed stream")
 
 end
 
 function meta:Int(v)
 
-	if self:IsReading() then return self.stream:ReadInt(true) end
-	if self:IsWriting() then self.stream:WriteInt(v, true) return v end
+	if self:IsReading() then return self:Data():ReadInt(true) end
+	if self:IsWriting() then self:Data():WriteInt(v, true) return v end
 	error("Tried to use closed stream")
 
 end
 
 function meta:UShort(v)
 
-	if self:IsReading() then return self.stream:ReadShort(false) end
-	if self:IsWriting() then self.stream:WriteShort(v, false) return v end
+	if self:IsReading() then return self:Data():ReadShort(false) end
+	if self:IsWriting() then self:Data():WriteShort(v, false) return v end
 	error("Tried to use closed stream")
 
 end
 
 function meta:Short(v)
 
-	if self:IsReading() then return self.stream:ReadShort(true) end
-	if self:IsWriting() then self.stream:WriteShort(v, true) return v end
+	if self:IsReading() then return self:Data():ReadShort(true) end
+	if self:IsWriting() then self:Data():WriteShort(v, true) return v end
 	error("Tried to use closed stream")
 
 end
 
 function meta:Bool(v)
 
-	if self:IsReading() then return self.stream:ReadBool() end
-	if self:IsWriting() then self.stream:WriteBool(v) return v end
+	if self:IsReading() then return self:Data():ReadBool() end
+	if self:IsWriting() then self:Data():WriteBool(v) return v end
 	error("Tried to use closed stream")
 
 end
 
-function meta:String(v, raw)
+function meta:String(v, raw, n)
+
+	if self.version >= 5 then
+
+		if self:IsReading() then
+			if self.stringTable and not raw then
+				return self.stringTable:Get(self:Bits(nil, 24))
+			end
+			n = n or self:UInt()
+			return self:Data():ReadStr(n, true)
+		end
+		if self:IsWriting() then
+			if self.stringTable and not raw then
+				self:Bits( self.stringTable:Add(v), 24 ) return v
+			end
+			if not n then self:UInt(string.len(v)) end
+			self:Data():WriteStr(v, true)
+			return v
+		end
+		error("Tried to use closed stream")
+
+	end
 
 	if self:IsReading() then
-		local usingStringTable = self.stream.stringTable
+		local usingStringTable = self:Data().stringTable
 		if usingStringTable and not raw then
-			return self.stream:ReadStr()
+			return self:Data():ReadStr()
 		else
 			local n = self:UInt()
-			return self.stream:ReadStr(n, true)
+			return self:Data():ReadStr(n, true)
 		end
 	end
 	if self:IsWriting() then
-		local usingStringTable = self.stream.stringTable
+		local usingStringTable = self:Data().stringTable
 		if usingStringTable and not raw then
-			self.stream:WriteStr(v)
+			self:Data():WriteStr(v)
 		else
 			self:UInt(string.len(v))
-			self.stream:WriteStr(v, true)
+			self:Data():WriteStr(v, true)
 		end
 		return v 
 	end
@@ -244,8 +343,71 @@ end
 
 function meta:Value(v)
 
-	if self:IsReading() then return bpdata.ReadValue(self.stream) end
-	if self:IsWriting() then bpdata.WriteValue(v, self.stream) return v end
+	if self:IsReading() then return bpdata.ReadValue(self:Data()) end
+	if self:IsWriting() then bpdata.WriteValue(v, self:Data()) return v end
+	error("Tried to use closed stream")
+
+end
+
+function meta:GUID(v)
+
+	if self:IsReading() then return self:Data():ReadStr(16) end
+	if self:IsWriting() then self:Data():WriteStr(v) return v end
+	error("Tried to use closed stream")
+
+end
+
+function meta:Object(v, noLinker)
+
+	if self:IsWriting() then
+
+		if v == nil then self:UInt(0) return v end
+		if not type(v) == "table" then error("Tried to write non-table object") end
+		if v.__hash == nil then error("Object is not a metatype") end
+
+		if noLinker or self.linker == nil then
+			if self.linker then self.linker:RecordObject(v) end
+			v:Serialize(self)
+		else
+			self.linker:WriteObject(v, self)
+		end
+		return v
+
+	end
+	if self:IsReading() then
+
+		if noLinker or self.linker == nil then
+			v:Serialize(self)
+		else
+			v = self.linker:ReadObject(self)
+		end
+		return v
+
+	end
+	error("Tried to use closed stream")
+
+end
+
+function meta:ObjectArray(v)
+
+	if self:IsWriting() then
+
+		self:UInt(#v)
+		if #v == 0 then return end
+		for i=1, #v do self:Object(v[i]) end
+		return v
+
+	end
+	if self:IsReading() then
+
+		local v = {}
+		local n = self:UInt()
+		for i=1, n do
+			v[#t+1] = self:Object(nil)
+		end
+		return v
+
+	end
 	error("Tried to use closed stream")
 
 end
@@ -253,8 +415,9 @@ end
 local function Forward(name, t)
 
 	meta[name] = function(s, ...)
-		if not s.stream then error("Tried to use closed stream") end
-		return t[name](s.stream, ...)
+		local stream = s:Data()
+		if not stream then error("Tried to use closed stream") end
+		return t[name](stream, ...)
 	end
 
 end
@@ -262,7 +425,6 @@ end
 Forward("IsUsingStringTable", bpdata.OUT)
 Forward("WriteBits", bpdata.OUT)
 Forward("WriteBool", bpdata.OUT)
-Forward("WriteStr", bpdata.OUT)
 Forward("WriteByte", bpdata.OUT)
 Forward("WriteShort", bpdata.OUT)
 Forward("WriteInt", bpdata.OUT)
@@ -270,10 +432,12 @@ Forward("WriteFloat", bpdata.OUT)
 
 Forward("ReadBits", bpdata.IN)
 Forward("ReadBool", bpdata.IN)
-Forward("ReadStr", bpdata.IN)
 Forward("ReadByte", bpdata.IN)
 Forward("ReadShort", bpdata.IN)
 Forward("ReadInt", bpdata.IN)
 Forward("ReadFloat", bpdata.IN)
+
+function meta:WriteStr(str, raw) self:String(str, raw, 0) end
+function meta:ReadStr(n, raw) return self:String(nil, raw, n) end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end

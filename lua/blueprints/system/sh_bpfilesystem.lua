@@ -3,7 +3,7 @@ AddCSLuaFile()
 G_BPFiles = G_BPFiles or {}
 G_BPLocalFiles = G_BPLocalFiles or {}
 
-module("bpfilesystem", package.seeall, bpcommon.rescope( bpcommon ))
+module("bpfilesystem", package.seeall, bpcommon.rescope( bpcommon, bpstream ))
 
 FT_Local = 0
 FT_Remote = 1
@@ -311,14 +311,15 @@ end
 local function DownloadLocalFile( file, ply )
 
 	local state = bptransfer.GetState( ply )
-	local stream = bpdata.OutStream(false, true, true):UseStringTable()
 
 	local modulePath = UIDToModulePath( file:GetUID() )
 	local mod = bpmodule.New():WithOuter( file )
+	local stream = mod:CreateStream(MODE_NetworkString):Out()
 	mod:Load( modulePath )
-	mod:WriteToStream(stream, STREAM_NET)
+	stream:Object(mod, true)
+	stream:Finish(true)
 
-	local data = stream:GetString(true, false)
+	local data = stream:GetString()
 	if not state:AddData(data, "module", file:GetName()) then
 		return false
 	end
@@ -357,12 +358,14 @@ if SERVER then
 			if owner == nil then error("Unable to get user for file owner") end
 
 			local moduleData = data.buffer:GetString()
-			local stream = bpdata.InStream(false, true):UseStringTable()
-			if not stream:LoadString(moduleData, true, false) then error("Failed to load file locally") end
+			local mod = bpmodule.New()
+			local stream = mod:CreateStream(MODE_NetworkString, moduleData):In()
+
+			mod = stream:Object(mod, true)
 
 			local execute = bpdata.ReadValue(stream)
 			local name = bpdata.ReadValue(stream)
-			local mod = bpmodule.New():ReadFromStream(stream, STREAM_NET)
+			
 			local filename = UIDToModulePath( mod:GetUID() )
 			local file = FindFileByUID( mod:GetUID() )
 
@@ -418,12 +421,12 @@ else
 		if data.tag == "module" then
 
 			local moduleData = data.buffer:GetString()
-			local stream = bpdata.InStream(false, true):UseStringTable()
-			if not stream:LoadString(moduleData, true, false) then error("Failed to load file locally") end
+			local mod = bpmodule.New()
+			local stream = mod:CreateStream(MODE_NetworkString, moduleData):In()
+
+			mod = stream:Object(mod, true)
 
 			local path = ClientFileDirectory .. ModuleNameToFilename(data.name)
-			local mod = bpmodule.New()
-			mod:ReadFromStream( stream, STREAM_NET )
 
 			if file.Exists(path, "DATA") then
 				local head = bpmodule.LoadHeader(path)
@@ -505,17 +508,18 @@ function UploadObject( object, name, execute )
 	assert( CLIENT )
 	assert( isbpmodule(object) )
 
-	local stream = bpdata.OutStream(false, true, true):UseStringTable()
+	local stream = object:CreateStream(MODE_NetworkString):Out()
+	stream:Object( object, true )
+	stream:Value( execute )
+	stream:Value( name )
 
-	bpdata.WriteValue(execute, stream)
-	bpdata.WriteValue(name, stream)
-	object:WriteToStream(stream, STREAM_NET)
-
-	local data = stream:GetString(true, false)
+	local data = stream:GetString()
 	local transfer = bptransfer.GetState(LocalPlayer())
 	if not transfer:AddData(data, "module", "test") then
 		print("Failed to add file to transfer")
 	end
+
+	stream:Finish(true)
 
 end
 

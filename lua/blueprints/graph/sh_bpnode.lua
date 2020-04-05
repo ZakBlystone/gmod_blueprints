@@ -441,7 +441,7 @@ end
 
 function meta:WriteToStream(stream, mode, version)
 
-	assert(stream:IsUsingStringTable())
+	if version < 5 then assert(stream:IsUsingStringTable()) end
 
 	Profile("write-node", function()
 
@@ -467,7 +467,7 @@ end
 
 function meta:ReadFromStream(stream, mode, version)
 
-	assert(stream:IsUsingStringTable())
+	if version < 5 then assert(stream:IsUsingStringTable()) end
 
 	if version < 4 then
 		self.nodeType = bpdata.ReadValue(stream)
