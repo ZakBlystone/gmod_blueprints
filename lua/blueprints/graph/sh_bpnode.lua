@@ -449,7 +449,6 @@ function meta:Serialize(stream)
 		self.literals = stream:Value(self.literals)
 	else
 		self.nodeType = stream:String(self.nodeType)
-		self.literals = {}
 
 		if stream:IsWriting() then
 			for k,v in pairs(self.literals) do
@@ -458,6 +457,7 @@ function meta:Serialize(stream)
 			end
 			stream:Bits(0, 16)
 		elseif stream:IsReading() then
+			self.literals = {}
 			local r = stream:Bits(nil, 16)
 			while r ~= 0 do
 				self.literals[r] = stream:String()
