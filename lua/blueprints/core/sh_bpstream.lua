@@ -362,6 +362,16 @@ function meta:String(v, raw, n)
 
 end
 
+function meta:SValueCompat(v)
+
+	if self:GetVersion() < 5 then
+		return self:Value(v)
+	else
+		return self:String(v)
+	end
+
+end
+
 function meta:Value(v)
 
 	if self:IsReading() then return bpdata.ReadValue(self:Data()) end

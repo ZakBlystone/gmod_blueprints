@@ -257,11 +257,11 @@ function meta:Serialize(stream)
 	self.locals = stream:Value(self.locals)
 	self.globals = stream:Value(self.globals)
 	self.informs = stream:Value(self.informs)
-	self.modFilter = stream:Value(self.modFilter)
+	self.modFilter = stream:SValueCompat(self.modFilter)
 
 	local numPins = stream:Bits(#self.pins, 8)
 	for i=1, numPins do
-		self.pins[i] = stream:Object(self.pins[i] or bppin.New(), true)
+		self.pins[i] = stream:Object(self.pins[i] or bppin.New())
 	end
 
 	return stream

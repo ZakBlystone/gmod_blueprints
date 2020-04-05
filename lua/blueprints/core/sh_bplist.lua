@@ -298,12 +298,12 @@ function meta:Serialize(stream)
 	self.namedItems = stream:Bool(self.namedItems)
 	if self.indexed then self.nextID = stream:UInt(self.nextID) end
 	local count = stream:UInt(self:Size())
-	--print("List serialize " .. count .. " items")
+	if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
 	for i=1, count do
 
 		local item = self.items[i] or self:ConstructObject()
-		if self.indexed then item.id = stream:UInt(item.id) end
-		if self.namedItems then item.name = stream:Value(item.name) end
+		if self.indexed then item.id = stream:UInt(item.id) else item.id = i end
+		if self.namedItems then item.name = stream:SValueCompat(item.name) end
 		stream:Object(item, true)
 
 		if stream:IsReading() then

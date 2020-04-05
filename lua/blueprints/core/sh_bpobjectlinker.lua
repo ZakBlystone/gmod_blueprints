@@ -8,11 +8,33 @@ function meta:Init()
 
 	self.objects = {}
 	self.nextSetID = 0
+	self.order = {}
+	self.hashes = {}
+	self.orderNum = 1
+	self.hashNum = 1
 	return self
 
 end
 
 function meta:Serialize(stream)
+
+	local orderCount = stream:UInt(#self.order)
+	local hashCount = stream:UInt(#self.hashes)
+
+	print("Serialize: " .. orderCount .. " orders")
+	print("Serialize: " .. hashCount .. " hashes")
+
+	for i=1, orderCount do
+		self.order[i] = self.order[i] or {}
+		self.order[i][1] = stream:UByte(self.order[i][1])
+		self.order[i][2] = stream:Bits(self.order[i][2], 24)
+	end
+
+	for i=1, hashCount do
+		self.hashes[i] = stream:UInt(self.hashes[i])
+	end
+
+	return stream
 
 end
 
@@ -62,8 +84,7 @@ function meta:WriteObject(stream, obj)
 
 	local set = self:GetSetForHash( meta.__hash )
 	if obj == nil then
-		stream:UByte(0)
-		stream:Bits(0,24)
+		self.order[#self.order+1] = {0, 0}
 		return
 	end
 
@@ -80,13 +101,11 @@ function meta:WriteObject(stream, obj)
 	end
 
 	if existing then
-		stream:UByte(set.id)
-		stream:Bits(existing,24)
+		self.order[#self.order+1] = {set.id, existing}
 	else
 		set.objects[hash] = set.next
-		stream:UByte(set.id)
-		stream:Bits(set.next, 24)
-		stream:UInt(meta.__hash)
+		self.order[#self.order+1] = {set.id, set.next}
+		self.hashes[#self.hashes+1] = meta.__hash
 		obj:Serialize(stream)
 		set.next = set.next + 1
 	end
@@ -95,15 +114,20 @@ end
 
 function meta:ReadObject(stream)
 
-	local setID = stream:UByte()
-	local objID = stream:Bits(nil, 24)
+	local ord = self.order[self.orderNum]
+	self.orderNum = self.orderNum + 1
+
+	local setID = ord[1]
+	local objID = ord[2]
 
 	if objID == 0 then return nil end
 
 	self.objects[setID] = self.objects[setID] or {}
 	local set = self.objects[setID]
 	if not set[objID] then
-		local hash = stream:UInt()
+		local hash = self.hashes[self.hashNum]
+		self.hashNum = self.hashNum + 1
+
 		local obj = self:Construct(hash)
 		obj:Serialize(stream)
 		set[objID] = obj
@@ -116,7 +140,7 @@ end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end
 
---[[if CLIENT then
+if CLIENT and bpstream ~= nil then
 
 	local stream = bpstream.New("test", bpstream.MODE_String):Out()
 	local pt = bppintype.New(bpschema.PN_Ref,nil,"Entity")
@@ -130,4 +154,4 @@ function New(...) return bpcommon.MakeInstance(meta, ...) end
 	local t = stream:Object()
 	print(tostring(t))
 
-end]]
+end
