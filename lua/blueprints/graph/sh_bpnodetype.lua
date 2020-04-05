@@ -261,7 +261,7 @@ function meta:Serialize(stream)
 
 	local numPins = stream:Bits(#self.pins, 8)
 	for i=1, numPins do
-		self.pins[i] = stream:Object(self.pins[i] or bppin.New())
+		self.pins[i] = stream:Object(self.pins[i] or bppin.New(), true)
 	end
 
 	return stream

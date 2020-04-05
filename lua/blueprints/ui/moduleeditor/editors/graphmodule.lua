@@ -29,7 +29,7 @@ function EDITOR:PostInit()
 
 	hook.Add("BPPinClassRefresh", "pinrefresh_" .. self:GetModule():GetUID(), function(class)
 		print("PIN CLASS UPDATED, INVALIDATE: " .. class)
-		for _, graph in self.module:Graphs() do
+		for _, graph in self:GetModule():Graphs() do
 			for _, node in graph:Nodes() do
 				node:UpdatePins()
 			end

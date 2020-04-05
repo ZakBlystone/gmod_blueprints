@@ -50,6 +50,8 @@ function meta:Init(context, mode, file)
 		self:AddFlag(FL_Checksum)
 	end
 
+	--self:AddFlag(FL_NoObjectLinker)
+
 	return self
 
 end

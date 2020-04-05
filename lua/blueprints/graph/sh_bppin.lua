@@ -134,7 +134,7 @@ end
 
 function meta:Serialize(stream)
 
-	self.type = stream:Object(self.type)
+	self.type = stream:Object(self.type):WithOuter(self)
 	self.dir = stream:Bits(self.dir, 8)
 	self.name = stream:String(self.name)
 	self.desc = stream:String(self.desc)
@@ -159,5 +159,7 @@ function meta:Copy(dir)
 end
 
 bpcommon.ForwardMetaCallsVia(meta, "bppintype", "GetType")
+
+meta.GetHash = nil
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end

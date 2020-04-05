@@ -24,7 +24,7 @@ function PIN:GetLiteralDisplay()
 		if key then literal = enum.entries[key].shortkey end
 	end
 
-	return bpcommon.ZipStringLeft(literal, 26)
+	return bpcommon.ZipStringLeft(tostring(literal), 26)
 
 end
 

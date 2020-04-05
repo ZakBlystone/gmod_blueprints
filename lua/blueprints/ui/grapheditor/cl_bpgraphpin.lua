@@ -287,7 +287,7 @@ function meta:GetLiteralValue()
 
 	local literal = node:GetLiteral(self.pinID) or "!!!UNASSIGNED LITERAL!!!"
 
-	self.literalText = bpcommon.ZipStringLeft(literal, 26)
+	self.literalText = bpcommon.ZipStringLeft(tostring(literal), 26)
 
 	return literal
 
