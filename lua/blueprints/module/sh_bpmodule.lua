@@ -136,12 +136,6 @@ function meta:GetAllModules()
 
 end
 
-function meta:CreateStream(mode, file)
-
-	return bpstream.New("module", mode, file)
-
-end
-
 function LoadHeader(filename)
 
 	local stream = bpstream.New("module", MODE_File, filename):AddFlags(FL_Base64):In()

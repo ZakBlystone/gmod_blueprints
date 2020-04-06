@@ -154,11 +154,11 @@ function meta:Serialize(stream)
 	end
 
 	if self:HasFlag(FL_HasOwner) then
-		self.owner = stream:Object( self.owner or bpuser.New(), true )
+		self.owner = stream:Object( self.owner )
 	end
 
 	if self:HasFlag(FL_HasLock) then
-		self.lock = stream:Object( self.lock or bpuser.New(), true )
+		self.lock = stream:Object( self.lock )
 	end
 
 	return stream

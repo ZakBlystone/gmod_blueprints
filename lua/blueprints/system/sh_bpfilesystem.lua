@@ -308,7 +308,7 @@ local function DownloadLocalFile( file, ply )
 
 	local modulePath = UIDToModulePath( file:GetUID() )
 	local mod = bpmodule.Load(modulePath):WithOuter( file )
-	local stream = mod:CreateStream(MODE_NetworkString):Out()
+	local stream = bpstream.New("module", MODE_NetworkString):Out()
 	stream:Object(mod)
 
 	local data = stream:Finish()
@@ -350,10 +350,8 @@ if SERVER then
 			if owner == nil then error("Unable to get user for file owner") end
 
 			local moduleData = data.buffer:GetString()
-			local mod = bpmodule.New()
-			local stream = mod:CreateStream(MODE_NetworkString, moduleData):In()
-
-			mod = stream:Object(mod, true)
+			local stream = bpstream.New("module", MODE_NetworkString, moduleData):In()
+			mod = stream:Object()
 
 			local execute = stream:Value()
 			local name = stream:Value()
@@ -413,10 +411,8 @@ else
 		if data.tag == "module" then
 
 			local moduleData = data.buffer:GetString()
-			local mod = bpmodule.New()
-			local stream = mod:CreateStream(MODE_NetworkString, moduleData):In()
-
-			mod = stream:Object(mod, true)
+			local stream = bpstream.New("module", MODE_NetworkString, moduleData):In()
+			local mod = stream:Object()
 
 			local path = ClientFileDirectory .. ModuleNameToFilename(data.name)
 
@@ -500,8 +496,8 @@ function UploadObject( object, name, execute )
 	assert( CLIENT )
 	assert( isbpmodule(object) )
 
-	local stream = object:CreateStream(MODE_NetworkString):Out()
-	stream:Object( object, true )
+	local stream = bpstream.New("module", MODE_NetworkString):Out()
+	stream:Object( object )
 	stream:Value( execute )
 	stream:Value( name )
 

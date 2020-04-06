@@ -106,7 +106,7 @@ function Install( mod, owner )
 	bpenv.Instantiate( mod:GetUID(), instanceUID )
 
 	local stream = bpstream.New("bpnet", bpstream.MODE_Network):Out()
-	stream:Object(mod, true)
+	stream:Object(mod)
 
 	net.Start("bpnet")
 	net.WriteUInt( CMD_Install, CommandBits )
@@ -161,7 +161,7 @@ if SERVER then
 
 				print("Packing Blueprint " .. v:GetName() .. "...")
 				local cmod = bpenv.Get( v:GetUID() )  --mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
-				agg:Object(cmod, true)
+				agg:Object(cmod)
 
 				print("Write " .. #instances .. " instances.")
 				agg:UInt(#instances)
@@ -227,7 +227,7 @@ net.Receive("bpnet", function(len, ply)
 
 		local uid = net.ReadData( 16 )
 		local stream = bpstream.New("bpnet", bpstream.MODE_Network):In()
-		local mod = stream:Object( bpcompiledmodule.New(), true )
+		local mod = stream:Object()
 
 		mod:Load()
 		bpenv.Install( mod )
@@ -267,7 +267,7 @@ net.Receive("bpnet", function(len, ply)
 		for i=1, count do
 
 			--print("Reading module " .. i)
-			local mod = stream:Object( bpcompiledmodule.New(), true )
+			local mod = stream:Object()
 			local numInstances = stream:UInt()
 
 			--print(numInstances .. " instances")

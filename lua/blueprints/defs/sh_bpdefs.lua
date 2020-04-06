@@ -410,8 +410,7 @@ local function LoadDefinitionPack(data)
 			:AddFlags(bpstream.FL_Compressed + bpstream.FL_Checksum + bpstream.FL_FileBacked + bpstream.FL_NoHeader)
 			:In()
 
-		defpack = stream:Object( bpdefpack.New(), true )
-		defpack:PostInit()
+		defpack = stream:Object()
 		ready = true
 	end)
 
@@ -441,7 +440,7 @@ elseif SERVER then
 			:AddFlags(bpstream.FL_Compressed + bpstream.FL_Checksum + bpstream.FL_FileBacked + bpstream.FL_NoHeader)
 			:Out()
 
-		stream:Object(defpack, true)
+		stream:Object(defpack)
 		stream:Finish()
 		bpcommon.ProfileEnd()
 

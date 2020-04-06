@@ -220,7 +220,7 @@ function meta:Serialize(stream)
 	end
 
 	self.enums = stream:Value(self.enums)
-	self.redirectors = stream:Value(self.redirectors)
+	self.redirectors = stream:StringMap(self.redirectors)
 
 	if stream:IsReading() then self:PostInit() end
 	return stream
