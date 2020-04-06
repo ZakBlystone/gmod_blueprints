@@ -231,7 +231,7 @@ end
 OUT = {} OUT.__index = OUT
 IN = {} IN.__index = IN
 
-function OUT:Init(bitstream, crc, fileBacked)
+function OUT:Init(bitstream, fileBacked)
 	if bitstream then
 		self.bit = 0
 		self.buffer = {}
@@ -239,10 +239,13 @@ function OUT:Init(bitstream, crc, fileBacked)
 		self.buffer = NewBuffer(fileBacked) --""
 	end
 	self.fileBacked = fileBacked
-	self.signedCRC = crc
 	self.bitstream = bitstream
 	self.prepended = {}
 	return self
+end
+
+function OUT:GetCRC()
+	return math.floor( util.CRC( self.buffer:GetString() ) )
 end
 
 function OUT:GetString(compressed, base64encoded)
@@ -255,11 +258,6 @@ function OUT:GetString(compressed, base64encoded)
 	else
 		str = self.buffer:GetString()
 		self.buffer:Close()
-	end
-
-	if self.signedCRC then
-		local crc = util.CRC(str)
-		str = Int2Str( crc, false ) .. str
 	end
 
 	local buf = compressed and util.Compress(str) or str
@@ -330,7 +328,7 @@ function OUT:WriteFloat(v) self:WriteStr(Float2Str(v), true) end
 OUT.Write = OUT.WriteStr
 OUT.WriteLong = OUT.WriteInt
 
-function IN:Init(bitstream, crc)
+function IN:Init(bitstream)
 	if bitstream then
 		self.bit = 0
 		self.buffer = {}
@@ -338,13 +336,21 @@ function IN:Init(bitstream, crc)
 		self.buffer = ""
 		self.byte = 1
 	end
-	self.signedCRC = crc
 	self.bitstream = bitstream
 	return self
 end
 
+function IN:GetCRC( offset )
+	if offset then return math.floor( util.CRC( self.buffer:sub(offset,-1) ) ) end
+	return math.floor( util.CRC( self.buffer ) )
+end
+
 function IN:Reset()
 	self.byte = 1
+end
+
+function IN:Position()
+	return self.byte
 end
 
 function IN:Remain()
@@ -356,14 +362,6 @@ function IN:LoadString(str, compressed, base64encoded)
 	if compressed then str = util.Decompress(str, 0x4000000) end --64 megs max
 
 	if str == nil then return false end
-
-	if self.signedCRC then
-		local remain = str:sub(5,-1)
-		local signed = Str2Int( str:sub(1,4), false )
-		local test = math.floor( util.CRC( remain ) ) --weird bug where not exactly equal
-		if test ~= signed then return false end
-		str = remain
-	end
 
 	if self.bitstream then
 		self.buffer = {}

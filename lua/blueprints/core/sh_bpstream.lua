@@ -79,16 +79,10 @@ function meta:Out()
 
 	if DEBUG_MODE then self:ClearFlag( FL_Compressed ) end
 	if DEBUG_MODE then self:ClearFlag( FL_Base64 ) end
-	--if DEBUG_MODE then self:ClearFlag( FL_Checksum ) end
 
 	self.io = IO_Out
-	self.stream = bpdata.OutStream(
-		self:HasFlag(FL_BitStream),
-		self:HasFlag(FL_Checksum),
-		self:HasFlag(FL_FileBacked)
-	)
-
-	self.dataStream = bpdata.OutStream(false, false, self:HasFlag(FL_FileBacked))
+	self.stream = bpdata.OutStream( self:HasFlag(FL_BitStream), self:HasFlag(FL_FileBacked) )
+	self.dataStream = bpdata.OutStream( false, self:HasFlag(FL_FileBacked) )
 
 	if not self:HasFlag(FL_NoObjectLinker) then self.linker = bpobjectlinker.New():WithOuter(self) end
 	if not self:HasFlag(FL_NoStringTable) then self.stringTable = bpstringtable.New():WithOuter(self) end
@@ -118,13 +112,9 @@ function meta:In( noRead )
 
 	if DEBUG_MODE then self:ClearFlag( FL_Compressed ) end
 	if DEBUG_MODE then self:ClearFlag( FL_Base64 ) end
-	--if DEBUG_MODE then self:ClearFlag( FL_Checksum ) end
 
 	self.io = IO_In
-	self.stream = bpdata.InStream(
-		self:HasFlag(FL_BitStream),
-		self:HasFlag(FL_Checksum)
-	)
+	self.stream = bpdata.InStream( self:HasFlag(FL_BitStream) )
 
 	if not noRead then
 
@@ -150,16 +140,17 @@ function meta:In( noRead )
 
 	end
 
-	--self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64)
-
-	if not self:HasFlag(FL_NoHeader) then print("Read Header") self:SerializeHeader() else print("Skip Header") end
+	if not self:HasFlag(FL_NoHeader) then self:SerializeHeader() else end
+	if self:HasFlag(FL_Checksum) then
+		local signed = self:UInt()
+		local test = self.stream:GetCRC( self.stream:Position() )
+		if test ~= signed then error("Corrupted data!") end
+	end
 	if not self:HasFlag(FL_NoObjectLinker) then
-		print("READ LINKER")
 		self.linker = bpobjectlinker.New():WithOuter(self)
 		self.linker:Serialize(self)
 	end
 	if not self:HasFlag(FL_NoStringTable) then
-		print("READ STRINGTABLE")
 		self.stringTable = bpstringtable.New():WithOuter(self)
 		self.stringTable:Serialize(self)
 	end
@@ -168,40 +159,42 @@ function meta:In( noRead )
 
 end
 
-function meta:Finish( noWrite )
+function meta:Finish()
 
 	local out = nil
 
 	if self:IsWriting() then
 
+		local contents = bpdata.OutStream( false, self:HasFlag(FL_FileBacked) )
+
+		self:MetaState( contents )
+		if self.linker then self.linker:Serialize(self) end
+		if self.stringTable then self.stringTable:Serialize(self) end
+		contents:WriteStr( self.dataStream:GetString(false, false) )
+
 		self:MetaState( self.stream )
-		if self.linker then print("WRITE LINKER") self.linker:Serialize(self) end
-		if self.stringTable then print("WRITE STRINGTABLE") self.stringTable:Serialize(self) end
+		if self:HasFlag(FL_Checksum) then self:UInt( contents:GetCRC() ) end
+
+		self.stream:WriteStr( contents:GetString(false, false) )
 		self:MetaState( nil )
 
-		self.stream:WriteStr( self.dataStream:GetString(false, false) )
+		if self.mode == MODE_File then
 
-		if not noWrite then
+			assert(self.file)
+			out = self.stream:WriteToFile(self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
 
-			if self.mode == MODE_File then
+		elseif self.mode == MODE_String or self.mode == MODE_NetworkString then
 
-				assert(self.file)
-				out = self.stream:WriteToFile(self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
+			out = self.stream:GetString( self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
 
-			elseif self.mode == MODE_String or self.mode == MODE_NetworkString then
+		elseif self.mode == MODE_Network then
 
-				out = self.stream:GetString( self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
+			local s, p = self.stream:WriteToNet( self:HasFlag(FL_Compressed) )
+			out = p
 
-			elseif self.mode == MODE_Network then
+		else
 
-				local s, p = self.stream:WriteToNet( self:HasFlag(FL_Compressed) )
-				out = p
-
-			else
-
-				error("Invalid mode for writing")
-
-			end
+			error("Invalid mode for writing")
 
 		end
 
