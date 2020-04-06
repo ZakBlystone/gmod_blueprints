@@ -71,7 +71,7 @@ function meta:SerializeHeader()
 		if self.version > fmtVersion then error("Blueprint data version is newer") end
 	end
 
-	print("HEADER: " .. self.magic .. " | " .. self.version)
+	--print("HEADER: " .. self.magic .. " | " .. self.version)
 
 end
 

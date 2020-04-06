@@ -93,7 +93,7 @@ function MODULE:SerializeData(stream)
 	if self.AdditionalConfig then
 		self.config = stream:Value(self.config or {})
 		if stream:IsReading() then
-			self.config = table.Merge(self:GetDefaultConfigTable(), config)
+			self.config = table.Merge(self:GetDefaultConfigTable(), self.config)
 		end
 	end
 

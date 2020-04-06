@@ -101,8 +101,8 @@ function FindMatchingPin(ntype, pf, module, cache)
 	local outType = nil
 	local fdir = pf:GetDir()
 
-	if fdir == PD_In then inType = pf end
-	if fdir == PD_Out then outType = pf end
+	if fdir == PD_In then inType = pf:GetType() end
+	if fdir == PD_Out then outType = pf:GetType() end
 
 	for id, pin in ipairs(pins) do
 

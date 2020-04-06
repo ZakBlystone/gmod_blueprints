@@ -21,8 +21,8 @@ function meta:Serialize(stream)
 	local orderCount = stream:UInt(#self.order)
 	local hashCount = stream:UInt(#self.hashes)
 
-	print("Serialize: " .. orderCount .. " orders")
-	print("Serialize: " .. hashCount .. " hashes")
+	--print("Serialize: " .. orderCount .. " orders")
+	--print("Serialize: " .. hashCount .. " hashes")
 
 	for i=1, orderCount do
 		self.order[i] = self.order[i] or {}
