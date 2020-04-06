@@ -31,7 +31,7 @@ IO_In = 2
 DEBUG_MODE = false
 
 fmtMagic = 0x314D5042
-fmtVersion = 5
+fmtVersion = 1
 
 
 function meta:Init(context, mode, file)
@@ -211,6 +211,7 @@ function meta:IsNetwork() return self.mode == MODE_Network or self.mode == MODE_
 function meta:IsString() return self.mode == MODE_String end
 function meta:IsReading() return self.io == IO_In end
 function meta:IsWriting() return self.io == IO_Out end
+function meta:IsClosed() return self.io == IO_None end
 function meta:GetContext() return self.context end
 function meta:GetMode() return self.mode end
 function meta:GetMagic() return self.magic end
@@ -290,6 +291,7 @@ end
 
 function meta:String(v, raw, n)
 
+	assert(type(v) == "string" or v == nil, "Expected string, got " .. type(v))
 	if self:IsReading() then
 		if self.stringTable and not raw then
 			return self.stringTable:Get(self:Bits(nil, 24))
@@ -383,6 +385,70 @@ function meta:ObjectArray(v)
 
 end
 
+function meta:Length(v)
+
+	if self:IsWriting() then
+
+		local t = v
+		for i=1, 4 do
+			local b = bit.band(t, 0x7F)
+			t = bit.rshift(t, 7)
+			if t ~= 0 then b = bit.bor(b, 0x80) end
+			self:UByte(b)
+			if t == 0 then break end
+		end
+		return v
+
+	end
+	if self:IsReading() then
+
+		v = 0
+		for i=1, 4 do
+			local b = self:UByte()
+			v = v + bit.lshift(bit.band(b, 0x7F), (i-1)*7)
+			if bit.band(b, 0x80) == 0 then break end
+		end
+		return v
+
+	end
+	error("Tried to use closed stream")
+
+end
+
+function meta:StringArray(t)
+
+	if self:IsClosed() then error("Tried to use closed stream") end
+	if self:IsReading() and #t ~= 0 then t = {} end
+	for i=1, self:Length(#t) do
+		t[i] = self:String(t[i])
+	end
+	return t
+
+end
+
+function meta:StringMap(t)
+
+	if self:IsClosed() then error("Tried to use closed stream") end
+	if self:IsWriting() then
+
+		local n = 0
+		for k,v in pairs(t) do n = n + 1 end
+		self:Length(n)
+		for k,v in pairs(t) do self:String(k) self:String(v) end
+		return t
+
+	end
+	if self:IsReading() then
+
+		t = {}
+		local n = self:Length()
+		for i=1, n do t[self:String()] = self:String() end
+		return t
+
+	end
+
+end
+
 local function Forward(name, t)
 
 	meta[name] = function(s, ...)
@@ -412,3 +478,14 @@ function meta:WriteStr(str, raw) self:String(str, raw, 0) end
 function meta:ReadStr(n, raw) return self:String(nil, raw, n) end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end
+
+if CLIENT then
+
+	local t = bpstream.New("test", MODE_String):Out()
+	t:Length(1)
+
+	local t2 = bpstream.New("test", MODE_String, t:Finish()):In()
+	print( t2:Length() )
+	t2:Finish()
+
+end

@@ -152,7 +152,7 @@ function AddLocalModule( mod, name )
 		return nil
 	end
 
-	mod:Save( path )
+	bpmodule.Save( path, mod )
 	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, fileName)
 	entry:SetPath( path )
 	mod:WithOuter( entry )
@@ -174,7 +174,7 @@ function NewModuleFile( name )
 
 	local mod = bpmodule.New()
 	mod:CreateDefaults()
-	mod:Save( path )
+	bpmodule.Save( path, mod )
 	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, fileName)
 	entry:SetPath( path )
 	mod:WithOuter( entry )
@@ -261,17 +261,14 @@ function LoadServerFile( file )
 	assert(SERVER)
 
 	local modulePath = UIDToModulePath( file:GetUID() )
-	local mod = bpmodule.New():WithOuter( file )
-	mod:Load( modulePath )
-	return mod
+	return bpmodule.Load(modulePath):WithOuter( file )
 
 end
 
 local function RunLocalFile( file )
 
 	local modulePath = UIDToModulePath( file:GetUID() )
-	local mod = bpmodule.New():WithOuter( file )
-	mod:Load( modulePath )
+	local mod = bpmodule.Load(modulePath):WithOuter( file )
 	local cmod = mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 
 	assert( cmod ~= nil )
@@ -310,10 +307,9 @@ local function DownloadLocalFile( file, ply )
 	local state = bptransfer.GetState( ply )
 
 	local modulePath = UIDToModulePath( file:GetUID() )
-	local mod = bpmodule.New():WithOuter( file )
+	local mod = bpmodule.Load(modulePath):WithOuter( file )
 	local stream = mod:CreateStream(MODE_NetworkString):Out()
-	mod:Load( modulePath )
-	stream:Object(mod, true)
+	stream:Object(mod)
 
 	local data = stream:Finish()
 	if not state:AddData(data, "module", file:GetName()) then
@@ -388,7 +384,7 @@ if SERVER then
 
 			mod.revision = mod.revision + 1
 			--print("Module increment revision: " .. mod.revision)
-			mod:Save(filename)
+			bpmodule.Save(filename, mod)
 
 			file:SetRevision( mod.revision )
 
@@ -440,7 +436,7 @@ else
 					print("Unmatched module with same path : " .. bpcommon.GUIDToString( head.uid ) .. " <<-- " .. bpcommon.GUIDToString( mod:GetUID() ))
 				end
 			else
-				mod:Save( path )
+				bpmodule.Save( path, mod )
 
 				local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, path)
 				entry:SetPath( path )
@@ -690,11 +686,10 @@ net.Receive("bpfilesystem", function(len, ply)
 		local rev = net.ReadUInt(32)
 		local file = G_BPLocalFiles[uid]
 		if file then
-			local mod = bpmodule.New():WithOuter( file )
-			mod:Load( file:GetPath() )
+			local mod = bpmodule.Load( file:GetPath() ):WithOuter( file )
 			assert(mod.revision <= rev)
 			mod.revision = rev
-			mod:Save( file:GetPath() )
+			bpmodule.Save( file:GetPath(), mod )
 			file:SetRevision( rev )
 			IndexLocalFiles()
 		end

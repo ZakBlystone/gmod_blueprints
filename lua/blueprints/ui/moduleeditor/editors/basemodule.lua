@@ -41,7 +41,7 @@ end
 
 function EDITOR:Export()
 
-	local text = self:GetModule():SaveToText()
+	local text = bpmodule.SaveToText( self:GetModule() )
 	SetClipboardText( text )
 	Derma_Message( "Module copied to clipboard", "Export", "Ok" )
 
@@ -49,7 +49,7 @@ end
 
 function EDITOR:ExportShareableKey( pnl )
 
-	local text = self:GetModule():SaveToText()
+	local text = bpmodule.SaveToText( self:GetModule() )
 	local prev = pnl:GetText()
 
 	pnl:SetEnabled(false)
@@ -157,7 +157,7 @@ function EDITOR:Save( callback )
 
 	else
 
-		self:GetModule():Save( file:GetPath() )
+		bpmodule.Save( file:GetPath(), self:GetModule() )
 		bpfilesystem.MarkFileAsChanged( file, false )
 		if tab then tab:SetSuffix("") end
 		if callback then callback(true) end

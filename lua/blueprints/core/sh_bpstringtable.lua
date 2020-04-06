@@ -36,43 +36,12 @@ end
 
 function meta:Serialize(stream)
 
-	if stream:IsWriting() then
+	local lengths = {}
+	local strings = self.strings
+	local count = stream:UInt(#strings)
 
-		local longStrings = {}
-		local longLookup = {}
-		local count = #self.strings
-		for i, str in ipairs(self.strings) do
-			if str:len() >= 256 then
-				longLookup[i] = true
-				longStrings[#longStrings+1] = i
-			end
-		end
-
-		stream:UInt(count)
-		stream:UInt(#longStrings)
-
-		for _,v in ipairs(longStrings) do stream:Bits(v, 24) end
-
-		for i=1, count do stream:Bits(self.strings[i]:len(), longLookup[i] and 16 or 8) end
-		for i=1, count do stream:String(self.strings[i], true, 0) end
-
-	elseif stream:IsReading() then
-
-		local count = stream:UInt()
-		local longCount = stream:UInt()
-		local strings = {}
-
-		local longLookup = {}
-		for i=1, longCount do
-			longLookup[ stream:Bits(nil, 24) ] = true
-		end
-
-		for i=1, count do strings[i] = stream:Bits(nil, longLookup[i] and 16 or 8) end
-		for i=1, count do strings[i] = stream:String(nil, true, strings[i]) end
-
-		self.strings = strings
-
-	end
+	for i=1, count do lengths[i] = stream:Length(strings[i] and #strings[i] or 0) end
+	for i=1, count do strings[i] = stream:String(strings[i], true, lengths[i]) end
 
 	return stream
 

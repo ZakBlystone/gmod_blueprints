@@ -26,7 +26,7 @@ function meta:Serialize(stream)
 
 	for i=1, orderCount do
 		self.order[i] = self.order[i] or {}
-		self.order[i][1] = stream:UByte(self.order[i][1])
+		self.order[i][1] = stream:Length(self.order[i][1])
 		self.order[i][2] = stream:Bits(self.order[i][2], 24)
 	end
 
@@ -52,7 +52,6 @@ function meta:GetSetForHash(hash)
 	if not t then
 		self.objects[hash] = {next = 1, id = self.nextSetID, objects = {}}
 		self.nextSetID = self.nextSetID + 1
-		if self.nextSetID >= 256 then error("Max object hash set exceeded!!!") end
 		t = self.objects[hash]
 	end
 	return t
@@ -106,8 +105,8 @@ function meta:WriteObject(stream, obj)
 		set.objects[hash] = set.next
 		self.order[#self.order+1] = {set.id, set.next}
 		self.hashes[#self.hashes+1] = meta.__hash
-		obj:Serialize(stream)
 		set.next = set.next + 1
+		obj:Serialize(stream)
 	end
 
 end

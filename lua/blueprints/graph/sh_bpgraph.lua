@@ -805,26 +805,21 @@ end
 
 function meta:ReadConnectionMeta(stream)
 
-	if stream:GetVersion() >= 4 then
-		local cmeta = {}
-		local ids = {}
-		local bits = stream:ReadBits(8)
-		local id = stream:ReadBits(bits)
-		local k = 0
-		while id ~= 0 and k ~= 100000 do
-			k = k + 1
-			ids[#ids+1] = id
-			id = stream:ReadBits(bits)
-		end
-		if k == 100000 then error("NO STOP BIT!!!") end
-		for i=1, #ids do
-			cmeta[ids[i]] = {stream:ReadStr(), stream:ReadStr(), stream:ReadStr(), stream:ReadStr()}
-		end
-		self.connectionMeta = cmeta
-
-	else
-		self.connectionMeta = stream:Value()
+	local cmeta = {}
+	local ids = {}
+	local bits = stream:ReadBits(8)
+	local id = stream:ReadBits(bits)
+	local k = 0
+	while id ~= 0 and k ~= 100000 do
+		k = k + 1
+		ids[#ids+1] = id
+		id = stream:ReadBits(bits)
 	end
+	if k == 100000 then error("NO STOP BIT!!!") end
+	for i=1, #ids do
+		cmeta[ids[i]] = {stream:ReadStr(), stream:ReadStr(), stream:ReadStr(), stream:ReadStr()}
+	end
+	self.connectionMeta = cmeta
 
 end
 
@@ -836,15 +831,13 @@ function meta:WriteConnectionMeta(stream)
 
 	local newver = true
 	local idf = stream.WriteInt
-	if newver then
-		for id, c in self:Connections(true) do n = n + 1 maxid = math.max(maxid, id) end
-		local bits = 24
-		if maxid < 65536 then bits = 16 end
-		if maxid < 256 then bits = 8 end
-		stream:WriteBits( bits, 8 )
-		for id, c in self:Connections(true) do stream:WriteBits( id, bits ) end
-		stream:WriteBits( 0, bits )
-	end
+	for id, c in self:Connections(true) do n = n + 1 maxid = math.max(maxid, id) end
+	local bits = 24
+	if maxid < 65536 then bits = 16 end
+	if maxid < 256 then bits = 8 end
+	stream:WriteBits( bits, 8 )
+	for id, c in self:Connections(true) do stream:WriteBits( id, bits ) end
+	stream:WriteBits( 0, bits )
 
 	for id, c in self:Connections(true) do
 
@@ -852,19 +845,11 @@ function meta:WriteConnectionMeta(stream)
 		local n1 = self:GetNode(c[3])
 		local pin0 = n0:GetPins()[c[2]]
 		local pin1 = n1:GetPins()[c[4]]
-		if newver then
-			stream:WriteStr( n0:GetTypeName() )
-			stream:WriteStr( pin0:GetName() )
-			stream:WriteStr( n1:GetTypeName() )
-			stream:WriteStr( pin1:GetName() )
-		else
-			connnectionMeta[id] = {n0:GetTypeName(), pin0:GetName(), n1:GetTypeName(), pin1:GetName()}
-		end
+		stream:WriteStr( n0:GetTypeName() )
+		stream:WriteStr( pin0:GetName() )
+		stream:WriteStr( n1:GetTypeName() )
+		stream:WriteStr( pin1:GetName() )
 
-	end
-
-	if not newver then
-		stream:Value( connnectionMeta )
 	end
 
 end
@@ -901,7 +886,7 @@ function meta:Serialize(stream)
 		end
 	end
 
-	if stream:GetVersion() >= 3 then self.hookNodeType = stream:Value(self.hookNodeType) end
+	self.hookNodeType = stream:String(self.hookNodeType)
 
 	return stream
 

@@ -21,7 +21,7 @@ end
 
 function PIN:OnLiteralChanged( old, new )
 
-	if new then
+	if CLIENT and new then
 		self.wrap:SetText(new)
 	end
 

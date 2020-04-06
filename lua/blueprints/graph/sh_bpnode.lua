@@ -444,28 +444,8 @@ end
 
 function meta:Serialize(stream)
 
-	if stream:GetVersion() < 4 then
-		self.nodeType = stream:Value(self.nodeType)
-		self.literals = stream:Value(self.literals)
-	else
-		self.nodeType = stream:String(self.nodeType)
-
-		if stream:IsWriting() then
-			for k,v in pairs(self.literals) do
-				stream:Bits(k, 16)
-				stream:String(v)
-			end
-			stream:Bits(0, 16)
-		elseif stream:IsReading() then
-			self.literals = {}
-			local r = stream:Bits(nil, 16)
-			while r ~= 0 do
-				self.literals[r] = stream:String()
-				r = stream:Bits(nil, 16)
-			end
-		end
-	end
-
+	self.nodeType = stream:String(self.nodeType)
+	self.literals = stream:StringArray(self.literals)
 	self.x = stream:Float(self.x)
 	self.y = stream:Float(self.y)
 

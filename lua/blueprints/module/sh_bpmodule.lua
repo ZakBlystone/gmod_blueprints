@@ -142,38 +142,10 @@ function meta:CreateStream(mode, file)
 
 end
 
-function meta:NetSend()
-
-	bpcommon.ProfileStart("module:NetSend")
-	bpcommon.Profile("module-net-write", function()
-		local stream = self:CreateStream(MODE_Network):Out()
-		bpcommon.Profile( "write-module", self.Serialize, self, stream )
-		stream:Finish()
-	end)
-	bpcommon.ProfileEnd()
-
-end
-
-function meta:NetRecv()
-
-	bpcommon.ProfileStart("module:NetRecv")
-	bpcommon.Profile("module-net-read", function()
-		local stream = self:CreateStream(MODE_Network):In()
-		bpcommon.Profile( "read-module", self.Serialize, self, stream )
-		stream:Finish()
-	end)
-	bpcommon.ProfileEnd()
-
-end
-
 function LoadHeader(filename)
 
-	local stream = bpstream.New("module", MODE_File, filename)
-		:AddFlags( FL_Compressed + FL_Checksum + FL_Base64 ):In()
-
-	local modtype = stream:GetVersion() < 2 and stream:ReadInt( false ) or stream:Value()
-	if type(modtype) == "number" then modtype = "Mod" end
-
+	local stream = bpstream.New("module", MODE_File, filename):AddFlags(FL_Base64):In()
+	local modtype = stream:String()
 	local header = {
 		magic = stream:GetMagic(),
 		version = stream:GetVersion(),
@@ -188,56 +160,58 @@ function LoadHeader(filename)
 
 end
 
-function meta:LoadFromText(text)
+function Load(filename)
 
 	bpcommon.ProfileStart("bpmodule:Load")
 
-	local stream = self:CreateStream(MODE_String, text):AddFlag(FL_Base64):In()
-	self:Serialize( stream )
+	local stream = bpstream.New("module", MODE_File, filename):AddFlag(FL_Base64):In()
+	local mod = stream:Object() stream:Finish()
+
+	bpcommon.ProfileEnd()
+
+	assert( isbpmodule(mod) )
+	return mod
+
+end
+
+function LoadFromText(text)
+
+	bpcommon.ProfileStart("bpmodule:Load")
+
+	local stream = bpstream.New("module", MODE_String, text):AddFlag(FL_Base64):In()
+	local mod = stream:Object() stream:Finish()
+
+	bpcommon.ProfileEnd()
+
+	assert( isbpmodule(mod) )
+	return mod
+
+end
+
+function Save(filename, mod)
+
+	assert( isbpmodule(mod) )
+	bpcommon.ProfileStart("bpmodule:Save")
+	
+	local stream = bpstream.New("module", MODE_File, filename):AddFlag(FL_Base64):Out()
+	stream:Object(mod)
 	stream:Finish()
 
 	bpcommon.ProfileEnd()
 
 end
 
-function meta:Load(filename)
+function SaveToText(mod)
 
-	bpcommon.ProfileStart("bpmodule:Load")
-
-	local head = LoadHeader(filename)
-	local magic = head.magic
-	local version = head.version
-
-	local stream = self:CreateStream(MODE_File, filename):AddFlag(FL_Base64):In()
-	self:Serialize( stream )
-	stream:Finish()
-
-	bpcommon.ProfileEnd()
-
-end
-
-function meta:SaveToText()
-
+	assert( isbpmodule(mod) )
 	bpcommon.ProfileStart("bpmodule:Save")
 
-	local stream = self:CreateStream(MODE_String, text):AddFlag(FL_Base64):Out()
-	self:Serialize( stream )
+	local stream = bpstream.New("module", MODE_String, filename):AddFlag(FL_Base64):Out()
+	stream:Object(mod)
 	local out = stream:Finish()
 
 	bpcommon.ProfileEnd()
 	return out
-
-end
-
-function meta:Save(filename)
-
-	bpcommon.ProfileStart("bpmodule:Save")
-
-	local stream = self:CreateStream(MODE_File, filename):AddFlag(FL_Base64):Out()
-	self:Serialize( stream )
-	stream:Finish()
-
-	bpcommon.ProfileEnd()
 
 end
 
@@ -247,12 +221,7 @@ function meta:Serialize(stream)
 	local magic = stream:GetMagic()
 	local version = stream:GetVersion()
 
-	if version < 2 and stream:IsReading() then
-		stream:UInt() self.type = "Mod"
-	else
-		self.type = stream:Value( self.type )
-	end
-
+	self.type = stream:String( self.type )
 	self.revision = stream:UInt( self.revision )
 	self.uniqueID = stream:GUID( self.uniqueID )
 

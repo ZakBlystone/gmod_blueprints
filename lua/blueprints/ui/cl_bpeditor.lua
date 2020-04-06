@@ -351,8 +351,7 @@ function PANEL:FinishImport( import, text )
 
 		if import == nil then error("Failed to get import text") end
 
-		local mod = bpmodule.New()
-		mod:LoadFromText( text )
+		local mod = bpmodule.LoadFromText( text )
 		mod:GenerateNewUID()
 		self:OpenModule(mod, "unnamed", nil)
 
@@ -469,10 +468,9 @@ function PANEL:OpenFile( file )
 		return
 	end
 
-	local mod = bpmodule.New():WithOuter(file)
 	local b,e = xpcall( 
 		function()
-			mod:Load(file:GetPath())
+			local mod = bpmodule.Load(file:GetPath()):WithOuter(file)
 			return self:OpenModule( mod, file:GetName(), file )
 		end, 
 		function(err)
