@@ -212,6 +212,16 @@ function CreateUniqueKey(tab, key)
 
 end
 
+-- Weak reference object
+local wm = {}
+wm.__mode = "v"
+wm.__index = function(s, k) return wm[k] or (rawget(s,"r") and rawget(s,"r")[k]) end
+wm.__call = function(s, r) if r then s.r = r end return s.r end
+function wm:IsValid() return self.r ~= nil end
+function wm:Reset() self.r = nil end
+function wm:Set(r) self.r = r end
+function Weak(x) return setmetatable({r=x, __weak = true}, wm) end
+
 -- List of items which have ids
 function CreateIndexableListIterators(meta, variable)
 
