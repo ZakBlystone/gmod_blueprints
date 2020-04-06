@@ -1091,8 +1091,8 @@ function meta:Compile()
 	Profile("write-files", function()
 
 		-- write compiled output to file for debugging
-		file.Write("blueprints/last_compile_.txt", compiledModule:GetCode(true))
-		file.Write("blueprints/last_compile.txt", compiledModule:GetCode())
+		file.Write(bpcommon.BLUEPRINT_DATA_PATH .. "/last_compile_.txt", compiledModule:GetCode(true))
+		file.Write(bpcommon.BLUEPRINT_DATA_PATH .. "/last_compile.txt", compiledModule:GetCode())
 
 	end)
 

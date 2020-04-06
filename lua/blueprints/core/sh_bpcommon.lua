@@ -4,7 +4,9 @@ G_BPMetaRegistry = G_BPMetaRegistry or {}
 
 module("bpcommon", package.seeall)
 
-file.CreateDir("blueprints")
+BLUEPRINT_DATA_PATH = "blueprints2"
+
+file.CreateDir(BLUEPRINT_DATA_PATH)
 
 ENABLE_PROFILING = true
 ENABLE_DEEP_PROFILING = false

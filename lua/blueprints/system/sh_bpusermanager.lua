@@ -22,7 +22,7 @@ local CMD_RemoveUser = 6
 local CMD_SetGroupFlag = 7
 local CMD_ClearGroupFlag = 8
 
-local UserFile = "blueprints/__users.txt"
+local UserFile = bpcommon.BLUEPRINT_DATA_PATH .. "/__users.txt"
 local UserFileVersion = 1
 
 if SERVER then

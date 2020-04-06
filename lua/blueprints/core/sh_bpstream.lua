@@ -50,6 +50,11 @@ function meta:Init(context, mode, file)
 		self:AddFlag(FL_Checksum)
 	end
 
+	if mode == MODE_File then
+		self:AddFlag(FL_Compressed)
+		self:AddFlag(FL_Checksum)
+	end
+
 	--self:AddFlag(FL_NoObjectLinker)
 
 	return self
@@ -191,8 +196,8 @@ function meta:Finish( noWrite )
 	if self:IsWriting() then
 
 		self:MetaState(true)
-		if self.linker then self.linker:Serialize(self) end
-		if self.stringTable then self.stringTable:Serialize(self) end
+		if self.linker then print("WRITE LINKER") self.linker:Serialize(self) end
+		if self.stringTable then print("WRITE STRINGTABLE") self.stringTable:Serialize(self) end
 		if self.dataStream then self.stream:WriteStr( self.dataStream:GetString(false, false) ) end
 		self:MetaState(false)
 

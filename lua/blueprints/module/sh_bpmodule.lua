@@ -139,7 +139,6 @@ end
 function meta:CreateStream(mode, file)
 
 	return bpstream.New("module", mode, file)
-		:AddFlags( FL_Compressed + FL_Checksum )
 
 end
 

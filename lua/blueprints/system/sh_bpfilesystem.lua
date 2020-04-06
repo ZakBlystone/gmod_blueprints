@@ -20,11 +20,11 @@ local CMD_DownloadFile = 7
 local CMD_AckUpload = 8
 local CMD_ServerMessage = 9
 
-local FileDirectory = "blueprints/server/"
+local FileDirectory = bpcommon.BLUEPRINT_DATA_PATH .. "/server/"
 local FileIndex = FileDirectory .. "__index.txt"
 local FileIndexVersion = 1
 
-local ClientFileDirectory = "blueprints/client/"
+local ClientFileDirectory = bpcommon.BLUEPRINT_DATA_PATH .. "/client/"
 local ClientPendingCommands = {}
 
 if SERVER then
@@ -317,9 +317,8 @@ local function DownloadLocalFile( file, ply )
 	local stream = mod:CreateStream(MODE_NetworkString):Out()
 	mod:Load( modulePath )
 	stream:Object(mod, true)
-	stream:Finish(true)
 
-	local data = stream:GetString()
+	local data = stream:Finish()
 	if not state:AddData(data, "module", file:GetName()) then
 		return false
 	end
@@ -513,13 +512,11 @@ function UploadObject( object, name, execute )
 	stream:Value( execute )
 	stream:Value( name )
 
-	local data = stream:GetString()
+	local data = stream:Finish()
 	local transfer = bptransfer.GetState(LocalPlayer())
 	if not transfer:AddData(data, "module", "test") then
 		print("Failed to add file to transfer")
 	end
-
-	stream:Finish(true)
 
 end
 

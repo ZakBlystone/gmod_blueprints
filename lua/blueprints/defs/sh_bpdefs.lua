@@ -8,7 +8,7 @@ local pinFlagLookup = {}
 local defpack = bpdefpack.New()
 
 local WITH_DOCUMENTATION = true
-local DEFPACK_LOCATION = "blueprints/bp_newdefinitionpack.txt"
+local DEFPACK_LOCATION = bpcommon.BLUEPRINT_DATA_PATH .. "/bp_newdefinitionpack.txt"
 
 function Ready()
 	return ready
