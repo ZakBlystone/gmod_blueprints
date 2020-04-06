@@ -3,7 +3,7 @@ AddCSLuaFile()
 G_BPUsers = G_BPUsers or {}
 G_BPGroups = G_BPGroups or {}
 
-module("bpusermanager", package.seeall, bpcommon.rescope( bpcommon ))
+module("bpusermanager", package.seeall, bpcommon.rescope( bpcommon, bpstream ))
 
 local TableFlagBits = 2
 local TF_Users = 1
@@ -119,10 +119,10 @@ local function PushTables( flags, ply )
 	net.Start("bpusermanager")
 	net.WriteUInt(CMD_UpdateTables, CommandBits)
 	net.WriteUInt(flags, TableFlagBits)
-	local stream = bpdata.OutStream()
-	if bit.band(flags, TF_Users) ~= 0 then bpdata.WriteArray(bpuser_meta, G_BPUsers, stream, STREAM_NET) end
-	if bit.band(flags, TF_Groups) ~= 0 then bpdata.WriteArray(bpgroup_meta, G_BPGroups, stream, STREAM_NET) end
-	stream:WriteToNet( true )
+	local stream = bpstream.New("users", MODE_Network):Out()
+	if bit.band(flags, TF_Users) ~= 0 then stream:ObjectArray(G_BPUsers) end
+	if bit.band(flags, TF_Groups) ~= 0 then stream:ObjectArray(G_BPGroups) end
+	stream:Finish()
 	if ply then net.Send(ply) else net.Broadcast() end
 
 end
@@ -131,11 +131,9 @@ local function LoadTables()
 
 	if file.Exists( UserFile, "DATA" ) then
 
-		local stream = bpdata.InStream(false, true)
-		stream:LoadFile( UserFile, false, false )
-		local version = stream:ReadInt(false)
-		G_BPUsers = bpdata.ReadArray(bpuser_meta, stream, STREAM_FILE, version)
-		G_BPGroups = bpdata.ReadArray(bpgroup_meta, stream, STREAM_FILE, version)
+		local stream = bpstream.New("users", MODE_File, UserFile):In()
+		G_BPUsers = stream:ObjectArray()
+		G_BPGroups = stream:ObjectArray()
 
 	else
 
@@ -148,11 +146,10 @@ end
 
 local function SaveTables()
 
-	local stream = bpdata.OutStream(false, true)
-	stream:WriteInt(UserFileVersion, false)
-	bpdata.WriteArray(bpuser_meta, G_BPUsers, stream, STREAM_FILE, UserFileVersion)
-	bpdata.WriteArray(bpgroup_meta, G_BPGroups, stream, STREAM_FILE, UserFileVersion)
-	stream:WriteToFile( UserFile, false, false )
+	local stream = bpstream.New("users", MODE_File, UserFile):Out()
+	stream:ObjectArray(G_BPUsers)
+	stream:ObjectArray(G_BPGroups)
+	stream:Finish()
 
 end
 
@@ -160,8 +157,8 @@ local function HandleLogin( ply )
 
 	assert(SERVER)
 
-	local stream = bpdata.InStream():ReadFromNet(true)
-	local user = bpuser.New():ReadFromStream( stream, STREAM_NET )
+	local stream = bpstream.New("users", MODE_Network):In()
+	local user = stream:Object()
 
 	if user:IsValid() then
 
@@ -215,9 +212,9 @@ function Login()
 
 	assert(user:IsValid())
 
-	local stream = bpdata.OutStream()
-	user:WriteToStream( stream, STREAM_NET )
-	stream:WriteToNet( true )
+	local stream = bpstream.New("users", MODE_Network):Out()
+	stream:Object(user)
+	stream:Finish()
 
 	net.SendToServer()
 
@@ -322,10 +319,10 @@ net.Receive("bpusermanager", function(len, ply)
 	elseif cmd == CMD_UpdateTables then
 		assert(CLIENT)
 		local flags = net.ReadUInt(TableFlagBits)
-		local stream = bpdata.InStream():ReadFromNet(true)
+		local stream = bpstream.New("users", MODE_Network):In()
 		if bit.band(flags, TF_Users) ~= 0 then
 			--print("Updating user table")
-			G_BPUsers = bpdata.ReadArray(bpuser_meta, stream, STREAM_NET)
+			G_BPUsers = stream:ObjectArray()
 			--PrintTable(G_BPUsers)
 			for _, user in ipairs(G_BPUsers) do
 				if user == _G.G_BPLocalUser then _G.G_BPLocalUser = user end
@@ -334,9 +331,10 @@ net.Receive("bpusermanager", function(len, ply)
 		end
 		if bit.band(flags, TF_Groups) ~= 0 then
 			--print("Updating group table")
-			G_BPGroups = bpdata.ReadArray(bpgroup_meta, stream, STREAM_NET)
+			G_BPGroups = stream:ObjectArray()
 			hook.Run("BPGroupTableUpdated")
 		end
+		stream:Finish()
 	elseif cmd == CMD_AddUser then
 		assert(SERVER)
 		if sendingUser:HasPermission( bpgroup.FL_CanEditUsers ) then

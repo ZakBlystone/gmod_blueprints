@@ -72,24 +72,4 @@ function meta:Serialize(stream)
 
 end
 
-function meta:WriteToStream(stream, mode, version) -- deprecate
-
-	bpdata.WriteValue( self.name, stream )
-	bpdata.WriteValue( self.color, stream )
-	stream:WriteBits( self.flags, 16 )
-
-	return self
-
-end
-
-function meta:ReadFromStream(stream, mode, version) -- deprecate
-
-	self.name = bpdata.ReadValue( stream )
-	self.color = bpdata.ReadValue( stream )
-	self.flags = stream:ReadBits( 16 )
-
-	return self
-
-end
-
 function New(...) return bpcommon.MakeInstance(meta, ...) end

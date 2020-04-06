@@ -194,19 +194,18 @@ function PushFiles(ply)
 	net.Start("bpfilesystem")
 	net.WriteUInt(CMD_UpdateFileTable, CommandBits)
 
-	local stream = bpdata.OutStream(false, true)
-	bpdata.WriteArray(bpfile_meta, G_BPFiles, stream, STREAM_NET)
-	stream:WriteToNet(true)
+	local stream = bpstream.New("files", MODE_Network):Out()
+	stream:ObjectArray(G_BPFiles)
+	stream:Finish()
 	if ply then net.Send(ply) else net.Broadcast() end
 
 end
 
 local function SaveIndex()
 
-	local stream = bpdata.OutStream(false, true)
-	stream:WriteInt(FileIndexVersion, false)
-	bpdata.WriteArray(bpfile_meta, G_BPFiles, stream, STREAM_FILE)
-	stream:WriteToFile( FileIndex, false, false )
+	local stream = bpstream.New("files", MODE_File, FileIndex):Out()
+	stream:ObjectArray(G_BPFiles)
+	stream:Finish()
 
 end
 
@@ -214,10 +213,8 @@ local function LoadIndex()
 
 	if file.Exists( FileIndex, "DATA" ) then
 
-		local stream = bpdata.InStream(false, true)
-		stream:LoadFile( FileIndex, false, false )
-		local version = stream:ReadInt(false)
-		G_BPFiles = bpdata.ReadArray(bpfile_meta, stream, STREAM_FILE)
+		local stream = bpstream.New("files", MODE_File, FileIndex):In()
+		G_BPFiles = stream:ObjectArray()
 
 		for _, f in ipairs(G_BPFiles) do
 			local path = UIDToModulePath( f:GetUID() )
@@ -362,8 +359,8 @@ if SERVER then
 
 			mod = stream:Object(mod, true)
 
-			local execute = bpdata.ReadValue(stream)
-			local name = bpdata.ReadValue(stream)
+			local execute = stream:Value()
+			local name = stream:Value()
 			
 			local filename = UIDToModulePath( mod:GetUID() )
 			local file = FindFileByUID( mod:GetUID() )
@@ -617,10 +614,8 @@ net.Receive("bpfilesystem", function(len, ply)
 		if v then v.callback( not res, str ) end
 		ClientPendingCommands[cc] = nil
 	elseif cmd == CMD_UpdateFileTable then
-		local stream = bpdata.InStream(false, true)
-		stream:ReadFromNet(true)
-		G_BPFiles = bpdata.ReadArray(bpfile_meta, stream, STREAM_NET)
-		--print("Updated remote files: " .. #G_BPFiles)
+		local stream = bpstream.New("files", MODE_Network):In()
+		G_BPFiles = stream:ObjectArray()
 		hook.Run("BPFileTableUpdated", FT_Remote)
 		IndexLocalFiles()
 	elseif cmd == CMD_TakeLock then

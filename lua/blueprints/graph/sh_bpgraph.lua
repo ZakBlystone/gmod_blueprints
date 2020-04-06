@@ -823,7 +823,7 @@ function meta:ReadConnectionMeta(stream)
 		self.connectionMeta = cmeta
 
 	else
-		self.connectionMeta = bpdata.ReadValue( stream )
+		self.connectionMeta = stream:Value()
 	end
 
 end
@@ -864,7 +864,7 @@ function meta:WriteConnectionMeta(stream)
 	end
 
 	if not newver then
-		bpdata.WriteValue( connnectionMeta, stream )
+		stream:Value( connnectionMeta )
 	end
 
 end

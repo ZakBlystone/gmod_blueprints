@@ -160,20 +160,12 @@ function meta:SetFromString( str )
 
 end
 
-function meta:WriteToStream(stream)
+function meta:Serialize(stream)
 
-	bpdata.WriteValue( self._class, stream )
-	stream:WriteBits( self.flags, 8 )
-	return self
-
-end
-
-function meta:ReadFromStream(stream)
-
-	self._class = bpdata.ReadValue( stream )
-	self.flags = stream:ReadBits(8)
-	valueClasses:Install(self._class, self)
-	return self
+	self._class = stream:String(self._class)
+	self.flags = stream:Bits(self.flags)
+	if stream:IsReading() then valueClasses:Install(self._class, self) end
+	return stream
 
 end
 

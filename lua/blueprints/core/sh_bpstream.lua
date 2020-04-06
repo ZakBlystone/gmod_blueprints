@@ -30,7 +30,7 @@ IO_In = 2
 
 DEBUG_MODE = false
 
-fmtMagic = 0x42504D31
+fmtMagic = 0x314D5042
 fmtVersion = 5
 
 
@@ -61,23 +61,6 @@ function meta:Init(context, mode, file)
 
 end
 
-function meta:Version(v)
-
-	self.version = v
-
-	if v < 5 then self:AddFlag(FL_NoObjectLinker) end
-
-	return self
-
-end
-
-function meta:Magic(v)
-
-	self.magic = v
-	return self
-
-end
-
 function meta:SerializeHeader()
 
 	self.magic = self:UInt(self.magic)
@@ -88,13 +71,15 @@ function meta:SerializeHeader()
 		if self.version > fmtVersion then error("Blueprint data version is newer") end
 	end
 
+	print("HEADER: " .. self.magic .. " | " .. self.version)
+
 end
 
 function meta:Out()
 
 	if DEBUG_MODE then self:ClearFlag( FL_Compressed ) end
 	if DEBUG_MODE then self:ClearFlag( FL_Base64 ) end
-	if DEBUG_MODE then self:ClearFlag( FL_Checksum ) end
+	--if DEBUG_MODE then self:ClearFlag( FL_Checksum ) end
 
 	self.io = IO_Out
 	self.stream = bpdata.OutStream(
@@ -103,18 +88,14 @@ function meta:Out()
 		self:HasFlag(FL_FileBacked)
 	)
 
-	if self.version >= 5 then
-		self.dataStream = bpdata.OutStream(false, false, self:HasFlag(FL_FileBacked))
-		
-		if not self:HasFlag(FL_NoObjectLinker) then self.linker = bpobjectlinker.New():WithOuter(self) end
-		if not self:HasFlag(FL_NoStringTable) then self.stringTable = bpstringtable.New():WithOuter(self) end
-	else
-		if not self:HasFlag(FL_NoStringTable) then self.stream:UseStringTable() end
-	end
+	self.dataStream = bpdata.OutStream(false, false, self:HasFlag(FL_FileBacked))
 
-	self:MetaState( true )
+	if not self:HasFlag(FL_NoObjectLinker) then self.linker = bpobjectlinker.New():WithOuter(self) end
+	if not self:HasFlag(FL_NoStringTable) then self.stringTable = bpstringtable.New():WithOuter(self) end
+
+	self:MetaState( self.stream )
 	if not self:HasFlag(FL_NoHeader) then print("Write Header") self:SerializeHeader() else print("Skip Header") end
-	self:MetaState( false )
+	self:MetaState( nil )
 
 	return self
 
@@ -122,7 +103,7 @@ end
 
 function meta:Data()
 
-	if self.metaState then return self.stream end
+	if self.metaState then return self.metaState end
 	return self.dataStream or self.stream
 
 end
@@ -137,17 +118,13 @@ function meta:In( noRead )
 
 	if DEBUG_MODE then self:ClearFlag( FL_Compressed ) end
 	if DEBUG_MODE then self:ClearFlag( FL_Base64 ) end
-	if DEBUG_MODE then self:ClearFlag( FL_Checksum ) end
+	--if DEBUG_MODE then self:ClearFlag( FL_Checksum ) end
 
 	self.io = IO_In
 	self.stream = bpdata.InStream(
 		self:HasFlag(FL_BitStream),
 		self:HasFlag(FL_Checksum)
 	)
-
-	if self.version < 5 then
-		if not self:HasFlag(FL_NoStringTable) then self.stream:UseStringTable() end
-	end
 
 	if not noRead then
 
@@ -173,6 +150,8 @@ function meta:In( noRead )
 
 	end
 
+	--self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64)
+
 	if not self:HasFlag(FL_NoHeader) then print("Read Header") self:SerializeHeader() else print("Skip Header") end
 	if not self:HasFlag(FL_NoObjectLinker) then
 		print("READ LINKER")
@@ -195,11 +174,12 @@ function meta:Finish( noWrite )
 
 	if self:IsWriting() then
 
-		self:MetaState(true)
+		self:MetaState( self.stream )
 		if self.linker then print("WRITE LINKER") self.linker:Serialize(self) end
 		if self.stringTable then print("WRITE STRINGTABLE") self.stringTable:Serialize(self) end
-		if self.dataStream then self.stream:WriteStr( self.dataStream:GetString(false, false) ) end
-		self:MetaState(false)
+		self:MetaState( nil )
+
+		self.stream:WriteStr( self.dataStream:GetString(false, false) )
 
 		if not noWrite then
 
@@ -210,11 +190,10 @@ function meta:Finish( noWrite )
 
 			elseif self.mode == MODE_String or self.mode == MODE_NetworkString then
 
-				out = self:GetString()
+				out = self.stream:GetString( self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
 
 			elseif self.mode == MODE_Network then
 
-				print("Write to network")
 				local s, p = self.stream:WriteToNet( self:HasFlag(FL_Compressed) )
 				out = p
 
@@ -243,13 +222,6 @@ function meta:GetContext() return self.context end
 function meta:GetMode() return self.mode end
 function meta:GetMagic() return self.magic end
 function meta:GetVersion() return self.version end
-
-function meta:GetString()
-
-	assert( self:IsWriting() )
-	return self.stream:GetString( self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
-
-end
 
 function meta:UByte(v)
 
@@ -325,45 +297,20 @@ end
 
 function meta:String(v, raw, n)
 
-	if self.version >= 5 then
-
-		if self:IsReading() then
-			if self.stringTable and not raw then
-				return self.stringTable:Get(self:Bits(nil, 24))
-			end
-			n = n or self:UInt()
-			return self:Data():ReadStr(n, true)
-		end
-		if self:IsWriting() then
-			if self.stringTable and not raw then
-				self:Bits( self.stringTable:Add(v), 24 ) return v
-			end
-			if not n then self:UInt(string.len(v)) end
-			self:Data():WriteStr(v, true)
-			return v
-		end
-		error("Tried to use closed stream")
-
-	end
-
 	if self:IsReading() then
-		local usingStringTable = self:Data().stringTable
-		if usingStringTable and not raw then
-			return self:Data():ReadStr()
-		else
-			n = n or self:UInt()
-			return self:Data():ReadStr(n, true)
+		if self.stringTable and not raw then
+			return self.stringTable:Get(self:Bits(nil, 24))
 		end
+		n = n or self:UInt()
+		return self:Data():ReadStr(n, true)
 	end
 	if self:IsWriting() then
-		local usingStringTable = self:Data().stringTable
-		if usingStringTable and not raw then
-			self:Data():WriteStr(v)
-		else
-			if not n then self:UInt(string.len(v)) end
-			self:Data():WriteStr(v, true)
+		if self.stringTable and not raw then
+			self:Bits( self.stringTable:Add(v), 24 ) return v
 		end
-		return v 
+		if not n then self:UInt(string.len(v)) end
+		self:Data():WriteStr(v, true)
+		return v
 	end
 	error("Tried to use closed stream")
 
@@ -371,18 +318,14 @@ end
 
 function meta:SValueCompat(v)
 
-	if self:GetVersion() < 5 then
-		return self:Value(v)
-	else
-		return self:String(v)
-	end
+	return self:String(v)
 
 end
 
 function meta:Value(v)
 
-	if self:IsReading() then return bpdata.ReadValue(self:Data()) end
-	if self:IsWriting() then bpdata.WriteValue(v, self:Data()) return v end
+	if self:IsReading() then return bpdata.ReadValue(self) end
+	if self:IsWriting() then bpdata.WriteValue(v, self) return v end
 	error("Tried to use closed stream")
 
 end
@@ -438,7 +381,7 @@ function meta:ObjectArray(v)
 		local v = {}
 		local n = self:UInt()
 		for i=1, n do
-			v[#t+1] = self:Object(nil)
+			v[#v+1] = self:Object(nil)
 		end
 		return v
 

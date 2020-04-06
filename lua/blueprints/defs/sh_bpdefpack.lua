@@ -212,6 +212,7 @@ function meta:Serialize(stream)
 	end
 
 	for i=1, structCount do
+		-- This is a dumb out-of-bounds hack, fix later
 		self.structs[i] = stream:Object( self.structs[i] or bpstruct.New():WithOuter(self), true )
 		self.structs[i].name = stream:String(self.structs[i].name)
 		self.structs[i].pinTypeOverride = stream:Int(self.structs[i].pinTypeOverride or -1)
@@ -223,52 +224,6 @@ function meta:Serialize(stream)
 
 	if stream:IsReading() then self:PostInit() end
 	return stream
-
-end
-
-function meta:WriteToStream(stream) -- deprecate
-
-	assert(stream:IsUsingStringTable())
-	stream:WriteInt(#self.nodeGroups, false)
-	stream:WriteInt(#self.structs, false)
-	for i=1, #self.nodeGroups do self.nodeGroups[i]:WriteToStream(stream) end
-	for i=1, #self.structs do
-		-- This is a dumb out-of-bounds hack, fix later
-		self.structs[i]:WriteToStream(stream)
-		stream:WriteStr(self.structs[i]:GetName())
-		stream:WriteInt(self.structs[i].pinTypeOverride or -1, true)
-	end
-	bpdata.WriteValue(self.enums, stream)
-	bpdata.WriteValue(self.redirectors, stream)
-	return self
-
-end
-
-function meta:ReadFromStream(stream) -- deprecate
-
-	local groupCount = stream:ReadInt(false)
-	local structCount = stream:ReadInt(false)
-
-	for i=1, groupCount do
-		self.nodeGroups[#self.nodeGroups+1] = bpnodetypegroup.New():WithOuter(self):ReadFromStream(stream)
-	end
-
-	for i=1, structCount do
-		local struct = bpstruct.New():WithOuter(self):ReadFromStream(stream)
-		local structName = stream:ReadStr()
-		local pinTypeOverride = stream:ReadInt(true)
-
-		struct:SetName( structName )
-		self.structs[#self.structs+1] = struct
-		-- This is a dumb out-of-bounds hack, fix later
-		if pinTypeOverride ~= -1 then struct.pinTypeOverride = pinTypeOverride end
-	end
-
-	self.enums = bpdata.ReadValue(stream)
-	self.redirectors = bpdata.ReadValue(stream)
-
-	self:PostInit()
-	return self
 
 end
 

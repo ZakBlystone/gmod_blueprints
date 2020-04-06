@@ -245,15 +245,6 @@ function OUT:Init(bitstream, crc, fileBacked)
 	return self
 end
 
-function OUT:UseStringTable()
-	self.stringTable = bpstringtable.New()
-	return self
-end
-
-function OUT:IsUsingStringTable()
-	return self.stringTable ~= nil
-end
-
 function OUT:GetString(compressed, base64encoded)
 	local str = nil
 	if self.bitstream then
@@ -263,13 +254,6 @@ function OUT:GetString(compressed, base64encoded)
 		end
 	else
 		str = self.buffer:GetString()
-		if self.stringTable then
-			-- Prepend string table
-			local b = OutStream(false, false, true)
-			self.stringTable:WriteToStream(b)
-			b:WriteStr(str, true)
-			str = b:GetString(false, false)
-		end
 		self.buffer:Close()
 	end
 
@@ -334,7 +318,6 @@ function OUT:WriteStr(str, raw)
 	if self.bitstream then
 		for i=1, string.len(str) do self:WriteBits(string_byte(str, i), 8) end
 	else
-		if self.stringTable and not raw then self:WriteBits( self.stringTable:Add( str ), 24 ) return end
 		self.buffer:Write(str)
 	end
 end
@@ -360,17 +343,12 @@ function IN:Init(bitstream, crc)
 	return self
 end
 
-function IN:UseStringTable()
-	self.stringTable = bpstringtable.New()
-	return self
-end
-
-function IN:IsUsingStringTable()
-	return self.stringTable ~= nil
-end
-
 function IN:Reset()
 	self.byte = 1
+end
+
+function IN:Remain()
+	return #self.buffer - (self.byte - 1)
 end
 
 function IN:LoadString(str, compressed, base64encoded)
@@ -393,11 +371,6 @@ function IN:LoadString(str, compressed, base64encoded)
 		for i=1, string.len(str) do self.buffer[i] = str:byte(i) end
 	else
 		self.buffer = str
-	end
-
-
-	if self.stringTable then
-		self.stringTable:ReadFromStream(self)
 	end
 
 	return true
@@ -463,13 +436,8 @@ function IN:ReadStr(n, raw)
 		for i=1, n do s = s .. string.char(self:ReadBits(8)) end
 		return s
 	else
-		local r = nil
-		if self.stringTable ~= nil and not raw then
-			r = self.stringTable:Get(self:ReadBits(24))
-		else
-			r = string.sub(self.buffer, self.byte, self.byte+(n-1))
-			self.byte = self.byte + n
-		end
+		local r = string.sub(self.buffer, self.byte, self.byte+(n-1))
+		self.byte = self.byte + n
 		return r
 	end
 end
@@ -567,7 +535,6 @@ function WriteValue(t, buf, thread)
 		end
 	elseif ttype == "string" then
 		buf:WriteBits(DT_STRING, DT_STATUSBITS)
-		if not buf:IsUsingStringTable() then buf:WriteInt( t:len(), false ) end
 		buf:WriteStr( t )
 	elseif ttype == "boolean" then
 		buf:WriteBits(DT_BOOL, DT_STATUSBITS)
@@ -637,36 +604,10 @@ function ReadValue(buf, thread)
 		local index = buf:ReadBits(ENTITY_BITS)
 		return ents.GetByIndex(index)
 	elseif ttype == DT_STRING then
-		if not buf:IsUsingStringTable() then
-			local len = buf:ReadInt(false)
-			return buf:ReadStr( len )
-		else
-			return buf:ReadStr()
-		end
+		return buf:ReadStr()
 	elseif ttype == DT_BOOL then
 		return buf:ReadBits( 1 ) == 1
 	end
-end
-
-function ReadArray(meta, stream, ...)
-
-	local t = {}
-	local n = stream:ReadInt(false)
-	for i=1, n do
-		t[#t+1] = bpcommon.MakeInstance( meta ):ReadFromStream(stream, ...)
-	end
-	return t
-
-end
-
-function WriteArray(meta, t, stream, ...)
-
-	stream:WriteInt(#t, false)
-	if #t == 0 then return end
-	for i=1, #t do
-		t[i]:WriteToStream(stream, ...)
-	end
-
 end
 
 --TestAll()

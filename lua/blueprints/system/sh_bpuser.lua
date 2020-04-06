@@ -157,42 +157,4 @@ function meta:Serialize(stream)
 
 end
 
-function meta:WriteToStream(stream, mode, version) -- deprecate
-
-	bpdata.WriteValue( self.steamID, stream )
-	bpdata.WriteValue( self.name, stream )
-	stream:WriteBits( self.flags, 8 )
-	stream:WriteBits( self.groups, 32 )
-
-	return self
-
-end
-
-function meta:ReadFromStream(stream, mode, version) -- deprecate
-
-	self.steamID = bpdata.ReadValue( stream )
-	self.name = bpdata.ReadValue( stream )
-	self.flags = stream:ReadBits( 8 )
-	self.groups = stream:ReadBits( 32 )
-
-	if mode == bpcommon.STREAM_FILE then
-		self:ClearFlag( FL_LoggedIn )
-		self:ClearFlag( FL_NewUser )
-	end
-
-	if CLIENT then
-
-		-- Get up-to-date name
-		steamworks.RequestPlayerInfo( self:GetSteamID64(), function( name )
-
-			self.name = name
-
-		end )
-
-	end
-
-	return self
-
-end
-
 function New(...) return bpcommon.MakeInstance(meta, ...) end

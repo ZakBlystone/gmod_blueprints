@@ -47,17 +47,10 @@ function VALUE:SetFromString( str )
 
 end
 
-function VALUE:WriteToStream(stream)
+function VALUE:Serialize(stream)
 
-	bpdata.WriteValue( self._prec, stream )
-	return BaseClass.WriteToStream( self, stream )
-
-end
-
-function VALUE:ReadFromStream(stream)
-
-	self._prec = bpdata.ReadValue( stream )
-	return BaseClass.ReadFromStream( self, stream )
+	BaseClass.Serialize( self, stream )
+	self._prec = stream:Value( self._prec )
 
 end
 

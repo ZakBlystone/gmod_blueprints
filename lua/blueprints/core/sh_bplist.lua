@@ -323,49 +323,6 @@ function meta:Serialize(stream)
 
 end
 
-function meta:WriteToStream(stream, mode, version) -- deprecate
-
-	stream:WriteBool(self.namedItems)
-	if self.indexed then stream:WriteInt(self.nextID, false) end
-	stream:WriteInt(self:Size(), false)
-	for _,v in ipairs(self.items) do
-		if self.indexed then stream:WriteInt(v.id, false) end
-		if self.namedItems then bpdata.WriteValue( v.name, stream ) end
-		if not v.WriteToStream then error("Need stream implementation for list item") end
-		v:WriteToStream(stream, mode, version)
-	end
-
-end
-
-function meta:ReadFromStream(stream, mode, version) -- deprecate
-
-	bpcommon.Profile("list-read", function()
-
-		self:Clear()
-		self.namedItems = stream:ReadBool()
-		if self.indexed then self.nextID = stream:ReadInt(false) end
-		local count = stream:ReadInt(false)
-		if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
-		for i=1, count do
-			local item = self:ConstructObject()
-			item.id = self.indexed and stream:ReadInt(false) or i
-			if item.PostInit then item:PostInit() end
-			self.itemLookup[item.id] = item
-			if self.namedItems then item.name = bpdata.ReadValue( stream ) end
-			if not item.ReadFromStream then error("Need stream implementation for list item") end
-			item:ReadFromStream(stream, mode, version)
-			self:Broadcast("preModify", MODIFY_ADD, item.id, item)
-			self.items[#self.items+1] = item
-			self:Broadcast("added", item.id, item)
-			self:Broadcast("postModify", MODIFY_ADD, item.id, item)
-		end
-
-	end)
-
-	return self
-
-end
-
 function meta:Get( id )
 
 	return self.itemLookup[id]
