@@ -17,7 +17,7 @@ local roundedBox = bprenderutils.RoundedBoxFast
 
 local meta = bpcommon.MetaTable("bpuigraphnode")
 
-local NODE_MINIMUM_WIDTH = 100
+local NODE_MINIMUM_WIDTH = 80
 local NODE_PINSIDE_SPACING = 40
 local NODE_HEADER_HEIGHT = 40
 local NODE_HEADER_SPACING = 25

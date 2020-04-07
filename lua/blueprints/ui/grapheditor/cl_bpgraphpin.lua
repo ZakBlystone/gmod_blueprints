@@ -14,7 +14,11 @@ local math_ceil = math.ceil
 
 local meta = bpcommon.MetaTable("bpuigraphpin")
 
-local TEX_PIN = Material("materials/pins/pin.png")
+local pngParams = "mips smooth"
+local TEX_PIN = Material("materials/pins/pin.png", pngParams)
+local TEX_PIN_TABLE = Material("materials/pins/pin_table.png", pngParams)
+local TEX_PIN_AUTO = Material("materials/pins/pin_auto.png", pngParams)
+local TEX_PIN_EXEC = Material("materials/pins/pin_exec.png", pngParams)
 local TEXT_OFFSET = 8
 local LITERAL_OFFSET = 10
 local LITERAL_HEIGHT = 24
@@ -23,6 +27,10 @@ local LITERAL_MAX_WIDTH = 350
 local PIN_SIZE = 24
 local PIN_HITBOX_EXPAND = 8
 local PIN_LITERAL_HITBOX_EXPAND = 8
+local PIN_TITLE_BLACKLIST = {
+	["Exec"] = true,
+	["Thru"] = true,
+}
 
 function meta:Init(vnode, pinID, sideIndex)
 
@@ -172,8 +180,10 @@ function meta:GetSize()
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
 		surface.SetFont( self.font )
 		local title = self:GetDisplayName()
-		local titleWidth = surface.GetTextSize( title )
-		width = width + titleWidth + TEXT_OFFSET
+		if not PIN_TITLE_BLACKLIST[title] then
+			local titleWidth = surface.GetTextSize( title )
+			width = width + titleWidth + TEXT_OFFSET
+		end
 	end
 
 	if self:ShouldDrawLiteral() then
@@ -211,11 +221,13 @@ function meta:Layout()
 
 	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
 		local title = self:GetDisplayName()
-		local titleWidth = surface.GetTextSize( title )
-		x = x + TEXT_OFFSET * d
-		if self.pin:IsOut() then x = x + titleWidth * d end
-		self.titlePos = x
-		x = x + titleWidth * d
+		if not PIN_TITLE_BLACKLIST[title] then
+			local titleWidth = surface.GetTextSize( title )
+			x = x + TEXT_OFFSET * d
+			if self.pin:IsOut() then x = x + titleWidth * d end
+			self.titlePos = x
+			x = x + titleWidth * d
+		end
 	end
 
 	if self.pin:IsIn() then
@@ -332,25 +344,14 @@ function meta:DrawHotspot(x,y,alpha)
 	local ox, oy = self:GetHotspotOffset()
 	local isTable = self.pin:HasFlag(PNF_Table)
 	local r,g,b,a = self.pin:GetColor():Unpack()
+	local tex = isTable and TEX_PIN_TABLE or TEX_PIN
+
+	if self.autoPin then tex = TEX_PIN_AUTO end
+	if self:GetPin():IsType(PN_Exec) then tex = TEX_PIN_EXEC end
 
 	surface_setDrawColor( r, g, b, 255 * alpha )
-	surface_setMaterial(TEX_PIN)
+	surface_setMaterial(tex)
 	surface_drawTexturedRect(x+ox-PIN_SIZE/2,y+oy-PIN_SIZE/2,PIN_SIZE,PIN_SIZE)
-
-	if isTable then
-		surface_setDrawColor( 0,0,0,255 )
-		surface_drawRect(x+ox - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
-		surface_drawRect(x+ox+PIN_SIZE*.25 - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
-		surface_drawRect(x+ox-PIN_SIZE*.25 - 2,y+oy-PIN_SIZE/2,4,PIN_SIZE)
-	end
-
-	if self.autoPin then
-
-		surface_setDrawColor( 0,0,0,250 )
-		surface_setMaterial(TEX_PIN)
-		surface_drawTexturedRect(x+ox-PIN_SIZE/2 + 5,y+oy-PIN_SIZE/2 + 5,PIN_SIZE-10,PIN_SIZE-10)
-
-	end
 
 end
 
@@ -405,13 +406,14 @@ function meta:Draw(xOffset, yOffset, alpha)
 	--self:DrawHitBox()
 
 	local title = self:GetDisplayName()
-
-	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
-		local hx,hy = self:GetHotspotOffset()
-		surface_setFont( self.font )
-		surface_setTextPos( math_ceil( x + self.titlePos ), math_ceil( hy + y-(self.titleHeight)/2 ) )
-		surface_setTextColor( self.autoPin and 40 or 255, self.autoPin and 220 or 255, 255, 255*alpha )
-		surface_drawText( title )
+	if not PIN_TITLE_BLACKLIST[title] then
+		if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
+			local hx,hy = self:GetHotspotOffset()
+			surface_setFont( self.font )
+			surface_setTextPos( math_ceil( x + self.titlePos ), math_ceil( hy + y-(self.titleHeight)/2 ) )
+			surface_setTextColor( self.autoPin and 40 or 255, self.autoPin and 220 or 255, 255, 255*alpha )
+			surface_drawText( title )
+		end
 	end
 
 	--render.PopFilterMag()
