@@ -114,7 +114,11 @@ end
 
 function PANEL:SetList( list )
 
+	if self.list then self.list:UnbindAll(self) end
+
 	self:Clear()
+
+	if list == nil then return end
 
 	self.list = list
 	self.list:Bind("added", self, self.ItemAdded)

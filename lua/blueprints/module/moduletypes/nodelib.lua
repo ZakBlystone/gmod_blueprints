@@ -16,24 +16,24 @@ function MODULE:Setup()
 
 	self.groups = bplist.New( bpnodetypegroup_meta ):WithOuter(self):PreserveNames(true)
 	
-	local nodes = bpnodetypegroup.New( bpnodetypegroup.TYPE_Lib ):WithOuter(self)
-	nodes:SetName("DarkRP")
+	--local nodes = bpnodetypegroup.New( bpnodetypegroup.TYPE_Lib ):WithOuter(self)
+	--nodes:SetName("DarkRP")
 
-	local nodes2 = bpnodetypegroup.New( bpnodetypegroup.TYPE_Lib ):WithOuter(self)
-	nodes2:SetName("GLOBAL")
+	--local nodes2 = bpnodetypegroup.New( bpnodetypegroup.TYPE_Lib ):WithOuter(self)
+	--nodes2:SetName("GLOBAL")
 
 	self.structs = bplist.New( bpstruct_meta ):WithOuter(self)
 
-	self.groups:Add(nodes)
-	self.groups:Add(nodes2)
+	--self.groups:Add(nodes)
+	--self.groups:Add(nodes2)
 
-	local test = nodes:NewEntry() test:SetName("createEntity") test:SetCodeType( NT_Function ) test:AddPin( MakePin( PD_In, "name", PN_String ) )
+	--[[local test = nodes:NewEntry() test:SetName("createEntity") test:SetCodeType( NT_Function ) test:AddPin( MakePin( PD_In, "name", PN_String ) )
 	local test = nodes:NewEntry() test:SetName("createEntityGroup") test:SetCodeType( NT_Function ) test:AddPin( MakePin( PD_In, "name", PN_String ) )
 	local test = nodes:NewEntry() test:SetName("createFood") test:SetCodeType( NT_Function ) test:AddPin( MakePin( PD_In, "name", PN_String ) )
 	local test = nodes:NewEntry() test:SetName("getChatSound") test:SetCodeType( NT_Pure ) 
 		test:AddPin( MakePin( PD_In, "text", PN_String ) )
 		test:AddPin( MakePin( PD_Out, "soundPaths", PN_String, PNF_Table ) )
-		test:SetRole( ROLE_Server )
+		test:SetRole( ROLE_Server )]]
 
 	--[[self.test = bpnodetype.New():WithOuter(self)
 	self.test:SetContext(bpnodetype.NC_Lib)
@@ -44,6 +44,12 @@ function MODULE:Setup()
 end
 
 function MODULE:GetNodeTypes()
+
+end
+
+function MODULE:GetPinTypes( collection )
+
+	BaseClass.GetPinTypes( self, collection )
 
 end
 

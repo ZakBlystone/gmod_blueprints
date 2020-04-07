@@ -14,10 +14,20 @@ function EDITOR:PopulateSideBar()
 	self.GroupList = self:AddSidebarList(LOCTEXT("editor_nodelib_grouplist","Groups"))
 	self.GroupList.HandleAddItem = function(list)
 
+		local newGroup = bpnodetypegroup.New(bpnodetypegroup.TYPE_Lib)
+		newGroup:SetName("untitled")
+		list.list:Add( newGroup )
+		print("Add one group")
+
 	end
 
 	self.NodeList = self:AddSidebarList(LOCTEXT("editor_nodelib_nodelist","Nodes"))
 	self.NodeList.HandleAddItem = function(list)
+
+		local newNode = bpnodetype.New()
+		newNode:SetName("untitled")
+		list.list:Add( newNode )
+		print("Add one node")
 
 	end
 
@@ -33,6 +43,8 @@ function EDITOR:PopulateSideBar()
 	self.selectedNode = nil
 	self.currentNodeGroup = nil
 
+	self.pinLists = {}
+
 end
 
 function EDITOR:Setup()
@@ -43,9 +55,72 @@ function EDITOR:Setup()
 
 end
 
+function EDITOR:MakePinListUI( name, dir, nodeType )
+
+	name = tostring(name)
+
+	self.pinLists[dir] = self.pinLists[dir] or bplist.New(bppin_meta):NamedItems(name):WithOuter(self):Indexed(false)
+
+	local editor = self
+	local view = vgui.Create("BPListPanel")
+	local list = self.pinLists[dir]
+	local module = self:GetModule()
+
+	list:UnbindAll(self)
+	list:Clear()
+	list:BindRaw("removed", self, function() editor:ApplyPins( nodeType ) end)
+
+	for _, v in ipairs(nodeType:GetPins()) do
+		if v:GetDir() == dir and not v:IsType(PN_Exec) then
+			v.id = nil
+			list:Add(v)
+		end
+	end
+
+	local cat = self.sideBar:Add( tostring(name) )
+	cat:SetContents( view )
+	local add = cat:CreateAddButton()
+	add.DoClick = function() view:InvokeAdd() end
+
+	view.HandleAddItem = function(pnl)
+		local id, item = list:Add( MakePin( dir, nil, PN_Bool, PNF_None, nil ), name )
+	end
+	view.CreateItemPanel = function(pnl, id, item)
+		local entry = vgui.Create("BPPinListEntry", pnl)
+		entry.vlist = pnl
+		entry.id = id
+		entry.module = module
+		function entry:SetPinType(t) item:SetType( t ) editor:ApplyPins( nodeType ) end
+		function entry:GetPinType() return item:GetType() end
+		function entry:SetPinName(n) pnl.list:Rename( id, n ) editor:ApplyPins( nodeType ) end
+		function entry:GetPinName() return item.name end
+		return entry
+	end
+	view:SetList( list )
+	view:SetText( name )
+	view:SetNoConfirm()
+
+end
+
+function EDITOR:ApplyPins( nodeType )
+
+	nodeType.pins = {}
+
+	for _, v in self.pinLists[PD_In]:Items() do
+		nodeType.pins[#nodeType.pins+1] = v
+	end
+
+	for _, v in self.pinLists[PD_Out]:Items() do
+		nodeType.pins[#nodeType.pins+1] = v
+	end
+
+	 self:ConstructNode( nodeType )
+
+end
+
 function EDITOR:SetupNodeDetails( nodeType )
 
-	if IsValid(self.detailGUI) then self.detailGUI:Remove() end
+	if IsValid(self.sideBar) then self.sideBar:Remove() end
 
 	self.values = bpvaluetype.FromValue({}, function() return {} end)
 
@@ -89,10 +164,15 @@ function EDITOR:SetupNodeDetails( nodeType )
 			:BindAny(self, function() self:ConstructNode( nodeType ) end )
 		)
 
-	end
+		self.sideBar = vgui.Create("BPCategoryList")
+		self.detailGUI = self.values:CreateVGUI({ live = true, })
+		self.sideBar:Add( "Details" ):SetContents( self.detailGUI )
+		self:MakePinListUI( "Inputs", PD_In, nodeType )
+		self:MakePinListUI( "Outputs", PD_Out, nodeType )
 
-	self.detailGUI = self.values:CreateVGUI({ live = true, })
-	self:SetDetails( self.detailGUI )
+		self:SetDetails( self.sideBar )
+
+	end
 
 end
 
@@ -129,7 +209,7 @@ function EDITOR:Think()
 		self.selectedGroup = selectedGroup
 		self.selectedNode = nil
 		self.currentNodeGroup = self:GetModule().groups:Get( selectedGroup )
-		self.NodeList:SetList( self.currentNodeGroup:GetEntries() )
+		self.NodeList:SetList( self.currentNodeGroup and self.currentNodeGroup:GetEntries() )
 
 	end
 
