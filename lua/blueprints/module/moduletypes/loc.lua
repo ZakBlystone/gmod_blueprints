@@ -44,33 +44,7 @@ function MODULE:SerializeData(stream)
 	BaseClass.SerializeData( self, stream )
 
 	self.data.language = stream:String( self.data.language )
-
-	if stream:IsWriting() then
-
-		local num = 0
-		for k,v in pairs(self.data.keys) do
-			num = num + 1
-		end
-
-		stream:UInt( num )
-
-		for k,v in pairs(self.data.keys) do
-			stream:String( k )
-			stream:String( v )
-		end
-
-	elseif stream:IsReading() then
-
-		local num = stream:UInt()
-		for i=1, num do
-
-			local k = stream:String()
-			local v = stream:String()
-			self.data.keys[k] = v
-
-		end
-
-	end
+	self.data.keys = stream:StringMap( self.data.keys )
 
 	return stream
 
