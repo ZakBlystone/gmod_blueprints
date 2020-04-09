@@ -209,7 +209,7 @@ function PANEL:Init()
 	self.search:SetUpdateOnType(true)
 	self.search.OnValueChange = function(te, ...) self:OnSearchTerm(...) end
 	self.search.OnEnter = function()
-		if self.sortedOptions then
+		if self.sortedOptions and self.sortedOptions[1] then
 			self:Select( self.sortedOptions[1] )
 		end
 	end
