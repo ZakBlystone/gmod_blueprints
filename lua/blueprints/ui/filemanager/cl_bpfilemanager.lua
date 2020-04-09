@@ -479,13 +479,9 @@ function PANEL:ModuleDropdown()
 	for _, v in ipairs( classes ) do
 
 		local cl = v.class
-		if not cl.Creatable then continue end
+		if not cl.Creatable or cl.Developer then continue end
 
-		local op = self.cmenu:AddOption( tostring(cl.Name), function()
-
-			self:CreateModule( v.name )
-
-		end)
+		local op = self.cmenu:AddOption( tostring(cl.Name), function() self:CreateModule( v.name ) end)
 		if cl.Icon then op:SetIcon( cl.Icon ) end
 		if cl.Description then op:SetTooltip( tostring(cl.Description) ) end
 
@@ -517,6 +513,21 @@ function PANEL:ModuleDropdown()
 
 	end
 
+
+	self.cmenu:AddSpacer()
+	local developerMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"module_submenu_developer","Developer" ) )
+	op:SetIcon( "icon16/application_osx_terminal.png" )
+
+	for _, v in ipairs( classes ) do
+
+		local cl = v.class
+		if not cl.Creatable or not cl.Developer then continue end
+
+		local op = developerMenu:AddOption( tostring(cl.Name), function() self:CreateModule( v.name ) end)
+		if cl.Icon then op:SetIcon( cl.Icon ) end
+		if cl.Description then op:SetTooltip( tostring(cl.Description) ) end
+
+	end
 
 	self.cmenu:SetMinimumWidth( 100 )
 	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, self )

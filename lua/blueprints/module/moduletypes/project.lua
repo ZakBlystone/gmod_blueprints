@@ -4,7 +4,7 @@ module("mod_projectmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema,
 
 local MODULE = {}
 
-MODULE.Creatable = true
+MODULE.Creatable = false
 MODULE.Name = LOCTEXT"module_project_name","Project"
 MODULE.Description = LOCTEXT"module_project_desc","Project"
 MODULE.Icon = "icon16/wrench.png"
