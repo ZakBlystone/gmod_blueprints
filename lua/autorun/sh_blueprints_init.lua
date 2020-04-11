@@ -29,6 +29,9 @@ bpinclude("core/sh_bptransfer.lua")
 bpinclude("core/sh_bppaste.lua")
 bpinclude("core/sh_bpvalue.lua")
 
+-- LOCALIZATION
+bpinclude("localization/en_us.lua")
+
 -- GRAPH
 bpinclude("graph/sh_bpschema.lua")
 bpinclude("graph/sh_bppintype.lua")

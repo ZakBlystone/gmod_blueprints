@@ -236,7 +236,7 @@ function PANEL:Init()
 
 	--self.Tabs:AddSheet( "Assets", self.AssetBrowser, "Assets", "icon16/zoom.png")
 	self.Tabs:AddSheet( LOCTEXT("file_users","Users"), self.UserManager, LOCTEXT("file_users_desc","Users"), "icon16/group.png" )
-	self.Tabs:SetActiveTab( self.Tabs:AddSheet( LOCTEXT("file_files","Files"), self.FileManager, LOCTEXT("file_files_desc","Users"), "icon16/folder.png" ).Tab )
+	self.Tabs:SetActiveTab( self.Tabs:AddSheet( LOCTEXT("file_files","Files"), self.FileManager, LOCTEXT("file_files_desc","Files"), "icon16/folder.png" ).Tab )
 
 	local openCount = cookie.GetNumber("bp_editor_open_count", 0)
 	local lastVersion = cookie.GetString("bp_editor_last_version", "")

@@ -11,14 +11,42 @@ local data = {}
 local cache = {}
 local meta = {}
 local locale = {}
-local currentLocale = "en_us"
+local currentLocale = "en-us"
+
+-- Covers all gmod supported locales
 local locales = {
-	{"English - United States", "en_us"},
+	{"Bulgarian", "bg"},
+	{"Chinese - China", "zh-cn"},
+	{"Chinese - Taiwan", "zh-tw"},
+	{"Croatian", "hr"},
+	{"Czech", "cs"},
+	{"Danish", "da"},
+	{"Dutch - Netherlands", "nl-nl"},
+	{"English - United States", "en-us"},
+	{"English - Pirate", "en-pt"},
+	{"Estonian", "et"},
+	{"Finnish", "fi"},
 	{"French - France", "fr-fr"},
 	{"German - Germany", "de-de"},
+	{"Greek", "el"},
+	{"Hebrew", "he"},
+	{"Hungarian", "hu"},
+	{"Italian - Italy", "it-it"},
+	{"Japanese", "ja"},
+	{"Korean", "ko"},
+	{"Lithuanian", "lt"},
+	{"Norwegian - Nynorsk", "no-no"},
+	{"Polish", "pl"},
+	{"Portuguese - Brazil", "pt-br"},
+	{"Portuguese - Portugal", "pt-pt"},
 	{"Russian", "ru"},
+	{"Slovak", "sk"},
 	{"Spanish - Spain (Traditional)", "es-es"},
 	{"Swedish - Sweden", "sv-se"},
+	{"Thai", "th"},
+	{"Turkish", "tr"},
+	{"Ukrainian", "uk"},
+	{"Vietnamese", "vi"},
 }
 
 function GetKnownLocales()
@@ -27,10 +55,19 @@ function GetKnownLocales()
 
 end
 
+function GetLocale()
+
+	return currentLocale
+
+end
+
 function SetLocale(l)
 
 	if locale[l] == nil then print("Language not supported: " .. tostring(l)) return end
-	currentLocale = l
+	if l ~= currentLocale then
+		currentLocale = l
+		hook.Run("BPLocaleChanged")
+	end
 
 end
 
@@ -44,10 +81,11 @@ function GetSupported()
 
 end
 
-function AddLocTable(t)
+function AddLocTable(t, makeCurrent)
 
 	if t == nil or t.locale == nil or t.keys == nil then error("Malformed language data") end
 	locale[t.locale] = t
+	if makeCurrent then SetLocale(t.locale) end
 
 end
 
@@ -103,7 +141,7 @@ function GetKeys()
 
 end
 
-function ParseScript(script)
+local function ParseScript(script)
 
 	MsgC(Color(255,180,0), "Parsing: " .. tostring(script) .. "... ")
 	local str = file.Read(script, "LUA")
@@ -117,7 +155,7 @@ function ParseScript(script)
 
 end
 
-function ProcessScripts(dir)
+local function ProcessScripts(dir)
 
 	local f, d = file.Find(dir .. "/*", "LUA")
 
@@ -133,17 +171,45 @@ end
 
 _G.LOCTEXT = Get
 
-if CLIENT then
+local function UpdateFromGmodLanguage()
 
-	hook.Add("BPPostInit", "initLocalization", function()
-		ProcessScripts("blueprints")
-	end)
+	local gmodLocale = GetConVar("gmod_language"):GetString():lower()
+	local locale = nil
+	for _, loc in ipairs(locales) do
+		if loc[2]:find( gmodLocale ) then locale = loc[2]:lower() break end
+	end
 
-	concommand.Add("bp_refresh_localization", function()
+	if locale == nil then print("Failed to find locale for: '" .. gmodLocale .. "' defaulting to 'en-us'") end
 
-		data = {}
-		ProcessScripts("blueprints")
-
-	end)
+	SetLocale( locale or "en-us" )
 
 end
+
+local NeedsScan = true
+
+function ScanLuaFiles()
+
+	if NeedsScan == false then return end
+	ProcessScripts("blueprints")
+	NeedsScan = false
+
+end
+
+cvars.RemoveChangeCallback("gmod_language", "localeChangeListener")
+cvars.AddChangeCallback("gmod_language", function( convar, oldValue, newValue )
+
+	UpdateFromGmodLanguage()
+
+end, "localeChangeListener")
+
+hook.Add("BPPostInit", "initLocalization", function()
+	UpdateFromGmodLanguage()
+end)
+
+concommand.Add("bp_scan_localization", function()
+
+	data = {}
+	NeedsScan = true
+	ScanLuaFiles()
+
+end)
