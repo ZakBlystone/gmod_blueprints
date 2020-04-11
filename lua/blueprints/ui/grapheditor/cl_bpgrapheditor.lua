@@ -445,6 +445,10 @@ function meta:LeftMouse(x,y,pressed)
 				local scaleFactor = self:GetCoordinateScaleFactor()
 				local _, pinNode = self:GetGraph():AddNode("CORE_Pin", wx/scaleFactor, wy/scaleFactor - 15)
 				pinNode:FindPin(PD_In, "In"):Connect( self.grabPin:GetPin() )
+			elseif input.IsKeyDown( KEY_B ) and self.grabPin:GetPin():IsType(PN_Bool) then
+				local scaleFactor = self:GetCoordinateScaleFactor()
+				local _, pinNode = self:GetGraph():AddNode("LOGIC_If", wx/scaleFactor - 5, wy/scaleFactor - 50)
+				pinNode:FindPin(PD_In, "Condition"):Connect( self.grabPin:GetPin() )
 			elseif not self.takingGrabbedPin then
 				self:OpenCreationContext(self.grabPin:GetPin())
 				return

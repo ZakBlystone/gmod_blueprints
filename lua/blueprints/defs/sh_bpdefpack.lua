@@ -23,6 +23,7 @@ end
 
 function meta:PostInit()
 
+	self.nodeTypes = {}
 	local tab = self.nodeTypes
 	for k,v in ipairs(self.structs) do
 
@@ -50,7 +51,16 @@ function meta:PostInit()
 		end
 
 		if v:GetType() == bpnodetypegroup.TYPE_Class then
-			self.classes[v:GetName()] = v
+			local exist = self.classes[v:GetName()]
+			if exist then
+				for _, entry in v:GetEntries():Items() do
+					entry.id = nil
+					entry:WithOuter( exist )
+					exist:AddEntry( entry )
+				end
+			else
+				self.classes[v:GetName()] = v
+			end
 		end
 
 		if v:GetType() == bpnodetypegroup.TYPE_Lib then

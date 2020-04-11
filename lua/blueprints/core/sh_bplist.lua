@@ -309,7 +309,7 @@ function meta:Serialize(stream)
 		if stream:IsReading() then
 
 			if item.PostInit then item:PostInit() end
-			if self.indexed then self.itemLookup[item.id] = item end
+			if self.indexed then self.itemLookup[item.id] = item self.nextID = i + 1 end
 			self:Broadcast("preModify", MODIFY_ADD, item.id, item)
 			self.items[i] = item
 			self:Broadcast("added", item.id, item)

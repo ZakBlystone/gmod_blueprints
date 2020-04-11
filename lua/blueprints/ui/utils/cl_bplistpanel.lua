@@ -28,7 +28,7 @@ function PANEL:CreateItemPanel( id, item )
 	local btn = vgui.Create("DLabel", panel)
 	btn:SetTextColor( Color(255,255,255) )
 	btn:SetFont("DermaDefaultBold")
-	btn:SetText( item:GetName() )
+	btn:SetText( item:GetName() or "unnamed" )
 	btn:DockMargin( 8,0,2,0 )
 	btn:Dock( FILL )
 
@@ -114,7 +114,11 @@ end
 
 function PANEL:SetList( list )
 
+	if self.list then self.list:UnbindAll(self) end
+
 	self:Clear()
+
+	if list == nil then return end
 
 	self.list = list
 	self.list:Bind("added", self, self.ItemAdded)
@@ -266,7 +270,7 @@ function PANEL:Rename( id )
 		if v.id == id then
 			v.btn:SetVisible(false)
 			v.edit = vgui.Create("DTextEntry", v)
-			v.edit:SetText(item:GetName())
+			v.edit:SetText(item:GetName() or "unnamed")
 			v.edit:RequestFocus()
 			v.edit:SelectAllOnFocus()
 			v.edit.OnFocusChanged = function(te, gained)

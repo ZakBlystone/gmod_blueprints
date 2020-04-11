@@ -5,6 +5,10 @@ if SERVER then
 	resource.AddFile("resource/fonts/Akkurat-Bold.ttf")
 	resource.AddFile("resource/fonts/JetBrainsMono-Bold.ttf")
 	resource.AddFile("materials/icon64/blueprints.png")
+	resource.AddFile("materials/pins/pin.png")
+	resource.AddFile("materials/pins/pin_table.png")
+	resource.AddFile("materials/pins/pin_auto.png")
+	resource.AddFile("materials/pins/pin_exec.png")
 
 else
 
