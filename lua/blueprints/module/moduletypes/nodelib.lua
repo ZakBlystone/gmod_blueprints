@@ -81,7 +81,7 @@ function MODULE:Compile( compiler, pass )
 		compiler.emit("local data = [[" .. mod .. "]]")
 		compiler.emit([[hook.Add("BPPopulateDefs", ]] .. bpcommon.EscapedGUID( self:GetUID() ) .. [[, function(pack)]])
 		compiler.emit([[
-	if not bpcommon.CheckVersionCompat("]] .. bpcommon.ENV_VERSION ..  [[", "Tried to load outdated node library: ]] .. self:GetName() .. [[") then return end
+	if not bpcommon.CheckVersionCompat("]] .. bpcommon.ENV_VERSION ..  [[", "nodelib", "Tried to load outdated node library: ]] .. self:GetName() .. [[") then return end
 	local mod = bpmodule.New()
 	mod:LoadFromText(data)
 	for _, group in mod.groups:Items() do pack:AddNodeGroup(group) end

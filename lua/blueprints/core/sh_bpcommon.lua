@@ -16,7 +16,7 @@ STREAM_FILE = 1
 STREAM_NET = 2
 
 -- This version of Blueprints
-ENV_VERSION = "1.5"
+ENV_VERSION = "1.6"
 
 -- Moves external variables into module scope
 function rescope(...)
@@ -44,7 +44,7 @@ local ps = {
 }
 
 -- Check to see if environment version is compatible
-function CheckVersionCompat(v, msg)
+function CheckVersionCompat(v, what, msg)
 
 	if type(v) == "string" and v:len() > 0 and v[1] == "1" then
 		return true
