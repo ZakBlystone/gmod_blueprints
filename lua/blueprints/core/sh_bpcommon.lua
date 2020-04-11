@@ -43,6 +43,18 @@ local ps = {
 	start = 0,
 }
 
+-- Check to see if environment version is compatible
+function CheckVersionCompat(v, msg)
+
+	if type(v) == "string" and v:len() > 0 and v[1] == "1" then
+		return true
+	end
+
+	if msg then MsgC(Color(255,100,100), msg .. "\n") end
+	return false
+
+end
+
 -- Begin profiling a block of code
 function ProfileStart(name)
 
