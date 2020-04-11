@@ -11,36 +11,19 @@ MODULE.Icon = "icon16/table.png"
 MODULE.EditorClass = "nodelib"
 MODULE.Developer = true
 
+bpcommon.CreateIndexableListIterators(MODULE, "structs")
+
 function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
 	self.groups = bplist.New( bpnodetypegroup_meta ):WithOuter(self):PreserveNames(true)
-	
-	--local nodes = bpnodetypegroup.New( bpnodetypegroup.TYPE_Lib ):WithOuter(self)
-	--nodes:SetName("DarkRP")
 
 	--local nodes2 = bpnodetypegroup.New( bpnodetypegroup.TYPE_Lib ):WithOuter(self)
 	--nodes2:SetName("GLOBAL")
 
-	self.structs = bplist.New( bpstruct_meta ):WithOuter(self)
+	self.structs = bplist.New( bpstruct_meta ):NamedItems("Struct"):WithOuter(self)
 
-	--self.groups:Add(nodes)
-	--self.groups:Add(nodes2)
-
-	--[[local test = nodes:NewEntry() test:SetName("createEntity") test:SetCodeType( NT_Function ) test:AddPin( MakePin( PD_In, "name", PN_String ) )
-	local test = nodes:NewEntry() test:SetName("createEntityGroup") test:SetCodeType( NT_Function ) test:AddPin( MakePin( PD_In, "name", PN_String ) )
-	local test = nodes:NewEntry() test:SetName("createFood") test:SetCodeType( NT_Function ) test:AddPin( MakePin( PD_In, "name", PN_String ) )
-	local test = nodes:NewEntry() test:SetName("getChatSound") test:SetCodeType( NT_Pure ) 
-		test:AddPin( MakePin( PD_In, "text", PN_String ) )
-		test:AddPin( MakePin( PD_Out, "soundPaths", PN_String, PNF_Table ) )
-		test:SetRole( ROLE_Server )]]
-
-	--[[self.test = bpnodetype.New():WithOuter(self)
-	self.test:SetContext(bpnodetype.NC_Lib)
-	self.test:SetNodeClass("FuncCall")
-	self.test:SetDisplayName("PrintMessage")
-	self.test:SetCategory("GLOBAL")]]
 
 end
 
@@ -51,6 +34,16 @@ end
 function MODULE:GetPinTypes( collection )
 
 	BaseClass.GetPinTypes( self, collection )
+
+	local types = {}
+	collection:Add( types )
+
+	for id, v in self:Structs() do
+
+		local pinType = bppintype.New(PN_Struct, PNF_Custom, v.name):WithOuter( v )
+		types[#types+1] = pinType
+
+	end
 
 end
 
@@ -64,15 +57,37 @@ function MODULE:WriteData( stream, mode, version )
 
 	BaseClass.WriteData( self, stream, mode, version )
 
+	self.groups:WriteToStream( stream, mode, version )
+	self.structs:WriteToStream( stream, mode, version )
+
 end
 
 function MODULE:ReadData( stream, mode, version )
 
 	BaseClass.ReadData( self, stream, mode, version )
 
+	self.groups:ReadFromStream( stream, mode, version )
+	self.structs:ReadFromStream( stream, mode, version )
+
 end
 
 function MODULE:Compile( compiler, pass )
+
+
+	if pass == CP_MODULECODE then
+
+		local mod = self:SaveToText()
+		compiler.emit("if not game.SinglePlayer() and CLIENT then return end")
+		compiler.emit("local data = [[" .. mod .. "]]")
+		compiler.emit([[hook.Add("BPPopulateDefs", ]] .. bpcommon.EscapedGUID( self:GetUID() ) .. [[, function(pack)]])
+		compiler.emit([[
+	local mod = bpmodule.New()
+	mod:LoadFromText(data)
+	for _, group in mod.groups:Items() do pack:AddNodeGroup(group) end
+	for _, struct in mod.structs:Items() do pack:AddStruct(struct) end]])
+		compiler.emit("end)")
+
+	end
 
 end
 

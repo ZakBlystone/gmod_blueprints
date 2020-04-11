@@ -317,6 +317,7 @@ function meta:ReadFromStream(stream, mode, version)
 		for i=1, count do
 			local item = self:ConstructObject()
 			item.id = self.indexed and stream:ReadInt(false) or i
+			if not self.indexed then self.nextID = i + 1 end
 			if item.PostInit then item:PostInit() end
 			self.itemLookup[item.id] = item
 			if self.namedItems then item.name = bpdata.ReadValue( stream ) end

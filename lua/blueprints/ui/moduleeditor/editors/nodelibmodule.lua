@@ -6,33 +6,76 @@ local EDITOR = {}
 
 EDITOR.HasSideBar = true
 EDITOR.HasDetails = true
+EDITOR.CanExportLuaScript = true
 --EDITOR.CanInstallLocally = true
 --EDITOR.CanExportLuaScript = true
+
+local nodeGroupTypeColors = {
+	[bpnodetypegroup.TYPE_Lib] = Color(60,80,150),
+	[bpnodetypegroup.TYPE_Class] = Color(60,150,80),
+	[bpnodetypegroup.TYPE_Hooks] = Color(120,80,80),
+}
 
 function EDITOR:PopulateSideBar()
 
 	self.GroupList = self:AddSidebarList(LOCTEXT("editor_nodelib_grouplist","Groups"))
-	self.GroupList.HandleAddItem = function(list)
+	self.GroupList.HandleAddItem = function(pnl, list)
 
-		local newGroup = bpnodetypegroup.New(bpnodetypegroup.TYPE_Lib)
-		newGroup:SetName("untitled")
-		list.list:Add( newGroup )
-		print("Add one group")
+		local function MakeGroup(groupType)
+			local newGroup = bpnodetypegroup.New(groupType)
+			local id = list:Add(newGroup)
+			pnl:Rename(id)
+		end
+
+		local menu = DermaMenu( false, self:GetPanel() )
+		menu:AddOption( "Library", function() MakeGroup(bpnodetypegroup.TYPE_Lib) end )
+		menu:AddOption( "Class", function() MakeGroup(bpnodetypegroup.TYPE_Class) end )
+		menu:AddOption( "Hooks", function() MakeGroup(bpnodetypegroup.TYPE_Hooks) end )
+		menu:SetMinimumWidth( 100 )
+		menu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )
+
+	end
+
+	self.GroupList.ItemBackgroundColor = function( list, id, item, selected )
+
+		local vcolor = nodeGroupTypeColors[item:GetType()]
+		if selected then
+			return vcolor
+		else
+			return Color(vcolor.r*.5, vcolor.g*.5, vcolor.b*.5)
+		end
 
 	end
 
 	self.NodeList = self:AddSidebarList(LOCTEXT("editor_nodelib_nodelist","Nodes"))
-	self.NodeList.HandleAddItem = function(list)
+	self.NodeList.HandleAddItem = function(pnl, list)
 
-		local newNode = bpnodetype.New()
+		if list == nil then return end
+		local newNode = bpnodetype.New():WithOuter( self.currentNodeGroup )
+
+		if self.currentNodeGroup:GetType() == bpnodetypegroup.TYPE_Hooks then
+			newNode:SetCodeType( NT_Event )
+		else
+			newNode:SetCodeType( NT_Function )
+		end
+
 		newNode:SetName("untitled")
-		list.list:Add( newNode )
-		print("Add one node")
+		list:Add( newNode )
 
 	end
 
 	self.StructList = self:AddSidebarList(LOCTEXT("editor_nodelib_structlist","Structs"))
-	self.StructList.HandleAddItem = function(list)
+	self.StructList.HandleAddItem = function(pnl, list)
+		local itemID, item = list:Construct()
+		pnl:Rename(itemID)
+	end
+
+	self.StructList.PopulateMenuItems = function(pnl, items, id)
+
+		items[#items+1] = {
+			name = LOCTEXT("editor_graphmodule_editstruct","Edit Struct"),
+			func = function() bpuistructeditmenu.EditStructParams( self:GetModule().structs:Get(id) ) end,
+		}
 
 	end
 
@@ -70,7 +113,7 @@ function EDITOR:MakePinListUI( name, dir, nodeType )
 	list:Clear()
 	list:BindRaw("removed", self, function() editor:ApplyPins( nodeType ) end)
 
-	for _, v in ipairs(nodeType:GetPins()) do
+	for _, v in ipairs(nodeType:GetRawPins()) do
 		if v:GetDir() == dir and not v:IsType(PN_Exec) then
 			v.id = nil
 			list:Add(v)

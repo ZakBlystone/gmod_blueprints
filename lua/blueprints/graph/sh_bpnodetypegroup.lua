@@ -96,7 +96,7 @@ end
 
 function meta:ToString()
 
-	return self:GetName() .. "[" .. GroupTypeNames[self:GetType()] .. "] - " .. #self.entries .. " nodes."
+	return self:GetName() .. "[" .. GroupTypeNames[self:GetType()] .. "] - " .. self.entries:Size() .. " nodes."
 
 end
 

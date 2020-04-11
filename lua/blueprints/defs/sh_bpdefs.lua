@@ -211,6 +211,7 @@ local function RegisterBlock(keyword, level, open, value, close)
 
 end
 
+local isPopulatingDefs = false
 function LoadAndParseDefs()
 
 	defpack = bpdefpack.New()
@@ -223,6 +224,10 @@ function LoadAndParseDefs()
 			ParseDefinitionFile(v[1], v[2])
 		--end
 	end
+
+	isPopulatingDefs = true
+	hook.Run("BPPopulateDefs", defpack)
+	isPopulatingDefs = false
 
 end
 
@@ -427,33 +432,45 @@ local function LoadDefinitionPack(data)
 
 end
 
-if game.SinglePlayer() then
+local function ParseAndSave()
+
+	bpcommon.ProfileStart("parse definitions")
 	LoadAndParseDefs()
+
+	local stream = bpdata.OutStream(false, true, true)
+	stream:UseStringTable()
+
+	defpack:WriteToStream(stream)
+
+	stream:WriteToFile(DEFPACK_LOCATION, true, false)
+	bpcommon.ProfileEnd()
+
 	defpack:PostInit()
-	ready = true
-elseif SERVER then
-	local function ParseAndSave()
-		bpcommon.ProfileStart("parse definitions")
-		LoadAndParseDefs()
 
-		local stream = bpdata.OutStream(false, true, true)
-		stream:UseStringTable()
+end
 
-		defpack:WriteToStream(stream)
+local function PushLatest()
 
-		stream:WriteToFile(DEFPACK_LOCATION, true, false)
-		bpcommon.ProfileEnd()
-
-		defpack:PostInit()
-	end
 	ParseAndSave()
+	if ply:IsAdmin() then
+		for k, v in pairs(bptransfer.GetStates()) do v:AddFile(DEFPACK_LOCATION, "defs2") end
+	end
+
+end
+
+if game.SinglePlayer() then
+	timer.Simple(0, function()
+		LoadAndParseDefs()
+		defpack:PostInit()
+		ready = true
+	end)
+elseif SERVER then
+
+	timer.Simple(0, ParseAndSave)
 
 	concommand.Add("bp_push_latest_definitions", function(ply)
 
-		ParseAndSave()
-		if ply:IsAdmin() then
-			for k, v in pairs(bptransfer.GetStates()) do v:AddFile(DEFPACK_LOCATION, "defs2") end
-		end
+		PushLatest()
 
 	end)
 
