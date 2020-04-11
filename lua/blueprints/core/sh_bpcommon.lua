@@ -1,5 +1,8 @@
+-- Common utility functions and metatables for Blueprints
+
 AddCSLuaFile()
 
+-- Global registry of all metatables used by Blueprints
 G_BPMetaRegistry = G_BPMetaRegistry or {}
 
 module("bpcommon", package.seeall)
@@ -12,21 +15,13 @@ ENABLE_DEEP_PROFILING = false
 STREAM_FILE = 1
 STREAM_NET = 2
 
+-- This version of Blueprints
 ENV_VERSION = "1.5"
 
+-- Moves external variables into module scope
 function rescope(...)
 	local scopes = {...}
 	local vars = {}
-
-	--[[for i=#scopes, 1, -1 do
-
-		for k, v in pairs(scopes[i]) do
-			if k:sub(1,1) ~= '_' then
-				vars[k] = v
-			end
-		end
-
-	end]]
 
 	return function(x)
 		local m = getmetatable(x)
@@ -40,9 +35,6 @@ function rescope(...)
 			end
 			return pindex[ index ]
 		end
-		--[[for k, v in pairs(vars) do
-			x._M[k] = v
-		end]]
 	end
 end
 
@@ -51,6 +43,7 @@ local ps = {
 	start = 0,
 }
 
+-- Begin profiling a block of code
 function ProfileStart(name)
 
 	if not ENABLE_PROFILING then return end
@@ -68,6 +61,7 @@ function ProfileStart(name)
 
 end
 
+-- Profile a specific function and log it
 function Profile(key, func, ...)
 
 	if not ps.enabled then return func(...) end
@@ -88,6 +82,7 @@ function Profile(key, func, ...)
 
 end
 
+-- Builds text representation  of profiling data
 local function RecurseStack(st, depth)
 
 	local data = {}
@@ -123,6 +118,7 @@ local function RecurseStack(st, depth)
 
 end
 
+-- Finish profiling a block of code
 function ProfileEnd()
 
 	if not ENABLE_PROFILING then return end
@@ -138,27 +134,7 @@ function ProfileEnd()
 
 end
 
-
-function CallbackList(t, listindex)
-	local env = getfenv(2)
-	local cblist = env
-	if listindex then
-		env[listindex] = {}
-		cblist = env[listindex]
-	end
-
-	cblist["CB_LOOKUP"] = {}
-
-	local cbx = 1
-	for k,v in ipairs(t) do
-		cblist["CB_" .. tostring(v)] = cbx
-		cblist["CB_LOOKUP"][cbx] = "CB_" .. tostring(v)
-		cbx = cbx * 2
-	end
-
-	cblist["CB_ALL"] = cbx-1
-end
-
+-- Adds elipses (...) if 'str' is longer than 'max'
 function ZipStringLeft(str, max)
 
 	local len = str:len()
@@ -169,6 +145,7 @@ function ZipStringLeft(str, max)
 
 end
 
+-- Makes the first letter in a string uppercase
 function Camelize(str)
 
 	if str:len() == 0 then return "" end
@@ -177,6 +154,7 @@ function Camelize(str)
 
 end
 
+-- Sanitizes a string to only have letters and underscores
 function Sanitize(str)
 
 	if str == nil then return nil end
@@ -187,6 +165,7 @@ function Sanitize(str)
 
 end
 
+-- If the string is plural, makes it sinular ( 'dogs' -> 'dog' )
 function GetSingular(str)
 
 	return str:sub(-1,-1) == "s" and str:sub(1,-2) or str
@@ -240,6 +219,7 @@ function CreateIndexableListIterators(meta, variable)
 
 end
 
+-- Outer utility functions
 local function WithOuter(self, outer)
 	rawset(self, "__outer", outer)
 	return self
@@ -267,6 +247,7 @@ local function FindOuter(self, check)
 	end
 end
 
+-- Creates and registers a metatable
 function MetaTable(name, extends)
 
 	G_BPMetaRegistry[name] = G_BPMetaRegistry[name] or {}
@@ -297,6 +278,7 @@ function MetaTable(name, extends)
 
 end
 
+-- Finds the metatable the given hash belongs to
 function GetMetaTableFromHash(hash)
 
 	for k,v in pairs(G_BPMetaRegistry) do
@@ -305,12 +287,14 @@ function GetMetaTableFromHash(hash)
 
 end
 
+-- Finds a metatable by name
 function FindMetaTable(name)
 
 	return G_BPMetaRegistry[name]
 
 end
 
+-- Gets the name of the given metatable
 function GetMetaTableName(tbl)
 
 	for k,v in pairs(G_BPMetaRegistry) do
@@ -320,6 +304,7 @@ function GetMetaTableName(tbl)
 
 end
 
+-- Makes an instance of a metatable
 function MakeInstance(meta, ...)
 
 	if type(meta) == "string" then meta = G_BPMetaRegistry[name] end
@@ -327,6 +312,7 @@ function MakeInstance(meta, ...)
 
 end
 
+-- Copies functions from target and invokes them through 'getter'
 function ForwardMetaCallsVia(meta, target, getter)
 
 	target = FindMetaTable(target)
@@ -453,12 +439,14 @@ function MakeObservable(obj)
 
 end
 
+-- This is not reliable, basic check to see if string is probably a GUID
 function IsGUID( guid )
 
 	return type(guid) == "string" and #guid == 16
 
 end
 
+-- Converts a GUID from binary to a printable string
 function GUIDToString( guid, raw )
 
 	if not IsGUID( guid ) then return "<invalid-guid>" end
@@ -489,6 +477,7 @@ function GUIDToString( guid, raw )
 
 end
 
+-- Converts a GUID into a string that can be compiled in code
 function EscapedGUID( guid )
 
 	local out = "\""
@@ -499,6 +488,7 @@ function EscapedGUID( guid )
 
 end
 
+-- Generates a new globally unique ID
 function GUID()
 
 	local d,b,g,m=os.date"*t",function(x,y)return x and y or 0 end,system,bit
@@ -510,6 +500,7 @@ function GUID()
 
 end
 
+-- Converts bytes into hexadecimal representation
 function HexBytes(str)
 
 	if str == nil or str == "" or str:len() % 2 ~= 0 then return "" end
@@ -520,6 +511,7 @@ function HexBytes(str)
 
 end
 
+-- Creates a callback for when a table is garbage collected
 function GCHandle(func)
 
 	local prx = newproxy(true)
@@ -529,12 +521,14 @@ function GCHandle(func)
 
 end
 
+-- Gets a unique key for a player, tries to be non-nil
 function PlayerKey(ply)
 
 	return ply:AccountID() or "singleplayer"
 
 end
 
+-- Transforms the contents of a table through a function
 function Transform(tab, out, func, ...)
 
 	if type(tab) == "function" then
@@ -554,6 +548,7 @@ function Transform(tab, out, func, ...)
 
 end
 
+-- table.Copy except it handles outers properly instead of infinitely recursing
 function CopyTable( tab, lookup_table )
 
 	if ( tab == nil ) then return nil end
