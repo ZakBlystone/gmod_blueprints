@@ -48,7 +48,7 @@ local ps = {
 -- Check to see if environment version is compatible
 function CheckVersionCompat(v, msg)
 
-	if type(v) == "string" and v:len() > 0 and v[1] == "1" then
+	if type(v) == "string" and v:len() > 0 and v[1] == "2" then
 		return true
 	end
 
