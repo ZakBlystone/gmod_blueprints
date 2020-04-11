@@ -13,9 +13,8 @@ function EDITOR:Setup()
 	self.values = bpvaluetype.FromValue(mod.data, function() return mod.data end)
 
 	local rank = {
-		["language"] = 1,
-		["locale"] = 2,
-		["keys"] = 3,
+		["locale"] = 1,
+		["keys"] = 2,
 	}
 	function self.values:SortChildren()
 		table.sort(self._children, function(a,b)
@@ -28,6 +27,7 @@ function EDITOR:Setup()
 	end
 
 	self.values:SortChildren()
+	self.values:Index("locale"):OverrideClass( "enum" ):SetOptions( bplocalization.GetKnownLocales() )
 
 end
 

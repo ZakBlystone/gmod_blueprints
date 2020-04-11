@@ -76,18 +76,37 @@ function VALUE:SetFromString( str )
 
 end
 
+local btnColor = HexColor and HexColor("#2c3e50")
+local btnOver = HexColor and AdjustHSV(btnColor, 0, -.2, 0.1)
+local btnPress = HexColor and AdjustHSV(btnColor, 0, -.2, -.1)
 
 function VALUE:GetDefault() return self.options[1][2] end
 function VALUE:CreateVGUI( info )
 
 	local btn = vgui.Create("DButton")
+	local label = vgui.Create("DLabel", btn)
 
-	btn:SetText( self:FindKey(true) )
+	btn:SetText("")
+	label:SetText( self:FindKey(true) )
+	label:DockMargin(6, 0, 0, 0)
+	label:Dock( FILL )
+	label:SetTextColor( Color(255,255,255) )
+
+	btn.SizeToContents = function(pnl) pnl:SetTall(20) end
+	btn.Paint = function(pnl, w, h)
+		local col = btnColor
+		if pnl.Hovered then col = btnOver end
+		if pnl.Depressed then col = btnPress end
+
+		--draw.RoundedBox(4,0,0,w,h, Color(150,150,150))
+		draw.RoundedBox(4,0,0,w,h, col)
+	end
+
 	function btn.DoClick()
 
 		local menu = bpuipickmenu.Create(nil, nil, 300, 200)
 		menu:SetCollection( bpcollection.New():Add( self.options ) )
-		menu.OnEntrySelected = function(pnl, e) self:Set(e[2]) btn:SetText(e[3] or e[1]) end
+		menu.OnEntrySelected = function(pnl, e) self:Set(e[2]) label:SetText(e[3] or e[1]) end
 		menu.GetDisplayName = function(pnl, e) return e[3] or e[1] end
 		menu.GetTooltip = function(pnl, e) return e[4] or e[3] or e[1] end
 		menu:SetSorter( function(a,b)

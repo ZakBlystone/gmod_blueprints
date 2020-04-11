@@ -188,6 +188,7 @@ function GetPinValueTypeClass(pintype)
 
 end
 
+-- Helper function for creaing pins
 function MakePin(dir, name, pintype, flags, ex, desc)
 	local istype = type(pintype) == "table"
 	return bppin.New(

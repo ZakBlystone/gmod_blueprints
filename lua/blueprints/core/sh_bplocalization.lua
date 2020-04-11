@@ -12,6 +12,20 @@ local cache = {}
 local meta = {}
 local locale = {}
 local currentLocale = "en_us"
+local locales = {
+	{"English - United States", "en_us"},
+	{"French - France", "fr-fr"},
+	{"German - Germany", "de-de"},
+	{"Russian", "ru"},
+	{"Spanish - Spain (Traditional)", "es-es"},
+	{"Swedish - Sweden", "sv-se"},
+}
+
+function GetKnownLocales()
+
+	return locales
+
+end
 
 function SetLocale(l)
 

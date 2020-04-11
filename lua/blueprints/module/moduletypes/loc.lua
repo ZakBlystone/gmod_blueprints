@@ -23,7 +23,6 @@ function MODULE:Setup()
 	end
 
 	self.data.locale = "en_us"
-	self.data.language = "English"
 	self.data.keys = t
 
 end

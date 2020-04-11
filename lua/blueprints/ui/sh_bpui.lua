@@ -60,6 +60,13 @@ function HexColor(hex)
 
 end
 
+function AdjustHSV(color, offsetH, offsetS, offsetV)
+
+	local h,s,v = ColorToHSV(color)
+	return HSVToColor(h + offsetH, s + offsetS, v + offsetV)
+
+end
+
 function LerpColors(t, a, b)
 
 	return Color(
