@@ -60,7 +60,8 @@ function EDITOR:PopulateSideBar()
 		end
 
 		newNode:SetName("untitled")
-		list:Add( newNode )
+		local id = list:Add( newNode )
+		pnl:Rename(id)
 
 	end
 
@@ -95,6 +96,17 @@ function EDITOR:Setup()
 	local mod = self:GetModule()
 	self.graph = bpgraph.New():WithOuter(mod)
 	self.graph:SetName("Node Preview")
+
+	mod.groups:Bind("postModify", self, self.PostGroupListModify)
+
+end
+
+function EDITOR:Shutdown()
+
+	local mod = self:GetModule()
+
+	mod.groups:UnbindAll(self)
+	if self.currentNodeGroup then self.currentNodeGroup:UnbindAll(self) end
 
 end
 
@@ -244,15 +256,48 @@ function EDITOR:ConstructNode( nodeType )
 
 end
 
+function EDITOR:PostNodeListModify( action, id, item )
+
+	if action ~= bplist.MODIFY_RENAME then return end
+	if item ~= self.currentNodeType then return end
+
+	self:ConstructNode( self.currentNodeType )
+	self:SetupNodeDetails( self.currentNodeType )
+
+end
+
+function EDITOR:PostGroupListModify( action, id, item )
+
+	if action ~= bplist.MODIFY_REMOVE then return end
+	if item ~= self.currentNodeGroup then return end
+
+	self.NodeList:SetList(nil)
+
+end
+
 function EDITOR:Think()
 
 	local selectedGroup = self.GroupList:GetSelectedID()
 	if selectedGroup ~= self.selectedGroup then
 
+		if self.currentNodeGroup then self.currentNodeGroup:GetEntries():UnbindAll( self ) end
+
 		self.selectedGroup = selectedGroup
 		self.selectedNode = nil
 		self.currentNodeGroup = self:GetModule().groups:Get( selectedGroup )
-		self.NodeList:SetList( self.currentNodeGroup and self.currentNodeGroup:GetEntries() )
+
+		print("GROUP CHANGED: " .. tostring( self.currentNodeGroup ))
+
+		if self.currentNodeGroup then
+
+			self.NodeList:SetList( self.currentNodeGroup:GetEntries() )
+			self.NodeList:ClearSelection()
+			self.currentNodeGroup:GetEntries():Bind( "postModify", self, self.PostNodeListModify )
+
+		end
+
+		self:ConstructNode( nil )
+		self:SetupNodeDetails( nil )
 
 	end
 
@@ -261,6 +306,9 @@ function EDITOR:Think()
 
 		self.selectedNode = selectedNode
 		self.currentNodeType = self.currentNodeGroup:GetEntries():Get( selectedNode )
+
+		print("SELECTED NODE CHANGED: " .. tostring(self.currentNodeType))
+
 		self:ConstructNode( self.currentNodeType )
 		self:SetupNodeDetails( self.currentNodeType )
 

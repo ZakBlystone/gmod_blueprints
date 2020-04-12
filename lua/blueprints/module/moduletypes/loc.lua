@@ -15,6 +15,8 @@ function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
+	bplocalization.ScanLuaFiles()
+
 	self.data = {}
 
 	local t = {}
@@ -22,14 +24,14 @@ function MODULE:Setup()
 		t[v] = tostring(bplocalization.Get(v))
 	end
 
-	self.data.locale = "en_us"
+	self.data.locale = "en-us"
 	self.data.keys = t
 
 end
 
-function MODULE:GetLanguage()
+function MODULE:GetLocale()
 
-	return self.data.language
+	return self.data.locale
 
 end
 
@@ -43,7 +45,7 @@ function MODULE:SerializeData(stream)
 
 	BaseClass.SerializeData( self, stream )
 
-	self.data.language = stream:String( self.data.language )
+	self.data.locale = stream:String( self.data.locale )
 	self.data.keys = stream:StringMap( self.data.keys )
 
 	return stream
@@ -62,13 +64,17 @@ function MODULE:Compile( compiler, pass )
 		end
 
 		compiler.emit("local data = " .. bpvaluetype.FromValue(self.data, function() return self.data end):ToString() )
+		compiler.emit("if CLIENT then")
+		compiler.pushIndent()
 		if bit.band(compiler.flags, CF_Standalone) ~= 0 then
 			compiler.emit("bplocalization.AddLocTable(data)")
 		else
-			compiler.emit("__bpm.init = function() bplocalization.AddLocTable(data) end")
+			compiler.emit("__bpm.init = function() bplocalization.AddLocTable(data, true) end")
 			compiler.emit("__bpm.shutdown = function() bplocalization.RemoveLocTable(data) end")
 			compiler.emit("return __bpm")
 		end
+		compiler.popIndent()
+		compiler.emit("end")
 
 	end
 
