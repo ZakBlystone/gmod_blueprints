@@ -286,8 +286,6 @@ function EDITOR:Think()
 		self.selectedNode = nil
 		self.currentNodeGroup = self:GetModule().groups:Get( selectedGroup )
 
-		print("GROUP CHANGED: " .. tostring( self.currentNodeGroup ))
-
 		if self.currentNodeGroup then
 
 			self.NodeList:SetList( self.currentNodeGroup:GetEntries() )
@@ -306,8 +304,6 @@ function EDITOR:Think()
 
 		self.selectedNode = selectedNode
 		self.currentNodeType = self.currentNodeGroup:GetEntries():Get( selectedNode )
-
-		print("SELECTED NODE CHANGED: " .. tostring(self.currentNodeType))
 
 		self:ConstructNode( self.currentNodeType )
 		self:SetupNodeDetails( self.currentNodeType )
