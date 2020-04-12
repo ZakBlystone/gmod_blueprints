@@ -184,6 +184,12 @@ function PANEL:ItemRemoved(id, item)
 
 end
 
+function PANEL:ClearSelection()
+
+	self.selectedID = nil
+
+end
+
 function PANEL:Select(id)
 
 	if self.selectedID ~= id or self.alwaysSelect then

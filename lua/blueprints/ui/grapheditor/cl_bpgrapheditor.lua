@@ -192,7 +192,7 @@ function meta:InvalidateAllNodes( pins )
 
 end
 
-function meta:GraphCleared() end
+function meta:GraphCleared() self.nodeSet:CreateAllNodes() end
 function meta:PostModifyNode( id ) self.nodeSet:PostModifyNode(id) end
 
 function meta:IsLocked() return self.vgraph:GetIsLocked() end

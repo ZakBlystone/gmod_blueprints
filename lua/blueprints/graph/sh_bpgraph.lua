@@ -648,12 +648,12 @@ end
 
 function meta:Clear()
 
-	self:Broadcast("cleared")
-
 	self.nodes:Clear()
 	self.inputs:Clear()
 	self.outputs:Clear()
 	self.connections = {}
+
+	self:Broadcast("cleared")
 
 end
 
