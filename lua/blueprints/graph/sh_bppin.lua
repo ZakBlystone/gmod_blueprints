@@ -74,7 +74,12 @@ end
 
 function meta:IsIn() return self:GetDir() == PD_In end
 function meta:IsOut() return self:GetDir() == PD_Out end
-function meta:GetDefault(...) return self.default or self:GetType():GetDefault(...) end
+function meta:GetDefault(...)
+
+	if self:HasFlag(PNF_Nullable) then return nil end
+	return self.default or self:GetType():GetDefault(...)
+
+end
 
 -- Funky colors!
 --[[function meta:GetColor()
