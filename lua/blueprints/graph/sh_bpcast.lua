@@ -70,26 +70,43 @@ function CanCast(outPinType, inPinType)
 
 end
 
+local function GetNodeTypePins(ntype, module)
+
+	local nodeClass = ntype:GetNodeClass()
+	if nodeClass == nil then return ntype:GetPins() end
+
+	local cl = bpnode.nodeClasses:Get(nodeClass)
+	if cl and cl.GeneratePins ~= bpnode_meta.GeneratePins then
+		local node = bpnode.New(ntype):WithOuter( module )
+		node:PostInit()
+		return node:GetPins()
+	end
+
+	return ntype:GetPins()
+
+end
+
 function FindMatchingPin(ntype, pf, module, cache)
 
 	assert(module ~= nil)
 
+	local nodePinCache = nil
+	if cache then
+		cache.__nodePins = cache.__nodePins or {}
+		nodePinCache = cache.__nodePins
+	end
+
+	local pins = nil
 	local informs = ntype:GetInforms()
 	local ignoreNullable = bit.band( PNF_All, bit.bnot( PNF_Nullable ) )
 
-	local nodeClass = ntype:GetNodeClass()
-	if nodeClass ~= nil then
-		--local outer = ntype:GetOuter()
-		--local outerName = outer and bpcommon.GetMetaTableName( getmetatable(outer) ) or "no-outer"
-		--print("FIND MATCHING PIN CLASS " .. nodeClass .. " WITHIN MODULE: " .. module:GetName())
-		--print("  NODE TYPE OUTER: " .. outerName)
-		--print("  GRAPH THUNK: " .. tostring(ntype:GetGraphThunk()))
-		local node = bpnode.New(ntype):WithOuter( module )
-		node:PostInit()
-		pins = node:GetPins()
+	if nodePinCache and nodePinCache[ntype] then
+		pins = nodePinCache[ntype]
 	else
-		pins = ntype:GetPins()
+		pins = GetNodeTypePins(ntype, module)
+		if nodePinCache then nodePinCache[ntype] = pins end
 	end
+
 
 	if cache and cache[ntype] ~= nil then
 		local id = cache[ntype]
