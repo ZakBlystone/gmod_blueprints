@@ -52,7 +52,7 @@ function meta:PostInit()
 
 		if v:GetType() == bpnodetypegroup.TYPE_Class then
 			local exist = self.classes[v:GetName()]
-			if exist then
+			if exist and exist ~= v then
 				for _, entry in v:GetEntries():Items() do
 					entry.id = nil
 					entry:WithOuter( exist )
@@ -73,8 +73,8 @@ function meta:PostInit()
 	end
 
 	--[[print("Init node types: ")
-	for k,v in ipairs(tab) do
-		print(v:GetName())
+	for k,v in pairs(tab) do
+		print(v:GetFullName())
 	end]]
 
 end

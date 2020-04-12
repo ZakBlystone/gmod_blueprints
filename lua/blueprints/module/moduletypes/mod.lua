@@ -18,15 +18,16 @@ function MODULE:CreateDefaults()
 
 end
 
-local allowedHooks = {
-	["GM"] = true,
-	["CORE"] = true,
+local blacklistHooks = {
+	["WEAPON"] = true,
+	["ENTITY"] = true,
+	["EFFECT"] = true,
 }
 
 function MODULE:CanAddNode(nodeType)
 
 	local group = nodeType:GetGroup()
-	if group and nodeType:GetContext() == bpnodetype.NC_Hook and not allowedHooks[group:GetName()] then return false end
+	if group and nodeType:GetContext() == bpnodetype.NC_Hook and blacklistHooks[group:GetName()] then return false end
 
 	return BaseClass:CanAddNode( nodeType )
 

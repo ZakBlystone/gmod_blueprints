@@ -58,6 +58,11 @@ end
 
 function MODULE:GetNodeTypes()
 
+end
+
+function MODULE:RequestGraphForEvent( nodeType )
+
+	return nil
 
 end
 

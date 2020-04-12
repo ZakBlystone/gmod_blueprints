@@ -68,6 +68,7 @@ function EDITOR:PopulateSideBar()
 	self.StructList = self:AddSidebarList(LOCTEXT("editor_nodelib_structlist","Structs"))
 	self.StructList.HandleAddItem = function(pnl, list)
 		local itemID, item = list:Construct()
+		item.pins:PreserveNames(true)
 		pnl:Rename(itemID)
 	end
 
@@ -83,6 +84,10 @@ function EDITOR:PopulateSideBar()
 	self.GroupList:SetList( self:GetModule().groups )
 	self.StructList:SetList( self:GetModule().structs )
 
+	for _, struct in self:GetModule().structs:Items() do
+		struct.pins:PreserveNames(true)
+	end
+
 	self.selectedGroup = nil
 	self.selectedNode = nil
 	self.currentNodeGroup = nil
@@ -96,6 +101,7 @@ function EDITOR:Setup()
 	local mod = self:GetModule()
 	self.graph = bpgraph.New():WithOuter(mod)
 	self.graph:SetName("Node Preview")
+	self.graph.CanAddNode = function() return true end
 
 	mod.groups:Bind("postModify", self, self.PostGroupListModify)
 
@@ -106,7 +112,7 @@ function EDITOR:Shutdown()
 	local mod = self:GetModule()
 
 	mod.groups:UnbindAll(self)
-	if self.currentNodeGroup then self.currentNodeGroup:UnbindAll(self) end
+	if self.currentNodeGroup then self.currentNodeGroup:GetEntries():UnbindAll(self) end
 
 end
 
@@ -239,13 +245,73 @@ function EDITOR:PostInit()
 
 end
 
+function EDITOR:MakeVNode(node)
+
+	if not node then return end
+	local vnode = bpuigraphnode.New( node, self.graph )
+	return vnode
+
+end
+
+function EDITOR:AddNode( nodeType, x, y )
+
+	local _, node = self.graph:AddNode( nodeType, x or 0, y or 0 )
+	local vnode = self:MakeVNode(node)
+	return node, vnode
+
+end
+
 function EDITOR:ConstructNode( nodeType )
 
 	self.graph:Clear()
 	if nodeType ~= nil then
-		local _, node = self.graph:AddNode( nodeType, 0, 0 )
+		if nodeType:GetCodeType() == NT_Event and nodeType:ReturnsValues() then
+
+			self.graph.inputs:Clear()
+			self.graph.outputs:Clear()
+			for _, v in ipairs(nodeType:GetRawPins()) do
+				if v:IsType(PN_Exec) then continue end
+				v = v:Copy( v:IsIn() and PD_Out or PD_In ) v.id = nil
+				if v:GetDir() == PD_In then self.graph.inputs:Add(v) end
+				if v:GetDir() == PD_Out then self.graph.outputs:Add(v) end
+			end
+
+			local entry = bpnodetype.New():WithOuter( self.graph )
+			entry:SetCodeType(NT_FuncInput)
+			entry:SetName(nodeType:GetName())
+			entry:AddFlag(NTF_NoDelete)
+			entry:SetNodeClass("UserFuncEntry")
+			entry.GetRole = function() return nodeType:GetRole() end
+
+			local exit = bpnodetype.New():WithOuter( self.graph )
+			exit:SetCodeType(NT_FuncOutput)
+			exit:SetDisplayName("Return")
+			exit:SetName("__Exit")
+			exit:AddFlag(NTF_NoDelete)
+			exit:SetNodeClass("UserFuncExit")
+			exit.GetRole = function() return nodeType:GetRole() end
+
+			local _, ventry = self:AddNode( entry )
+			local w0,h0 = ventry:GetSize()
+
+			local _, vexit = self:AddNode( exit, 200 )
+			local w1,h1 = vexit:GetSize()
+
+			local c0 = w0/2
+			local c1 = 400 + w1/2
+			local cx = (c0/2 + c1/2)
+
+			self.vgraph:SetZoomLevel(-1,0,0)
+			timer.Simple(0, function()
+				self.vgraph:CenterOnPoint(cx,h0/2)
+			end)
+
+			return
+
+		end
+
+		local node, vnode = self:AddNode( nodeType )
 		if not node then return end
-		local vnode = bpuigraphnode.New( node, self.graph )
 		local w,h = vnode:GetSize()
 
 		self.vgraph:SetZoomLevel(-2,0,0)

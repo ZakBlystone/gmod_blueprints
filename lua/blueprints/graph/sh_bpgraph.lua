@@ -692,7 +692,8 @@ function meta:AddNode(nodeTypeName, ...)
 	if not self:CanAddNode(nodeType) then return end
 
 	if nodeType:GetCodeType() == NT_Event and nodeType:ReturnsValues() then
-		return self:GetModule():RequestGraphForEvent(nodeType)
+		local graph = self:GetModule():RequestGraphForEvent(nodeType)
+		if graph then return graph end
 	end
 
 	local id, newNode = self.nodes:Construct( nodeType, ... )
@@ -1141,7 +1142,10 @@ function meta:CompileNodes( compiler )
 	compiler.begin(CTX_Hooks .. graphID)
 
 	if self:HasFlag(bpgraph.FL_HOOK) then
-		local args = {self:GetHookType() or self:GetName(), self:GetName(), graphID, -1}
+		local nodeType = self:GetNodeTypes():Find(self:GetHookType())
+		local hookName = nodeType and nodeType:GetName() or self:GetName()
+
+		local args = {self:GetHookType() or self:GetName(), hookName, graphID, -1}
 		compiler.emit("_FR_HOOK(" .. table.concat(args, ",") .. ")")
 	end
 
