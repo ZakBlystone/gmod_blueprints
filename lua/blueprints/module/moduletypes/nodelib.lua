@@ -53,6 +53,12 @@ function MODULE:AutoFillsPinType( pinType )
 
 end
 
+function MODULE:RequestGraphForEvent( nodeType )
+
+	return nil
+
+end
+
 function MODULE:WriteData( stream, mode, version )
 
 	BaseClass.WriteData( self, stream, mode, version )
