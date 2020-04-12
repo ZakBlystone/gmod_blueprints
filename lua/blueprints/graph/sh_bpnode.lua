@@ -8,7 +8,7 @@ DummyNodeType:SetDisplayName("InvalidNode")
 local meta = bpcommon.MetaTable("bpnode")
 meta.__tostring = function(self) return self:ToString() end
 
-local nodeClasses = bpclassloader.Get("Node", "blueprints/graph/nodetypes/", "BPNodeClassRefresh", meta)
+nodeClasses = bpclassloader.Get("Node", "blueprints/graph/nodetypes/", "BPNodeClassRefresh", meta)
 
 --Common pin filters
 PF_NoExec = function( pin ) return not pin:IsType( PN_Exec ) end
