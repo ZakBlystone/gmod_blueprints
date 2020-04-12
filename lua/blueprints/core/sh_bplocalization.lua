@@ -93,6 +93,7 @@ function RemoveLocTable(t)
 
 	if t == nil or t.locale == nil then error("Malformed language data") end
 	locale[t.locale] = nil
+	SetLocale("en-us")
 
 end
 

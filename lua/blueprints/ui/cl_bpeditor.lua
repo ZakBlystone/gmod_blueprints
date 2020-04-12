@@ -532,11 +532,11 @@ vgui.Register( "BPEditor", PANEL, "DFrame" )
 
 --if true then return end
 
-local function OpenEditor()
+function OpenEditor( forceRefresh )
 
 	if IsValid(G_BPEditorInstance) then
 
-		if deleteOnClose:GetBool() then
+		if deleteOnClose:GetBool() or forceRefresh then
 
 			if IsValid(G_BPEditorInstance) then G_BPEditorInstance:Remove() end
 			G_BPEditorInstance = nil
