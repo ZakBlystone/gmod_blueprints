@@ -244,10 +244,10 @@ end
 function meta:Draw(w,h)
 
 	surface.SetDrawColor(Color(80,80,80,255))
-	self:DrawGrid(BGMaterial, 15, 2)
+	self:DrawGrid(BGMaterial, 16, 2)
 
 	surface.SetDrawColor(Color(150,150,150,80))
-	self:DrawGrid(BGMaterial, 15, 8)
+	self:DrawGrid(BGMaterial, 16, 8)
 
 	-- Draw graph here
 	self.graphPainter:Draw()

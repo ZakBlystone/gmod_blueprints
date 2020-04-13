@@ -31,9 +31,10 @@ local NODE_PINSIDE_SPACING = 40
 local NODE_HEADER_HEIGHT = 40
 local NODE_HEADER_SPACING = 25
 local NODE_FOOTER_HEIGHT = 40
-local NODE_COMPACT_HEADER_SPACING = 0
-local NODE_COMPACT_HEADER_HEIGHT = 20
-local NODE_COMPACT_FOOTER_HEIGHT = 20
+local NODE_COMPACT_HEADER_SPACING = 25
+local NODE_COMPACT_HEADER_HEIGHT = 40
+local NODE_COMPACT_FOOTER_HEIGHT = 0
+local NODE_COMPACT_OFFSET = 45
 local PIN_SPACING = 8
 local PIN_EDGE_SPACING = 8
 
@@ -121,6 +122,7 @@ function meta:GetSize()
 
 	self.titleWidth = titleWidth
 	self.titleHeight = titleHeight
+	self.compact = self:ShouldBeCompact()
 
 	if self:ShouldBeCompact() then
 		width = math.max(titleWidth+40, 0)
@@ -249,9 +251,11 @@ end
 function meta:GetPos()
 
 	local x,y = self.node:GetPos()
+
 	local scale = 2 -- HARD CODE FOR NOW, FIX LATER
 	x = x * scale
 	y = y * scale
+
 	return x,y
 
 end
@@ -267,6 +271,11 @@ function meta:GetHitBox()
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
+
+	if self.compact then
+		y = y + NODE_COMPACT_OFFSET
+	end
+
 	return x,y,w,h
 
 end
@@ -327,13 +336,17 @@ end
 local col = Color(0,0,0)
 function meta:Draw(xOffset, yOffset, alpha)
 
-	--self:Invalidate(true)
+	self:Invalidate(true)
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
 
 	x = x + xOffset
 	y = y + yOffset
+
+	if self.compact then
+		y = y + NODE_COMPACT_OFFSET
+	end
 
 	local node = self.node
 	local outline = 8
@@ -351,7 +364,7 @@ function meta:Draw(xOffset, yOffset, alpha)
 
 
 	local ntc = node:GetColor()
-	local isCompact = self:ShouldBeCompact()
+	local isCompact = self.compact
 	local role = node:GetRole()
 	if not isCompact then
 		col:SetUnpacked(ntc.r, ntc.g, ntc.b, 255*alpha)
