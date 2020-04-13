@@ -47,7 +47,7 @@ function meta:GetTypeName() return PinTypeNames[ self:GetBaseType() ] or "UNKNOW
 function meta:GetLiteralType() return NodeLiteralTypes[ self:GetBaseType() ] end
 function meta:GetDefault()
 
-	if self:HasFlag(PNF_Table) then return "{}" end
+	if self:HasFlag(PNF_Table) then return (not self:HasFlag(PNF_Nullable)) and "{}" end
 	if self:GetBaseType() == PN_Enum and bpdefs and bpdefs.Ready() then
 		local enum = bpdefs.Get():GetEnum( self )
 		if enum and enum.entries[1] then return enum.entries[1].key end
