@@ -70,7 +70,7 @@ HOOKS ENTITY
 	HOOK Use, SERVER
 	{
 		DESC Called when another entity uses this entity, example would be a player pressing "+use" this entity.
-		OUT activator, PN_Ref, PNF_None, Entity, #The tntity that caused this input. This will usually be the player who pressed their use key.
+		OUT activator, PN_Ref, PNF_None, Entity, #The entity that caused this input. This will usually be the player who pressed their use key.
 		OUT caller, PN_Ref, PNF_None, Entity, #The entity responsible for the input. Same as activator unless activated by a proxy.
 		OUT useType, PN_Enum, PNF_None, USE, #The use type
 		OUT value, PN_Number, #Any passed value
