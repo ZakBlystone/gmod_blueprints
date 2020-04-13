@@ -366,6 +366,7 @@ function meta:GetCodeType()
 
 end
 
+function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
 function meta:GetTypeName() return self.nodeType end
 function meta:GetPos() return self.x, self.y end
 function meta:RemapPin(name) return self:GetType():RemapPin(name) end
