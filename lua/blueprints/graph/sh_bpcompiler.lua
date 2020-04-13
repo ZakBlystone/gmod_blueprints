@@ -435,10 +435,13 @@ function meta:GetPinLiteral(pin, sanitize)
 		if pin:IsType(PN_String) then l = "\"" .. l .. "\"" end
 		if pin:IsType(PN_Asset) then l = "\"" .. l .. "\"" end
 
+		--print("LITERAL FOR NODEPIN: " .. node:ToString(pin.id) .. " [" .. l .. "]")
+
 		return { var = l }
 	else
 		local def = pin:GetDefault()
-		return def and { var = pin:GetDefault() } or nil
+		--print("DEFAULT FOR NODEPIN: " .. node:ToString(pin.id))
+		return def and { var = def } or "nil"
 	end
 
 end

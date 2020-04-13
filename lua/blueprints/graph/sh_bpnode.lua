@@ -136,7 +136,7 @@ function meta:UpdatePins()
 		v:InitPinClass()
 
 		if prev ~= nil and prev[k] ~= nil and v:GetLiteral() ~= nil and not prev[k]:Equal(v) then
-			v:SetDefaultLiteral(true)
+			v:SetLiteral(nil)
 			--print("Force default literal on pin: " .. v:ToString(true) .. " : " .. tostring(v:GetLiteral()) .. "->" .. tostring(v:GetDefault()) )
 		end
 
