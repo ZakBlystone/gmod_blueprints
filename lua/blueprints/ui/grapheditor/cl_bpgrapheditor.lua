@@ -443,7 +443,7 @@ function meta:LeftMouse(x,y,pressed)
 				if not self:ConnectPins(self.grabPin, targetPin) then self:DeleteLastUndo() end
 			elseif input.IsKeyDown( KEY_LALT ) then
 				local scaleFactor = self:GetCoordinateScaleFactor()
-				local _, pinNode = self:GetGraph():AddNode("CORE_Pin", wx/scaleFactor, wy/scaleFactor - 15)
+				local _, pinNode = self:GetGraph():AddNode("CORE_Pin", wx/scaleFactor - 32, wy/scaleFactor - 32)
 				pinNode:FindPin(PD_In, "In"):Connect( self.grabPin:GetPin() )
 			elseif input.IsKeyDown( KEY_B ) and self.grabPin:GetPin():IsType(PN_Bool) then
 				local scaleFactor = self:GetCoordinateScaleFactor()

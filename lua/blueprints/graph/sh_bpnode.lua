@@ -37,8 +37,8 @@ end
 
 function meta:PostInit()
 
-	self.x = math.Round(self.x / 15) * 15
-	self.y = math.Round(self.y / 15) * 15
+	self.x = math.Round(self.x / 16) * 16
+	self.y = math.Round(self.y / 16) * 16
 
 	local ntype = self.nodeTypeObject
 	if not self.nodeTypeObject then
@@ -366,6 +366,7 @@ function meta:GetCodeType()
 
 end
 
+function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
 function meta:GetTypeName() return self.nodeType end
 function meta:GetPos() return self.x, self.y end
 function meta:RemapPin(name) return self:GetType():RemapPin(name) end
@@ -412,8 +413,8 @@ function meta:Move(x, y)
 	local px = self.x
 	local py = self.y
 
-	x = math.Round(x / 15) * 15
-	y = math.Round(y / 15) * 15
+	x = math.Round(x / 16) * 16
+	y = math.Round(y / 16) * 16
 
 	self.x = x
 	self.y = y

@@ -5,12 +5,11 @@ if SERVER then
 	resource.AddFile("resource/fonts/Akkurat-Bold.ttf")
 	resource.AddFile("resource/fonts/JetBrainsMono-Bold.ttf")
 	resource.AddFile("materials/icon64/blueprints.png")
-	resource.AddFile("materials/pins/pin.png")
-	resource.AddFile("materials/pins/pin_table.png")
-	resource.AddFile("materials/pins/pin_auto.png")
-	resource.AddFile("materials/pins/pin_exec.png")
+	resource.AddFile("materials/bpgraphatlas.png")
 
 else
+
+G_BPGraphAtlas = Material("bpgraphatlas.png", "mips smooth")
 
 surface.CreateFont( "NodeTitleFont", {
 	font = "Akkurat-Bold", -- Use the font-name which is shown to you by your operating system Font Viewer, not the file name

@@ -2,6 +2,10 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpgraphpainter", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
+local render_PushFilterMag = render.PushFilterMag
+local render_PushFilterMin = render.PushFilterMin
+local render_PopFilterMag = render.PopFilterMag
+local render_PopFilterMin = render.PopFilterMin
 local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
 	["$basetexture"] = "dev/dev_measuregeneric01b",
 	["$vertexcolor"] = 1,
@@ -132,8 +136,20 @@ function meta:Draw(xOffset, yOffset, alpha)
 	yOffset = yOffset or 0
 	alpha = alpha or 1
 
+	render_PushFilterMag( TEXFILTER.LINEAR )
+	render_PushFilterMin( TEXFILTER.LINEAR )
+
+	local b,e = pcall( function()
+
 	self:DrawConnections(xOffset, yOffset, alpha)
 	self:DrawNodes(xOffset, yOffset, alpha)
+
+	end)
+
+	render_PopFilterMag()
+	render_PopFilterMin()
+
+	if not b then print(e) end
 
 end
 
