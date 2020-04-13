@@ -14,11 +14,6 @@ local math_ceil = math.ceil
 
 local meta = bpcommon.MetaTable("bpuigraphpin")
 
-local pngParams = "mips smooth"
-local TEX_PIN = Material("materials/pins/pin.png", pngParams)
-local TEX_PIN_TABLE = Material("materials/pins/pin_table.png", pngParams)
-local TEX_PIN_AUTO = Material("materials/pins/pin_auto.png", pngParams)
-local TEX_PIN_EXEC = Material("materials/pins/pin_exec.png", pngParams)
 local TEXT_OFFSET = 8
 local LITERAL_OFFSET = 10
 local LITERAL_HEIGHT = 24
@@ -31,6 +26,12 @@ local PIN_TITLE_BLACKLIST = {
 	["Exec"] = true,
 	["Thru"] = true,
 }
+
+local drawPin = GWEN.CreateTextureNormal( 64, 128, 64, 64, G_BPGraphAtlas )
+local drawPinExec = GWEN.CreateTextureNormal( 128, 128, 64, 64, G_BPGraphAtlas )
+local drawPinTable = GWEN.CreateTextureNormal( 0, 192, 64, 64, G_BPGraphAtlas )
+local drawPinAuto = GWEN.CreateTextureNormal( 64, 192, 64, 64, G_BPGraphAtlas )
+local drawLiteralBox = GWEN.CreateTextureBorder( 64, 64, 32, 32, 8, 8, 8, 8, G_BPGraphAtlas )
 
 function meta:Init(vnode, pinID, sideIndex)
 
@@ -337,21 +338,24 @@ function meta:DrawLiteral(x, y, alpha)
 	end
 end
 
+local col = Color(0,0,0)
 function meta:DrawHotspot(x,y,alpha)
 
 	if self.pin:IsType(PN_Dummy) then return end
 
 	local ox, oy = self:GetHotspotOffset()
 	local isTable = self.pin:HasFlag(PNF_Table)
+	local isExec = self.pin:IsType(PN_Exec)
+	local isAuto = self.autoPin
 	local r,g,b,a = self.pin:GetColor():Unpack()
-	local tex = isTable and TEX_PIN_TABLE or TEX_PIN
 
-	if self.autoPin then tex = TEX_PIN_AUTO end
-	if self:GetPin():IsType(PN_Exec) then tex = TEX_PIN_EXEC end
+	local f = drawPin
+	if isTable then f = drawPinTable end
+	if isExec then f = drawPinExec end
+	if isAuto then f = drawPinAuto end
 
-	surface_setDrawColor( r, g, b, 255 * alpha )
-	surface_setMaterial(tex)
-	surface_drawTexturedRect(x+ox-PIN_SIZE/2,y+oy-PIN_SIZE/2,PIN_SIZE,PIN_SIZE)
+	col:SetUnpacked(r,g,b,a * alpha)
+	f(x+ox-PIN_SIZE/2, y+oy-PIN_SIZE/2, PIN_SIZE, PIN_SIZE, col)
 
 end
 
@@ -368,9 +372,11 @@ function meta:BuildMetrics()
 	if self.invalidateMetrics ~= nil and not self.invalidateMetrics then return end
 
 	local title = self:GetDisplayName()
+	local hx,hy = self:GetHotspotOffset()
 
 	surface.SetFont(self.font)
 	self.titleWidth, self.titleHeight = surface.GetTextSize( title )
+	self.titleOffsetY = hy - self.titleHeight / 2
 	self.invalidateMetrics = false
 
 end
@@ -391,33 +397,35 @@ function meta:Draw(xOffset, yOffset, alpha)
 	local w,h = self:GetSize()
 	local ox, oy = self:GetHotspotOffset()
 	local node = self.vnode:GetNode()
-	local font = self.font
 
 	x = x + xOffset
 	y = y + yOffset
 
 	self:DrawHotspot(x,y,alpha)
 
-	--render.PushFilterMag( TEXFILTER.LINEAR )
-	--render.PushFilterMin( TEXFILTER.LINEAR )
-
 	if not self:IsConnected() then self:DrawLiteral(x,y,alpha) end
+
 
 	--self:DrawHitBox()
 
+end
+
+function meta:DrawTitle(xOffset, yOffset, alpha)
+
 	local title = self:GetDisplayName()
 	if not PIN_TITLE_BLACKLIST[title] then
+		local node = self.vnode:GetNode()
 		if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
-			local hx,hy = self:GetHotspotOffset()
-			surface_setFont( self.font )
-			surface_setTextPos( math_ceil( x + self.titlePos ), math_ceil( hy + y-(self.titleHeight)/2 ) )
+			local x,y = self:GetPos()
+
+			x = x + xOffset
+			y = y + yOffset
+
+			surface_setTextPos( math_ceil( x + self.titlePos ), math_ceil( y + self.titleOffsetY ) )
 			surface_setTextColor( self.autoPin and 40 or 255, self.autoPin and 220 or 255, 255, 255*alpha )
 			surface_drawText( title )
 		end
 	end
-
-	--render.PopFilterMag()
-	--render.PopFilterMin()
 
 end
 
