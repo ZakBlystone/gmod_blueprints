@@ -248,7 +248,7 @@ LIB render
 	FUNC FogMode, CLIENT
 	{
 		DESC Sets the mode of fog.
-		IN fogMode, PN_Enum, PNF_None, MATERIAL, #Fog mode, see MATERIAL_FOG_ Enums.
+		IN fogMode, PN_Enum, PNF_None, MATERIAL_FOG, #Fog mode, see MATERIAL_FOG_ Enums.
 	}
 	FUNC FogStart, CLIENT
 	{
