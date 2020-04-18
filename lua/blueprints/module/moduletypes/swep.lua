@@ -163,6 +163,7 @@ end]])
 		compiler.emitContext( CTX_Vars .. "global", 1 )
 		compiler.emit("\tself.bInitialized = true")
 		compiler.emit("\tself:netInit()")
+		compiler.emit("\tself:hookEvents(true)")
 		compiler.emit("\tif self.WEAPON_Initialize then self:WEAPON_Initialize() end")
 		compiler.emit("end")
 
@@ -174,6 +175,7 @@ function meta:Think()
 end
 function meta:OnRemove()
 	if not self.bInitialized then return end
+	self:hookEvents(false)
 	if self.WEAPON_OnRemove then self:WEAPON_OnRemove() end
 	self:netShutdown()
 end]])

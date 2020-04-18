@@ -411,6 +411,14 @@ end]]
 
 end
 
+fragments["metahooks"] = [[
+function meta:hookEvents( enable )
+	for k,v in pairs(self.__bpm.events) do
+		if not v.hook or type(meta[k]) ~= "function" then continue end
+		(enable and hook.Add or hook.Remove)(v.hook, "bphook_"..__guidString(self.guid), function(...) return self[k](self, ...) end)
+	end
+end]]
+
 fragments["standalone"] = [[
 local instance = __bpm.new()
 if instance.CORE_Init then instance:CORE_Init() end

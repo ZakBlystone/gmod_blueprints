@@ -187,7 +187,11 @@ function MODULE:Compile(compiler, pass)
 
 	BaseClass.Compile( self, compiler, pass )
 
-	if pass == CP_PREPASS then
+	if pass == CP_MODULEMETA then
+
+		compiler.emit("_FR_METAHOOKS()")
+
+	elseif pass == CP_PREPASS then
 
 		for k, v in ipairs( self.cgraphs ) do
 			for _, node in v:Nodes() do
