@@ -428,7 +428,7 @@ function MODULE:CompileVariable( compiler, id, var )
 	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 	if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 
-	print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
+	--print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
 
 	local varName = var:GetName()
 	if compiler.compactVars then varName = id end

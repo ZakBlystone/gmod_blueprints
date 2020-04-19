@@ -895,13 +895,13 @@ function meta:CompileGraphJumpTable(graph)
 		local id = self:GetID(node)
 		for _, j in ipairs(node:GetJumpSymbols()) do
 
-			if not node.execReachable then print("***Node will not execute: " .. node:ToString()) continue end
+			if not node.execReachable then continue end --print("***Node will not execute: " .. node:ToString())
 
 			jumpTable[id] = jumpTable[id] or {}
 			jumpTable[id][j] = nextJumpID
 			jl[#jl+1] = nextJumpID
 
-			print("Require jump symbol: " .. node:ToString() .. " " .. j .. " => " .. nextJumpID)
+			--print("Require jump symbol: " .. node:ToString() .. " " .. j .. " => " .. nextJumpID)
 
 			nextJumpID = nextJumpID + 1
 
