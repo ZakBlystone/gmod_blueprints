@@ -96,10 +96,7 @@ function MODULE:Compile(compiler, pass)
 		compiler.emit( "meta = table.Merge( meta, " .. entityTable:ToString() .. " )")
 
 		compiler.emit([[
-for k,v in pairs(meta) do
-	local _, _, m = k:find("ENTITY_(.+)")
-	if m then meta[ m ] = v end
-end]])
+for k,v in pairs(meta) do local _, _, m = k:find("ENTITY_(.+)") if m then meta[ m ] = v end end]])
 
 		compiler.emit("function meta:Initialize()")
 		compiler.emit("\tlocal instance = self")
@@ -111,16 +108,7 @@ end]])
 		compiler.emit("\tself.lastThink = CurTime()")
 		compiler.emit("\tself:netInit()")
 		compiler.emit("\tif self.ENTITY_Initialize then self:ENTITY_Initialize() end")
-		compiler.emit([[
-local bpm = instance.__bpm
-local key = "bphook_" .. __guidString(instance.guid)
-for k,v in pairs(bpm.events) do
-	if v.hook and type(meta[k]) == "function" then
-		local function call(...) return instance[k](instance, ...) end
-		hook.Add(v.hook, key, call)
-	end
-end
-]])
+		compiler.emit("\tself:hookEvents(true)")
 		compiler.emit("end")
 
 		compiler.emit([[
@@ -135,11 +123,7 @@ end
 function meta:OnRemove()
 	if not self.bInitialized then return end
 	local bpm = self.__bpm
-	for k,v in pairs(bpm.events) do
-		if not v.hook or type(meta[k]) ~= "function" then continue end
-		local key = "bphook_" .. __guidString(self.guid, true)
-		hook.Remove(v.hook, key, false)
-	end
+	self:hookEvents(false)
 	if self.ENTITY_OnRemove then self:ENTITY_OnRemove() end
 	self:netShutdown()
 end]])

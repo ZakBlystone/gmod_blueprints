@@ -405,7 +405,7 @@ function meta:NodeWalk(nodeID, condition, visited)
 	-- Add node connections to stack
 	local function AddNodeConnections(node)
 		if visited[node] then return end visited[node] = true
-		for pinID, pin in node:Pins() do
+		for pinID, pin in node:Pins(nil, true) do
 			for _, v in ipairs( self:GetPinConnections(pin:GetDir(), node.id, pinID) ) do
 				local other = pin:GetDir() == PD_In and v[1] or v[3]
 				local otherPin = pin:GetDir() == PD_In and v[2] or v[4]
@@ -1078,14 +1078,24 @@ function meta:PreCompile( compiler, uniqueKeys )
 	-- prepare graph
 	self:CacheNodeTypes()
 	self:CollapseRerouteNodes()
+
+	-- mark all nodes reachable via execution
+	self:ExecWalk( function(node)
+		node.execReachable = true
+	end )
+
 	compiler:EnumerateGraphVars(self, uniqueKeys)
 	compiler:CompileGraphJumpTable(self)
 	compiler:CompileGraphVarListing(self)
 
 	-- compile prepass on all nodes
 	for id, node in self:Nodes() do
-		compiler:RunNodeCompile(node, CP_PREPASS)
+		if node:GetCodeType() == NT_Pure and node:WillExecute() then compiler:RunNodeCompile(node, CP_PREPASS) end
 	end
+
+	self:ExecWalk( function(node)
+		compiler:RunNodeCompile( node, CP_PREPASS )
+	end )
 
 	return self
 
@@ -1094,6 +1104,8 @@ end
 function meta:CompileEntrypoint( compiler )
 
 	local graphID = compiler:GetID(self)
+
+	compiler:CompileGraphNodeJumps( self )
 
 	compiler.begin(CTX_Graph .. graphID)
 
@@ -1109,15 +1121,52 @@ function meta:CompileEntrypoint( compiler )
 	compiler.emitContext( CTX_JumpTable .. graphID, 1 )
 
 	-- emit all functions belonging to this graph
-	local code = compiler.getFilteredContexts( CTX_FunctionNode .. graphID )
-	for k, _ in pairs(code) do compiler.emitContext( k, 1 ) end
+	--local code = compiler.getFilteredContexts( CTX_FunctionNode .. graphID )
+	--for k, _ in pairs(code) do compiler.emitContext( k, 1 ) end
+
+	self:ExecWalk( function(node)
+		compiler.emitContext( CTX_FunctionNode .. graphID .. "_" .. compiler:GetID(node), 1 )
+	end )
 
 	-- emit terminus jump vector
 	compiler.emit("\n\t::__terminus::\n")
 	compiler.emit("end")
+	compiler.emit("setfenv(graph_" .. graphID .. "_entry, setmetatable({}, {__index = _G}))")
 	compiler.finish()
 
-	print("COMPILED GRAPH: " .. graphID)
+	--print("COMPILED GRAPH: " .. graphID)
+
+end
+
+function meta:ExecWalk( func )
+
+	local visited = {}
+
+	for _, node in self:Nodes() do
+
+		local codeType = node:GetCodeType()
+		if codeType == NT_Event or codeType == NT_FuncInput then
+
+			--print("EXEC WALK: " .. node:ToString())
+
+			local connections = self:NodeWalk(node.id, function(node, pinID)
+				return node:GetPin(pinID):IsType(PN_Exec) and node:GetPin(pinID):GetDir() == PD_In
+			end, visited)
+
+			local emitted = {}
+			for k, v in ipairs(connections) do
+
+				local nodeA = self:GetNode(v[1])
+				local nodeB = self:GetNode(v[3])
+
+				if not emitted[nodeA] then func(nodeA) emitted[nodeA] = true end
+				if not emitted[nodeB] then func(nodeB) emitted[nodeB] = true end
+
+			end
+
+		end
+
+	end
 
 end
 
@@ -1125,18 +1174,23 @@ function meta:CompileNodes( compiler )
 
 	local graphID = compiler:GetID(self)
 
-	print("COMPILING NODES FOR GRAPH: " .. graphID)
+	--print("COMPILING NODES FOR GRAPH: " .. graphID)
 
 	-- compile each single-node context in the graph
 	for id, node in self:Nodes() do
-		Profile("single-node", compiler.CompileNodeSingle, compiler, node)
+		if node:GetCodeType() == NT_Pure and node:WillExecute() then
+			Profile("single-node", compiler.CompileNodeSingle, compiler, node)
+		end
 	end
 
+	self:ExecWalk( function(node)
+		Profile("single-node", compiler.CompileNodeSingle, compiler, node)
+	end )
+
 	-- compile all non-pure function nodes in the graph (and events / special nodes)
-	for id, node in self:Nodes() do
-		if node:GetCodeType() == NT_Pure then continue end
+	self:ExecWalk( function(node)
 		Profile("functions", compiler.CompileNodeFunction, compiler, node)
-	end
+	end )
 
 	-- compile hook listing for this graph if it is an event hook
 	compiler.begin(CTX_Hooks .. graphID)
@@ -1155,11 +1209,11 @@ end
 
 function meta:Compile( compiler, pass )
 
-	print("COMPILING GRAPH: " .. self:GetName())
+	--print("COMPILING GRAPH: " .. self:GetName())
 
 	if pass == CP_MAINPASS then
 
-		print("COMPILING GRAPH MAIN-PASS: " .. self:GetName())
+		--print("COMPILING GRAPH MAIN-PASS: " .. self:GetName())
 
 		self:CompileNodes( compiler )
 		self:CompileEntrypoint( compiler )

@@ -223,13 +223,15 @@ LIB CORE
 	{
 		IN Exec, PN_Exec
 		OUT Thru, PN_Exec
-		CODE if CLIENT then #1 else goto popcall end
+		FALLTHROUGH
+		CODE if not CLIENT then goto popcall end
 	}
 	SPECIAL ServerOnly, SHARED
 	{
 		IN Exec, PN_Exec
 		OUT Thru, PN_Exec
-		CODE if SERVER then #1 else goto popcall end
+		FALLTHROUGH
+		CODE if not SERVER then goto popcall end
 	}
 	SPECIAL Role, SHARED
 	{

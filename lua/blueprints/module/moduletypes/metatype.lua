@@ -10,6 +10,29 @@ MODULE.SelfPinSubClass = nil
 MODULE.HasSelfPin = true
 MODULE.HasUIDClassname = false
 
+function InlineVarCompileFunc( pinName, var )
+
+	return function(node, compiler, pass)
+
+		if pass == bpcompiler.CP_ALLOCVARS then
+
+			compiler:CreatePinRouter( node:FindPin(PD_Out, pinName), function(pin)
+				return { var = var }
+			end )
+
+			return true
+
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			compiler:CompileReturnPin( node )
+			return true
+
+		end
+
+	end
+
+end
+
 function MODULE:Setup()
 
 	BaseClass.Setup(self)
@@ -27,7 +50,7 @@ function MODULE:Setup()
 			MakePin(PD_Out, "Self", self.modulePinType),
 		}
 	end
-	self.getSelfNodeType:SetCode( "#1 = __self" )
+	self.getSelfNodeType.Compile = InlineVarCompileFunc("Self", "__self")
 
 	self.getClassNodeType = bpnodetype.New():WithOuter(self)
 	self.getClassNodeType:SetCodeType(NT_Pure)
@@ -39,7 +62,7 @@ function MODULE:Setup()
 			MakePin(PD_Out, "Class", PN_BPClass, PNF_None, self:GetUID() ),
 		}
 	end
-	self.getClassNodeType:SetCode( "#1 = __bpm.guid" )
+	self.getClassNodeType.Compile = InlineVarCompileFunc("Class", "__bpm.guid")
 
 	if self.HasOwner then
 
@@ -53,7 +76,7 @@ function MODULE:Setup()
 				MakePin(PD_Out, "Owner", self:GetOwnerPinType()),
 			}
 		end
-		self.getOwnerNodeType:SetCode( "#1 = __self.Owner" )
+		self.getOwnerNodeType.Compile = InlineVarCompileFunc("Owner", "__self.Owner")
 
 	end
 
@@ -187,7 +210,11 @@ function MODULE:Compile(compiler, pass)
 
 	BaseClass.Compile( self, compiler, pass )
 
-	if pass == CP_PREPASS then
+	if pass == CP_MODULEMETA then
+
+		compiler.emit("_FR_METAHOOKS()")
+
+	elseif pass == CP_PREPASS then
 
 		for k, v in ipairs( self.cgraphs ) do
 			for _, node in v:Nodes() do

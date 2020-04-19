@@ -425,7 +425,7 @@ function MODULE:CompileVariable( compiler, id, var )
 	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 	if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 
-	print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
+	--print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
 
 	local varName = var:GetName()
 	if compiler.compactVars then varName = id end
@@ -506,9 +506,11 @@ function MODULE:Compile( compiler, pass )
 
 		local bDebug = compiler.debug and 1 or 0
 		local bILP = compiler.ilp and 1 or 0
+		local bGUID = self:IsConstructable() and 1 or 0
 		local args = bDebug .. ", " .. bILP
+
 		compiler.emit("_FR_HEAD(" .. args .. ")")   -- script header
-		compiler.emit("_FR_UTILS()")                -- utilities
+		compiler.emit("_FR_UTILS(" .. bGUID .. ")") -- utilities
 		compiler.emitContext( CTX_Network )         -- network boilerplate
 		compiler.emit("_FR_MODHEAD()")              -- header for module
 
@@ -575,11 +577,13 @@ function MODULE:Compile( compiler, pass )
 		end
 		compiler.emit("}")
 
+		local errorHandler = bit.band(compiler.flags, CF_Standalone) ~= 0 and "1" or "0"
+
 		-- infinite-loop-protection checker
 		if compiler.ilp then
-			compiler.emit("_FR_SUPPORT(1, " .. compiler.ilpmaxh .. ")")
+			compiler.emit("_FR_SUPPORT(1, " .. compiler.ilpmaxh .. ", " .. errorHandler .. ")")
 		else
-			compiler.emit("_FR_SUPPORT()")
+			compiler.emit("_FR_SUPPORT(0, 0, " .. errorHandler .. ")")
 		end
 
 	elseif pass == CP_MODULEFOOTER then

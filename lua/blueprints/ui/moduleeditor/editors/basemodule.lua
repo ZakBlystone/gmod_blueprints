@@ -120,6 +120,7 @@ function EDITOR:ExportLua()
 	local ok, res = self:GetModule():TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
 	if ok then
 		SetClipboardText( res:GetCode() )
+		Derma_Message( "Lua script copied to clipboard", "Export Lua", "Ok" )
 	else
 		ErrorNoHalt( res )
 	end
