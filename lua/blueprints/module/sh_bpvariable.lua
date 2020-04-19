@@ -34,7 +34,7 @@ function meta:Init(type, repmode)
 
 		elseif pass == bpcompiler.CP_MAINPASS then
 
-			if node:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) ) end
+			compiler:CompileReturnPin( node )
 			return true
 
 		end
@@ -63,7 +63,7 @@ function meta:Init(type, repmode)
 		elseif pass == bpcompiler.CP_MAINPASS then
 
 			compiler.emit( varName .. " = " .. compiler:GetPinCode( node:FindPin(PD_In, "value") ) )
-			if node:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) ) end
+			compiler:CompileReturnPin( node )
 			return true
 
 		end

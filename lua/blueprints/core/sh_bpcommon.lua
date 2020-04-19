@@ -583,3 +583,24 @@ function CopyTable( tab, lookup_table )
 	return copy
 
 end
+
+if SERVER then
+
+	print("TEST")
+
+	local extern = 5
+
+	HelloValue = nil
+	local function TestFunc()
+		print("Call")
+		HelloValue = 5
+	end
+
+	setfenv(TestFunc, setmetatable({}, {__index = _G}))
+
+	print(tostring(HelloValue))
+	TestFunc()
+	print(tostring(HelloValue))
+	print(extern)
+
+end

@@ -136,6 +136,7 @@ function meta:Setup()
 	self.guidString = bpcommon.GUIDToString(self.module:GetUID(), true)
 	self.varscope = nil
 	self.pinRouters = {}
+	self.jumpsRequired = {}
 
 	return self
 
@@ -441,7 +442,7 @@ function meta:GetPinLiteral(pin, sanitize)
 	else
 		local def = pin:GetDefault()
 		--print("DEFAULT FOR NODEPIN: " .. node:ToString(pin.id))
-		return def and { var = def } or "nil"
+		return def and { var = def } or { var = "nil" }
 	end
 
 end
@@ -537,15 +538,25 @@ function meta:CompileVars(code, inVars, outVars, node)
 
 	-- replace jumps
 	local jumpTable = self:GetGraphJumpTable(graph)[nodeID] or {}
-	str = str:gsub("%^_([%w_]+)", function(x) return tostring(jumpTable[x]) end)
-	str = str:gsub("%^([%w_]+)", function(x) return "jmp_" .. jumpTable[x] end)
+	str = str:gsub("%^_([%w_]+)", function(x) return tostring(jumpTable[x] or 0) end)
+	str = str:gsub("%^([%w_]+)", function(x) return "jmp_" .. (jumpTable[x] or 0) end)
 	str = DesanitizeCodedString(str)
 
-	if node:GetCodeType() == NT_Function then
-		str = str .. "\n" .. self:GetVarCode(outVars[1], true)
-	end
-
 	return str
+
+end
+
+function meta:CompileReturnPin( node )
+
+	if node:GetCodeType() == NT_Function then
+		local thruPin = node:FindPin(PD_Out, "Thru")
+		local connected = thruPin:GetConnectedPins()
+		if #connected == 0 then
+			self.emit( self:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) )
+		elseif #connected[1]:GetConnectedPins() > 1 then
+			self.emit( self:GetPinCode( node:FindPin(PD_Out, "Thru"), true ) )
+		end
+	end
 
 end
 
@@ -697,6 +708,8 @@ function meta:CompileNodeSingle(node)
 
 	end
 
+	self:CompileReturnPin( node )
+
 	self.finish()
 
 end
@@ -754,11 +767,40 @@ function meta:CompileNodeFunction(node)
 	local graphID = self:GetID(node:GetGraph())
 	local nodeID = self:GetID(node)
 
+	self.jumpsRequired[graphID] = self.jumpsRequired[graphID] or {}
+
 	self:RunNodeCompile( node, CP_METAPASS )
 
 	self.begin(CTX_FunctionNode .. graphID .. "_" .. nodeID)
-	if self.debugcomments then self.emit("-- " .. node:ToString()) end
-	self.emit("::jmp_" .. nodeID .. "::")
+	if self.debugcomments and (codeType == NT_Event or codeType == NT_FuncInput) then self.emit("-- " .. node:ToString()) end
+
+	local needsJump = (codeType == NT_Event or codeType == NT_FuncInput)
+	if not needsJump then
+		for pinID, pin in node:SidePins(PD_In) do
+			if not pin:IsType(PN_Exec) then continue end
+			local pins = pin:GetConnectedPins()
+			if #pins == 1 then
+				local other = pins[1]:GetNode()
+				local n, pos = 0, 0
+				for _, pin in other:SidePins(PD_Out) do
+					if pin:IsType(PN_Exec) and #pin:GetConnectedPins() ~= 0 then n = n + 1 end
+					if pin == pins[1] then pos = n break end
+				end
+				print(node:ToString() .. " CONNECTED TO EXEC # " .. pos)
+				if other:GetCodeType() == NT_Special then
+					if other:HasFlag(NTF_FallThrough) then
+						needsJump = (pos ~= 1)
+					else 
+						needsJump = true
+					end
+				end
+			elseif #pins > 1 then
+				needsJump = true
+			end
+		end
+	end
+
+	if needsJump then self.emit("::jmp_" .. nodeID .. "::") self.jumpsRequired[graphID][nodeID] = true print("Mark for jump: " .. nodeID .. " : " .. node:ToString()) end
 
 	-- event nodes are really just jump stubs
 	if codeType == NT_Event or codeType == NT_FuncInput then 
@@ -776,7 +818,7 @@ function meta:CompileNodeFunction(node)
 				end
 
 				if execCount > 1 then self.emit("\t__targetPin = " .. connection.id) end
-				self.emit("\tgoto jmp_" .. self:GetID(connection:GetNode()))
+				--self.emit("\tgoto jmp_" .. self:GetID(connection:GetNode()))
 				self.finish()
 				return
 			end
@@ -836,13 +878,11 @@ function meta:CompileGraphJumpTable(graph)
 
 	local jl = {0}
 
-	-- emit jumps for all non-pure functions
 	for _, node in graph:Nodes() do
 		local id = self:GetID(node)
 		if node:GetCodeType() ~= NT_Pure then
-			jl[#jl+1] = id
+			nextJumpID = math.max(nextJumpID, id+1)
 		end
-		nextJumpID = math.max(nextJumpID, id+1)
 	end
 
 	-- some nodes have internal jump symbols to control program flow (delay / sequence)
@@ -852,11 +892,41 @@ function meta:CompileGraphJumpTable(graph)
 		local id = self:GetID(node)
 		for _, j in ipairs(node:GetJumpSymbols()) do
 
+			if not node:WillExecute() then print("***Node will not execute: " .. node:ToString()) continue end
+
 			jumpTable[id] = jumpTable[id] or {}
 			jumpTable[id][j] = nextJumpID
 			jl[#jl+1] = nextJumpID
+
+			print("Require jump symbol: " .. node:ToString() .. " " .. j .. " => " .. nextJumpID)
+
 			nextJumpID = nextJumpID + 1
 
+		end
+	end
+
+
+	self.emit("_FR_JLIST(" .. table.concat(jl, ",") .. ")")
+
+	self.finish()
+
+end
+
+function meta:CompileGraphNodeJumps(graph)
+
+	local jl = {}
+
+	local graphID = self:GetID(graph)
+	self.begin(CTX_JumpTable .. graphID)
+
+	self.jumpsRequired[graphID] = self.jumpsRequired[graphID] or {}
+
+	-- emit jumps for all non-pure functions
+	for _, node in graph:Nodes() do
+		local id = self:GetID(node)
+		if self.jumpsRequired[graphID][id] then
+			jl[#jl+1] = id
+			print("ADD JUMP: " .. id .. " : " .. node:ToString())
 		end
 	end
 
@@ -888,12 +958,6 @@ function meta:CompileGraphVarListing(graph)
 		if not v.literal and not v.global and not v.isFunc and not v.keyAsGlobal then
 			locals[#locals+1] = v.var
 		end
-	end
-
-	if self.compactVars then
-		self.emit("_FR_ILOCALS(" .. #locals .. ")")
-	else
-		self.emit("_FR_LOCALS(" .. table.concat(locals, ",") .. ")")
 	end
 
 	self.finish()

@@ -120,6 +120,27 @@ function meta:IsPinConnected( pinID )
 
 end
 
+function meta:WillExecute()
+
+	local codeType = self:GetCodeType()
+	if codeType == NT_Event then return true
+	elseif codeType == NT_Pure then
+
+		for _, pin in self:SidePins( PD_Out ) do
+			if #pin:GetConnectedPins() > 0 then return true end
+		end
+
+	else
+
+		for _, pin in self:SidePins( PD_In ) do
+			if pin:IsType(PN_Exec) and #pin:GetConnectedPins() > 0 then return true end
+		end
+
+	end
+	return false
+
+end
+
 function meta:UpdatePins()
 
 	local prev = self.pinCache
@@ -263,11 +284,23 @@ function meta:SidePins(dir, filter)
 
 end
 
-function meta:Pins(filter)
+function meta:Pins(filter, reverse)
 
 	filter = filter or filterNoOp
 	local pins = self:GetPins()
+
 	local i, j, num = 0, 0, #pins
+	if reverse then
+		i = num + 1
+		return function()
+			i = i - 1
+			while i >= 1 and not filter(pins[i]) do i = i - 1 end
+			if i >= 1 then
+				j = j + 1
+				return i, pins[i], j
+			end
+		end
+	end
 	return function()
 		i = i + 1
 		while i <= num and not filter(pins[i]) do i = i + 1 end

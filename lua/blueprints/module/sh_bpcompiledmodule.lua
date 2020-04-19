@@ -442,11 +442,10 @@ if SERVER then
 end]]
 
 fragments["callstack"] = [[
-local cs = {}
-local function pushjmp(i) table.insert(cs, 1, i) end
+cs = {}
+function pushjmp(i) cs[#cs+1] = i end
 goto jumpto
-::jmp_0:: ::popcall::
-if #cs > 0 then ip = cs[1] table.remove(cs, 1) else goto __terminus end
+::jmp_0:: ::popcall:: csl = #cs if csl > 0 then ip = cs[csl] cs[csl] = nil else goto __terminus end
 ::jumpto::
 ]]
 

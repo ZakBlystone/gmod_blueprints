@@ -3,11 +3,8 @@ LIB LOGIC
 	SPECIAL If, SHARED
 	{
 		DESC Conditional 'If' statement
-		IN Exec, PN_Exec
-		IN Condition, PN_Bool
-		OUT True, PN_Exec, #Executes if true
-		OUT False, PN_Exec, #Executes if false
-		CODE if $2 then #1 end #2
+		FALLTHROUGH
+		CLASS If
 	}
 	SPECIAL DoN, SHARED
 	{

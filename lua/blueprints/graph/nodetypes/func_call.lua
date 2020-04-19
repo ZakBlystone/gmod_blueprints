@@ -46,6 +46,8 @@ function NODE:Compile(compiler, pass)
 
 		end
 
+		print("COMPILE CALL: " .. self:ToString())
+
 		-- Compile pins
 		local ret = {}
 		for k, pin in self:SidePins(PD_Out, bpnode.PF_NoExec) do
@@ -61,7 +63,7 @@ function NODE:Compile(compiler, pass)
 		compiler.emit( table.concat(ret, ",") .. (#ret > 0 and " = " or "") .. call .. "(" .. table.concat(arg, ",") .. ")"  )
 
 		-- Non-pure functions must emit return jump code
-		if self:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( self:FindPin(PD_Out, "Thru"), true ) ) end
+		compiler:CompileReturnPin( self )
 		return true
 
 	end

@@ -43,8 +43,7 @@ function NODE:GetCode()
 	local str = ""
 
 	for i=1, self.data.pinCount do
-		str = str .. "pushjmp(^_" .. i .. ") ip = #_" .. i .. " goto jumpto\n"
-		str = str .. "::^" .. i .. "::\n"
+		str = str .. "pushjmp(^_" .. i .. ") ip = #_" .. i .. " goto jumpto ::^" .. i .. "::\n"
 	end
 	str = str .. "goto popcall"
 

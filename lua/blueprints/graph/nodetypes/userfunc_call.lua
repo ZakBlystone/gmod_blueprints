@@ -62,7 +62,7 @@ function NODE:Compile(compiler, pass)
 
 		compiler.emit( table.concat(ret, ",") .. (#ret > 0 and " = " or "") .. selfPinCode .. ":" .. graph:GetName() .. "(" .. table.concat(arg, ",") .. ")"  )
 
-		if self:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( self:FindPin(PD_Out, "Thru"), true ) ) end
+		compiler:CompileReturnPin( self )
 		return true
 
 	end
