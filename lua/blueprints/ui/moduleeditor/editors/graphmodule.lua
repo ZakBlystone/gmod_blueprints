@@ -73,6 +73,14 @@ function EDITOR:Think()
 
 	end
 
+	if _G.G_BPDraggingElement then
+
+		if not input.IsMouseDown( MOUSE_LEFT ) then
+			_G.G_BPDraggingElement = nil
+		end
+
+	end
+
 end
 
 function EDITOR:PopulateSideBar()
@@ -117,6 +125,30 @@ function EDITOR:PopulateSideBar()
 
 	end
 
+	local detour = self.GraphList.CreateItemPanel
+	self.GraphList.CreateItemPanel = function(pnl, id, item)
+		local p = detour(pnl, id, item)
+
+		if item:GetType() == GT_Function then
+			local detour = p.OnMousePressed
+			p.OnMousePressed = function( pnl, code )
+				if code ~= MOUSE_LEFT then detour(pnl, code) end
+				pnl.wantDrag = true
+			end
+			p.OnMouseReleased = function( pnl, code )
+				if code == MOUSE_LEFT then detour(pnl, code) end
+				pnl.wantDrag = false
+			end
+			p.OnCursorExited = function(pnl)
+				if pnl.wantDrag then
+					_G.G_BPDraggingElement = item
+					pnl.wantDrag = false
+				end
+			end
+		end
+		return p
+	end
+
 	-- Variable List
 	if self:GetModule():CanHaveVariables() then
 
@@ -131,6 +163,22 @@ function EDITOR:PopulateSideBar()
 			function entry:GetPinType() return item:GetType() end
 			function entry:SetPinName(n) pnl.list:Rename( id, n ) end
 			function entry:GetPinName() return item.name end
+			local detour = entry.OnMousePressed
+			entry.OnMousePressed = function( pnl, code )
+				detour(pnl, code)
+				pnl.wantDrag = true
+			end
+			entry.OnMouseReleased = function( pnl, code )
+				pnl.wantDrag = false
+			end
+			entry.OnCursorExited = function(pnl)
+				timer.Simple(.05, function()
+					if pnl.wantDrag then
+						_G.G_BPDraggingElement = item
+						pnl.wantDrag = false
+					end
+				end)
+			end
 			return entry
 
 		end
@@ -148,6 +196,17 @@ function EDITOR:PopulateSideBar()
 		self.StructList.HandleAddItem = function(pnl, list)
 			local itemID, item = list:Construct()
 			pnl:Rename(itemID)
+		end
+
+		local detour = self.StructList.CreateItemPanel
+		self.StructList.CreateItemPanel = function(pnl, id, item)
+			local p = detour(pnl, id, item)
+			local detour = p.OnMousePressed
+			p.OnMousePressed = function( pnl, code )
+				detour(pnl, code)
+				_G.G_BPDraggingElement = item
+			end
+			return p
 		end
 
 		self.StructList.PopulateMenuItems = function(pnl, items, id)
@@ -169,6 +228,17 @@ function EDITOR:PopulateSideBar()
 		self.EventList.HandleAddItem = function(pnl, list)
 			local itemID, item = list:Construct()
 			pnl:Rename(itemID)
+		end
+
+		local detour = self.EventList.CreateItemPanel
+		self.EventList.CreateItemPanel = function(pnl, id, item)
+			local p = detour(pnl, id, item)
+			local detour = p.OnMousePressed
+			p.OnMousePressed = function( pnl, code )
+				detour(pnl, code)
+				_G.G_BPDraggingElement = item
+			end
+			return p
 		end
 
 		self.EventList.PopulateMenuItems = function(pnl, items, id)
