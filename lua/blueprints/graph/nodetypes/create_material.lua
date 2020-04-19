@@ -162,7 +162,7 @@ function NODE:Compile(compiler, pass)
 		end
 		compiler.emit("} )")
 
-		if self:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( self:FindPin(PD_Out, "Thru"), true ) ) end
+		compiler:CompileReturnPin( self )
 		return true
 
 	end

@@ -72,7 +72,8 @@ function NODE:BuildSendThunk(compiler)
 	table.insert(args, 1, "end")
 	self.send.emit( table.concat(args, ", ") .. ")")
 
-	self.send.emit( compiler:GetPinCode( self:FindPin(PD_Out, "Thru"), true ) )
+	compiler:CompileReturnPin( self )
+
 	self.send.finish()
 
 end

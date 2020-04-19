@@ -53,7 +53,7 @@ function NODE:Compile(compiler, pass)
 		compiler.emit("}")
 		if struct.metaTable then compiler.emit("setmetatable( " .. outValueCode .. ", " .. struct.metaTable .. "_ )") end
 
-		if self:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( self:FindPin(PD_Out, "Thru"), true ) ) end
+		compiler:CompileReturnPin( self )
 		return true
 
 	end
