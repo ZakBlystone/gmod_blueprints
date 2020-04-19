@@ -24,6 +24,7 @@ function meta:Init( editor, vgraph )
 	self.lastMouseX = 0
 	self.lastMouseY = 0
 	self.tooltipWrap = bptextwrap.New():SetFont(TOOLTIP_FONT):SetMaxWidth(TOOLTIP_MAXWIDTH)
+	self.dragVarWrap = bptextwrap.New():SetFont(TOOLTIP_FONT):SetMaxWidth(TOOLTIP_MAXWIDTH)
 	self.tooltip = false
 	self.tooltipText = nil
 	self.tooltipLocation = nil
@@ -241,6 +242,26 @@ function meta:DrawTooltip()
 
 end
 
+function meta:DrawDragged()
+
+	if G_BPDraggingElement then
+
+		local v = G_BPDraggingElement
+		local mx, my = self:GetVGraph():GetMousePos()
+
+		self.dragVarWrap:SetText(v:GetName())
+
+		local tw, th = self.dragVarWrap:GetSize()
+		my = my - th
+
+		draw.RoundedBox(6, mx - 5, my - 5, tw + 10, th + 10, Color(0,0,0,255))
+
+		self.dragVarWrap:Draw(mx, my, 255, 255, 255, 255)
+
+	end
+
+end
+
 function meta:Draw(w,h)
 
 	surface.SetDrawColor(Color(80,80,80,255))
@@ -294,6 +315,7 @@ function meta:DrawOverlay(w,h)
 	self:PaintZoomIndicator(w,h)
 	self:PaintPopups(w,h)
 	self:DrawTooltip()
+	self:DrawDragged()
 
 end
 

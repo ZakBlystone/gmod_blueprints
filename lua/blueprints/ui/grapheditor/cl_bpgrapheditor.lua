@@ -387,6 +387,37 @@ function meta:CheckNodeSpawn(key, nodeType, wx, wy)
 	end
 end
 
+function meta:PlaceVar(var, wx, wy, setter)
+
+	local scaleFactor = self:GetCoordinateScaleFactor()
+	local _, pinNode = self:GetGraph():AddNode(setter and var:SetterNodeType() or var:GetterNodeType(), wx/scaleFactor, wy/scaleFactor - 15)
+
+end
+
+function meta:PlaceEvent(event, wx, wy, call)
+
+	local scaleFactor = self:GetCoordinateScaleFactor()
+	local _, pinNode = self:GetGraph():AddNode(call and event:CallNodeType() or event:EventNodeType(), wx/scaleFactor, wy/scaleFactor - 15)
+
+end
+
+function meta:PlaceStruct(struct, wx, wy, make)
+
+	local scaleFactor = self:GetCoordinateScaleFactor()
+	local _, pinNode = self:GetGraph():AddNode(make and struct:MakerNodeType() or struct:BreakerNodeType(), wx/scaleFactor, wy/scaleFactor - 15)
+
+end
+
+function meta:PlaceGraphCall(graph, wx, wy)
+
+	if graph == self:GetGraph() then return end
+	if graph:GetCallNodeType() == nil then print("Graph doesn't have call node") return end
+
+	local scaleFactor = self:GetCoordinateScaleFactor()
+	local _, pinNode = self:GetGraph():AddNode(graph:GetCallNodeType(), wx/scaleFactor, wy/scaleFactor - 15)
+
+end
+
 local nodeSpawners = {
 	[KEY_B] = "LOGIC_If",
 	[KEY_D] = "CORE_Delay",
@@ -435,6 +466,37 @@ function meta:LeftMouse(x,y,pressed)
 		end
 
 	else
+
+		if G_BPDraggingElement then
+
+			local v = G_BPDraggingElement
+			if isbpgraph(v) then
+
+				self:PlaceGraphCall( v, wx, wy )
+
+			else
+
+				self.dragVarMenu = DermaMenu( false, self.vgraph )
+
+				if isbpevent( v ) then
+					self.dragVarMenu:AddOption( "Call " .. v:GetName(), function() self:PlaceEvent( v, wx, wy, true ) end )
+					self.dragVarMenu:AddOption( "Hook " .. v:GetName(), function() self:PlaceEvent( v, wx, wy, false ) end )
+				elseif isbpvariable(v) then
+					self.dragVarMenu:AddOption( "Set " .. v:GetName(), function() self:PlaceVar( v, wx, wy, true ) end )
+					self.dragVarMenu:AddOption( "Get " .. v:GetName(), function() self:PlaceVar( v, wx, wy, false ) end )
+				elseif isbpstruct(v) then
+					self.dragVarMenu:AddOption( "Make " .. v:GetName(), function() self:PlaceStruct( v, wx, wy, true ) end )
+					self.dragVarMenu:AddOption( "Break " .. v:GetName(), function() self:PlaceStruct( v, wx, wy, false ) end )
+				end
+
+				self.dragVarMenu:SetMinimumWidth( 100 )
+				self.dragVarMenu:Open( gui.MouseX(), gui.MouseY(), false, self.vgraph )
+
+			end
+
+			G_BPDraggingElement = nil
+
+		end
 
 		if self.grabPin then
 			local targetPin = self:TryGetPin(wx,wy)
