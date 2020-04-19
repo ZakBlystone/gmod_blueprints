@@ -283,95 +283,46 @@ end
 fragments["nethead"] = [[
 G_BPNetHandlers = G_BPNetHandlers or {}
 G_BPNetChannels = G_BPNetChannels or {}
+net.Receive("bpmessage", function(...) local ch = G_BPNetChannels[net.ReadUInt(16)] if ch ~= nil then ch:netReceiveMessage(...) end end)
 net.Receive("bpclosechannel", function(len, pl) G_BPNetChannels[net.ReadUInt(16)] = nil end)
-net.Receive("bphandshake", function(len, pl)
-	local moduleGUID, instanceGUID = net.ReadData(16), net.ReadData(16)
-	for _, v in ipairs(G_BPNetHandlers) do
-		if v.__bpm.guid == moduleGUID then v:netReceiveHandshake(instanceGUID, len, pl) end
-	end
+net.Receive("bphandshake", function(len, pl) local mod, inst = net.ReadData(16), net.ReadData(16)
+	for _, v in ipairs(G_BPNetHandlers) do if v.__bpm.guid == mod and inst == v.guid then v:netReceiveHandshake(inst, len, pl) end end
 end)
-net.Receive("bpmessage", function(...)
-	local channel = G_BPNetChannels[net.ReadUInt(16)]
-	if channel ~= nil then channel:netReceiveMessage(...) end
-end)
-local function __netWriteTable(f, t) net.WriteUInt(#t, 24) for i=1, #t do f(t[i]) end end
-local function __netReadTable(f) local t = {} for i=1, net.ReadUInt(24) do t[#t+1] = f() end return t end
-local function __netAllocChannel(id, module)
-	if (id or -1) == -1 then for i=0, 65535 do if G_BPNetChannels[i] == nil then id = i break end end end
+local function __netAllocChannel(id, mod)
+	if id == -1 then for i=0, 65535 do if G_BPNetChannels[i] == nil then id = i break end end end
 	if id == -1 then error("Unable to allocate network channel") end
-	if G_BPNetChannels[id] then print("WARNING: Network channel already allocated: " .. id) end
-	G_BPNetChannels[id] = module
-	return { id = id, guid = module.guid }
-end
-local function __netCloseChannel(ch)
-	if not ch or not G_BPNetChannels[ch.id] then return end
-	G_BPNetChannels[ch.id] = nil
-	if CLIENT then return end
-	net.Start("bpclosechannel")
-	net.WriteUInt(ch.id, 16)
-	net.Broadcast()
+	if G_BPNetChannels[id] then print("WARNING: Network channel already allocated: " .. id) end G_BPNetChannels[id] = mod
+	return { id = id, guid = mod.guid }
 end
 ]]
 
 fragments["netmain"] = [[
 function meta:netInit()
-	self.netReady, self.netCalls = false, {}
-	G_BPNetHandlers[#G_BPNetHandlers+1] = self
-	if SERVER then self.netChannel = __netAllocChannel(nil, self) return end
-	net.Start("bphandshake")
-	net.WriteData(__bpm.guid, 16)
-	net.WriteData(self.guid, 16)
-	net.WriteBool(false)
-	net.SendToServer()
+	self.netReady, self.ncl = false, {} G_BPNetHandlers[#G_BPNetHandlers+1] = self
+	if SERVER then self.chann = __netAllocChannel(-1, self) return end
+	net.Start("bphandshake") net.WriteData(__bpm.guid, 16) net.WriteData(self.guid, 16) net.WriteBool(false) net.SendToServer()
 end
 function meta:netShutdown()
-	if self.netChannel then __netCloseChannel(self.netChannel) end
 	table.RemoveByValue(G_BPNetHandlers, self)
+	if not self.chann or not G_BPNetChannels[self.chann.id] then return else G_BPNetChannels[self.chann.id] = nil end
+	if SERVER then net.Start("bpclosechannel") net.WriteUInt(self.chann.id, 16) net.Broadcast() end
 end
 function meta:netUpdate()
 	if not self.netReady then return end
-	for i, c in ipairs(self.netCalls) do
-		local s,e = pcall(c.f, unpack(c.a))
-		if not s then __bpm.onError(e, 0, c.g, c.n) end
-		self.netCalls[i] = nil
-	end
+	for i, c in ipairs(self.ncl) do local s,e = pcall(c.f, unpack(c.a)) s = s or __bpm.onError(e, 0, c.g, c.n) self.ncl[i] = nil end
 end
-function meta:netPostCall(func, ...)
-	self.netCalls[#self.netCalls+1] = {f = func, a = {...}, g = __dbggraph or -1, n = __dbgnode or -1}
-end
-function meta:netReceiveHandshake(instanceGUID, len, pl)
-	if instanceGUID ~= self.guid then return end
+function meta:netPostCall(f, ...) self.ncl[#self.ncl+1] = {f = f, a = {...}, g = __dbggraph or -1, n = __dbgnode or -1} end
+function meta:netReceiveHandshake(inst, len, pl)
 	if SERVER then
-		local ready = net.ReadBool()
-		if not ready then
-			--print("Recv handshake request from: " .. tostring(pl))
-			net.Start("bphandshake")
-			net.WriteData(__bpm.guid, 16)
-			net.WriteData(instanceGUID, 16)
-			net.WriteUInt(self.netChannel.id, 16)
-			net.Send(pl)
-			--print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __guidString(self.guid))
-		else
-			--print("Channel established on both roles: " .. self.netChannel.id .. " -> " .. __guidString(self.guid))
-			self.netReady = true
-		end
-	else
-		local id = net.ReadUInt(16)
-		self.netChannel = __netAllocChannel(id, self)
-		--print("Handshake Establish Channel: " .. self.netChannel.id .. " -> " .. __guidString(self.guid))
-		net.Start("bphandshake")
-		net.WriteData(__bpm.guid, 16)
-		net.WriteData(self.guid, 16)
-		net.WriteBool(true)
-		net.SendToServer()
-		self.netReady = true
+		if net.ReadBool() then self.netReady = true return end
+		net.Start("bphandshake") net.WriteData(__bpm.guid, 16) net.WriteData(inst, 16) net.WriteUInt(self.chann.id, 16) net.Send(pl)
+		return
 	end
+	self.chann = __netAllocChannel(net.ReadUInt(16), self)
+	net.Start("bphandshake") net.WriteData(__bpm.guid, 16) net.WriteData(self.guid, 16) net.WriteBool(true) net.SendToServer()
+	self.netReady = true
 end
-function meta:netStartMessage(id)
-	net.Start("bpmessage")
-	net.WriteUInt(self.netChannel.id, 16)
-	net.WriteUInt(id, 16)
-end]]
+function meta:netStartMessage(id) net.Start("bpmessage") net.WriteUInt(self.chann.id, 16) net.WriteUInt(id, 16) end]]
 
 fragments["support"] = function(args) 
 
@@ -391,7 +342,7 @@ __bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boo
 __bpm.delayExists = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then return true end end end
 __bpm.delay = function(key, delay, func, ...) __bpm.delayKill(key) __self.delays[#__self.delays+1] = { key = key, f = func, t = delay, a = {...} } end
 __bpm.delayKill = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end end
-__bpm.onError = function(msg, mod, graph, node) end
+__bpm.onError = function(msg, mod, graph, node) ]] .. (args[3] and "error(msg)" or "") .. [[ end
 __bpm.error = function(msg) __bpm.onError(e, 0, __dbggraph or -1, __dbgnode or -1) end]]
 
 end
@@ -531,8 +482,7 @@ fragments["mpcall"] = function(args)
 	-- a counter is incremented and as recursion happens, the counter increases.
 	ret = ret .. [[
 
-local b,e = pcall(graph_]] .. args[2] .. [[_entry, ]] .. args[3] .. [[)
-if not b then __bpm.onError(tostring(e), 0, __dbggraph or -1, __dbgnode or -1) end]]
+local b,e = pcall(graph_]] .. args[2] .. [[_entry, ]] .. args[3] .. [[) b = b or __bpm.error(tostring(e))]]
 
 	if args[1] == "1" then
 		ret = ret .. [[
@@ -575,10 +525,15 @@ local meta = {} meta.__index = meta]]
 
 end
 
-fragments["utils"] = [[
+fragments["utils"] = function(args)
+
+	return [[
 local __hex = "0123456789ABCDEF"
 local function __guidString(str) return str:gsub(".", function(x) local b = string.byte(x) return __hex[1+b/16] .. __hex[1+b%16] end) end
-local function __hexBytes(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
+local function __hexBytes(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end]]
+.. (args[1] == "1" and
+[[
+
 local function __makeGUID()
 	local d,b,g,m=os.date"*t",function(x,y)return x and y or 0 end,system,bit
 	local r,n,s,u,x,y=function(x,y)return m.band(m.rshift(x,y or 0),0xFF)end,
@@ -586,7 +541,9 @@ local function __makeGUID()
 	d.min*1024+d.hour*32+d.day,d.year*16+d.month;_G.__guidsalt=s+1;return
 	string.char(r(x),r(x,8),r(y),r(y,8),r(n,24),r(n,16),r(n,8),r(n),r(s,24),r(s,16),
 	r(s,8),r(s),r(u,16),r(u,8),r(u),d.sec*4+b(g.IsWindows(),2)+b(g.IsLinux(),1))
-end]]
+end]] or "")
+
+end
 
 fragments["hook"] = [[
 ["\1"] = {
