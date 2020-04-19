@@ -47,8 +47,6 @@ end
 
 function NODE:Compile(compiler, pass)
 
-	print("COMPILE IF STATEMENT")
-
 	BaseClass.Compile( self, compiler, pass )
 
 	if pass == CP_PREPASS then

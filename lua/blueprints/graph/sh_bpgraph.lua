@@ -1116,6 +1116,12 @@ function meta:PreCompile( compiler, uniqueKeys )
 	-- prepare graph
 	self:CacheNodeTypes()
 	self:CollapseRerouteNodes()
+
+	-- mark all nodes reachable via execution
+	self:ExecWalk( function(node)
+		node.execReachable = true
+	end )
+
 	compiler:EnumerateGraphVars(self, uniqueKeys)
 	compiler:CompileGraphJumpTable(self)
 	compiler:CompileGraphVarListing(self)
@@ -1176,7 +1182,8 @@ function meta:ExecWalk( func )
 
 	for _, node in self:Nodes() do
 
-		if node:GetCodeType() == NT_Event or node:GetCodeType() == NT_FuncInput then
+		local codeType = node:GetCodeType()
+		if codeType == NT_Event or codeType == NT_FuncInput then
 
 			--print("EXEC WALK: " .. node:ToString())
 

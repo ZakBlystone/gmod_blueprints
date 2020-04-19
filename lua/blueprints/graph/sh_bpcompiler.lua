@@ -769,6 +769,8 @@ function meta:CompileNodeFunction(node)
 
 	self.jumpsRequired[graphID] = self.jumpsRequired[graphID] or {}
 
+	--print("COMPILE NODE: " .. node:ToString())
+
 	self:RunNodeCompile( node, CP_METAPASS )
 
 	self.begin(CTX_FunctionNode .. graphID .. "_" .. nodeID)
@@ -786,7 +788,7 @@ function meta:CompileNodeFunction(node)
 					if pin:IsType(PN_Exec) and #pin:GetConnectedPins() ~= 0 then n = n + 1 end
 					if pin == pins[1] then pos = n break end
 				end
-				print(node:ToString() .. " CONNECTED TO EXEC # " .. pos)
+				--print(node:ToString() .. " CONNECTED TO EXEC # " .. pos)
 				if other:GetCodeType() == NT_Special then
 					if other:HasFlag(NTF_FallThrough) then
 						needsJump = (pos ~= 1)
@@ -800,7 +802,8 @@ function meta:CompileNodeFunction(node)
 		end
 	end
 
-	if needsJump then self.emit("::jmp_" .. nodeID .. "::") self.jumpsRequired[graphID][nodeID] = true print("Mark for jump: " .. nodeID .. " : " .. node:ToString()) end
+	if needsJump then self.emit("::jmp_" .. nodeID .. "::") self.jumpsRequired[graphID][nodeID] = true end
+	--print("Mark for jump: " .. nodeID .. " : " .. node:ToString())
 
 	-- event nodes are really just jump stubs
 	if codeType == NT_Event or codeType == NT_FuncInput then 
@@ -892,7 +895,7 @@ function meta:CompileGraphJumpTable(graph)
 		local id = self:GetID(node)
 		for _, j in ipairs(node:GetJumpSymbols()) do
 
-			if not node:WillExecute() then print("***Node will not execute: " .. node:ToString()) continue end
+			if not node.execReachable then print("***Node will not execute: " .. node:ToString()) continue end
 
 			jumpTable[id] = jumpTable[id] or {}
 			jumpTable[id][j] = nextJumpID
@@ -926,7 +929,7 @@ function meta:CompileGraphNodeJumps(graph)
 		local id = self:GetID(node)
 		if self.jumpsRequired[graphID][id] then
 			jl[#jl+1] = id
-			print("ADD JUMP: " .. id .. " : " .. node:ToString())
+			--print("ADD JUMP: " .. id .. " : " .. node:ToString())
 		end
 	end
 

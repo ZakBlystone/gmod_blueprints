@@ -46,7 +46,7 @@ function NODE:Compile(compiler, pass)
 
 		end
 
-		print("COMPILE CALL: " .. self:ToString())
+		--print("COMPILE CALL: " .. self:ToString())
 
 		-- Compile pins
 		local ret = {}
