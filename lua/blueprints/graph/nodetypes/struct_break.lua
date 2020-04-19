@@ -50,7 +50,7 @@ function NODE:Compile(compiler, pass)
 
 	elseif pass == CP_MAINPASS then
 
-		if self:GetCodeType() == NT_Function then compiler.emit( compiler:GetPinCode( self:FindPin(PD_Out, "Thru"), true ) ) end
+		compiler:CompileReturnPin( self )
 		return true
 
 	end
