@@ -15,6 +15,7 @@
 		"readme.md",
 		"README.md",
 		"*.py",
+		"*.psd",
 		"defspec.txt"
 	]
 }

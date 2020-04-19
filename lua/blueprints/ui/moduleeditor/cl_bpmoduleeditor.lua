@@ -213,11 +213,11 @@ function PANEL:SetModule( mod )
 	self.moduleEditor:PopulateMenuBar( menu )
 	self.module:GetMenuItems( menu )
 
-	self.Menu:Add("Refresh", function()
+	--[[self.Menu:Add("Refresh", function()
 
 		self:Refresh()
 
-	end, Color(10,100,5), nil, false)
+	end, Color(10,100,5), nil, false)]]
 
 	for k,v in ipairs(menu) do
 		self.Menu:Add(v.name, v.func, v.color, v.icon, v.right)
