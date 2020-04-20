@@ -88,7 +88,7 @@ function meta:Out()
 	if not self:HasFlag(FL_NoStringTable) then self.stringTable = bpstringtable.New():WithOuter(self) end
 
 	self:MetaState( self.stream )
-	if not self:HasFlag(FL_NoHeader) then print("Write Header") self:SerializeHeader() else print("Skip Header") end
+	if not self:HasFlag(FL_NoHeader) then self:SerializeHeader() end
 	self:MetaState( nil )
 
 	return self
@@ -478,14 +478,3 @@ function meta:WriteStr(str, raw) self:String(str, raw, 0) end
 function meta:ReadStr(n, raw) return self:String(nil, raw, n) end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end
-
-if CLIENT then
-
-	local t = bpstream.New("test", MODE_String):Out()
-	t:Length(1)
-
-	local t2 = bpstream.New("test", MODE_String, t:Finish()):In()
-	print( t2:Length() )
-	t2:Finish()
-
-end
