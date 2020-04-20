@@ -336,7 +336,7 @@ end
 local col = Color(0,0,0)
 function meta:Draw(xOffset, yOffset, alpha)
 
-	self:Invalidate(true)
+	--self:Invalidate(true)
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
@@ -371,7 +371,10 @@ function meta:Draw(xOffset, yOffset, alpha)
 		drawNode(x,y,w,h,col)
 		if drawRoles[role] then drawRoles[role](x + w - 35,y + 10,24,24) end
 	else
-		col:SetUnpacked(255, 255, 255, 255*alpha)
+		local r,g,b = 0,0,0
+		if role == ROLE_Server then r,g,b = 64,182,255 end
+		if role == ROLE_Client then r,g,b = 255,184,68 end
+		col:SetUnpacked(r, g, b, 255*alpha)
 		drawCompact(x,y,w,h,col)
 	end
 
