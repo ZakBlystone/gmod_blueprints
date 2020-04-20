@@ -343,7 +343,7 @@ __bpm.delayExists = function(key) for i=#__self.delays, 1, -1 do if __self.delay
 __bpm.delay = function(key, delay, func, ...) __bpm.delayKill(key) __self.delays[#__self.delays+1] = { key = key, f = func, t = delay, a = {...} } end
 __bpm.delayKill = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end end
 __bpm.onError = function(msg, mod, graph, node) ]] .. (args[3] and "error(msg)" or "") .. [[ end
-__bpm.error = function(msg) __bpm.onError(e, 0, __dbggraph or -1, __dbgnode or -1) end]]
+__bpm.error = function(msg) __bpm.onError(tostring(msg), 0, __dbggraph or -1, __dbgnode or -1) end]]
 
 end
 
@@ -482,7 +482,7 @@ fragments["mpcall"] = function(args)
 	-- a counter is incremented and as recursion happens, the counter increases.
 	ret = ret .. [[
 
-local b,e = pcall(graph_]] .. args[2] .. [[_entry, ]] .. args[3] .. [[) b = b or __bpm.error(tostring(e))]]
+local b,e = pcall(graph_]] .. args[2] .. [[_entry, ]] .. args[3] .. [[) b = b or __bpm.error(e)]]
 
 	if args[1] == "1" then
 		ret = ret .. [[
