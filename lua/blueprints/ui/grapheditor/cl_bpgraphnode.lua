@@ -336,7 +336,7 @@ end
 local col = Color(0,0,0)
 function meta:Draw(xOffset, yOffset, alpha)
 
-	self:Invalidate(true)
+	--self:Invalidate(true)
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
