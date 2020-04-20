@@ -657,7 +657,7 @@ function meta:CompileNodeSingle(node)
 	end
 
 	-- if node can compile itself, stop here
-	if self:RunNodeCompile(node, CP_MAINPASS) then self.finish() return end
+	if self:RunNodeCompile(node, CP_MAINPASS) then self.finish() self:RunNodeCompile( node, CP_METAPASS ) return end
 
 
 	local code = node:GetCode()
@@ -711,6 +711,8 @@ function meta:CompileNodeSingle(node)
 	self:CompileReturnPin( node )
 
 	self.finish()
+
+	self:RunNodeCompile( node, CP_METAPASS )
 
 end
 
@@ -770,8 +772,6 @@ function meta:CompileNodeFunction(node)
 	self.jumpsRequired[graphID] = self.jumpsRequired[graphID] or {}
 
 	--print("COMPILE NODE: " .. node:ToString())
-
-	self:RunNodeCompile( node, CP_METAPASS )
 
 	self.begin(CTX_FunctionNode .. graphID .. "_" .. nodeID)
 	if self.debugcomments and (codeType == NT_Event or codeType == NT_FuncInput) then self.emit("-- " .. node:ToString()) end
