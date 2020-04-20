@@ -388,7 +388,7 @@ function MakeObservable(obj)
 
 	local function GetCB(name, target)
 		local t = obj.__callbacks
-		t[name] = t[name] or {}
+		t[name] = t[name] or setmetatable({}, {__mode = "k"})
 		if target then
 			t[name][target] = t[name][target] or {}
 			return t[name][target]
