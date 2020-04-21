@@ -1,5 +1,10 @@
 if SERVER then AddCSLuaFile() return end
 
+local text_edit_event = LOCTEXT("dialog_edit_event", "Edit Event")
+local text_net_mode = LOCTEXT("dialog_edit_event_net", "Net Mode:")
+local text_edit_pins = LOCTEXT("dialog_edit_event_pins", "Pins")
+local text_edit_struct = LOCTEXT("dialog_edit_struct", "Edit Struct")
+
 module("bpuistructeditmenu", package.seeall, bpcommon.rescope(bpschema))
 
 function EditStructParams( struct )
@@ -7,7 +12,7 @@ function EditStructParams( struct )
 	local width = 500
 
 	local window = vgui.Create( "DFrame" )
-	window:SetTitle( "Edit Struct" )
+	window:SetTitle( text_edit_struct() )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
 	window.OnRemove = function(self)
@@ -18,7 +23,7 @@ function EditStructParams( struct )
 		if IsValid(window) then window:Remove() end
 	end)
 
-	local pins = bpuivarcreatemenu.VarList( struct, window, struct.pins, "Pins" )
+	local pins = bpuivarcreatemenu.VarList( struct, window, struct.pins, text_edit_pins(), "Pin" )
 	pins:Dock( FILL )
 
 	window:SetSize( 500, 400 )
@@ -33,7 +38,7 @@ function EditEventParams( event )
 	local width = 500
 
 	local window = vgui.Create( "DFrame" )
-	window:SetTitle( "Edit Event" )
+	window:SetTitle( text_edit_event() )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
 	window.OnRemove = function(self)
@@ -52,7 +57,7 @@ function EditEventParams( event )
 	param:SetWide(300)
 
 	local label = vgui.Create("DLabel", param)
-	label:SetText("Net Mode:")
+	label:SetText(text_net_mode())
 	label:SizeToContents()
 	label:Dock( LEFT )
 	local netmode = vgui.Create("DComboBox", param )
@@ -78,7 +83,7 @@ function EditEventParams( event )
 	param:DockMargin(10,10,10,10)
 	param:Dock( TOP )
 
-	local pins = bpuivarcreatemenu.VarList( event, window, event.pins, "Pins" )
+	local pins = bpuivarcreatemenu.VarList( event, window, event.pins, text_edit_pins(), "Out" )
 	pins:Dock( FILL )
 
 	window:MakePopup()

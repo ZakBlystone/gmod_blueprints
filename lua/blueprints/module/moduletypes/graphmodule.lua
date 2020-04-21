@@ -353,7 +353,7 @@ end
 function MODULE:GetMenuItems( tab )
 
 	tab[#tab+1] = {
-		name = "Set Defaults",
+		name = LOCTEXT("menu_setdefaults", "Set Defaults"),
 		func = function(...) self:OpenVGUI(...) end,
 		color = Color(60,120,200),
 	}

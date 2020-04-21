@@ -12,6 +12,9 @@ local statusIconRunning = "icon16/resultset_next.png"
 local statusIconStopped = "icon16/stop.png"
 local typeIconDefault = "icon16/joystick.png"
 
+local text_query_delete = LOCTEXT("query_file_delete", "Are you sure you want to delete '%s'?")
+local text_query_title_delete = LOCTEXT("query_file_delete_title", "Delete File")
+
 function PANEL:OnFileOpen( file )
 
 end
@@ -308,9 +311,9 @@ function PANEL:OpenMenu()
 
 		self.menu:AddOption( "Delete", function()
 
-		Derma_Query("Are you sure you want to delete \"" .. self.file:GetName() .. "\"?", "Delete File",
-		"Yes", function() self.view:GetEditor():CloseFileUID( self.file:GetUID() ) file.Delete(self.file:GetPath()) bpfilesystem.IndexLocalFiles() end,
-		"No", function() end)
+		Derma_Query(query_file_delete_item(self.file:GetName()), text_query_title_delete(),
+		LOCTEXT("query_yes", "Yes")(), function() self.view:GetEditor():CloseFileUID( self.file:GetUID() ) file.Delete(self.file:GetPath()) bpfilesystem.IndexLocalFiles() end,
+		LOCTEXT("query_no", "No")(), function() end)
 
 		end)
 
@@ -318,9 +321,9 @@ function PANEL:OpenMenu()
 
 		self.menu:AddOption( "Delete", function()
 
-		Derma_Query("Are you sure you want to delete \"" .. self.file:GetName() .. "\"?", "Delete File",
-		"Yes", function() bpfilesystem.DeleteFile( self.file ) end,
-		"No", function() end)
+		Derma_Query(query_file_delete_item(self.file:GetName()), text_query_title_delete(),
+		LOCTEXT("query_yes", "Yes")(), function() bpfilesystem.DeleteFile( self.file ) end,
+		LOCTEXT("query_no", "No")(), function() end)
 
 		end)
 

@@ -112,6 +112,7 @@ function GetLocString(key)
 
 end
 
+meta.__call = function(s, ...) return string.format( GetLocString(s.key), ... ) end
 meta.__tostring = function(s) return GetLocString(s.key) end
 meta.__concat = function(s,b) return GetLocString(s.key) .. b end
 meta.__lt = function(a,b) return tostring(a) < tostring(b) end

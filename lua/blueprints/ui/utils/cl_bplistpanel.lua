@@ -2,6 +2,7 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuilistpanel", package.seeall)
 
+local text_delete_item = LOCTEXT("query_list_delete_item", "Delete %s? This cannot be undone")
 local PANEL = {}
 
 function PANEL:Init()
@@ -90,13 +91,13 @@ function PANEL:CreateItemPanel( id, item )
 			return
 		end
 
-		Derma_Query("Delete " .. item:GetName() .. "? This cannot be undone",
+		Derma_Query(text_delete_item(item:GetName()),
 		"",
-		"Yes",
+		LOCTEXT("query_yes", "Yes")(),
 		function() 
 			self.list:Remove( id )
 		end,
-		"No",
+		LOCTEXT("query_no", "No")(),
 		function() end)
 
 	end
@@ -248,7 +249,7 @@ function PANEL:OpenMenu( id )
 	self.menu = DermaMenu( false, self )
 
 	local t = {}
-	t[#t+1] = { name = "Rename", func = function() self:Rename(id) end }
+	t[#t+1] = { name = LOCTEXT("list_rename","Rename"), func = function() self:Rename(id) end }
 
 	self:PopulateMenuItems(t, id)
 	for _, v in ipairs(t) do

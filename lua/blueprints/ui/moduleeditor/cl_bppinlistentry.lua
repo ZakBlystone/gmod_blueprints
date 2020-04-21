@@ -4,6 +4,7 @@ module("bpuipinlistentry", package.seeall, bpcommon.rescope(bpschema))
 
 local PANEL = {}
 local tableIcon = Material("icon16/text_list_bullets.png")
+local text_delete_pin = LOCTEXT("query_list_delete_pin", "Delete %s? This cannot be undone")
 
 function PANEL:Init()
 
@@ -39,13 +40,13 @@ function PANEL:Init()
 			return
 		end
 
-		Derma_Query("Delete " .. self:GetPinName() .. "? This cannot be undone",
+		Derma_Query(text_delete_pin( self:GetPinName() ),
 		"",
-		"Yes",
+		LOCTEXT("query_yes", "Yes")(),
 		function() 
 			self.vlist.list:Remove( self.id )
 		end,
-		"No",
+		LOCTEXT("query_no", "No")(),
 		function() end)
 
 	end
@@ -102,9 +103,9 @@ function PANEL:OpenMenu()
 
 	self.menu = DermaMenu( false, self )
 
-	self.menu:AddOption( "Edit Type", function() self.typeSelector:DoClick() end )
-	self.menu:AddOption( "Rename", function() self:EditName() end )
-	self.menu:AddOption( "Delete", function() self.rmv:DoClick() end )
+	self.menu:AddOption( LOCTEXT( "pin_edit_type", "Edit Type" )(), function() self.typeSelector:DoClick() end )
+	self.menu:AddOption( LOCTEXT( "pin_edit_rename", "Rename" )(), function() self:EditName() end )
+	self.menu:AddOption( LOCTEXT( "pin_edit_delete", "Delete" )(), function() self.rmv:DoClick() end )
 
 	self.menu:SetMinimumWidth( 100 )
 	self.menu:Open( gui.MouseX(), gui.MouseY(), false, self )

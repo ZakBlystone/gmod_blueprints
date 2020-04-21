@@ -2,12 +2,12 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuivarcreatemenu", package.seeall, bpcommon.rescope(bpschema))
 
-function VarList( element, window, list, name )
+function VarList( element, window, list, name, itemName )
 
 	local module = element:FindOuter( bpmodule_meta )
 	local vlist = vgui.Create( "BPListView", window )
 	vlist.HandleAddItem = function(pnl)
-		local id, item = list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ):WithOuter( element ), name )
+		local id, item = list:Add( MakePin( PD_None, nil, PN_Bool, PNF_None, nil ):WithOuter( element ), itemName or name )
 	end
 	vlist.CreateItemPanel = function(pnl, id, item)
 		local entry = vgui.Create("BPPinListEntry", pnl)

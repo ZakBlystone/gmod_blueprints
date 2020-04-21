@@ -95,8 +95,8 @@ function EDITOR:PopulateSideBar()
 		end
 
 		local menu = DermaMenu( false, self:GetPanel() )
-		menu:AddOption( "Event Graph", function() MakeGraph(bpschema.GT_Event) end )
-		menu:AddOption( "Function", function() MakeGraph(bpschema.GT_Function) end )
+		menu:AddOption( LOCTEXT("editor_graphmodule_add_eventgraph", "Event Graph")(), function() MakeGraph(bpschema.GT_Event) end )
+		menu:AddOption( LOCTEXT("editor_graphmodule_add_function", "Function")(), function() MakeGraph(bpschema.GT_Function) end )
 		menu:SetMinimumWidth( 100 )
 		menu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )
 
