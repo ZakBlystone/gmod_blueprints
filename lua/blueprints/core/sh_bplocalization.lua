@@ -149,7 +149,7 @@ local function ParseScript(script)
 	local str = file.Read(script, "LUA")
 	if str == nil then MsgC(Color(255,100,100), "Failed\n") return end
 
-	for m,d in string.gmatch(str, "LOCTEXT%(?\"([^\"]+)\",+%s*\"([^\"]+)\"") do
+	for m,d in string.gmatch(str, "LOCTEXT%s*%(?%s*\"([^\"]+)\",+%s*\"([^\"]+)\"") do
 		data[m] = d
 	end
 
