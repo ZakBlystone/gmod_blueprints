@@ -783,6 +783,7 @@ function meta:CompileNodeFunction(node)
 			local pins = pin:GetConnectedPins()
 			if #pins == 1 then
 				local other = pins[1]:GetNode()
+				--needsJump = node.__nextExec ~= nil and (node.__nextExec ~= other)
 				local n, pos = 0, 0
 				for _, pin in other:SidePins(PD_Out) do
 					if pin:IsType(PN_Exec) and #pin:GetConnectedPins() ~= 0 then n = n + 1 end

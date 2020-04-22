@@ -124,7 +124,7 @@ function NODE:BuildCallThunk( compiler )
 
 	self.call.begin()
 	self.call.emit(call)
-	self.call.emit( compiler:GetPinCode( self:FindPin(PD_Out, "Thru"), true ) )
+	compiler:CompileReturnPin( self )
 	self.call.finish()
 
 end
