@@ -2,6 +2,13 @@ if SERVER then AddCSLuaFile() return end
 
 module("bpuieditor", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 
+local text_unsaved_changes = LOCTEXT("query_unsaved_changes", "This module has unsaved changes, would you like the save them?")
+local text_wait_for_defs = LOCTEXT("editor_wait_for_defs", "Wait for definitions to download. If download stalls, run 'bp_request_definitions' in console.")
+local text_failed_to_open = LOCTEXT("editor_failed_to_open", "Failed to open module")
+local text_blueprint_paste_hint = LOCTEXT("editor_blueprint_paste", "Paste the blueprint below ('bp-xxxxxxxxxxxxxxxxxxxx' codes work too):")
+local text_import_module = LOCTEXT("editor_import_module", "Import Module")
+local text_import = LOCTEXT("editor_import", "Import")
+
 local PANEL = {}
 
 function PANEL:Init()
@@ -299,7 +306,7 @@ function PANEL:OpenImport()
 	local import = vgui.Create( "DFrame" )
 
 	local info = vgui.Create("DLabel", import)
-	info:SetText("Paste the blueprint below ('bp-xxxxxxxxxxxxxxxxxxxx' codes work too):")
+	info:SetText(text_blueprint_paste_hint())
 	info:SetPos(0, 30)
 	info:SizeToContents()
 
@@ -310,7 +317,7 @@ function PANEL:OpenImport()
 
 	local ok = vgui.Create("DButton", import)
 
-	import:SetTitle("Import Module")
+	import:SetTitle(text_import_module())
 	import:SetSize(ScrW()*.5, ScrH()*.5)
 	import:Center()
 	import:MakePopup()
@@ -318,7 +325,7 @@ function PANEL:OpenImport()
 
 	info:CenterHorizontal()
 
-	ok:SetText("Import")
+	ok:SetText(text_import())
 	ok:SetWide(50)
 	ok:SetPos(0, import:GetTall() - 40 )
 	ok:CenterHorizontal()
@@ -464,7 +471,7 @@ function PANEL:OpenFile( file )
 	end
 
 	if not bpdefs.Ready() then
-		Derma_Message( "Wait for definitions to download. If download stalls, run 'bp_request_definitions' in console.", "Failed to open module", "OK" )
+		Derma_Message( text_wait_for_defs(), text_failed_to_open(), LOCTEXT("query_ok", "Ok") )
 		return
 	end
 
@@ -474,7 +481,7 @@ function PANEL:OpenFile( file )
 			return self:OpenModule( mod, file:GetName(), file )
 		end, 
 		function(err)
-			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), "Failed to open module", "OK" )
+			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), text_failed_to_open(), LOCTEXT("query_ok", "Ok") )
 		end)
 	if not b then
 		
@@ -497,9 +504,9 @@ function PANEL:CloseFile( file, callback )
 
 	if opened and file:HasFlag( bpfile.FL_HasLocalChanges ) then 
 		self.Tabs:SetActiveTab( opened.Tab )
-		Derma_Query("This module has unsaved changes, would you like the save them?", "Close",
-		"Yes", function() opened.Panel:Save( function(ok) if ok then self:CloseFileUID( file:GetUID() ) callback() end end ) end,
-		"No", function() bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end)
+		Derma_Query(text_unsaved_changes(), LOCTEXT("query_close_file", "Close")(),
+		LOCTEXT("query_yes", "Yes")(), function() opened.Panel:Save( function(ok) if ok then self:CloseFileUID( file:GetUID() ) callback() end end ) end,
+		LOCTEXT("query_no", "No")(), function() bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end)
 		return
 	end
 

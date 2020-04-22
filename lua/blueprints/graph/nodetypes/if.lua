@@ -58,18 +58,23 @@ function NODE:Compile(compiler, pass)
 		local pinFalse = self:FindPin(PD_Out, "False")
 		local pinTrue = self:FindPin(PD_Out, "True")
 
-		local falseConnections = #pinFalse:GetConnectedPins()
-		local trueConnections = #pinTrue:GetConnectedPins()
+		local falseConnections = pinFalse:GetConnectedPins()
+		local trueConnections = pinTrue:GetConnectedPins()
 		local cond = compiler:GetPinCode( self:FindPin(PD_In, "Condition") )
 
-		if falseConnections == 0 and trueConnections == 0 then
+		if self.__nextExec then print( self:ToString() .. " NEXT: " .. self.__nextExec:ToString() ) else print( self:ToString() .. " NO NEXT") end
+
+		if #falseConnections == 0 and #trueConnections == 0 then
 			compiler.emit("goto jmp_0")
-		elseif trueConnections == 1 and falseConnections == 0 then
+		elseif #trueConnections == 1 and #falseConnections == 0 then
 			compiler.emit("if not " .. cond .. " then goto jmp_0 end" )
-		elseif trueConnections == 0 and falseConnections == 1 then
+			if self.__nextExec ~= trueConnections[1]:GetNode() then compiler.emit( compiler:GetPinCode( pinTrue, true ) ) end
+		elseif #trueConnections == 0 and #falseConnections == 1 then
 			compiler.emit("if " .. cond .. " then goto jmp_0 end" )
+			if self.__nextExec ~= falseConnections[1]:GetNode() then compiler.emit( compiler:GetPinCode( pinFalse, true ) ) end
 		else
-			compiler.emit("if not " .. cond .. " then " .. compiler:GetPinCode( self:FindPin(PD_Out, "False"), true ) .. " end" )
+			compiler.emit("if not " .. cond .. " then " .. compiler:GetPinCode( pinFalse, true ) .. " end" )
+			if self.__nextExec ~= trueConnections[1]:GetNode() then compiler.emit( compiler:GetPinCode( pinTrue, true ) ) end
 		end
 
 		

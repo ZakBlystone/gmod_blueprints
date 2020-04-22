@@ -107,7 +107,8 @@ function VALUE:GetDefault() return "" end
 
 function VALUE:ToString()
 
-	return "\"" .. tostring( self:Get() ) .. "\""
+	local str = tostring( self:Get() ):gsub("\"", "\\\"")
+	return "\"" .. str .. "\""
 
 end
 

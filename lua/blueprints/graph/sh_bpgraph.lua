@@ -1141,19 +1141,18 @@ end
 function meta:ExecWalk( func )
 
 	local visited = {}
+	local emitted = {}
 
 	for _, node in self:Nodes() do
 
 		local codeType = node:GetCodeType()
 		if codeType == NT_Event or codeType == NT_FuncInput then
 
-			--print("EXEC WALK: " .. node:ToString())
-
 			local connections = self:NodeWalk(node.id, function(node, pinID)
 				return node:GetPin(pinID):IsType(PN_Exec) and node:GetPin(pinID):GetDir() == PD_In
 			end, visited)
 
-			local emitted = {}
+
 			for k, v in ipairs(connections) do
 
 				local nodeA = self:GetNode(v[1])
@@ -1175,6 +1174,12 @@ function meta:CompileNodes( compiler )
 	local graphID = compiler:GetID(self)
 
 	--print("COMPILING NODES FOR GRAPH: " .. graphID)
+
+	local prevNode = nil
+	self:ExecWalk( function(node)
+		if prevNode then prevNode.__nextExec = node end
+		prevNode = node
+	end )
 
 	-- compile each single-node context in the graph
 	for id, node in self:Nodes() do

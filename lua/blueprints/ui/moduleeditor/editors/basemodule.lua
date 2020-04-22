@@ -4,6 +4,26 @@ module("editor_basemodule", package.seeall, bpcommon.rescope(bpschema))
 
 local EDITOR = {}
 
+local text_module_copied = LOCTEXT("module_export_text", "Module copied to clipboard")
+local text_module_key_copied = LOCTEXT("module_export_key_ok", "Blueprint key copied to clipboard")
+local text_module_key_failed = LOCTEXT("module_export_key_failed", "Error creating sharable key: %s")
+local text_module_name = LOCTEXT("module_name", "Module Name")
+
+local text_menu_save = LOCTEXT("menu_save", "Save")
+local text_menu_export = LOCTEXT("menu_export", "Export")
+local text_menu_export_shareable = LOCTEXT("menu_export_shareable", "Export shareable key")
+local text_menu_export_lua = LOCTEXT("menu_export_lua","Export Lua script")
+local text_menu_local_install = LOCTEXT("menu_localinstall","Local: Install")
+local text_menu_local_uninstall = LOCTEXT("menu_localuninstall","Local: Uninstall")
+local text_menu_send_to_server = LOCTEXT("menu_sendtoserver","Send to server")
+
+local text_run_fail = LOCTEXT("module_run_fail", "Failed to run")
+local text_compile_fail = LOCTEXT("module_compile_fail", "Failed to compile")
+
+local text_script_copied = LOCTEXT("module_lua_export", "Lua script copied to clipboard")
+local text_local_no_permission = LOCTEXT("module_local_no_permission", "You do not have permission to run local scripts")
+local text_module_save_fail = LOCTEXT("module_save_fail", "Failed to create module: %s")
+
 EDITOR.CanSave = true
 EDITOR.CanSendToServer = false
 EDITOR.CanInstallLocally = false
@@ -13,28 +33,28 @@ function EDITOR:PopulateMenuBar( t )
 
 	if self.CanSave then
 
-		t[#t+1] = { name = LOCTEXT("menu_save", "Save"), func = function() self:Save() end, icon = "icon16/disk.png" }
-		t[#t+1] = { name = LOCTEXT("menu_export", "Export"), func = function() self:Export() end, icon = "icon16/folder_go.png" }
-		t[#t+1] = { name = LOCTEXT("menu_export_shareable", "Export shareable key"), func = function(...) self:ExportShareableKey(...) end, icon = "icon16/folder_go.png" }
+		t[#t+1] = { name = text_menu_save, func = function() self:Save() end, icon = "icon16/disk.png" }
+		t[#t+1] = { name = text_menu_export, func = function() self:Export() end, icon = "icon16/folder_go.png" }
+		t[#t+1] = { name = text_menu_export_shareable, func = function(...) self:ExportShareableKey(...) end, icon = "icon16/folder_go.png" }
 
 	end
 
 	if self.CanSendToServer then
 
-		t[#t+1] = { name = LOCTEXT("menu_sendtoserver","Send to server"), func = function(...) self:SendToServer(...) end, color = Color(80,180,80), icon = "icon16/server_go.png" }
+		t[#t+1] = { name = text_menu_send_to_server, func = function(...) self:SendToServer(...) end, color = Color(80,180,80), icon = "icon16/server_go.png" }
 
 	end
 
 	if self.CanInstallLocally then
 
-		t[#t+1] = { name = LOCTEXT("menu_localinstall","Local: Install"), func = function(...) self:InstallLocally(...) end, icon = "icon16/flag_green.png" }
-		t[#t+1] = { name = LOCTEXT("menu_localuninstall","Local: Uninstall"), func = function(...) self:UninstallLocally(...) end, icon = "icon16/flag_red.png" }
+		t[#t+1] = { name = text_menu_local_install, func = function(...) self:InstallLocally(...) end, icon = "icon16/flag_green.png" }
+		t[#t+1] = { name = text_menu_local_uninstall, func = function(...) self:UninstallLocally(...) end, icon = "icon16/flag_red.png" }
 
 	end
 
 	if self.CanExportLuaScript then
 
-		t[#t+1] = { name = LOCTEXT("menu_export_lua","Export Lua script"), func = function(...) self:ExportLua(...) end, icon = "icon16/page_code.png" }
+		t[#t+1] = { name = text_menu_export_lua, func = function(...) self:ExportLua(...) end, icon = "icon16/page_code.png" }
 
 	end
 end
@@ -43,7 +63,7 @@ function EDITOR:Export()
 
 	local text = bpmodule.SaveToText( self:GetModule() )
 	SetClipboardText( text )
-	Derma_Message( "Module copied to clipboard", "Export", "Ok" )
+	Derma_Message( text_module_copied(), text_menu_export(), LOCTEXT("query_ok", "Ok")() )
 
 end
 
@@ -58,9 +78,9 @@ function EDITOR:ExportShareableKey( pnl )
 		if IsValid(pnl) then pnl:SetEnabled(true) end
 		if ok then
 			SetClipboardText( result )
-			Derma_Message( "Blueprint key copied to clipboard", "Export shareable key", "Ok" )
+			Derma_Message( text_module_key_copied(), text_menu_export_shareable(), LOCTEXT("query_ok", "Ok")() )
 		else
-			Derma_Message( "Error creating sharable key: " .. tostring(result), "Export shareable key", "Ok" )
+			Derma_Message( text_module_key_failed(tostring(result)), text_menu_export_shareable(), LOCTEXT("query_ok", "Ok")() )
 		end
 
 	end)
@@ -78,10 +98,10 @@ function EDITOR:SendToServer()
 		if ok then
 			self:Save( function(ok) if ok then self:Upload(true) end end )
 		else
-			Derma_Message( res, "Failed to run", "OK" )
+			Derma_Message( res, text_run_fail(), LOCTEXT("query_ok", "Ok")() )
 		end
 	else
-		Derma_Message( res, "Failed to compile", "OK" )
+		Derma_Message( res, text_compile_fail(), LOCTEXT("query_ok", "Ok")() )
 	end
 
 end
@@ -89,7 +109,7 @@ end
 function EDITOR:InstallLocally()
 
 	if not bpusermanager.GetLocalUser():HasPermission( bpgroup.FL_CanRunLocally ) then
-		Derma_Message( "You do not have permission to run local scripts", "Run Locally", "OK" )
+		Derma_Message( text_local_no_permission(), text_menu_local_install(), LOCTEXT("query_ok", "Ok")() )
 		return
 	end
 
@@ -101,10 +121,10 @@ function EDITOR:InstallLocally()
 			bpenv.Install( res )
 			bpenv.Instantiate( res:GetUID() )
 		else
-			Derma_Message( res, "Failed to run", "OK" )
+			Derma_Message( res, text_run_fail(), LOCTEXT("query_ok", "Ok")() )
 		end
 	else
-		Derma_Message( res, "Failed to compile", "OK" )
+		Derma_Message( res, text_compile_fail(), LOCTEXT("query_ok", "Ok")() )
 	end
 
 end
@@ -120,7 +140,7 @@ function EDITOR:ExportLua()
 	local ok, res = self:GetModule():TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
 	if ok then
 		SetClipboardText( res:GetCode() )
-		Derma_Message( "Lua script copied to clipboard", "Export Lua", "Ok" )
+		Derma_Message( text_script_copied(), text_menu_export_lua(), LOCTEXT("query_ok", "Ok")() )
 	else
 		ErrorNoHalt( res )
 	end
@@ -144,7 +164,7 @@ function EDITOR:Save( callback )
 	local tab = self:GetTab()
 	if file == nil then
 
-		Derma_StringRequest("Save Module", "Module Name", "untitled",
+		Derma_StringRequest(text_menu_save(), text_module_name(), "untitled",
 		function( text )
 			local file = bpfilesystem.AddLocalModule( self:GetModule(), text )
 			if file ~= nil then
@@ -152,9 +172,9 @@ function EDITOR:Save( callback )
 				if callback then callback(true) end
 			else
 				if callback then callback(false) end
-				Derma_Message("Failed to create module: " .. text, "Error", "Ok")
+				Derma_Message(text_module_save_fail(text), LOCTEXT("query_error", "Error")(), LOCTEXT("query_ok", "Ok")())
 			end
-		end, nil, "OK", "Cancel")
+		end, nil, LOCTEXT("query_ok", "Ok")(), LOCTEXT("query_cancel", "Cancel")())
 
 	else
 

@@ -424,6 +424,13 @@ local nodeSpawners = {
 	[KEY_S] = "CORE_Sequence",
 }
 
+local text_call = LOCTEXT("drag_create_call", "Call %s")
+local text_hook = LOCTEXT("drag_create_hook", "Hook %s")
+local text_set = LOCTEXT("drag_create_set", "Set %s")
+local text_get = LOCTEXT("drag_create_get", "Get %s")
+local text_make = LOCTEXT("drag_create_make", "Make %s")
+local text_break = LOCTEXT("drag_create_break", "Break %s")
+
 function meta:LeftMouse(x,y,pressed)
 
 	local wx, wy = self:PointToWorld(x,y)
@@ -479,14 +486,14 @@ function meta:LeftMouse(x,y,pressed)
 				self.dragVarMenu = DermaMenu( false, self.vgraph )
 
 				if isbpevent( v ) then
-					self.dragVarMenu:AddOption( "Call " .. v:GetName(), function() self:PlaceEvent( v, wx, wy, true ) end )
-					self.dragVarMenu:AddOption( "Hook " .. v:GetName(), function() self:PlaceEvent( v, wx, wy, false ) end )
+					self.dragVarMenu:AddOption( text_call( v:GetName() ), function() self:PlaceEvent( v, wx, wy, true ) end )
+					self.dragVarMenu:AddOption( text_hook( v:GetName() ), function() self:PlaceEvent( v, wx, wy, false ) end )
 				elseif isbpvariable(v) then
-					self.dragVarMenu:AddOption( "Set " .. v:GetName(), function() self:PlaceVar( v, wx, wy, true ) end )
-					self.dragVarMenu:AddOption( "Get " .. v:GetName(), function() self:PlaceVar( v, wx, wy, false ) end )
+					self.dragVarMenu:AddOption( text_set( v:GetName() ), function() self:PlaceVar( v, wx, wy, true ) end )
+					self.dragVarMenu:AddOption( text_get( v:GetName() ), function() self:PlaceVar( v, wx, wy, false ) end )
 				elseif isbpstruct(v) then
-					self.dragVarMenu:AddOption( "Make " .. v:GetName(), function() self:PlaceStruct( v, wx, wy, true ) end )
-					self.dragVarMenu:AddOption( "Break " .. v:GetName(), function() self:PlaceStruct( v, wx, wy, false ) end )
+					self.dragVarMenu:AddOption( text_make( v:GetName() ), function() self:PlaceStruct( v, wx, wy, true ) end )
+					self.dragVarMenu:AddOption( text_break( v:GetName() ), function() self:PlaceStruct( v, wx, wy, false ) end )
 				end
 
 				self.dragVarMenu:SetMinimumWidth( 100 )
@@ -828,12 +835,12 @@ function meta:OpenCreationContext( pinFilter )
 	menu.GetTooltip = function(pnl, e) return e:GetDescription() end
 	menu.GetCategory = function(pnl, e)
 		local context = e:GetContext()
-		if context == bpnodetype.NC_Hook then return "Hooks", "icon16/connect.png"
-		elseif context == bpnodetype.NC_Class then return "Classes", "icon16/bricks.png"
-		elseif context == bpnodetype.NC_Lib then return "Libs", "icon16/brick.png"
-		elseif context == bpnodetype.NC_Struct then return "Structs", "icon16/table.png"
+		if context == bpnodetype.NC_Hook then return tostring( LOCTEXT("nodecat_hooks", "Hooks") ), "icon16/connect.png"
+		elseif context == bpnodetype.NC_Class then return tostring( LOCTEXT("nodecat_class", "Classes") ), "icon16/bricks.png"
+		elseif context == bpnodetype.NC_Lib then return tostring( LOCTEXT("nodecat_library", "Libs") ), "icon16/brick.png"
+		elseif context == bpnodetype.NC_Struct then return tostring( LOCTEXT("nodecat_struct", "Structs") ), "icon16/table.png"
 		end
-		return "Other"
+		return tostring( LOCTEXT("nodecat_other", "Other") )
 	end
 	menu.GetSubCategory = function(pnl, e)
 		local category = e:GetCategory()
@@ -864,12 +871,12 @@ function meta:OpenCreationContext( pinFilter )
 	local playerType = bppintype.New(PN_Ref, PNF_None, "Player")
 	local anyType = bppintype.New(PN_Any, PNF_None)
 
-	menu:AddPage( "All", "All Nodes", "icon16/book.png", nil, pinFilter ~= nil )
-	menu:AddPage( "Hooks", "Hook Nodes", "icon16/connect.png", FilterByType(NT_Event), true )
-	menu:AddPage( "Entity", "Entity Nodes", "icon16/bricks.png", FilterByPinType(entityType), true )
-	menu:AddPage( "Player", "Entity Nodes", "icon16/user.png", FilterByPinType(playerType), true )
-	menu:AddPage( "Special", "Special Nodes", "icon16/plugin.png", bpuipickmenu.OrFilter( FilterByType(NT_Special), FilterByPinType(anyType) ), true )
-	menu:AddPage( "Custom", "User Created Nodes", "icon16/wrench.png", function(n) return n:HasFlag(NTF_Custom) end, true )
+	menu:AddPage( LOCTEXT("context_node_all", "All"), LOCTEXT("context_node_all_desc", "All Nodes"), "icon16/book.png", nil, pinFilter ~= nil )
+	menu:AddPage( LOCTEXT("context_node_hooks", "Hooks"), LOCTEXT("context_node_hooks_desc", "Hook Nodes"), "icon16/connect.png", FilterByType(NT_Event), true )
+	menu:AddPage( LOCTEXT("context_node_entity", "Entity"), LOCTEXT("context_node_entity_desc", "Entity Nodes"), "icon16/bricks.png", FilterByPinType(entityType), true )
+	menu:AddPage( LOCTEXT("context_node_player", "Player"), LOCTEXT("context_node_player_desc", "Player Nodes"), "icon16/user.png", FilterByPinType(playerType), true )
+	menu:AddPage( LOCTEXT("context_node_spec", "Special"), LOCTEXT("context_node_spec_desc", "Special Nodes"), "icon16/plugin.png", bpuipickmenu.OrFilter( FilterByType(NT_Special), FilterByPinType(anyType) ), true )
+	menu:AddPage( LOCTEXT("context_node_custom", "Custom"), LOCTEXT("context_node_custom_desc", "User Created Nodes"), "icon16/wrench.png", function(n) return n:HasFlag(NTF_Custom) end, true )
 	menu:Setup()
 	self.menu = menu
 	return menu

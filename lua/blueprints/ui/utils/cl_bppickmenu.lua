@@ -115,8 +115,8 @@ end
 function PANEL:AddPage( name, desc, icon, filter, expanded )
 
 	self.pages[#self.pages + 1] = {
-		name = name,
-		desc = desc,
+		name = tostring(name),
+		desc = tostring(desc),
 		icon = icon,
 		filter = filter or function() return true end,
 		expanded = expanded,
