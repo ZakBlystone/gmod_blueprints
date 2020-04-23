@@ -9,7 +9,7 @@ if SERVER then
 
 else
 
-G_BPGraphAtlas = Material("bpgraphatlas.png", "mips smooth")
+G_BPGraphAtlas = Material("bpgraphatlas.png", "smooth")
 
 surface.CreateFont( "NodeTitleFont", {
 	font = "Akkurat-Bold", -- Use the font-name which is shown to you by your operating system Font Viewer, not the file name

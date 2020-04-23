@@ -310,7 +310,7 @@ function PANEL:OpenMenu()
 
 		self.menu:AddOption( "Delete", function()
 
-		Derma_Query(query_file_delete_item(self.file:GetName()), text_query_title_delete(),
+		Derma_Query(text_query_delete(self.file:GetName()), text_query_title_delete(),
 		LOCTEXT("query_yes", "Yes")(), function() self.view:GetEditor():CloseFileUID( self.file:GetUID() ) file.Delete(self.file:GetPath()) bpfilesystem.IndexLocalFiles() end,
 		LOCTEXT("query_no", "No")(), function() end)
 
@@ -320,7 +320,7 @@ function PANEL:OpenMenu()
 
 		self.menu:AddOption( "Delete", function()
 
-		Derma_Query(query_file_delete_item(self.file:GetName()), text_query_title_delete(),
+		Derma_Query(text_query_delete(self.file:GetName()), text_query_title_delete(),
 		LOCTEXT("query_yes", "Yes")(), function() bpfilesystem.DeleteFile( self.file ) end,
 		LOCTEXT("query_no", "No")(), function() end)
 
