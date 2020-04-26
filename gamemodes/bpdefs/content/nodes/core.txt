@@ -345,4 +345,9 @@ LIB CORE
 			end
 		}
 	}
+	FUNC Error, SHARED
+	{
+		IN Message, PN_String
+		CODE error($1)
+	}
 }

@@ -210,6 +210,13 @@ function meta:Instantiate( forceGUID )
 
 end
 
+function meta:Refresh()
+
+	local func = self:Get().refresh
+	if func then func() end
+
+end
+
 function meta:Initialize()
 
 	local func = self:Get().init
@@ -364,9 +371,11 @@ end
 
 fragments["metahooks"] = [[
 function meta:hookEvents( enable )
+	local key = "bphook_"..__guidString(self.guid)
+	for k,v in pairs(hook.GetTable()) do v[key] = nil end
+	if not enable then return end
 	for k,v in pairs(self.__bpm.events) do
-		if not v.hook or type(meta[k]) ~= "function" then continue end
-		(enable and hook.Add or hook.Remove)(v.hook, "bphook_"..__guidString(self.guid), function(...) return self[k](self, ...) end)
+		hook.Add( v.hook, key, function(...) return self[k](self, ...) end )
 	end
 end]]
 
