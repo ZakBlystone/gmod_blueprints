@@ -12,6 +12,24 @@ local meta = bpcommon.MetaTable("bpnodetype")
 bpcommon.AddFlagAccessors(meta)
 
 meta.__tostring = function(self) return self:ToString() end
+meta.__eq = function(a, b)
+	if a.codeType ~= b.codeType then return false end
+	if a.role ~= b.role then return false end
+	if a.flags ~= b.flags then return false end
+	if a.code ~= b.code then return false end
+	if a.category ~= b.category then return false end
+
+	if a:GetFullName() ~= b:GetFullName() then return false end
+
+	local aPins = a:GetPins()
+	local bPins = b:GetPins()
+	if #aPins ~= #bPins then return false end
+	for k, pin in ipairs(aPins) do
+		if not bPins[k] then return false end
+		if pin ~= bPins[k] then return false end
+	end
+	return true
+end
 
 local PIN_INPUT_EXEC = MakePin( PD_In, "Exec", PN_Exec )
 local PIN_OUTPUT_EXEC = MakePin( PD_Out, "Exec", PN_Exec )
@@ -272,19 +290,6 @@ function meta:ToString()
 
 	return tostring( self:GetFullName() )
 
-end
-
-function meta:SamePins(other)
-	local a,b = self, other
-	local aPins = a:GetPins()
-	local bPins = b:GetPins()
-	if #aPins ~= #bPins then return false end
-	for k, pin in pairs(aPins) do
-		if not bPins[k] then return false end
-		if pin:GetName() ~= bPins[k]:GetName() then return false end
-		if pin:GetType() ~= bPins[k]:GetType() then return false end
-	end
-	return true
 end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end

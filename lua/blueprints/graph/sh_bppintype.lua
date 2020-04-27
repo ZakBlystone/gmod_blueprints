@@ -8,6 +8,22 @@ meta.__tostring = function(self)
 	return self:ToString()
 end
 
+meta.__eq = function(a, b)
+	return a.basetype == b.basetype and a.flags == b.flags and a.subtype == b.subtype
+end
+
+meta.__lt = function(a, b)
+	if a.basetype ~= b.basetype then return a.basetype < b.basetype end
+	if a.subtype ~= b.subtype then return a.subtype < b.subtype end
+	return false
+end
+
+meta.__le = function(a, b)
+	if a.basetype ~= b.basetype then return a.basetype <= b.basetype end
+	if a.subtype ~= b.subtype then return a.subtype <= b.subtype end
+	return true
+end
+
 function meta:Init(type, flags, subtype)
 	self.basetype = type
 	self.flags = flags or PNF_None
@@ -133,22 +149,6 @@ function meta:Equal(other, flagMask, ignoreSubType)
 	if self:GetBaseType() ~= other:GetBaseType() then return false end
 	if bit.band( self:GetFlags(), flagMask ) ~= bit.band( other:GetFlags(), flagMask ) then return false end
 	if self:GetSubType() ~= other:GetSubType() and not ignoreSubType then return false end
-	return true
-end
-
-meta.__eq = function(a, b)
-	return a.basetype == b.basetype and a.flags == b.flags and a.subtype == b.subtype
-end
-
-meta.__lt = function(a, b)
-	if a.basetype ~= b.basetype then return a.basetype < b.basetype end
-	if a.subtype ~= b.subtype then return a.subtype < b.subtype end
-	return false
-end
-
-meta.__le = function(a, b)
-	if a.basetype ~= b.basetype then return a.basetype <= b.basetype end
-	if a.subtype ~= b.subtype then return a.subtype <= b.subtype end
 	return true
 end
 

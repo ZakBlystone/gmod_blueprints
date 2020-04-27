@@ -6,6 +6,10 @@ local meta = bpcommon.MetaTable("bppin")
 local pinClasses = bpclassloader.Get("Pin", "blueprints/graph/pintypes/", "BPPinClassRefresh", meta)
 
 meta.__tostring = nil
+meta.__eq = function(a, b)
+	return bppintype_meta.__eq( a.type, b.type ) and a.dir == b.dir and a.name == b.name
+end
+
 --[[meta.__tostring = function(self)
 	return self:ToString(true, true)
 end]]
