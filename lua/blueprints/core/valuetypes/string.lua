@@ -71,7 +71,7 @@ function VALUE:CreateTextEntry( info, parent )
 
 	entry:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
 
-	self:BindRaw("valueChanged", function(old, new, key)
+	self:BindRaw("valueChanged", self, function(old, new, key)
 		entry:SetText( new )
 	end)
 

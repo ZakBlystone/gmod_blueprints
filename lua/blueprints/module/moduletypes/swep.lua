@@ -203,6 +203,11 @@ __bpm.init = function()
 	end
 	end )
 end
+__bpm.refresh = function()
+	for _, e in ipairs( ents.FindByClass( __bpm.class ) ) do
+		if IsValid(e) then e.__bpm = __bpm e:hookEvents(true) end
+	end
+end
 __bpm.shutdown = function()
 	weapons.Register({ Base = "weapon_base" }, __bpm.class)
 	if CLIENT then return end

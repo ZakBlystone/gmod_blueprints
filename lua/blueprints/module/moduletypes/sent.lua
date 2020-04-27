@@ -140,6 +140,11 @@ __bpm.init = function()
 	scripted_ents.Register( meta, __bpm.class )
 	if CLIENT and bpsandbox then bpsandbox.RefreshSENTs() end
 end
+__bpm.refresh = function()
+	for _, e in ipairs( ents.FindByClass( __bpm.class ) ) do
+		if IsValid(e) then e.__bpm = __bpm e:hookEvents(true) end
+	end
+end
 __bpm.shutdown = function()
 	scripted_ents.Register({ Type = "anim" }, __bpm.class)
 	if CLIENT then return end
