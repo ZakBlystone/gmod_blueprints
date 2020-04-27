@@ -145,6 +145,16 @@ function MODULE:GetSelfNodeType() return self.getSelfNodeType end
 function MODULE:GetClassNodeType() return self.getClassNodeType end
 function MODULE:GetOwnerNodeType() return self.getOwnerNodeType end
 
+function MODULE:SerializeData( stream )
+
+	stream:Extern( self:GetSelfNodeType() )
+	stream:Extern( self:GetClassNodeType() )
+	stream:Extern( self:GetOwnerNodeType() )
+
+	return BaseClass.SerializeData( self, stream )
+
+end
+
 function MODULE:IsConstructable() return false end
 
 function MODULE:CanCast( outPinType, inPinType )

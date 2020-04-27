@@ -6,9 +6,6 @@ local meta = bpcommon.MetaTable("bppin")
 local pinClasses = bpclassloader.Get("Pin", "blueprints/graph/pintypes/", "BPPinClassRefresh", meta)
 
 meta.__tostring = nil
-meta.__eq = function(a, b)
-	return bppintype_meta.__eq( a.type, b.type ) and a.dir == b.dir and a.name == b.name
-end
 
 --[[meta.__tostring = function(self)
 	return self:ToString(true, true)
@@ -19,6 +16,7 @@ function meta:Init(dir, name, type, desc)
 	self.name = name
 	self.type = type and type:Copy( self ) or nil
 	self.desc = desc
+	self.literal = ""
 	return self
 end
 
@@ -30,8 +28,38 @@ function meta:InitPinClass()
 end
 
 function meta:SetPinClass(class) self.pinClass = class return self end
-function meta:SetLiteral(value) self:GetNode():SetLiteral( self.id, value ) end
-function meta:GetLiteral() return self:GetNode():GetLiteral( self.id ) end
+function meta:SetLiteral(value)
+
+	local node = self:GetNode()
+	local literalType = self:GetLiteralType()
+	if literalType == "number" then
+		if not tonumber(value) then
+			value = 0
+		end
+	end
+
+	value = tostring(value)
+	local prevValue = self.literal
+	local changed = value ~= prevValue
+
+	if node and not node.suppressPinEvents and node:GetGraph() then
+		node:GetGraph():Broadcast("preModifyLiteral", node.id, self.id, value)
+	end
+
+	self.literal = value
+
+	print("SET LITERAL ON PIN: " .. tostring(value) .. " -> " .. self:ToString())
+
+	if node and not node.suppressPinEvents and node:GetGraph() then
+		node:GetGraph():Broadcast("postModifyLiteral", node.id, self.id, value)
+	end
+
+	if changed and self.OnLiteralChanged then
+		self:OnLiteralChanged( prevValue, value )
+	end
+
+end
+function meta:GetLiteral() return self.literal end
 function meta:CanHaveLiteral() return self:GetLiteralType() ~= nil end
 function meta:OnRightClick() end
 
@@ -147,6 +175,10 @@ function meta:Serialize(stream)
 	self.name = stream:String(self.name)
 	self.desc = stream:String(self.desc)
 	self.default = stream:String(self.default)
+	self.literal = stream:String(self.literal)
+
+	--print("PIN SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]: " .. self:ToString())
+
 	return self
 
 end
@@ -162,8 +194,13 @@ function meta:Copy(dir)
 
 	local copy = bpcommon.MakeInstance(meta, dir or self.dir, self.name, self.type, self.desc)
 	copy.default = self.default
+	copy.literal = self.literal
 	return copy
 
+end
+
+function meta:Equals(other)
+	return bppintype_meta.__eq( self.type, other.type ) and self.dir == other.dir and self.name == other.name
 end
 
 bpcommon.ForwardMetaCallsVia(meta, "bppintype", "GetType")

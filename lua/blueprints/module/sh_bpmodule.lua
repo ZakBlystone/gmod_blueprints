@@ -138,7 +138,7 @@ end
 
 function LoadHeader(filename)
 
-	local stream = bpstream.New("module", MODE_File, filename):AddFlags(FL_Base64):In()
+	local stream = bpstream.New("module-head", MODE_File, filename):AddFlags(FL_Base64):In()
 	local modtype = stream:String()
 	local header = {
 		magic = stream:GetMagic(),
@@ -158,7 +158,7 @@ function Load(filename)
 
 	bpcommon.ProfileStart("bpmodule:Load")
 
-	local stream = bpstream.New("module", MODE_File, filename):AddFlag(FL_Base64):In()
+	local stream = bpstream.New("module-file", MODE_File, filename):AddFlag(FL_Base64):In()
 	local mod = stream:Object() stream:Finish()
 
 	bpcommon.ProfileEnd()
@@ -172,7 +172,7 @@ function LoadFromText(text)
 
 	bpcommon.ProfileStart("bpmodule:Load")
 
-	local stream = bpstream.New("module", MODE_String, text):AddFlag(FL_Base64):In()
+	local stream = bpstream.New("module-text", MODE_String, text):AddFlag(FL_Base64):In()
 	local mod = stream:Object() stream:Finish()
 
 	bpcommon.ProfileEnd()
@@ -187,7 +187,7 @@ function Save(filename, mod)
 	assert( isbpmodule(mod) )
 	bpcommon.ProfileStart("bpmodule:Save")
 	
-	local stream = bpstream.New("module", MODE_File, filename):AddFlag(FL_Base64):Out()
+	local stream = bpstream.New("module-file", MODE_File, filename):AddFlag(FL_Base64):Out()
 	stream:Object(mod)
 	stream:Finish()
 
@@ -200,7 +200,7 @@ function SaveToText(mod)
 	assert( isbpmodule(mod) )
 	bpcommon.ProfileStart("bpmodule:Save")
 
-	local stream = bpstream.New("module", MODE_String, filename):AddFlag(FL_Base64):Out()
+	local stream = bpstream.New("module-text", MODE_String, filename):AddFlag(FL_Base64):Out()
 	stream:Object(mod)
 	local out = stream:Finish()
 

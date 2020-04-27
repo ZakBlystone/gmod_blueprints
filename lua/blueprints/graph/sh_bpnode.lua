@@ -13,20 +13,11 @@ nodeClasses = bpclassloader.Get("Node", "blueprints/graph/nodetypes/", "BPNodeCl
 --Common pin filters
 PF_NoExec = function( pin ) return not pin:IsType( PN_Exec ) end
 
-function meta:Init(nodeType, x, y, literals)
+function meta:Init(nodeType, x, y)
 
-	if type(nodeType) == "table" then
-		self.nodeTypeObject = nodeType
-		self.nodeType = self.nodeTypeObject:GetFullName()
-	else
-		self.nodeType = nodeType or "invalid"
-	end
-
-	assert(self.nodeType ~= nil)
-
+	self.nodeType = Weak(nodeType or DummyNodeType)
 	self.x = x or 0
 	self.y = y or 0
-	self.literals = literals or {}
 	self.data = {}
 
 	bpcommon.MakeObservable(self)
@@ -37,18 +28,15 @@ end
 
 function meta:PostInit()
 
+	if self.initialized then return true end
+
 	self.x = math.Round(self.x / 16) * 16
 	self.y = math.Round(self.y / 16) * 16
 
-	local ntype = self.nodeTypeObject
-	if not self.nodeTypeObject then
-		self.nodeType = bpdefs:Get():RemapNodeType(self.nodeType)
-
-		ntype = self:GetType()
-		if ntype == nil then 
-			if self.nodeType ~= "invalid" then print("Node type not found for: " .. self.nodeType) end
-			return false
-		end
+	local ntype = self.nodeType()
+	if ntype == nil then
+		print("Node without valid nodetype!")
+		return false
 	end
 
 	local nodeClass = ntype:GetNodeClass()
@@ -56,6 +44,7 @@ function meta:PostInit()
 
 	self:UpdatePins()
 
+	self.initialized = true
 	return true
 
 end
@@ -70,20 +59,6 @@ function meta:SetLiteralDefaults( force )
 	for pinID, pin, pos in self:SidePins(PD_In) do
 		pin:SetDefaultLiteral( force )
 	end
-
-	self.suppressPinEvents = false
-
-end
-
-function meta:ShiftLiterals(d)
-
-	self.suppressPinEvents = true
-
-	local l = bpcommon.CopyTable(self.literals)
-	for pinID, literal in pairs(l) do
-		self:SetLiteral(pinID+d, literal)
-	end
-	self:RemoveInvalidLiterals()
 
 	self.suppressPinEvents = false
 
@@ -143,27 +118,45 @@ end
 
 function meta:UpdatePins()
 
-	local prev = self.pinCache
+	--print("UPDATING PINS[" .. self:ToString() .. "]...")
 
-	self.pinCache = {}
-	self:GeneratePins(self.pinCache)
+	local newPins = {}
+	self:GeneratePins(newPins)
 
-	for k, v in ipairs(self:GetPins()) do
-		v:WithOuter( self )
-		v.id = k
-	end
-
-	for k, v in ipairs(self:GetPins()) do
-		v:InitPinClass()
-
-		if prev ~= nil and prev[k] ~= nil and v:GetLiteral() ~= nil and not prev[k]:Equal(v) then
-			v:SetLiteral(nil)
-			--print("Force default literal on pin: " .. v:ToString(true) .. " : " .. tostring(v:GetLiteral()) .. "->" .. tostring(v:GetDefault()) )
+	local current = self.pinCache
+	local function findExisting( p )
+		if not current then return end
+		for _,v in ipairs( current ) do
+			if v:Equals(p) then return v end
 		end
-
+		print(" No Match for: " .. tostring(p:ToString(true, true)))
 	end
 
-	self:SetLiteralDefaults()
+	--print(" SEARCH CACHE: " .. (current and #current or "nil"))
+
+	self.suppressPinEvents = true
+	self.pinCache = {}
+	for k, v in ipairs(newPins) do
+		local p = findExisting(v)
+		if not p then 
+			print(" CREATE NEW: " .. v:GetName() .. " ... init literal" )
+			v:WithOuter( self )
+			v.id = k
+			v:InitPinClass()
+			v:SetLiteral( v:GetDefault() )
+			self.pinCache[k] = v
+		else
+			p:WithOuter( self )
+			p.id = k
+			p:InitPinClass()
+			self.pinCache[k] = p
+			--print(" LOAD FROM CACHE: " .. p:GetName() )
+		end
+	end
+
+	self.suppressPinEvents = false
+
+	--self:SetLiteralDefaults()
 	self:Broadcast("pinsUpdated")
 
 end
@@ -331,7 +324,8 @@ end
 
 function meta:GetLiteral(pinID)
 
-	return self.literals[pinID]
+	local pins = self:GetPins()
+	return pins[pinID] ~= nil and pins[pinID]:GetLiteral() or ""
 
 end
 
@@ -341,55 +335,13 @@ function meta:SetLiteral(pinID, value)
 	if pinID < 1 or pinID > #pins then return end
 	if pins[pinID]:IsOut() or pins[pinID]:IsType(PN_Exec) then return end
 
-	local literalType = pins[pinID]:GetLiteralType()
-	if literalType == "number" then
-		if not tonumber(value) then
-			value = 0
-		end
-	end
-
-	value = tostring(value)
-	local prevValue = self.literals[pinID]
-	local changed = value ~= prevValue
-	local outerGraph = self:GetGraph()
-
-	if not self.suppressPinEvents and outerGraph then
-		outerGraph:Broadcast("preModifyLiteral", self.id, pinID, value)
-	end
-
-	self.literals[pinID] = value
-
-	if not self.suppressPinEvents and outerGraph then
-		outerGraph:Broadcast("postModifyLiteral", self.id, pinID, value)
-	end
-
-	if changed and pins[pinID].OnLiteralChanged then
-		pins[pinID]:OnLiteralChanged( prevValue, value )
-	end
-
-end
-
-function meta:RemoveInvalidLiterals()
-
-	local pins = self:GetPins()
-	for pinID, value in ipairs(self.literals) do
-		if pins[pinID] == nil or pins[pinID]:IsOut() or pins[pinID]:IsType(PN_Exec) then self.literals[pinID] = nil end
-	end
+	pins[pinID]:SetLiteral( value )
 
 end
 
 function meta:GetType()
 
-	if self.nodeTypeObject then return self.nodeTypeObject end
-
-	local nodeTypes = self:GetGraph():GetNodeTypes()
-	local ntype = nodeTypes:Find( self.nodeType )
-	if self.nodeType ~= "invalid" and ntype == nil then --[[print("Unable to find node type: " .. tostring(self.nodeType))]] end
-	self.nodeTypeObject = ntype
-
-	if ntype == nil then return DummyNodeType end
-
-	return ntype
+	return self.nodeType()
 
 end
 
@@ -400,7 +352,7 @@ function meta:GetCodeType()
 end
 
 function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
-function meta:GetTypeName() return self.nodeType end
+function meta:GetTypeName() return self.nodeType:IsValid() and self.nodeType():GetFullName() or "unknown" end
 function meta:GetPos() return self.x, self.y end
 function meta:RemapPin(name) return self:GetType():RemapPin(name) end
 
@@ -409,12 +361,6 @@ function meta:ConvertType(t)
 	self:PreModify()
 	self.data.codeTypeOverride = t
 	self:PostModify()
-
-	if t == NT_Pure then
-		self:ShiftLiterals(-2)
-	elseif t == NT_Function then
-		self:ShiftLiterals(2)
-	end
 
 end
 
@@ -465,11 +411,14 @@ function meta:Copy()
 	local newNode = setmetatable({}, meta)
 	newNode.x = self.x
 	newNode.y = self.y
-	newNode.literals = bpcommon.CopyTable(self.literals)
 	newNode.data = bpcommon.CopyTable(self.data)
-	newNode.nodeType = self.nodeType
-	newNode.nodeTypeObject = self.nodeTypeObject
+	newNode.nodeType = Weak(self.nodeType())
+	newNode.pinCache = {}
 	newNode:WithOuter( self:GetOuter() )
+
+	for _, v in ipairs(self.pinCache or {}) do
+		newNode.pinCache[#newNode.pinCache+1] = v:Copy():WithOuter(self)
+	end
 
 	bpcommon.MakeObservable(newNode)
 	return newNode
@@ -478,10 +427,15 @@ end
 
 function meta:Serialize(stream)
 
-	self.nodeType = stream:String(self.nodeType)
-	self.literals = stream:StringArray(self.literals)
+	self.nodeType = stream:Object(self.nodeType)
 	self.x = stream:Float(self.x)
 	self.y = stream:Float(self.y)
+	self.pinCache = stream:ObjectArray( self.pinCache or {} )
+
+	--print("NODE SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "] PINS: " .. self:ToString())
+	--[[for _,v in ipairs(self.pinCache) do
+		print(" " .. v:ToString(true, true))
+	end]]
 
 	return stream
 

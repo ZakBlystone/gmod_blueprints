@@ -150,8 +150,9 @@ function meta:NodeRemoved( id ) self.nodeSet:NodeRemoved(id) end
 function meta:NodeMove( id, x, y ) end
 
 function meta:PinPreEditLiteral( nodeID, pinID, value )
-	local node = self.nodeSet:GetVNodes()[nodeID]:GetNode()
-	self:CreateUndo("Edit: " .. node:GetDisplayName() .. "." .. node:GetPin(pinID):GetDisplayName())
+	local vnode = self.nodeSet:GetVNodes()[nodeID]
+	local node = vnode and vnode:GetNode()
+	if node then self:CreateUndo("Edit: " .. node:GetDisplayName() .. "." .. node:GetPin(pinID):GetDisplayName()) end
 end
 
 function meta:PinPostEditLiteral( nodeID, pinID, value )

@@ -2,6 +2,7 @@ TEST.Name = "Weak"
 TEST.Libs = {
 	"bpcommon",
 	"bppintype",
+	"bppin",
 	"bpschema",
 	"bpstream",
 	"setmetatable",
@@ -111,5 +112,50 @@ function LINKER_TEST_EXTERN()
 
 	ASSERT(w ~= nil)
 	ASSERT(rawequal(w(), pt3))
+
+end
+
+function LINKER_TEST_DEEP()
+
+	-- First
+	print("****************WRITE TEST")
+	local stream = bpstream.New("test", bpstream.MODE_String):Out()
+	local pt = bppintype.New(bpschema.PN_Ref,nil,"Entity")
+	local pt2 = bppintype.New(bpschema.PN_Exec,nil)
+	local pin = bppin.New(bpschema.PD_Out, "TestPin", pt, "A Test Pin")
+	local pin2 = bppin.New(bpschema.PD_Out, "TestPin2", pt2, "A Test Pin")
+	stream:Object(pin)
+	stream:Object(pin2)
+	local data = stream:Finish()
+
+	-- Second
+	print("****************READ TEST")
+	stream = bpstream.New("test2", bpstream.MODE_String, data):In()
+	local readPin = stream:Object()
+	local readPin2 = stream:Object()
+
+	print(readPin:ToString(true, true))
+	print(readPin2:ToString(true, true))
+
+	-- Third
+	print("****************RE-WRITE TEST")
+	stream = bpstream.New("test3", bpstream.MODE_String):Out()
+	stream:Object(readPin)
+	stream:Object(readPin2)
+	data = stream:Finish()
+
+
+	-- Fourth
+	print("****************RE-READ TEST")
+	stream = bpstream.New("test4", bpstream.MODE_String, data):In()
+	local reReadPin = stream:Object()
+	local reReadPin2 = stream:Object()
+
+	print(readPin:ToString(true, true))
+	print(readPin2:ToString(true, true))
+
+	ASSERT( reReadPin == readPin )
+	ASSERT( reReadPin2 == readPin2 )
+
 
 end

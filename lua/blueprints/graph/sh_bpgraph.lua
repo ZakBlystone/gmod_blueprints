@@ -156,7 +156,7 @@ end
 
 function meta:PostModifyNode( node )
 
-	--print("NODE MODIFICATION: " .. node:ToString() )
+	print("NODE MODIFICATION: " .. node:ToString() )
 
 	node:UpdatePins()
 	self:Broadcast("postModifyNode", node.id)
@@ -804,58 +804,32 @@ function meta:CollapseRerouteNodes()
 
 end
 
-function meta:ReadConnectionMeta(stream)
-
-	local cmeta = {}
-	local ids = {}
-	local bits = stream:ReadBits(8)
-	local id = stream:ReadBits(bits)
-	local k = 0
-	while id ~= 0 and k ~= 100000 do
-		k = k + 1
-		ids[#ids+1] = id
-		id = stream:ReadBits(bits)
-	end
-	if k == 100000 then error("NO STOP BIT!!!") end
-	for i=1, #ids do
-		cmeta[ids[i]] = {stream:ReadStr(), stream:ReadStr(), stream:ReadStr(), stream:ReadStr()}
-	end
-	self.connectionMeta = cmeta
-
-end
-
-function meta:WriteConnectionMeta(stream)
-
-	local connnectionMeta = {}
-	local n = 0
-	local maxid = 0
-
-	local newver = true
-	local idf = stream.WriteInt
-	for id, c in self:Connections(true) do n = n + 1 maxid = math.max(maxid, id) end
-	local bits = 24
-	if maxid < 65536 then bits = 16 end
-	if maxid < 256 then bits = 8 end
-	stream:WriteBits( bits, 8 )
-	for id, c in self:Connections(true) do stream:WriteBits( id, bits ) end
-	stream:WriteBits( 0, bits )
-
-	for id, c in self:Connections(true) do
-
-		local n0 = self:GetNode(c[1])
-		local n1 = self:GetNode(c[3])
-		local pin0 = n0:GetPins()[c[2]]
-		local pin1 = n1:GetPins()[c[4]]
-		stream:WriteStr( n0:GetTypeName() )
-		stream:WriteStr( pin0:GetName() )
-		stream:WriteStr( n1:GetTypeName() )
-		stream:WriteStr( pin1:GetName() )
-
-	end
-
-end
-
 function meta:Serialize(stream)
+
+	local external = {}
+	for _, v in self.nodes:Items() do
+		if stream:IsNetwork() or true then
+			external[#external+1] = v:GetType():GetFullName()
+		else
+			external[#external+1] = v:GetType()
+		end
+	end
+
+	if stream:IsNetwork() or true then
+		local types = self:GetNodeTypes()
+		for _, v in ipairs( stream:StringArray(external) ) do
+			stream:Extern(types:Find(v))
+			print("EXTERNAL NODE TYPE: " .. tostring(types:Find(v)) )
+		end
+	else
+		-- TODO, reconstitute outer groups on external nodetypes
+		external = stream:ObjectArray(external)
+		self.strongNodeTypeRef = external
+	end
+
+	stream:Extern( self:GetCallNodeType() )
+	stream:Extern( self:GetEntryNodeType() )
+	stream:Extern( self:GetExitNodeType() )
 
 	self.type = stream:UInt(self.type)
 	self.flags = stream:UInt(self.flags)
@@ -878,65 +852,9 @@ function meta:Serialize(stream)
 	end
 
 	self.connections = stream:Value(self.connections)
-
-	if stream:IsFile() then
-		if stream:IsWriting() then
-			self:WriteConnectionMeta(stream)
-		elseif stream:IsReading() then
-			self:ReadConnectionMeta(stream)
-		end
-	end
-
 	self.hookNodeType = stream:String(self.hookNodeType)
 
 	return stream
-
-end
-
-function meta:ResolveConnectionMeta()
-
-	if self.connectionMeta ~= nil then
-
-		--print("Resolving connection meta...")
-		for i, c in self:Connections(true) do
-			local meta = self.connectionMeta[i]
-			local nt0 = self:GetNode(c[1])
-			local nt1 = self:GetNode(c[3])
-
-			if nt0 == nil then continue end
-			if nt1 == nil then continue end
-
-			local pin0 = nt0:GetPin(c[2])
-			local pin1 = nt1:GetPin(c[4])
-			local ignorePin0 = false
-			local ignorePin1 = false
-
-			meta[2] = nt0:RemapPin(meta[2])
-			meta[4] = nt1:RemapPin(meta[4])
-
-			-- Reroute pins don't require fixup
-			if nt0:GetTypeName() == "CORE_Pin" then ignorePin0 = true end
-			if nt1:GetTypeName() == "CORE_Pin" then ignorePin1 = true end
-
-			--print("Check Connection: " .. nt0:ToString(c[2]) .. " -> " .. nt1:ToString(c[4]))
-
-			if meta == nil then continue end
-			if (pin0 == nil or pin0:GetName():lower() ~= meta[2]:lower()) and not ignorePin0 then
-				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")
-				local found = nt0:FindPin( PD_Out, meta[2] )
-				c[2] = found and found.id or nil
-				MsgC( c[2] ~= nil and Color(100,255,100) or Color(255,100,100), c[2] ~= nil and " Resolved\n" or " Not resolved\n" )
-			end
-
-			if (pin1 == nil or pin1:GetName():lower() ~= meta[4]:lower()) and not ignorePin1 then
-				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
-				local found = nt0:FindPin( PD_In, meta[4] )
-				c[4] = found and found.id or nil
-				MsgC( c[4] ~= nil and Color(100,255,100) or Color(255,100,100), c[4] ~= nil and " Resolved\n" or " Not resolved\n" )
-			end
-		end
-		self.connectionMeta = nil
-	end
 
 end
 
@@ -955,7 +873,6 @@ function meta:CreateDeferredData()
 			self:Broadcast("nodeAdded", id)
 		end
 
-		self:ResolveConnectionMeta()
 		self:WalkInforms()
 		self:RemoveInvalidConnections()
 		for i, connection in self:Connections() do

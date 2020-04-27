@@ -28,11 +28,14 @@ function meta:Init(type, flags, subtype)
 	self.basetype = type
 	self.flags = flags or PNF_None
 	self.subtype = subtype
-
-	local hashStr = string.format("%0.2d_%0.2x_%s", self.basetype or -1, self.flags, tostring(self.subtype) )
-	self.hash = util.CRC( hashStr )
+	self:UpdateHash()
 
 	return self
+end
+
+function meta:UpdateHash()
+	local hashStr = string.format("%0.2d_%0.2x_%s", self.basetype or -1, self.flags, tostring(self.subtype) )
+	self.hash = util.CRC( hashStr )
 end
 
 function meta:GetHash()
@@ -157,6 +160,11 @@ function meta:Serialize(stream)
 	self.basetype = stream:Bits(self.basetype, 8)
 	self.flags = stream:Bits(self.flags, 8)
 	self.subtype = stream:String(self.subtype)
+
+	if stream:IsReading() then self:UpdateHash() end
+
+	--print("PINTYPE SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]: " .. self:ToString())
+
 	return stream
 
 end

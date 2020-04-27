@@ -243,6 +243,14 @@ function CreateIndexableListIterators(meta, variable)
 
 end
 
+function RawToString(obj)
+	local m = getmetatable(obj)
+	setmetatable(obj, nil)
+	local s = tostring(obj)
+	setmetatable(obj, m)
+	return s
+end
+
 -- Outer utility functions
 local function WithOuter(self, outer)
 	rawset(self, "__outer", outer)

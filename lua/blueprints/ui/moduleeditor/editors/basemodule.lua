@@ -96,7 +96,7 @@ function EDITOR:SendToServer()
 	if ok then
 		ok, res = res:TryLoad()
 		if ok then
-			self:Save( function(ok) if ok then self:Upload(true) end end )
+			self:Save( function(ok) if ok then print("**Uploading Module") self:Upload(true) end end )
 		else
 			Derma_Message( res, text_run_fail(), LOCTEXT("query_ok", "Ok")() )
 		end
@@ -164,6 +164,7 @@ function EDITOR:Save( callback )
 	local tab = self:GetTab()
 	if file == nil then
 
+		print("**Add Local Module")
 		Derma_StringRequest(text_menu_save(), text_module_name(), "untitled",
 		function( text )
 			local file = bpfilesystem.AddLocalModule( self:GetModule(), text )
@@ -178,6 +179,7 @@ function EDITOR:Save( callback )
 
 	else
 
+		print("**Saving Module")
 		bpmodule.Save( file:GetPath(), self:GetModule() )
 		bpfilesystem.MarkFileAsChanged( file, false )
 		if tab then tab:SetSuffix("") end

@@ -427,9 +427,8 @@ end
 
 function meta:GetPinLiteral(pin, sanitize)
 
-	local node = pin:GetNode()
-	if node and node.literals[pin.id] ~= nil and not noLiteral then
-		local l = tostring(node.literals[pin.id])
+	if pin and pin:GetLiteral() and not noLiteral then
+		local l = tostring(pin:GetLiteral())
 
 		if pin:IsType(PN_BPClass) then l = EscapedGUID(l) end
 		if sanitize then l = SanitizeString(l) end

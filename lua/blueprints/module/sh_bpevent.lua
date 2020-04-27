@@ -101,6 +101,9 @@ end
 
 function meta:Serialize(stream)
 
+	stream:Extern( self:CallNodeType() )
+	stream:Extern( self:EventNodeType() )
+
 	self.pins:Serialize(stream)
 	self.flags = stream:Bits(self.flags, 8)
 

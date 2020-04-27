@@ -135,6 +135,9 @@ end
 
 function meta:Serialize(stream)
 
+	stream:Extern( self:MakerNodeType() )
+	stream:Extern( self:BreakerNodeType() )
+
 	self.pins:Serialize(stream)
 	self.nameMap = stream:Value(self.nameMap)
 	self.invNameMap = stream:Value(self.invNameMap)
