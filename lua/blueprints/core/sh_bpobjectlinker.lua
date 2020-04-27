@@ -119,7 +119,7 @@ function meta:FindObjectOrder( obj )
 
 end
 
-function meta:WriteObject(stream, obj)
+function meta:WriteObject(stream, obj, isExtern)
 
 	if obj == nil then
 		self.order[#self.order+1] = {0, 0}
@@ -150,16 +150,18 @@ function meta:WriteObject(stream, obj)
 	else
 		set.objects[hash] = set.next
 		self.order[#self.order+1] = {set.id, set.next}
-		self.hashes[#self.hashes+1] = meta.__hash
+		if not isExtern then 
+			self.hashes[#self.hashes+1] = meta.__hash
+			obj:Serialize(stream) 
+		end
 		set.next = set.next + 1
-		obj:Serialize(stream)
 	end
 
 	if self.refs[obj] then self.order[self.refs[obj]][1] = #self.order end
 
 end
 
-function meta:ReadObject(stream)
+function meta:ReadObject(stream, extern, isExtern)
 
 	local ord = self.order[self.orderNum]
 	self.orderNum = self.orderNum + 1
@@ -186,10 +188,10 @@ function meta:ReadObject(stream)
 	local set = self.objects[setID]
 	if not set[objID] then
 		local hash = self.hashes[self.hashNum]
-		self.hashNum = self.hashNum + 1
+		if not isExtern then self.hashNum = self.hashNum + 1 end
 
-		local obj = self:Construct(hash)
-		obj:Serialize(stream)
+		local obj = isExtern and extern or self:Construct(hash)
+		if not isExtern then obj:Serialize(stream) end
 		set[objID] = obj
 
 		local w = self.refs[self.orderNum - 1]

@@ -333,6 +333,14 @@ function meta:GUID(v)
 
 end
 
+function meta:Extern(v)
+
+	if self.linker == nil then return end
+	if self:IsReading() then return self.linker:ReadObject(self, v, true) end
+	if self:IsWriting() then self.linker:WriteObject(self, v, true) return v end
+
+end
+
 function meta:Object(v, noLinker)
 
 	if self:IsWriting() then
