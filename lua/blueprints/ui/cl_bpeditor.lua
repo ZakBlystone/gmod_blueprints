@@ -471,7 +471,7 @@ function PANEL:OpenFile( file )
 	end
 
 	if not bpdefs.Ready() then
-		Derma_Message( text_wait_for_defs(), text_failed_to_open(), LOCTEXT("query_ok", "Ok") )
+		Derma_Message( text_wait_for_defs(), text_failed_to_open(), LOCTEXT("query_ok", "Ok")() )
 		return
 	end
 
@@ -481,7 +481,7 @@ function PANEL:OpenFile( file )
 			return self:OpenModule( mod, file:GetName(), file )
 		end, 
 		function(err)
-			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), text_failed_to_open(), LOCTEXT("query_ok", "Ok") )
+			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), text_failed_to_open(), LOCTEXT("query_ok", "Ok")() )
 		end)
 	if not b then
 		
