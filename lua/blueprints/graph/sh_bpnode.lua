@@ -89,9 +89,9 @@ end
 
 function meta:IsPinConnected( pinID )
 
-	local outerGraph = self:GetGraph()
-	if outerGraph == nil then return false end
-	return outerGraph:IsPinConnected( self.id, pinID )
+	local pins = self:GetPins()
+	if pin[pinID] and #pin[pinID]:GetConnections() > 0 then return true end
+	return false
 
 end
 

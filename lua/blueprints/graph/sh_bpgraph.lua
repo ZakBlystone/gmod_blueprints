@@ -321,14 +321,6 @@ function meta:GetNodePin(nodeID, pinID)
 
 end
 
-function meta:GetPinConnections(pinDir, nodeID, pinID)
-
-	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:GetConnections'")
-
-	return self:GetNode(nodeID):GetPin(pinID):GetConnectedPins()
-
-end
-
 function meta:GetUsedPinTypes(used, noFlags)
 
 	used = used or {}
@@ -395,14 +387,10 @@ function meta:BuildInformDirectionalCandidates(dir, candidateNodes)
 	for id, node in self:Nodes() do
 		for pinID, pin in node:SidePins(dir) do
 			if node:IsInformPin(pinID) then
-				for _, v in ipairs( self:GetPinConnections(dir, id, pinID) ) do
-					local other = self:GetNode( dir == PD_In and v[1] or v[3] )
+				for _, v in ipairs( pin:GetConnectedPins() ) do
+					local other = v:GetNode()
 					if other == nil then continue end
-
-					local otherPin = dir == PD_In and v[2] or v[4]
-					if other:GetPin( otherPin ) == nil then continue end
-
-					if other:IsInformPin( otherPin ) == false and other:GetPin( otherPin ):GetBaseType() ~= PN_Any then
+					if other:IsInformPin( v.id ) == false and v:GetBaseType() ~= PN_Any then
 						if not table.HasValue(candidateNodes, other) then
 							candidateNodes[#candidateNodes+1] = other
 						end
@@ -434,8 +422,8 @@ function meta:WalkInforms()
 			end, visited)
 			local pinType = nil
 			for _,c in ipairs(connections) do
-				if not self:GetNode(c[1]):IsInformPin(c[2]) then pinType = self:GetNode(c[1]):GetPin(c[2]):GetType(true) end
-				self:GetNode(c[3]):SetInform(pinType)
+				if not c[1]:GetNode():IsInformPin(c[1].id) then pinType = c[1]:GetType(true) end
+				c[2]:GetNode():SetInform(pinType)
 			end
 		end
 
@@ -447,8 +435,8 @@ function meta:WalkInforms()
 			end, visited)
 			local pinType = nil
 			for _,c in ipairs(connections) do
-				if not self:GetNode(c[3]):IsInformPin(c[4]) then pinType = self:GetNode(c[3]):GetPin(c[4]):GetType(true) end
-				self:GetNode(c[1]):SetInform(pinType)
+				if not c[1]:GetNode():IsInformPin(c[1].id) then pinType = c[1]:GetType(true) end
+				c[2]:GetNode():SetInform(pinType)
 			end
 		end
 
@@ -473,29 +461,9 @@ function meta:FindNodeByType(nodeType)
 
 end
 
-function meta:IsPinConnected(nodeID, pinID, killConnections)
-
-	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:IsConnectedTo'")
-
-end
-
 function meta:NodePinToString(nodeID, pinID)
 
 	return self:GetNode(nodeID):ToString(pinID)
-
-end
-
-function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
-
-	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:CanConnect'")
-	return false
-
-end
-
-function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
-
-	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:MakeLink'")
-	return false
 
 end
 
@@ -550,18 +518,6 @@ function meta:AddNode(nodeTypeName, ...)
 
 	local id, newNode = self.nodes:Construct( nodeType, ... )
 	return id, newNode
-
-end
-
-function meta:RemoveConnectionID(id)
-
-	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:BreakLink'")
-
-end
-
-function meta:RemoveConnection(nodeID0, pinID0, nodeID1, pinID1)
-
-	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:BreakLink'")
 
 end
 

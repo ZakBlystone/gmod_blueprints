@@ -771,7 +771,7 @@ function meta:ConnectNodeToGrabbedPin( node )
 		local pf = self.grabPin:GetPin()
 		local match = bpcast.FindMatchingPin( node:GetType(), pf, self.graph:GetModule() )
 		if match ~= nil then
-			self:GetGraph():ConnectNodes(grabbedNode.id, self.grabPin:GetPinID(), node.id, match)
+			self.grabPin.pin:MakeLink( node:GetPin( match ) )
 		end
 
 		self.grabPin = nil
