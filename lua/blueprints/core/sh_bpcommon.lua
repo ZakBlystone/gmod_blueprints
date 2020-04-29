@@ -203,6 +203,13 @@ function CreateUniqueKey(tab, key)
 
 end
 
+-- Shows deprecation message and traceback
+function Deprecated(msg)
+
+	print(debug.traceback( "****" .. msg .. "****", 2))
+
+end
+
 -- Weak reference object
 local wm = {}
 wm.__mode = "v"

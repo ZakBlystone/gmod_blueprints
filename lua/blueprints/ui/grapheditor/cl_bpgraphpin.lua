@@ -48,7 +48,6 @@ function meta:Init(vnode, pinID, sideIndex)
 	self.literalPos = nil
 	self.cacheWidth = nil
 	self.cacheHeight = nil
-	self.connections = self.pin:GetConnectedPins()
 	self.invalidateMetrics = true
 
 	return self
@@ -63,12 +62,6 @@ function meta:GetDisplayName()
 	if #str > 0 then str = str:sub(2, -1) end
 	self.displayName = str
 	return self.displayName
-
-end
-
-function meta:GetConnections()
-
-	return self.connections
 
 end
 
@@ -159,7 +152,6 @@ function meta:Invalidate()
 	self.titlePos = nil
 	self.literalPos = nil
 	self.literalText = nil
-	self.connections = self.pin:GetConnectedPins()
 	self.invalidateMetrics = true
 	self.literalW = nil
 	self.literalH = nil
@@ -287,7 +279,7 @@ function meta:IsConnected()
 
 	local node = self.vnode:GetNode()
 	local graph = node:GetGraph()
-	self.connectionState = graph:IsPinConnected( node.id, self.pinID )
+	self.connectionState =  #node:GetPin( self.pinID ):GetConnections() > 0
 
 	return self.connectionState
 

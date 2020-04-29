@@ -373,8 +373,8 @@ function meta:ObjectArray(v)
 
 	if self:IsWriting() then
 
-		self:UInt(#v)
-		if #v == 0 then return end
+		self:Length(#v)
+		if #v == 0 then return v end
 		for i=1, #v do self:Object(v[i]) end
 		return v
 
@@ -382,7 +382,7 @@ function meta:ObjectArray(v)
 	if self:IsReading() then
 
 		local v = {}
-		local n = self:UInt()
+		local n = self:Length()
 		for i=1, n do
 			v[#v+1] = self:Object(nil)
 		end

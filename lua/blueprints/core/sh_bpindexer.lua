@@ -24,4 +24,13 @@ function meta:Get(v)
 
 end
 
+function meta:FindByID(id)
+
+	for k, v in pairs(self.indices) do
+		if v == id then return k end
+	end
+	return nil
+
+end
+
 function New(...) return bpcommon.MakeInstance(meta, ...) end

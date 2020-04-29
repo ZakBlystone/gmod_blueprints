@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-module("bppin", package.seeall, bpcommon.rescope(bpschema))
+module("bppin", package.seeall, bpcommon.rescope(bpcommon, bpschema))
 
 local meta = bpcommon.MetaTable("bppin")
 local pinClasses = bpclassloader.Get("Pin", "blueprints/graph/pintypes/", "BPPinClassRefresh", meta)
@@ -17,6 +17,7 @@ function meta:Init(dir, name, type, desc)
 	self.type = type and type:Copy( self ) or nil
 	self.desc = desc
 	self.literal = ""
+	self.connections = {}
 	return self
 end
 
@@ -123,22 +124,11 @@ function meta:GetNode()
 
 end
 
-function meta:GetConnectedPins()
+function meta:GetConnectedPins(out)
 
-	local node = self:GetNode()
-	if node == nil then return {} end
-
-	local graph = node:GetGraph()
-	if graph == nil then return {} end
-
-	local nodeID = node.id
-	local pinID = self.id
-	local out = {}
-	local dir = self:GetDir()
-	for k, v in graph:Connections() do
-		if dir == PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
-		if dir == PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
-		out[#out+1] = graph:GetNode( dir == PD_In and v[1] or v[3] ):GetPin( dir == PD_In and v[2] or v[4] )
+	out = out or {}
+	for _, pin in pairs(self:GetConnections()) do
+		if pin() then out[#out+1] = pin() end
 	end
 	return out
 
@@ -146,14 +136,7 @@ end
 
 function meta:Connect( other )
 
-	local node = self:GetNode()
-	local otherNode = other:GetNode()
-	local graph = node:GetGraph()
-
-	if graph == nil then print("Cannot connect, not in a graph") return end
-	if graph ~= otherNode:GetGraph() then print("Cannot connect across different graphs") return end
-
-	return graph:ConnectNodes( node.id, self.id, otherNode.id, other.id )
+	return self:MakeLink( other )
 
 end
 
@@ -168,6 +151,121 @@ function meta:SetDefaultLiteral( force )
 
 end
 
+function meta:GetConnections()
+
+	return self.connections
+
+end
+
+function meta:IsConnectedTo( other )
+
+	for _, pin in ipairs(self:GetConnections()) do
+		if pin() == other then return true end
+	end
+	return false
+
+end
+
+function meta:CanConnect( other )
+
+	if self:GetDir() == other:GetDir() then return false, "Can't connect " .. (self:IsOut() and "m/m" or "f/f") .. " pins" end
+	if not self:IsOut() then return other:CanConnect(self) end
+
+	local conn = self:GetConnections()
+	local node = self:GetNode()
+	local otherNode = other:GetNode()
+
+	if node == nil or otherNode == nil then return false, "Can't connect pins without nodes" end
+
+	if self:IsConnectedTo( other ) then return false, "Already connected: " .. self:ToStringNode() .. " --> " .. other:ToStringNode() end
+	if self:IsType(PN_Exec) and #conn > 0 then return false, "Only one connection outgoing for exec pins" end
+	if not other:IsType(PN_Exec) and #other:GetConnections() > 0 then return false, "Only one connection for inputs" end
+
+	if node:GetTypeName() == "CORE_Pin" and self:IsType(PN_Any) then return true end
+	if otherNode:GetTypeName() == "CORE_Pin" and other:IsType(PN_Any) then return true end
+
+	if self:HasFlag(PNF_Table) ~= other:HasFlag(PNF_Table) then return false, "Can't connect table to non-table pin" end
+
+	if not self:GetType():Equal(other:GetType(), 0) then
+
+		if self:IsType(PN_Any) and not other:IsType(PN_Exec) then return true end
+		if other:IsType(PN_Any) and not self:IsType(PN_Exec) then return true end
+
+		local mod = self:FindOuter( bpmodule_meta )
+		if mod and mod:CanCast( self:GetType(), other:GetType() ) then
+			return true
+		else
+			return false, "No explicit conversion between " .. self:ToStringNode() .. " --> " .. other:ToStringNode()
+		end
+
+	end
+
+	if self:GetSubType() ~= other:GetSubType() then 
+		return false, "Can't connect " .. self:ToStringNode() .. " --> " .. other:ToStringNode()
+	end
+
+	return true
+
+end
+
+function meta:MakeLink( other )
+
+	if self:GetDir() == other:GetDir() then return self:CanConnect(other) end
+	if not self:IsOut() then return other:MakeLink(self) end
+
+	local allowed, msg = self:CanConnect(other)
+	if not allowed then print(msg) return false end
+
+	local conn = self:GetConnections()
+	conn[#conn+1] = Weak( other )
+	local otherConn = other:GetConnections()
+	otherConn[#otherConn+1] = Weak( self )
+
+	local graph = self:FindOuter( bpgraph_meta )
+	if graph then
+		graph:WalkInforms()
+		graph:Broadcast("connectionAdded", self, other)
+	end
+
+end
+
+function meta:BreakLink( other )
+
+	local graph = self:FindOuter( bpgraph_meta )
+	local conn = self:GetConnections()
+	for i, c in ipairs(conn) do
+		if c() == other then
+			table.remove(conn, i)
+
+			for j, o in ipairs(other:GetConnections()) do
+				if o() == self then
+					table.remove(other:GetConnections(), j)
+				end
+			end
+
+			if graph and not noNotify then
+				graph:WalkInforms()
+				graph:Broadcast("connectionRemoved", self, c())
+			end
+			return true
+		end
+	end
+
+	return false
+
+end
+
+function meta:BreakAllLinks()
+
+	local conn = self:GetConnections()
+	for i=#conn, 1, -1 do
+
+		self:BreakLink( conn[i]() )
+
+	end
+
+end
+
 function meta:Serialize(stream)
 
 	self.type = stream:Object(self.type):WithOuter(self)
@@ -176,11 +274,16 @@ function meta:Serialize(stream)
 	self.desc = stream:String(self.desc)
 	self.default = stream:String(self.default)
 	self.literal = stream:String(self.literal)
+	self.connections = stream:ObjectArray(self.connections)
 
 	--print("PIN SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]: " .. self:ToString())
 
 	return self
 
+end
+
+function meta:ToStringNode()
+	return self:GetNode():ToString(self.id)
 end
 
 function meta:ToString(printTypeInfo, printDir)

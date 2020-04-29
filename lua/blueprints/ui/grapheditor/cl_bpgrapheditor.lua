@@ -160,7 +160,9 @@ function meta:PinPostEditLiteral( nodeID, pinID, value )
 	if node then node:Invalidate(true) end
 end
 
-function meta:ConnectionAdded( id, conn )
+function meta:ConnectionAdded( a, b )
+
+	if true then print("***OUTDATED CONNECTION BIND 'ConnectionAdded'") return end
 
 	local nodes = self.nodeSet:GetVNodes()
 	local nodeA = nodes[conn[1]]
@@ -169,7 +171,9 @@ function meta:ConnectionAdded( id, conn )
 	if nodeB then nodeB:Invalidate(true) end
 
 end
-function meta:ConnectionRemoved( id, conn ) 
+function meta:ConnectionRemoved( a, b ) 
+
+	if true then print("***OUTDATED CONNECTION BIND 'ConnectionRemoved'") return end
 
 	local nodes = self.nodeSet:GetVNodes()
 	local nodeA = nodes[conn[1]]
@@ -324,11 +328,20 @@ end
 
 function meta:ConnectPins(vpin0, vpin1)
 
-	local nodeID0 = vpin0:GetVNode():GetNode().id
-	local nodeID1 = vpin1:GetVNode():GetNode().id
-	local pinID0 = vpin0:GetPinID()
-	local pinID1 = vpin1:GetPinID()
-	return self:GetGraph():ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
+	return vpin0.pin:MakeLink(vpin1.pin)
+
+end
+
+function meta:FindVPin(pin)
+
+	local vnodes = self:GetVNodes()
+	for _, vnode in ipairs(vnodes) do
+
+		for _, vpin in ipairs(vnode.pins) do
+			if vpin.pin == pin then return vpin end
+		end
+
+	end
 
 end
 
@@ -338,21 +351,12 @@ function meta:TakeGrabbedPin()
 	local pinID = self.grabPin:GetPinID()
 	local graph = self:GetGraph()
 	local vnodes = self:GetVNodes()
-	for k,v in graph:Connections() do
 
-		if v[1] == nodeID and v[2] == pinID then
+	for _, pin in ipairs(self.grabPin.pin:GetConnectedPins()) do
 
-			self.grabPin = vnodes[v[3]]:GetVPin(v[4])
-			graph:RemoveConnectionID(k)
-			break
-
-		elseif v[3] == nodeID and v[4] == pinID then
-
-			self.grabPin = vnodes[v[1]]:GetVPin(v[2])
-			graph:RemoveConnectionID(k)
-			break
-
-		end
+		self.grabPin.pin:BreakLink( pin )
+		self.grabPin = self:FindVPin( pin ) or self.grabPin
+		break
 
 	end
 

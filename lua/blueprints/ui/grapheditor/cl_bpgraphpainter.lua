@@ -29,14 +29,14 @@ function meta:GetVGraph() return self.vgraph end
 function meta:PointToWorld(x,y) return self:GetVGraph():GetRenderer():PointToWorld(x,y) end
 function meta:PointToScreen(x,y) return self:GetVGraph():GetRenderer():PointToScreen(x,y) end
 
-function meta:DrawConnection(connection, xOffset, yOffset, alpha)
+function meta:DrawConnection(aPin, bPin, xOffset, yOffset, alpha)
 
 	local nodes = self:GetNodeSet():GetVNodes()
 	local pw, ph = self:GetVGraph():GetSize()
-	local a = nodes[connection[1]]
-	local apin = connection[2]
-	local b = nodes[connection[3]]
-	local bpin = connection[4]
+	local a = nodes[aPin:GetNode().id]
+	local apin = aPin.id
+	local b = nodes[bPin:GetNode().id]
+	local bpin = bPin.id
 
 	if a == nil or b == nil then print("Invalid connection") return end
 
@@ -121,10 +121,21 @@ end
 function meta:DrawConnections(xOffset, yOffset, alpha)
 
 	local connectionsDrawn = 0
-	for _, connection in self:GetGraph():Connections() do
-		if self:DrawConnection(connection, xOffset, yOffset, alpha) then connectionsDrawn = connectionsDrawn + 1 end
+	for _, vnode in pairs(self:GetNodeSet():GetVNodes()) do
+
+		for pinID, pin in vnode:GetNode():SidePins(PD_Out) do
+
+			for _, other in ipairs(pin:GetConnections()) do
+
+				if other() ~= nil then
+					if self:DrawConnection(pin, other(), xOffset, yOffset, alpha) then connectionsDrawn = connectionsDrawn + 1 end
+				end
+
+			end
+
+		end
+
 	end
-	--print("Connections: " .. connectionsDrawn)
 
 end
 

@@ -29,8 +29,6 @@ function meta:Init(type)
 	self.nodes = bplist.New(bpnode_meta):WithOuter(self)
 	self.inputs = bplist.New(bppin_meta):NamedItems("Inputs"):WithOuter(self)
 	self.outputs = bplist.New(bppin_meta):NamedItems("Outputs"):WithOuter(self)
-	self.connections = {}
-	self.heldConnections = {}
 
 	-- Listen for changes in the input variable list (function graph)
 	self.inputs:Bind("preModify", self, self.PreModify)
@@ -43,12 +41,7 @@ function meta:Init(type)
 	-- Listen for changes in the node list
 	self.nodes:BindRaw("added", self, function(id) self:Broadcast("nodeAdded", id) end)
 	self.nodes:BindRaw("removed", self, function(id)
-		for i, c in self:Connections() do
-			if c[1] == id or c[3] == id then
-				self:RemoveConnectionID(i)
-			end
-		end
-
+		self.nodes:Get(id):BreakAllLinks()
 		self:Broadcast("nodeRemoved", id)
 	end)
 
@@ -130,28 +123,6 @@ function meta:PreModifyNode( node, action, subaction )
 
 	self:Broadcast("preModifyNode", node.id, action)
 
-	self.heldConnections[node.id] = {}
-	local held = self.heldConnections[node.id]
-	local pins = node:GetPins()
-
-	node.holdPinCount = #pins
-
-	for i, c in self:Connections() do
-
-		if c[1] == node.id then --output
-			local other = self:GetNode(c[3])
-			local pin = pins[c[2]]
-			self:RemoveConnectionID(i)
-			held[#held+1] = {pin:GetDir(), pin:GetName(), c[3], PD_In, other:GetPin(c[4]):GetName(), c[2]}
-		elseif c[3] == node.id then --input
-			local other = self:GetNode(c[1])
-			local pin = pins[c[4]]
-			self:RemoveConnectionID(i)
-			held[#held+1] = {pin:GetDir(), pin:GetName(), c[1], PD_Out, other:GetPin(c[2]):GetName(), c[4]}
-		end
-
-	end
-
 end
 
 function meta:PostModifyNode( node )
@@ -160,29 +131,6 @@ function meta:PostModifyNode( node )
 
 	node:UpdatePins()
 	self:Broadcast("postModifyNode", node.id)
-
-	local ntype = node:GetType()
-	local held = self.heldConnections[node.id]
-	self.heldConnections[node.id] = nil
-
-	if ntype == nil then return end
-	if held == nil then return end
-
-	local pins = node:GetPins()
-	local pinCountSame = node.holdPinCount == #pins
-
-	for _, c in ipairs(held) do
-		local found = node:FindPin(c[1], c[2])
-		local pinID = found and found.id
-		if pinID == nil and pinCountSame then pinID = c[6] end
-		if pinID then
-			local other = self:GetNode(c[3])
-			local otherPin = other:FindPin(c[4], c[5]).id
-			if otherPin ~= nil then self:ConnectNodes(node.id, pinID, other.id, otherPin) end
-		else
-			print("Couldn't find pin: " .. tostring(c[2]))
-		end
-	end
 
 end
 
@@ -341,20 +289,28 @@ function meta:GetNodeTypes()
 
 end
 
-function meta:Connections(forward)
+function meta:AllPins()
 
-	if forward then
-		local i, n = 0, #self.connections
-		return function()
+	local nodes = self.nodes:GetTable()
+	local i = 1
+	local j = 1
+	local num = #nodes
+
+	return function()
+		if i > num then return end
+		local n = nodes[i]
+		local p = n:GetPins()
+		local o
+		if j >= #p then
 			i = i + 1
-			if i <= n then return i, self.connections[i] end
+			o = p[j]
+			j = 1
+			return o
+		else
+			o = p[j]
+			j = j + 1
+			return o
 		end
-	end
-
-	local i = #self.connections + 1
-	return function() 
-		i = i - 1
-		if i > 0 then return i, self.connections[i] end
 	end
 
 end
@@ -367,13 +323,9 @@ end
 
 function meta:GetPinConnections(pinDir, nodeID, pinID)
 
-	local out = {}
-	for k, v in self:Connections() do
-		if pinDir == PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
-		if pinDir == PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
-		out[#out+1] = v
-	end
-	return out
+	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:GetConnections'")
+
+	return self:GetNode(nodeID):GetPin(pinID):GetConnectedPins()
 
 end
 
@@ -406,13 +358,10 @@ function meta:NodeWalk(nodeID, condition, visited)
 	local function AddNodeConnections(node)
 		if visited[node] then return end visited[node] = true
 		for pinID, pin in node:Pins(nil, true) do
-			for _, v in ipairs( self:GetPinConnections(pin:GetDir(), node.id, pinID) ) do
-				local other = pin:GetDir() == PD_In and v[1] or v[3]
-				local otherPin = pin:GetDir() == PD_In and v[2] or v[4]
-				local otherNode = self:GetNode( other )
-
+			for _, v in ipairs( pin:GetConnectedPins() ) do
+				assert(v:GetNode() ~= nil)
 				-- Push connection onto stack if condition passes
-				if condition(otherNode, otherPin) then stack[#stack+1] = v end
+				if condition(v:GetNode(), v.id) then stack[#stack+1] = {pin, v} end
 			end
 		end
 	end
@@ -428,8 +377,8 @@ function meta:NodeWalk(nodeID, condition, visited)
 		table.remove(stack, #stack)
 		connections[#connections+1] = conn
 
-		local node0 = self:GetNode(conn[1])
-		local node1 = self:GetNode(conn[3])
+		local node0 = conn[1]:GetNode()
+		local node1 = conn[2]:GetNode()
 
 		-- Recurse into the node that hasn't been visited yet
 		AddNodeConnections(visited[node0] and node1 or node0)
@@ -524,47 +473,9 @@ function meta:FindNodeByType(nodeType)
 
 end
 
-function meta:FindConnection(nodeID0, pinID0, nodeID1, pinID1)
-
-	local p0 = self:GetNodePin( nodeID0, pinID0 )
-	local dir = p0:GetDir()
-
-	if dir == PD_Out then
-
-		for _, connection in self:Connections() do
-
-			if connection[1] ~= nodeID0 or connection[2] ~= pinID0 then continue end
-			if connection[3] == nodeID1 and connection[4] == pinID1 then return connection end
-
-		end
-
-	else
-
-		for _, connection in self:Connections() do
-
-			if connection[3] ~= nodeID0 or connection[4] ~= pinID0 then continue end
-			if connection[1] == nodeID1 and connection[2] == pinID1 then return connection end
-
-		end
-
-	end
-
-end
-
 function meta:IsPinConnected(nodeID, pinID, killConnections)
 
-	for i, connection in self:Connections() do
-
-		if connection[1] == nodeID and connection[2] == pinID then
-			if killConnections then self:RemoveConnectionID(i) continue end
-			return true, connection
-		end
-		if connection[3] == nodeID and connection[4] == pinID then
-			if killConnections then self:RemoveConnectionID(i) continue end
-			return true, connection
-		end
-
-	end
+	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:IsConnectedTo'")
 
 end
 
@@ -576,73 +487,15 @@ end
 
 function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
 
-	if self:FindConnection(nodeID0, pinID0, nodeID1, pinID1) ~= nil then return false, "Already connected" end
-
-	local p0 = self:GetNodePin(nodeID0, pinID0) --always PD_Out
-	local p1 = self:GetNodePin(nodeID1, pinID1) --always PD_In
-
-	if p0:IsType(PN_Exec) and self:IsPinConnected(nodeID0, pinID0, true) then return false, "Only one connection outgoing for exec pins" end
-	if not p1:IsType(PN_Exec) and self:IsPinConnected(nodeID1, pinID1, true) then return false, "Only one connection for inputs" end
-
-	if p0:GetDir() == p1:GetDir() then return false, "Can't connect " .. (p0:IsOut() and "m/m" or "f/f") .. " pins" end
-
-	if self:GetNode(nodeID0):GetTypeName() == "CORE_Pin" and p0:IsType(PN_Any) then return true end
-	if self:GetNode(nodeID1):GetTypeName() == "CORE_Pin" and p1:IsType(PN_Any) then return true end
-
-	if p0:HasFlag(PNF_Table) ~= p1:HasFlag(PNF_Table) then return false, "Can't connect table to non-table pin" end
-
-	if not p0:GetType():Equal(p1:GetType(), 0) then
-
-		if p0:IsType(PN_Any) and not p1:IsType(PN_Exec) then return true end
-		if p1:IsType(PN_Any) and not p0:IsType(PN_Exec) then return true end
-
-		if self:GetModule():CanCast(p0:GetType(), p1:GetType()) then
-			return true
-		else
-			return false, "No explicit conversion between " .. self:NodePinToString(nodeID0, pinID0) .. " and " .. self:NodePinToString(nodeID1, pinID1)
-		end
-
-	end
-
-	if p0:GetSubType() ~= p1:GetSubType() then 
-		return false, "Can't connect " .. self:NodePinToString(nodeID0, pinID0) .. " to " .. self:NodePinToString(nodeID1, pinID1)
-	end
-
-	return true
+	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:CanConnect'")
+	return false
 
 end
 
 function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
 
-	local p0 = self:GetNodePin(nodeID0, pinID0)
-	local p1 = self:GetNodePin(nodeID1, pinID1)
-
-	if p0 == nil then print("P0 pin not found: " .. nodeID0 .. " -> " .. pinID0) return false end
-	if p1 == nil then print("P1 pin not found: " .. nodeID1 .. " -> " .. pinID1) return false end
-
-	-- swap connection to ensure first is output and second is input
-	if p0:IsIn() and p1:IsOut() then
-		local t = nodeID0 nodeID0 = nodeID1 nodeID1 = t
-		local t = pinID0 pinID0 = pinID1 pinID1 = t
-	end
-
-	local cc, m = self:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
-	if not cc then print(m) return false end
-
-	self.connections[#self.connections+1] = { nodeID0, pinID0, nodeID1, pinID1 }
-
-	local node0 = self:GetNode(nodeID0)
-	local node1 = self:GetNode(nodeID1)
-
-	if node0.ConnectionAdded then node0:ConnectionAdded( p0 ) end
-	if node1.ConnectionAdded then node1:ConnectionAdded( p1 ) end
-
-	--print("CONNECTED: " .. self:GetNode(nodeID0):ToString(pinID0) .. " -> " .. self:GetNode(nodeID1):ToString(pinID1))
-
-	self:WalkInforms()
-	self:Broadcast("connectionAdded", #self.connections, self.connections[#self.connections])
-
-	return true
+	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:MakeLink'")
+	return false
 
 end
 
@@ -651,7 +504,6 @@ function meta:Clear()
 	self.nodes:Clear()
 	self.inputs:Clear()
 	self.outputs:Clear()
-	self.connections = {}
 
 	self:Broadcast("cleared")
 
@@ -703,62 +555,21 @@ end
 
 function meta:RemoveConnectionID(id)
 
-	local c = self.connections[id]
-	if c ~= nil then
-		table.remove(self.connections, id)
-		self:WalkInforms()
-		self:Broadcast("connectionRemoved", id, c)
-	else
-		print("Could not find connection: " .. tostring(id))
-	end
+	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:BreakLink'")
 
 end
 
 function meta:RemoveConnection(nodeID0, pinID0, nodeID1, pinID1)
 
-	for i, c in self:Connections() do
-
-		if (c[1] == nodeID0 and c[3] == nodeID1) and (c[2] == pinID0 and c[4] == pinID1) then
-			self:RemoveConnectionID(i)
-		elseif (c[1] == nodeID1 and c[3] == nodeID0) and (c[2] == pinID1 and c[4] == pinID0) then
-			self:RemoveConnectionID(i)
-		end
-
-	end
-
-end
-
-function meta:RemoveInvalidConnections()
-
-	local connections = self.connections
-	for i=#connections, 1, -1 do
-
-		local c = connections[i]
-		local node1 = self:GetNode(c[1])
-		local node2 = self:GetNode(c[3])
-		if not node1 then
-			print("Removed invalid connection: " .. i .. " [output node not found : " .. tostring(c[1]) .. "]")
-			table.remove(connections, i)
-		elseif not node2 then
-			print("Removed invalid connection: " .. i .. " [input node not found : " .. tostring(c[3]) .. "]")
-			table.remove(connections, i)
-		elseif not node1:GetPin(c[2]) then
-			print("Removed invalid connection: " .. i .. " [output pin not found : " .. node1:ToString() .. " : " .. tostring(c[2]) .. "]")
-			table.remove(connections, i)
-			PrintTable(c)
-		elseif not node2:GetPin(c[4]) then
-			print("Removed invalid connection: " .. i .. " [input pin not found : " .. node2:ToString() .. " : " .. tostring(c[4]) .. "]")
-			table.remove(connections, i)
-			PrintTable(c)
-		end
-
-	end	
+	bpcommon.Deprecated("OUTDATED CONNECTION TECH, USE 'bppin:BreakLink'")
 
 end
 
 function meta:CollapseSingleRerouteNode(nodeID)
 
-	local node = self:GetNode( nodeID )
+	error("Re-implement reroute collapse logic")
+
+	--[[local node = self:GetNode( nodeID )
 
 	local insert = {}
 	local connections = self.connections
@@ -785,7 +596,7 @@ function meta:CollapseSingleRerouteNode(nodeID)
 		end
 	end
 
-	self:RemoveNode( nodeID )
+	self:RemoveNode( nodeID )]]
 
 end
 
@@ -851,7 +662,6 @@ function meta:Serialize(stream)
 		self.deferredNodes:Serialize(stream)
 	end
 
-	self.connections = stream:Value(self.connections)
 	self.hookNodeType = stream:String(self.hookNodeType)
 
 	return stream
@@ -874,10 +684,6 @@ function meta:CreateDeferredData()
 		end
 
 		self:WalkInforms()
-		self:RemoveInvalidConnections()
-		for i, connection in self:Connections() do
-			self:Broadcast("connectionAdded", i, connection)
-		end
 
 	end)
 
@@ -885,6 +691,8 @@ end
 
 -- Quickly banging this out using existing tech
 function meta:CopyInto(other)
+
+	print("***COPY GRAPH****")
 
 	Profile("copy-graph", function()
 
@@ -895,6 +703,17 @@ function meta:CopyInto(other)
 		other.flags = self.flags
 		other.hookNodeType = self.hookNodeType
 
+		-- Store connections as indices
+		local connections = {}
+		local ids = bpindexer.New()
+		for pin in self:AllPins() do ids:Get(pin) end
+		for pin in self:AllPins() do
+			if not pin:IsOut() then continue end
+			for _, conn in ipairs(pin:GetConnections()) do
+				connections[#connections+1] = {ids:Get(pin), ids:Get(conn())}
+			end
+		end
+
 		-- Deep copy will copy all members including graph which includes module etc...
 		-- So clear graph variable and set it on the other side of the deep copy
 
@@ -904,8 +723,13 @@ function meta:CopyInto(other)
 
 		for _, node in other:Nodes() do node:PostInit() end
 
-		for _, c in self:Connections() do
-			other.connections[#other.connections+1] = {c[1], c[2], c[3], c[4]}
+		-- Restore connections
+		local ids = bpindexer.New()
+		for pin in other:AllPins() do ids:Get(pin) end
+		for _, conn in ipairs(connections) do
+			local a = ids:FindByID(conn[1])
+			local b = ids:FindByID(conn[2])
+			if a and b then a:MakeLink(b) end
 		end
 
 		other:WalkInforms()
@@ -921,17 +745,13 @@ function meta:CreateSubGraph(subNodeIds)
 	local copy = self:CopyInto( New():WithOuter( self:GetModule() ) )
 	local hold = {}
 
-	for i, c in self:Connections() do
-		hold[#hold+1] = c
-	end
-
 	copy:CacheNodeTypes()
 	copy:RemoveNodeIf( function(node) return not table.HasValue(subNodeIds, node.id) end )
 	copy:WalkInforms()
-	copy:RemoveInvalidConnections()
 
 	local severedPins = {}
-	for _, v in ipairs(hold) do
+	-- TODO: Fix this
+	--[[for _, v in ipairs(hold) do
 
 		if table.HasValue(subNodeIds, v[1]) and not table.HasValue(subNodeIds, v[3]) then
 			severedPins[#severedPins+1] = {v[1], v[2]}
@@ -941,7 +761,7 @@ function meta:CreateSubGraph(subNodeIds)
 			severedPins[#severedPins+1] = {v[3], v[4]}
 		end
 
-	end
+	end]]
 
 	copy.severedPins = severedPins
 
@@ -971,22 +791,6 @@ function meta:AddSubGraph( subgraph, x, y )
 		end
 
 	end
-
-	for _, c in copy:Connections() do
-
-		connectionCount = connectionCount + 1
-		local nodeID0 = connectionRemap[c[1]]
-		local nodeID1 = connectionRemap[c[3]]
-		local pinID0 = c[2]
-		local pinID1 = c[4]
-
-		if nodeID0 and nodeID1 then
-			self:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
-		end
-
-	end
-
-	--print("Added " .. nodeCount .. " nodes and " .. connectionCount .. " connections.")
 
 end
 
@@ -1072,9 +876,8 @@ function meta:ExecWalk( func )
 
 			for k, v in ipairs(connections) do
 
-				local nodeA = self:GetNode(v[1])
-				local nodeB = self:GetNode(v[3])
-
+				local nodeA = v[1]:GetNode()
+				local nodeB = v[2]:GetNode()
 				if not emitted[nodeA] then func(nodeA) emitted[nodeA] = true end
 				if not emitted[nodeB] then func(nodeB) emitted[nodeB] = true end
 

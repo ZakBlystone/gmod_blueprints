@@ -322,6 +322,14 @@ function meta:FindPin(dir, name)
 
 end
 
+function meta:BreakAllLinks()
+
+	for _, pin in ipairs(self:GetPins()) do
+		pin:BreakAllLinks()
+	end
+
+end
+
 function meta:GetLiteral(pinID)
 
 	local pins = self:GetPins()
