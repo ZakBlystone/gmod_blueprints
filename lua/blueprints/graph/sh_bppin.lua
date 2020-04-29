@@ -128,7 +128,7 @@ function meta:GetConnectedPins(out)
 
 	out = out or {}
 	for _, pin in pairs(self:GetConnections()) do
-		if pin() then out[#out+1] = pin() end
+		if pin() ~= nil then out[#out+1] = pin() end
 	end
 	return out
 
@@ -210,6 +210,8 @@ end
 
 function meta:MakeLink( other )
 
+	assert( isbppin(other), "Expected pin, got: " .. bpcommon.GetMetaTableName( getmetatable(other) ) )
+
 	if self:GetDir() == other:GetDir() then return self:CanConnect(other) end
 	if not self:IsOut() then return other:MakeLink(self) end
 
@@ -230,6 +232,8 @@ function meta:MakeLink( other )
 end
 
 function meta:BreakLink( other )
+
+	assert( isbppin(other), "Expected pin, got: " .. bpcommon.GetMetaTableName( getmetatable(other) ) )
 
 	local graph = self:FindOuter( bpgraph_meta )
 	local conn = self:GetConnections()

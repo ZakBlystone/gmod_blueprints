@@ -351,6 +351,7 @@ function meta:NodeWalk(nodeID, condition, visited)
 		if visited[node] then return end visited[node] = true
 		for pinID, pin in node:Pins(nil, true) do
 			for _, v in ipairs( pin:GetConnectedPins() ) do
+				print( "PINTYPE: " .. bpcommon.GetMetaTableName( getmetatable(v) ) )
 				assert(v:GetNode() ~= nil)
 				-- Push connection onto stack if condition passes
 				if condition(v:GetNode(), v.id) then stack[#stack+1] = {pin, v} end
@@ -521,38 +522,20 @@ function meta:AddNode(nodeTypeName, ...)
 
 end
 
-function meta:CollapseSingleRerouteNode(nodeID)
+function meta:CollapseSingleRerouteNode( node )
 
-	error("Re-implement reroute collapse logic")
+	local inputs = {}
+	local outputs = {}
 
-	--[[local node = self:GetNode( nodeID )
+	for _, pin in ipairs(node:GetPin(1):GetConnectedPins()) do inputs[#inputs+1] = pin end
+	for _, pin in ipairs(node:GetPin(2):GetConnectedPins()) do outputs[#outputs+1] = pin end
 
-	local insert = {}
-	local connections = self.connections
-	local input = nil
-	for i, c in self:Connections() do
+	node:BreakAllLinks()
 
-		if c[1] == nodeID then --output
-			insert[#insert+1] = {c[3],c[4]}
-			self:RemoveConnectionID(i)
-		elseif c[3] == nodeID then --input
-			input = {c[1],c[2]}
-			self:RemoveConnectionID(i)
-		end
-
-	end	
-
-	if input == nil then print("Reroute node did not have input connection") return end
-
-	for _, c in ipairs(insert) do
-		if not self:ConnectNodes(input[1], input[2], c[1], c[2]) then 
-			error("Unable to reconnect re-route nodes: " .. 
-				self:NodePinToString(input[1], input[2]) .. " -> " .. 
-				self:NodePinToString(c[1], c[2])) 
-		end
-	end
-
-	self:RemoveNode( nodeID )]]
+	if #inputs == 0 or #outputs == 0 then return
+	elseif #inputs == 1 then for _, pin in ipairs(outputs) do inputs[1]:MakeLink( pin ) end
+	elseif #outputs == 1 then for _, pin in ipairs(inputs) do outputs[1]:MakeLink( pin ) end
+	else error("Invalid state on reroute node: " .. #inputs .. " inputs, " .. #outputs .. " outputs") end
 
 end
 
@@ -562,7 +545,7 @@ function meta:CollapseRerouteNodes()
 
 	for _, node in self:Nodes(true) do
 		if node:GetType():HasFlag(NTF_Collapse) then
-			self:CollapseSingleRerouteNode( node.id )
+			self:CollapseSingleRerouteNode( node )
 		end
 	end
 
