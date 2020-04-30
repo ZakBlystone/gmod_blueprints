@@ -8,7 +8,6 @@ MODIFY_RENAME = 2
 MODIFY_REPLACE = 3
 
 local meta = bpcommon.MetaTable("bplist")
-meta.__tostring = function(self) return self:ToString() end
 meta.__index = meta
 
 function meta:Init( meta )
@@ -304,7 +303,7 @@ function meta:Serialize(stream)
 		local item = self.items[i] or self:ConstructObject()
 		if self.indexed then item.id = stream:UInt(item.id) else item.id = i end
 		if self.namedItems then item.name = stream:SValueCompat(item.name) end
-		stream:Object(item, true)
+		stream:Object(item, self, true)
 
 		if stream:IsReading() then
 

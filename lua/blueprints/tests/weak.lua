@@ -1,6 +1,8 @@
 TEST.Name = "Weak"
 TEST.Libs = {
 	"bpcommon",
+	"bpnodetype",
+	"bpnode",
 	"bppintype",
 	"bppin",
 	"bpschema",
@@ -9,7 +11,11 @@ TEST.Libs = {
 	"collectgarbage",
 	"print",
 	"tostring",
-	"rawequal"
+	"rawequal",
+	"getmetatable",
+	"isbppin",
+	"isbpnode",
+	"isbpnodetype",
 }
 
 function GC_TEST()
@@ -115,10 +121,74 @@ function LINKER_TEST_EXTERN()
 
 end
 
+function LINKER_TEST_EXTERN_CONNECTIONS()
+
+	-- Setup
+	local baseType = bpnodetype.New()
+	baseType:SetCodeType( bpschema.NT_Function )
+	baseType:SetName("baseType")
+	
+	local baseType2 = bpnodetype.New()
+	baseType2:SetCodeType( bpschema.NT_Function )
+	baseType2:SetName("baseType2")
+
+	local nodeA = bpnode.New(baseType) nodeA:PostInit()
+	local nodeB = bpnode.New(baseType2) nodeB:PostInit()
+
+	nodeA:FindPin(bpschema.PD_Out, "Thru"):MakeLink(nodeB:FindPin(bpschema.PD_In, "Exec"))
+
+	-- Write
+	local stream = bpstream.New("test", bpstream.MODE_String):Out()
+	stream:Extern(baseType)
+	stream:Extern(baseType2)
+	stream:Object(nodeA)
+	stream:Object(nodeB)
+	local data = stream:Finish()
+
+	-- Read
+	stream = bpstream.New("test2", bpstream.MODE_String, data):In()
+	stream:Extern(nil)
+	stream:Extern(nil)
+
+	local readNodeA = stream:Object()
+	local readNodeB = stream:Object()
+
+	ASSERT(isbpnode(readNodeA))
+	ASSERT(isbpnode(readNodeB))
+
+	readNodeA:PostInit()
+	readNodeB:PostInit()
+
+	ASSERT(isbpnodetype(readNodeA.nodeType()) or readNodeA.nodeType() == nil)
+	ASSERT(isbpnodetype(readNodeB.nodeType()) or readNodeB.nodeType() == nil)
+
+	print("A Pins")
+	for _, pin in ipairs(readNodeA:GetPins()) do
+		ASSERT( isbppin( pin ) )
+		print( pin )
+	end
+
+	print("B Pins")
+	for _, pin in ipairs(readNodeB:GetPins()) do
+		ASSERT( isbppin( pin ) )
+		print( pin )
+	end
+
+	local pins = readNodeA:FindPin(bpschema.PD_Out, "Thru"):GetConnectedPins()
+
+	local found = false
+	for _, pin in ipairs(pins) do
+		if pin == readNodeB:FindPin(bpschema.PD_In, "Exec") then found = true end
+	end
+
+	ASSERT(found)
+
+end
+
 function LINKER_TEST_DEEP()
 
 	-- First
-	print("****************WRITE TEST")
+	--print("****************WRITE TEST")
 	local stream = bpstream.New("test", bpstream.MODE_String):Out()
 	local pt = bppintype.New(bpschema.PN_Ref,nil,"Entity")
 	local pt2 = bppintype.New(bpschema.PN_Exec,nil)
@@ -129,16 +199,16 @@ function LINKER_TEST_DEEP()
 	local data = stream:Finish()
 
 	-- Second
-	print("****************READ TEST")
+	--print("****************READ TEST")
 	stream = bpstream.New("test2", bpstream.MODE_String, data):In()
 	local readPin = stream:Object()
 	local readPin2 = stream:Object()
 
-	print(readPin:ToString(true, true))
-	print(readPin2:ToString(true, true))
+	--print(readPin:ToString(true, true))
+	--print(readPin2:ToString(true, true))
 
 	-- Third
-	print("****************RE-WRITE TEST")
+	--print("****************RE-WRITE TEST")
 	stream = bpstream.New("test3", bpstream.MODE_String):Out()
 	stream:Object(readPin)
 	stream:Object(readPin2)
@@ -146,16 +216,16 @@ function LINKER_TEST_DEEP()
 
 
 	-- Fourth
-	print("****************RE-READ TEST")
+	--print("****************RE-READ TEST")
 	stream = bpstream.New("test4", bpstream.MODE_String, data):In()
 	local reReadPin = stream:Object()
 	local reReadPin2 = stream:Object()
 
-	print(readPin:ToString(true, true))
-	print(readPin2:ToString(true, true))
+	--print(readPin:ToString(true, true))
+	--print(readPin2:ToString(true, true))
 
-	ASSERT( reReadPin == readPin )
-	ASSERT( reReadPin2 == readPin2 )
+	ASSERT( reReadPin:Equal(readPin) )
+	ASSERT( reReadPin2:Equal(readPin2) )
 
 
 end

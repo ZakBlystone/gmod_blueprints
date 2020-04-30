@@ -5,12 +5,6 @@ module("bppin", package.seeall, bpcommon.rescope(bpcommon, bpschema))
 local meta = bpcommon.MetaTable("bppin")
 local pinClasses = bpclassloader.Get("Pin", "blueprints/graph/pintypes/", "BPPinClassRefresh", meta)
 
-meta.__tostring = nil
-
---[[meta.__tostring = function(self)
-	return self:ToString(true, true)
-end]]
-
 function meta:Init(dir, name, type, desc)
 	self.dir = dir
 	self.name = name
@@ -210,7 +204,7 @@ end
 
 function meta:MakeLink( other )
 
-	assert( isbppin(other), "Expected pin, got: " .. bpcommon.GetMetaTableName( getmetatable(other) ) )
+	assert( isbppin(other), "Expected pin, got: " .. tostring(other) )
 
 	if self:GetDir() == other:GetDir() then return self:CanConnect(other) end
 	if not self:IsOut() then return other:MakeLink(self) end
@@ -233,7 +227,7 @@ end
 
 function meta:BreakLink( other )
 
-	assert( isbppin(other), "Expected pin, got: " .. bpcommon.GetMetaTableName( getmetatable(other) ) )
+	assert( isbppin(other), "Expected pin, got: " .. tostring(other) )
 
 	local graph = self:FindOuter( bpgraph_meta )
 	local conn = self:GetConnections()
@@ -272,28 +266,43 @@ end
 
 function meta:Serialize(stream)
 
-	self.type = stream:Object(self.type):WithOuter(self)
-	self.dir = stream:Bits(self.dir, 8)
 	self.name = stream:String(self.name)
+
+	print(" PIN SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]: " .. tostring(self))
+
+	self.type = stream:Object(self.type, self)
+	self.dir = stream:Bits(self.dir, 8)
 	self.desc = stream:String(self.desc)
 	self.default = stream:String(self.default)
 	self.literal = stream:String(self.literal)
 	self.connections = stream:ObjectArray(self.connections)
 
-	--print("PIN SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]: " .. self:ToString())
+	for _, conn in ipairs(self.connections) do
+
+		if conn:IsValid() then
+
+			assert( isbppin(conn()), "Expected pin, got: " .. tostring( conn() ) )
+
+		end
+
+	end
+
+	print(" PIN DONE")
 
 	return self
 
 end
 
-function meta:ToStringNode()
-	return self:GetNode():ToString(self.id)
+function meta:ToString()
+	local node = self:GetNode()
+	if not node then return "[nodeless]" .. self:ToStringEx(true, true) end
+	return self:GetNode():ToString(self)
 end
 
-function meta:ToString(printTypeInfo, printDir)
-	local str = self:GetName()
+function meta:ToStringEx(printTypeInfo, printDir)
+	local str = self:GetName() or "unnamed"
 	if printDir then str = str .. " (" .. (self:GetDir() == PD_In and "IN" or "OUT") .. ")" end
-	if printTypeInfo then str = str .. " [" .. self:GetType():ToString() .. "]" end
+	if printTypeInfo then str = str .. " [" .. tostring(self:GetType()) .. "]" end
 	return str
 end
 

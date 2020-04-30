@@ -20,7 +20,6 @@ FT_Unknown = 0
 FT_Module = 1
 
 local meta = bpcommon.MetaTable("bpfile")
-meta.__tostring = function(self) return self:ToString() end
 
 bpcommon.AddFlagAccessors(meta)
 

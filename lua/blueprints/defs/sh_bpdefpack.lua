@@ -3,7 +3,6 @@ AddCSLuaFile()
 module("bpdefpack", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bpdefpack")
-meta.__tostring = function(self) return self:ToString() end
 
 function meta:Init()
 
@@ -218,12 +217,12 @@ function meta:Serialize(stream)
 	local structCount = stream:UInt(#self.structs)
 
 	for i=1, groupCount do
-		self.nodeGroups[i] = stream:Object( self.nodeGroups[i] or bpnodetypegroup.New():WithOuter(self), true )
+		self.nodeGroups[i] = stream:Object( self.nodeGroups[i] or bpnodetypegroup.New(), self, true )
 	end
 
 	for i=1, structCount do
 		-- This is a dumb out-of-bounds hack, fix later
-		self.structs[i] = stream:Object( self.structs[i] or bpstruct.New():WithOuter(self), true )
+		self.structs[i] = stream:Object( self.structs[i] or bpstruct.New(), self, true )
 		self.structs[i].name = stream:String(self.structs[i].name)
 		self.structs[i].pinTypeOverride = stream:Int(self.structs[i].pinTypeOverride or -1)
 		if self.structs[i].pinTypeOverride == -1 then self.structs[i].pinTypeOverride = nil end

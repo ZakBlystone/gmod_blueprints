@@ -11,7 +11,6 @@ local meta = bpcommon.MetaTable("bpnodetype")
 
 bpcommon.AddFlagAccessors(meta)
 
-meta.__tostring = function(self) return self:ToString() end
 meta.__eq = function(a, b)
 	if a.codeType ~= b.codeType then return false end
 	if a.role ~= b.role then return false end
@@ -279,7 +278,7 @@ function meta:Serialize(stream)
 
 	local numPins = stream:Bits(#self.pins, 8)
 	for i=1, numPins do
-		self.pins[i] = stream:Object(self.pins[i] or bppin.New(), true)
+		self.pins[i] = stream:Object(self.pins[i] or bppin.New(), nil, true)
 	end
 
 	return stream

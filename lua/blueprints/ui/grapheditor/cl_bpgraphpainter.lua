@@ -31,6 +31,9 @@ function meta:PointToScreen(x,y) return self:GetVGraph():GetRenderer():PointToSc
 
 function meta:DrawConnection(aPin, bPin, xOffset, yOffset, alpha)
 
+	assert( isbppin(aPin), "Expected pin, got: " .. tostring(aPin) )
+	assert( isbppin(bPin), "Expected pin, got: " .. tostring(bPin) )
+
 	local nodes = self:GetNodeSet():GetVNodes()
 	local pw, ph = self:GetVGraph():GetSize()
 	local a = nodes[aPin:GetNode().id]

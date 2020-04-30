@@ -129,7 +129,9 @@ function meta:WriteObject(stream, obj, isExtern)
 	if not type(obj) == "table" then error("Tried to write non-table object") end
 
 	if obj.__weak then
-		self.order[#self.order+1] = {self:FindObjectOrder(obj()), WEAK_SET}
+		local ord = self:FindObjectOrder(obj())
+		if ord ~= 0 then print("  PRE-LINKED WEAK: " .. tostring(obj())) end
+		self.order[#self.order+1] = {ord, WEAK_SET}
 		if obj:IsValid() then self.refs[obj()] = #self.order end
 		return
 	end
@@ -150,18 +152,19 @@ function meta:WriteObject(stream, obj, isExtern)
 	else
 		set.objects[hash] = set.next
 		self.order[#self.order+1] = {set.id, set.next}
+		self.hashes[#self.hashes+1] = meta.__hash
 		if not isExtern then 
-			self.hashes[#self.hashes+1] = meta.__hash
+			print("SAVED: " .. tostring(obj))
 			obj:Serialize(stream) 
 		end
 		set.next = set.next + 1
 	end
 
-	if self.refs[obj] then self.order[self.refs[obj]][1] = #self.order end
+	if self.refs[obj] then self.order[self.refs[obj]][1] = #self.order print("  POST-LINKED WEAK: " .. tostring(obj) ) end
 
 end
 
-function meta:ReadObject(stream, extern, isExtern)
+function meta:ReadObject(stream, extern, isExtern, outer)
 
 	local ord = self.order[self.orderNum]
 	self.orderNum = self.orderNum + 1
@@ -171,12 +174,10 @@ function meta:ReadObject(stream, extern, isExtern)
 
 	if objID == WEAK_SET then
 		local w = bpcommon.Weak(nil)
-		for k, v in ipairs(self.order) do
-			if k == setID then
-				local set = self.objects[v[1]]
-				if set then w:Set( set[v[2]] ) end
-				break
-			end
+		if setID ~= 0 and self.order[setID] ~= nil then
+			local ord = self.order[setID]
+			local set = self.objects[ord[1]]
+			if set then w:Set( set[ord[2]] ) print("  PRE-LINKED WEAK: " .. tostring(set[ord[2]]) ) end
 		end
 		self.refs[setID] = w
 		return w
@@ -188,14 +189,21 @@ function meta:ReadObject(stream, extern, isExtern)
 	local set = self.objects[setID]
 	if not set[objID] then
 		local hash = self.hashes[self.hashNum]
-		if not isExtern then self.hashNum = self.hashNum + 1 end
+		self.hashNum = self.hashNum + 1
 
-		local obj = isExtern and extern or self:Construct(hash)
-		if not isExtern then obj:Serialize(stream) end
+		local obj = nil
+		if isExtern then
+			obj = extern
+		else 
+			obj = self:Construct(hash):WithOuter(outer)
+			print("CONSTRUCTED: " .. tostring(obj))
+			obj:Serialize(stream)
+		end
 		set[objID] = obj
 
 		local w = self.refs[self.orderNum - 1]
 		if w then
+			print("  POST-LINKED WEAK: " .. tostring(obj))
 			w:Set( obj )
 		end
 

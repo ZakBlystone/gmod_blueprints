@@ -341,7 +341,7 @@ function meta:Extern(v)
 
 end
 
-function meta:Object(v, noLinker)
+function meta:Object(v, outer, noLinker)
 
 	if self:IsWriting() then
 
@@ -350,7 +350,7 @@ function meta:Object(v, noLinker)
 			if v.__hash == nil then error("Object is not a metatype") end
 			v:Serialize(self)
 		else
-			self.linker:WriteObject(self, v)
+			self.linker:WriteObject(self, v, false)
 		end
 		return v
 
@@ -360,7 +360,7 @@ function meta:Object(v, noLinker)
 		if noLinker or self.linker == nil then
 			v:Serialize(self)
 		else
-			v = self.linker:ReadObject(self)
+			v = self.linker:ReadObject(self, nil, false, outer)
 		end
 		return v
 
@@ -369,13 +369,13 @@ function meta:Object(v, noLinker)
 
 end
 
-function meta:ObjectArray(v)
+function meta:ObjectArray(v, outer)
 
 	if self:IsWriting() then
 
 		self:Length(#v)
 		if #v == 0 then return v end
-		for i=1, #v do self:Object(v[i]) end
+		for i=1, #v do self:Object(v[i], outer) end
 		return v
 
 	end
@@ -384,7 +384,7 @@ function meta:ObjectArray(v)
 		local v = {}
 		local n = self:Length()
 		for i=1, n do
-			v[#v+1] = self:Object(nil)
+			v[#v+1] = self:Object(nil, outer)
 		end
 		return v
 

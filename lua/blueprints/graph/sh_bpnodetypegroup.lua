@@ -27,7 +27,6 @@ function NodeContextFromGroupType( type )
 end
 
 local meta = bpcommon.MetaTable("bpnodetypegroup")
-meta.__tostring = function(self) return self:ToString() end
 
 function meta:Init(entryType)
 

@@ -6,7 +6,6 @@ local DummyNodeType = bpnodetype.New()
 DummyNodeType:SetDisplayName("InvalidNode")
 
 local meta = bpcommon.MetaTable("bpnode")
-meta.__tostring = function(self) return self:ToString() end
 
 nodeClasses = bpclassloader.Get("Node", "blueprints/graph/nodetypes/", "BPNodeClassRefresh", meta)
 
@@ -35,8 +34,13 @@ function meta:PostInit()
 
 	local ntype = self.nodeType()
 	if ntype == nil then
-		print("Node without valid nodetype!")
-		return false
+		print("Node without valid nodetype, replacing with dummy!")
+		ntype = DummyNodeType
+		self.nodeType:Set( ntype )
+
+		for _, pin in ipairs(self.pinCache or {}) do
+			print(" PIN WAS: " .. pin:ToStringEx(true, true))
+		end
 	end
 
 	local nodeClass = ntype:GetNodeClass()
@@ -50,8 +54,6 @@ function meta:PostInit()
 end
 
 function meta:SetLiteralDefaults( force )
-
-	local ntype = self:GetType()
 
 	self.suppressPinEvents = true
 
@@ -76,7 +78,7 @@ function meta:ToString(pinID)
 		if pinID then
 			local p = type(pinID) == "table" and pinID or self:GetPin(pinID)
 			if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end
-			if p then str = str .. "." .. p:ToString(true,true) end
+			if p then str = str .. "." .. p:ToStringEx(true,true) end
 		end
 	end
 
@@ -120,8 +122,15 @@ function meta:UpdatePins()
 
 	--print("UPDATING PINS[" .. self:ToString() .. "]...")
 
-	local newPins = {}
-	self:GeneratePins(newPins)
+	local newPins = nil
+
+	-- This will do for now
+	if self.nodeType() ~= DummyNodeType then
+		newPins = {}
+		self:GeneratePins(newPins)
+	else
+		newPins = self.pinCache
+	end
 
 	local current = self.pinCache
 	local function findExisting( p )
@@ -435,15 +444,20 @@ end
 
 function meta:Serialize(stream)
 
+	print("NODE SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]")
+
 	self.nodeType = stream:Object(self.nodeType)
 	self.x = stream:Float(self.x)
 	self.y = stream:Float(self.y)
-	self.pinCache = stream:ObjectArray( self.pinCache or {} )
 
-	--print("NODE SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "] PINS: " .. self:ToString())
+	print("PINS:")
+	self.pinCache = stream:ObjectArray( self.pinCache or {}, self )
+
 	--[[for _,v in ipairs(self.pinCache) do
 		print(" " .. v:ToString(true, true))
 	end]]
+
+	print("NODE DONE")
 
 	return stream
 

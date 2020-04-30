@@ -293,6 +293,10 @@ function MetaTable(name, extends)
 	local mt = G_BPMetaRegistry[name]
 	mt.__index = mt
 	mt.__hash = util.CRC(name)
+	mt.__tostring = function(s)
+		local str = s.ToString and s:ToString() or ""
+		return ("%s(%s): %s"):format(name, tostring(s.__rawstr), str)
+	end
 	mt.WithOuter = WithOuter
 	mt.GetOuter = GetOuter
 	mt.GetOutermost = GetOutermost
@@ -310,7 +314,7 @@ function MetaTable(name, extends)
 		end
 	end
 
-	_G["is" .. name] = function(tbl) return (getmetatable(tbl) or {}).__hash == mt.__hash end
+	_G["is" .. name] = function(tbl) return tbl ~= nil and (getmetatable(tbl) or {}).__hash == mt.__hash end
 	_G[name .. "_meta"] = mt
 
 	return mt
@@ -336,6 +340,7 @@ end
 -- Gets the name of the given metatable
 function GetMetaTableName(tbl)
 
+	if tbl == nil then return "nil" end
 	for k,v in pairs(G_BPMetaRegistry) do
 		if v.__hash == tbl.__hash then return k end
 	end
@@ -347,7 +352,9 @@ end
 function MakeInstance(meta, ...)
 
 	if type(meta) == "string" then meta = G_BPMetaRegistry[name] end
-	return setmetatable({}, meta):Init(...)
+	local raw = {}
+	raw.__rawstr =tostring(raw)
+	return setmetatable(raw, meta):Init(...)
 
 end
 

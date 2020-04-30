@@ -4,9 +4,6 @@ AddCSLuaFile()
 module("bppintype", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bppintype")
-meta.__tostring = function(self)
-	return self:ToString()
-end
 
 meta.__eq = function(a, b)
 	return a.basetype == b.basetype and a.flags == b.flags and a.subtype == b.subtype

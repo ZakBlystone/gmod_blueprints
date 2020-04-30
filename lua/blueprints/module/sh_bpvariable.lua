@@ -134,7 +134,7 @@ function meta:Serialize(stream)
 	stream:Extern( self:GetterNodeType() )
 	stream:Extern( self:SetterNodeType() )
 
-	self.pintype = stream:Object(self.pintype or bppintype.New():WithOuter(self), true)
+	self.pintype = stream:Object(self.pintype or bppintype.New(), self, true)
 	self.default = stream:Value(self.default)
 	self.repmode = stream:Value(self.repmode)
 
