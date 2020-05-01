@@ -162,22 +162,18 @@ end
 
 function meta:ConnectionAdded( a, b )
 
-	if true then print("***OUTDATED CONNECTION BIND 'ConnectionAdded'") return end
-
 	local nodes = self.nodeSet:GetVNodes()
-	local nodeA = nodes[conn[1]]
-	local nodeB = nodes[conn[3]]
+	local nodeA = nodes[a:GetNode().id]
+	local nodeB = nodes[b:GetNode().id]
 	if nodeA then nodeA:Invalidate(true) end
 	if nodeB then nodeB:Invalidate(true) end
 
 end
 function meta:ConnectionRemoved( a, b ) 
 
-	if true then print("***OUTDATED CONNECTION BIND 'ConnectionRemoved'") return end
-
 	local nodes = self.nodeSet:GetVNodes()
-	local nodeA = nodes[conn[1]]
-	local nodeB = nodes[conn[3]]
+	local nodeA = nodes[a:GetNode().id]
+	local nodeB = nodes[b:GetNode().id]
 	if nodeA then nodeA:Invalidate(true) end
 	if nodeB then nodeB:Invalidate(true) end
 
@@ -335,27 +331,26 @@ end
 function meta:FindVPin(pin)
 
 	local vnodes = self:GetVNodes()
-	for _, vnode in ipairs(vnodes) do
+	local vnode = vnodes[pin:GetNode().id]
+	if vnode == nil then return nil end
 
-		for _, vpin in ipairs(vnode.pins) do
-			if vpin.pin == pin then return vpin end
-		end
-
+	for _, vpin in ipairs(vnode.pins) do
+		if vpin.pin == pin then return vpin end
 	end
 
 end
 
 function meta:TakeGrabbedPin()
 
-	local nodeID = self.grabPin:GetVNode():GetNode().id
-	local pinID = self.grabPin:GetPinID()
-	local graph = self:GetGraph()
-	local vnodes = self:GetVNodes()
-
 	for _, pin in ipairs(self.grabPin.pin:GetConnectedPins()) do
 
 		self.grabPin.pin:BreakLink( pin )
-		self.grabPin = self:FindVPin( pin ) or self.grabPin
+		local p = self:FindVPin( pin )
+		if not p then
+			print("Couldn't find pin: ", pin)
+		else
+			self.grabPin = p
+		end
 		break
 
 	end
@@ -519,6 +514,7 @@ function meta:LeftMouse(x,y,pressed)
 				local scaleFactor = self:GetCoordinateScaleFactor()
 				local _, pinNode = self:GetGraph():AddNode("CORE_Pin", wx/scaleFactor - 32, wy/scaleFactor - 32)
 				pinNode:FindPin(PD_In, "In"):Connect( self.grabPin:GetPin() )
+				pinNode:FindPin(PD_Out, "Out"):Connect( self.grabPin:GetPin() )
 			elseif input.IsKeyDown( KEY_B ) and self.grabPin:GetPin():IsType(PN_Bool) then
 				local scaleFactor = self:GetCoordinateScaleFactor()
 				local _, pinNode = self:GetGraph():AddNode("LOGIC_If", wx/scaleFactor - 5, wy/scaleFactor - 50)

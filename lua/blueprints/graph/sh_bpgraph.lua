@@ -351,7 +351,6 @@ function meta:NodeWalk(nodeID, condition, visited)
 		if visited[node] then return end visited[node] = true
 		for pinID, pin in node:Pins(nil, true) do
 			for _, v in ipairs( pin:GetConnectedPins() ) do
-				print( "PINTYPE: " .. bpcommon.GetMetaTableName( getmetatable(v) ) )
 				assert(v:GetNode() ~= nil)
 				-- Push connection onto stack if condition passes
 				if condition(v:GetNode(), v.id) then stack[#stack+1] = {pin, v} end

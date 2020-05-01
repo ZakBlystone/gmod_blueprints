@@ -344,7 +344,7 @@ function meta:DrawHotspot(x,y,alpha)
 	local f = drawPin
 	if isTable then f = drawPinTable end
 	if isExec then f = drawPinExec end
-	if isAuto then f = drawPinAuto end
+	if isAuto and not self:IsConnected() then f = drawPinAuto end
 
 	col:SetUnpacked(r,g,b,a * alpha)
 	f(x+ox-PIN_SIZE/2, y+oy-PIN_SIZE/2, PIN_SIZE, PIN_SIZE, col)
