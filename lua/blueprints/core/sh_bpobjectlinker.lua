@@ -113,7 +113,7 @@ function meta:FindObjectOrder( obj )
 	end
 
 	for k, order in ipairs(self.order) do
-		if order[2] == existing then return k end
+		if order[1] == set.id and order[2] == existing then return k end
 	end
 
 	return 0
@@ -157,8 +157,9 @@ function meta:WriteObject(stream, obj, isExtern)
 
 	if obj.__weak then
 		local ord = self:FindObjectOrder(obj())
-		if ord ~= 0 then self:DPrint("PRE-LINKED WEAK: " .. tostring(obj())) end
-		self.order[#self.order+1] = {ord, WEAK_SET}
+		--if ord ~= 0 then ord = self.order[ord][1] end
+		if ord ~= 0 then self:DPrint("PRE-LINKED WEAK[" .. tostring(obj) .. "]: " .. tostring(obj()) .. " [" .. ord .. "]") end
+		self.order[#self.order+1] = {ord, WEAK_SET, obj}
 		if obj:IsValid() then self:AppendRef(obj(), #self.order) end
 		return
 	end
@@ -176,12 +177,13 @@ function meta:WriteObject(stream, obj, isExtern)
 
 	if existing then
 		self.order[#self.order+1] = {set.id, existing}
+		self:DPrint("SAVED: " .. tostring(obj) .. " [" .. (#self.order) .. "]")
 	else
 		set.objects[hash] = set.next
 		self.order[#self.order+1] = {set.id, set.next}
 		self.hashes[#self.hashes+1] = meta.__hash
 		if not isExtern then 
-			self:DPrint("SAVED: " .. tostring(obj))
+			self:DPrint("SAVED: " .. tostring(obj) .. " [" .. (#self.order) .. "]")
 			self:DPushIndent()
 			obj:Serialize(stream)
 			self:DPopIndent()
@@ -191,8 +193,9 @@ function meta:WriteObject(stream, obj, isExtern)
 
 	local r = self:GetRefTable(obj, true)
 	if r then
+		local thisOrder = #self.order
 		for _, v in ipairs(r) do
-			self.order[v][1] = #self.order self:DPrint("POST-LINKED WEAK: " .. tostring(obj) )
+			self.order[v][1] = thisOrder self:DPrint("POST-LINKED WEAK[" .. tostring(self.order[v][3]) .. "]: " .. tostring(obj) .. " [" .. thisOrder .. "]" )
 		end
 	end
 
@@ -211,7 +214,11 @@ function meta:ReadObject(stream, extern, isExtern, outer)
 		if setID ~= 0 and self.order[setID] ~= nil then
 			local ord = self.order[setID]
 			local set = self.objects[ord[1]]
-			if set then w:Set( set[ord[2]] ) self:DPrint("PRE-LINKED WEAK: " .. tostring(set[ord[2]]) ) end
+			if set then
+				w:Set( set[ord[2]] )
+				self:DPrint("PRE-LINKED WEAK[" .. tostring(w) .. "]: " .. tostring(set[ord[2]]) .. " [" .. setID .. "]" )
+				if w:IsValid() then return w end
+			end
 		end
 		self:AppendRef(setID, w)
 		return w
@@ -230,7 +237,7 @@ function meta:ReadObject(stream, extern, isExtern, outer)
 			obj = extern
 		else 
 			obj = self:Construct(hash):WithOuter(outer)
-			self:DPrint("CONSTRUCTED: " .. tostring(obj))
+			self:DPrint("CONSTRUCTED: " .. tostring(obj) .. " [" .. (self.orderNum-1) .. "]")
 			self:DPushIndent()
 			obj:Serialize(stream)
 			self:DPopIndent()
@@ -240,7 +247,7 @@ function meta:ReadObject(stream, extern, isExtern, outer)
 		local r = self:GetRefTable(self.orderNum - 1, true)
 		if r then
 			for _, v in ipairs(r) do
-				self:DPrint("POST-LINKED WEAK: " .. tostring(obj))
+				self:DPrint("POST-LINKED WEAK[" .. tostring(v) .. "]: " .. tostring(obj) .. " [" .. (self.orderNum-1) .. "]")
 				v:Set( obj )
 			end
 		end

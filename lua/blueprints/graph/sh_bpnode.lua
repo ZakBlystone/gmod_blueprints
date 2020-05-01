@@ -34,12 +34,12 @@ function meta:PostInit()
 
 	local ntype = self.nodeType()
 	if ntype == nil then
-		print("Node without valid nodetype, replacing with dummy!")
+		--print("Node without valid nodetype, replacing with dummy!")
 		ntype = DummyNodeType
 		self.nodeType:Set( ntype )
 
 		for _, pin in ipairs(self.pinCache or {}) do
-			print(" PIN WAS: " .. pin:ToStringEx(true, true))
+			--print(" PIN WAS: " .. pin:ToStringEx(true, true))
 		end
 	end
 

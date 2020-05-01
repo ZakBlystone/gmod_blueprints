@@ -162,16 +162,12 @@ function LINKER_TEST_EXTERN_CONNECTIONS()
 	ASSERT(isbpnodetype(readNodeA.nodeType()) or readNodeA.nodeType() == nil)
 	ASSERT(isbpnodetype(readNodeB.nodeType()) or readNodeB.nodeType() == nil)
 
-	print("A Pins")
 	for _, pin in ipairs(readNodeA:GetPins()) do
 		ASSERT( isbppin( pin ) )
-		print( pin )
 	end
 
-	print("B Pins")
 	for _, pin in ipairs(readNodeB:GetPins()) do
 		ASSERT( isbppin( pin ) )
-		print( pin )
 	end
 
 	local pins = readNodeA:FindPin(bpschema.PD_Out, "Thru"):GetConnectedPins()
