@@ -148,7 +148,7 @@ function meta:UpdatePins()
 	for k, v in ipairs(newPins) do
 		local p = findExisting(v)
 		if not p then 
-			print(" CREATE NEW: " .. v:GetName() .. " ... init literal" )
+			--print(" CREATE NEW: " .. v:GetName() .. " ... init literal" )
 			v:WithOuter( self )
 			v.id = k
 			v:InitPinClass()
@@ -444,20 +444,20 @@ end
 
 function meta:Serialize(stream)
 
-	print("NODE SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]")
+	--print("NODE SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]")
 
 	self.nodeType = stream:Object(self.nodeType)
 	self.x = stream:Float(self.x)
 	self.y = stream:Float(self.y)
 
-	print("PINS:")
+	--print("PINS:")
 	self.pinCache = stream:ObjectArray( self.pinCache or {}, self )
 
 	--[[for _,v in ipairs(self.pinCache) do
 		print(" " .. v:ToString(true, true))
 	end]]
 
-	print("NODE DONE")
+	--print("NODE DONE")
 
 	return stream
 

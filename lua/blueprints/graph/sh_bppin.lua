@@ -43,7 +43,7 @@ function meta:SetLiteral(value)
 
 	self.literal = value
 
-	print("SET LITERAL ON PIN: " .. tostring(value) .. " -> " .. self:ToString())
+	--print("SET LITERAL ON PIN: " .. tostring(value) .. " -> " .. self:ToString())
 
 	if node and not node.suppressPinEvents and node:GetGraph() then
 		node:GetGraph():Broadcast("postModifyLiteral", node.id, self.id, value)
@@ -268,7 +268,7 @@ function meta:Serialize(stream)
 
 	self.name = stream:String(self.name)
 
-	print(" PIN SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]: " .. tostring(self))
+	--print(" PIN SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]: " .. tostring(self))
 
 	self.type = stream:Object(self.type, self)
 	self.dir = stream:Bits(self.dir, 8)
@@ -287,7 +287,7 @@ function meta:Serialize(stream)
 
 	end
 
-	print(" PIN DONE")
+	--print(" PIN DONE")
 
 	return self
 

@@ -14,6 +14,7 @@ function meta:Init()
 	self.refs = {}
 	self.orderNum = 1
 	self.hashNum = 1
+	self.dindent = 0
 	return self
 
 end
@@ -23,8 +24,8 @@ function meta:Serialize(stream)
 	local orderCount = stream:UInt(#self.order)
 	local hashCount = stream:UInt(#self.hashes)
 
-	--print("Serialize: " .. orderCount .. " orders")
-	--print("Serialize: " .. hashCount .. " hashes")
+	--Dprint("Serialize: " .. orderCount .. " orders")
+	--Dprint("Serialize: " .. hashCount .. " hashes")
 
 	for i=1, orderCount do
 		self.order[i] = self.order[i] or {}
@@ -119,6 +120,32 @@ function meta:FindObjectOrder( obj )
 
 end
 
+function meta:DSetDebug(enable)
+	self.debug = enable
+end
+
+function meta:DPushIndent()
+	self.dindent = self.dindent + 1
+end
+
+function meta:DPopIndent()
+	self.dindent = self.dindent - 1
+end
+
+function meta:DPrint(...)
+	if self.debug then print(string.rep("  ", self.dindent) .. table.concat({...}, ",")) end
+end
+
+function meta:GetRefTable(obj, noCreate)
+	if not noCreate then self.refs[obj] = self.refs[obj] or {} end
+	return self.refs[obj]
+end
+
+function meta:AppendRef(obj, ord)
+	local t = self:GetRefTable(obj)
+	t[#t+1] = ord
+end
+
 function meta:WriteObject(stream, obj, isExtern)
 
 	if obj == nil then
@@ -130,9 +157,9 @@ function meta:WriteObject(stream, obj, isExtern)
 
 	if obj.__weak then
 		local ord = self:FindObjectOrder(obj())
-		if ord ~= 0 then print("  PRE-LINKED WEAK: " .. tostring(obj())) end
+		if ord ~= 0 then self:DPrint("PRE-LINKED WEAK: " .. tostring(obj())) end
 		self.order[#self.order+1] = {ord, WEAK_SET}
-		if obj:IsValid() then self.refs[obj()] = #self.order end
+		if obj:IsValid() then self:AppendRef(obj(), #self.order) end
 		return
 	end
 
@@ -154,13 +181,20 @@ function meta:WriteObject(stream, obj, isExtern)
 		self.order[#self.order+1] = {set.id, set.next}
 		self.hashes[#self.hashes+1] = meta.__hash
 		if not isExtern then 
-			print("SAVED: " .. tostring(obj))
-			obj:Serialize(stream) 
+			self:DPrint("SAVED: " .. tostring(obj))
+			self:DPushIndent()
+			obj:Serialize(stream)
+			self:DPopIndent()
 		end
 		set.next = set.next + 1
 	end
 
-	if self.refs[obj] then self.order[self.refs[obj]][1] = #self.order print("  POST-LINKED WEAK: " .. tostring(obj) ) end
+	local r = self:GetRefTable(obj, true)
+	if r then
+		for _, v in ipairs(r) do
+			self.order[v][1] = #self.order self:DPrint("POST-LINKED WEAK: " .. tostring(obj) )
+		end
+	end
 
 end
 
@@ -177,9 +211,9 @@ function meta:ReadObject(stream, extern, isExtern, outer)
 		if setID ~= 0 and self.order[setID] ~= nil then
 			local ord = self.order[setID]
 			local set = self.objects[ord[1]]
-			if set then w:Set( set[ord[2]] ) print("  PRE-LINKED WEAK: " .. tostring(set[ord[2]]) ) end
+			if set then w:Set( set[ord[2]] ) self:DPrint("PRE-LINKED WEAK: " .. tostring(set[ord[2]]) ) end
 		end
-		self.refs[setID] = w
+		self:AppendRef(setID, w)
 		return w
 	end
 
@@ -196,15 +230,19 @@ function meta:ReadObject(stream, extern, isExtern, outer)
 			obj = extern
 		else 
 			obj = self:Construct(hash):WithOuter(outer)
-			print("CONSTRUCTED: " .. tostring(obj))
+			self:DPrint("CONSTRUCTED: " .. tostring(obj))
+			self:DPushIndent()
 			obj:Serialize(stream)
+			self:DPopIndent()
 		end
 		set[objID] = obj
 
-		local w = self.refs[self.orderNum - 1]
-		if w then
-			print("  POST-LINKED WEAK: " .. tostring(obj))
-			w:Set( obj )
+		local r = self:GetRefTable(self.orderNum - 1, true)
+		if r then
+			for _, v in ipairs(r) do
+				self:DPrint("POST-LINKED WEAK: " .. tostring(obj))
+				v:Set( obj )
+			end
 		end
 
 		return obj

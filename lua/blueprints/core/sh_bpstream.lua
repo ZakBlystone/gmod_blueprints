@@ -108,6 +108,12 @@ function meta:MetaState( state )
 
 end
 
+function meta:GetLinker()
+
+	return self.linker
+
+end
+
 function meta:In( noRead )
 
 	if DEBUG_MODE then self:ClearFlag( FL_Compressed ) end

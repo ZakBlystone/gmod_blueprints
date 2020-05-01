@@ -19,8 +19,8 @@ if SERVER then
 		local l = suite._log
 		l[#l+1] = {str = str, func = inf.func, fl = fl or 0}
 
-		print("ERR: [" .. msg .. "]" .. tostring(inf.func))
-		PrintTable(inf)
+		--print("ERR: [" .. msg .. "]" .. tostring(inf.func))
+		--PrintTable(inf)
 
 	end
 
@@ -36,12 +36,12 @@ if SERVER then
 
 	end
 
-	local function TestAssert(suite, cond)
-		if not cond then Fail(suite, "Assert failed") end
+	local function TestAssert(suite, cond, exMsg)
+		if not cond then Fail(suite, "Assert failed" .. (exMsg or "")) end
 	end
 
-	local function TestExpect(suite, value, expect)
-		if value ~= expect then Fail(suite, "Expected " .. tostring(expect) .. " got " .. tostring(value)) end
+	local function TestExpect(suite, value, expect, exMsg)
+		if value ~= expect then Fail(suite, (exMsg or "") .. "Expected " .. tostring(expect) .. " got " .. tostring(value)) end
 	end
 
 	local function TestExpectType(suite, value, expect)
@@ -74,6 +74,7 @@ if SERVER then
 			TEST = test,
 			pairs = pairs,
 			ipairs = ipairs,
+			bpcommon = bpcommon,
 		}
 
 		local suite = CompileFile(testPath .. file)
