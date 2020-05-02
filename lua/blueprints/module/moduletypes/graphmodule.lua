@@ -393,6 +393,8 @@ end
 
 function MODULE:SerializeData( stream )
 
+	BaseClass.SerializeData( self, stream )
+
 	self.suppressGraphNotify = true
 
 	print("Serialize graph module")
@@ -403,8 +405,6 @@ function MODULE:SerializeData( stream )
 
 	if self:CanHaveStructs() then self.structs:Serialize( stream ) end
 	if self:CanHaveEvents() then self.events:Serialize( stream ) end
-
-	BaseClass.SerializeData( self, stream )
 
 	if stream:IsReading() then
 		for _, graph in self:Graphs() do

@@ -148,7 +148,7 @@ function meta:UpdatePins()
 	for k, v in ipairs(newPins) do
 		local p = findExisting(v)
 		if not p then 
-			--print(" CREATE NEW: " .. v:GetName() .. " ... init literal" )
+			--print(" CREATE NEW: " .. tostring(v) .. " ... init literal" )
 			v:WithOuter( self )
 			v.id = k
 			v:InitPinClass()

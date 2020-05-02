@@ -107,13 +107,17 @@ end
 
 function meta:SetType( type )
 
+	print("SET TYPE TO: " .. tostring(type))
+
 	local mod = self:GetModule()
 	mod:PreModifyNodeType( self.getterNodeType )
 	mod:PreModifyNodeType( self.setterNodeType )
-	self.pintype = type:Copy():WithOuter(self)
+	self.pintype = type:Copy(self)
 	self.default = self.pintype:GetDefault()
 	mod:PostModifyNodeType( self.getterNodeType )
 	mod:PostModifyNodeType( self.setterNodeType )
+
+	print("AS: " .. tostring(self.pintype))
 
 end
 
@@ -134,7 +138,7 @@ function meta:Serialize(stream)
 	stream:Extern( self:GetterNodeType() )
 	stream:Extern( self:SetterNodeType() )
 
-	self.pintype = stream:Object(self.pintype or bppintype.New(), self, true)
+	self.pintype = stream:Object(self.pintype, self)
 	self.default = stream:Value(self.default)
 	self.repmode = stream:Value(self.repmode)
 

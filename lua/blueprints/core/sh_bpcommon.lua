@@ -615,12 +615,16 @@ function CopyTable( tab, lookup_table )
 		if ( !istable( v ) ) then
 			copy[ i ] = v
 		elseif i ~= "__outer" then
-			lookup_table = lookup_table or {}
-			lookup_table[ tab ] = copy
-			if ( lookup_table[ v ] ) then
-				copy[ i ] = lookup_table[ v ] -- we already copied this table. reuse the copy.
+			if v.Copy then
+				copy[ i ] = v:Copy()
 			else
-				copy[ i ] = CopyTable( v, lookup_table ) -- not yet copied. copy it.
+				lookup_table = lookup_table or {}
+				lookup_table[ tab ] = copy
+				if ( lookup_table[ v ] ) then
+					copy[ i ] = lookup_table[ v ] -- we already copied this table. reuse the copy.
+				else
+					copy[ i ] = CopyTable( v, lookup_table ) -- not yet copied. copy it.
+				end
 			end
 		end
 	end

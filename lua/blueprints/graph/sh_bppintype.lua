@@ -80,7 +80,7 @@ end
 function meta:GetDisplayName()
 
 	if self:IsType(PN_BPRef) and self.subtype:IsValid() then
-		return self.subtype():GetName()
+		return "M_" .. self.subtype():GetName()
 	end
 
 	if self:IsType(PN_BPClass) then
