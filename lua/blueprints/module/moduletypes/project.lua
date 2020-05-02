@@ -2,12 +2,134 @@ AddCSLuaFile()
 
 module("mod_projectmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpcompiler))
 
+local assetMeta = bpcommon.MetaTable("bpprojectasset")
+function assetMeta:Init( name, asset )
+
+	self.name = name
+	self.asset = asset
+	return self
+
+end
+
+function assetMeta:GetName() return self.name end
+function assetMeta:GetAsset() return self.asset end
+function assetMeta:Serialize( stream )
+
+	self.name = stream:String( self.name )
+	self.asset = stream:Object( self.asset, self )
+	return stream
+
+end
+
 local MODULE = {}
 
-MODULE.Creatable = false
+MODULE.Creatable = true
 MODULE.Name = LOCTEXT"module_project_name","Project"
 MODULE.Description = LOCTEXT"module_project_desc","Project"
 MODULE.Icon = "icon16/wrench.png"
 MODULE.EditorClass = "projectmodule"
+
+function MODULE:Setup()
+
+	BaseClass.Setup(self)
+
+	self.assets = {}
+
+end
+
+function MODULE:GetAssets()
+
+	return self.assets
+
+end
+
+function MODULE:UniqueAssetName(name)
+
+	local lut = {}
+	for k, v in pairs(self.assets) do lut[v.name] = 1 end
+
+	local newName = name
+	local k = 1
+	while lut[newName] ~= nil do
+		newName = name .. "_" .. k
+		k = k + 1
+	end
+
+	return newName
+
+end
+
+function MODULE:AddAsset(name, asset)
+
+	name = self:UniqueAssetName( name )
+	self.assets[#self.assets+1] = bpcommon.MakeInstance(assetMeta, name, asset)
+	self:Broadcast("addedAsset", name, asset)
+
+end
+
+function MODULE:RemoveAsset(asset)
+
+	for k, v in ipairs(self.assets) do
+		if v == asset or v:GetAsset() == asset then
+			table.remove(self.assets, k)
+			self:Broadcast("removedAsset", v)
+			return true
+		end
+	end
+	return false
+
+end
+
+function MODULE:FindAssetName(asset)
+
+	for _, v in ipairs(self.assets) do
+		if v:GetAsset() == asset then return v:GetName() end
+	end
+	return nil
+
+end
+
+function MODULE:FindAssetByName(name)
+
+	for _, v in ipairs(self.assets) do
+		if v:GetName() == name then return v:GetAsset() end
+	end
+	return nil
+
+end
+
+function MODULE:GetModuleName(mod)
+
+	local assetName = self:FindAssetName(mod)
+	if assetName ~= nil then return assetName end
+	return "submodule"
+
+end
+
+function MODULE:AddModule(mod)
+
+	assert(mod:GetOuter() == nil)
+
+	self:AddAsset( tostring(mod.Name or mod:GetType()), mod:WithOuter(self) )
+
+end
+
+function MODULE:RemoveModule(mod)
+
+	self:RemoveAsset(mod)
+
+end
+
+function MODULE:SerializeData(stream)
+
+	BaseClass.SerializeData( self, stream )
+
+	self.assets = stream:ObjectArray( self.assets, self )
+
+end
+
+function MODULE:Compile( compiler, pass )
+
+end
 
 RegisterModuleClass("ProjectModule", MODULE, "Configurable")

@@ -54,8 +54,12 @@ end
 
 function meta:GetName()
 
+	local outerModule = self:FindOuter( bpmodule_meta )
+	if outerModule then return outerModule:GetModuleName(self) end
+
 	local outerFile = self:FindOuter( bpfile_meta )
 	if outerFile then return outerFile:GetName() end
+
 	return "unnamed"
 
 end
