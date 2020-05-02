@@ -61,7 +61,7 @@ end
 
 function EDITOR:Export()
 
-	local text = bpmodule.SaveToText( self:GetModule() )
+	local text = bpmodule.SaveToText( self:GetTargetModule() )
 	SetClipboardText( text )
 	Derma_Message( text_module_copied(), text_menu_export(), LOCTEXT("query_ok", "Ok")() )
 
@@ -69,7 +69,7 @@ end
 
 function EDITOR:ExportShareableKey( pnl )
 
-	local text = bpmodule.SaveToText( self:GetModule() )
+	local text = bpmodule.SaveToText( self:GetTargetModule() )
 	local prev = pnl:GetText()
 
 	pnl:SetEnabled(false)
@@ -92,7 +92,7 @@ function EDITOR:SendToServer()
 	_G.G_BPError = nil
 	self:GetMainEditor():ClearReport()
 	--bpnet.SendModule( self.module )
-	local ok, res = self:GetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 	if ok then
 		ok, res = res:TryLoad()
 		if ok then
@@ -113,11 +113,11 @@ function EDITOR:InstallLocally()
 		return
 	end
 
-	local ok, res = self:GetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
 	if ok then
 		ok, res = res:TryLoad()
 		if ok then
-			bpenv.Uninstall( self:GetModule():GetUID() )
+			bpenv.Uninstall( self:GetTargetModule():GetUID() )
 			bpenv.Install( res )
 			bpenv.Instantiate( res:GetUID() )
 		else
@@ -131,13 +131,13 @@ end
 
 function EDITOR:UninstallLocally()
 
-	bpenv.Uninstall( self:GetModule():GetUID() )
+	bpenv.Uninstall( self:GetTargetModule():GetUID() )
 
 end
 
 function EDITOR:ExportLua()
 
-	local ok, res = self:GetModule():TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
+	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
 	if ok then
 		SetClipboardText( res:GetCode() )
 		Derma_Message( text_script_copied(), text_menu_export_lua(), LOCTEXT("query_ok", "Ok")() )
@@ -153,7 +153,7 @@ function EDITOR:Upload( execute )
 	if not file then return end
 
 	local name = bpfilesystem.ModulePathToName( file:GetPath() )
-	bpfilesystem.UploadObject(self:GetModule(), name or file:GetPath(), execute)
+	bpfilesystem.UploadObject(self:GetTargetModule(), name or file:GetPath(), execute)
 
 end
 
@@ -167,7 +167,7 @@ function EDITOR:Save( callback )
 		print("**Add Local Module")
 		Derma_StringRequest(text_menu_save(), text_module_name(), "untitled",
 		function( text )
-			local file = bpfilesystem.AddLocalModule( self:GetModule(), text )
+			local file = bpfilesystem.AddLocalModule( self:GetTargetModule(), text )
 			if file ~= nil then
 				tab:SetLabel( text )
 				if callback then callback(true) end
@@ -180,12 +180,23 @@ function EDITOR:Save( callback )
 	else
 
 		print("**Saving Module")
-		bpmodule.Save( file:GetPath(), self:GetModule() )
+		bpmodule.Save( file:GetPath(), self:GetTargetModule() )
 		bpfilesystem.MarkFileAsChanged( file, false )
 		if tab then tab:SetSuffix("") end
 		if callback then callback(true) end
 
 	end
+
+end
+
+function EDITOR:GetTargetModule()
+
+	local mod = self:GetModule()
+	local outer = mod:FindOuter(bpmodule_meta)
+	if outer then
+		return outer
+	end
+	return mod
 
 end
 

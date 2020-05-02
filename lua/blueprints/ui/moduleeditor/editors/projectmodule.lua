@@ -4,6 +4,11 @@ module("editor_projectmodule", package.seeall, bpcommon.rescope(bpschema))
 
 local EDITOR = {}
 
+EDITOR.CanSave = true
+EDITOR.CanSendToServer = true
+EDITOR.CanInstallLocally = true
+EDITOR.CanExportLuaScript = true
+
 function EDITOR:PopulateMenuBar( t )
 
 	t[#t+1] = { name = "New SubModule", func = function() self:NewSubModule() end, icon = "icon16/asterisk_yellow.png" }
