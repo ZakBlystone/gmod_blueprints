@@ -155,7 +155,7 @@ function meta:WriteObject(stream, obj, isExtern)
 
 	if not type(obj) == "table" then error("Tried to write non-table object") end
 
-	if obj.__weak then
+	if obj.__ref then
 		local ord = self:FindObjectOrder(obj())
 		--if ord ~= 0 then ord = self.order[ord][1] end
 		if ord ~= 0 then self:DPrint("PRE-LINKED WEAK[" .. tostring(obj) .. "]: " .. tostring(obj()) .. " [" .. ord .. "]") end
