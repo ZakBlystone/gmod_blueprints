@@ -8,6 +8,7 @@ MODULE.Name = LOCTEXT"module_entity_name","Entity"
 MODULE.Description = LOCTEXT"module_entity_desc","A Scripted Entity you can spawn in the world"
 MODULE.Icon = "icon16/bricks.png"
 MODULE.Creatable = true
+MODULE.CanBeSubmodule = true
 MODULE.AdditionalConfig = true
 MODULE.HasOwner = true
 MODULE.SelfPinSubClass = "Entity"

@@ -8,6 +8,7 @@ MODULE.Name = LOCTEXT"module_swep_name","Weapon"
 MODULE.Description = LOCTEXT"module_swep_desc","A Scripted Weapon you can pick up and shoot"
 MODULE.Icon = "icon16/gun.png"
 MODULE.Creatable = true
+MODULE.CanBeSubmodule = true
 MODULE.AdditionalConfig = true
 MODULE.HasOwner = true
 MODULE.SelfPinSubClass = "Weapon"

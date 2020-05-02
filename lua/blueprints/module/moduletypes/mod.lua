@@ -8,6 +8,7 @@ MODULE.Name = LOCTEXT"module_mod_name","Mod"
 MODULE.Description = LOCTEXT"module_mod_desc","A Basic Script"
 MODULE.Icon = "icon16/joystick.png"
 MODULE.Creatable = true
+MODULE.CanBeSubmodule = true
 
 function MODULE:CreateDefaults()
 

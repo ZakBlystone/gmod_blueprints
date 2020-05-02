@@ -8,6 +8,7 @@ MODULE.Name = LOCTEXT"module_effect_name","Effect"
 MODULE.Description = LOCTEXT"module_effect_desc","A Clientside Effect you can dispatch using util.Effect"
 MODULE.Icon = "icon16/lightning.png"
 MODULE.Creatable = true
+MODULE.CanBeSubmodule = true
 MODULE.AdditionalConfig = true
 MODULE.SelfPinSubClass = "Entity"
 MODULE.HasUIDClassname = true
