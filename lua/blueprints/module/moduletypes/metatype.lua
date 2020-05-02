@@ -183,9 +183,9 @@ function MODULE:CanCast( outPinType, inPinType )
 
 end
 
-function MODULE:GetNodeTypes( collection, graph )
+function MODULE:GetLocalNodeTypes( collection )
 
-	BaseClass.GetNodeTypes( self, collection, graph )
+	BaseClass.GetLocalNodeTypes( self, collection )
 
 	local types = {}
 
@@ -201,6 +201,12 @@ function MODULE:GetNodeTypes( collection, graph )
 	end
 
 	for k,v in pairs(types) do v.name = k end
+
+end
+
+function MODULE:GetNodeTypes( collection, graph )
+
+	BaseClass.GetNodeTypes( self, collection, graph )
 
 end
 

@@ -171,7 +171,7 @@ function meta:CanConnect( other )
 
 	if node == nil or otherNode == nil then return false, "Can't connect pins without nodes" end
 
-	if self:IsConnectedTo( other ) then return false, "Already connected: " .. self:ToStringNode() .. " --> " .. other:ToStringNode() end
+	if self:IsConnectedTo( other ) then return false, "Already connected: " .. tostring(self) .. " --> " .. tostring(other) end
 	if self:IsType(PN_Exec) and #conn > 0 then return false, "Only one connection outgoing for exec pins" end
 	if not other:IsType(PN_Exec) and #other:GetConnections() > 0 then return false, "Only one connection for inputs" end
 
@@ -189,13 +189,13 @@ function meta:CanConnect( other )
 		if mod and mod:CanCast( self:GetType(), other:GetType() ) then
 			return true
 		else
-			return false, "No explicit conversion between " .. self:ToStringNode() .. " --> " .. other:ToStringNode()
+			return false, "No explicit conversion between " .. tostring(self) .. " --> " .. tostring(other)
 		end
 
 	end
 
 	if self:GetSubType() ~= other:GetSubType() then 
-		return false, "Can't connect " .. self:ToStringNode() .. " --> " .. other:ToStringNode()
+		return false, "Can't connect " .. tostring(self) .. " --> " .. tostring(other)
 	end
 
 	return true

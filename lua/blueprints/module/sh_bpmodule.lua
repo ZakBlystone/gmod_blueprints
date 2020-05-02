@@ -95,17 +95,34 @@ function meta:NodeTypeInUse( nodeType )
 
 end
 
-function meta:GetNodeTypes( collection )
+function meta:GetAllNodeTypes( collection )
 
 	collection:Add( bpdefs.Get():GetNodeTypes() )
+	local outerModule = self:FindOuter(bpmodule_meta)
+	if outerModule and outerModule.EnumerateAllNodeTypes then
+		outerModule:EnumerateAllNodeTypes( collection )
+	else
+		self:GetNodeTypes( collection )
+	end
 
 end
 
-function meta:GetPinTypes( collection )
+function meta:GetAllPinTypes( collection )
 
 	collection:Add( bpdefs.Get():GetPinTypes() )
+	local outerModule = self:FindOuter(bpmodule_meta)
+	if outerModule and outerModule.EnumerateAllPinTypes then
+		outerModule:EnumerateAllPinTypes( collection )
+	else
+		self:GetPinTypes( collection )
+	end
 
 end
+
+function meta:GetLocalNodeTypes( collection ) end
+
+function meta:GetNodeTypes( collection ) end
+function meta:GetPinTypes( collection ) end
 
 function meta:GetMenuItems( tab )
 

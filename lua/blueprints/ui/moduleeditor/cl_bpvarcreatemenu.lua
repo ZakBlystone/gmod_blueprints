@@ -100,7 +100,7 @@ end
 function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 
 	local collection = bpcollection.New()
-	module:GetPinTypes( collection )
+	module:GetAllPinTypes( collection )
 
 	current = current or bppintype.New(PN_Bool)
 

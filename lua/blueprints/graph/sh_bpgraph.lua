@@ -273,7 +273,8 @@ function meta:GetNodeTypes()
 	local collection = bpcollection.New()
 
 	Profile("cache-node-types", function()
-		self:GetModule():GetNodeTypes( collection, self )
+		self:GetModule():GetAllNodeTypes( collection, self )
+		self:GetModule():GetLocalNodeTypes( collection )
 
 		if self.type == GT_Function then
 			local types = {}
@@ -861,7 +862,7 @@ function meta:CompileNodes( compiler )
 	compiler.begin(CTX_Hooks .. graphID)
 
 	if self:HasFlag(bpgraph.FL_HOOK) then
-		local nodeType = self:GetNodeTypes():Find(self:GetHookType())
+		local nodeType = self:GetAllNodeTypes():Find(self:GetHookType())
 		local hookName = nodeType and nodeType:GetName() or self:GetName()
 
 		local args = {self:GetHookType() or self:GetName(), hookName, graphID, -1}

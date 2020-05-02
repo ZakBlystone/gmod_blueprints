@@ -106,6 +106,26 @@ function MODULE:GetModuleName(mod)
 
 end
 
+function MODULE:EnumerateAllPinTypes( collection )
+
+	for _, asset in ipairs(self:GetAssets()) do
+		if isbpmodule(asset:GetAsset()) then
+			asset:GetAsset():GetPinTypes( collection )
+		end
+	end
+
+end
+
+function MODULE:EnumerateAllNodeTypes( collection )
+
+	for _, asset in ipairs(self:GetAssets()) do
+		if isbpmodule(asset:GetAsset()) then
+			asset:GetAsset():GetNodeTypes( collection )
+		end
+	end
+
+end
+
 function MODULE:AddModule(mod)
 
 	assert(mod:GetOuter() == nil)
