@@ -38,7 +38,7 @@ function MODULE:Setup()
 	BaseClass.Setup(self)
 
 	self.autoFills = {}
-	self.modulePinType = bppintype.New( PN_BPRef, PNF_None, self:GetUID() ):WithOuter(self)
+	self.modulePinType = bppintype.New( PN_BPRef, PNF_None, self ):WithOuter(self)
 
 	self.getSelfNodeType = bpnodetype.New():WithOuter(self)
 	self.getSelfNodeType:SetCodeType(NT_Pure)
@@ -147,6 +147,7 @@ function MODULE:GetOwnerNodeType() return self.getOwnerNodeType end
 
 function MODULE:SerializeData( stream )
 
+	stream:Extern( self:GetModulePinType() )
 	stream:Extern( self:GetSelfNodeType() )
 	stream:Extern( self:GetClassNodeType() )
 	stream:Extern( self:GetOwnerNodeType() )

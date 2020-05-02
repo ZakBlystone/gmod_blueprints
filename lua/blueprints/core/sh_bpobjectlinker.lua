@@ -91,7 +91,7 @@ function meta:GetObjectHash( obj )
 	local hash = obj
 	local hashed = false
 
-	if obj.GetHash then hash = obj:GetHash() hashed = true end
+	--if obj.GetHash then hash = obj:GetHash() hashed = true end
 
 	return hash, hashed
 

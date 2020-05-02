@@ -558,7 +558,9 @@ function meta:Serialize(stream)
 	local external = {}
 	for _, v in self.nodes:Items() do
 		if stream:IsNetwork() or true then
-			external[#external+1] = v:GetType():GetFullName()
+			if v:GetType():FindOuter(bpdefpack_meta) ~= nil then
+				external[#external+1] = v:GetType():GetFullName()
+			end
 		else
 			external[#external+1] = v:GetType()
 		end

@@ -6,23 +6,28 @@ module("bppintype", package.seeall, bpcommon.rescope(bpschema))
 local meta = bpcommon.MetaTable("bppintype")
 
 meta.__eq = function(a, b)
-	return a.basetype == b.basetype and a.flags == b.flags and a.subtype == b.subtype
+	return a.basetype == b.basetype and a.flags == b.flags and a:GetSubType() == b:GetSubType()
 end
 
 meta.__lt = function(a, b)
 	if a.basetype ~= b.basetype then return a.basetype < b.basetype end
-	if a.subtype ~= b.subtype then return a.subtype < b.subtype end
+	if a:GetSubType() ~= b:GetSubType() then return a:GetSubType() < b:GetSubType() end
 	return false
 end
 
 meta.__le = function(a, b)
 	if a.basetype ~= b.basetype then return a.basetype <= b.basetype end
-	if a.subtype ~= b.subtype then return a.subtype <= b.subtype end
+	if a:GetSubType() ~= b:GetSubType() then return a:GetSubType() <= b:GetSubType() end
 	return true
 end
 
-function meta:Init(type, flags, subtype)
-	self.basetype = type
+function meta:Init(basetype, flags, subtype)
+
+	if type(subtype) == "table" then
+		subtype = bpcommon.Weak(subtype)
+	end
+
+	self.basetype = basetype
 	self.flags = flags or PNF_None
 	self.subtype = subtype
 	self:UpdateHash()
@@ -56,7 +61,7 @@ function meta:Copy( outer )
 end
 
 function meta:GetBaseType() return self.basetype end
-function meta:GetSubType() return self.subtype end
+function meta:GetSubType() return type(self.subtype) == "table" and self.subtype() or self.subtype end
 function meta:GetFlags(mask) return bit.band(self.flags, mask or PNF_All) end
 function meta:GetColor() return NodePinColors[ self:GetBaseType() ] or Color(0,0,0,255) end
 function meta:GetTypeName() return PinTypeNames[ self:GetBaseType() ] or "UNKNOWN" end
@@ -74,11 +79,8 @@ end
 
 function meta:GetDisplayName()
 
-	if self:IsType(PN_BPRef) then
-		local mod = self:FindOuter( bpmodule_meta )
-		if mod then return mod:GetName() end
-		local sub = self:GetSubType()
-		return sub and bpcommon.GUIDToString(self:GetSubType(), true) or "unknown blueprint"
+	if self:IsType(PN_BPRef) and self.subtype:IsValid() then
+		return self.subtype():GetName()
 	end
 
 	if self:IsType(PN_BPClass) then
@@ -156,7 +158,12 @@ function meta:Serialize(stream)
 
 	self.basetype = stream:Bits(self.basetype, 8)
 	self.flags = stream:Bits(self.flags, 8)
-	self.subtype = stream:String(self.subtype)
+
+	if self.basetype == PN_BPRef then
+		self.subtype = stream:Object(self.subtype)
+	else
+		self.subtype = stream:String(self.subtype)
+	end
 
 	if stream:IsReading() then self:UpdateHash() end
 

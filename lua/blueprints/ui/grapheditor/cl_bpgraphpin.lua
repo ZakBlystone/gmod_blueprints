@@ -375,11 +375,12 @@ end
 
 function meta:Draw(xOffset, yOffset, alpha)
 
+	--if true then return end
+
 	if self.currentPinType == nil or not self.currentPinType:Equal(self.pin:GetType()) then
 		self:Invalidate()
-		self.currentPinType = bpcommon.CopyTable( self.pin:GetType() )
+		self.currentPinType = self.pin:GetType():Copy()
 		self.vnode:Invalidate()
-		--print("PIN TYPE CHANGED")
 	end
 
 	self:Layout()
