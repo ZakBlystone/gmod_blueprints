@@ -11,6 +11,7 @@ function assetMeta:Init( name, asset )
 
 end
 
+function assetMeta:SetName(newName) self.name = newName end
 function assetMeta:GetName() return self.name end
 function assetMeta:GetAsset() return self.asset end
 function assetMeta:Serialize( stream )
@@ -64,6 +65,13 @@ function MODULE:AddAsset(name, asset)
 	name = self:UniqueAssetName( name )
 	self.assets[#self.assets+1] = bpcommon.MakeInstance(assetMeta, name, asset)
 	self:Broadcast("addedAsset", name, asset)
+
+end
+
+function MODULE:RenameAsset(asset, newName)
+
+	newName = self:UniqueAssetName( newName )
+	asset:SetName( newName )
 
 end
 

@@ -73,7 +73,33 @@ function EDITOR:AddAsset( asset, icon )
 	tile:SetInner( pnl )
 	tile:SetIcon( icon )
 
+	local detour = tile.OnMousePressed
+	tile.OnMousePressed = function( pnl, code )
+		if code == MOUSE_LEFT then
+			detour(pnl, code)
+		elseif code == MOUSE_RIGHT then
+			self:OpenAssetMenu(pnl, asset)
+		end
+	end
+
 	self.assets:Add( tile )
+
+end
+
+function EDITOR:OpenAssetMenu(pnl, asset)
+
+	if IsValid(self.cmenu) then self.cmenu:Remove() end
+	self.cmenu = DermaMenu( false, self )
+	self.cmenu:AddOption( "Rename", function()
+		Derma_StringRequest("Rename", "Module Name", asset:GetName(),
+		function( text )
+			asset:SetName( text )
+			self:EnumerateAssets()
+		end, nil, LOCTEXT("query_ok", "Ok")(), LOCTEXT("query_cancel", "Cancel")())
+	end)
+
+	self.cmenu:SetMinimumWidth( 100 )
+	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, pnl )
 
 end
 
