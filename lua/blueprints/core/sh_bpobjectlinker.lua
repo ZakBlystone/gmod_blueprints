@@ -77,7 +77,7 @@ function meta:PostLink(stream)
 		for k, v in ipairs(self.order) do
 			if v[1] == WEAK_SET then
 				local ord = self.order[v[2]]
-				if ord ~= nil then
+				if ord ~= nil and self.objects[ord[1]] then
 					v[4]:Set( self.objects[ord[1]][ord[2]] )
 				end
 			elseif v[1] == EXTERN_SET and self.extern[v[2]] then
