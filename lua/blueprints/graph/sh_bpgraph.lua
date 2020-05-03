@@ -54,6 +54,7 @@ function meta:Init(type)
 	self.callNodeType:SetCodeType(NT_Function)
 	self.callNodeType:SetNodeClass("UserFuncCall")
 	self.callNodeType.GetDisplayName = function() return self:GetName() end
+	self.callNodeType.GetCategory = function() return self:GetModule() and self:GetModule():GetName() or self:GetName() end
 	self.callNodeType.GetGraphThunk = function() return self end
 	self.callNodeType.GetRole = function() return self:GetNetworkRole() end
 

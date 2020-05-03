@@ -26,6 +26,7 @@ function MODULE:Setup()
 	self.createNodeType.GetDisplayName = function() return "Create " .. self:GetName() end
 	self.createNodeType.GetGraphThunk = function() return self end
 	self.createNodeType.GetRole = function() return ROLE_Server end
+	self.createNodeType.GetCategory = function() return self:GetName() end
 	self.createNodeType.GetRawPins = function()
 		return {
 			MakePin(PD_Out, "Entity", self:GetModulePinType()),
@@ -51,9 +52,10 @@ function MODULE:Setup()
 
 	self.findAllNodeType = bpnodetype.New():WithOuter(self)
 	self.findAllNodeType:SetCodeType(NT_Function)
-	self.findAllNodeType.GetDisplayName = function() return "Get All " .. self:GetName() .. "s" end
+	self.findAllNodeType.GetDisplayName = function() return "Find All " .. self:GetName() .. "s" end
 	self.findAllNodeType.GetGraphThunk = function() return self end
 	self.findAllNodeType.GetRole = function() return ROLE_Server end
+	self.findAllNodeType.GetCategory = function() return self:GetName() end
 	self.findAllNodeType.GetRawPins = function()
 		return {
 			MakePin(PD_Out, "Entities", self:GetModulePinType():AsTable()),
