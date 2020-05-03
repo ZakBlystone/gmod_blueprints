@@ -77,6 +77,28 @@ function meta:GetDefault()
 
 end
 
+function meta:CanCastTo( inPinType )
+
+	if self:IsType(PN_BPRef) and self.subtype:IsValid() then
+		return self.subtype():CanCast( self, inPinType )
+	end
+
+	if self:IsType(PN_BPClass) and inPinType:IsType(PN_BPClass) then
+
+		--[[local inSub = inPinType:GetSubType()
+		local outSub = self:GetSubType()
+		if not bpcommon.IsGUID( inSub ) and bpcommon.IsGUID( outSub )then
+
+			local mod = self:ResolveModuleUID( outSub )
+			return mod:GetType() == inSub
+
+		end]]
+		return false
+
+	end
+
+end
+
 function meta:GetDisplayName()
 
 	if self:IsType(PN_BPRef) and self.subtype:IsValid() then

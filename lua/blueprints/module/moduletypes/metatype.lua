@@ -160,20 +160,7 @@ function MODULE:IsConstructable() return false end
 
 function MODULE:CanCast( outPinType, inPinType )
 
-	if outPinType:GetBaseType() == PN_BPClass and inPinType:GetBaseType() == PN_BPClass then
-
-		local inSub = inPinType:GetSubType()
-		local outSub = outPinType:GetSubType()
-		if not bpcommon.IsGUID( inSub ) and bpcommon.IsGUID( outSub )then
-
-			local mod = self:ResolveModuleUID( outSub )
-			return mod:GetType() == inSub
-
-		end
-
-	end
-
-	if outPinType:Equal(self.modulePinType) then
+	if outPinType:Equal(self:GetModulePinType()) then
 
 		if inPinType:GetSubType() == self.SelfPinSubClass then return true end
 

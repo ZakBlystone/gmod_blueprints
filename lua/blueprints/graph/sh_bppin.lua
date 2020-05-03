@@ -185,8 +185,7 @@ function meta:CanConnect( other )
 		if self:IsType(PN_Any) and not other:IsType(PN_Exec) then return true end
 		if other:IsType(PN_Any) and not self:IsType(PN_Exec) then return true end
 
-		local mod = self:FindOuter( bpmodule_meta )
-		if mod and mod:CanCast( self:GetType(), other:GetType() ) then
+		if bpcast.CanCast( self:GetType(), other:GetType() ) then
 			return true
 		else
 			return false, "No explicit conversion between " .. tostring(self) .. " --> " .. tostring(other)

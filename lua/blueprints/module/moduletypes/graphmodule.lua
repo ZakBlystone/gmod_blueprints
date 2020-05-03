@@ -346,7 +346,7 @@ function MODULE:CanHaveEvents() return true end
 
 function MODULE:CanCast( outPinType, inPinType )
 
-	return bpcast.CanCast( outPinType, inPinType )
+	return false
 
 end
 

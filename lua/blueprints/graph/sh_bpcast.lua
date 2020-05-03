@@ -66,7 +66,7 @@ function CanCast(outPinType, inPinType)
 		end
 	end
 
-	return false
+	return outPinType:CanCastTo( inPinType )
 
 end
 
@@ -142,11 +142,11 @@ function FindMatchingPin(ntype, pf, module, cache)
 					if cache[outH][inH] ~= nil then 
 						castMatch = cache[outH][inH]
 					else
-						castMatch = module:CanCast(outType, inType)
+						castMatch = CanCast(outType, inType)
 						cache[outH][inH] = castMatch
 					end
 				else
-					castMatch = module:CanCast(outType, inType)
+					castMatch = CanCast(outType, inType)
 				end
 
 			end
