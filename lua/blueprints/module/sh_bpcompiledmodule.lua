@@ -351,6 +351,7 @@ fragments["update"] = function(args)
 
 	return [[
 function meta:update( rate )]] .. x .. [[
+	__self = self
 	rate = rate or FrameTime()
 	self:netUpdate()
 	local t,d = self.delays
