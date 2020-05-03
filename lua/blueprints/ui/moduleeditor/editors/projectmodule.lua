@@ -97,6 +97,14 @@ function EDITOR:OpenAssetMenu(pnl, asset)
 			self:EnumerateAssets()
 		end, nil, LOCTEXT("query_ok", "Ok")(), LOCTEXT("query_cancel", "Cancel")())
 	end)
+	self.cmenu:AddOption( "Delete", function()
+		Derma_Query("Delete " .. asset:GetName() .. "? This cannot be undone", "Delete Asset",
+		LOCTEXT("query_yes", "Yes")(), function()
+			self:GetModule():RemoveAsset( asset )
+			self:EnumerateAssets()
+		end,
+		LOCTEXT("query_no", "No")(), function() end)
+	end)
 
 	self.cmenu:SetMinimumWidth( 100 )
 	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, pnl )
