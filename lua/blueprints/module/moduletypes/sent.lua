@@ -49,6 +49,34 @@ function MODULE:Setup()
 
 	end
 
+	self.findAllNodeType = bpnodetype.New():WithOuter(self)
+	self.findAllNodeType:SetCodeType(NT_Function)
+	self.findAllNodeType.GetDisplayName = function() return "Get All " .. self:GetName() .. "s" end
+	self.findAllNodeType.GetGraphThunk = function() return self end
+	self.findAllNodeType.GetRole = function() return ROLE_Server end
+	self.findAllNodeType.GetRawPins = function()
+		return {
+			MakePin(PD_Out, "Entities", self:GetModulePinType():AsTable()),
+		}
+	end
+	self.findAllNodeType.Compile =  function(node, compiler, pass)
+
+		if pass == bpcompiler.CP_ALLOCVARS then 
+
+			compiler:CreatePinVar( node:FindPin(PD_Out, "Entities") )
+			return true
+
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			local edit = self:GetConfigEdit()
+			compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Entities") ) .. [[ = ents.FindByClass(]] .. edit:Index("classname"):ToString() .. [[)]])
+			compiler:CompileReturnPin( node )
+			return true
+
+		end
+
+	end
+
 end
 
 function MODULE:GetOwnerPinType() return bppintype.New( PN_Ref, PNF_None, "Entity" ) end
@@ -83,6 +111,7 @@ function MODULE:GetDefaultConfigTable()
 end
 
 function MODULE:GetCreateNodeType() return self.createNodeType end
+function MODULE:GetFindAllNodeType() return self.findAllNodeType end
 function MODULE:GetNodeTypes( collection, graph )
 
 	BaseClass.GetNodeTypes( self, collection, graph )
@@ -91,6 +120,7 @@ function MODULE:GetNodeTypes( collection, graph )
 
 	collection:Add( types )
 	types["__Create"] = self:GetCreateNodeType()
+	types["__FindAll"] = self:GetFindAllNodeType()
 	for k,v in pairs(types) do v.name = k end
 
 end
@@ -98,6 +128,10 @@ end
 function MODULE:SerializeData( stream )
 
 	stream:Extern( self:GetCreateNodeType() )
+	
+	if stream:GetVersion() == 2 then
+		stream:Extern( self:GetFindAllNodeType() )
+	end
 
 	return BaseClass.SerializeData( self, stream )
 

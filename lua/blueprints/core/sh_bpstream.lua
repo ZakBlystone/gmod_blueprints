@@ -31,7 +31,7 @@ IO_In = 2
 DEBUG_MODE = false
 
 fmtMagic = 0x314D5042
-fmtVersion = 1
+fmtVersion = 2
 
 
 function meta:Init(context, mode, file)
