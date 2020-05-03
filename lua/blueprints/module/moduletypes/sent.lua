@@ -21,6 +21,33 @@ function MODULE:Setup()
 	self:AddAutoFill( bppintype.New( PN_Ref, PNF_None, "PhysObj" ), "__self:GetPhysicsObject()" )
 	self:AddAutoFill( bppintype.New( PN_Ref, PNF_None, "Entity" ), "__self" )
 
+	self.createNodeType = bpnodetype.New():WithOuter(self)
+	self.createNodeType:SetCodeType(NT_Function)
+	self.createNodeType.GetDisplayName = function() return "Create " .. self:GetName() end
+	self.createNodeType.GetGraphThunk = function() return self end
+	self.createNodeType.GetRole = function() return ROLE_Server end
+	self.createNodeType.GetRawPins = function()
+		return {
+			MakePin(PD_Out, "Entity", self:GetModulePinType()),
+		}
+	end
+	self.createNodeType.Compile =  function(node, compiler, pass)
+
+		if pass == bpcompiler.CP_ALLOCVARS then 
+
+			compiler:CreatePinVar( node:FindPin(PD_Out, "Entity") )
+			return true
+
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Entity") ) .. [[ = ents.Create( __bpm.class )]])
+			compiler:CompileReturnPin( node )
+			return true
+
+		end
+
+	end
+
 end
 
 function MODULE:GetOwnerPinType() return bppintype.New( PN_Ref, PNF_None, "Entity" ) end
@@ -51,6 +78,27 @@ function MODULE:GetDefaultConfigTable()
 			AdminOnly = false,
 		}
 	}
+
+end
+
+function MODULE:GetCreateNodeType() return self.createNodeType end
+function MODULE:GetNodeTypes( collection, graph )
+
+	BaseClass.GetNodeTypes( self, collection, graph )
+
+	local types = {}
+
+	collection:Add( types )
+	types["__Create"] = self:GetCreateNodeType()
+	for k,v in pairs(types) do v.name = k end
+
+end
+
+function MODULE:SerializeData( stream )
+
+	stream:Extern( self:GetCreateNodeType() )
+
+	return BaseClass.SerializeData( self, stream )
 
 end
 
