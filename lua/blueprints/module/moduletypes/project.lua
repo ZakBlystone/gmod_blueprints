@@ -185,6 +185,9 @@ function MODULE:Compile( compiler, pass )
 
 	elseif pass == CP_MODULECODE then
 
+		compiler.emit("_FR_UTILS(1)") -- utilities
+		compiler.emitContext( CTX_Network )         -- network boilerplate
+
 		compiler.emit("local __modules = {}")
 
 		for k, asset in ipairs(self:GetAssets()) do
@@ -204,7 +207,16 @@ function MODULE:Compile( compiler, pass )
 	elseif pass == CP_MODULEFOOTER then
 
 		compiler.emit("_FR_PROJECTFOOTER()")
-		compiler.emit("return __bpm")
+
+		if bit.band(compiler.flags, CF_Standalone) ~= 0 then
+
+			compiler.emit("__bpm.init()")
+
+		else
+
+			compiler.emit("return __bpm")
+
+		end
 
 	end
 

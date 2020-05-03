@@ -482,6 +482,8 @@ end
 
 function MODULE:Compile( compiler, pass )
 
+	local withinProject = self:FindOuter(bpmodule_meta) ~= nil
+
 	if pass == CP_PREPASS then
 
 		print("MODULE PRE-COMPILE")
@@ -511,8 +513,12 @@ function MODULE:Compile( compiler, pass )
 		local args = bDebug .. ", " .. bILP
 
 		compiler.emit("_FR_HEAD(" .. args .. ")")   -- script header
-		compiler.emit("_FR_UTILS(" .. bGUID .. ")") -- utilities
-		compiler.emitContext( CTX_Network )         -- network boilerplate
+
+		if not withinProject then
+			compiler.emit("_FR_UTILS(" .. bGUID .. ")") -- utilities
+			compiler.emitContext( CTX_Network )         -- network boilerplate
+		end
+
 		compiler.emit("_FR_MODHEAD()")              -- header for module
 
 		-- emit each graph's entry function

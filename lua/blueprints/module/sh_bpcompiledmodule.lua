@@ -390,7 +390,6 @@ for _, m in ipairs(__modules) do
 end
 __bpm.init = function()
 	for _, m in ipairs(__modules) do
-		print("META: " .. tostring(m.meta))
 		if m.init then m.init() end
 	end
 end
