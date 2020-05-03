@@ -83,9 +83,18 @@ function meta:ToString(pinID)
 	end
 
 	local outerGraph = self:GetGraph()
-	if outerGraph then str = outerGraph:GetName() .. ":" .. str end
+	if outerGraph then str = tostring(outerGraph:GetName()) .. ":" .. tostring(str) end
 
 	return str
+
+end
+
+function meta:GetDisplayName()
+
+	local ntype = self:GetType()
+	if ntype ~= nil then
+		return ntype:GetDisplayName()
+	end
 
 end
 

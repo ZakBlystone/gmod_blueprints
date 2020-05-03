@@ -300,10 +300,10 @@ function meta:Serialize(stream)
 	if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
 	for i=1, count do
 
-		local item = self.items[i] or self:ConstructObject()
+		self.items[i] = stream:Object(self.items[i], self)
+		local item = self.items[i]
 		if self.indexed then item.id = stream:UInt(item.id) else item.id = i end
 		if self.namedItems then item.name = stream:SValueCompat(item.name) end
-		stream:Object(item, self, true)
 
 		if stream:IsReading() then
 

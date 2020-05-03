@@ -1,6 +1,7 @@
 TEST.Name = "ObjectLinker"
 TEST.Libs = {
 	"bpstream",
+	"bplist",
 	"setmetatable",
 	"collectgarbage",
 	"print",
@@ -38,6 +39,7 @@ function m1:Add( sub )
 
 end
 
+function m1:GetName() return self.name end
 function m1:Serialize( stream )
 	self.ident = stream:Object( self.ident )
 	self.name = stream:String(self.name)
@@ -147,5 +149,35 @@ function CROSS_SUBLINK()
 	ASSERT( isbplinkertest3( B.ident ) )
 	EXPECT(A.sub[1](), B.ident)
 	EXPECT(B.sub[1](), A.ident)
+
+end
+
+function LIST_TEST()
+
+	local A = NewM1()
+	local B = NewM1()
+	local C = NewM1()
+	local D = NewM1()
+	local list = bplist.New():NamedItems("Item")
+
+	list:Add(A)
+	list:Add(B)
+	list:Add(C)
+	list:Add(D)
+
+	ThroughStream( function(s)
+		list:Serialize(s)
+		--list = s:Object( list )
+	end, false )
+
+	ASSERT( isbplinkertest1( list:Get(1) ) )
+	ASSERT( isbplinkertest1( list:Get(2) ) )
+	ASSERT( isbplinkertest1( list:Get(3) ) )
+	ASSERT( isbplinkertest1( list:Get(4) ) )
+
+	ASSERT( list:Get(1):GetName() == "Item_1" )
+	ASSERT( list:Get(2):GetName() == "Item_2" )
+	ASSERT( list:Get(3):GetName() == "Item_3" )
+	ASSERT( list:Get(4):GetName() == "Item_4" )
 
 end
