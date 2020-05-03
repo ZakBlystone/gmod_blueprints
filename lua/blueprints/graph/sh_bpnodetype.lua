@@ -11,25 +11,6 @@ local meta = bpcommon.MetaTable("bpnodetype")
 
 bpcommon.AddFlagAccessors(meta)
 
-meta.__eq = function(a, b)
-	if a.codeType ~= b.codeType then return false end
-	if a.role ~= b.role then return false end
-	if a.flags ~= b.flags then return false end
-	if a.code ~= b.code then return false end
-	if a.category ~= b.category then return false end
-
-	if a:GetFullName() ~= b:GetFullName() then return false end
-
-	local aPins = a:GetPins()
-	local bPins = b:GetPins()
-	if #aPins ~= #bPins then return false end
-	for k, pin in ipairs(aPins) do
-		if not bPins[k] then return false end
-		if pin ~= bPins[k] then return false end
-	end
-	return true
-end
-
 local PIN_INPUT_EXEC = MakePin( PD_In, "Exec", PN_Exec )
 local PIN_OUTPUT_EXEC = MakePin( PD_Out, "Exec", PN_Exec )
 local PIN_OUTPUT_THRU = MakePin( PD_Out, "Thru", PN_Exec )
