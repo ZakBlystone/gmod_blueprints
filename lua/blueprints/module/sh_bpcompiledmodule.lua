@@ -381,6 +381,30 @@ for k,v in pairs(bpm.events) do
 	end
 end]]
 
+fragments["projectfooter"] = [[
+__bpm = {}
+__bpm.onError = function() end
+for _, m in ipairs(__modules) do
+	m.onError = function(...) __bpm.onError(...) end
+end
+__bpm.init = function()
+	for _, m in ipairs(__modules) do
+		print("META: " .. tostring(m.meta))
+		if m.init then m.init() end
+	end
+end
+__bpm.shutdown = function()
+	for _, m in ipairs(__modules) do
+		if m.shutdown then m.shutdown() end
+	end
+end
+__bpm.refresh = function()
+	for _, m in ipairs(__modules) do
+		if m.refresh then m.refresh() end
+	end
+end
+]]
+
 -------------------------------------------------------- RUNTIME --------------------------------------------------------
 
 fragments["standalonehead"] = [[

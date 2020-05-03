@@ -191,7 +191,8 @@ end]])
 		compiler.emit([[
 __bpm.playerKey = "bpplayerhadweapon_" .. __bpm.class
 __bpm.init = function()
-	weapons.Register( meta, __bpm.class )
+	print("SWEP META: " .. tostring(__bpm.meta))
+	weapons.Register( __bpm.meta, __bpm.class )
 	if CLIENT and bpsandbox then bpsandbox.RefreshSWEPs() end
 	if CLIENT then return end
 	timer.Simple(.5, function()

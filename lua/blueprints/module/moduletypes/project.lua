@@ -148,7 +148,57 @@ function MODULE:SerializeData(stream)
 
 end
 
+function MODULE:CompileAll( pass )
+
+	for k, asset in ipairs(self:GetAssets()) do
+		if isbpmodule(asset:GetAsset()) then
+			local mod = asset:GetAsset()
+			mod:Compile( self.compilers[mod], pass )
+		end
+	end
+
+end
+
 function MODULE:Compile( compiler, pass )
+
+	print("COMPILE PASS: " .. pass)
+
+	if pass == CP_PREPASS then
+
+		self.compilers = {}
+
+		for k, asset in ipairs(self:GetAssets()) do
+			if isbpmodule(asset:GetAsset()) then
+				local mod = asset:GetAsset()
+				self.compilers[mod] = bpcompiler.New( mod, compiler.flags )
+				self.compilers[mod]:Compile( mod )
+			end
+		end
+
+	elseif pass == CP_MODULECODE then
+
+		compiler.emit("local __modules = {}")
+
+		for k, asset in ipairs(self:GetAssets()) do
+			if isbpmodule(asset:GetAsset()) then
+				local mod = asset:GetAsset()
+				local cmp = self.compilers[mod]
+				local ctx = cmp.getContext(CTX_Code)
+				compiler.emit("do")
+				compiler.emitIndented(ctx, 0)
+				compiler.emit("__modules[#__modules+1] = __bpm")
+				compiler.emit("end")
+			end
+		end
+
+	elseif pass == CP_MODULEMETA then
+	elseif pass == CP_MODULEBPM then
+	elseif pass == CP_MODULEFOOTER then
+
+		compiler.emit("_FR_PROJECTFOOTER()")
+		compiler.emit("return __bpm")
+
+	end
 
 end
 

@@ -40,7 +40,8 @@ function MODULE:Setup()
 
 		elseif pass == bpcompiler.CP_MAINPASS then
 
-			compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Entity") ) .. [[ = ents.Create( __bpm.class )]])
+			local edit = self:GetConfigEdit()
+			compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Entity") ) .. [[ = ents.Create(]] .. edit:Index("classname"):ToString() .. [[)]])
 			compiler:CompileReturnPin( node )
 			return true
 
@@ -186,7 +187,7 @@ end]])
 		compiler.emit("__bpm.class = " .. classname:ToString())
 		compiler.emit([[
 __bpm.init = function()
-	scripted_ents.Register( meta, __bpm.class )
+	scripted_ents.Register( __bpm.meta, __bpm.class )
 	if CLIENT and bpsandbox then bpsandbox.RefreshSENTs() end
 end
 __bpm.refresh = function()

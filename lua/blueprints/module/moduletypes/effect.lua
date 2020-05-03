@@ -108,7 +108,7 @@ end]])
 		compiler.emit([[
 __bpm.init = function()
 	if SERVER then return end
-	effects.Register( meta, __bpm.class )
+	effects.Register( __bpm.meta, __bpm.class )
 end
 __bpm.shutdown = function()
 

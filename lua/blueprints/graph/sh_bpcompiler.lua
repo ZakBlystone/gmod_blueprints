@@ -1001,13 +1001,13 @@ function meta:CompileNetworkCode()
 end
 
 -- glues all the code together
-function meta:CompileCodeSegment()
+function meta:CompileCodeSegment( noExport )
 
 	local moduleID = self:GetID(self.module)
 
 	self.begin(CTX_Code)
 
-	if bit.band(self.flags, CF_Standalone) ~= 0 then
+	if bit.band(self.flags, CF_Standalone) ~= 0 and not noExport then
 		self.emit("-- Compiled using gm_blueprints v" .. bpcommon.ENV_VERSION .. " ( https://github.com/ZakBlystone/gmod_blueprints )")
 	end
 
@@ -1015,7 +1015,7 @@ function meta:CompileCodeSegment()
 	self:RunModuleCompile( CP_MODULECODE )
 	self:RunModuleCompile( CP_MODULEMETA )
 	self:RunModuleCompile( CP_MODULEBPM )
-	self:RunModuleCompile( CP_MODULEFOOTER )
+	if not noExport then self:RunModuleCompile( CP_MODULEFOOTER ) end
 
 	self.finish()
 
@@ -1125,7 +1125,7 @@ function meta:CompileGraphMetaHook(graph, node, name)
 
 end
 
-function meta:Compile()
+function meta:Compile( noExport )
 
 	--print("COMPILING MODULE...")
 
@@ -1146,10 +1146,12 @@ function meta:Compile()
 	Profile("meta-lookup", self.CompileMetaTableLookup, self)
 
 	-- compile main code segment
-	Profile("code-segment", self.CompileCodeSegment, self)
+	Profile("code-segment", self.CompileCodeSegment, self, noExport)
 
 	-- debugging info
 	Profile("debug-symbols", self.CreateDebugSymbols, self)
+
+	if noExport then return nil end
 
 	local compiledModule = nil
 
