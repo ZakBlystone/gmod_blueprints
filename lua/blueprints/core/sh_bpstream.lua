@@ -29,9 +29,10 @@ IO_Out = 1
 IO_In = 2
 
 DEBUG_MODE = false
+CATCH_UNFINISHED = true
 
 fmtMagic = 0x314D5042
-fmtVersion = 2
+fmtVersion = 3
 
 
 function meta:Init(context, mode, file)
@@ -90,6 +91,13 @@ function meta:Out()
 	self:MetaState( self.stream )
 	if not self:HasFlag(FL_NoHeader) then self:SerializeHeader() end
 	self:MetaState( nil )
+
+	if CATCH_UNFINISHED then
+		local site = debug.traceback()
+		self.finishCheck = bpcommon.GCHandle( function()
+			if not self:IsClosed() then print("****Unfinished output stream at: " .. site) end
+		end )
+	end
 
 	return self
 
@@ -161,6 +169,13 @@ function meta:In( noRead )
 		self.stringTable:Serialize(self)
 	end
 
+	if CATCH_UNFINISHED then
+		local site = debug.traceback()
+		self.finishCheck = bpcommon.GCHandle( function()
+			if not self:IsClosed() then print("****Unfinished input stream at: " .. site) end
+		end )
+	end
+
 	return self
 
 end
@@ -174,6 +189,7 @@ function meta:Finish()
 		local contents = bpdata.OutStream( false, self:HasFlag(FL_FileBacked) )
 
 		self:MetaState( contents )
+		if self.linker then self.linker:PostLink(self) end
 		if self.linker then self.linker:Serialize(self) end
 		if self.stringTable then self.stringTable:Serialize(self) end
 		contents:WriteStr( self.dataStream:GetString(false, false) )
@@ -203,6 +219,10 @@ function meta:Finish()
 			error("Invalid mode for writing")
 
 		end
+
+	elseif self:IsReading() then
+
+		if self.linker then self.linker:PostLink(self) end
 
 	end
 
@@ -339,11 +359,13 @@ function meta:GUID(v)
 
 end
 
-function meta:Extern(v)
+function meta:Extern(v, uid)
+
+	assert(uid ~= nil, "Each 'Extern' callsite must have its own unique ID (GUID)")
 
 	if self.linker == nil then return end
-	if self:IsReading() then return self.linker:ReadObject(self, v, true) end
-	if self:IsWriting() then self.linker:WriteObject(self, v, true) return v end
+	if self:IsReading() then self.linker:ReadExtern(self, v, uid) return v end
+	if self:IsWriting() then self.linker:WriteExtern(self, v, uid) return v end
 
 end
 
@@ -356,7 +378,7 @@ function meta:Object(v, outer, noLinker)
 			if v.__hash == nil then error("Object is not a metatype") end
 			v:Serialize(self)
 		else
-			self.linker:WriteObject(self, v, false)
+			self.linker:WriteObject(self, v)
 		end
 		return v
 
@@ -366,7 +388,7 @@ function meta:Object(v, outer, noLinker)
 		if noLinker or self.linker == nil then
 			v:Serialize(self)
 		else
-			v = self.linker:ReadObject(self, nil, false, outer)
+			v = self.linker:ReadObject(self, outer)
 		end
 		return v
 

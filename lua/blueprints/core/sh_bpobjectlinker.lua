@@ -3,6 +3,7 @@ AddCSLuaFile()
 module("bpobjectlinker", package.seeall)
 
 local meta = bpcommon.MetaTable("bpobjectlinker")
+local EXTERN_SET = 0xFFFFFE
 local WEAK_SET = 0xFFFFFF
 
 function meta:Init()
@@ -11,26 +12,39 @@ function meta:Init()
 	self.nextSetID = 0
 	self.order = {}
 	self.hashes = {}
-	self.refs = {}
 	self.orderNum = 1
 	self.hashNum = 1
 	self.dindent = 0
+	self.extern = {}
+	self.externUIDNum = 1
+	self.externUIDs = {}
+	self.externObjLookup = {}
+	self.UIDList = {}
 	return self
 
 end
 
 function meta:Serialize(stream)
 
+	local uidCount = stream:UInt(#self.UIDList)
 	local orderCount = stream:UInt(#self.order)
 	local hashCount = stream:UInt(#self.hashes)
 
 	--Dprint("Serialize: " .. orderCount .. " orders")
 	--Dprint("Serialize: " .. hashCount .. " hashes")
 
+	for i=1, uidCount do
+		self.UIDList[i] = stream:GUID(self.UIDList[i])
+		self.externUIDs[self.UIDList[i]] = i
+	end
+
 	for i=1, orderCount do
 		self.order[i] = self.order[i] or {}
 		self.order[i][1] = stream:Length(self.order[i][1])
-		self.order[i][2] = stream:Bits(self.order[i][2], 24)
+		self.order[i][2] = stream:Length(self.order[i][2])
+		if self.order[i][1] == EXTERN_SET then
+			self.order[i][3] = stream:Length(self.order[i][3])
+		end
 	end
 
 	for i=1, hashCount do
@@ -38,6 +52,40 @@ function meta:Serialize(stream)
 	end
 
 	return stream
+
+end
+
+function meta:PostLink(stream)
+
+	if stream:IsWriting() then
+
+		for k, v in ipairs(self.order) do
+			if v[1] == WEAK_SET and v[4]() then
+				local o = v[4]()
+				local ord = self:FindObjectOrder(o)
+				if ord then v[2] = ord end
+				if self.externObjLookup[o] then
+					v[1] = EXTERN_SET
+					v[2] = self.externObjLookup[o]
+					v[3] = self.extern[v[2]][o]
+				end
+			end
+		end
+
+	else
+
+		for k, v in ipairs(self.order) do
+			if v[1] == WEAK_SET then
+				local ord = self.order[v[2]]
+				if ord ~= nil then
+					v[4]:Set( self.objects[ord[1]][ord[2]] )
+				end
+			elseif v[1] == EXTERN_SET and self.extern[v[2]] then
+				v[4]:Set( self.extern[v[2]][v[3]] )
+			end
+		end
+
+	end
 
 end
 
@@ -60,20 +108,6 @@ function meta:GetSetForHash(hash)
 	return t
 
 end
-
---[[function meta:RecordObject(obj)
-
-	if obj == nil then return end
-	if not type(obj) == "table" then error("Tried to record non-table object") end
-	if obj.__hash == nil then error("Object is not a metatype") end
-
-	local set = self:GetSetForHash( obj.__hash )
-	if not set[obj] then
-		set.objects[obj] = set.next
-		set.next = set.next + 1
-	end
-
-end]]
 
 function meta:GetObjectMeta( obj )
 
@@ -136,17 +170,51 @@ function meta:DPrint(...)
 	if self.debug then print(string.rep("  ", self.dindent) .. table.concat({...}, ",")) end
 end
 
-function meta:GetRefTable(obj, noCreate)
-	if not noCreate then self.refs[obj] = self.refs[obj] or {} end
-	return self.refs[obj]
+function meta:GetExternSet(uid)
+
+	local index = self.externUIDs[uid]
+	self.extern[index] = self.extern[index] or {}
+	return self.extern[index]
+
 end
 
-function meta:AppendRef(obj, ord)
-	local t = self:GetRefTable(obj)
-	t[#t+1] = ord
+function meta:CreateExtern(obj, uid)
+
+	local set = self:GetExternSet( uid )
+	set[#set+1] = obj
+	set[obj] = #set
+
+	self.externObjLookup[obj] = self.externUIDs[uid]
+
 end
 
-function meta:WriteObject(stream, obj, isExtern)
+function meta:ReadExtern(stream, obj, uid)
+
+	if obj == nil then return end
+	if self.externUIDs[uid] == nil then
+		print("Unlinked extern object: " .. bpcommon.GUIDToString( uid ) )
+		return
+	end
+
+	self:CreateExtern(obj, uid)
+
+end
+
+function meta:WriteExtern(stream, obj, uid)
+
+	if obj == nil then return end
+
+	if not self.externUIDs[uid] then
+		self.UIDList[#self.UIDList+1] = uid
+		self.externUIDs[uid] = self.externUIDNum
+		self.externUIDNum = self.externUIDNum + 1
+	end
+
+	self:CreateExtern(obj, uid)
+
+end
+
+function meta:WriteObject(stream, obj)
 
 	if obj == nil then
 		self.order[#self.order+1] = {0, 0}
@@ -156,11 +224,7 @@ function meta:WriteObject(stream, obj, isExtern)
 	if not type(obj) == "table" then error("Tried to write non-table object") end
 
 	if obj.__ref then
-		local ord = self:FindObjectOrder(obj())
-		--if ord ~= 0 then ord = self.order[ord][1] end
-		if ord ~= 0 then self:DPrint("PRE-LINKED WEAK[" .. tostring(obj) .. "]: " .. tostring(obj()) .. " [" .. ord .. "]") end
-		self.order[#self.order+1] = {ord, WEAK_SET, obj}
-		if obj:IsValid() then self:AppendRef(obj(), #self.order) end
+		self.order[#self.order+1] = {WEAK_SET, 0, 0, obj}
 		return
 	end
 
@@ -183,25 +247,16 @@ function meta:WriteObject(stream, obj, isExtern)
 		set.objects[hash] = set.next
 		self.order[#self.order+1] = {set.id, set.next}
 		self.hashes[#self.hashes+1] = meta.__hash
-		if not isExtern then 
-			self:DPrint("SAVED: " .. tostring(obj) .. " [" .. (#self.order) .. "]")
-			self:DPushIndent()
-			obj:Serialize(stream)
-			self:DPopIndent()
-		end
+		self:DPrint("SAVED: " .. tostring(obj) .. " [" .. (#self.order) .. "]")
+		self:DPushIndent()
+		obj:Serialize(stream)
+		self:DPopIndent()
 		set.next = set.next + 1
-	end
-
-	local r = self:GetRefTable(obj, true)
-	if r then
-		for _, v in ipairs(r) do
-			self.order[v][1] = thisOrderNum self:DPrint("POST-LINKED WEAK[" .. tostring(self.order[v][3]) .. "]: " .. tostring(obj) .. " [" .. thisOrderNum .. "]" )
-		end
 	end
 
 end
 
-function meta:ReadObject(stream, extern, isExtern, outer)
+function meta:ReadObject(stream, outer)
 
 	local ord = self.order[self.orderNum]
 	local thisOrderNum = self.orderNum
@@ -210,18 +265,9 @@ function meta:ReadObject(stream, extern, isExtern, outer)
 	local setID = ord[1]
 	local objID = ord[2]
 
-	if objID == WEAK_SET then
+	if setID == WEAK_SET or setID == EXTERN_SET then
 		local w = bpcommon.Weak(nil)
-		if setID ~= 0 and self.order[setID] ~= nil then
-			local ord = self.order[setID]
-			local set = self.objects[ord[1]]
-			if set then
-				w:Set( set[ord[2]] )
-				self:DPrint("PRE-LINKED WEAK[" .. tostring(w) .. "]: " .. tostring(set[ord[2]]) .. " [" .. setID .. "]" )
-				if w:IsValid() then return w end
-			end
-		end
-		self:AppendRef(setID, w)
+		ord[4] = w
 		return w
 	end
 
@@ -233,25 +279,12 @@ function meta:ReadObject(stream, extern, isExtern, outer)
 		local hash = self.hashes[self.hashNum]
 		self.hashNum = self.hashNum + 1
 
-		local obj = nil
-		if isExtern then
-			obj = extern
-		else 
-			obj = self:Construct(hash):WithOuter(outer)
-			self:DPrint("CONSTRUCTED: " .. tostring(obj) .. " [" .. (thisOrderNum) .. "]")
-			self:DPushIndent()
-			obj:Serialize(stream)
-			self:DPopIndent()
-		end
+		local obj = self:Construct(hash):WithOuter(outer)
+		self:DPrint("CONSTRUCTED: " .. tostring(obj) .. " [" .. (thisOrderNum) .. "]")
+		self:DPushIndent()
+		obj:Serialize(stream)
+		self:DPopIndent()
 		set[objID] = obj
-
-		local r = self:GetRefTable(thisOrderNum, true)
-		if r then
-			for _, v in ipairs(r) do
-				self:DPrint("POST-LINKED WEAK[" .. tostring(v) .. "]: " .. tostring(obj) .. " [" .. (thisOrderNum) .. "]")
-				v:Set( obj )
-			end
-		end
 
 		return obj
 	else

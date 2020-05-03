@@ -17,6 +17,10 @@ local m1 = bpcommon.MetaTable("bplinkertest1")
 local m2 = bpcommon.MetaTable("bplinkertest2")
 local m3 = bpcommon.MetaTable("bplinkertest3")
 
+local externID0 = "\xA3\x05\x45\x7E\x3A\x67\xAB\xCA\x80\x00\x00\x0D\x16\xCF\x4F\x56"
+local externID1 = "\xA3\x05\x45\x7E\xDF\xEC\xE6\x78\x80\x00\x00\x0E\x16\xF6\x15\x7E"
+local externID2 = "\xA3\x05\x45\x7E\x04\xBC\x73\x22\x80\x00\x00\x0F\x17\x12\x77\x9A"
+
 local function ThroughStream( func, debugEnable )
 
 	local stream = bpstream.New("test", bpstream.MODE_String):Out()
@@ -26,6 +30,7 @@ local function ThroughStream( func, debugEnable )
 	stream = bpstream.New("test2", bpstream.MODE_String, data):In()
 	stream:GetLinker():DSetDebug(debugEnable)
 	func(stream)
+	stream:Finish()
 
 end
 
@@ -81,8 +86,8 @@ function EXTERN_SUBOBJECTS()
 
 	ThroughStream( function(s)
 		test = s:Object(test)
-		s:Extern(A)
-		s:Extern(B)
+		s:Extern(A,externID0)
+		s:Extern(B,externID1)
 	end )
 
 	ASSERT( isbplinkertest1( test ) )
@@ -95,6 +100,53 @@ function EXTERN_SUBOBJECTS()
 			EXPECT( sub(), B, i )
 		end
 	end
+
+end
+
+function EXTERN_MULTIPLE()
+
+	local A = NewM2()
+	local B = NewM2()
+	local WA = bpcommon.Weak(A)
+	local WB = bpcommon.Weak(B)
+
+	ThroughStream( function(s)
+		WA = s:Object(WA)
+		WB = s:Object(WB)
+		s:Extern(A,externID0)
+		s:Extern(B,externID0)
+	end )
+
+	EXPECT(A, WA())
+	EXPECT(B, WB())
+
+end
+
+function EXTERN_INDEPENDENCE()
+
+	local A = NewM2()
+	local B = NewM2()
+	local W = bpcommon.Weak(A)
+
+	ThroughStream( function(s)
+		W = s:Object(W)
+		s:Extern(A,externID0)
+		if s:IsReading() then
+			s:Extern(B,externID1)
+		end
+	end )
+
+	EXPECT(A, W())
+
+	ThroughStream( function(s)
+		s:Extern(A,externID0)
+		if s:IsReading() then
+			s:Extern(B,externID1)
+		end
+		W = s:Object(W)
+	end )
+
+	EXPECT(A, W())
 
 end
 

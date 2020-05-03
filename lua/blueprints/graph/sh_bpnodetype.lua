@@ -213,7 +213,7 @@ function meta:GetFullName()
 		if groupName == "GLOBAL" then return self.name end
 	end
 
-	return groupName .. "_" .. self.name
+	return groupName .. "_" .. tostring(self.name)
 
 end
 

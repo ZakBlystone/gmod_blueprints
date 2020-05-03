@@ -129,11 +129,8 @@ end
 
 function MODULE:SerializeData( stream )
 
-	stream:Extern( self:GetCreateNodeType() )
-	
-	if stream:GetVersion() == 2 then
-		stream:Extern( self:GetFindAllNodeType() )
-	end
+	stream:Extern( self:GetCreateNodeType(), "\xE3\x09\x45\x7E\xE1\xE5\xBB\xEE\x80\x00\x00\x13\x51\xC1\x24\x22" )
+	stream:Extern( self:GetFindAllNodeType(), "\xE3\x09\x45\x7E\x71\xC5\xA0\xE6\x80\x00\x00\x14\x51\xD1\x5C\x32" )
 
 	return BaseClass.SerializeData( self, stream )
 

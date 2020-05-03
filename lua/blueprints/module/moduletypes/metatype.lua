@@ -147,10 +147,10 @@ function MODULE:GetOwnerNodeType() return self.getOwnerNodeType end
 
 function MODULE:SerializeData( stream )
 
-	stream:Extern( self:GetModulePinType() )
-	stream:Extern( self:GetSelfNodeType() )
-	stream:Extern( self:GetClassNodeType() )
-	stream:Extern( self:GetOwnerNodeType() )
+	stream:Extern( self:GetModulePinType(), "\xE3\x05\x45\x7E\xA6\x93\xC1\x32\x80\x00\x00\x0F\x51\x68\x87\xB6" )
+	stream:Extern( self:GetSelfNodeType(), "\xE3\x05\x45\x7E\x53\x60\x58\xAB\x80\x00\x00\x10\x51\x78\x1D\xC6" )
+	stream:Extern( self:GetClassNodeType(), "\xE3\x05\x45\x7E\x49\x74\x30\xFA\x80\x00\x00\x11\x51\x8A\x8D\xDA" )
+	stream:Extern( self:GetOwnerNodeType(), "\xE3\x05\x45\x7E\xF7\xB7\xCB\xA9\x80\x00\x00\x12\x51\x96\xE4\xE6" )
 
 	return BaseClass.SerializeData( self, stream )
 

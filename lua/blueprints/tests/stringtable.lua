@@ -62,6 +62,7 @@ function TRANSMIT()
 	local serialized = outs:Finish()
 	local ins = bpstream.New("test-stringtable", bpstream.MODE_String, serialized):In()
 	dest:Serialize(ins)
+	ins:Finish()
 
 	for i, id in ipairs(fromIds) do
 		EXPECT( dest:Get(id), strings[i] )

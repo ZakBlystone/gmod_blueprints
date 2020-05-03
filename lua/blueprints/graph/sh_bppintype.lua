@@ -77,6 +77,15 @@ function meta:GetDefault()
 
 end
 
+function meta:GetSubTypeString()
+
+	local t = self:GetSubType()
+	if type(t) == "table" then return t:GetName() end
+	if type(t) == "string" then return t end
+	return "nil"
+
+end
+
 function meta:CanCastTo( inPinType )
 
 	if self:IsType(PN_BPRef) and self.subtype:IsValid() then
@@ -101,8 +110,8 @@ end
 
 function meta:GetDisplayName()
 
-	if self:IsType(PN_BPRef) and self.subtype:IsValid() then
-		return "M_" .. self.subtype():GetName()
+	if self:IsType(PN_BPRef) then
+		return "M_" .. self:GetSubTypeString()
 	end
 
 	if self:IsType(PN_BPClass) then

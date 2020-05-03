@@ -215,6 +215,7 @@ local function LoadIndex()
 
 		local stream = bpstream.New("files", MODE_File, FileIndex):In()
 		G_BPFiles = stream:ObjectArray()
+		stream:Finish()
 
 		for _, f in ipairs(G_BPFiles) do
 			local path = UIDToModulePath( f:GetUID() )
@@ -355,6 +356,7 @@ if SERVER then
 
 			local execute = stream:Value()
 			local name = stream:Value()
+			stream:Finish()
 			
 			local filename = UIDToModulePath( mod:GetUID() )
 			local file = FindFileByUID( mod:GetUID() )
@@ -413,6 +415,7 @@ else
 			local moduleData = data.buffer:GetString()
 			local stream = bpstream.New("module", MODE_NetworkString, moduleData):In()
 			local mod = stream:Object()
+			stream:Finish()
 
 			local path = ClientFileDirectory .. ModuleNameToFilename(data.name)
 
@@ -608,6 +611,7 @@ net.Receive("bpfilesystem", function(len, ply)
 	elseif cmd == CMD_UpdateFileTable then
 		local stream = bpstream.New("files", MODE_Network):In()
 		G_BPFiles = stream:ObjectArray()
+		stream:Finish()
 		hook.Run("BPFileTableUpdated", FT_Remote)
 		IndexLocalFiles()
 	elseif cmd == CMD_TakeLock then

@@ -571,7 +571,7 @@ function meta:Serialize(stream)
 	if stream:IsNetwork() or true then
 		local types = self:GetNodeTypes()
 		for _, v in ipairs( stream:StringArray(external) ) do
-			stream:Extern(types:Find(v))
+			stream:Extern(types:Find(v), "\xE3\x01\x45\x7E\x79\x4E\xEE\x21\x80\x00\x00\x0B\x4F\xEF\x14\x26")
 			print("EXTERNAL NODE TYPE: " .. tostring(types:Find(v)) )
 		end
 	else
@@ -580,9 +580,9 @@ function meta:Serialize(stream)
 		self.strongNodeTypeRef = external
 	end
 
-	stream:Extern( self:GetCallNodeType() )
-	stream:Extern( self:GetEntryNodeType() )
-	stream:Extern( self:GetExitNodeType() )
+	stream:Extern( self:GetCallNodeType(), "\xE3\x01\x45\x7E\x7A\x7A\x16\x2F\x80\x00\x00\x0C\x50\x2A\xF7\x62" )
+	stream:Extern( self:GetEntryNodeType(), "\xE3\x01\x45\x7E\x4E\x7A\x49\x9F\x80\x00\x00\x0D\x50\x41\x15\x7A" )
+	stream:Extern( self:GetExitNodeType(), "\xE3\x01\x45\x7E\xC5\x9C\x09\x94\x80\x00\x00\x0E\x50\x4C\x94\x86" )
 
 	self.type = stream:UInt(self.type)
 	self.flags = stream:UInt(self.flags)

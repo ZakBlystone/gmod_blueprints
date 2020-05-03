@@ -556,7 +556,7 @@ function GUID()
 
 end
 
--- Converts bytes into hexadecimal representation
+-- Converts hexadecimal representation to bytes
 function HexBytes(str)
 
 	if str == nil or str == "" or str:len() % 2 ~= 0 then return "" end
@@ -629,5 +629,16 @@ function CopyTable( tab, lookup_table )
 		end
 	end
 	return copy
+
+end
+
+if CLIENT then
+
+	concommand.Add("bp_guid", function(p,c,a)
+		local uid = EscapedGUID( GUID() )
+		local str = a[1] and ("local %s = %s"):format(a[1], uid) or uid
+		SetClipboardText( str )
+		print(str)
+	end)
 
 end

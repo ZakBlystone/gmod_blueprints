@@ -135,8 +135,8 @@ end
 
 function meta:Serialize(stream)
 
-	stream:Extern( self:GetterNodeType() )
-	stream:Extern( self:SetterNodeType() )
+	stream:Extern( self:GetterNodeType(), "\xE3\x09\x45\x7E\xCF\x3C\xFB\xB9\x80\x00\x00\x19\x52\x63\x95\xCA" )
+	stream:Extern( self:SetterNodeType(), "\xE3\x09\x45\x7E\x9F\x38\x84\x65\x80\x00\x00\x1A\x52\x73\xBD\xDA" )
 
 	self.pintype = stream:Object(self.pintype, self)
 	self.default = stream:Value(self.default)

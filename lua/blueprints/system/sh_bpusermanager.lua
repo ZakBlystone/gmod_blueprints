@@ -134,6 +134,7 @@ local function LoadTables()
 		local stream = bpstream.New("users", MODE_File, UserFile):In()
 		G_BPUsers = stream:ObjectArray()
 		G_BPGroups = stream:ObjectArray()
+		stream:Finish()
 
 	else
 
@@ -159,6 +160,7 @@ local function HandleLogin( ply )
 
 	local stream = bpstream.New("users", MODE_Network):In()
 	local user = stream:Object()
+	stream:Finish()
 
 	if user:IsValid() then
 

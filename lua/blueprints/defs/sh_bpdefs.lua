@@ -417,6 +417,7 @@ local function LoadDefinitionPack(data)
 			:In()
 
 		defpack = stream:Object()
+		stream:Finish()
 		ready = true
 	end)
 
@@ -461,8 +462,10 @@ end
 
 if game.SinglePlayer() then
 	timer.Simple(0, function()
+		bpcommon.ProfileStart("parse definitions")
 		LoadAndParseDefs()
 		defpack:PostInit()
+		bpcommon.ProfileEnd()
 		ready = true
 	end)
 elseif SERVER then
