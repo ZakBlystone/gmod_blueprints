@@ -159,6 +159,45 @@ function PANEL:AddSheet( label, panel, Tooltip, material, closeButton )
 
 end
 
+function PANEL:CloseTab( tab, bRemovePanelToo )
+
+	for k, v in pairs( self.Items ) do
+
+		if ( v.Tab != tab ) then continue end
+
+		table.remove( self.Items, k )
+
+	end
+
+	for k, v in pairs( self.tabScroller.Panels ) do
+
+		if ( v != tab ) then continue end
+
+		table.remove( self.tabScroller.Panels, k )
+
+	end
+
+	self.tabScroller:InvalidateLayout( true )
+
+	if ( tab == self:GetActiveTab() ) then
+		self:SetActiveTab( self.Items[ #self.Items ].Tab )
+		--self.m_pActiveTab = self.Items[ #self.Items ].Tab
+	end
+
+	local pnl = tab:GetPanel()
+
+	if ( bRemovePanelToo ) then
+		pnl:Remove()
+	end
+
+	tab:Remove()
+
+	self:InvalidateLayout( true )
+
+	return pnl
+
+end
+
 derma.DefineControl( "BPEditorPropertySheet", "Blueprint editor property sheet", PANEL, "DPropertySheet" )
 
 local PANEL = {}

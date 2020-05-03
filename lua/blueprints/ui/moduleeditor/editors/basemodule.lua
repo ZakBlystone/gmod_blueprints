@@ -29,7 +29,16 @@ EDITOR.CanSendToServer = false
 EDITOR.CanInstallLocally = false
 EDITOR.CanExportLuaScript = false
 
+function EDITOR:ShouldCreateMenuBar()
+
+	if self:GetModule():FindOuter( bpmodule_meta ) then return false end
+	return true
+
+end
+
 function EDITOR:PopulateMenuBar( t )
+
+	if self:GetModule():FindOuter( bpmodule_meta ) then return end
 
 	if self.CanSave then
 

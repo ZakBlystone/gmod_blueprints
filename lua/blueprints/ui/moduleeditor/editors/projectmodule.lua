@@ -11,9 +11,17 @@ EDITOR.CanExportLuaScript = true
 
 function EDITOR:PopulateMenuBar( t )
 
-	t[#t+1] = { name = "New SubModule", func = function() self:NewSubModule() end, icon = "icon16/asterisk_yellow.png" }
+	--[[if not self.editingModuleTab then
+		t[#t+1] = { name = "New SubModule", func = function() self:NewSubModule() end, icon = "icon16/asterisk_yellow.png" }
+	end]]
 
 	BaseClass.PopulateMenuBar(self, t)
+
+	if self.editingModuleTab then
+		local editor = self.editingModuleTab.moduleEditor
+		editor:PopulateMenuBar( t )
+		editor:GetModule():GetMenuItems( t )
+	end
 
 end
 
@@ -27,12 +35,27 @@ function EDITOR:PostInit()
 	mod:BindRaw("addedAsset", self, function() self:EnumerateAssets() end)
 	mod:BindRaw("removedAsset", self, function() self:EnumerateAssets() end)
 
-	self.assets = vgui.Create("DIconLayout")
+	self.openModules = {}
+	self.tabs = vgui.Create("BPEditorPropertySheet" )
+	self.tabs:DockMargin(0, 0, 0, 0)
+	self.tabs:Dock( FILL )
+	self.tabs:SetPadding( 0 )
+	self.tabs:SetEditor( self:GetMainEditor() )
+	self.tabs.OnActiveTabChanged = function(pnl, old, new) self:OnTabChanged(old, new) end
+	self:SetContent( self.tabs )
+
+	self.scroll = vgui.Create( "DScrollPanel" )
+	self.scroll:Dock( FILL )
+
+	self.assets = vgui.Create("DIconLayout", self.scroll)
 	self.assets:SetSelectionCanvas( true )
+	self.assets:Dock( FILL )
 	self.assets.OnChildAdded = function(pnl, child)
 		child:SetSelectable( true )
 	end
-	self:SetContent( self.assets )
+
+	self.tabs:AddSheet( LOCTEXT("project_assets","Assets"), self.scroll, LOCTEXT("project_assets_desc","Assets in this project"), "icon16/application_double.png" )
+
 	self:EnumerateAssets()
 
 end
@@ -44,13 +67,99 @@ function EDITOR:Shutdown()
 
 end
 
+function EDITOR:OnTabChanged( old, new )
+
+	if new.view then
+		self.editingModuleTab = new.view
+		print("IN SUBMODULE")
+	else
+		self.editingModuleTab = nil
+		print("NOT IN SUBMODULE")
+	end
+
+	self:UpdateMenuBar()
+
+end
+
+function EDITOR:CloseModule( mod )
+
+	local uid = mod:GetUID()
+	local opened = self.openModules[uid]
+	if opened == nil then return end
+
+	self.tabs:CloseTab( opened.Tab )
+	opened.Panel:Remove()
+
+	self.openModules[uid] = nil
+
+end
+
+function EDITOR:OpenModule( mod )
+
+	local existing = self.openModules[mod:GetUID()]
+	if existing then
+		self.tabs:SetActiveTab( existing.Tab )
+		return existing
+	end
+
+	local title = mod:GetName()
+	local view = vgui.Create("BPModuleEditor")
+	local sheet = self.tabs:AddSheet( title, view, title, mod.Icon or "icon16/application.png", true )
+	view:SetModule( mod )
+	view.editor = self
+	view.file = file
+	view.tab = sheet.Tab
+
+	sheet.Tab.view = view
+	sheet.Tab.Close = function()
+		self:CloseModule( mod )
+	end
+
+	self.openModules[mod:GetUID()] = sheet
+
+	self.tabs:SetActiveTab( sheet.Tab )
+	return sheet
+
+end
+
 function EDITOR:ChooseAsset( asset )
 
 	if isbpmodule(asset:GetAsset()) then
 		local mod = asset:GetAsset()
 		print("OPEN ASSET: " .. tostring(mod:GetName()))
-		self:GetMainEditor():OpenModule( mod, mod:GetName() )
+		self:OpenModule( mod, mod:GetName() )
 	end
+
+end
+
+function EDITOR:AddAssetTile( name, icon, pnl, func, rightClick )
+
+	if icon and not pnl then
+		pnl = vgui.Create("DImage")
+		pnl:SetImage(icon)
+		pnl:SetSize(64,64)
+		icon = nil
+	end
+
+	local tile = vgui.Create("BPAssetTile")
+	tile.DoClick = func
+	tile:SetSize(128,128)
+	tile:SetText( name )
+	tile:SetInner( pnl )
+	tile:SetIcon( icon )
+	tile:SetDrawInnerBox( false )
+
+	local detour = tile.OnMousePressed
+	tile.OnMousePressed = function( pnl, code )
+		if code == MOUSE_LEFT then
+			detour(pnl, code)
+		elseif code == MOUSE_RIGHT then
+			if rightClick then rightClick(pnl) end
+		end
+	end
+
+	self.assets:Add( tile )
+	return tile
 
 end
 
@@ -59,30 +168,12 @@ function EDITOR:AddAsset( asset, icon )
 	local pnl = nil
 	if isbpmodule(asset:GetAsset()) then
 		local mod = asset:GetAsset()
-		if mod.Icon then
-			pnl = vgui.Create("DImage")
-			pnl:SetImage(mod.Icon)
-			pnl:SetSize(64,64)
-		end
+		icon = icon or mod.Icon
 	end
 
-	local tile = vgui.Create("BPAssetTile")
-	tile:SetSize(128,128)
-	tile:SetText( asset:GetName() )
-	tile.DoClick = function() self:ChooseAsset( asset ) end
-	tile:SetInner( pnl )
-	tile:SetIcon( icon )
-
-	local detour = tile.OnMousePressed
-	tile.OnMousePressed = function( pnl, code )
-		if code == MOUSE_LEFT then
-			detour(pnl, code)
-		elseif code == MOUSE_RIGHT then
-			self:OpenAssetMenu(pnl, asset)
-		end
-	end
-
-	self.assets:Add( tile )
+	self:AddAssetTile( asset:GetName(), icon, nil,
+		function() self:ChooseAsset( asset ) end,
+		function(pnl) self:OpenAssetMenu(pnl, asset) end)
 
 end
 
@@ -117,6 +208,8 @@ function EDITOR:EnumerateAssets()
 
 	for _, m in ipairs(self:GetModule():GetAssets()) do self:AddAsset(m) end
 
+	self:AddAssetTile("", "icon16/add.png", nil, function() self:NewSubModule() end ):SetColor(Color(255,255,255,150))
+
 end
 
 function EDITOR:NewSubModule()
@@ -127,7 +220,7 @@ end
 
 function EDITOR:AddModule(subModule)
 
-	self:GetModule():AddModule(subModule)
+	return self:GetModule():AddModule(subModule)
 
 end
 
@@ -135,7 +228,8 @@ function EDITOR:CreateModule(type)
 
 	local mod = bpmodule.New(type)
 	mod:CreateDefaults()
-	self:AddModule(mod)
+	local newAsset = self:AddModule(mod)
+	--self:ChooseAsset( newAsset )
 
 end
 

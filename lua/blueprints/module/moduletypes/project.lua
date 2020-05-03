@@ -63,8 +63,10 @@ end
 function MODULE:AddAsset(name, asset)
 
 	name = self:UniqueAssetName( name )
-	self.assets[#self.assets+1] = bpcommon.MakeInstance(assetMeta, name, asset)
-	self:Broadcast("addedAsset", name, asset)
+	local entry = bpcommon.MakeInstance(assetMeta, name, asset)
+	self.assets[#self.assets+1] = entry
+	self:Broadcast("addedAsset", name, entry)
+	return entry
 
 end
 
@@ -138,7 +140,7 @@ function MODULE:AddModule(mod)
 
 	assert(mod:GetOuter() == nil)
 
-	self:AddAsset( tostring(mod.Name or mod:GetType()), mod:WithOuter(self) )
+	return self:AddAsset( tostring(mod.Name or mod:GetType()), mod:WithOuter(self) )
 
 end
 

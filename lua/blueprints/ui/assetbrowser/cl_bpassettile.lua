@@ -8,6 +8,8 @@ function PANEL:Init()
 	self:SetText("ASSET NAME")
 	self:SetTextColor(Color(255,255,255))
 	self:SetFont("DermaDefaultBold")
+	self.drawInnerBox = true
+	self.color = Color(255,255,255,255)
 
 end
 
@@ -39,7 +41,11 @@ function PANEL:PerformLayout()
 		local w,h = self:GetSize()
 		local iw, ih = self.inner:GetSize()
 
-		self.inner:SetPos((w - iw)/2, ((h-16) - ih)/2)
+		if self:GetText() == "" then
+			self.inner:SetPos((w - iw)/2, (h - ih)/2)
+		else
+			self.inner:SetPos((w - iw)/2, ((h-16) - ih)/2)
+		end
 
 		local x,y = self.inner:GetPos()
 		local bottom = (h - (self.inner:GetTall() + y))
@@ -60,13 +66,27 @@ function PANEL:PerformLayout()
 
 end
 
+function PANEL:SetDrawInnerBox( drawBox )
+
+	self.drawInnerBox = drawBox
+
+end
+
+function PANEL:SetColor(color)
+
+	self.color = color
+
+end
+
 function PANEL:Paint(w,h)
 
-	local r,g,b,a = 80,80,80,255
+	local brt = .3
+	local r,g,b,a = self.color.r * brt,self.color.g * brt,self.color.b * brt,self.color.a
 
 	if self.Hovered then
 		r = 180
 		g = 120
+		b = 80
 	end
 
 	draw.RoundedBox(4, 0, 0, w, h, Color(r,g,b,a))
@@ -76,7 +96,7 @@ function PANEL:Paint(w,h)
 
 		local x,y = self.inner:GetPos()
 		local iw, ih = self.inner:GetSize()
-		draw.RoundedBox(0, x, y, iw, ih, Color(r/3,g/3,b/3,a))
+		if self.drawInnerBox then draw.RoundedBox(0, x, y, iw, ih, Color(r/3,g/3,b/3,a)) end
 
 	end
 

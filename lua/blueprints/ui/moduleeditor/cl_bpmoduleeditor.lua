@@ -25,8 +25,10 @@ function meta:GetModule() return self:GetPanel():GetModule() end
 function meta:GetFile() return self:GetModule():FindOuter( bpfile_meta ) end
 function meta:SetContent( panel ) self:GetPanel():SetContent( panel ) end
 function meta:SetDetails( panel ) self:GetPanel():SetDetails( panel ) end
+function meta:ShouldCreateMenuBar() return true end
 function meta:PopulateMenuBar( menu ) end
 function meta:PopulateSideBar() end
+function meta:UpdateMenuBar() self:GetPanel():UpdateMenuBar() end
 function meta:AddSidebarPanel( ... ) return self:GetPanel():AddSidebarPanel(...) end
 function meta:AddSidebarList( ... ) return self:GetPanel():AddSidebarList(...) end
 
@@ -43,8 +45,6 @@ local PANEL = {}
 function PANEL:Init()
 
 	local editor = self:GetParent()
-
-	self.Menu = bpuimenubar.AddTo(self)
 
 	self.callback = function(...)
 		self:OnModuleCallback(...)
@@ -154,6 +154,32 @@ function PANEL:MarkAsModified()
 
 end
 
+function PANEL:UpdateMenuBar()
+
+	if self.moduleEditor:ShouldCreateMenuBar() then
+		if not IsValid(self.Menu) then
+			self.Menu = bpuimenubar.AddTo(self)
+		else
+			self.Menu:Clear()
+		end
+
+		local menu = {}
+		self.moduleEditor:PopulateMenuBar( menu )
+		self.module:GetMenuItems( menu )
+
+		--[[self.Menu:Add("Refresh", function()
+
+			self:Refresh()
+
+		end, Color(10,100,5), nil, false)]]
+
+		for k,v in ipairs(menu) do
+			self.Menu:Add(v.name, v.func, v.color, v.icon, v.right)
+		end
+	end
+
+end
+
 function PANEL:SetModule( mod )
 
 	if self.module then
@@ -172,7 +198,6 @@ function PANEL:SetModule( mod )
 
 	self.moduleEditor = NewEditor( self, self.module )
 
-	self.Menu:Clear()
 	self:CreateContentPanel()
 
 	if self.moduleEditor.HasDetails then
@@ -209,19 +234,7 @@ function PANEL:SetModule( mod )
 
 	end
 
-	local menu = {}
-	self.moduleEditor:PopulateMenuBar( menu )
-	self.module:GetMenuItems( menu )
-
-	--[[self.Menu:Add("Refresh", function()
-
-		self:Refresh()
-
-	end, Color(10,100,5), nil, false)]]
-
-	for k,v in ipairs(menu) do
-		self.Menu:Add(v.name, v.func, v.color, v.icon, v.right)
-	end
+	self:UpdateMenuBar()
 
 	self.moduleEditor:PostInit()
 
