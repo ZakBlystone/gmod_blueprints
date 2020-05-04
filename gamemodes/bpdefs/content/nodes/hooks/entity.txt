@@ -52,6 +52,12 @@ HOOKS ENTITY
 		DESC Called when the entity is taking damage.
 		OUT damage, PN_Ref, PNF_None, CTakeDamageInfo, #The damage to be applied to the entity.
 	}
+	HOOK PhysicsCollide, SERVER
+	{
+		DESC Called when the entity collides with anything.
+		OUT data, PN_Struct, PNF_None, CollisionData, #Information regarding the collision
+		OUT collider, PN_Ref, PNF_None, PhysObj, #The physics object that collided
+	}
 	HOOK StartTouch, SERVER
 	{
 		DESC Called when the entity starts touching another entity.
