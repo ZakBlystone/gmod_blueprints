@@ -459,6 +459,10 @@ function meta:Serialize(stream)
 	self.x = stream:Float(self.x)
 	self.y = stream:Float(self.y)
 
+	if stream:GetVersion() >= 2 then
+		self.data = stream:Value(self.data)
+	end
+
 	--print("PINS:")
 	self.pinCache = stream:ObjectArray( self.pinCache or {}, self )
 
