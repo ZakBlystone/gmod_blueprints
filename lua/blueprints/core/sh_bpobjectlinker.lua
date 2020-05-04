@@ -20,6 +20,7 @@ function meta:Init()
 	self.externUIDs = {}
 	self.externObjLookup = {}
 	self.UIDList = {}
+	--self:DSetDebug(true)
 	return self
 
 end
@@ -63,27 +64,36 @@ function meta:PostLink(stream)
 			if v[1] == WEAK_SET and v[4]() then
 				local o = v[4]()
 				local ord = self:FindObjectOrder(o)
-				if ord then v[2] = ord end
-				if self.externObjLookup[o] then
+				if ord ~= 0 then
+					v[2] = ord
+					--print("LINK WEAK[" .. ord .. "]: " .. tostring(o))
+				elseif self.externObjLookup[o] then
 					v[1] = EXTERN_SET
 					v[2] = self.externObjLookup[o]
 					v[3] = self.extern[v[2]][o]
+					--print("LINK EXTERN: " .. tostring(o))
 				end
 			end
 		end
 
 	else
 
+		--local m = {}
 		for k, v in ipairs(self.order) do
 			if v[1] == WEAK_SET then
 				local ord = self.order[v[2]]
 				if ord ~= nil and self.objects[ord[1]] then
+					--m[#m+1] = {"LINK WEAK[" .. v[2] .. "]: ", self.objects[ord[1]][ord[2]]}
 					v[4]:Set( self.objects[ord[1]][ord[2]] )
 				end
 			elseif v[1] == EXTERN_SET and self.extern[v[2]] then
+				--m[#m+1] = {"LINK EXTERN: ", self.extern[v[2]][v[3]]}
 				v[4]:Set( self.extern[v[2]][v[3]] )
 			end
 		end
+		--[[for _, v in ipairs(m) do
+			print( v[1] .. tostring(v[2]) )
+		end]]
 
 	end
 
@@ -247,11 +257,11 @@ function meta:WriteObject(stream, obj)
 		set.objects[hash] = set.next
 		self.order[#self.order+1] = {set.id, set.next}
 		self.hashes[#self.hashes+1] = meta.__hash
+		set.next = set.next + 1
 		self:DPrint("SAVED: " .. tostring(obj) .. " [" .. (#self.order) .. "]")
 		self:DPushIndent()
 		obj:Serialize(stream)
 		self:DPopIndent()
-		set.next = set.next + 1
 	end
 
 end
