@@ -160,7 +160,7 @@ function MODULE:IsConstructable() return false end
 
 function MODULE:CanCast( outPinType, inPinType )
 
-	if outPinType:Equal(self:GetModulePinType()) then
+	if outPinType:Equal(self:GetModulePinType(), PNF_None) then
 
 		if inPinType:GetSubType() == self.SelfPinSubClass then return true end
 

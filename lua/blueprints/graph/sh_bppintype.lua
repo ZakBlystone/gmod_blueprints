@@ -88,6 +88,8 @@ end
 
 function meta:CanCastTo( inPinType )
 
+	if self:IsType(PN_Any) or inPinType:IsType(PN_Any) then return true end
+
 	if self:IsType(PN_BPRef) and self.subtype:IsValid() then
 		return self.subtype():CanCast( self, inPinType )
 	end
