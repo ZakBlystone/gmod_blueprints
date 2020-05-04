@@ -19,8 +19,58 @@ function MODULE:Setup()
 
 	self:AddAutoFill( bppintype.New( PN_Ref, PNF_None, "CEffectData" ), "__self.__data" )
 
+	self.dispatchNodeType = bpnodetype.New():WithOuter(self)
+	self.dispatchNodeType:SetCodeType(NT_Function)
+	self.dispatchNodeType.GetDisplayName = function() return "Dispatch " .. self:GetName() end
+	self.dispatchNodeType.GetGraphThunk = function() return self end
+	self.dispatchNodeType.GetRole = function() return ROLE_Server end
+	self.dispatchNodeType.GetCategory = function() return self:GetName() end
+	self.dispatchNodeType.GetRawPins = function()
+		return {
+			MakePin(PD_In, "EffectData", PN_Ref, PNF_None, "CEffectData"),
+		}
+	end
+	self.dispatchNodeType.Compile =  function(node, compiler, pass)
+
+		if pass == bpcompiler.CP_ALLOCVARS then 
+
+			compiler:CreatePinVar( node:FindPin(PD_In, "EffectData") )
+			return true
+
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			local edit = self:GetConfigEdit()
+			compiler.emit( [[util.Effect(]] .. edit:Index("classname"):ToString() .. [[, ]] .. compiler:GetPinCode( node:FindPin(PD_In, "EffectData") ) .. [[)]])
+			compiler:CompileReturnPin( node )
+			return true
+
+		end
+
+	end
+
 end
 
+function MODULE:GetNodeTypes( collection, graph )
+
+	BaseClass.GetNodeTypes( self, collection, graph )
+
+	local types = {}
+
+	collection:Add( types )
+	types["__Dispatch"] = self:GetDispatchNodeType()
+	for k,v in pairs(types) do v.name = k end
+
+end
+
+function MODULE:SerializeData( stream )
+
+	stream:Extern( self:GetDispatchNodeType(), "\x43\xBE\x45\x7E\x10\xE2\xC1\x5B\x80\x00\x00\xBD\x1F\xB0\x72\x12" )
+
+	return BaseClass.SerializeData( self, stream )
+
+end
+
+function MODULE:GetDispatchNodeType() return self.dispatchNodeType end
 function MODULE:GetSelfPinType() return bppintype.New( PN_Ref, PNF_None, "Entity" ) end
 
 function MODULE:SetupEditValues( values )
