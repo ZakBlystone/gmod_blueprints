@@ -70,6 +70,12 @@ function meta:IsConstructable()
 
 end
 
+function meta:CanCast( outPinType, inPinType )
+
+	return false
+
+end
+
 function meta:CanAddNode(nodeType)
 
 	local filter = nodeType:GetModFilter()
