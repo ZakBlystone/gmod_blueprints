@@ -80,7 +80,7 @@ end
 function meta:GetSubTypeString()
 
 	local t = self:GetSubType()
-	if type(t) == "table" then return t:GetName() end
+	if type(t) == "table" then return t.GetName and t:GetName() or "invalid" end
 	if type(t) == "string" then return t end
 	return "nil"
 
