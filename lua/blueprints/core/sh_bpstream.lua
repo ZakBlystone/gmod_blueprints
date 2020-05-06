@@ -387,6 +387,7 @@ function meta:Object(v, outer, noLinker)
 
 		if noLinker or self.linker == nil then
 			v:Serialize(self)
+			v:WithOuter( outer )
 		else
 			v = self.linker:ReadObject(self, outer)
 		end
