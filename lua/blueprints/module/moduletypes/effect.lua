@@ -23,7 +23,7 @@ function MODULE:Setup()
 	self.dispatchNodeType:SetCodeType(NT_Function)
 	self.dispatchNodeType.GetDisplayName = function() return "Dispatch " .. self:GetName() end
 	self.dispatchNodeType.GetGraphThunk = function() return self end
-	self.dispatchNodeType.GetRole = function() return ROLE_Server end
+	self.dispatchNodeType.GetRole = function() return ROLE_Shared end
 	self.dispatchNodeType.GetCategory = function() return self:GetName() end
 	self.dispatchNodeType.GetRawPins = function()
 		return {
