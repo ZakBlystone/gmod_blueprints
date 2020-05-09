@@ -201,15 +201,17 @@ function meta:CanConnect( other )
 
 end
 
-function meta:MakeLink( other )
+function meta:MakeLink( other, force )
 
 	assert( isbppin(other), "Expected pin, got: " .. tostring(other) )
 
 	if self:GetDir() == other:GetDir() then return self:CanConnect(other) end
-	if not self:IsOut() then return other:MakeLink(self) end
+	if not self:IsOut() then return other:MakeLink(self, force) end
 
-	local allowed, msg = self:CanConnect(other)
-	if not allowed then print(msg) return false end
+	if not force then
+		local allowed, msg = self:CanConnect(other)
+		if not allowed then print(msg) return false end
+	end
 
 	local conn = self:GetConnections()
 	conn[#conn+1] = Weak( other )

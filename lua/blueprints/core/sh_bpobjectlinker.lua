@@ -95,6 +95,12 @@ function meta:PostLink(stream)
 			print( v[1] .. tostring(v[2]) )
 		end]]
 
+		for _, set in pairs(self.objects) do
+			for _, obj in pairs(set) do
+				if obj.PostLoad then obj:PostLoad() end
+			end
+		end
+
 	end
 
 end
@@ -122,7 +128,7 @@ end
 function meta:GetObjectMeta( obj )
 
 	local meta = getmetatable(obj)
-	if meta == nil or meta.__hash == nil then error("Object is not a metatype") end
+	if meta == nil or meta.__hash == nil then error("Object is not a metatype: " .. tostring(obj) .. " | " .. tostring(meta) .. " | " .. tostring( meta and meta.__hash )) end
 
 	assert(bpcommon.GetMetaTableFromHash(meta.__hash), "Issue with metatable hashes")
 
@@ -234,6 +240,9 @@ function meta:WriteObject(stream, obj)
 	if not type(obj) == "table" then error("Tried to write non-table object") end
 
 	if obj.__ref then
+		if obj() and ( getmetatable(obj()) == nil or getmetatable(obj()).__hash == nil ) then
+			print("INVALID POINTED OBJECT: " .. debug.traceback())
+		end
 		self.order[#self.order+1] = {WEAK_SET, 0, 0, obj}
 		return
 	end

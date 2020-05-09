@@ -557,6 +557,8 @@ end
 
 function meta:Serialize(stream)
 
+	self:CacheNodeTypes()
+
 	local external = {}
 	for _, v in self.nodes:Items() do
 		if stream:IsNetwork() or true then
@@ -618,16 +620,19 @@ function meta:CreateDeferredData()
 
 		self.deferredNodes:MoveInto(self.nodes)
 
-		self:CacheNodeTypes()
 		self:RemoveNodeIf( function(node) return not node:PostInit() end )
 
 		for id, node in self:Nodes() do
 			self:Broadcast("nodeAdded", id)
 		end
 
-		self:WalkInforms()
-
 	end)
+
+end
+
+function meta:PostLoad()
+
+	self:WalkInforms()
 
 end
 
@@ -671,7 +676,7 @@ function meta:CopyInto(other)
 		for _, conn in ipairs(connections) do
 			local a = ids:FindByID(conn[1])
 			local b = ids:FindByID(conn[2])
-			if a and b then a:MakeLink(b) end
+			if a and b then a:MakeLink(b, true) end
 		end
 
 		other:WalkInforms()
