@@ -15,6 +15,8 @@ local render_PopFilterMag = render.PopFilterMag
 local render_PopFilterMin = render.PopFilterMin
 local roundedBox = bprenderutils.RoundedBoxFast
 
+local debugNodeIndex = false
+
 local drawNode = GWEN.CreateTextureBorder( 64, 0, 64, 64, 12, 48, 12, 12, G_BPGraphAtlas )
 local drawNodeHighlight = GWEN.CreateTextureBorder( 0, 0, 48, 48, 16, 16, 16, 16, G_BPGraphAtlas )
 local drawCompact = GWEN.CreateTextureBorder( 144, 0, 64, 64, 18, 18, 18, 18, G_BPGraphAtlas )
@@ -386,6 +388,13 @@ function meta:Draw(xOffset, yOffset, alpha)
 	self:DrawPins(xOffset, yOffset, alpha, true)
 
 	local name = self:GetDisplayName()
+
+	if debugNodeIndex then
+		surface_setFont( "NodeTitleFont" )
+		surface_setTextPos( x, y - 40 )
+		surface_setTextColor( 255, 255, 255, 255*alpha )
+		surface_drawText( tostring(self:GetNode().id) )
+	end
 
 	if not isCompact then
 

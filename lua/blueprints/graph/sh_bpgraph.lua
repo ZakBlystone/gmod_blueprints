@@ -25,7 +25,6 @@ function meta:Init(type)
 	self.hookNodeType = nil
 
 	-- Create lists for graph elements
-	self.deferredNodes = bplist.New(bpnode_meta):WithOuter(self)
 	self.nodes = bplist.New(bpnode_meta):WithOuter(self)
 	self.inputs = bplist.New(bppin_meta):NamedItems("Inputs"):WithOuter(self)
 	self.outputs = bplist.New(bppin_meta):NamedItems("Outputs"):WithOuter(self)
@@ -40,8 +39,8 @@ function meta:Init(type)
 
 	-- Listen for changes in the node list
 	self.nodes:BindRaw("added", self, function(id) self:Broadcast("nodeAdded", id) end)
-	self.nodes:BindRaw("removed", self, function(id)
-		self.nodes:Get(id):BreakAllLinks()
+	self.nodes:BindRaw("removed", self, function(id, node)
+		node:BreakAllLinks()
 		self:Broadcast("nodeRemoved", id)
 	end)
 
@@ -77,6 +76,12 @@ function meta:Init(type)
 	bpcommon.MakeObservable(self)
 
 	return self
+
+end
+
+function meta:ToString()
+
+	return self:GetName() or "unnamed"
 
 end
 
@@ -622,6 +627,7 @@ end
 function meta:PostLoad()
 
 	self:WalkInforms()
+	print(tostring(self) .. " : NEXT NODE ID: " .. self.nodes.nextID)
 
 end
 

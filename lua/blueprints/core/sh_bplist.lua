@@ -298,6 +298,7 @@ function meta:Serialize(stream)
 	if self.indexed then self.nextID = stream:UInt(self.nextID) end
 	local count = stream:UInt(self:Size())
 	if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
+	local goodNextID = 0
 	for i=1, count do
 
 		self.items[i] = stream:Object(self.items[i], self)
@@ -307,8 +308,9 @@ function meta:Serialize(stream)
 
 		if stream:IsReading() then
 
+			goodNextID = math.max(goodNextID, item.id+1)
 			if item.PostInit then item:PostInit() end
-			if self.indexed then self.itemLookup[item.id] = item self.nextID = i + 1 end
+			if self.indexed then self.itemLookup[item.id] = item end
 			self:Broadcast("preModify", MODIFY_ADD, item.id, item)
 			self.items[i] = item
 			self:Broadcast("added", item.id, item)
@@ -316,6 +318,10 @@ function meta:Serialize(stream)
 
 		end
 
+	end
+
+	if stream:IsReading() then
+		self.nextID = goodNextID
 	end
 
 	return stream
