@@ -38,10 +38,10 @@ function meta:Init(type)
 	self.outputs:Bind("postModify", self, self.PostModify)
 
 	-- Listen for changes in the node list
-	self.nodes:BindRaw("added", self, function(id, node) self:Broadcast("nodeAdded", id) end)
+	self.nodes:BindRaw("added", self, function(id, node) self:Broadcast("nodeAdded", node) end)
 	self.nodes:BindRaw("removed", self, function(id, node)
 		node:BreakAllLinks()
-		self:Broadcast("nodeRemoved", id)
+		self:Broadcast("nodeRemoved", node)
 	end)
 
 	local pinmeta = bpcommon.FindMetaTable("bppin")
@@ -139,7 +139,7 @@ function meta:CanRename() return not self:HasFlag(FL_LOCK_NAME) end
 
 function meta:PreModifyNode( node, action, subaction )
 
-	self:Broadcast("preModifyNode", node.id, action)
+	self:Broadcast("preModifyNode", node, action)
 
 end
 
@@ -148,7 +148,7 @@ function meta:PostModifyNode( node )
 	print("NODE MODIFICATION: " .. node:ToString() )
 
 	node:UpdatePins()
-	self:Broadcast("postModifyNode", node.id, node)
+	self:Broadcast("postModifyNode", node)
 
 end
 
@@ -357,7 +357,7 @@ function meta:GetUsedPinTypes(used, noFlags)
 end
 
 -- Starting at a given node, traverses connections in the graph which match a condition
-function meta:NodeWalk(nodeID, condition, visited)
+function meta:NodeWalk(node, condition, visited)
 
 	visited = visited or {}
 
@@ -378,7 +378,7 @@ function meta:NodeWalk(nodeID, condition, visited)
 	end
 
 	-- Add current node's connections
-	AddNodeConnections(self:GetNode(nodeID))
+	AddNodeConnections(node)
 
 	while #stack > 0 and max > 0 do
 		max = max - 1
@@ -436,7 +436,7 @@ function meta:WalkInforms()
 		self:BuildInformDirectionalCandidates(PD_In, candidateNodes)
 
 		for _, v in ipairs(candidateNodes) do
-			local connections = self:NodeWalk(v.id, function(node, pinID)
+			local connections = self:NodeWalk(v, function(node, pinID)
 				return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_In
 			end, visited)
 			local pinType = nil
@@ -449,7 +449,7 @@ function meta:WalkInforms()
 		self:BuildInformDirectionalCandidates(PD_Out, candidateNodes)
 
 		for _, v in ipairs(candidateNodes) do
-			local connections = self:NodeWalk(v.id, function(node, pinID)
+			local connections = self:NodeWalk(v, function(node, pinID)
 				return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_Out
 			end, visited)
 			local pinType = nil
@@ -682,13 +682,13 @@ function meta:CopyInto(other)
 
 end
 
-function meta:CreateSubGraph(subNodeIds)
+function meta:CreateSubGraph( subNodes )
 
 	local copy = self:CopyInto( New():WithOuter( self:GetModule() ) )
 	local hold = {}
 
 	copy:CacheNodeTypes()
-	copy:RemoveNodeIf( function(node) return not table.HasValue(subNodeIds, node.id) end )
+	copy:RemoveNodeIf( function(node) return not table.HasValue(subNodes, node) end )
 	copy:WalkInforms()
 
 	local severedPins = {}
@@ -811,7 +811,7 @@ function meta:ExecWalk( func )
 		local codeType = node:GetCodeType()
 		if codeType == NT_Event or codeType == NT_FuncInput then
 
-			local connections = self:NodeWalk(node.id, function(node, pinID)
+			local connections = self:NodeWalk(node, function(node, pinID)
 				return node:GetPin(pinID):IsType(PN_Exec) and node:GetPin(pinID):GetDir() == PD_In
 			end, visited)
 

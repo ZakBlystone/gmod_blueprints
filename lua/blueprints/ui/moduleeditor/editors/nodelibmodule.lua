@@ -36,7 +36,7 @@ function EDITOR:PopulateSideBar()
 
 	end
 
-	self.GroupList.ItemBackgroundColor = function( list, id, item, selected )
+	self.GroupList.ItemBackgroundColor = function( list, item, selected )
 
 		local vcolor = nodeGroupTypeColors[item:GetType()]
 		if selected then
@@ -72,11 +72,11 @@ function EDITOR:PopulateSideBar()
 		pnl:Rename(itemID)
 	end
 
-	self.StructList.PopulateMenuItems = function(pnl, items, id)
+	self.StructList.PopulateMenuItems = function(pnl, items, struct)
 
 		items[#items+1] = {
 			name = LOCTEXT("editor_graphmodule_editstruct","Edit Struct"),
-			func = function() bpuistructeditmenu.EditStructParams( self:GetModule().structs:Get(id) ) end,
+			func = function() bpuistructeditmenu.EditStructParams( struct ) end,
 		}
 
 	end
@@ -149,11 +149,11 @@ function EDITOR:MakePinListUI( name, dir, nodeType )
 	view.CreateItemPanel = function(pnl, id, item)
 		local entry = vgui.Create("BPPinListEntry", pnl)
 		entry.vlist = pnl
-		entry.id = id
+		entry.item = item
 		entry.module = module
 		function entry:SetPinType(t) item:SetType( t ) editor:ApplyPins( nodeType ) end
 		function entry:GetPinType() return item:GetType() end
-		function entry:SetPinName(n) pnl.list:Rename( id, n ) editor:ApplyPins( nodeType ) end
+		function entry:SetPinName(n) pnl.list:Rename( item, n ) editor:ApplyPins( nodeType ) end
 		function entry:GetPinName() return item.name end
 		return entry
 	end

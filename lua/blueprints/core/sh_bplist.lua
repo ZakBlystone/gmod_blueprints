@@ -221,9 +221,9 @@ function meta:Add( item, optName, forceIndex )
 
 end
 
-function meta:Remove( id )
+function meta:Remove( item )
 
-	return self:RemoveIf( function(x) return x.id == id end )
+	return self:RemoveIf( function(x) return x == item end )
 
 end
 
@@ -253,9 +253,8 @@ function meta:RemoveIf( cond )
 
 end
 
-function meta:Rename( id, newName, force )
+function meta:Rename( item, newName, force )
 
-	local item = self:Get(id)
 	if item == nil then return false end
 	if not force and (item.CanRename and not item:CanRename()) then return false end
 
@@ -265,28 +264,8 @@ function meta:Rename( id, newName, force )
 
 	local prev = item.name
 	item.name = self:GetNameForItem( newName, item )
-	self:Broadcast("renamed", item.id, prev, item.name)
+	self:Broadcast("renamed", item.id, item, prev, item.name)
 	self:Broadcast("postModify", MODIFY_RENAME, item.id, item)
-
-end
-
-function meta:Replace( id, item )
-
-	local oldItem, oldItemIdx = nil, nil
-	for i, exist in ipairs(self.items) do
-		if exist.id == id then
-			oldItem = exist
-			oldItemIdx = i
-			break
-		end
-	end
-
-	if not oldItem then error("Attempt to replace invalid index: " .. id .. " " .. tostring(oldItemIdx)) end
-
-	self:Broadcast("preModify", MODIFY_REPLACE, item.id, item)
-	self.itemLookup[id] = item
-	self.items[oldItemIdx] = item
-	self:Broadcast("postModify", MODIFY_REPLACE, item.id, item)
 
 end
 
@@ -325,12 +304,6 @@ function meta:Serialize(stream)
 	end
 
 	return stream
-
-end
-
-function meta:Get( id )
-
-	return self.itemLookup[id]
 
 end
 

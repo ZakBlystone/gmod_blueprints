@@ -426,7 +426,7 @@ function meta:Move(x, y)
 
 	local outerGraph = self:GetGraph()
 	if outerGraph == nil then return px ~= self.x or py ~= self.y end
-	outerGraph:Broadcast("nodeMoved", self.id, x, y)
+	outerGraph:Broadcast("nodeMoved", self, x, y)
 
 	return px ~= self.x or py ~= self.y
 

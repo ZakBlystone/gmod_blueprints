@@ -13,8 +13,8 @@ function EDITOR:Setup()
 
 	print("SETUP GRAPH MODULE EDITOR")
 
-	self.vvars = {}
-	self.vgraphs = {}
+	self.vvars = setmetatable({}, {__mode = "k"})
+	self.vgraphs = setmetatable({}, {__mode = "k"})
 
 	self:GetModule():Bind("graphAdded", self, self.GraphAdded)
 	self:GetModule():Bind("graphRemoved", self, self.GraphRemoved)
@@ -24,7 +24,7 @@ end
 function EDITOR:PostInit()
 
 	for id, graph in self:GetModule().graphs:Items() do
-		self:GraphAdded( id )
+		self:GraphAdded( graph )
 	end
 
 	hook.Add("BPPinClassRefresh", "pinrefresh_" .. self:GetModule():GetUID(), function(class)
@@ -58,10 +58,10 @@ function EDITOR:Think()
 
 	if self.GraphList then
 
-		local selectedGraphID = self.GraphList:GetSelectedID()
+		local selected = self.GraphList:GetSelected()
 
-		for id, vgraph in pairs( self.vgraphs ) do
-			if id == selectedGraphID then
+		for graph, vgraph in pairs( self.vgraphs ) do
+			if graph == selected then
 				if not vgraph:IsVisible() then
 					vgraph:SetVisible(true)
 					self:SetContent( vgraph )
@@ -90,8 +90,8 @@ function EDITOR:PopulateSideBar()
 	self.GraphList.HandleAddItem = function(list)
 
 		local function MakeGraph(graphType)
-			local id = self:GetModule():NewGraph( nil, graphType )
-			list:Rename(id)
+			local id, graph = self:GetModule():NewGraph( nil, graphType )
+			list:Rename(graph)
 		end
 
 		local menu = DermaMenu( false, self:GetPanel() )
@@ -102,7 +102,7 @@ function EDITOR:PopulateSideBar()
 
 	end
 
-	self.GraphList.ItemBackgroundColor = function( list, id, item, selected )
+	self.GraphList.ItemBackgroundColor = function( list, item, selected )
 
 		local vcolor = bpschema.GraphTypeColors[item:GetType()]
 		if selected then
@@ -113,9 +113,8 @@ function EDITOR:PopulateSideBar()
 
 	end
 
-	self.GraphList.PopulateMenuItems = function(pnl, items, id)
+	self.GraphList.PopulateMenuItems = function(pnl, items, graph)
 
-		local graph = self:GetModule():GetGraph(id)
 		if graph.type == bpschema.GT_Function and not graph:HasFlag(bpgraph.FL_LOCK_PINS) then
 			items[#items+1] = {
 				name = LOCTEXT("editor_graphmodule_editgraphpins","Edit Pins"),
@@ -157,11 +156,11 @@ function EDITOR:PopulateSideBar()
 
 			local entry = vgui.Create("BPPinListEntry", pnl)
 			entry.vlist = pnl
-			entry.id = id
+			entry.item = item
 			entry.module = self:GetModule()
 			function entry:SetPinType(t) item:SetType( t ) end
 			function entry:GetPinType() return item:GetType() end
-			function entry:SetPinName(n) pnl.list:Rename( id, n ) end
+			function entry:SetPinName(n) pnl.list:Rename( item, n ) end
 			function entry:GetPinName() return item.name end
 			local detour = entry.OnMousePressed
 			entry.OnMousePressed = function( pnl, code )
@@ -195,7 +194,7 @@ function EDITOR:PopulateSideBar()
 		self.StructList = self:AddSidebarList(LOCTEXT("editor_graphmodule_structlist","Structs"))
 		self.StructList.HandleAddItem = function(pnl, list)
 			local itemID, item = list:Construct()
-			pnl:Rename(itemID)
+			pnl:Rename(item)
 		end
 
 		local detour = self.StructList.CreateItemPanel
@@ -209,11 +208,11 @@ function EDITOR:PopulateSideBar()
 			return p
 		end
 
-		self.StructList.PopulateMenuItems = function(pnl, items, id)
+		self.StructList.PopulateMenuItems = function(pnl, items, struct)
 
 			items[#items+1] = {
 				name = LOCTEXT("editor_graphmodule_editstruct","Edit Struct"),
-				func = function() bpuistructeditmenu.EditStructParams( self:GetModule():GetStruct(id) ) end,
+				func = function() bpuistructeditmenu.EditStructParams( struct ) end,
 			}
 
 		end
@@ -227,7 +226,7 @@ function EDITOR:PopulateSideBar()
 		self.EventList = self:AddSidebarList(LOCTEXT("editor_graphmodule_eventlist","Events"))
 		self.EventList.HandleAddItem = function(pnl, list)
 			local itemID, item = list:Construct()
-			pnl:Rename(itemID)
+			pnl:Rename(item)
 		end
 
 		local detour = self.EventList.CreateItemPanel
@@ -241,11 +240,11 @@ function EDITOR:PopulateSideBar()
 			return p
 		end
 
-		self.EventList.PopulateMenuItems = function(pnl, items, id)
+		self.EventList.PopulateMenuItems = function(pnl, items, event)
 
 			items[#items+1] = {
 				name = LOCTEXT("editor_graphmodule_editevent","Edit Event"),
-				func = function() bpuistructeditmenu.EditEventParams( self:GetModule():GetEvent(id) ) end,
+				func = function() bpuistructeditmenu.EditEventParams( event ) end,
 			}
 
 		end
@@ -257,33 +256,31 @@ function EDITOR:PopulateSideBar()
 
 end
 
-function EDITOR:GraphAdded( id )
+function EDITOR:GraphAdded( graph )
 
-	local graph = self:GetModule():GetGraph(id)
 	local vgraph = vgui.Create("BPGraph", self.Content)
 
 	vgraph:SetGraph( graph )
 	vgraph:SetVisible(false)
 	vgraph:CenterToOrigin()
-	self.vgraphs[id] = vgraph
+	self.vgraphs[graph] = vgraph
+
+	self.GraphList:Select( graph )
 
 end
 
-function EDITOR:GraphRemoved( id )
+function EDITOR:GraphRemoved( graph )
 
-	if IsValid(self.SelectedGraph) and self.SelectedGraph.id == id then
-		self.SelectedGraph:SetVisible(false)
-		self.SelectedGraph = nil
-	end
-
-	self.vgraphs[id]:Remove()
-	self.vgraphs[id] = nil
+	self.vgraphs[graph]:Remove()
+	self.vgraphs[graph] = nil
 
 end
 
 function EDITOR:HandleError( errorData )
 
-	local vgraph = self.vgraphs[ errorData.graphID ]
+	-- TODO, restructure error handling
+
+	--[[local vgraph = self.vgraphs[ errorData.graphID ]
 	if not vgraph then return end
 
 	local edit = vgraph:GetEditor()
@@ -299,7 +296,7 @@ function EDITOR:HandleError( errorData )
 		timer.Simple(0, function()
 			vgraph:CenterOnPoint(x + w/2,y + h/2)
 		end)
-	end
+	end]]
 
 end
 

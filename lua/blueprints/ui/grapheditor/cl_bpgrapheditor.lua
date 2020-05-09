@@ -145,9 +145,9 @@ function meta:GetCoordinateScaleFactor() return 2 end
 function meta:GetVNodes() return self.nodeSet:GetVNodes() end
 
 function meta:CreateAllNodes() self.nodeSet:CreateAllNodes() end
-function meta:NodeAdded( id, node ) self.nodeSet:NodeAdded(id, node) end
-function meta:NodeRemoved( id,node ) self.nodeSet:NodeRemoved(id, node) end
-function meta:NodeMove( id, x, y ) end
+function meta:NodeAdded( node ) self.nodeSet:NodeAdded(node) end
+function meta:NodeRemoved( node ) self.nodeSet:NodeRemoved(node) end
+function meta:NodeMove( node, x, y ) end
 
 function meta:PinPreEditLiteral( node, pinID, value )
 	local vnode = self.nodeSet:GetVNodes()[node]
@@ -194,7 +194,7 @@ function meta:InvalidateAllNodes( pins )
 end
 
 function meta:GraphCleared() self.nodeSet:CreateAllNodes() end
-function meta:PostModifyNode( id, node ) self.nodeSet:PostModifyNode(id, node) end
+function meta:PostModifyNode( node ) self.nodeSet:PostModifyNode(node) end
 
 function meta:IsLocked() return self.vgraph:GetIsLocked() end
 
@@ -609,16 +609,16 @@ function meta:KeyPress( code )
 
 		if code == KEY_C or code == KEY_X then
 			local selected = self:GetSelectedNodes()
-			local selectedIDs = {}
-			for k,v in pairs(selected) do selectedIDs[#selectedIDs+1] = v:GetNode().id end
+			local selectedNodes = {}
+			for k,v in pairs(selected) do selectedNodes[#selectedNodes+1] = k end
 
-			if #selectedIDs == 0 then
+			if #selectedNodes == 0 then
 				print("Tried copy, but no nodes selected")
 				G_BPGraphEditorCopyState = nil 
 				return 
 			end
 
-			local subGraph = self:GetGraph():CreateSubGraph( selectedIDs )
+			local subGraph = self:GetGraph():CreateSubGraph( selectedNodes )
 			local nodeSet = bpgraphnodeset.New( subGraph )
 			nodeSet:CreateAllNodes()
 

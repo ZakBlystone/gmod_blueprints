@@ -22,7 +22,7 @@ function meta:Init(type, repmode)
 	self.getterNodeType.Compile = function(node, compiler, pass)
 
 		local varName = "__self.__" .. self:GetName()
-		if compiler.compactVars then varName = "__self.__" .. self.id end
+		if compiler.compactVars then varName = "__self.__" .. compiler:GetID(self) end
 
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
@@ -51,7 +51,7 @@ function meta:Init(type, repmode)
 	self.setterNodeType.Compile = function(node, compiler, pass)
 
 		local varName = "__self.__" .. self:GetName()
-		if compiler.compactVars then varName = "__self.__" .. self.id end
+		if compiler.compactVars then varName = "__self.__" .. compiler:GetID(self) end
 
 		if pass == bpcompiler.CP_ALLOCVARS then 
 

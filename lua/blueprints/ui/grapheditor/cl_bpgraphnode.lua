@@ -358,11 +358,12 @@ function meta:Draw(xOffset, yOffset, alpha)
 		drawNodeHighlight(x-outline,y-outline,w+outline*2,h+outline*2,col)
 	end
 
-	local err = _G.G_BPError
+	-- TODO restructure error handling
+	--[[local err = _G.G_BPError
 	if err ~= nil and err.nodeID == self.node.id and err.graphID == self.graph.id then
 		col:SetUnpacked(200,80,80,255*alpha)
 		drawNodeHighlight(x-4,y-4,w+8,h+8,col)
-	end
+	end]]
 
 
 	local ntc = node:GetColor()

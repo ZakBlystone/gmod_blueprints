@@ -9,8 +9,8 @@ function PANEL:Init()
 
 	self:SetKeyboardInputEnabled( true )
 	self:SetBackgroundColor( Color(30,30,30) )
-	self.selectedID = nil
-	self.vitems = {}
+	self.selected = bpcommon.Weak()
+	self.vitems = setmetatable({}, {__mode = "k"})
 
 end
 
@@ -52,7 +52,7 @@ function PANEL:CreateItemPanel( id, item )
 	rmv:Dock( RIGHT )
 
 	panel.btn = btn
-	panel.id = id
+	panel.item = item
 	panel:SetTall(20)
 
 	panel.OnKeyCodePressed = function( pnl, code )
@@ -60,23 +60,23 @@ function PANEL:CreateItemPanel( id, item )
 		if code == KEY_DELETE then
 			rmv:DoClick()
 		elseif code == KEY_F2 then
-			self:Rename(id)
+			self:Rename(item)
 		end
 
 	end
 
 	panel.OnMousePressed = function( pnl, code )
 		if code == MOUSE_LEFT then
-			self:Select(id)
+			self:Select(item)
 			pnl:RequestFocus()
 		elseif code == MOUSE_RIGHT then
-			self:OpenMenu(id, item)
+			self:OpenMenu(item)
 		end
 	end
 
 	panel.Paint = function( pnl, w, h )
 
-		local col = self:ItemBackgroundColor(id, item, self.selectedID == id)
+		local col = self:ItemBackgroundColor(item, self.selected() == pnl.item )
 		surface.SetDrawColor( col )
 		surface.DrawRect(0,0,w,h)
 
@@ -87,7 +87,7 @@ function PANEL:CreateItemPanel( id, item )
 	rmv.DoClick = function( pnl )
 
 		if self.noConfirm then
-			self.list:Remove( id )
+			self.list:Remove( item )
 			return
 		end
 
@@ -95,7 +95,7 @@ function PANEL:CreateItemPanel( id, item )
 		"",
 		LOCTEXT("query_yes", "Yes")(),
 		function() 
-			self.list:Remove( id )
+			self.list:Remove( item )
 		end,
 		LOCTEXT("query_no", "No")(),
 		function() end)
@@ -151,7 +151,7 @@ function PANEL:ItemAdded(id, item)
 		panel:OnJustAdded()
 	end
 
-	self.vitems[id] = panel
+	self.vitems[item] = panel
 
 	if self.selectedID == nil then
 		self.selectedID = id
@@ -162,24 +162,24 @@ function PANEL:ItemAdded(id, item)
 
 end
 
-function PANEL:ItemRenamed(id, prev, new)
+function PANEL:ItemRenamed(id, item, prev, new)
 
-	if self.vitems[id].label then
-		self.vitems[id].label:SetText(new)
+	if self.vitems[item].label then
+		self.vitems[item].label:SetText(new)
 	end
 
 end
 
 function PANEL:ItemRemoved(id, item)
 
-	local panel = self.vitems[id]
+	local panel = self.vitems[item]
 	if panel ~= nil then
 		self:RemoveItem( panel )
 		self:GetParent():InvalidateLayout(true)
-		self.vitems[id] = nil
+		self.vitems[item] = nil
 	end
 
-	if self:GetSelectedID() == id then
+	if self:GetSelected() == item then
 		self:Select(nil)
 	end
 
@@ -187,26 +187,26 @@ end
 
 function PANEL:ClearSelection()
 
-	self.selectedID = nil
+	self.selected:Reset()
 
 end
 
-function PANEL:Select(id)
+function PANEL:Select(item)
 
-	if self.selectedID ~= id or self.alwaysSelect then
-		self.selectedID = id
-		self:OnItemSelected( id, id and self.list:Get(id) or nil )
+	if self.selected() ~= item or self.alwaysSelect then
+		self.selected:Set(item)
+		self:OnItemSelected( item )
 	end
 
 end
 
-function PANEL:GetSelectedID()
+function PANEL:GetSelected()
 
-	return self.selectedID
+	return self.selected()
 
 end
 
-function PANEL:OnItemSelected( id, item )
+function PANEL:OnItemSelected( item )
 
 end
 
@@ -220,7 +220,7 @@ function PANEL:Clear()
 
 end
 
-function PANEL:ItemBackgroundColor( id, item, selected )
+function PANEL:ItemBackgroundColor( item, selected )
 
 	return selected and Color(80,80,80,255) or Color(50,50,50,255)
 
@@ -240,7 +240,7 @@ function PANEL:CloseMenu()
 
 end
 
-function PANEL:OpenMenu( id )
+function PANEL:OpenMenu(item )
 
 	--print("OPEN MENU: " .. id)
 
@@ -249,9 +249,9 @@ function PANEL:OpenMenu( id )
 	self.menu = DermaMenu( false, self )
 
 	local t = {}
-	t[#t+1] = { name = LOCTEXT("list_rename","Rename"), func = function() self:Rename(id) end }
+	t[#t+1] = { name = LOCTEXT("list_rename","Rename"), func = function() self:Rename(item) end }
 
-	self:PopulateMenuItems(t, id)
+	self:PopulateMenuItems(t, item)
 	for _, v in ipairs(t) do
 		self.menu:AddOption( tostring(v.name), v.func )
 	end
@@ -261,7 +261,7 @@ function PANEL:OpenMenu( id )
 
 end
 
-function PANEL:PopulateMenuItems( items, id )
+function PANEL:PopulateMenuItems( items, item )
 
 end
 
@@ -269,12 +269,10 @@ function PANEL:HandleAddItem( list )
 
 end
 
-function PANEL:Rename( id )
-
-	local item = self.list:Get(id)
+function PANEL:Rename( item )
 
 	for _, v in pairs(self.vitems) do
-		if v.id == id then
+		if v.item == item then
 			v.btn:SetVisible(false)
 			v.edit = vgui.Create("DTextEntry", v)
 			v.edit:SetText(item:GetName() or "unnamed")
@@ -282,13 +280,13 @@ function PANEL:Rename( id )
 			v.edit:SelectAllOnFocus()
 			v.edit.OnFocusChanged = function(te, gained)
 				if not gained then 
-					self.list:Rename( id, te:GetText() )
+					self.list:Rename( item, te:GetText() )
 					v.btn:SetVisible(true)
 					te:Remove()
 				end
 			end
 			v.edit.OnEnter = function(te)
-				self.list:Rename( id, te:GetText() )
+				self.list:Rename( item, te:GetText() )
 				v.btn:SetVisible(true)
 				te:Remove()
 			end

@@ -12,11 +12,11 @@ function VarList( element, window, list, name, itemName )
 	vlist.CreateItemPanel = function(pnl, id, item)
 		local entry = vgui.Create("BPPinListEntry", pnl)
 		entry.vlist = pnl
-		entry.id = id
+		entry.item = item
 		entry.module = module
 		function entry:SetPinType(t) element:PreModify() item:SetType( t ) element:PostModify() end
 		function entry:GetPinType() return item:GetType() end
-		function entry:SetPinName(n) pnl.list:Rename( id, n ) end
+		function entry:SetPinName(n) pnl.list:Rename( item, n ) end
 		function entry:GetPinName() return item.name end
 		return entry
 	end

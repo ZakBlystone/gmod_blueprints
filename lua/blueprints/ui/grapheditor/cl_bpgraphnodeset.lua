@@ -23,29 +23,29 @@ function meta:CreateAllNodes()
 	local count = 0
 
 	self.vnodes = {}
-	for id, node in self:GetGraph():Nodes() do self:NodeAdded(id, node) count = count + 1 end
+	for id, node in self:GetGraph():Nodes() do self:NodeAdded(node) count = count + 1 end
 
 	--print("Created " .. count .. " VNodes")
 
 end
 
-function meta:NodeAdded( id, node )
+function meta:NodeAdded( node )
 
 	if self:GetGraph() == nil then return end
 
 	local graph = self:GetGraph()
-	local vnode = bpuigraphnode.New( graph:GetNode(id), graph, self.editor )
+	local vnode = bpuigraphnode.New( node, graph, self.editor )
 	self.vnodes[node] = vnode
 
 end
 
-function meta:NodeRemoved( id, node )
+function meta:NodeRemoved( node )
 
 	self.vnodes[node] = nil
 
 end
 
-function meta:PostModifyNode( id, node )
+function meta:PostModifyNode( node )
 
 	if self.vnodes[node] ~= nil then
 		self.vnodes[node]:CreatePins()
