@@ -86,7 +86,7 @@ function meta:GetModule()
 
 end
 
-function meta:PostInit()
+function meta:CreateDefaults()
 
 	-- Function graphs add entry and exit nodes on creation
 	if self.type == GT_Function then
@@ -96,7 +96,19 @@ function meta:PostInit()
 
 	end
 
-	self:CacheNodeTypes()
+end
+
+function meta:PostInit()
+
+	-- Function graphs add entry and exit nodes on creation
+	--[[if self.type == GT_Function then
+
+		self:AddNode(self.callEntryNodeType, 0, 200)
+		self:AddNode(self.callExitNodeType, 400, 200)
+
+	end]]
+
+	--self:CacheNodeTypes()
 
 	return self
 
@@ -600,33 +612,10 @@ function meta:Serialize(stream)
 
 	end
 
-	if stream:IsWriting() then
-		self.nodes:Serialize(stream)
-	elseif stream:IsReading() then
-		self.deferredNodes:Serialize(stream)
-	end
-
+	self.nodes:Serialize(stream)
 	self.hookNodeType = stream:String(self.hookNodeType)
 
 	return stream
-
-end
-
-function meta:CreateDeferredData()
-
-	--print("CREATE DEFERRED NODES: " .. #self.deferred)
-
-	Profile("create-deferred", function()
-
-		self.deferredNodes:MoveInto(self.nodes)
-
-		self:RemoveNodeIf( function(node) return not node:PostInit() end )
-
-		for id, node in self:Nodes() do
-			self:Broadcast("nodeAdded", id)
-		end
-
-	end)
 
 end
 

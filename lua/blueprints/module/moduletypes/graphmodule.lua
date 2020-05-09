@@ -286,6 +286,7 @@ end
 function MODULE:NewGraph(name, type)
 
 	local id, graph = self.graphs:ConstructNamed( name, type )
+	graph:CreateDefaults()
 	return id, graph
 
 end
@@ -401,15 +402,16 @@ function MODULE:SerializeData( stream )
 
 	if self:CanHaveVariables() then self.variables:Serialize( stream ) end
 
+	if stream:GetVersion() >= 3 then
+		if self:CanHaveStructs() then self.structs:Serialize( stream ) end
+		if self:CanHaveEvents() then self.events:Serialize( stream ) end
+	end
+
 	self.graphs:Serialize( stream )
 
-	if self:CanHaveStructs() then self.structs:Serialize( stream ) end
-	if self:CanHaveEvents() then self.events:Serialize( stream ) end
-
-	if stream:IsReading() then
-		for _, graph in self:Graphs() do
-			graph:CreateDeferredData()
-		end
+	if stream:GetVersion() < 3 then
+		if self:CanHaveStructs() then self.structs:Serialize( stream ) end
+		if self:CanHaveEvents() then self.events:Serialize( stream ) end
 	end
 
 	self.suppressGraphNotify = false
