@@ -684,11 +684,19 @@ end
 
 function meta:CreateSubGraph( subNodes )
 
+	local pre = bpindexer.New()
+	local discard = {}
+	for _, node in self:Nodes() do pre:Get(node) end
+	for _, node in ipairs(subNodes) do discard[pre:Get(node)] = true end
+
 	local copy = self:CopyInto( New():WithOuter( self:GetModule() ) )
 	local hold = {}
 
+	local post = bpindexer.New()
+	for _, node in copy:Nodes() do post:Get(node) end
+
 	copy:CacheNodeTypes()
-	copy:RemoveNodeIf( function(node) return not table.HasValue(subNodes, node) end )
+	copy:RemoveNodeIf( function(node) return not discard[post:Get(node)] end )
 	copy:WalkInforms()
 
 	local severedPins = {}

@@ -130,10 +130,12 @@ end
 function meta:GetSelectedNodes()
 
 	local selection = {}
+	local count = 0
 	for k,v in pairs(self.selectedNodes) do
 		selection[k:GetNode()] = k
+		count = count + 1
 	end
-	return selection
+	return selection, count
 
 end
 function meta:ClearSelection() self.selectedNodes = {} end
@@ -540,8 +542,8 @@ function meta:RightMouse(x,y,pressed)
 	local wx, wy = self:PointToWorld(x,y)
 
 	if pressed then
-		local selected = self:GetSelectedNodes()
-		if #selected > 1 then
+		local selected, count = self:GetSelectedNodes()
+		if count > 1 then
 			self:OpenMultiNodeContext(selected)
 			return false
 		end
@@ -608,7 +610,7 @@ function meta:KeyPress( code )
 		end
 
 		if code == KEY_C or code == KEY_X then
-			local selected = self:GetSelectedNodes()
+			local selected, count = self:GetSelectedNodes()
 			local selectedNodes = {}
 			for k,v in pairs(selected) do selectedNodes[#selectedNodes+1] = k end
 
