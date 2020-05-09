@@ -38,7 +38,7 @@ function meta:SetLiteral(value)
 	local changed = value ~= prevValue
 
 	if node and not node.suppressPinEvents and node:GetGraph() then
-		node:GetGraph():Broadcast("preModifyLiteral", node.id, self.id, value)
+		node:GetGraph():Broadcast("preModifyLiteral", node, self.id, value)
 	end
 
 	self.literal = value
@@ -46,7 +46,7 @@ function meta:SetLiteral(value)
 	--print("SET LITERAL ON PIN: " .. tostring(value) .. " -> " .. self:ToString())
 
 	if node and not node.suppressPinEvents and node:GetGraph() then
-		node:GetGraph():Broadcast("postModifyLiteral", node.id, self.id, value)
+		node:GetGraph():Broadcast("postModifyLiteral", node, self.id, value)
 	end
 
 	if changed and self.OnLiteralChanged then

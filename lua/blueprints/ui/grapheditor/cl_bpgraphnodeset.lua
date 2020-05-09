@@ -6,7 +6,7 @@ local meta = bpcommon.MetaTable("bpgraphnodeset")
 
 function meta:Init( graph, editor )
 
-	self.vnodes = {}
+	self.vnodes = setmetatable({}, {__mode = "k"})
 	self.graph = graph
 	self.editor = editor
 	return self
@@ -23,33 +23,33 @@ function meta:CreateAllNodes()
 	local count = 0
 
 	self.vnodes = {}
-	for id in self:GetGraph():NodeIDs() do self:NodeAdded(id) count = count + 1 end
+	for id, node in self:GetGraph():Nodes() do self:NodeAdded(id, node) count = count + 1 end
 
 	--print("Created " .. count .. " VNodes")
 
 end
 
-function meta:NodeAdded( id )
+function meta:NodeAdded( id, node )
 
 	if self:GetGraph() == nil then return end
 
 	local graph = self:GetGraph()
 	local vnode = bpuigraphnode.New( graph:GetNode(id), graph, self.editor )
-	self.vnodes[id] = vnode
+	self.vnodes[node] = vnode
 
 end
 
-function meta:NodeRemoved( id )
+function meta:NodeRemoved( id, node )
 
-	self.vnodes[id] = nil
+	self.vnodes[node] = nil
 
 end
 
-function meta:PostModifyNode( id )
+function meta:PostModifyNode( id, node )
 
-	if self.vnodes[id] ~= nil then
-		self.vnodes[id]:CreatePins()
-		self.vnodes[id]:Invalidate(true)
+	if self.vnodes[node] ~= nil then
+		self.vnodes[node]:CreatePins()
+		self.vnodes[node]:Invalidate(true)
 	end
 
 end

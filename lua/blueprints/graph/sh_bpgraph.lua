@@ -38,7 +38,7 @@ function meta:Init(type)
 	self.outputs:Bind("postModify", self, self.PostModify)
 
 	-- Listen for changes in the node list
-	self.nodes:BindRaw("added", self, function(id) self:Broadcast("nodeAdded", id) end)
+	self.nodes:BindRaw("added", self, function(id, node) self:Broadcast("nodeAdded", id) end)
 	self.nodes:BindRaw("removed", self, function(id, node)
 		node:BreakAllLinks()
 		self:Broadcast("nodeRemoved", id)
@@ -148,7 +148,7 @@ function meta:PostModifyNode( node )
 	print("NODE MODIFICATION: " .. node:ToString() )
 
 	node:UpdatePins()
-	self:Broadcast("postModifyNode", node.id)
+	self:Broadcast("postModifyNode", node.id, node)
 
 end
 

@@ -131,7 +131,7 @@ function meta:GetSelectedNodes()
 
 	local selection = {}
 	for k,v in pairs(self.selectedNodes) do
-		selection[k:GetNode().id] = k
+		selection[k:GetNode()] = k
 	end
 	return selection
 
@@ -145,26 +145,26 @@ function meta:GetCoordinateScaleFactor() return 2 end
 function meta:GetVNodes() return self.nodeSet:GetVNodes() end
 
 function meta:CreateAllNodes() self.nodeSet:CreateAllNodes() end
-function meta:NodeAdded( id ) self.nodeSet:NodeAdded(id) end
-function meta:NodeRemoved( id ) self.nodeSet:NodeRemoved(id) end
+function meta:NodeAdded( id, node ) self.nodeSet:NodeAdded(id, node) end
+function meta:NodeRemoved( id,node ) self.nodeSet:NodeRemoved(id, node) end
 function meta:NodeMove( id, x, y ) end
 
-function meta:PinPreEditLiteral( nodeID, pinID, value )
-	local vnode = self.nodeSet:GetVNodes()[nodeID]
+function meta:PinPreEditLiteral( node, pinID, value )
+	local vnode = self.nodeSet:GetVNodes()[node]
 	local node = vnode and vnode:GetNode()
 	if node then self:CreateUndo("Edit: " .. node:GetDisplayName() .. "." .. node:GetPin(pinID):GetDisplayName()) end
 end
 
-function meta:PinPostEditLiteral( nodeID, pinID, value )
-	local node = self.nodeSet:GetVNodes()[nodeID]
+function meta:PinPostEditLiteral( node, pinID, value )
+	local node = self.nodeSet:GetVNodes()[node]
 	if node then node:Invalidate(true) end
 end
 
 function meta:ConnectionAdded( a, b )
 
 	local nodes = self.nodeSet:GetVNodes()
-	local nodeA = nodes[a:GetNode().id]
-	local nodeB = nodes[b:GetNode().id]
+	local nodeA = nodes[a:GetNode()]
+	local nodeB = nodes[b:GetNode()]
 	if nodeA then nodeA:Invalidate(true) end
 	if nodeB then nodeB:Invalidate(true) end
 
@@ -172,8 +172,8 @@ end
 function meta:ConnectionRemoved( a, b ) 
 
 	local nodes = self.nodeSet:GetVNodes()
-	local nodeA = nodes[a:GetNode().id]
-	local nodeB = nodes[b:GetNode().id]
+	local nodeA = nodes[a:GetNode()]
+	local nodeB = nodes[b:GetNode()]
 	if nodeA then nodeA:Invalidate(true) end
 	if nodeB then nodeB:Invalidate(true) end
 
@@ -194,7 +194,7 @@ function meta:InvalidateAllNodes( pins )
 end
 
 function meta:GraphCleared() self.nodeSet:CreateAllNodes() end
-function meta:PostModifyNode( id ) self.nodeSet:PostModifyNode(id) end
+function meta:PostModifyNode( id, node ) self.nodeSet:PostModifyNode(id, node) end
 
 function meta:IsLocked() return self.vgraph:GetIsLocked() end
 
@@ -331,7 +331,7 @@ end
 function meta:FindVPin(pin)
 
 	local vnodes = self:GetVNodes()
-	local vnode = vnodes[pin:GetNode().id]
+	local vnode = vnodes[pin:GetNode()]
 	if vnode == nil then return nil end
 
 	for _, vpin in ipairs(vnode.pins) do

@@ -36,9 +36,9 @@ function meta:DrawConnection(aPin, bPin, xOffset, yOffset, alpha)
 
 	local nodes = self:GetNodeSet():GetVNodes()
 	local pw, ph = self:GetVGraph():GetSize()
-	local a = nodes[aPin:GetNode().id]
+	local a = nodes[aPin:GetNode()]
 	local apin = aPin.id
-	local b = nodes[bPin:GetNode().id]
+	local b = nodes[bPin:GetNode()]
 	local bpin = bPin.id
 
 	if a == nil or b == nil then print("Invalid connection") return end
