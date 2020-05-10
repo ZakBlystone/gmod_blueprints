@@ -227,9 +227,9 @@ function LIST_TEST()
 	ASSERT( isbplinkertest1( list:Get(3) ) )
 	ASSERT( isbplinkertest1( list:Get(4) ) )
 
-	ASSERT( list:Get(1):GetName() == "Item_1" )
-	ASSERT( list:Get(2):GetName() == "Item_2" )
-	ASSERT( list:Get(3):GetName() == "Item_3" )
-	ASSERT( list:Get(4):GetName() == "Item_4" )
+	ASSERT( list:Get(1):GetName() == "Item" )
+	ASSERT( list:Get(2):GetName() == "Item1" )
+	ASSERT( list:Get(3):GetName() == "Item2" )
+	ASSERT( list:Get(4):GetName() == "Item3" )
 
 end
