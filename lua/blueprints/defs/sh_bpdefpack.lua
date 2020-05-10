@@ -53,7 +53,6 @@ function meta:PostInit()
 			local exist = self.classes[v:GetName()]
 			if exist and exist ~= v then
 				for _, entry in v:GetEntries():Items() do
-					entry.id = nil
 					entry:WithOuter( exist )
 					exist:AddEntry( entry )
 				end

@@ -627,7 +627,6 @@ end
 function meta:PostLoad()
 
 	self:WalkInforms()
-	print(tostring(self) .. " : NEXT NODE ID: " .. self.nodes.nextID)
 
 end
 
@@ -639,7 +638,6 @@ function meta:CopyInto(other)
 	Profile("copy-graph", function()
 
 		other:Clear()
-		other.id = self.id
 		other.name = self.name
 		other.type = self.type
 		other.flags = self.flags

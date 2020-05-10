@@ -11,8 +11,6 @@ local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes
 
 function GetClassLoader() return moduleClasses end
 
-nextModuleID = nextModuleID or 0
-
 meta.Name = LOCTEXT"module_default_name","unnamed"
 meta.Description = LOCTEXT"module_default_desc","description"
 meta.EditorClass = ""
@@ -20,7 +18,6 @@ meta.EditorClass = ""
 function meta:Init(type)
 
 	self.version = bpstream.fmtVersion
-	self.id = nextModuleID
 	self.type = type or "mod"
 	self.revision = 1
 	self.uniqueID = bpcommon.GUID()
@@ -28,8 +25,6 @@ function meta:Init(type)
 	bpcommon.MakeObservable(self)
 
 	moduleClasses:Install( self:GetType(), self )
-
-	nextModuleID = nextModuleID + 1
 	return self
 
 end

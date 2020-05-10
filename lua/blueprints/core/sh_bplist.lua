@@ -28,7 +28,7 @@ end
 function meta:NamedItems( prefix )
 
 	self.namedItems = true
-	self.namePrefix = (prefix or "Item") .. "_"
+	self.namePrefix = (prefix or "Item")
 	return self
 
 end
@@ -43,19 +43,9 @@ end
 function meta:Clear()
 
 	self.items = {}
-	self.itemLookup = {}
-	self.nextID = 1
 	self:Broadcast("cleared")
 	return self
 
-end
-
-function meta:Advance(forceIndex)
-	self.nextID = (forceIndex or self.nextID) + 1
-end
-
-function meta:NextIndex()
-	return self.nextID
 end
 
 function meta:Items( reverse )
@@ -66,35 +56,14 @@ function meta:Items( reverse )
 		local i = #items + 1
 		return function() 
 			i = i - 1
-			if i > 0 then return items[i].id, items[i] end
+			if i > 0 then return i, items[i] end
 		end
 	else
 		local i, n = 0, #items
 		return function()
 			if #items ~= n then error("Concurrent modification of list!") end
 			i = i + 1
-			if i <= n then return items[i].id, items[i] end
-		end
-	end
-
-end
-
-function meta:ItemIDs( reverse )
-
-	local items = self.items
-
-	if reverse then
-		local i = #items + 1
-		return function() 
-			i = i - 1
-			if i > 0 then return items[i].id end
-		end
-	else
-		local i, n = 0, #items
-		return function() 
-			if #items ~= n then error("Concurrent modification of list!") end
-			i = i + 1
-			if i <= n then return items[i].id end
+			if i <= n then return i, items[i] end
 		end
 	end
 
@@ -123,7 +92,7 @@ function meta:GetNameForItem( name, item )
 		name = self.sanitizer(name)
 	else
 		name = bpcommon.Sanitize(name)
-		if name == nil then name = self.namePrefix .. item.id end
+		if name == nil then name = self.namePrefix end
 		name = bpcommon.Camelize(name)
 	end
 
@@ -137,15 +106,11 @@ function meta:MoveInto( other )
 
 	other:Clear()
 
-	local nextID = 0
 	for id, item in self:Items() do
 		item:WithOuter( other )
 		other.items[#other.items+1] = item
-		other.itemLookup[id] = item
-		nextID = math.max(id+1, nextID)
 	end
 
-	other.nextID = nextID
 	self:Clear()
 
 end
@@ -153,17 +118,13 @@ end
 function meta:CopyInto( other )
 
 	other.items = {}
-	other.itemLookup = {}
 
 	for id, item in self:Items() do
 		local copy = item.Copy and item:Copy() or bpcommon.CopyTable( item )
 		copy:WithOuter( other )
-		copy.id = item.id
 		other.items[#other.items+1] = copy
-		other.itemLookup[id] = copy
 	end
 
-	other.nextID = self.nextID
 	return other
 
 end
@@ -197,27 +158,24 @@ end
 
 function meta:Add( item, optName, forceIndex )
 
-	if item.id ~= nil then error("Cannot add uniquely indexed items to multiple lists") end
-	item.id = forceIndex or self:NextIndex()
-
 	if self.namedItems then
 		item.name = self:GetNameForItem( optName, item )
 	end
 
+	local i = #self.items+1
+
 	item:WithOuter( self )
 
-	self:Broadcast("preModify", MODIFY_ADD, item.id, item)
+	self:Broadcast("preModify", MODIFY_ADD, i, item)
 
-	self.items[#self.items+1] = item
-	self.itemLookup[item.id] = item
-	self:Advance(forceIndex)
+	self.items[i] = item
 
 	if item.PostInit then item:PostInit() end
 
-	self:Broadcast("added", item.id, item)
-	self:Broadcast("postModify", MODIFY_ADD, item.id, item)
+	self:Broadcast("added", i, item)
+	self:Broadcast("postModify", MODIFY_ADD, i, item)
 
-	return item.id, item
+	return i, item
 
 end
 
@@ -236,13 +194,11 @@ function meta:RemoveIf( cond )
 		local item = items[i]
 		if cond( item ) then
 
-			self:Broadcast("preModify", MODIFY_REMOVE, item.id, item)
+			self:Broadcast("preModify", MODIFY_REMOVE, i, item)
 
 			table.remove( items, i ) 
-			self:Broadcast("removed", item.id, item)
-			self:Broadcast("postModify", MODIFY_REMOVE, item.id, item)
-			self.itemLookup[item.id] = nil
-			item.id = nil
+			self:Broadcast("removed", i, item)
+			self:Broadcast("postModify", MODIFY_REMOVE, i, item)
 			removed = removed + 1
 
 		end
@@ -259,13 +215,14 @@ function meta:Rename( item, newName, force )
 	if not force and (item.CanRename and not item:CanRename()) then return false end
 
 	if newName == item.name then return false end
+	local i = self:FindIndex( item )
 
-	self:Broadcast("preModify", MODIFY_RENAME, item.id, item)
+	self:Broadcast("preModify", MODIFY_RENAME, i, item)
 
 	local prev = item.name
 	item.name = self:GetNameForItem( newName, item )
-	self:Broadcast("renamed", item.id, item, prev, item.name)
-	self:Broadcast("postModify", MODIFY_RENAME, item.id, item)
+	self:Broadcast("renamed", i, item, prev, item.name)
+	self:Broadcast("postModify", MODIFY_RENAME, i, item)
 
 end
 
@@ -274,7 +231,7 @@ function meta:Serialize(stream)
 	if stream:IsReading() then self:Clear() end
 
 	self.namedItems = stream:Bool(self.namedItems)
-	if self.indexed then self.nextID = stream:UInt(self.nextID) end
+	if self.indexed and stream:GetVersion() < 4 then stream:UInt(0) end --Compat, remove soon
 	local count = stream:UInt(self:Size())
 	if count > 5000 then error("MAX LIST COUNT EXCEEDED!!!!") end
 	local goodNextID = 0
@@ -282,28 +239,37 @@ function meta:Serialize(stream)
 
 		self.items[i] = stream:Object(self.items[i], self)
 		local item = self.items[i]
-		if self.indexed then item.id = stream:UInt(item.id) else item.id = i end
-		if self.namedItems then item.name = stream:SValueCompat(item.name) end
+		if self.indexed and stream:GetVersion() < 4 then stream:UInt(0) end --Compat, remove soon
+		if self.namedItems then item.name = stream:String(item.name) end
 
 		if stream:IsReading() then
 
-			goodNextID = math.max(goodNextID, item.id+1)
 			if item.PostInit then item:PostInit() end
-			if self.indexed then self.itemLookup[item.id] = item end
-			self:Broadcast("preModify", MODIFY_ADD, item.id, item)
+			self:Broadcast("preModify", MODIFY_ADD, i, item)
 			self.items[i] = item
-			self:Broadcast("added", item.id, item)
-			self:Broadcast("postModify", MODIFY_ADD, item.id, item)
+			self:Broadcast("added", i, item)
+			self:Broadcast("postModify", MODIFY_ADD, i, item)
 
 		end
 
 	end
 
-	if stream:IsReading() then
-		self.nextID = goodNextID
-	end
-
 	return stream
+
+end
+
+function meta:FindIndex( item )
+
+	for i, found in self:Items() do
+		if rawequal(found, item) then return i end
+	end
+	return -1
+
+end
+
+function meta:Get( i )
+
+	return self.items[i]
 
 end
 

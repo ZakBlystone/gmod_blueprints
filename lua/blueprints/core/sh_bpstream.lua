@@ -32,7 +32,7 @@ DEBUG_MODE = false
 CATCH_UNFINISHED = true
 
 fmtMagic = 0x314D5042
-fmtVersion = 3
+fmtVersion = 4
 
 
 function meta:Init(context, mode, file)
@@ -334,12 +334,6 @@ function meta:String(v, raw, n)
 		return v
 	end
 	error("Tried to use closed stream")
-
-end
-
-function meta:SValueCompat(v)
-
-	return self:String(v)
 
 end
 

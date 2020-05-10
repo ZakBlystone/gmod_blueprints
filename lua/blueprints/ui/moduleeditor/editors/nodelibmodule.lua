@@ -133,7 +133,6 @@ function EDITOR:MakePinListUI( name, dir, nodeType )
 
 	for _, v in ipairs(nodeType:GetRawPins()) do
 		if v:GetDir() == dir and not v:IsType(PN_Exec) then
-			v.id = nil
 			list:Add(v)
 		end
 	end

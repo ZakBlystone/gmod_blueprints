@@ -235,14 +235,9 @@ function CreateIndexableListIterators(meta, variable)
 	local singular = GetSingular(variable)
 	local varName = Camelize(singular)
 	local iteratorName = varName .. "s"
-	local idIteratorName = varName .. "IDs"
 
 	meta[iteratorName] = function(self, ...)
 		return self[variable]:Items(...)
-	end
-
-	meta[idIteratorName] = function(self, ...)
-		return self[variable]:ItemIDs(...)
 	end
 
 	meta["Get" .. varName] = function(self, ...)
