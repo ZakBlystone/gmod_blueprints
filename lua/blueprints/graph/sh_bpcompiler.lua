@@ -109,7 +109,8 @@ function meta:Init( mod, flags )
 		[bpcommon.FindMetaTable("bpnodetype")] = 2,
 		[bpcommon.FindMetaTable("bppin")] = 3,
 		[bpcommon.FindMetaTable("bppintype")] = 4,
-		[bpcommon.FindMetaTable("bpmodule")] = 4,
+		[bpcommon.FindMetaTable("bpmodule")] = 5,
+		[bpcommon.FindMetaTable("bpvariable")] = 6,
 	}
 
 
