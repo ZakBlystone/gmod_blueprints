@@ -62,7 +62,7 @@ function NODE:Compile(compiler, pass)
 		local trueConnections = pinTrue:GetConnectedPins()
 		local cond = compiler:GetPinCode( self:FindPin(PD_In, "Condition") )
 
-		if self.__nextExec then print( self:ToString() .. " NEXT: " .. self.__nextExec:ToString() ) else print( self:ToString() .. " NO NEXT") end
+		--if self.__nextExec then print( self:ToString() .. " NEXT: " .. self.__nextExec:ToString() ) else print( self:ToString() .. " NO NEXT") end
 
 		if #falseConnections == 0 and #trueConnections == 0 then
 			compiler.emit("goto jmp_0")

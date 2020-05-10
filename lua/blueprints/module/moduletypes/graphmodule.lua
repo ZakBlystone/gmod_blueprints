@@ -91,7 +91,7 @@ function MODULE:Setup()
 
 	end
 
-	print("SETUP GRAPH MODULE")
+	--print("SETUP GRAPH MODULE")
 
 end
 
@@ -398,7 +398,7 @@ function MODULE:SerializeData( stream )
 
 	self.suppressGraphNotify = true
 
-	print("Serialize graph module")
+	--print("Serialize graph module")
 
 	if self:CanHaveVariables() then self.variables:Serialize( stream ) end
 
@@ -488,7 +488,7 @@ function MODULE:Compile( compiler, pass )
 
 	if pass == CP_PREPASS then
 
-		print("MODULE PRE-COMPILE")
+		--print("MODULE PRE-COMPILE")
 		-- make local copies of all module graphs so they can be edited without changing the module
 		self.cgraphs = {}
 		self.uniqueKeys = {}
@@ -502,7 +502,7 @@ function MODULE:Compile( compiler, pass )
 
 	elseif pass == CP_MAINPASS then
 
-		print("MODULE COMPILE: " .. #self.cgraphs)
+		--print("MODULE COMPILE: " .. #self.cgraphs)
 		for _, graph in ipairs(self.cgraphs) do
 			graph:Compile( compiler, pass )
 		end

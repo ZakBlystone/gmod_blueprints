@@ -171,7 +171,7 @@ end
 
 function MODULE:Compile( compiler, pass )
 
-	print("COMPILE PASS: " .. pass)
+	--print("COMPILE PASS: " .. pass)
 
 	if pass == CP_PREPASS then
 

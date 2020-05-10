@@ -116,7 +116,7 @@ function Install( mod, owner )
 	net.Broadcast()
 
 	local instances = bpenv.GetInstances( mod:GetUID() )
-	print("NUM INSTANCES: " .. #instances)
+	--print("NUM INSTANCES: " .. #instances)
 
 end
 

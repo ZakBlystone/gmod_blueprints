@@ -591,7 +591,7 @@ function meta:Serialize(stream)
 		local types = self:GetNodeTypes()
 		for _, v in ipairs( stream:StringArray(external) ) do
 			stream:Extern(types:Find(v), "\xE3\x01\x45\x7E\x79\x4E\xEE\x21\x80\x00\x00\x0B\x4F\xEF\x14\x26")
-			print("EXTERNAL NODE TYPE: " .. tostring(types:Find(v)) )
+			--print("EXTERNAL NODE TYPE: " .. tostring(types:Find(v)) )
 		end
 	else
 		-- TODO, reconstitute outer groups on external nodetypes
@@ -633,8 +633,6 @@ end
 -- Quickly banging this out using existing tech
 function meta:CopyInto(other)
 
-	print("***COPY GRAPH****")
-
 	Profile("copy-graph", function()
 
 		other:Clear()
@@ -653,9 +651,6 @@ function meta:CopyInto(other)
 				connections[#connections+1] = {ids:Get(pin), ids:Get(conn())}
 			end
 		end
-
-		-- Deep copy will copy all members including graph which includes module etc...
-		-- So clear graph variable and set it on the other side of the deep copy
 
 		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes )
 		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )

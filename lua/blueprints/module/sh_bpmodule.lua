@@ -241,8 +241,8 @@ function meta:Serialize(stream)
 	self.revision = stream:UInt( self.revision )
 	self.uniqueID = stream:GUID( self.uniqueID )
 
-	print("MODULE: " .. magic .. " | " .. version .. " | " .. self.revision .. " | " .. self.type)
-	print(bpcommon.GUIDToString(self.uniqueID))
+	--print("MODULE: " .. magic .. " | " .. version .. " | " .. self.revision .. " | " .. self.type)
+	--print(bpcommon.GUIDToString(self.uniqueID))
 
 	if stream:IsFile() or stream:IsString() then
 		self.envVersion = stream:Value( self.envVersion or bpcommon.ENV_VERSION )
@@ -250,7 +250,7 @@ function meta:Serialize(stream)
 
 	if stream:IsReading() then
 
-		print("INSTALL CLASS FOR: " .. tostring(self:GetType()))
+		--print("INSTALL CLASS FOR: " .. tostring(self:GetType()))
 		moduleClasses:Install( self:GetType(), self )
 		self:Clear()
 
