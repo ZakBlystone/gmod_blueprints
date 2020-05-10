@@ -27,36 +27,42 @@ end
 
 function meta:Serialize(stream)
 
-	local uidCount = stream:UInt(#self.UIDList)
-	local orderCount = stream:UInt(#self.order)
-	local hashCount = stream:UInt(#self.hashes)
+	bpcommon.Profile("serialize-object-meta", function()
 
-	--Dprint("Serialize: " .. orderCount .. " orders")
-	--Dprint("Serialize: " .. hashCount .. " hashes")
+		local uidCount = stream:UInt(#self.UIDList)
+		local orderCount = stream:UInt(#self.order)
+		local hashCount = stream:UInt(#self.hashes)
 
-	for i=1, uidCount do
-		self.UIDList[i] = stream:GUID(self.UIDList[i])
-		self.externUIDs[self.UIDList[i]] = i
-	end
+		--Dprint("Serialize: " .. orderCount .. " orders")
+		--Dprint("Serialize: " .. hashCount .. " hashes")
 
-	for i=1, orderCount do
-		self.order[i] = self.order[i] or {}
-		self.order[i][1] = stream:Length(self.order[i][1])
-		self.order[i][2] = stream:Length(self.order[i][2])
-		if self.order[i][1] == EXTERN_SET then
-			self.order[i][3] = stream:Length(self.order[i][3])
+		for i=1, uidCount do
+			self.UIDList[i] = stream:GUID(self.UIDList[i])
+			self.externUIDs[self.UIDList[i]] = i
 		end
-	end
 
-	for i=1, hashCount do
-		self.hashes[i] = stream:UInt(self.hashes[i])
-	end
+		for i=1, orderCount do
+			self.order[i] = self.order[i] or {}
+			self.order[i][1] = stream:Length(self.order[i][1])
+			self.order[i][2] = stream:Length(self.order[i][2])
+			if self.order[i][1] == EXTERN_SET then
+				self.order[i][3] = stream:Length(self.order[i][3])
+			end
+		end
+
+		for i=1, hashCount do
+			self.hashes[i] = stream:UInt(self.hashes[i])
+		end
+
+	end)
 
 	return stream
 
 end
 
 function meta:PostLink(stream)
+
+	bpcommon.Profile("post-link", function()
 
 	if stream:IsWriting() then
 
@@ -102,6 +108,8 @@ function meta:PostLink(stream)
 		end
 
 	end
+
+	end)
 
 end
 
@@ -261,16 +269,16 @@ function meta:WriteObject(stream, obj)
 	local thisOrderNum = #self.order+1
 	if existing then
 		self.order[#self.order+1] = {set.id, existing}
-		self:DPrint("SAVED: " .. tostring(obj) .. " [" .. (#self.order) .. "]")
+		--self:DPrint("SAVED: " .. tostring(obj) .. " [" .. (#self.order) .. "]")
 	else
 		set.objects[hash] = set.next
 		self.order[#self.order+1] = {set.id, set.next}
 		self.hashes[#self.hashes+1] = meta.__hash
 		set.next = set.next + 1
-		self:DPrint("SAVED: " .. tostring(obj) .. " [" .. (#self.order) .. "]")
-		self:DPushIndent()
+		--self:DPrint("SAVED: " .. tostring(obj) .. " [" .. (#self.order) .. "]")
+		--self:DPushIndent()
 		obj:Serialize(stream)
-		self:DPopIndent()
+		--self:DPopIndent()
 	end
 
 end
@@ -299,10 +307,10 @@ function meta:ReadObject(stream, outer)
 		self.hashNum = self.hashNum + 1
 
 		local obj = self:Construct(hash):WithOuter(outer)
-		self:DPrint("CONSTRUCTED: " .. tostring(obj) .. " [" .. (thisOrderNum) .. "]")
-		self:DPushIndent()
+		--self:DPrint("CONSTRUCTED: " .. tostring(obj) .. " [" .. (thisOrderNum) .. "]")
+		--self:DPushIndent()
 		obj:Serialize(stream)
-		self:DPopIndent()
+		--self:DPopIndent()
 		set[objID] = obj
 
 		return obj

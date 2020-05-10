@@ -225,6 +225,9 @@ function base64_decode(data)
 end
 
 
+base64_encode = util.Base64Encode
+base64_decode = util.Base64Decode
+
 -- Input / Output streams
 
 

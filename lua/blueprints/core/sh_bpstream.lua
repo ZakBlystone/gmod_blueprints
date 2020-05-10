@@ -54,6 +54,7 @@ function meta:Init(context, mode, file)
 	if mode == MODE_File then
 		self:AddFlag(FL_Compressed)
 		self:AddFlag(FL_Checksum)
+		self:AddFlag(FL_FileBacked)
 	end
 
 	--self:AddFlag(FL_NoObjectLinker)
@@ -185,40 +186,50 @@ function meta:Finish()
 	local out = nil
 
 	if self:IsWriting() then
+		
 
-		local contents = bpdata.OutStream( false, self:HasFlag(FL_FileBacked) )
+		bpcommon.Profile("post-write-stream", function()
 
-		self:MetaState( contents )
-		if self.linker then self.linker:PostLink(self) end
-		if self.linker then self.linker:Serialize(self) end
-		if self.stringTable then self.stringTable:Serialize(self) end
-		contents:WriteStr( self.dataStream:GetString(false, false) )
+			local contents = bpdata.OutStream( false, self:HasFlag(FL_FileBacked) )
 
-		self:MetaState( self.stream )
-		if self:HasFlag(FL_Checksum) then self:UInt( contents:GetCRC() ) end
+			self:MetaState( contents )
+			if self.linker then self.linker:PostLink(self) end
+			if self.linker then self.linker:Serialize(self) end
+			if self.stringTable then self.stringTable:Serialize(self) end
 
-		self.stream:WriteStr( contents:GetString(false, false) )
-		self:MetaState( nil )
+			contents:WriteStr( self.dataStream:GetString(false, false) )
 
-		if self.mode == MODE_File then
+			self:MetaState( self.stream )
+			if self:HasFlag(FL_Checksum) then self:UInt( contents:GetCRC() ) end
 
-			assert(self.file)
-			out = self.stream:WriteToFile(self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
+			self.stream:WriteStr( contents:GetString(false, false) )
+			self:MetaState( nil )
 
-		elseif self.mode == MODE_String or self.mode == MODE_NetworkString then
+			bpcommon.Profile("write", function()
 
-			out = self.stream:GetString( self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
+				if self.mode == MODE_File then
 
-		elseif self.mode == MODE_Network then
+					assert(self.file)
+					out = self.stream:WriteToFile(self.file, self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
 
-			local s, p = self.stream:WriteToNet( self:HasFlag(FL_Compressed) )
-			out = p
+				elseif self.mode == MODE_String or self.mode == MODE_NetworkString then
 
-		else
+					out = self.stream:GetString( self:HasFlag(FL_Compressed), self:HasFlag(FL_Base64) )
 
-			error("Invalid mode for writing")
+				elseif self.mode == MODE_Network then
 
-		end
+					local s, p = self.stream:WriteToNet( self:HasFlag(FL_Compressed) )
+					out = p
+
+				else
+
+					error("Invalid mode for writing")
+
+				end
+
+			end)
+
+		end)
 
 	elseif self:IsReading() then
 
