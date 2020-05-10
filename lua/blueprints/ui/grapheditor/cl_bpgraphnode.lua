@@ -15,8 +15,6 @@ local render_PopFilterMag = render.PopFilterMag
 local render_PopFilterMin = render.PopFilterMin
 local roundedBox = bprenderutils.RoundedBoxFast
 
-local debugNodeIndex = false
-
 local drawNode = GWEN.CreateTextureBorder( 64, 0, 64, 64, 12, 48, 12, 12, G_BPGraphAtlas )
 local drawNodeHighlight = GWEN.CreateTextureBorder( 0, 0, 48, 48, 16, 16, 16, 16, G_BPGraphAtlas )
 local drawCompact = GWEN.CreateTextureBorder( 144, 0, 64, 64, 18, 18, 18, 18, G_BPGraphAtlas )
@@ -56,6 +54,7 @@ end
 
 function meta:Invalidate(invalidatePins)
 
+	self.compact = nil
 	self.width = nil
 	self.height = nil
 	self.displayName = nil
@@ -71,12 +70,16 @@ end
 
 function meta:ShouldBeCompact()
 
+	if self.compact ~= nil then return self.compact end
+
 	for _, v in ipairs(self.pins) do
 		if v.pin:IsIn() and v.pin:GetLiteralType() == "string" and #v.pin:GetConnections() == 0 then
-			return false
+			self.compact = false
+			return self.compact
 		end
 	end
-	return self.node:HasFlag(NTF_Compact)
+	self.compact = self.node:HasFlag(NTF_Compact) or ( #self.node:GetPins() <= 2 and self.node:GetCodeType() == NT_Pure )
+	return self.compact
 
 end
 
@@ -124,7 +127,6 @@ function meta:GetSize()
 
 	self.titleWidth = titleWidth
 	self.titleHeight = titleHeight
-	self.compact = self:ShouldBeCompact()
 
 	if self:ShouldBeCompact() then
 		width = math.max(titleWidth+40, 0)
@@ -389,13 +391,6 @@ function meta:Draw(xOffset, yOffset, alpha)
 	self:DrawPins(xOffset, yOffset, alpha, true)
 
 	local name = self:GetDisplayName()
-
-	if debugNodeIndex then
-		surface_setFont( "NodeTitleFont" )
-		surface_setTextPos( x, y - 40 )
-		surface_setTextColor( 255, 255, 255, 255*alpha )
-		surface_drawText( tostring(self:GetNode().id) )
-	end
 
 	if not isCompact then
 

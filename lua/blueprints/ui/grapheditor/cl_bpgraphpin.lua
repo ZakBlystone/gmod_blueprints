@@ -170,7 +170,7 @@ function meta:GetSize()
 	local height = PIN_SIZE
 	local node = self.vnode:GetNode()
 
-	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
+	if not self.vnode:ShouldBeCompact() and not node:HasFlag(NTF_HidePinNames) then
 		surface.SetFont( self.font )
 		local title = self:GetDisplayName()
 		if not PIN_TITLE_BLACKLIST[title] then
@@ -212,7 +212,7 @@ function meta:Layout()
 	self.titlePos = 0
 	self.literalPos = 0
 
-	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
+	if not self.vnode:ShouldBeCompact() and not node:HasFlag(NTF_HidePinNames) then
 		local title = self:GetDisplayName()
 		if not PIN_TITLE_BLACKLIST[title] then
 			local titleWidth = surface.GetTextSize( title )
@@ -408,7 +408,7 @@ function meta:DrawTitle(xOffset, yOffset, alpha)
 	local title = self:GetDisplayName()
 	if not PIN_TITLE_BLACKLIST[title] then
 		local node = self.vnode:GetNode()
-		if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
+		if not self.vnode:ShouldBeCompact() and not node:HasFlag(NTF_HidePinNames) then
 			local x,y = self:GetPos()
 
 			x = x + xOffset

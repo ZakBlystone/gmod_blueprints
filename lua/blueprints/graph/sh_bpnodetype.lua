@@ -160,11 +160,6 @@ function meta:GetPins()
 		table.insert(pins, 1, PIN_INPUT_EXEC)
 	end
 
-	--HACK
-	if #pins <= 2 and self:GetCodeType() == NT_Pure then
-		self:AddFlag(NTF_Compact)
-	end
-
 	return pins
 end
 
