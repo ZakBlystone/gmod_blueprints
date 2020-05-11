@@ -22,6 +22,17 @@ function meta:InitPinClass()
 
 end
 
+function meta:PostLoad()
+
+	for i=#self.connections, 1, -1 do
+		if not self.connections[i]:IsValid() then
+			print("Remove invalid pin connection[" .. tostring(self) .. "]: " .. i)
+			table.remove(self.connections, i)
+		end
+	end
+
+end
+
 function meta:SetPinClass(class) self.pinClass = class return self end
 function meta:SetLiteral(value)
 
@@ -259,7 +270,11 @@ function meta:BreakAllLinks()
 	local conn = self:GetConnections()
 	for i=#conn, 1, -1 do
 
-		self:BreakLink( conn[i]() )
+		if conn[i]:IsValid() then
+			self:BreakLink( conn[i]() )
+		else
+			table.remove(conn, i)
+		end
 
 	end
 
