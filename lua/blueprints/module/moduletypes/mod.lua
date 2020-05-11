@@ -68,22 +68,28 @@ end]])
 
 		compiler.emit([[
 __bpm.init = function()
+	G_BPInstances = G_BPInstances or {}
+	if G_BPInstances[__bpm.guid] ~= nil then return end
 	local instance = setmetatable({}, __bpm.meta)
 	instance:Initialize()
-	G_BPInstances = G_BPInstances or {}
 	G_BPInstances[__bpm.guid] = instance
+	print("INIT MOD: " .. __guidString(__bpm.guid))
+	hook.Add( "Think", __bpm.guid, function(...) return instance:update() end )
 end
 __bpm.refresh = function()
 	local instance = G_BPInstances[__bpm.guid]
 	if not instance then return end
-	setmetatable(instance, __bpm.meta)
+	instance.__bpm = __bpm
 	instance:hookEvents(true)
+	print("REFRESH MOD: " .. __guidString(__bpm.guid))
 end
 __bpm.shutdown = function()
 	local instance = G_BPInstances[__bpm.guid]
 	if not instance then return end
+	hook.Remove( "Think", __bpm.guid )
 	instance:Shutdown()
 	G_BPInstances[__bpm.guid] = nil
+	print("STOP MOD: " .. __guidString(__bpm.guid))
 end]])
 
 	end
