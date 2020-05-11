@@ -37,6 +37,8 @@ local NODE_COMPACT_FOOTER_HEIGHT = 0
 local NODE_COMPACT_OFFSET = 45
 local PIN_SPACING = 8
 local PIN_EDGE_SPACING = 8
+local COMMENT_FONT = "NodePinFont"
+local COMMENT_MAXWIDTH = 300
 
 function meta:Init(node, graph, editor)
 
@@ -46,6 +48,7 @@ function meta:Init(node, graph, editor)
 	self.width = nil
 	self.height = nil
 	self.pins = {}
+	self.commentWrap = bptextwrap.New():SetFont(COMMENT_FONT):SetMaxWidth(COMMENT_MAXWIDTH)
 	self:CreatePins()
 	self:LayoutPins()
 	return self
@@ -366,6 +369,16 @@ function meta:Draw(xOffset, yOffset, alpha)
 		col:SetUnpacked(200,80,80,255*alpha)
 		drawNodeHighlight(x-4,y-4,w+8,h+8,col)
 	end]]
+
+	if node:GetComment() ~= self.commentWrap:GetText() then
+		self.commentWrap:SetText( node:GetComment() )
+	end
+
+	if node:GetComment() ~= "" then
+		local tw, th = self.commentWrap:GetSize()
+		draw.RoundedBox(6, x - 5, y - 25 - th, tw + 10, th + 10, Color(0,0,0,200 * alpha))
+		self.commentWrap:Draw(x, y - 20 - th, 255, 255, 255, 255 * alpha)
+	end
 
 
 	local ntc = node:GetColor()

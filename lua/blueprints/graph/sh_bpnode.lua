@@ -387,6 +387,9 @@ function meta:GetCodeType()
 
 end
 
+function meta:SetComment( comment ) self.data.comment = comment end
+function meta:GetComment() return self.data.comment or "" end
+
 function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
 function meta:GetTypeName() return self.nodeType:IsValid() and self.nodeType():GetFullName() or "unknown" end
 function meta:GetPos() return self.x, self.y end
@@ -413,6 +416,18 @@ function meta:GetOptions(tab)
 	elseif self:GetCodeType() == NT_Pure then
 		tab[#tab+1] = {"ConvertToNonPure", function() self:ConvertType(NT_Function) end }
 	end
+
+	tab[#tab+1] = {
+		"Edit Comment",
+		function() 
+			local pnl = bptextliteraledit.LiteralEditWindow( "Comment", "DTextEntry", 300, 120, nil, 0, 0 )
+			pnl:SetText( self:GetComment() or "" )
+			pnl:SetMultiline(true)
+			pnl.OnTextChanged = function( pnl, noMenuRemoval, keepAutoComplete )
+				self:SetComment( pnl:GetText() )
+			end
+		end
+	}
 
 end
 

@@ -2,12 +2,12 @@ if SERVER then AddCSLuaFile() return end
 
 module("bptextliteraledit", package.seeall, bpcommon.rescope(bpschema))
 
-function PinLiteralEditWindow( pin, innerClass, w, h, onClose, xoff, yoff )
+function LiteralEditWindow( title, innerClass, w, h, onClose, xoff, yoff )
 
 	local x, y = gui.MouseX(), gui.MouseY()
 
 	local window = vgui.Create( "DFrame" )
-	window:SetTitle( pin:GetDisplayName() )
+	window:SetTitle( title )
 	window:SetDraggable( false )
 	window:ShowCloseButton( false )
 
@@ -33,6 +33,12 @@ function PinLiteralEditWindow( pin, innerClass, w, h, onClose, xoff, yoff )
 	window:MakePopup()
 
 	return inner
+
+end
+
+function PinLiteralEditWindow( pin, innerClass, w, h, onClose, xoff, yoff )
+
+	return LiteralEditWindow( pin:GetDisplayName(), innerClass, w, h, onClose, xoff, yoff )
 
 end
 
