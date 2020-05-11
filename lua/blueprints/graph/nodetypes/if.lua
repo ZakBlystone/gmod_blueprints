@@ -84,8 +84,4 @@ function NODE:Compile(compiler, pass)
 
 end
 
-function NODE:GetOptions(tab)
-
-end
-
 RegisterNodeClass("If", NODE)
