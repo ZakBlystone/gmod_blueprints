@@ -591,7 +591,7 @@ function meta:Serialize(stream)
 		local types = self:GetNodeTypes()
 		for _, v in ipairs( stream:StringArray(external) ) do
 			stream:Extern(types:Find(v), "\xE3\x01\x45\x7E\x79\x4E\xEE\x21\x80\x00\x00\x0B\x4F\xEF\x14\x26")
-			--print("EXTERNAL NODE TYPE: " .. tostring(types:Find(v)) )
+			print("EXTERNAL NODE TYPE: " .. tostring(types:Find(v)) )
 		end
 	else
 		-- TODO, reconstitute outer groups on external nodetypes
@@ -648,6 +648,7 @@ function meta:CopyInto(other)
 		for pin in self:AllPins() do
 			if not pin:IsOut() then continue end
 			for _, conn in ipairs(pin:GetConnections()) do
+				if not conn:IsValid() then continue end
 				connections[#connections+1] = {ids:Get(pin), ids:Get(conn())}
 			end
 		end

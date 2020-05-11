@@ -44,12 +44,22 @@ function meta:PostInit()
 	end
 
 	local nodeClass = ntype:GetNodeClass()
-	if nodeClass then nodeClasses:Install(nodeClass, self) end
+	if nodeClass then 
+		nodeClasses:Install(nodeClass, self)
+		--print("INIT NODE CLASS: " .. nodeClass )
+	end
 
 	self:UpdatePins()
 
 	self.initialized = true
 	return true
+
+end
+
+function meta:PostLoad()
+
+	self.initialized = false
+	self:PostInit()
 
 end
 

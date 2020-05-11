@@ -283,7 +283,7 @@ function meta:ToString(name)
 
 	local str = (name or "list") .. ":"
 	for id, item in self:Items() do
-		str = str .. "\n [" .. id .. "] = " .. tostring(item)
+		--str = str .. "\n [" .. id .. "] = " .. tostring(item)
 	end
 	return str
 
