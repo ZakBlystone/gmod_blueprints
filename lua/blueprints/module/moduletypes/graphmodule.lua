@@ -162,9 +162,9 @@ function MODULE:AutoFillsPinType( pinType )
 end
 
 function MODULE:GetModulePinType() return nil end
-function MODULE:GetNodeTypes( collection, graph )
+function MODULE:GetLocalNodeTypes( collection )
 
-	BaseClass.GetNodeTypes( self, collection )
+	BaseClass.GetLocalNodeTypes( self, collection )
 
 	local types = {}
 
@@ -181,6 +181,29 @@ function MODULE:GetNodeTypes( collection, graph )
 		end
 
 	end
+
+	if self:CanHaveEvents() then
+
+		for id, v in self:Events() do
+
+			types["__EventCall" .. id] = v:CallNodeType()
+			types["__Event" .. id] = v:EventNodeType()
+
+		end
+
+	end
+
+	for k,v in pairs(types) do v.name = k end
+
+end
+
+function MODULE:GetNodeTypes( collection, graph )
+
+	BaseClass.GetNodeTypes( self, collection )
+
+	local types = {}
+
+	collection:Add( types )
 
 	for id, v in self:Graphs() do
 
@@ -199,17 +222,6 @@ function MODULE:GetNodeTypes( collection, graph )
 
 			types["__Make" .. id] = v:MakerNodeType()
 			types["__Break" .. id] = v:BreakerNodeType()
-
-		end
-
-	end
-
-	if self:CanHaveEvents() then
-
-		for id, v in self:Events() do
-
-			types["__EventCall" .. id] = v:CallNodeType()
-			types["__Event" .. id] = v:EventNodeType()
 
 		end
 
