@@ -79,6 +79,7 @@ end
 __bpm.refresh = function()
 	local instance = G_BPInstances[__bpm.guid]
 	if not instance then return end
+	setmetatable(instance, __bpm.meta)
 	instance.__bpm = __bpm
 	instance:hookEvents(true)
 	print("REFRESH MOD: " .. __guidString(__bpm.guid))
