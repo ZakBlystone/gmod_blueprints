@@ -87,7 +87,7 @@ function NODE:BuildRecvThunk(compiler)
 
 	local recipient = self:FindPin(PD_In, "Recipient")
 
-	local call = "self:__Event" .. event.id .. "( "
+	local call = "self:__Event" .. compiler:GetID(event) .. "( "
 	local t = {}
 	if event:HasFlag( bpevent.EVF_Client ) then t[#t+1] = "pl" end
 	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) and x ~= recipient end) do
@@ -115,7 +115,7 @@ function NODE:BuildCallThunk( compiler )
 
 	local event = self:GetEvent()
 
-	local call = "__self:__Event" .. event.id .. "( "
+	local call = "__self:__Event" .. compiler:GetID(event) .. "( "
 	local t = {}
 	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) end) do
 		t[#t+1] = compiler:GetPinCode(pin)
