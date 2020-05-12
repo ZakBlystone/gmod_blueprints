@@ -839,6 +839,10 @@ function meta:ExecWalk( func )
 
 			end
 
+			if #connections == 0 and not emitted[node] then
+				func(node) emitted[node] = true 
+			end
+
 		end
 
 	end
