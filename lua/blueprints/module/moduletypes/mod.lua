@@ -82,6 +82,7 @@ __bpm.refresh = function()
 	setmetatable(instance, __bpm.meta)
 	instance.__bpm = __bpm
 	instance:hookEvents(true)
+	if instance.CORE_Init then instance:CORE_Init() end
 	print("REFRESH MOD: " .. __guidString(__bpm.guid))
 end
 __bpm.shutdown = function()
