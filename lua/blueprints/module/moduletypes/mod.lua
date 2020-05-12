@@ -74,7 +74,7 @@ __bpm.init = function()
 	instance:Initialize()
 	G_BPInstances[__bpm.guid] = instance
 	print("INIT MOD: " .. __guidString(__bpm.guid))
-	hook.Add( "Think", __bpm.guid, function(...) return instance:update() end )
+	hook.Add( "Think", __bpm.guid, function(...) local b,e = pcall(instance.update, instance) b = b or __bpm.error(e) end )
 end
 __bpm.refresh = function()
 	local instance = G_BPInstances[__bpm.guid]
