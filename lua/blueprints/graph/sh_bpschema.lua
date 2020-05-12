@@ -56,6 +56,7 @@ NTF_HidePinNames = 256
 NTF_Experimental = 512
 NTF_DirectCall = 1024
 NTF_FallThrough = 2048
+NTF_CallStack = 4096
 
 -- Graph types
 GT_Event = 0

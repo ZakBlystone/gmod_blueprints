@@ -65,12 +65,12 @@ function NODE:Compile(compiler, pass)
 		--if self.__nextExec then print( self:ToString() .. " NEXT: " .. self.__nextExec:ToString() ) else print( self:ToString() .. " NO NEXT") end
 
 		if #falseConnections == 0 and #trueConnections == 0 then
-			compiler.emit("goto jmp_0")
+			compiler.emit("goto popcall")
 		elseif #trueConnections == 1 and #falseConnections == 0 then
-			compiler.emit("if not " .. cond .. " then goto jmp_0 end" )
+			compiler.emit("if not " .. cond .. " then goto popcall end" )
 			if self.__nextExec ~= trueConnections[1]:GetNode() then compiler.emit( compiler:GetPinCode( pinTrue, true ) ) end
 		elseif #trueConnections == 0 and #falseConnections == 1 then
-			compiler.emit("if " .. cond .. " then goto jmp_0 end" )
+			compiler.emit("if " .. cond .. " then goto popcall end" )
 			if self.__nextExec ~= falseConnections[1]:GetNode() then compiler.emit( compiler:GetPinCode( pinFalse, true ) ) end
 		else
 			compiler.emit("if not " .. cond .. " then " .. compiler:GetPinCode( pinFalse, true ) .. " end" )

@@ -287,6 +287,7 @@ local function ParseNodeValue(nodeType, v)
 	if key == "REDIRECTPIN" then nodeType:AddPinRedirect(v.tuple[2], v.tuple[3]) end
 	if key == "REQUIREMETA" then nodeType:AddRequiredMeta(v.tuple[2]) end
 	if key == "FALLTHROUGH" then nodeType:AddFlag(NTF_FallThrough) end
+	if key == "CALLSTACK" then nodeType:AddFlag(NTF_CallStack) end
 	if key == "TBD" then nodeType.TBD = true end
 	if key == "WARN" then nodeType:SetWarning(v.literal) end
 	if key == "IN" or key == "OUT" then nodeType:AddPin( ParsePin(v) ) end

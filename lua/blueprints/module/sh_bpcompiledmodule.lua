@@ -416,11 +416,8 @@ if SERVER then
 end]]
 
 fragments["callstack"] = [[
-cs = {}
-function pushjmp(i) cs[#cs+1] = i end
-goto jumpto
-::jmp_0:: ::popcall:: csl = #cs if csl > 0 then ip = cs[csl] cs[csl] = nil else goto __terminus end
-::jumpto::
+sp=0 goto jumpto ::popcall:: if sp == 0 then goto __terminus end 
+ip=cs[sp] sp=sp-1 ::jumpto::
 ]]
 
 local netChecks = {
@@ -456,7 +453,7 @@ fragments["jlist"] = function(jumps)
 
 	local ret = ""
 	for k, v in ipairs(jumps) do
-		ret = ret .. (k == 1 and "" or "\n") .. "if ip == " .. v ..  " then goto jmp_" .. v .. " end"
+		ret = ret .. (k == 1 and "" or "\n") .. "if ip == " .. v ..  " then goto " .. (v == "0" and "popcall" or "jmp_" .. v) .. " end"
 	end
 	return ret
 
@@ -522,8 +519,6 @@ fragments["head"] = function(args)
 	if args[1] == "1" then
 		ret = ret .. [[
 
-local __svcheck = function() if not SERVER then error("Node '%node' can't run on client") end end
-local __clcheck = function() if not CLIENT then error("Node '%node' can't run on server") end end
 local __dbgnode = -1
 local __dbggraph = -1]]
 	end
@@ -553,18 +548,9 @@ fragments["utils"] = function(args)
 	return [[
 local __hex = "0123456789ABCDEF"
 local function __guidString(str) return str:gsub(".", function(x) local b = string.byte(x) return __hex[1+b/16] .. __hex[1+b%16] end) end
-local function __hexBytes(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end]]
-.. (args[1] == "1" and
-[[
-
-local function __makeGUID()
-	local d,b,g,m=os.date"*t",function(x,y)return x and y or 0 end,system,bit
-	local r,n,s,u,x,y=function(x,y)return m.band(m.rshift(x,y or 0),0xFF)end,
-	math.random(2^32-1),_G.__guidsalt or b(CLIENT,2^31),os.clock()*1000,
-	d.min*1024+d.hour*32+d.day,d.year*16+d.month;_G.__guidsalt=s+1;return
-	string.char(r(x),r(x,8),r(y),r(y,8),r(n,24),r(n,16),r(n,8),r(n),r(s,24),r(s,16),
-	r(s,8),r(s),r(u,16),r(u,8),r(u),d.sec*4+b(g.IsWindows(),2)+b(g.IsLinux(),1))
-end]] or "")
+local function __hexBytes(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
+local function __svcheck() if not SERVER then error("Node '%node' can't run on client") end end
+local function __clcheck() if not CLIENT then error("Node '%node' can't run on server") end end]]
 
 end
 

@@ -523,13 +523,12 @@ function MODULE:Compile( compiler, pass )
 
 		local bDebug = compiler.debug and 1 or 0
 		local bILP = compiler.ilp and 1 or 0
-		local bGUID = self:IsConstructable() and 1 or 0
 		local args = bDebug .. ", " .. bILP
 
 		compiler.emit("_FR_HEAD(" .. args .. ")")   -- script header
 
 		if not withinProject then
-			compiler.emit("_FR_UTILS(" .. bGUID .. ")") -- utilities
+			compiler.emit("_FR_UTILS()") -- utilities
 			compiler.emitContext( CTX_Network )         -- network boilerplate
 		end
 
@@ -577,20 +576,6 @@ function MODULE:Compile( compiler, pass )
 
 	elseif pass == CP_MODULEBPM then
 
-		if self:IsConstructable() then
-
-			-- constructor
-			compiler.emit("__bpm.new = function()")
-			compiler.emit("\tlocal instance = setmetatable({}, meta)")
-			compiler.emit("\tinstance.delays = {}")
-			compiler.emit("\tinstance.__bpm = __bpm")
-			compiler.emit("\tinstance.guid = __makeGUID()")
-			compiler.emitContext( CTX_Vars .. "global", 1 )
-			compiler.emit("\treturn instance")
-			compiler.emit("end")
-
-		end
-
 		-- event listing
 		compiler.emit("__bpm.events = {")
 		for k, _ in pairs( compiler.getFilteredContexts(CTX_Hooks) ) do
@@ -611,9 +596,6 @@ function MODULE:Compile( compiler, pass )
 
 		if bit.band(compiler.flags, CF_Standalone) ~= 0 then
 
-			if self:IsConstructable() then
-				compiler.emit("_FR_STANDALONE()")
-			end
 
 		else
 

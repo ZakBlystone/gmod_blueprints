@@ -466,7 +466,8 @@ function meta:GetVarCode(var, jump)
 		if execCount > 1 then s = "__targetPin = " .. var.pin.id .. " " end
 	end
 
-	if jump and var.jump then s = s .. "goto jmp_" end
+	if jump and var.term then s = s .. "goto popcall"
+	elseif jump and var.jump then s = s .. "goto jmp_" end
 	if var.literal then return s .. var.var end
 	if var.global or var.isFunc or var.keyAsGlobal then return "__self." .. var.var end
 	return s .. var.var
@@ -606,7 +607,8 @@ function meta:GetPinVar(pin, sanitize)
 				-- unconnected exec pins jump to ::jmp_0:: which just pops the stack
 				local pins = pin:GetConnectedPins()
 				return {
-					var = #pins == 0 and "0" or self:GetID(pins[1]:GetNode()),
+					var = #pins ~= 0 and self:GetID(pins[1]:GetNode()) or "",
+					term = #pins == 0,
 					jump = true,
 					pin = #pins > 0 and pins[1],
 				}
@@ -693,6 +695,10 @@ function meta:CompileNodeSingle(node)
 		ErrorNoHalt("No code for node: " .. node:ToString() .. "\n")
 		return
 	end
+
+	code = code:gsub("pushjmp%(([^%)]+)%)", function(x)
+		return "sp=sp+1 cs[sp]=" .. x
+	end)
 
 	-- grab code off node type and remove tabs
 	code = string.Replace(code, "\t", "")
@@ -1013,7 +1019,7 @@ function meta:CompileCodeSegment( noExport )
 		self.emit("-- Compiled using gm_blueprints v" .. bpcommon.ENV_VERSION .. " ( https://github.com/ZakBlystone/gmod_blueprints )")
 	end
 
-	self.emitContext( CTX_MetaTables )
+	if not noExport then self.emitContext( CTX_MetaTables ) end
 	self:RunModuleCompile( CP_MODULECODE )
 	self:RunModuleCompile( CP_MODULEMETA )
 	self:RunModuleCompile( CP_MODULEBPM )

@@ -5,6 +5,7 @@ local NODE = {}
 function NODE:Setup()
 
 	self.data.pinCount = self.data.pinCount or 2
+	self:AddFlag(bpschema.NTF_CallStack)
 
 end
 

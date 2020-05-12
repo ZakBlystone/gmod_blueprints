@@ -59,12 +59,6 @@ function meta:GetName()
 
 end
 
-function meta:IsConstructable()
-
-	return true
-
-end
-
 function meta:CanCast( outPinType, inPinType )
 
 	return false

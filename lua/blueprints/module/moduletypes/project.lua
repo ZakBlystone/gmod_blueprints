@@ -182,6 +182,9 @@ function MODULE:Compile( compiler, pass )
 				local mod = asset:GetAsset()
 				self.compilers[mod] = bpcompiler.New( mod, compiler.flags )
 				self.compilers[mod]:Compile( mod )
+				if mod.AddRequiredMetaTables then
+					mod:AddRequiredMetaTables( compiler )
+				end
 			end
 		end
 

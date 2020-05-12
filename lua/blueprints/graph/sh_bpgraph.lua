@@ -772,17 +772,24 @@ function meta:CompileEntrypoint( compiler )
 
 	compiler:CompileGraphNodeJumps( self )
 
+	-- check if graph requires a callstack
+	local requireCallStack = false
+	self:ExecWalk( function(node)
+		if node:HasFlag(NTF_CallStack) then requireCallStack = true end
+	end )
+
 	compiler.begin(CTX_Graph .. graphID)
 
 	-- graph function header and callstack
-	compiler.emit("\nlocal function graph_" .. graphID .. "_entry( ip )\n")
+	if requireCallStack then compiler.emit("\nlocal cs = {}") else compiler.emit("") end
+	compiler.emit("local function graph_" .. graphID .. "_entry( ip )\n")
 
 	-- debugging info
 	if compiler.debug then compiler.emit( "\t__dbggraph = " .. graphID) end
 
 	-- emit graph-local variables, callstack, and jumptable
 	compiler.emitContext( CTX_Vars .. graphID, 1 )
-	compiler.emit( "\t_FR_CALLSTACK()")
+	if requireCallStack then compiler.emit( "\t_FR_CALLSTACK()") end
 	compiler.emitContext( CTX_JumpTable .. graphID, 1 )
 
 	-- emit all functions belonging to this graph
@@ -794,7 +801,12 @@ function meta:CompileEntrypoint( compiler )
 	end )
 
 	-- emit terminus jump vector
-	compiler.emit("\n\t::__terminus::\n")
+	if not requireCallStack then
+		compiler.emit("\n\t::popcall:: ::__terminus::\n")
+	else
+		compiler.emit("\n\t::__terminus::\n")
+	end
+
 	compiler.emit("end")
 	compiler.emit("setfenv(graph_" .. graphID .. "_entry, setmetatable({}, {__index = _G}))")
 	compiler.finish()
