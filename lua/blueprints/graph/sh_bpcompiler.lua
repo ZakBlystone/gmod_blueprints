@@ -466,7 +466,7 @@ function meta:GetVarCode(var, jump)
 		if execCount > 1 then s = "__targetPin = " .. var.pin.id .. " " end
 	end
 
-	if jump and var.term then s = s .. "goto popcall"
+	if jump and var.term then return s .. "goto popcall"
 	elseif jump and var.jump then s = s .. "goto jmp_" end
 	if var.literal then return s .. var.var end
 	if var.global or var.isFunc or var.keyAsGlobal then return "__self." .. var.var end
@@ -607,7 +607,7 @@ function meta:GetPinVar(pin, sanitize)
 				-- unconnected exec pins jump to ::jmp_0:: which just pops the stack
 				local pins = pin:GetConnectedPins()
 				return {
-					var = #pins ~= 0 and self:GetID(pins[1]:GetNode()) or "",
+					var = #pins ~= 0 and self:GetID(pins[1]:GetNode()) or "0",
 					term = #pins == 0,
 					jump = true,
 					pin = #pins > 0 and pins[1],
