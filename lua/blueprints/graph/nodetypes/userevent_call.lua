@@ -5,7 +5,7 @@ module("node_usereventcall", package.seeall, bpcommon.rescope(bpschema, bpcompil
 local NODE = {}
 
 function NODE:Setup() end
-function NODE:GetEvent() return self:GetType().event end
+function NODE:GetEvent() return self:GetType():FindOuter(bpevent_meta) end
 
 function NODE:GeneratePins(pins)
 
@@ -39,7 +39,7 @@ function NODE:BuildSendThunk(compiler)
 
 	self.send.begin()
 	self.send.emit("__self:netPostCall( function(...) local arg = {...}")
-	self.send.emit("__self:netStartMessage(" .. self.recv.id .. ")")
+	self.send.emit("__self:netStartMessage(" .. compiler:GetID(event) .. ")")
 
 	local recipient = self:FindPin(PD_In, "Recipient")
 	local args = {}
@@ -78,39 +78,6 @@ function NODE:BuildSendThunk(compiler)
 
 end
 
-function NODE:BuildRecvThunk(compiler)
-
-	local event = self:GetEvent()
-
-	self.recv.begin()
-	self.recv.emit("if msgID == " .. self.recv.id .. " then")
-
-	local recipient = self:FindPin(PD_In, "Recipient")
-
-	local call = "self:__Event" .. compiler:GetID(event) .. "( "
-	local t = {}
-	if event:HasFlag( bpevent.EVF_Client ) then t[#t+1] = "pl" end
-	for _, pin in self:SidePins(PD_In, function(x) return not x:IsType(PN_Exec) and x ~= recipient end) do
-		local nthunk = pin.GetNetworkThunk and pin:GetNetworkThunk()
-		if nthunk ~= nil then
-			if pin:HasFlag(PNF_Table) then
-				t[#t+1] = "(function() local t = {} for i=1, net.ReadUInt(24) do t[#t+1] = " .. nthunk.read .. " end return t end)()"
-			else
-				t[#t+1] = nthunk.read
-			end
-		else
-			t[#t+1] = "nil"
-		end
-	end
-
-	call = call .. table.concat(t, ", ") .. " )"
-
-	self.recv.emit(call)
-	self.recv.emit("end")
-	self.recv.finish()
-
-end
-
 function NODE:BuildCallThunk( compiler )
 
 	local event = self:GetEvent()
@@ -134,41 +101,39 @@ function NODE:Compile(compiler, pass)
 	BaseClass.Compile( self, compiler, pass )
 
 	local event = self:GetEvent()
+	local hasEventTarget = #self:GetEvent():GetEventNodes() > 0
+
 	if pass == bpcompiler.CP_PREPASS then
 
-		if event:HasFlag( bpevent.EVF_RPC ) then
+		if hasEventTarget then
+			if event:HasFlag( bpevent.EVF_RPC ) then
 
-			self.recv = compiler:AllocThunk(bpcompiler.TK_NETCODE)
-			self.send = compiler:AllocThunk(bpcompiler.TK_GENERIC)
+				self.send = compiler:AllocThunk(bpcompiler.TK_GENERIC)
+				self:BuildSendThunk( compiler )
 
-			self:BuildRecvThunk( compiler )
-			self:BuildSendThunk( compiler )
+			else
 
-		else
+				self.call = compiler:AllocThunk(bpcompiler.TK_GENERIC)
+				self:BuildCallThunk( compiler )
 
-			self.call = compiler:AllocThunk(bpcompiler.TK_GENERIC)
-
-			self:BuildCallThunk( compiler )
-
+			end
 		end
+
 		return true
 
 	elseif pass == bpcompiler.CP_MAINPASS then
 
-		if event:HasFlag( bpevent.EVF_RPC ) then
-			compiler.emitContext(self.send.context)
+		if hasEventTarget then
+			if event:HasFlag( bpevent.EVF_RPC ) then
+				compiler.emitContext(self.send.context)
+			else
+				compiler.emitContext(self.call.context)
+			end
 		else
-			compiler.emitContext(self.call.context)
+			compiler:CompileReturnPin( self )
 		end
 
 		return true
-
-	elseif pass == bpcompiler.CP_NETCODEMSG then
-
-		if event:HasFlag( bpevent.EVF_RPC ) then
-			compiler.emitContext(self.recv.context)
-			return true 
-		end
 
 	end
 

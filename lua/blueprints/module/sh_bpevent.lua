@@ -53,6 +53,20 @@ function meta:Init()
 
 end
 
+function meta:GetEventNodes()
+
+	local nodes = {}
+	for _, graph in self:GetModule():Graphs() do
+		for _, node in graph:Nodes() do
+			if node:GetNodeClass() == "UserEventBind" and node:GetEvent() == self then
+				nodes[#nodes+1] = node
+			end
+		end
+	end
+	return nodes
+
+end
+
 function meta:GetModule()
 
 	return self:FindOuter( bpmodule_meta )
