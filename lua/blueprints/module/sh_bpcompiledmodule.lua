@@ -538,7 +538,7 @@ end
 fragments["modhead"] = function(args, mod)
 
 	return [[
-local __bpm = { guid = ]] .. bpcommon.EscapedGUID(mod:GetUID()) .. [[ }
+local __bpm = { guid = ]] .. args[1] .. [[ }
 local meta = {} meta.__index = meta]]
 
 end

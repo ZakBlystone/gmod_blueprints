@@ -532,7 +532,7 @@ function MODULE:Compile( compiler, pass )
 			compiler.emitContext( CTX_Network )         -- network boilerplate
 		end
 
-		compiler.emit("_FR_MODHEAD()")              -- header for module
+		compiler.emit("_FR_MODHEAD(" .. bpcommon.EscapedGUID(self:GetUID()) .. ")")              -- header for module
 
 		-- emit each graph's entry function
 		for _, graph in ipairs(self.cgraphs) do
