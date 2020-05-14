@@ -103,8 +103,6 @@ __bpm.refresh = function()
 	__bpm.ref = instance
 	instance.__bpm = __bpm
 	instance:hookEvents(true)
-	if instance.CORE_Init then instance:CORE_Init() end
-	print("REFRESH MOD: " .. __guidString(__bpm.guid))
 end
 __bpm.shutdown = function()
 	local instance = G_BPInstances[__bpm.guid]
