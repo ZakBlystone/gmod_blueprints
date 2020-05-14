@@ -180,10 +180,10 @@ function MODULE:Compile( compiler, pass )
 		for k, asset in ipairs(self:GetAssets()) do
 			if isbpmodule(asset:GetAsset()) then
 				local mod = asset:GetAsset()
-				self.compilers[mod] = bpcompiler.New( mod, compiler.flags )
+				self.compilers[mod] = bpcompiler.New( mod, compiler.flags ):WithOuter(compiler)
 				self.compilers[mod]:Compile( mod )
-				if mod.AddRequiredMetaTables then
-					mod:AddRequiredMetaTables( compiler )
+				for k, v in pairs(self.compilers[mod]:GetRequiredMetaTables()) do
+					compiler:AddRequiredMetaTable(k)
 				end
 			end
 		end
@@ -202,7 +202,7 @@ function MODULE:Compile( compiler, pass )
 				local ctx = cmp.getContext(CTX_Code)
 				compiler.emit("do")
 				compiler.emitIndented(ctx, 0)
-				compiler.emit("__modules[#__modules+1] = __bpm")
+				compiler.emit("__modules[" .. compiler:GetID(mod) .. "] = __bpm")
 				compiler.emit("end")
 			end
 		end

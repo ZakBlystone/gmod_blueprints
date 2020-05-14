@@ -84,6 +84,12 @@ function MODULE:Setup()
 
 end
 
+function MODULE:IsStatic()
+
+	return false
+
+end
+
 function MODULE:GenerateNewUID()
 
 	local previousUID = self:GetUID()

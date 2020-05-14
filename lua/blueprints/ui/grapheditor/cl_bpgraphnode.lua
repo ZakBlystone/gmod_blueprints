@@ -110,6 +110,7 @@ function meta:GetSize()
 	local pinSideSpacing = NODE_PINSIDE_SPACING
 
 	for pinID, pin, pos in node:SidePins(PD_In) do
+		if pin:ShouldBeHidden() then continue end
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
 		maxPinWidthIn = math.max(maxPinWidthIn, w)
@@ -118,6 +119,7 @@ function meta:GetSize()
 	if totalPinHeightIn ~= 0 then totalPinHeightIn = totalPinHeightIn - PIN_SPACING end
 
 	for pinID, pin, pos in node:SidePins(PD_Out) do
+		if pin:ShouldBeHidden() then continue end
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
 		maxPinWidthOut = math.max(maxPinWidthOut, w)
@@ -178,10 +180,12 @@ function meta:CreatePins()
 
 	local node = self.node
 	for pinID, pin, pos in node:SidePins(PD_In) do
+		if pin:ShouldBeHidden() then continue end
 		self.pins[pinID] = bpuigraphpin.New(self, pinID, pos)
 	end
 
 	for pinID, pin, pos in node:SidePins(PD_Out) do
+		if pin:ShouldBeHidden() then continue end
 		self.pins[pinID] = bpuigraphpin.New(self, pinID, pos)
 	end
 
@@ -199,6 +203,7 @@ function meta:LayoutPins()
 
 		local node = self.node
 		for pinID, pin, pos in node:SidePins(s) do
+			if pin:ShouldBeHidden() then continue end
 			local vpin = self.pins[pinID]
 			local w,h = vpin:GetSize()
 			vpin:SetPos(s == PD_In and PIN_EDGE_SPACING or (nw - w - PIN_EDGE_SPACING), y)

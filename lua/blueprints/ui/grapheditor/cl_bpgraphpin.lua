@@ -224,7 +224,7 @@ function meta:Layout()
 	end
 
 	if self.pin:IsIn() then
-		self.autoPin = node:GetModule():AutoFillsPinType( self.pin:GetType() )
+		self.autoPin = node:GetModule():AutoFillsPinType( self.pin:GetType() ) or self.pin:AlwaysAutoFill()
 	end
 	if not self:IsConnected() then
 		self.literalPos = LITERAL_OFFSET + x

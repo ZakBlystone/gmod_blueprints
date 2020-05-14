@@ -34,6 +34,19 @@ function MODULE:CanAddNode(nodeType)
 
 end
 
+function MODULE:IsStatic()
+
+	return true
+
+end
+
+function MODULE:GetStaticReference(compiler)
+
+	assert(isbpcompiler(compiler:GetOuter()))
+	return "__modules[" .. compiler:GetOuter():GetID(self) .. "].ref"
+
+end
+
 function MODULE:Compile(compiler, pass)
 
 	local edit = self:GetConfigEdit()
@@ -50,9 +63,12 @@ function MODULE:Compile(compiler, pass)
 		compiler.emitContext( CTX_Vars .. "global", 1 )
 		compiler.emit("\tself.bInitialized = true")
 		compiler.emit("\tself:netInit()")
+		compiler.emit("end")
+		compiler.emit("function meta:PostInit()")
 		compiler.emit("\tself:hookEvents(true)")
 		compiler.emit("\tif self.CORE_Init then self:CORE_Init() end")
 		compiler.emit("end")
+
 
 		compiler.emit([[
 function meta:Shutdown()
@@ -71,15 +87,20 @@ __bpm.init = function()
 	G_BPInstances = G_BPInstances or {}
 	if G_BPInstances[__bpm.guid] ~= nil then return end
 	local instance = setmetatable({}, __bpm.meta)
+	__bpm.ref = instance
 	instance:Initialize()
 	G_BPInstances[__bpm.guid] = instance
 	print("INIT MOD: " .. __guidString(__bpm.guid))
 	hook.Add( "Think", __bpm.guid, function(...) local b,e = pcall(instance.update, instance) b = b or __bpm.error(e) end )
 end
+__bpm.postInit = function()
+	if __bpm.ref then __bpm.ref:PostInit() end
+end
 __bpm.refresh = function()
 	local instance = G_BPInstances[__bpm.guid]
 	if not instance then return end
 	setmetatable(instance, __bpm.meta)
+	__bpm.ref = instance
 	instance.__bpm = __bpm
 	instance:hookEvents(true)
 	if instance.CORE_Init then instance:CORE_Init() end
@@ -90,6 +111,7 @@ __bpm.shutdown = function()
 	if not instance then return end
 	hook.Remove( "Think", __bpm.guid )
 	instance:Shutdown()
+	__bpm.ref = nil
 	G_BPInstances[__bpm.guid] = nil
 	print("STOP MOD: " .. __guidString(__bpm.guid))
 end]])

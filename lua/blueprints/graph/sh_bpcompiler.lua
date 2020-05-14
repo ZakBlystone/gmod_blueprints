@@ -476,6 +476,11 @@ end
 
 function meta:GetPinCode(pin, ...)
 
+	if pin.GetCode then
+		local r = pin:GetCode(self, ...)
+		if r then return r end
+	end
+
 	local var = self:GetPinVar(pin)
 	return self:GetVarCode(var, ...)
 
@@ -861,6 +866,12 @@ function meta:AddRequiredMetaTable(t)
 
 	self.requiredMetaTables = self.requiredMetaTables or {}
 	self.requiredMetaTables[t] = true
+
+end
+
+function meta:GetRequiredMetaTables()
+
+	return self.requiredMetaTables or {}
 
 end
 

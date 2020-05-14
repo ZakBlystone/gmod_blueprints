@@ -385,23 +385,21 @@ end]]
 fragments["projectfooter"] = [[
 __bpm = {}
 __bpm.onError = function() end
-for _, m in ipairs(__modules) do
+for _, m in pairs(__modules) do
 	m.onError = function(...) __bpm.onError(...) end
 end
+local function runAll(func, ...)
+	for _, m in pairs(__modules) do if m[func] then m[func](...) end end
+end
 __bpm.init = function()
-	for _, m in ipairs(__modules) do
-		if m.init then m.init() end
-	end
+	runAll("init")
+	runAll("postInit")
 end
 __bpm.shutdown = function()
-	for _, m in ipairs(__modules) do
-		if m.shutdown then m.shutdown() end
-	end
+	runAll("shutdown")
 end
 __bpm.refresh = function()
-	for _, m in ipairs(__modules) do
-		if m.refresh then m.refresh() end
-	end
+	runAll("refresh")
 end
 ]]
 

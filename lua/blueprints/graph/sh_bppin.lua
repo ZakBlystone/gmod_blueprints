@@ -67,6 +67,8 @@ function meta:SetLiteral(value)
 end
 function meta:GetLiteral() return self.literal end
 function meta:CanHaveLiteral() return self:GetLiteralType() ~= nil end
+function meta:AlwaysAutoFill() return false end
+function meta:ShouldBeHidden() return false end
 function meta:OnRightClick() end
 
 function meta:SetType(type) self.type = type:Copy( self ) return self end

@@ -160,6 +160,7 @@ PinTypeClasses = {
 	[PN_Angles] = "Angle",
 	[PN_Any] = "Wild",
 	[PN_BPClass] = "Class",
+	[PN_BPRef] = "BPRef",
 	[PN_Asset] = "Asset",
 	[PN_Ref] = "Ref",
 }
