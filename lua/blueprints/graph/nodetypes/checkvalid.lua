@@ -47,7 +47,7 @@ end
 function NODE:GetConditionCode(compiler)
 
 	local v = compiler:GetPinCode( self:FindPin(PD_In, "Thing") )
-	return "__bpm.genericIsValid(" .. v .. ")"
+	return "__genericIsValid(" .. v .. ")"
 
 end
 

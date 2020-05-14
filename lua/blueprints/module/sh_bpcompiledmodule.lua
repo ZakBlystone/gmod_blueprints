@@ -285,41 +285,35 @@ net.Receive("bpclosechannel", function(len, pl) G_BPNetChannels[net.ReadUInt(16)
 net.Receive("bphandshake", function(len, pl) local mod, inst = net.ReadData(16), net.ReadData(16)
 	for _, v in ipairs(G_BPNetHandlers) do if v.__bpm.guid == mod and inst == v.guid then v:netReceiveHandshake(inst, len, pl) end end
 end)
-local function __netAllocChannel(id, mod)
-	if id == -1 then for i=0, 65535 do if G_BPNetChannels[i] == nil then id = i break end end end
-	if id == -1 then error("Unable to allocate network channel") end
-	if G_BPNetChannels[id] then print("WARNING: Network channel already allocated: " .. id) end G_BPNetChannels[id] = mod
-	return { id = id, guid = mod.guid }
-end
-]]
-
-fragments["netmain"] = [[
-function meta:netInit()
+local __net = {}
+function __net:netInit()
 	self.netReady, self.ncl = false, {} G_BPNetHandlers[#G_BPNetHandlers+1] = self
-	if SERVER then self.chann = __netAllocChannel(-1, self) return end
-	net.Start("bphandshake") net.WriteData(__bpm.guid, 16) net.WriteData(self.guid, 16) net.WriteBool(false) net.SendToServer()
+	if SERVER then local id for i=0, 65535 do if G_BPNetChannels[i] == nil then id = i break elseif i == 65535 then error("Max network channels") end end
+	G_BPNetChannels[id] = self self.chann = { id = id, guid = self.guid } return end
+	net.Start("bphandshake") net.WriteData(self.__bpm.guid, 16) net.WriteData(self.guid, 16) net.WriteBool(false) net.SendToServer()
 end
-function meta:netShutdown()
+function __net:netShutdown()
 	table.RemoveByValue(G_BPNetHandlers, self)
 	if not self.chann or not G_BPNetChannels[self.chann.id] then return else G_BPNetChannels[self.chann.id] = nil end
 	if SERVER then net.Start("bpclosechannel") net.WriteUInt(self.chann.id, 16) net.Broadcast() end
 end
-function meta:netUpdate()
+function __net:netUpdate()
 	if not self.netReady then return end
-	for i, c in ipairs(self.ncl) do local s,e = pcall(c.f, unpack(c.a)) s = s or __bpm.onError(e, 0, c.g, c.n) self.ncl[i] = nil end
+	for i, c in ipairs(self.ncl) do local s,e = pcall(c.f, unpack(c.a)) s = s or self.__bpm.onError(e, 0, c.g, c.n) self.ncl[i] = nil end
 end
-function meta:netPostCall(f, ...) self.ncl[#self.ncl+1] = {f = f, a = {...}, g = __dbggraph or -1, n = __dbgnode or -1} end
-function meta:netReceiveHandshake(inst, len, pl)
-	if SERVER then
-		if net.ReadBool() then self.netReady = true return end
-		net.Start("bphandshake") net.WriteData(__bpm.guid, 16) net.WriteData(inst, 16) net.WriteUInt(self.chann.id, 16) net.Send(pl)
-		return
-	end
-	self.chann = __netAllocChannel(net.ReadUInt(16), self)
-	net.Start("bphandshake") net.WriteData(__bpm.guid, 16) net.WriteData(self.guid, 16) net.WriteBool(true) net.SendToServer()
-	self.netReady = true
+function __net:netReceiveHandshake(inst, len, pl)
+	if SERVER then if net.ReadBool() then self.netReady = true return end
+	net.Start("bphandshake") net.WriteData(self.__bpm.guid, 16) net.WriteData(inst, 16) net.WriteUInt(self.chann.id, 16) net.Send(pl) return end
+	self.chann = { id = net.ReadUInt(16), guid = self.guid }
+	if G_BPNetChannels[self.chann.id] then error("Network channel already allocated") else G_BPNetChannels[self.chann.id] = self end
+	net.Start("bphandshake") net.WriteData(self.__bpm.guid, 16) net.WriteData(self.guid, 16) net.WriteBool(true) net.SendToServer() self.netReady = true
 end
-function meta:netStartMessage(id) net.Start("bpmessage") net.WriteUInt(self.chann.id, 16) net.WriteUInt(id, 16) end]]
+function __net:netStartMessage(id) net.Start("bpmessage") net.WriteUInt(self.chann.id, 16) net.WriteUInt(id, 16) end
+]]
+
+fragments["netmain"] = [[
+table.Merge( meta, __net )
+function meta:netPostCall(f, ...) self.ncl[#self.ncl+1] = {f = f, a = {...}, g = __dbggraph or -1, n = __dbgnode or -1} end]]
 
 fragments["support"] = function(args) 
 
@@ -334,8 +328,6 @@ end
 	end
 
 return str .. [[
-__bpm.meta = meta
-__bpm.genericIsValid = function(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end
 __bpm.delayExists = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then return true end end end
 __bpm.delay = function(key, delay, func, ...) __bpm.delayKill(key) __self.delays[#__self.delays+1] = { key = key, f = func, t = delay, a = {...} } end
 __bpm.delayKill = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end end
@@ -370,37 +362,13 @@ function meta:hookEvents( enable )
 	end
 end]]
 
-fragments["standalone"] = [[
-local instance = __bpm.new()
-if instance.CORE_Init then instance:CORE_Init() end
-local bpm = instance.__bpm
-local key = "bphook_" .. __guidString(instance.guid)
-for k,v in pairs(bpm.events) do
-	if v.hook and type(meta[k]) == "function" then
-		local function call(...) return instance[k](instance, ...) end
-		hook.Add(v.hook, key, call)
-	end
-end]]
-
 fragments["projectfooter"] = [[
-__bpm = {}
-__bpm.onError = function() end
-for _, m in pairs(__modules) do
-	m.onError = function(...) __bpm.onError(...) end
-end
-local function runAll(func, ...)
-	for _, m in pairs(__modules) do if m[func] then m[func](...) end end
-end
-__bpm.init = function()
-	runAll("init")
-	runAll("postInit")
-end
-__bpm.shutdown = function()
-	runAll("shutdown")
-end
-__bpm.refresh = function()
-	runAll("refresh")
-end
+local function runAll(func, ...) for _, m in pairs(__modules) do if m[func] then m[func](...) end end end
+__bpm = { onError = function() end }
+__bpm.init = function() runAll("init") runAll("postInit") end
+__bpm.shutdown = function() runAll("shutdown") end
+__bpm.refresh = function() runAll("refresh") end
+for _, m in pairs(__modules) do m.onError = function(...) __bpm.onError(...) end end
 ]]
 
 -------------------------------------------------------- RUNTIME --------------------------------------------------------
@@ -536,8 +504,8 @@ end
 fragments["modhead"] = function(args, mod)
 
 	return [[
-local __bpm = { guid = ]] .. args[1] .. [[ }
-local meta = {} meta.__index = meta]]
+local __bpm = { guid = ]] .. args[1] .. [[, meta = {} }
+local meta = __bpm.meta meta.__index = meta]]
 
 end
 
@@ -545,10 +513,12 @@ fragments["utils"] = function(args)
 
 	return [[
 local __hex = "0123456789ABCDEF"
+local function __genericIsValid(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end
 local function __guidString(str) return str:gsub(".", function(x) local b = string.byte(x) return __hex[1+b/16] .. __hex[1+b%16] end) end
 local function __hexBytes(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
 local function __svcheck() if not SERVER then error("Node '%node' can't run on client") end end
-local function __clcheck() if not CLIENT then error("Node '%node' can't run on server") end end]]
+local function __clcheck() if not CLIENT then error("Node '%node' can't run on server") end end
+G_BPInstances = G_BPInstances or {}]]
 
 end
 

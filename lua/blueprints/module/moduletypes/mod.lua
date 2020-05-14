@@ -56,10 +56,9 @@ function MODULE:Compile(compiler, pass)
 	if pass == CP_MODULEMETA then
 
 		compiler.emit("function meta:Initialize()")
-		compiler.emit("\tlocal instance = self")
-		compiler.emit("\tinstance.delays = {}")
-		compiler.emit("\tinstance.__bpm = __bpm")
-		compiler.emit("\tinstance.guid = __bpm.guid")
+		compiler.emit("\tself.delays = {}")
+		compiler.emit("\tself.__bpm = __bpm")
+		compiler.emit("\tself.guid = __bpm.guid")
 		compiler.emitContext( CTX_Vars .. "global", 1 )
 		compiler.emit("\tself.bInitialized = true")
 		compiler.emit("\tself:netInit()")
@@ -84,34 +83,27 @@ end]])
 
 		compiler.emit([[
 __bpm.init = function()
-	G_BPInstances = G_BPInstances or {}
 	if G_BPInstances[__bpm.guid] ~= nil then return end
-	local instance = setmetatable({}, __bpm.meta)
-	__bpm.ref = instance
-	instance:Initialize()
-	G_BPInstances[__bpm.guid] = instance
-	print("INIT MOD: " .. __guidString(__bpm.guid))
-	hook.Add( "Think", __bpm.guid, function(...) local b,e = pcall(instance.update, instance) b = b or __bpm.error(e) end )
+	__bpm.ref = setmetatable({}, __bpm.meta)
+	__bpm.ref:Initialize()
+	G_BPInstances[__bpm.guid] = __bpm.ref
+	hook.Add( "Think", __bpm.guid, function(...) local b,e = pcall(__bpm.ref.update, __bpm.ref) b = b or __bpm.error(e) end )
 end
-__bpm.postInit = function()
-	if __bpm.ref then __bpm.ref:PostInit() end
-end
+__bpm.postInit = function() if __bpm.ref then __bpm.ref:PostInit() end end
 __bpm.refresh = function()
-	local instance = G_BPInstances[__bpm.guid]
-	if not instance then return end
-	setmetatable(instance, __bpm.meta)
-	__bpm.ref = instance
-	instance.__bpm = __bpm
-	instance:hookEvents(true)
+	__bpm.ref = G_BPInstances[__bpm.guid]
+	if not __bpm.ref then return end
+	setmetatable(__bpm.ref, __bpm.meta)
+	__bpm.ref.__bpm = __bpm
+	__bpm.ref:hookEvents(true)
 end
 __bpm.shutdown = function()
-	local instance = G_BPInstances[__bpm.guid]
-	if not instance then return end
+	__bpm.ref = G_BPInstances[__bpm.guid]
+	if not __bpm.ref then return end
 	hook.Remove( "Think", __bpm.guid )
-	instance:Shutdown()
+	__bpm.ref:Shutdown()
 	__bpm.ref = nil
 	G_BPInstances[__bpm.guid] = nil
-	print("STOP MOD: " .. __guidString(__bpm.guid))
 end]])
 
 	end

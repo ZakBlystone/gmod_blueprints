@@ -157,10 +157,9 @@ for k,v in pairs(meta) do
 end]])
 
 		compiler.emit("function meta:Initialize()")
-		compiler.emit("\tlocal instance = self")
-		compiler.emit("\tinstance.delays = {}")
-		compiler.emit("\tinstance.__bpm = __bpm")
-		compiler.emit("\tinstance.guid = __hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
+		compiler.emit("\tself.delays = {}")
+		compiler.emit("\tself.__bpm = __bpm")
+		compiler.emit("\tself.guid = __hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
 		compiler.emitContext( CTX_Vars .. "global", 1 )
 		compiler.emit("\tself.bInitialized = true")
 		compiler.emit("\tself:netInit()")

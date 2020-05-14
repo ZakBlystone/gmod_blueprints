@@ -445,12 +445,12 @@ function MODULE:CompileVariable( compiler, id, var )
 	local varName = var:GetName()
 	if compiler.compactVars then varName = id end
 	if type(def) == "string" then
-		compiler.emit("instance.__" .. varName .. " = " .. tostring(def))
+		compiler.emit("self.__" .. varName .. " = " .. tostring(def))
 	else
 		print("Emit variable as non-string")
 		local pt = bpvaluetype.FromPinType( vtype, function() return def end, function(v) def = v end )
 		if def and pt then
-			compiler.emit("instance.__" .. varName .. " = " .. pt:ToString())
+			compiler.emit("self.__" .. varName .. " = " .. pt:ToString())
 		end
 	end
 

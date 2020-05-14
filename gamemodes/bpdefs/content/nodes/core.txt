@@ -280,7 +280,7 @@ LIB CORE
 	{
 		IN Thing, PN_Any
 		OUT Valid, PN_Bool
-		CODE #1 = __bpm.genericIsValid($1)
+		CODE #1 = __genericIsValid($1)
 		INFORM 1
 	}
 	FUNC SetRef, SHARED
