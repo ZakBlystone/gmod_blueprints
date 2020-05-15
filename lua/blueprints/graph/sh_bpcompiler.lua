@@ -513,7 +513,6 @@ function meta:CompileVars(code, inVars, outVars, node)
 	end
 
 	-- replace macros
-	str = string.Replace( str, "@graph", "graph_" .. graphID .. "_entry" )
 	str = string.Replace( str, "!node", tostring(nodeID))
 	str = string.Replace( str, "!graph", tostring(graphID))
 	str = string.Replace( str, "!module", tostring(self.guidString))

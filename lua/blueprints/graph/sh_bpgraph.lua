@@ -781,8 +781,7 @@ function meta:CompileEntrypoint( compiler )
 	compiler.begin(CTX_Graph .. graphID)
 
 	-- graph function header and callstack
-	if requireCallStack then compiler.emit("\nlocal cs = {}") else compiler.emit("") end
-	compiler.emit("local function graph_" .. graphID .. "_entry( ip )\n")
+	compiler.emit("local graph_" .. graphID .. "_entry = __graph( function( ip )\n")
 
 	-- debugging info
 	if compiler.debug then compiler.emit( "\t__dbggraph = " .. graphID) end
@@ -807,8 +806,7 @@ function meta:CompileEntrypoint( compiler )
 		compiler.emit("\n\t::__terminus::\n")
 	end
 
-	compiler.emit("end")
-	compiler.emit("setfenv(graph_" .. graphID .. "_entry, setmetatable({}, {__index = _G}))")
+	compiler.emit("end)")
 	compiler.finish()
 
 	--print("COMPILED GRAPH: " .. graphID)

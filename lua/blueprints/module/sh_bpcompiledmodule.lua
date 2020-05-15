@@ -518,6 +518,7 @@ local function __guidString(str) return str:gsub(".", function(x) local b = stri
 local function __hexBytes(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
 local function __svcheck() if not SERVER then error("Node '%node' can't run on client") end end
 local function __clcheck() if not CLIENT then error("Node '%node' can't run on server") end end
+local function __graph(f) return setfenv(f, setmetatable({cs={},recurse=f}, {__index = _G})) end
 G_BPInstances = G_BPInstances or {}]]
 
 end

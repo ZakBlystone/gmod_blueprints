@@ -62,7 +62,7 @@ LIB CORE
 		LATENT
 		CODE
 		{
-			sound.PlayURL( $2, $3, function(a,b,c) #3 = a #4 = b #5 = c @graph(#_2) end )
+			sound.PlayURL( $2, $3, function(a,b,c) #3 = a #4 = b #5 = c recurse(#_2) end )
 			#1
 		}
 	}
@@ -175,7 +175,7 @@ LIB CORE
 		LATENT
 		CODE 
 		{
-			__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)
+			__bpm.delay("delay_!graph_!node", $2, function() recurse(#_1) end)
 			goto popcall
 		}
 	}
@@ -191,7 +191,7 @@ LIB CORE
 		CODE
 		{
 			#2 = $3
-			__bpm.delay("delay_!graph_!node", $2, function() @graph(#_1) end)
+			__bpm.delay("delay_!graph_!node", $2, function() recurse(#_1) end)
 			goto popcall
 		}
 	}
