@@ -36,7 +36,6 @@ function meta:Init( vgraph )
 	self.graph:Bind("connectionAdded", self, self.ConnectionAdded)
 	self.graph:Bind("connectionRemoved", self, self.ConnectionRemoved)
 	self.graph:Bind("cleared", self, self.GraphCleared)
-	self.graph:Bind("postModifyNode", self, self.PostModifyNode)
 
 	return self
 
@@ -196,7 +195,6 @@ function meta:InvalidateAllNodes( pins )
 end
 
 function meta:GraphCleared() self.nodeSet:CreateAllNodes() end
-function meta:PostModifyNode( node ) self.nodeSet:PostModifyNode(node) end
 
 function meta:IsLocked() return self.vgraph:GetIsLocked() end
 

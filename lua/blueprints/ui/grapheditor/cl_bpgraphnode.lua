@@ -39,6 +39,7 @@ local PIN_SPACING = 8
 local PIN_EDGE_SPACING = 8
 local COMMENT_FONT = "NodePinFont"
 local COMMENT_MAXWIDTH = 300
+local NO_HIDDEN_FILTER = function(pin) return not pin:ShouldBeHidden() end
 
 function meta:Init(node, graph, editor)
 
@@ -51,6 +52,11 @@ function meta:Init(node, graph, editor)
 	self.commentWrap = bptextwrap.New():SetFont(COMMENT_FONT):SetMaxWidth(COMMENT_MAXWIDTH)
 	self:CreatePins()
 	self:LayoutPins()
+	self.node:BindRaw("postModify", self, function()
+		self:CreatePins()
+		self:LayoutPins()
+		self:Invalidate(true)
+	end)
 	return self
 
 end
@@ -64,7 +70,7 @@ function meta:Invalidate(invalidatePins)
 	self.pinsNeedLayout = true
 
 	if invalidatePins then
-		for _, v in ipairs(self.pins) do
+		for _, v in pairs(self.pins) do
 			v:Invalidate()
 		end
 	end
@@ -75,7 +81,7 @@ function meta:ShouldBeCompact()
 
 	if self.compact ~= nil then return self.compact end
 
-	for _, v in ipairs(self.pins) do
+	for _, v in pairs(self.pins) do
 		if v.pin:IsIn() and v.pin:GetLiteralType() == "string" and #v.pin:GetConnections() == 0 then
 			self.compact = false
 			return self.compact
@@ -109,8 +115,7 @@ function meta:GetSize()
 	local footHeight = NODE_FOOTER_HEIGHT
 	local pinSideSpacing = NODE_PINSIDE_SPACING
 
-	for pinID, pin, pos in node:SidePins(PD_In) do
-		if pin:ShouldBeHidden() then continue end
+	for pinID, pin, pos in node:SidePins(PD_In, NO_HIDDEN_FILTER) do
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
 		maxPinWidthIn = math.max(maxPinWidthIn, w)
@@ -118,8 +123,7 @@ function meta:GetSize()
 	end
 	if totalPinHeightIn ~= 0 then totalPinHeightIn = totalPinHeightIn - PIN_SPACING end
 
-	for pinID, pin, pos in node:SidePins(PD_Out) do
-		if pin:ShouldBeHidden() then continue end
+	for pinID, pin, pos in node:SidePins(PD_Out, NO_HIDDEN_FILTER) do
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
 		maxPinWidthOut = math.max(maxPinWidthOut, w)
@@ -179,13 +183,11 @@ function meta:CreatePins()
 	self.pins = {}
 
 	local node = self.node
-	for pinID, pin, pos in node:SidePins(PD_In) do
-		if pin:ShouldBeHidden() then continue end
+	for pinID, pin, pos in node:SidePins(PD_In, NO_HIDDEN_FILTER) do
 		self.pins[pinID] = bpuigraphpin.New(self, pinID, pos)
 	end
 
-	for pinID, pin, pos in node:SidePins(PD_Out) do
-		if pin:ShouldBeHidden() then continue end
+	for pinID, pin, pos in node:SidePins(PD_Out, NO_HIDDEN_FILTER) do
 		self.pins[pinID] = bpuigraphpin.New(self, pinID, pos)
 	end
 
@@ -202,8 +204,7 @@ function meta:LayoutPins()
 		if self:ShouldBeCompact() then y = NODE_COMPACT_HEADER_HEIGHT + NODE_COMPACT_HEADER_SPACING end
 
 		local node = self.node
-		for pinID, pin, pos in node:SidePins(s) do
-			if pin:ShouldBeHidden() then continue end
+		for pinID, pin, pos in node:SidePins(s, NO_HIDDEN_FILTER) do
 			local vpin = self.pins[pinID]
 			local w,h = vpin:GetSize()
 			vpin:SetPos(s == PD_In and PIN_EDGE_SPACING or (nw - w - PIN_EDGE_SPACING), y)
@@ -217,7 +218,7 @@ function meta:LayoutPins()
 	self.pinsNeedLayout = false
 
 
-	--[[for _, vpin in ipairs(self.pins) do
+	--[[for _, vpin in pairs(self.pins) do
 		local x,y = self:CalculatePinLocation(vpin)
 		vpin:SetPos(x,y)
 	end]]
@@ -295,7 +296,7 @@ end
 function meta:DrawPins(xOffset, yOffset, alpha, textPass)
 
 	local x,y = self:GetPos()
-	for k,v in ipairs(self.pins) do
+	for k,v in pairs(self.pins) do
 		if textPass then
 			v:DrawTitle(x+xOffset, y+yOffset, alpha)
 		else

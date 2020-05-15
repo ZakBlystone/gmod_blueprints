@@ -54,14 +54,14 @@ function MODULE:Setup()
 		list:BindRaw("preModify", self, function(action, id, e)
 			if action ~= bplist.MODIFY_RENAME then return end
 			for _, v in ipairs(bpcommon.Transform(t, {}, cv, e)) do
-				self:PreModifyNodeType( v )
+				v:PreModify()
 			end
 		end)
 
 		list:BindRaw("postModify", self, function(action, id, e)
 			if action ~= bplist.MODIFY_RENAME then return end
 			for _, v in ipairs(bpcommon.Transform(t, {}, cv, e)) do
-				self:PostModifyNodeType( v )
+				v:PostModify()
 			end
 		end)
 
@@ -92,26 +92,6 @@ function MODULE:Setup()
 	end
 
 	--print("SETUP GRAPH MODULE")
-
-end
-
-function MODULE:PreModifyNodeType( nodeType )
-
-	for _, graph in self:Graphs() do
-		graph:PreModifyNodeType( nodeType )
-	end
-
-	BaseClass.PreModifyNodeType( self, nodeType )
-
-end
-
-function MODULE:PostModifyNodeType( nodeType )
-
-	for _, graph in self:Graphs() do
-		graph:PostModifyNodeType( nodeType )
-	end
-
-	BaseClass.PostModifyNodeType( self, nodeType )
 
 end
 

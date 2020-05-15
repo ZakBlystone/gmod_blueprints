@@ -76,10 +76,9 @@ function NODE:SetShader( shader )
 	local graph = self:FindOuter( bpgraph_meta )
 	if graph == nil then return end
 
-	graph:PreModifyNode( self )
+	self:PreModify()
 	self.data.shader = shader
-	graph:PostModifyNode( self )
-	self:SetLiteralDefaults( true )
+	self:PostModify()
 
 end
 

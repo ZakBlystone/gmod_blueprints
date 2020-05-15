@@ -121,78 +121,21 @@ end
 
 function meta:PreModify()
 
-	self:GetModule():PreModifyNodeType( self.callNodeType )
-	self:PreModifyNodeType( self.callEntryNodeType )
-	self:PreModifyNodeType( self.callExitNodeType )
+	self.callEntryNodeType:PreModify()
+	self.callExitNodeType:PreModify()
+	self.callNodeType:PreModify()
 
 end
 
 function meta:PostModify()
 
-	self:GetModule():PostModifyNodeType( self.callNodeType )
-	self:PostModifyNodeType( self.callEntryNodeType )
-	self:PostModifyNodeType( self.callExitNodeType )
+	self.callEntryNodeType:PostModify()
+	self.callExitNodeType:PostModify()
+	self.callNodeType:PostModify()
 
 end
 
 function meta:CanRename() return not self:HasFlag(FL_LOCK_NAME) end
-
-function meta:PreModifyNode( node, action, subaction )
-
-	self:Broadcast("preModifyNode", node, action)
-
-end
-
-function meta:PostModifyNode( node )
-
-	print("NODE MODIFICATION: " .. node:ToString() )
-
-	node:UpdatePins()
-	self:Broadcast("postModifyNode", node)
-
-end
-
-function meta:PreModifyNodeType( nodeType)
-
-	if type(nodeType) == "table" then
-
-		for id, node in self:Nodes() do
-			if node:GetType() ~= nodeType then continue end
-			self:PreModifyNode( node, action, subaction )
-		end
-
-	else
-
-		for id, node in self:Nodes() do
-			if node:GetTypeName() ~= nodeType then continue end
-			self:PreModifyNode( node, action, subaction )
-		end
-
-	end
-
-end
-
-function meta:PostModifyNodeType( nodeType )
-
-	self:CacheNodeTypes()
-
-	if type(nodeType) == "table" then
-
-		for id, node in self:Nodes() do
-			if node:GetType() ~= nodeType then continue end
-			self:PostModifyNode( node, action, subaction )
-		end
-
-	else
-
-		for id, node in self:Nodes() do
-			if node:GetTypeName() ~= nodeType then continue end
-			self:PostModifyNode( node, action, subaction )
-		end
-
-	end
-
-end
 
 function meta:SetHookType( nodeType )
 
@@ -657,7 +600,7 @@ function meta:CopyInto(other)
 		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )
 		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs )
 
-		for _, node in other:Nodes() do node:PostInit() end
+		for _, node in other:Nodes() do node:PostInit() node.nodeType():UnbindAll(node) end
 
 		-- Restore connections
 		local ids = bpindexer.New()

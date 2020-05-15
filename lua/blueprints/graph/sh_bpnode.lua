@@ -21,6 +21,11 @@ function meta:Init(nodeType, x, y)
 
 	bpcommon.MakeObservable(self)
 
+	if self.nodeType() then
+		self.nodeType():Bind("preModify", self, self.PreModify)
+		self.nodeType():Bind("postModify", self, self.PostModify)
+	end
+
 	return self
 
 end
@@ -41,6 +46,11 @@ function meta:PostInit()
 		for _, pin in ipairs(self.pinCache or {}) do
 			--print(" PIN WAS: " .. pin:ToStringEx(true, true))
 		end
+	end
+
+	if self.nodeType() then
+		self.nodeType():Bind("preModify", self, self.PreModify)
+		self.nodeType():Bind("postModify", self, self.PostModify)
 	end
 
 	local nodeClass = ntype:GetNodeClass()
@@ -152,8 +162,12 @@ function meta:UpdatePins()
 	end
 
 	local current = self.pinCache
-	local function findExisting( p )
+	local function findExisting( k, p )
 		if not current then return end
+		if current[k] and current[k]:GetType() == p:GetType() then
+			current[k]:SetName(p:GetName())
+			return current[k] 
+		end
 		for _,v in ipairs( current ) do
 			if v:Equals(p) then return v end
 		end
@@ -165,7 +179,7 @@ function meta:UpdatePins()
 	self.suppressPinEvents = true
 	self.pinCache = {}
 	for k, v in ipairs(newPins) do
-		local p = findExisting(v)
+		local p = findExisting(k, v)
 		if not p then 
 			--print(" CREATE NEW: " .. tostring(v) .. " ... init literal" )
 			v:WithOuter( self )
@@ -249,17 +263,14 @@ end
 
 function meta:PreModify()
 
-	local outerGraph = self:GetGraph()
-	if not outerGraph then return end
-	outerGraph:PreModifyNode( self )
+	self:Broadcast("preModify")
 
 end
 
 function meta:PostModify()
 
-	local outerGraph = self:GetGraph()
-	if not outerGraph then return end
-	outerGraph:PostModifyNode( self )
+	self:UpdatePins()
+	self:Broadcast("postModify")
 
 end
 

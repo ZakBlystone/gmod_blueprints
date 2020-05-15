@@ -44,19 +44,15 @@ end
 
 function meta:PreModify()
 
-	local mod = self:GetModule()
-	if not mod then return end
-	mod:PreModifyNodeType( self.makerNodeType )
-	mod:PreModifyNodeType( self.breakerNodeType )
+	self.makerNodeType:PreModify()
+	self.breakerNodeType:PreModify()
 
 end
 
 function meta:PostModify()
 
-	local mod = self:GetModule()
-	if not mod then return end
-	mod:PostModifyNodeType( self.makerNodeType )
-	mod:PostModifyNodeType( self.breakerNodeType )
+	self.makerNodeType:PostModify()
+	self.breakerNodeType:PostModify()
 
 end
 

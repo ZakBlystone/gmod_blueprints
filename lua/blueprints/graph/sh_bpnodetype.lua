@@ -35,6 +35,8 @@ function meta:Init()
 	self.pins = {}
 	self.warning = nil
 	self.modFilter = nil
+
+	bpcommon.MakeObservable(self)
 	return self
 
 end
@@ -229,6 +231,8 @@ function meta:GetDisplayName()
 end
 
 function meta:GetCode() return self.code end
+function meta:PreModify() self:Broadcast("preModify") end
+function meta:PostModify() self:Broadcast("postModify") end
 
 function meta:Serialize(stream)
 

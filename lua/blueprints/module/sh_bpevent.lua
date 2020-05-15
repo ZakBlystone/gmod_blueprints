@@ -75,17 +75,15 @@ end
 
 function meta:PreModify()
 
-	local mod = self:GetModule()
-	mod:PreModifyNodeType( self.eventNodeType )
-	mod:PreModifyNodeType( self.callNodeType )
+	self.eventNodeType:PreModify()
+	self.callNodeType:PreModify()
 
 end
 
 function meta:PostModify()
 
-	local mod = self:GetModule()
-	mod:PostModifyNodeType( self.eventNodeType )
-	mod:PostModifyNodeType( self.callNodeType )
+	self.eventNodeType:PostModify()
+	self.callNodeType:PostModify()
 
 end
 

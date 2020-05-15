@@ -74,16 +74,6 @@ function meta:CanAddNode(nodeType)
 
 end
 
-function meta:PreModifyNodeType( nodeType )
-
-end
-
-function meta:PostModifyNodeType( nodeType )
-
-	self:Broadcast("nodetypeModified", nodeType)
-
-end
-
 function meta:NodeTypeInUse( nodeType )
 
 	return false

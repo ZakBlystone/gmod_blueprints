@@ -110,12 +110,12 @@ function meta:SetType( type )
 	print("SET TYPE TO: " .. tostring(type))
 
 	local mod = self:GetModule()
-	mod:PreModifyNodeType( self.getterNodeType )
-	mod:PreModifyNodeType( self.setterNodeType )
+	self.getterNodeType:PreModify()
+	self.setterNodeType:PreModify()
 	self.pintype = type:Copy(self)
 	self.default = self.pintype:GetDefault()
-	mod:PostModifyNodeType( self.getterNodeType )
-	mod:PostModifyNodeType( self.setterNodeType )
+	self.getterNodeType:PostModify()
+	self.setterNodeType:PostModify()
 
 	print("AS: " .. tostring(self.pintype))
 

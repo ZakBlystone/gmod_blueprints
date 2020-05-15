@@ -45,13 +45,4 @@ function meta:NodeRemoved( node )
 
 end
 
-function meta:PostModifyNode( node )
-
-	if self.vnodes[node] ~= nil then
-		self.vnodes[node]:CreatePins()
-		self.vnodes[node]:Invalidate(true)
-	end
-
-end
-
 function New(...) return bpcommon.MakeInstance(meta, ...) end
