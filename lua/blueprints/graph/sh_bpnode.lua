@@ -161,12 +161,13 @@ function meta:UpdatePins()
 		newPins = self.pinCache
 	end
 
+	local keep = {}
 	local current = self.pinCache
 	local function findExisting( k, p )
 		if not current then return end
 		if current[k] and current[k]:GetType() == p:GetType() then
 			current[k]:SetName(p:GetName())
-			return current[k] 
+			return current[k]
 		end
 		for _,v in ipairs( current ) do
 			if v:Equals(p) then return v end
@@ -188,11 +189,18 @@ function meta:UpdatePins()
 			v:SetLiteral( v:GetDefault() )
 			self.pinCache[k] = v
 		else
+			keep[p] = true
 			p:WithOuter( self )
 			p.id = k
 			p:InitPinClass()
 			self.pinCache[k] = p
 			--print(" LOAD FROM CACHE: " .. p:GetName() )
+		end
+	end
+
+	if current then
+		for _, v in ipairs(current) do
+			if not keep[v] then v:BreakAllLinks() end
 		end
 	end
 

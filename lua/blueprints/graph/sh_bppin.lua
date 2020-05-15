@@ -24,6 +24,12 @@ end
 
 function meta:PostLoad()
 
+	self:RemoveInvalidConnections()
+
+end
+
+function meta:RemoveInvalidConnections()
+
 	for i=#self.connections, 1, -1 do
 		if not self.connections[i]:IsValid() then
 			print("Remove invalid pin connection[" .. tostring(self) .. "]: " .. i)
