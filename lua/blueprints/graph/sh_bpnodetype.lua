@@ -41,6 +41,12 @@ function meta:Init()
 
 end
 
+function meta:Destroy()
+
+	self:Broadcast("destroyed")
+
+end
+
 function meta:AddPin(pin) self.pins[#self.pins+1] = pin end
 function meta:AddRequiredMeta(meta) self.requiredMeta[#self.requiredMeta+1] = meta end
 function meta:AddPinRedirect(fromName, toName) self.pinRedirects[fromName] = toName end

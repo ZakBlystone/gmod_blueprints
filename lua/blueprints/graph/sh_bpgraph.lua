@@ -79,6 +79,14 @@ function meta:Init(type)
 
 end
 
+function meta:Destroy()
+
+	self.callNodeType:Destroy()
+	self.callEntryNodeType:Destroy()
+	self.callExitNodeType:Destroy()
+
+end
+
 function meta:ToString()
 
 	return self:GetName() or "unnamed"

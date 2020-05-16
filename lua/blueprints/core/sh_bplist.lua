@@ -19,6 +19,14 @@ function meta:Init( meta )
 
 end
 
+function meta:Destroy()
+
+	for _, item in self:Items() do
+		if item.Destroy then item:Destroy() end
+	end
+
+end
+
 function meta:GetItemMeta()
 
 	return self.itemMeta

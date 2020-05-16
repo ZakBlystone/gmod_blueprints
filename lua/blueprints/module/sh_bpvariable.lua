@@ -74,6 +74,13 @@ function meta:Init(type, repmode)
 
 end
 
+function meta:Destroy()
+
+	self.getterNodeType:Destroy()
+	self.setterNodeType:Destroy()
+
+end
+
 function meta:GetModule()
 
 	return self:FindOuter( bpmodule_meta )

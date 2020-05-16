@@ -33,7 +33,10 @@ function EDITOR:PostInit()
 
 	local mod = self:GetModule()
 	mod:BindRaw("addedAsset", self, function() self:EnumerateAssets() end)
-	mod:BindRaw("removedAsset", self, function() self:EnumerateAssets() end)
+	mod:BindRaw("removedAsset", self, function(asset) 
+		self:EnumerateAssets()
+		self:CloseModule(asset:GetAsset())
+	end)
 
 	self.openModules = {}
 	self.tabs = vgui.Create("BPEditorPropertySheet" )

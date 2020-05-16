@@ -24,6 +24,7 @@ function meta:Init(nodeType, x, y)
 	if self.nodeType() then
 		self.nodeType():Bind("preModify", self, self.PreModify)
 		self.nodeType():Bind("postModify", self, self.PostModify)
+		self.nodeType():Bind("destroyed", self, self.OnNodeTypeDestroyed)
 	end
 
 	return self
@@ -51,6 +52,7 @@ function meta:PostInit()
 	if self.nodeType() then
 		self.nodeType():Bind("preModify", self, self.PreModify)
 		self.nodeType():Bind("postModify", self, self.PostModify)
+		self.nodeType():Bind("destroyed", self, self.OnNodeTypeDestroyed)
 	end
 
 	local nodeClass = ntype:GetNodeClass()
@@ -70,6 +72,12 @@ function meta:PostLoad()
 
 	self.initialized = false
 	self:PostInit()
+
+end
+
+function meta:OnNodeTypeDestroyed()
+
+	self.nodeType:Set(DummyNodeType)
 
 end
 
@@ -154,7 +162,7 @@ function meta:UpdatePins()
 	local newPins = nil
 
 	-- This will do for now
-	if self.nodeType() ~= DummyNodeType then
+	if self:GetType() ~= DummyNodeType then
 		newPins = {}
 		self:GeneratePins(newPins)
 	else
@@ -396,7 +404,7 @@ end
 
 function meta:GetType()
 
-	return self.nodeType()
+	return self.nodeType() or DummyNodeType
 
 end
 
@@ -409,7 +417,13 @@ end
 function meta:SetComment( comment ) self.data.comment = comment end
 function meta:GetComment() return self.data.comment or "" end
 
-function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
+function meta:GetColor()
+	if self:GetType() == DummyNodeType then
+		return Color(200 + math.sin(CurTime()*10)*50,50,50)
+	end
+	return NodeTypeColors[ self:GetCodeType() ]
+end
+
 function meta:GetTypeName() return self.nodeType:IsValid() and self.nodeType():GetFullName() or "unknown" end
 function meta:GetPos() return self.x, self.y end
 function meta:RemapPin(name) return self:GetType():RemapPin(name) end

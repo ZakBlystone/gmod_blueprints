@@ -14,6 +14,10 @@ end
 function assetMeta:SetName(newName) self.name = newName end
 function assetMeta:GetName() return self.name end
 function assetMeta:GetAsset() return self.asset end
+function assetMeta:Destroy()
+	local obj = self:GetAsset()
+	if obj.Destroy then obj:Destroy() end
+end
 function assetMeta:Serialize( stream )
 
 	self.name = stream:String( self.name )
@@ -83,6 +87,7 @@ function MODULE:RemoveAsset(asset)
 		if v == asset or v:GetAsset() == asset then
 			table.remove(self.assets, k)
 			self:Broadcast("removedAsset", v)
+			v:Destroy()
 			return true
 		end
 	end

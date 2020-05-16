@@ -29,6 +29,12 @@ function meta:Init(type)
 
 end
 
+function meta:Destroy()
+
+	self:Broadcast("destroyed")
+
+end
+
 function meta:GenerateNewUID()
 
 	self.uniqueID = bpcommon.GUID()

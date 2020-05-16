@@ -31,6 +31,7 @@ function MODULE:Setup()
 		self:RemoveNodeTypes({ graph:GetCallNodeType() })
 		self:Broadcast("graphRemoved", graph)
 		self:RecacheNodeTypes()
+		graph:Destroy()
 	end)
 	self.graphs:BindRaw("preModify", self, function(action, id, graph)
 		if action == bplist.MODIFY_RENAME then graph:PreModify() end
@@ -92,6 +93,18 @@ function MODULE:Setup()
 	end
 
 	--print("SETUP GRAPH MODULE")
+
+end
+
+function MODULE:Destroy()
+
+	BaseClass.Destroy(self)
+
+	self.graphs:Destroy()
+
+	if self.structs then self.structs:Destroy() end
+	if self.events then self.events:Destroy() end
+	if self.variables then self.variables:Destroy() end
 
 end
 

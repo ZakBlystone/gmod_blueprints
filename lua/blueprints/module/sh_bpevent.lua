@@ -53,6 +53,13 @@ function meta:Init()
 
 end
 
+function meta:Destroy()
+
+	self.eventNodeType:Destroy()
+	self.callNodeType:Destroy()
+
+end
+
 function meta:GetEventNodes()
 
 	local nodes = {}
