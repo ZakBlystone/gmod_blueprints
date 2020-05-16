@@ -14,7 +14,7 @@ end
 function PIN:IsStaticReference()
 
 	local mod = self:GetType():GetSubType()
-	return mod and mod:IsStatic()
+	return mod and mod.IsStatic and mod:IsStatic()
 
 end
 

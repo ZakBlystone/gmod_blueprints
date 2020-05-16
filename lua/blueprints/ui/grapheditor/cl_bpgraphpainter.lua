@@ -41,7 +41,7 @@ function meta:DrawConnection(aPin, bPin, xOffset, yOffset, alpha)
 	local b = nodes[bPin:GetNode()]
 	local bpin = bPin.id
 
-	if a == nil or b == nil then print("Invalid connection") return end
+	if a == nil or b == nil then return end --print("Invalid connection") 
 
 	local ax, ay = a:GetPinSpotLocation(apin)
 	local bx, by = b:GetPinSpotLocation(bpin)
