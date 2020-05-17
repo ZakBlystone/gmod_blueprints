@@ -5,6 +5,7 @@ module("editor_dermalayout", package.seeall, bpcommon.rescope(bpschema))
 local EDITOR = {}
 
 EDITOR.HasSideBar = true
+EDITOR.HasDetails = true
 
 function EDITOR:Setup()
 
@@ -33,8 +34,32 @@ function EDITOR:CreatePanel()
 	self.preview:SetPaintedManually(true)
 	self.preview:Hide()
 
-	local btn = vgui.Create("DButton", self.preview)
+	--[[local btn = vgui.Create("DButton", self.preview)
 	btn:Dock(FILL)
+
+	self.values = bpvaluetype.FromValue({}, function() return {} end)
+	self.values:AddCosmeticChild("Text",
+		bpvaluetype.New("string", 
+			function() return btn:GetText() end,
+			function(x) btn:SetText(x) end )
+	)
+
+	self.values:AddCosmeticChild("Is Enabled",
+		bpvaluetype.New("boolean", 
+			function() return btn:IsEnabled( NTF_Deprecated ) end,
+			function(x) btn:SetEnabled( x ) end )
+	)
+
+	self.values:AddCosmeticChild("Text Color",
+		bpvaluetype.New("color", 
+			function() return btn:GetTextColor() end,
+			function(x) btn:SetTextColor(x) end )
+	)
+
+	self.sideBar = vgui.Create("BPCategoryList")
+	self.detailGUI = self.values:CreateVGUI({ live = true, })
+	self.sideBar:Add( "Details" ):SetContents( self.detailGUI )
+	self:SetDetails( self.sideBar )]]
 
 end
 
@@ -51,11 +76,7 @@ function EDITOR:PostInit()
 	self:CreatePanel()
 
 	self.vpreview = vgui.Create("BPDPreview")
-	self.vpreview.Draw2D = function(pnl)
-		if IsValid(self.preview) then
-			self.preview:PaintAt(0,0)
-		end
-	end
+	self.vpreview:SetPanel( self.preview )
 	self:SetContent( self.vpreview )
 
 end
@@ -91,6 +112,7 @@ function EDITOR:PopulateSideBar()
 	local win = root:AddNode("Window", "icon16/application_form.png")
 	local btn = win:AddNode("Button", "icon16/application.png")
 	btn:ExpandTo(true)
+	btn:Droppable("button")
 
 end
 
