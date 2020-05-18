@@ -4,6 +4,8 @@ module("bpdermanode", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpcom
 
 local meta = bpcommon.MetaTable("bpdermanode")
 
+print("DEFINED BPDERMANODE METATABLE: " .. tostring(meta))
+
 meta.DermaBase = ""
 
 dermaClasses = bpclassloader.Get("DermaNode", "blueprints/derma/nodetypes/", "BPDermaClassRefresh", meta)
@@ -169,12 +171,18 @@ function meta:Compile(compiler, pass)
 
 	if pass == CP_MAINPASS then
 
+		print("COMPILE NODE: ", tostring(self))
+
 		for _, child in ipairs(self:GetChildren()) do
 			child:Compile(compiler, pass)
 		end
 
 		compiler.emit("local PANEL = {Base = " .. self.DermaBase .. "} __panels[" .. compiler:GetID(self) .. "] = PANEL")
 		self:CompileMember(compiler, "Init")
+
+	else
+
+		print("COMPILE NODE PASS: ", tostring(self), pass)
 
 	end
 

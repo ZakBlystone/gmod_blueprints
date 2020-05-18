@@ -35,10 +35,6 @@ bpinclude("core/sh_bpvalue.lua")
 bpinclude("localization/en_us.lua")
 bpinclude("localization/fr_fr.lua")
 
--- DERMA
-bpinclude("derma/sh_bplayout.lua")
-bpinclude("derma/sh_bpdermanode.lua")
-
 -- GRAPH
 bpinclude("graph/sh_bpschema.lua")
 bpinclude("graph/sh_bppintype.lua")
@@ -49,6 +45,10 @@ bpinclude("graph/sh_bpnodetype.lua")
 bpinclude("graph/sh_bpnodetypegroup.lua")
 bpinclude("graph/sh_bpnode.lua")
 bpinclude("graph/sh_bpgraph.lua")
+
+-- DERMA
+bpinclude("derma/sh_bplayout.lua")
+bpinclude("derma/sh_bpdermanode.lua")
 
 -- MODULE
 bpinclude("module/sh_bpvariable.lua")

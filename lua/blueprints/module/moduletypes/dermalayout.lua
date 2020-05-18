@@ -23,6 +23,8 @@ end
 
 function MODULE:CreateDefaults()
 
+	print("CREATE DEFAULTS")
+
 	self.layoutRoot = bpdermanode.New("Window")
 	local button = bpdermanode.New("Button", self.layoutRoot)
 
@@ -59,7 +61,10 @@ function MODULE:Compile(compiler, pass)
 		compiler.emit("local __panels = {}")
 		compiler.emit("local __makePanel(id, ...) return vgui.CreateFromTable(__panels[id], ...) end")
 		if self:Root() then
+			print("Compile root: ", tostring(self:Root()))
 			self:Root():Compile(compiler, pass)
+		else
+			print("No root node")
 		end
 		compiler.finish()
 

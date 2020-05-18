@@ -4,7 +4,7 @@ module("dnode_window", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local NODE = {}
 
-NODE.DermaBase = "DWindow"
+NODE.DermaBase = "DFrame"
 
 function NODE:Setup() 
 
