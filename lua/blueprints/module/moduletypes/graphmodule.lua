@@ -349,6 +349,7 @@ end
 function MODULE:CanHaveVariables() return true end
 function MODULE:CanHaveStructs() return true end
 function MODULE:CanHaveEvents() return true end
+function MODULE:RequiresNetCode() return true end
 
 function MODULE:CanCast( outPinType, inPinType )
 
@@ -522,7 +523,10 @@ function MODULE:Compile( compiler, pass )
 
 		if not withinProject then
 			compiler.emit("_FR_UTILS()") -- utilities
-			compiler.emitContext( CTX_Network )         -- network boilerplate
+
+			if self:RequiresNetCode() then
+				compiler.emitContext( CTX_Network )         -- network boilerplate
+			end
 		end
 
 		compiler.emit("_FR_MODHEAD(" .. bpcommon.EscapedGUID(self:GetUID()) .. ")")              -- header for module
@@ -539,10 +543,10 @@ function MODULE:Compile( compiler, pass )
 		end
 
 		-- network meta functions
-		compiler.emitContext( CTX_NetworkMeta )
+		if self:RequiresNetCode() then compiler.emitContext( CTX_NetworkMeta ) end
 
 		-- update function, runs delays and resets the ilp recursion value for hooks
-		compiler.emit("_FR_UPDATE(" .. bILP .. ")")
+		compiler.emit("_FR_UPDATE(" .. bILP .. ", " .. (self:RequiresNetCode() and "1" or "0") .. ")")
 
 	elseif pass == CP_NETCODEMSG then
 

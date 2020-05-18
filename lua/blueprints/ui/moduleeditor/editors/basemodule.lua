@@ -24,6 +24,8 @@ local text_script_copied = LOCTEXT("module_lua_export", "Lua script copied to cl
 local text_local_no_permission = LOCTEXT("module_local_no_permission", "You do not have permission to run local scripts")
 local text_module_save_fail = LOCTEXT("module_save_fail", "Failed to create module: %s")
 
+local suppressExportMsg = CreateConVar("bp_suppress_export_message", "0", FCVAR_ARCHIVE, "For debugging, disables to popup notification when exporting things")
+
 EDITOR.CanSave = true
 EDITOR.CanSendToServer = false
 EDITOR.CanInstallLocally = false
@@ -72,7 +74,9 @@ function EDITOR:Export()
 
 	local text = bpmodule.SaveToText( self:GetTargetModule() )
 	SetClipboardText( text )
-	Derma_Message( text_module_copied(), text_menu_export(), LOCTEXT("query_ok", "Ok")() )
+	if not suppressExportMsg:GetBool() then 
+		Derma_Message( text_module_copied(), text_menu_export(), LOCTEXT("query_ok", "Ok")() )
+	end
 
 end
 
@@ -149,7 +153,9 @@ function EDITOR:ExportLua()
 	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
 	if ok then
 		SetClipboardText( res:GetCode() )
-		Derma_Message( text_script_copied(), text_menu_export_lua(), LOCTEXT("query_ok", "Ok")() )
+		if not suppressExportMsg:GetBool() then
+			Derma_Message( text_script_copied(), text_menu_export_lua(), LOCTEXT("query_ok", "Ok")() )
+		end
 	else
 		ErrorNoHalt( res )
 	end

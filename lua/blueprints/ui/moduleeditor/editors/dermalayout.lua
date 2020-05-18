@@ -6,6 +6,7 @@ local EDITOR = {}
 
 EDITOR.HasSideBar = true
 EDITOR.HasDetails = true
+EDITOR.CanExportLuaScript = true
 
 function EDITOR:Setup()
 

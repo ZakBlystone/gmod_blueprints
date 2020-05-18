@@ -17,7 +17,35 @@ function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
+	self.layoutRoot = nil
+
 end
+
+function MODULE:CreateDefaults()
+
+	self.layoutRoot = bpdermanode.New("Window")
+	local button = bpdermanode.New("Button", self.layoutRoot)
+
+end
+
+function MODULE:Root()
+
+	return self.layoutRoot
+
+end
+
+function MODULE:SerializeData( stream )
+
+	BaseClass.SerializeData( self, stream )
+
+	self.layoutRoot = stream:Object( self.layoutRoot, self )
+
+end
+
+function MODULE:CanHaveVariables() return true end
+function MODULE:CanHaveStructs() return true end
+function MODULE:CanHaveEvents() return false end
+function MODULE:RequiresNetCode() return false end
 
 function MODULE:Compile(compiler, pass)
 
@@ -25,29 +53,23 @@ function MODULE:Compile(compiler, pass)
 
 	BaseClass.Compile( self, compiler, pass )
 
-	if pass == CP_MODULEMETA then
+	if pass == CP_MAINPASS then
 
-		compiler.emit("function meta:Initialize()")
-		compiler.emit("\tself.delays = {}")
-		compiler.emit("\tself.__bpm = __bpm")
-		compiler.emit("\tself.guid = __bpm.guid")
-		compiler.emitContext( CTX_Vars .. "global", 1 )
-		compiler.emit("\tself.bInitialized = true")
-		compiler.emit("\tself:netInit()")
-		compiler.emit("end")
-		compiler.emit("function meta:PostInit()")
-		compiler.emit("\tself:hookEvents(true)")
-		compiler.emit("\tif self.CORE_Init then self:CORE_Init() end")
-		compiler.emit("end")
+		compiler.begin("derma")
+		compiler.emit("local __panels = {}")
+		compiler.emit("local __makePanel(id, ...) return vgui.CreateFromTable(__panels[id], ...) end")
+		if self:Root() then
+			self:Root():Compile(compiler, pass)
+		end
+		compiler.finish()
 
 
-		compiler.emit([[
-function meta:Shutdown()
-	if not self.bInitialized then return end
-	self:hookEvents(false)
-	if self.CORE_Shutdown then self:CORE_Shutdown() end
-	self:netShutdown()
-end]])
+	elseif pass == CP_MODULECODE then
+
+		compiler.emitContext("derma")
+
+
+	elseif pass == CP_MODULEMETA then
 
 		return true
 
@@ -55,7 +77,7 @@ end]])
 
 		compiler.emit([[
 __bpm.init = function() end
-__bpm.postInit = function() if __bpm.ref then __bpm.ref:PostInit() end end
+__bpm.postInit = function() end
 __bpm.refresh = function() end
 __bpm.shutdown = function() end]])
 

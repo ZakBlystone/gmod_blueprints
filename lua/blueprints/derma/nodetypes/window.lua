@@ -4,8 +4,15 @@ module("dnode_window", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local NODE = {}
 
-function NODE:Setup() end
-function NODE:Compile(compiler, pass)
+NODE.DermaBase = "DWindow"
+
+function NODE:Setup() 
+
+	self.data = {
+		width = 400,
+		height = 300,
+		title = "Window",
+	}
 
 end
 

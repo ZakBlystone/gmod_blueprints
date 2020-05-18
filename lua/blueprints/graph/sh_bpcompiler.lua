@@ -112,6 +112,7 @@ function meta:Init( mod, flags )
 		[bpcommon.FindMetaTable("bpmodule")] = 5,
 		[bpcommon.FindMetaTable("bpvariable")] = 6,
 		[bpcommon.FindMetaTable("bpevent")] = 7,
+		[bpcommon.FindMetaTable("bpdermanode")] = 8,
 	}
 
 

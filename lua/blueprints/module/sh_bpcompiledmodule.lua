@@ -341,11 +341,13 @@ fragments["update"] = function(args)
 	local x = "\n"
 	if args[1] == "1" then x = "\n\t__ilph = 0\n" end
 
+	local net = "\n"
+	if args[2] == "1" then net = "\n\tself:netUpdate()\n" end
+
 	return [[
 function meta:update( rate )]] .. x .. [[
 	__self = self
-	rate = rate or FrameTime()
-	self:netUpdate()
+	rate = rate or FrameTime()]] .. net .. [[
 	local t,d = self.delays
 	for i=#t, 1, -1 do d = t[i] d.t = d.t - rate if d.t <= 0 then d.t = d.f(unpack(d.a)) if not d.t then table.remove(t,i) end end end
 end]]
