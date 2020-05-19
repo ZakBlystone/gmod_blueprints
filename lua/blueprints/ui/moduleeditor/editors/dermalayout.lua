@@ -30,8 +30,15 @@ end
 
 function EDITOR:OpenDetails( node )
 
-	self.detailGUI = node:GetEdit():CreateVGUI({ live = true, })
-	self.detailsSlot:SetContents( self.detailGUI )
+	self.detailsBar:Clear()
+
+	self.detailsBar:Add( "Details" ):SetContents( node:GetEdit():CreateVGUI({ live = true, }) )
+
+	if node:GetLayout() then
+
+		self.detailsBar:Add( "Layout" ):SetContents( node:GetLayout():GetEdit():CreateVGUI({ live = true, }) )
+
+	end
 
 end
 
@@ -90,7 +97,6 @@ function EDITOR:PostInit()
 	self:SetContent( self.vpreview )
 
 	self.detailsBar = vgui.Create("BPCategoryList")
-	self.detailsSlot = self.detailsBar:Add( "Details" )
 	self:SetDetails( self.detailsBar )
 
 end

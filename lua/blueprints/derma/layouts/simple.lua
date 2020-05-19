@@ -7,15 +7,23 @@ module("dlayout_simple", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 local LAYOUT = {}
 
 function LAYOUT:Setup() end
-function LAYOUT:Compile(compiler)
+
+function LAYOUT:InitParams(params)
+
+	params.padding = 0
+
+end
+
+function LAYOUT:CompileLayout(compiler)
 
 	compiler.emitBlock([[
+		local l = self.layout
 		local off = self.yoffset or 0
-		local y, a = off, (self:GetTall() - off) / #self.ordered
+		local y, a = off + l.padding, (self:GetTall() - off - l.padding*2) / #self.ordered
 		for _, v in ipairs(self.ordered) do
 			local pnl = self.panels[v]
-			pnl:SetPos(0, y)
-			pnl:SetSize(self:GetWide(), a)
+			pnl:SetPos(l.padding, y)
+			pnl:SetSize(self:GetWide() - l.padding*2, a)
 			y = y + a
 		end]])
 

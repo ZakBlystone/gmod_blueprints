@@ -23,7 +23,7 @@ function meta:Init(class, parent, position)
 
 	bpcommon.MakeObservable(self)
 
-	if class ~= nil then self:SetupClass() end
+	if self.class ~= nil then self:SetupClass() end
 	if parent then
 		parent:AddChild(self, position)
 	end
@@ -42,6 +42,7 @@ function meta:GetCompiledID() return self.compiledID end
 function meta:SetLayout(layout)
 
 	self.layout = layout
+	if self.layout then self.layout.node:Set(self) end
 
 end
 
@@ -59,6 +60,7 @@ function meta:PostLoad()
 		end
 	end
 
+	self:SetLayout( self:GetLayout() )
 	self:SetupClass()
 
 end
@@ -85,8 +87,11 @@ function meta:SetupClass()
 		dermaClasses:Install(self.class, self)
 		print("Install class: " .. self.class)
 
-		if not self.data.params then
-			self:InitParams( self.data.params )
+		local parms = {}
+		self:InitParams( parms )
+
+		for k, v in pairs(parms) do
+			if self.data.params[k] == nil then self.data.params[k] = v end
 		end
 
 		self.edit = bpvaluetype.FromValue(self.data, function() return self.data end)
@@ -202,10 +207,15 @@ function meta:GenerateMemberCode(compiler, name)
 
 		self:CompileInitializers(compiler)
 
+		if self:GetLayout() then
+			local edit = self:GetLayout():GetEdit()
+			compiler.emitBlock("self.layout = " .. edit:ToString())
+		end
+
 	elseif name == "PerformLayout" then
 
 		compiler.emit( self.DermaBase .. ".PerformLayout(self, ...)" )
-		self:GetLayout():Compile(compiler)
+		self:GetLayout():CompileLayout(compiler)
 
 	end
 
