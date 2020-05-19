@@ -5,7 +5,7 @@ module("dnode_button", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 local NODE = {}
 
 NODE.DermaBase = "DButton"
-NODE.Icon = "icon16/application.png"
+NODE.Icon = "icon16/picture_empty.png"
 
 function NODE:Setup() 
 

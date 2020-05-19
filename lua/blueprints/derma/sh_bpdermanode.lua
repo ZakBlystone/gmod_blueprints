@@ -90,6 +90,7 @@ function meta:SetupClass()
 		local parms = {}
 		self:InitParams( parms )
 
+		self.data.params = self.data.params or {}
 		for k, v in pairs(parms) do
 			if self.data.params[k] == nil then self.data.params[k] = v end
 		end
