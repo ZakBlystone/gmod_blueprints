@@ -12,16 +12,18 @@ dermaClasses = bpclassloader.Get("DermaNode", "blueprints/derma/nodetypes/", "BP
 
 function meta:Init(class, parent, position)
 
-	self.layout = Ref()
+	self.layout = nil
 	self.parent = Weak()
 	self.children = {}
 	self.data = {}
 	self.class = class
+	self.name = self.class or "Unnamed"
+	self.preview = nil
+	self.compiledID = nil
 
 	bpcommon.MakeObservable(self)
 
-	self:SetupClass()
-
+	if class ~= nil then self:SetupClass() end
 	if parent then
 		parent:AddChild(self, position)
 	end
@@ -30,23 +32,30 @@ function meta:Init(class, parent, position)
 
 end
 
+function meta:GetEdit() return self.edit end
+function meta:SetPreview(preview) self.preview = preview end
+function meta:GetPreview() return self.preview end
+function meta:SetName(name) self.name = name end
+function meta:GetName() return self.name end
+function meta:GetCompiledID() return self.compiledID end
+
 function meta:SetLayout(layout)
 
-	self.layout:Set(layout)
+	self.layout = layout
 
 end
 
 function meta:GetLayout()
 
-	return self.layout()
+	return self.layout
 
 end
 
 function meta:PostLoad()
 
 	for _, child in ipairs(self.children) do
-		if child() then
-			child().parent:Set(self)
+		if child then
+			child.parent:Set(self)
 		end
 	end
 
@@ -54,11 +63,35 @@ function meta:PostLoad()
 
 end
 
+function meta:CustomizeEdit( edit ) 
+
+	local params = edit:Index("params")
+	if params == nil then print("No params!") return end
+	params:BindRaw("valueChanged", self, function(old, new, k)
+		local pnl = self:GetPreview()
+		if not IsValid(pnl) then return end
+		self:ApplyPanelValue(pnl, k, new, old )
+	end)
+
+end
+
+function meta:InitParams( params ) end
+function meta:ApplyPanelValue( pnl, k, v, oldValue ) end
+
 function meta:SetupClass()
 
-	if self.class then 
+	if self.class then
+
 		dermaClasses:Install(self.class, self)
 		print("Install class: " .. self.class)
+
+		if not self.data.params then
+			self:InitParams( self.data.params )
+		end
+
+		self.edit = bpvaluetype.FromValue(self.data, function() return self.data end)
+		self:CustomizeEdit( self.edit )
+
 	end
 
 end
@@ -68,11 +101,20 @@ function meta:GetChildIndex( child )
 	assert( isbpdermanode(child) )
 
 	for i=#self.children, 1, -1 do
-		if self.children[i]() == child then
+		if self.children[i] == child then
 			return i
 		end
 	end
 	return -1
+
+end
+
+function meta:GetChildByCompiledID( id )
+
+	for _, child in ipairs(self.children) do
+		if child and child:GetCompiledID() == id then return child end
+	end
+	return nil
 
 end
 
@@ -81,9 +123,9 @@ function meta:AddChild( child, position )
 	assert( isbpdermanode(child) )
 
 	if not position then
-		self.children[#self.children+1] = Ref(child)
+		self.children[#self.children+1] = child
 	else
-		table.insert(self.children, position, Ref(child))
+		table.insert(self.children, position, child)
 	end
 
 	child.parent:Set(self)
@@ -109,7 +151,7 @@ function meta:GetChildren()
 
 	local t = {}
 	for _, child in ipairs(self.children) do
-		t[#t+1] = child()
+		t[#t+1] = child
 	end
 	return t
 
@@ -124,8 +166,8 @@ function meta:Swap( childA, childB )
 
 	assert( idxA ~= -1 and idxB ~= -1 )
 
-	self.children[idxA]:Set(childB)
-	self.children[idxB]:Set(childA)
+	self.children[idxA] = childB
+	self.children[idxB] = childA
 
 	self:Broadcast("childrenSwapped", childA, childB, idxA, idxB)
 
@@ -136,6 +178,11 @@ function meta:Serialize(stream)
 	self.layout = stream:Object(self.layout, self)
 	self.children = stream:ObjectArray( self.children, self )
 	self.data = stream:Value(self.data)
+	self.name = stream:String(self.name)
+	self.class = stream:String(self.class)
+
+	print("SERIALIZE, DATA:")
+	PrintTable(self.data)
 
 	return stream
 
@@ -145,17 +192,26 @@ function meta:GenerateMemberCode(compiler, name)
 
 	if name == "Init" then
 
-		compiler.emit("self.panels = {}")
+		compiler.emit("self.panels = {} self.ordered = {}")
 		for _, child in ipairs(self:GetChildren()) do
 
 			local id = compiler:GetID(child)
-			compiler.emit("self.panels[" .. id .. "] = __makePanel(" .. id .. ", self)")
+			compiler.emit("self.panels[" .. id .. "] = __makePanel(" .. id .. ", self) self.ordered[#self.ordered+1] = " .. id)
 
 		end
+
+		self:CompileInitializers(compiler)
+
+	elseif name == "PerformLayout" then
+
+		compiler.emit( self.DermaBase .. ".PerformLayout(self, ...)" )
+		self:GetLayout():Compile(compiler)
 
 	end
 
 end
+
+function meta:CompileInitializers(compiler) end
 
 function meta:CompileMember(compiler, name)
 
@@ -173,12 +229,18 @@ function meta:Compile(compiler, pass)
 
 		print("COMPILE NODE: ", tostring(self))
 
+		self.compiledID = compiler:GetID(self)
+
 		for _, child in ipairs(self:GetChildren()) do
 			child:Compile(compiler, pass)
 		end
 
-		compiler.emit("local PANEL = {Base = " .. self.DermaBase .. "} __panels[" .. compiler:GetID(self) .. "] = PANEL")
+		compiler.emit("local PANEL = {Base = \"" .. self.DermaBase .. "\"} __panels[" .. compiler:GetID(self) .. "] = PANEL")
 		self:CompileMember(compiler, "Init")
+
+		if self:GetLayout() ~= nil then
+			self:CompileMember(compiler, "PerformLayout")
+		end
 
 	else
 
@@ -188,5 +250,17 @@ function meta:Compile(compiler, pass)
 
 end
 
+function meta:MapToPreview( preview )
+
+	self:SetPreview(preview)
+
+	for k, panel in pairs(preview.panels or {}) do
+		local node = self:GetChildByCompiledID(k)
+		if node ~= nil then
+			node:MapToPreview(panel)
+		end
+	end
+
+end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end

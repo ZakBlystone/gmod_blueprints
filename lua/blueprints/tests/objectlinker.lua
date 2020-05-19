@@ -233,3 +233,9 @@ function LIST_TEST()
 	ASSERT( list:Get(4):GetName() == "Item3" )
 
 end
+
+function REF_TEST()
+
+	
+
+end

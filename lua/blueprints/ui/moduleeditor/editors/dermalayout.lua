@@ -28,39 +28,48 @@ function EDITOR:ToggleDesignMode()
 
 end
 
+function EDITOR:OpenDetails( node )
+
+	self.detailGUI = node:GetEdit():CreateVGUI({ live = true, })
+	self.detailsSlot:SetContents( self.detailGUI )
+
+end
+
+function EDITOR:NodeSelected(node)
+
+	self:OpenDetails(node)
+
+end
+
 function EDITOR:CreatePanel()
 
-	self.preview = vgui.Create("DFrame")
-	self.preview:SetSize(400,300)
-	self.preview:SetPaintedManually(true)
-	self.preview:Hide()
+	self:DestroyPanel()
 
-	--[[local btn = vgui.Create("DButton", self.preview)
-	btn:Dock(FILL)
+	local ok, res = self:GetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	if ok then
+		local ok, lres = res:TryLoad()
+		if ok then
 
-	self.values = bpvaluetype.FromValue({}, function() return {} end)
-	self.values:AddCosmeticChild("Text",
-		bpvaluetype.New("string", 
-			function() return btn:GetText() end,
-			function(x) btn:SetText(x) end )
-	)
+			local unit = res:Get()
+			self.preview = unit.create()
 
-	self.values:AddCosmeticChild("Is Enabled",
-		bpvaluetype.New("boolean", 
-			function() return btn:IsEnabled( NTF_Deprecated ) end,
-			function(x) btn:SetEnabled( x ) end )
-	)
+			if IsValid(self.preview) then
+				self.preview:SetPaintedManually(true)
+				self.preview:Hide()
 
-	self.values:AddCosmeticChild("Text Color",
-		bpvaluetype.New("color", 
-			function() return btn:GetTextColor() end,
-			function(x) btn:SetTextColor(x) end )
-	)
+				self:GetModule():Root():MapToPreview( self.preview )
+			end
 
-	self.sideBar = vgui.Create("BPCategoryList")
-	self.detailGUI = self.values:CreateVGUI({ live = true, })
-	self.sideBar:Add( "Details" ):SetContents( self.detailGUI )
-	self:SetDetails( self.sideBar )]]
+		else
+
+			print("Load failure: " .. tostring(lres))
+
+		end
+	else
+
+		print("Compile failure: " .. tostring(res))
+
+	end
 
 end
 
@@ -79,6 +88,10 @@ function EDITOR:PostInit()
 	self.vpreview = vgui.Create("BPDPreview")
 	self.vpreview:SetPanel( self.preview )
 	self:SetContent( self.vpreview )
+
+	self.detailsBar = vgui.Create("BPCategoryList")
+	self.detailsSlot = self.detailsBar:Add( "Details" )
+	self:SetDetails( self.detailsBar )
 
 end
 
@@ -109,11 +122,34 @@ function EDITOR:PopulateSideBar()
 
 	end
 
+	self:BuildNodeTree()
+
+end
+
+function EDITOR:RecursiveAddNode(vnode, node)
+
+	local newNode = vnode:AddNode(node:GetName(), node.Icon or "icon16/application.png")
+	newNode:SetExpanded(true)
+	newNode.node = node
+	newNode.DoClick = function()
+		self:NodeSelected( node )
+	end
+	for _, child in ipairs(node:GetChildren()) do
+		self:RecursiveAddNode( newNode, child )
+	end
+
+end
+
+function EDITOR:BuildNodeTree()
+
+	self.hierarchyTree:Clear()
+
+	local rootNode = self:GetModule():Root()
 	local root = self.hierarchyTree:Root()
-	local win = root:AddNode("Window", "icon16/application_form.png")
-	local btn = win:AddNode("Button", "icon16/application.png")
-	btn:ExpandTo(true)
-	btn:Droppable("button")
+
+	if not rootNode then return end
+
+	self:RecursiveAddNode( root, rootNode )
 
 end
 

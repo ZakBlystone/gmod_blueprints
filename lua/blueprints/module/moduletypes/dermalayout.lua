@@ -26,7 +26,9 @@ function MODULE:CreateDefaults()
 	print("CREATE DEFAULTS")
 
 	self.layoutRoot = bpdermanode.New("Window")
+	self.layoutRoot:SetLayout( bplayout.New("Simple") )
 	local button = bpdermanode.New("Button", self.layoutRoot)
+	local button2 = bpdermanode.New("Button", self.layoutRoot)
 
 end
 
@@ -59,7 +61,7 @@ function MODULE:Compile(compiler, pass)
 
 		compiler.begin("derma")
 		compiler.emit("local __panels = {}")
-		compiler.emit("local __makePanel(id, ...) return vgui.CreateFromTable(__panels[id], ...) end")
+		compiler.emit("local __makePanel = function(id, ...) return vgui.CreateFromTable(__panels[id], ...) end")
 		if self:Root() then
 			print("Compile root: ", tostring(self:Root()))
 			self:Root():Compile(compiler, pass)
@@ -84,7 +86,8 @@ function MODULE:Compile(compiler, pass)
 __bpm.init = function() end
 __bpm.postInit = function() end
 __bpm.refresh = function() end
-__bpm.shutdown = function() end]])
+__bpm.shutdown = function() end
+__bpm.create = function(...) return __makePanel(]] .. compiler:GetID(self:Root()) .. [[, ...) end]])
 
 	end
 

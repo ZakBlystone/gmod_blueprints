@@ -17,6 +17,12 @@ function meta:Init(class)
 
 end
 
+function meta:PostLoad()
+
+	self:SetupClass()
+
+end
+
 function meta:SetupClass()
 
 	if self.class then 
@@ -28,6 +34,7 @@ end
 
 function meta:Serialize(stream)
 
+	self.class = stream:String(self.class)
 	self.data = stream:Value(self.data)
 	return stream
 
@@ -36,5 +43,7 @@ end
 function meta:InitializeLayoutData(node)
 
 end
+
+function meta:Compile(compiler) end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end

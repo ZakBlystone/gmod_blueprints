@@ -39,9 +39,8 @@ function PANEL:Draw2D()
 
 	if IsValid(self.preview) then
 		self.preview:PaintAt(0,0)
+		--self:DrawSelectionBoxAll(self.preview)
 	end
-
-	self:DrawSelectionBoxAll(self.preview)
 
 end
 
