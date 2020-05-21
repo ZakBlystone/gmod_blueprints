@@ -196,6 +196,7 @@ function EDITOR:PopulateSideBar()
 
 	self.hierarchyTree = vgui.Create("DTree", self.hierarchyPanel)
 	self.hierarchyTree:Dock( FILL )
+	self.hierarchyTree:SetClickOnDragHover(true)
 
 	self.hierarchyBar = self:AddSidebarPanel(LOCTEXT("editor_dermalayout_hierarchy","Hierarchy"), self.hierarchyPanel)
 
@@ -213,6 +214,24 @@ function EDITOR:RecursiveAddNode(vnode, node)
 	local newNode = vnode:AddNode(node:GetName(), node.Icon or "icon16/application.png")
 	newNode:SetExpanded(true)
 	newNode.node = node
+
+	if not node.RootOnly then
+		newNode:Droppable("dermanode")
+	end
+
+	newNode:Receiver( "dermanode", function( pnl, panels, isDropped, menuIndex, mouseX, mouseY )
+		if isDropped then
+			local changed = false
+			for _, src in ipairs(panels) do
+				if src.node == pnl.node then continue end
+				src.node:GetParent():RemoveChild( src.node )
+				pnl.node:AddChild(src.node)
+				changed = true
+			end
+			if changed then self:LayoutChanged() end
+		end
+	end )
+
 	newNode.DoClick = function()
 		self:NodeSelected( node )
 	end
