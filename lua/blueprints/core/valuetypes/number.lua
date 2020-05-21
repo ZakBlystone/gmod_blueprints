@@ -42,7 +42,7 @@ function VALUE:SetFromString( str )
 	local _,_,dec = str:find("%-*%d*%.(%d+)")
 	dec = dec and (#dec) or 0
 	self._prec = dec
-	self:Set( tonumber(str) )
+	self:Set( tonumber(str) or 0 )
 	return self
 
 end
