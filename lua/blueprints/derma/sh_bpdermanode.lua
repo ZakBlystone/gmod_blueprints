@@ -7,6 +7,7 @@ local meta = bpcommon.MetaTable("bpdermanode")
 print("DEFINED BPDERMANODE METATABLE: " .. tostring(meta))
 
 meta.DermaBase = ""
+meta.CanHaveChildren = false
 
 dermaClasses = bpclassloader.Get("DermaNode", "blueprints/derma/nodetypes/", "BPDermaClassRefresh", meta)
 
