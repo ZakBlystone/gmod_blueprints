@@ -10,6 +10,11 @@ local function Create()
 
 	local meta = {}
 	meta.__index = meta
+
+	function meta:Func()
+		print("Hi")
+	end
+
 	bpcommon.MakeObservable(meta)
 
 	return setmetatable({}, meta)
@@ -63,5 +68,52 @@ function GC_TEST()
 
 	target.x = 1
 	EXPECT( called, 1 )
+
+end
+
+function GC_TEST2()
+
+	inst = Create()
+
+	local t = {}
+	local w = bpcommon.Weak(t)
+
+	-- Ensure that an event's external references are collected
+	local called = 0
+	inst:BindRaw("event", t, function() called = called + 1 t.x = (t.x or 0) + 1 print("A: " .. t.x) end)
+	inst:Broadcast("event")
+
+	t = nil
+	collectgarbage()
+
+	t = {}
+	inst:BindRaw("event", t, function() called = called + 1 t.x = (t.x or 0) + 1 print("B: " .. t.x) end)
+	inst:Broadcast("event")
+	EXPECT( called, 2 )
+
+	called = 0
+
+	local winst = bpcommon.Weak(inst)
+	inst = nil
+
+	collectgarbage()
+
+	EXPECT( winst:IsValid(), false )
+
+end
+
+function GC_TEST3()
+
+	inst = Create()
+
+	-- Ensure self-referencing callbacks are collected properly
+	inst:BindRaw("event", inst, function() inst:Func() end)
+	inst:Broadcast("event")
+
+	local winst = bpcommon.Weak(inst)
+	inst = nil
+	collectgarbage()
+
+	EXPECT( winst:IsValid(), false )
 
 end

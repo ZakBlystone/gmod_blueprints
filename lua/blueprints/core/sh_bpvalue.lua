@@ -142,9 +142,12 @@ function meta:CreateVGUI( info )
 		if info.onChanged then info.onChanged() end
 	end
 
+	entry.OnRemove = function(pnl) self:UnbindAll( pnl ) end
 	entry:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
 
-	self:BindRaw( "valueChanged", self, function(old, new, key) entry:SetText( new ) end )
+	self:BindRaw( "valueChanged", entry, function(old, new, key) 
+		entry:SetText( new ) 
+	end )
 
 	return entry
 

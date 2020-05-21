@@ -52,7 +52,7 @@ function VALUE:SetStruct( struct )
 				k = k,
 				vt = vt,
 			}
-			vt:BindRaw( "valueChanged", function(old, new, key)
+			vt:BindRaw( "valueChanged", self, function(old, new, key)
 				local ak = (key ~= nil) and k .. "." .. tostring(key) or k
 				self:OnChanged(old, new, ak)
 			end )
