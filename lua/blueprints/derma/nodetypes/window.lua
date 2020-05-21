@@ -7,6 +7,7 @@ local NODE = {}
 NODE.DermaBase = "DFrame"
 NODE.RootOnly = true
 NODE.Icon = "icon16/application_form.png"
+NODE.Name = LOCTEXT"derma_node_window","Window"
 
 function NODE:Setup()
 

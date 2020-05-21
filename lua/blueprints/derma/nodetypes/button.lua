@@ -6,6 +6,7 @@ local NODE = {}
 
 NODE.DermaBase = "DButton"
 NODE.Icon = "icon16/picture_empty.png"
+NODE.Name = LOCTEXT"derma_node_button","Button"
 
 function NODE:Setup() 
 

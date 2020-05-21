@@ -28,6 +28,13 @@ function EDITOR:ToggleDesignMode()
 
 end
 
+function EDITOR:LayoutChanged()
+
+	self:BuildNodeTree()
+	self:CreatePanel()
+
+end
+
 function EDITOR:OpenDetails( node )
 
 	self.detailsBar:Clear()
@@ -48,6 +55,43 @@ function EDITOR:NodeSelected(node)
 
 end
 
+function EDITOR:NodeContextMenu(node, vnode)
+
+	if IsValid(self.cmenu) then self.cmenu:Remove() end
+	self.cmenu = DermaMenu( false, self:GetPanel() )
+	local addChildMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"project_submenu_addchild","Add Child" ) )
+
+	-- Enumerate child node classes
+	local loader = bpdermanode.GetClassLoader()
+	local classes = bpcommon.Transform( loader:GetClasses(), {}, function(k) return {name = k, class = loader:Get(k)} end )
+
+	table.sort( classes, function(a,b) return tostring(a.class.Name) < tostring(b.class.Name) end )
+
+	for _, v in ipairs( classes ) do
+
+		local cl = v.class
+		if cl.RootOnly then continue end
+
+		local op = addChildMenu:AddOption( tostring(cl.Name), function()
+			local newNode = bpdermanode.New(v.name, node)
+			self:LayoutChanged()
+		end )
+		if cl.Icon then op:SetIcon( cl.Icon ) end
+		if cl.Description then op:SetTooltip( tostring(cl.Description) ) end
+
+	end
+
+	if node:GetParent() ~= nil then
+		self.cmenu:AddOption( tostring( LOCTEXT"project_submenu_delete","Delete" ), function()
+			node:GetParent():RemoveChild( node )
+			self:LayoutChanged()
+		end )
+	end
+
+	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )
+
+end
+
 function EDITOR:CreatePanel()
 
 	self:DestroyPanel()
@@ -65,6 +109,8 @@ function EDITOR:CreatePanel()
 				self.preview:Hide()
 
 				self:GetModule():Root():MapToPreview( self.preview )
+
+				if IsValid(self.vpreview) then self.vpreview:SetPanel( self.preview ) end
 			end
 
 		else
@@ -104,6 +150,7 @@ end
 function EDITOR:Shutdown()
 
 	self:DestroyPanel()
+	if IsValid(self.cmenu) then self.cmenu:Remove() end
 
 end
 
@@ -139,6 +186,9 @@ function EDITOR:RecursiveAddNode(vnode, node)
 	newNode.node = node
 	newNode.DoClick = function()
 		self:NodeSelected( node )
+	end
+	newNode.DoRightClick = function()
+		self:NodeContextMenu( node, newNode )
 	end
 	for _, child in ipairs(node:GetChildren()) do
 		self:RecursiveAddNode( newNode, child )

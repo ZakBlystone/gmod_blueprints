@@ -10,6 +10,8 @@ meta.DermaBase = ""
 
 dermaClasses = bpclassloader.Get("DermaNode", "blueprints/derma/nodetypes/", "BPDermaClassRefresh", meta)
 
+function GetClassLoader() return dermaClasses end
+
 function meta:Init(class, parent, position)
 
 	self.layout = nil
@@ -38,6 +40,7 @@ function meta:GetPreview() return self.preview end
 function meta:SetName(name) self.name = name end
 function meta:GetName() return self.name end
 function meta:GetCompiledID() return self.compiledID end
+function meta:GetParent() return self.parent() end
 
 function meta:SetLayout(layout)
 
@@ -144,7 +147,7 @@ function meta:RemoveChild( child )
 	assert( isbpdermanode(child) )
 
 	for i=#self.children, 1, -1 do
-		if self.children[i]() == child then
+		if self.children[i] == child then
 			table.remove(self.children, i)
 			child.parent:Reset()
 			self:Broadcast("childRemoved", child, i)
@@ -186,9 +189,6 @@ function meta:Serialize(stream)
 	self.data = stream:Value(self.data)
 	self.name = stream:String(self.name)
 	self.class = stream:String(self.class)
-
-	print("SERIALIZE, DATA:")
-	PrintTable(self.data)
 
 	return stream
 

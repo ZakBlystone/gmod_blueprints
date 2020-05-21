@@ -6,6 +6,8 @@ local meta = bpcommon.MetaTable("bplayout")
 
 layoutClasses = bpclassloader.Get("DermaLayout", "blueprints/derma/layouts/", "BPDermaLayoutClassRefresh", meta)
 
+function GetClassLoader() return layoutClasses end
+
 function meta:Init(class)
 
 	self.class = class
