@@ -26,13 +26,7 @@ function MODULE:CreateDefaults()
 	print("CREATE DEFAULTS")
 
 	self.layoutRoot = bpdermanode.New("Window")
-	self.layoutRoot:SetLayout( bplayout.New("Simple") )
-	local button = bpdermanode.New("Button", self.layoutRoot)
-	local panel = bpdermanode.New("Panel", self.layoutRoot)
-	panel:SetLayout( bplayout.New("Simple") )
-
-	local buttonInner1 = bpdermanode.New("Button", panel)
-	local buttonInner2 = bpdermanode.New("Button", panel)
+	self.layoutRoot:SetupDefaultLayout()
 
 end
 

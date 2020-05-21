@@ -59,7 +59,8 @@ function EDITOR:NodeContextMenu(node, vnode)
 
 	if IsValid(self.cmenu) then self.cmenu:Remove() end
 	self.cmenu = DermaMenu( false, self:GetPanel() )
-	local addChildMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"project_submenu_addchild","Add Child" ) )
+	local addChildMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"layout_submenu_addchild","Add Child" ) )
+	local setLayoutMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"layout_submenu_setlayout","Set Layout" ) )
 
 	-- Enumerate child node classes
 	local loader = bpdermanode.GetClassLoader()
@@ -71,9 +72,37 @@ function EDITOR:NodeContextMenu(node, vnode)
 
 		local cl = v.class
 		if cl.RootOnly then continue end
+		if not cl.Creatable then continue end
 
 		local op = addChildMenu:AddOption( tostring(cl.Name), function()
 			local newNode = bpdermanode.New(v.name, node)
+			newNode:SetupDefaultLayout()
+			self:LayoutChanged()
+		end )
+		if cl.Icon then op:SetIcon( cl.Icon ) end
+		if cl.Description then op:SetTooltip( tostring(cl.Description) ) end
+
+	end
+
+	-- Enumerate layout classes
+	local loader = bplayout.GetClassLoader()
+	local classes = bpcommon.Transform( loader:GetClasses(), {}, function(k) return {name = k, class = loader:Get(k)} end )
+
+	table.sort( classes, function(a,b) return tostring(a.class.Name) < tostring(b.class.Name) end )
+
+	setLayoutMenu:AddOption( tostring( LOCTEXT"layout_submenu_layoutnone","No Layout" ), function()
+		node:SetLayout(nil)
+		self:LayoutChanged()
+	end ):SetIcon( "icon16/cut.png" )
+
+	for _, v in ipairs( classes ) do
+
+		local cl = v.class
+		if not cl.Creatable then continue end
+
+		local op = setLayoutMenu:AddOption( tostring(cl.Name), function()
+			local newLayout = bplayout.New(v.name)
+			node:SetLayout(newLayout)
 			self:LayoutChanged()
 		end )
 		if cl.Icon then op:SetIcon( cl.Icon ) end
@@ -82,10 +111,10 @@ function EDITOR:NodeContextMenu(node, vnode)
 	end
 
 	if node:GetParent() ~= nil then
-		self.cmenu:AddOption( tostring( LOCTEXT"project_submenu_delete","Delete" ), function()
+		self.cmenu:AddOption( tostring( LOCTEXT"layout_submenu_delete","Delete" ), function()
 			node:GetParent():RemoveChild( node )
 			self:LayoutChanged()
-		end )
+		end ):SetIcon( "icon16/delete.png" )
 	end
 
 	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )

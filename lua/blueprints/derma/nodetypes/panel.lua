@@ -7,8 +7,16 @@ local NODE = {}
 NODE.DermaBase = "DPanel"
 NODE.Icon = "icon16/application.png"
 NODE.Name = LOCTEXT"derma_node_panel","Panel"
+NODE.Creatable = true
 
 function NODE:Setup() 
+
+end
+
+function NODE:SetupDefaultLayout()
+
+	self:SetLayout( bplayout.New("Simple") )
+	return self
 
 end
 

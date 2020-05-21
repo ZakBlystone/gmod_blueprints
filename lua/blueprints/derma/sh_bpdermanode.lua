@@ -19,7 +19,7 @@ function meta:Init(class, parent, position)
 	self.children = {}
 	self.data = {}
 	self.class = class
-	self.name = self.class or "Unnamed"
+	self:SetName( self.class or "Unnamed" )
 	self.preview = nil
 	self.compiledID = nil
 
@@ -37,10 +37,11 @@ end
 function meta:GetEdit() return self.edit end
 function meta:SetPreview(preview) self.preview = preview end
 function meta:GetPreview() return self.preview end
-function meta:SetName(name) self.name = name end
+function meta:SetName(name) self.name = bpcommon.Camelize(name) end
 function meta:GetName() return self.name end
 function meta:GetCompiledID() return self.compiledID end
 function meta:GetParent() return self.parent() end
+function meta:SetupDefaultLayout() return self end
 
 function meta:SetLayout(layout)
 

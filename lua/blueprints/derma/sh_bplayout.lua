@@ -26,6 +26,9 @@ function meta:PostLoad()
 
 end
 
+function meta:SetParam(k, value) self.data[k] = value return self end
+function meta:GetParam(k) return self.data[k] end
+
 function meta:GetNode() return self.node() end
 function meta:GetPreview() return self:GetNode() and self:GetNode():GetPreview() end
 function meta:GetEdit() return self.edit end

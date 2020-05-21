@@ -8,8 +8,16 @@ NODE.DermaBase = "DFrame"
 NODE.RootOnly = true
 NODE.Icon = "icon16/application_form.png"
 NODE.Name = LOCTEXT"derma_node_window","Window"
+NODE.Creatable = true
 
 function NODE:Setup()
+
+end
+
+function NODE:SetupDefaultLayout()
+
+	self:SetLayout( bplayout.New("Simple"):SetParam("padding", 8) )
+	return self
 
 end
 
