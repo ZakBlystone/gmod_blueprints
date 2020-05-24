@@ -13,9 +13,6 @@ function ClosestDistanceToCubicHermite(k, p0, p1, m0, m1)
 
 end
 
-local vsamples = {}
-for i=1, 100 do vsamples[#vsamples+1] = {Vector(0,0,0), Color(0,0,0,0)} end
-
 local math_sqrt = math.sqrt
 local math_abs = math.abs
 local math_max = math.max
@@ -25,13 +22,16 @@ local math_pi = math.pi
 
 local mtVector =  FindMetaTable("Vector")
 local mtColor = FindMetaTable("Color")
-local render_setColorMaterial = render.SetColorMaterial
-local render_startBeam = render.StartBeam
-local render_endBeam = render.EndBeam
-local render_addBeam = render.AddBeam
-local setVecUnpacked = mtVector.SetUnpacked
-local setColUnpacked = mtColor.SetUnpacked
+local render_setColorMaterialIgnoreZ = render.SetColorMaterialIgnoreZ
 local colUnpack = mtColor.Unpack
+
+local v_set = mtVector.SetUnpacked
+local __vec = Vector()
+
+local mesh_position = mesh.Position
+local mesh_color = mesh.Color
+local mesh_texcoord = mesh.TexCoord
+local mesh_advance = mesh.AdvanceVertex
 
 function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
 
@@ -48,7 +48,6 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
 	local width = 4
 	local px = x0
 	local py = y0
-	local positions = vsamples
 
 	samples = samples or 20
 
@@ -59,39 +58,30 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
 	d = math_max(d, math_abs(dy))
 	d = math_min(d, 1000)
 
-	setVecUnpacked(positions[1][1],x0,y0,0)
-	positions[1][2] = c0
+	render_setColorMaterialIgnoreZ()
+	mesh.Begin( MATERIAL_TRIANGLE_STRIP, 2 * samples )
 
 	for i=1, samples do
 
-		local t = i/samples
-
-		t = 1 - (.5 + math_cos(t * math_pi) * .5)
+		local t = 1 - (.5 + math_cos((i/samples) * math_pi) * .5)
+		local ti = 1-t
 
 		local x = CubicHermite(x0, x1, d, d, t)
 		local y = CubicHermite(y0, y1, 0, 0, t)
 
-		setVecUnpacked(positions[i+1][1],x,y,0)
-		setColUnpacked(positions[i+1][2],Lerp(t, r0, r1), Lerp(t, g0, g1), Lerp(t, b0, b1), a0 * alpha)
+		local vdx,vdy = x - px,y - py
+		local d = .5 * (width / math_sqrt(vdx*vdx + vdy*vdy))
+		local pdx,pdy = -vdy * d,vdx * d
+
+		v_set(__vec, x+pdx, y+pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(1, t, 0) mesh_advance()
+		v_set(__vec, x-pdx, y-pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(1, t, 1) mesh_advance()
 
 		px = x
 		py = y
 
 	end
 
-	--render.SetMaterial(Material("cable/smoke.vmt"))
-	render_setColorMaterial()
-	render_startBeam(samples+1)
-	local t = CurTime()
-	local dist = 0
-	local prev = positions[1][1]
-	for i=1, samples+1 do
-		local curr = positions[i][1]
-		--dist = dist + curr:Distance(prev)
-		render_addBeam(curr, width, dist/30 - t, positions[i][2])
-		prev = curr
-	end
-	render_endBeam()
+	mesh.End()
 
 end
 
