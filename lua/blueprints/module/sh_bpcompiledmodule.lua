@@ -357,7 +357,7 @@ end
 fragments["metahooks"] = [[
 function meta:hookEvents( enable )
 	local key = "bphook_"..__guidString(self.guid)
-	for k,v in pairs(hook.GetTable()) do v[key] = nil end
+	for k,v in pairs(hook.GetTable()) do hook.Remove(k, key) end
 	if not enable then return end
 	for k,v in pairs(self.__bpm.events) do
 		hook.Add( v.hook, key, function(...) return self[k](self, ...) end )
