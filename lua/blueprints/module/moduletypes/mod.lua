@@ -49,6 +49,7 @@ end
 
 function MODULE:Compile(compiler, pass)
 
+	local withinProject = self:FindOuter(bpmodule_meta) ~= nil
 	local edit = self:GetConfigEdit()
 
 	BaseClass.Compile( self, compiler, pass )
@@ -81,13 +82,16 @@ end]])
 
 	elseif pass == CP_MODULEBPM then
 
+		local s = "\n"
+		if not withinProject then s = "\n\t__bpm.ref:PostInit()\n" end
+
 		compiler.emit([[
 __bpm.init = function()
 	if G_BPInstances[__bpm.guid] ~= nil then return end
 	__bpm.ref = setmetatable({}, __bpm.meta)
 	__bpm.ref:Initialize()
 	G_BPInstances[__bpm.guid] = __bpm.ref
-	hook.Add( "Think", __bpm.guid, function(...) local b,e = pcall(__bpm.ref.update, __bpm.ref) b = b or __bpm.error(e) end )
+	hook.Add( "Think", __bpm.guid, function(...) local b,e = pcall(__bpm.ref.update, __bpm.ref) b = b or __bpm.error(e) end )]] .. s .. [[
 end
 __bpm.postInit = function() if __bpm.ref then __bpm.ref:PostInit() end end
 __bpm.refresh = function()
