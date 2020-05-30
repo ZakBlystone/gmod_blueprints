@@ -32,7 +32,7 @@ DEBUG_MODE = false
 CATCH_UNFINISHED = true
 
 fmtMagic = 0x314D5042
-fmtVersion = 4
+fmtVersion = 5
 
 
 function meta:Init(context, mode, file)
@@ -55,6 +55,11 @@ function meta:Init(context, mode, file)
 		self:AddFlag(FL_Compressed)
 		self:AddFlag(FL_Checksum)
 		self:AddFlag(FL_FileBacked)
+	end
+
+	if mode == MODE_String then
+		self:AddFlag(FL_Compressed)
+		self:AddFlag(FL_Checksum)
 	end
 
 	--self:AddFlag(FL_NoObjectLinker)
@@ -410,6 +415,37 @@ function meta:ObjectArray(v, outer)
 		self:Length(#v)
 		if #v == 0 then return v end
 		for i=1, #v do self:Object(v[i], outer) end
+		return v
+
+	end
+	if self:IsReading() then
+
+		local v = {}
+		local n = self:Length()
+		for i=1, n do
+			v[#v+1] = self:Object(nil, outer)
+		end
+		return v
+
+	end
+	error("Tried to use closed stream")
+
+end
+
+function meta:ConditionalObjectArray(v, conditionFunc, outer)
+
+	if self:IsWriting() then
+
+		local n = 0
+		local mark = {}
+		for i=1, #v do
+			if conditionFunc(v[i]) then mark[i] = true n = n + 1 end
+		end
+
+		self:Length(n)
+		for i=1, #v do
+			if mark[i] then self:Object(v[i], outer) end
+		end
 		return v
 
 	end

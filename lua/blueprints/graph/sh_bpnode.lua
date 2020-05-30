@@ -200,6 +200,7 @@ function meta:UpdatePins()
 			keep[p] = true
 			p:WithOuter( self )
 			p.id = k
+			p.desc = v.desc
 			p:InitPinClass()
 			self.pinCache[k] = p
 			--print(" LOAD FROM CACHE: " .. p:GetName() )

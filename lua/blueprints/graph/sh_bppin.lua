@@ -25,6 +25,19 @@ end
 function meta:PostLoad()
 
 	self:RemoveInvalidConnections()
+	self:MakeConnectionsBiDirectional()
+
+end
+
+function meta:MakeConnectionsBiDirectional()
+
+	for _, v in pairs(self.connections) do
+		if not v():IsConnectedTo(self) then
+			local conn = v():GetConnections()
+			conn[#conn+1] = Weak( self )
+			--print("RECONNECT: " .. tostring(self) .. " <- " .. tostring(v()))
+		end
+	end
 
 end
 
@@ -296,10 +309,21 @@ function meta:Serialize(stream)
 
 	self.type = stream:Object(self.type, self)
 	self.dir = stream:Bits(self.dir, 8)
-	self.desc = stream:String(self.desc)
+	
+	if stream:GetContext() == "defs" or stream:GetVersion() < 5 then
+		self.desc = stream:String(self.desc)
+	else
+		self.desc = ""
+	end
+
 	self.default = stream:String(self.default)
 	self.literal = stream:String(self.literal)
-	self.connections = stream:ObjectArray(self.connections)
+
+	if self.dir == PD_Out or stream:GetVersion() < 5 then
+		self.connections = stream:ObjectArray(self.connections)
+	else
+		self.connections = {}
+	end
 
 	for _, conn in ipairs(self.connections) do
 

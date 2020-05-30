@@ -184,8 +184,19 @@ function LoadFromText(text)
 
 	bpcommon.ProfileStart("bpmodule:Load")
 
-	local stream = bpstream.New("module-text", MODE_String, text):AddFlag(FL_Base64):In()
-	local mod = stream:Object() stream:Finish()
+	local mod = nil
+	local b,e = pcall( function()
+
+		local stream = bpstream.New("module-text", MODE_String, text):AddFlag(FL_Base64):In()
+		mod = stream:Object() stream:Finish()
+
+	end )
+
+	if not b then 
+		print("Failed to load, trying old string specification...")
+		local stream = bpstream.New("module-text", MODE_String, text):AddFlag(FL_Base64):ClearFlag(FL_Compressed):ClearFlag(FL_Checksum):In()
+		mod = stream:Object() stream:Finish()
+	end
 
 	bpcommon.ProfileEnd()
 
