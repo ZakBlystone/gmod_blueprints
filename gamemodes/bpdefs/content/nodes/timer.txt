@@ -1,5 +1,6 @@
 LIB TIMER
 {
+	NOWIKIDOC
 	SPECIAL Create, SHARED
 	{
 		IN Exec, PN_Exec, #Starts the timer

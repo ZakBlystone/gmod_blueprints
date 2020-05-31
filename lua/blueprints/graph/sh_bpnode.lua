@@ -463,6 +463,46 @@ function meta:GetOptions(tab)
 		end
 	}
 
+	local doc = self:GetDocumentationURL()
+	if doc ~= nil then
+
+		tab[#tab+1] = {
+			"Open GMod Wiki",
+			function()
+				gui.OpenURL(doc)
+			end, "icon16/help.png"
+		}
+
+	end
+
+end
+
+function meta:GetDocumentationURL()
+
+	local ntype = self:GetType()
+	local group = ntype:GetGroup()
+
+	if group ~= nil and not group:HasFlag(bpnodetypegroup.FL_NoWikiDoc) then
+
+		local groupName = group:GetName()
+		local ctx = ntype:GetContext()
+		local name = ""
+		if ctx == bpnodetype.NC_Class or ctx == bpnodetype.NC_Hook then
+			name = groupName .. ":" .. ntype:GetName()
+		elseif ctx == bpnodetype.NC_Lib then
+			if groupName == "GLOBAL" then
+				name = ntype:GetName()
+			else
+				name = groupName .. "." .. ntype:GetName()
+			end
+		end
+
+		return "https://wiki.facepunch.com/gmod/" .. name
+
+	end
+
+	return nil
+
 end
 
 function meta:GetPins() return self.pinCache or {} end

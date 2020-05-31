@@ -1,5 +1,6 @@
 LIB TABLE
 {
+	NOWIKIDOC
 	PURE Get, SHARED
 	{
 		IN Table, PN_Any, PNF_Table

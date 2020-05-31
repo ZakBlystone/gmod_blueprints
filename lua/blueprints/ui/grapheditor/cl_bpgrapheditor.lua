@@ -732,7 +732,8 @@ function meta:OpenNodeContext(vnode)
 	self.nodeMenu = DermaMenu( false, self.vgraph )
 
 	for k,v in pairs(options) do
-		self.nodeMenu:AddOption( v[1], v[2] )
+		local op = self.nodeMenu:AddOption( v[1], v[2] )
+		if v[3] then op:SetIcon( v[3] ) end
 	end
 
 	self.nodeMenu:SetMinimumWidth( 100 )

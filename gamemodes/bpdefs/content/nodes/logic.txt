@@ -1,5 +1,6 @@
 LIB LOGIC
 {
+	NOWIKIDOC
 	SPECIAL If, SHARED
 	{
 		DESC Conditional 'If' statement

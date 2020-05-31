@@ -1,5 +1,6 @@
 HOOKS CORE
 {
+	NOWIKIDOC
 	REDIRECTNODE EntityFireBullets, CORE_EntityFireBullets
 	HOOK Init, SHARED
 	{
@@ -33,6 +34,7 @@ HOOKS CORE
 }
 LIB CORE
 {
+	NOWIKIDOC
 	REDIRECTNODE Pin, CORE_Pin
 	PURE Pin, SHARED
 	{

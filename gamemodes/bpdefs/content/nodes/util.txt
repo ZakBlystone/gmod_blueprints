@@ -1,5 +1,6 @@
 LIB UTIL
 {
+	NOWIKIDOC
 	PURE AngleVectors, SHARED
 	{
 		IN Angles, PN_Angles

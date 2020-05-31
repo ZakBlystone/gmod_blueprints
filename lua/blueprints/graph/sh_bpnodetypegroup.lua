@@ -7,6 +7,9 @@ TYPE_Lib = 1
 TYPE_Hooks = 2
 TYPE_Callbacks = 4
 
+FL_None = 0
+FL_NoWikiDoc = 1
+
 GroupTypeNames = {
 	[TYPE_Class] = "Class",
 	[TYPE_Lib] = "Lib",
@@ -28,8 +31,11 @@ end
 
 local meta = bpcommon.MetaTable("bpnodetypegroup")
 
+bpcommon.AddFlagAccessors(meta)
+
 function meta:Init(entryType)
 
+	self.flags = FL_None
 	self.entryType = entryType
 	self.name = ""
 	self.entries = bplist.New(bpnodetype_meta):WithOuter(self):Indexed(false):PreserveNames(true)
@@ -68,6 +74,10 @@ function meta:RemoveEntry( entry )
 end
 
 function meta:Serialize(stream)
+
+	if stream:GetVersion() > 5 then
+		self.flags = stream:Bits(self.flags, 8)
+	end
 
 	self.entryType = stream:Bits(self.entryType, 8)
 	self.name = stream:String(self.name)

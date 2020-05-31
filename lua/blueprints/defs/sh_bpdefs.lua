@@ -347,6 +347,11 @@ local topLevelHandlers = function(block, value)
 	if value.tuple[1] == "REDIRECTNODE" then
 		defpack:AddNodeRedirector( value.tuple[2], value.tuple[3] )
 	end
+	if value.tuple[1] == "NOWIKIDOC" then
+		if block.group then
+			block.group:AddFlag( bpnodetypegroup.FL_NoWikiDoc )
+		end
+	end
 end
 
 RegisterBlock("HOOKS", 0, function(block, parent)
