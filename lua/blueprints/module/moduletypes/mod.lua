@@ -40,7 +40,11 @@ function MODULE:IsStatic()
 
 end
 
-function MODULE:GetStaticReference(compiler)
+function MODULE:GetStaticReference(compiler, fromModule)
+
+	if fromModule == self then
+		return "__self"
+	end
 
 	assert(isbpcompiler(compiler:GetOuter()))
 	return "__modules[" .. compiler:GetOuter():GetID(self) .. "].ref"

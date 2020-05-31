@@ -35,7 +35,7 @@ function PIN:GetCode(compiler)
 	if #self:GetConnections() > 0 then return end
 	local mod = self:GetType():GetSubType()
 	if mod and mod:IsStatic() then
-		return mod:GetStaticReference(compiler)
+		return mod:GetStaticReference(compiler, self:FindOuter(bpmodule_meta))
 	end
 
 end
