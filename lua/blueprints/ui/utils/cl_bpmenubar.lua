@@ -28,7 +28,7 @@ end
 
 function PANEL:Add( name, func, color, icon, right )
 
-	color = color or Color(50,50,50)
+	color = color or Color(50,55,60)
 	local textColor = Color(240,240,240)
 	local opt = vgui.Create("DButton", self)
 	local text = tostring(name)

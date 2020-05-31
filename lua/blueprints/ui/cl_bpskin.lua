@@ -277,10 +277,18 @@ SKIN.Colours.Category.LineAlt.Button_Selected	= GWEN.TextureColor( 4 + 8 * 25, 5
 
 SKIN.Colours.TooltipText = GWEN.TextureColor( 4 + 8 * 26, 500 )
 
+SKIN.FlatUI = true
+
 function SKIN:PaintPanel( panel, w, h )
 
 	if ( !panel.m_bBackground ) then return end
-	self.tex.Panels.Normal( 0, 0, w, h, panel.m_bgColor )
+
+	if not self.FlatUI then
+		self.tex.Panels.Normal( 0, 0, w, h, panel.m_bgColor )
+	else
+		local r,g,b,a = (panel.m_bgColor or Color(255,255,255)):Unpack()
+		bprenderutils.RoundedBoxFast(2,0,0,w,h,r*.2,g*.22,b*.25,a,true,true,true,true)
+	end
 
 end
 
@@ -296,12 +304,20 @@ function SKIN:PaintFrame( panel, w, h )
 
 	if ( panel:HasHierarchicalFocus() ) then
 
-		--bprenderutils.RoundedBoxFast(4,0,0,w,h,r,g,b,255,true,true,true,true)
-		self.tex.Window.Normal( 0, 0, w, h )
+		if not self.FlatUI then
+			self.tex.Window.Normal( 0, 0, w, h )
+		else 
+			bprenderutils.RoundedBoxFast(2,0,0,w,h,60,70,75,255,true,true,true,true)
+			bprenderutils.RoundedBoxFast(2,0,0,w,28,230,255,255,20,true,true,false,false)
+		end
 
 	else
 
-		self.tex.Window.Inactive( 0, 0, w, h )
+		if not self.FlatUI then
+			self.tex.Window.Inactive( 0, 0, w, h )
+		else
+			bprenderutils.RoundedBoxFast(2,0,0,w,h,30,35,35,255,true,true,true,true)
+		end
 
 	end
 
@@ -364,6 +380,46 @@ function SKIN:PaintWindowMaximizeButton( panel, w, h )
 	end
 
 	self.tex.Window.Maxi( 0, 0, w, h )
+
+end
+
+function SKIN:PaintTab( panel, w, h )
+
+	if ( panel:IsActive() ) then
+		return self:PaintActiveTab( panel, w, h )
+	end
+
+	if not self.FlatUI then
+		self.tex.TabT_Inactive( 0, 0, w, h )
+	else
+		bprenderutils.RoundedBoxFast(2,0,0,w,h,50,60,64,255,true,true,true,true)
+	end
+
+end
+
+function SKIN:PaintActiveTab( panel, w, h )
+
+	if not self.FlatUI then
+		self.tex.TabT_Active( 0, 0, w, h )
+	else
+		bprenderutils.RoundedBoxFast(2,0,0,w,h,80,90,94,255,true,true,true,true)
+	end
+
+end
+
+function SKIN:PaintPropertySheet( panel, w, h )
+
+	-- TODO: Tabs at bottom, left, right
+
+	local ActiveTab = panel:GetActiveTab()
+	local Offset = 0
+	if ( ActiveTab ) then Offset = ActiveTab:GetTall() - 8 end
+
+	if not self.FlatUI then
+		self.tex.Tab_Control( 0, Offset, w, h-Offset )
+	else
+		bprenderutils.RoundedBoxFast(2,0,Offset,w,h-Offset,80,90,94,255,true,true,true,true)
+	end
 
 end
 
