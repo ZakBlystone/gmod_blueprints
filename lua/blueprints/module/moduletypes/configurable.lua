@@ -24,7 +24,8 @@ function MODULE:OpenVGUI( parent )
 
 	bpcommon.ProfileStart("edit defaults")
 
-	local window = vgui.Create( "DFrame" )
+	local window = vgui.Create( "BPFrame" )
+	window:SetSkin("Blueprints")
 	window:SetSizable( true )
 	window:SetSize( ScrW()/3, ScrH()/2 )
 	window:MakePopup()

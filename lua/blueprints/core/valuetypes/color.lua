@@ -24,6 +24,7 @@ function VALUE:CreateVGUI( info )
 
 	local mixer = vgui.Create("DColorMixer")
 
+	mixer:SetSkin("Blueprints")
 	mixer:SetColor( self:Get() )
 	mixer.ValueChanged = function( pnl, col )
 		self:Set( Color(col.r, col.g, col.b, col.a) )

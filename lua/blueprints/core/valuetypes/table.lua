@@ -19,6 +19,7 @@ function VALUE:CreateVGUI( info )
 	newInfo.depth = (info.depth or 0) + 1
 
 	local list = vgui.Create("DPanelList")
+	list:SetSkin("Blueprints")
 
 	if info.outer then
 		list:SetAutoSize(true)
@@ -38,6 +39,7 @@ function VALUE:CreateVGUI( info )
 		if ch:HasFlag( bpvaluetype.FL_HIDDEN ) then continue end
 
 		local l = vgui.Create("DLabel", p)
+		l:SetSkin("Blueprints")
 		l:SetText( tostring(key) )
 		l:SizeToContentsX()
 		labels[i] = l
@@ -58,11 +60,11 @@ function VALUE:CreateVGUI( info )
 			if IsValid(inner) then
 
 				local p = vgui.Create("DPanel")
-				p:SetBackgroundColor(Color(30,30,30))
+				p:SetBackgroundColor(Color(120,120,120))
 
 				if info.depth ~= nil then
 					if info.depth < 2 then
-						p:SetBackgroundColor(Color(50,50,50))
+						p:SetBackgroundColor(Color(180,180,180))
 					else
 						p.Paint = function() end
 					end

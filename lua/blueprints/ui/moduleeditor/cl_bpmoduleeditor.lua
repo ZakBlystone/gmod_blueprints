@@ -92,7 +92,7 @@ function PANEL:CreateContentPanel()
 
 	self.ContentPanel = vgui.Create("DPanel", self)
 	self.ContentPanel:Dock( FILL )
-	self.ContentPanel:SetBackgroundColor( Color(50,50,50) )
+	--self.ContentPanel:SetBackgroundColor( Color(180,180,180) )
 
 end
 

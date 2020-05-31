@@ -198,7 +198,6 @@ function EDITOR:PopulateSideBar()
 	self.hierarchyPanel = vgui.Create("DPanel")
 	self.hierarchyPanel:SetSize(100,200)
 	self.hierarchyPanel:SetMinimumSize(100,200)
-	self.hierarchyPanel:SetBackgroundColor(Color(40,40,40))
 
 	self.hierarchyTree = vgui.Create("DTree", self.hierarchyPanel)
 	self.hierarchyTree:Dock( FILL )

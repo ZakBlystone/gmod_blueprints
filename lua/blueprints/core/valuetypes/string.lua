@@ -50,6 +50,7 @@ end
 function VALUE:CreateTextEntry( info, parent )
 
 	local entry = vgui.Create("DTextEntry", parent)
+	entry:SetSkin("Blueprints")
 	entry:SetText( self:Get() )
 	entry:SelectAllOnFocus()
 	if info.live then entry:SetUpdateOnType(true) end

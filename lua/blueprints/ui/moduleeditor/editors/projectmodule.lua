@@ -42,12 +42,13 @@ function EDITOR:PostInit()
 	self.tabs = vgui.Create("BPEditorPropertySheet" )
 	self.tabs:DockMargin(0, 0, 0, 0)
 	self.tabs:Dock( FILL )
-	self.tabs:SetPadding( 0 )
+	self.tabs:SetPadding( 4 )
 	self.tabs:SetEditor( self:GetMainEditor() )
 	self.tabs.OnActiveTabChanged = function(pnl, old, new) self:OnTabChanged(old, new) end
 	self:SetContent( self.tabs )
 
 	self.scroll = vgui.Create( "DScrollPanel" )
+	self.scroll:DockMargin(4,4,4,4)
 	self.scroll:Dock( FILL )
 
 	self.assets = vgui.Create("DIconLayout", self.scroll)

@@ -121,6 +121,7 @@ function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 
 	local menu = bpuipickmenu.Create(nil, nil, 300)
 	local top = vgui.Create("DPanel")
+	top:SetSkin("Blueprints")
 	top:SetBackgroundColor(Color(40,40,40))
 	top:SetTall(30)
 

@@ -17,6 +17,7 @@ function PANEL:Init()
 	self:SetMouseInputEnabled( true )
 	self:SetContentAlignment( 7 )
 	self:SetTextInset( 0, 4 )
+	self:SetSkin("Blueprints")
 
 end
 
@@ -48,9 +49,10 @@ function PANEL:Setup( label, pPropertySheet, pPanel, strMaterial, closeButton )
 	if closeButton then
 
 		self.CloseButton = vgui.Create( "DButton", self )
-		self.CloseButton:SetText(" X ")
-		self.CloseButton:SizeToContents()
+		self.CloseButton:SetText("")
+		self.CloseButton:SetSize( 21, 24 )
 		self.CloseButton.DoClick = function() self:Close() end
+		self.CloseButton.Paint = function( panel, w, h ) derma.SkinHook( "Paint", "TabCloseButton", panel, w, h ) end
 		self:InvalidateLayout()
 
 	end
@@ -225,6 +227,8 @@ function PANEL:Init()
 	local x = (ScrW() - w)/2
 	local y = (ScrH() - h)/2
 
+	self:SetSkin("Blueprints")
+
 	self.fullScreen = false
 	self.btnMaxim:SetDisabled(false)
 	self.btnMaxim.DoClick = function ( button )
@@ -254,21 +258,23 @@ function PANEL:Init()
 	self:ShowCloseButton(true)
 	self:SetDeleteOnClose(false)
 
+	self.btnMinim:SetVisible(false)
+
 	self.Tabs = vgui.Create("BPEditorPropertySheet", self )
-	self.Tabs:DockMargin(0, 0, 0, 5)
+	self.Tabs:DockMargin(2, 2, 2, 5)
 	self.Tabs:Dock( FILL )
 	self.Tabs:SetPadding( 0 )
 	self.Tabs:SetEditor( self )
 
 	self.Status = vgui.Create("DPanel", self)
+	self.Status:DockMargin(2, 2, 2, 2)
 	self.Status:Dock( BOTTOM )
-	self.Status:SetBackgroundColor( Color(50,50,50) )
 
 	self.StatusText = vgui.Create("DLabel", self.Status)
 	self.StatusText:SetFont("DermaDefaultBold")
 	self.StatusText:Dock( FILL )
-	self.StatusText:DockMargin(10, 2, 2, 2)
-	self.StatusText:SetText("")
+	self.StatusText:DockMargin(8, 4, 4, 4)
+	self.StatusText:SetText("OK")
 
 	self.wasActive = false
 	self.openModules = {}
@@ -429,7 +435,7 @@ end
 
 function PANEL:Think()
 
-	self.BaseClass.Think(self)
+	BPFrame.Think(self)
 
 	if _G.G_BPError ~= nil then
 		if self.BpErrorWasNil then
@@ -571,7 +577,7 @@ function PANEL:CloseModule( mod )
 
 end
 
-vgui.Register( "BPEditor", PANEL, "DFrame" )
+vgui.Register( "BPEditor", PANEL, "BPFrame" )
 
 
 --if true then return end

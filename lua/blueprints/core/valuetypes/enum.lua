@@ -86,6 +86,9 @@ function VALUE:CreateVGUI( info )
 	local btn = vgui.Create("DButton")
 	local label = vgui.Create("DLabel", btn)
 
+	btn:SetSkin("Blueprints")
+	label:SetSkin("Blueprints")
+
 	btn:SetText("")
 	label:SetText( self:FindKey(true) )
 	label:DockMargin(6, 0, 0, 0)

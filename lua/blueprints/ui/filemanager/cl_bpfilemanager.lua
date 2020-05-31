@@ -348,7 +348,8 @@ local PANEL = {}
 function PANEL:Init()
 
 	self.AllowAutoRefresh = true
-	self:SetBackgroundColor( Color(40,40,40) )
+
+	self:SetBackgroundColor(Color(150,150,150))
 
 	self.label = vgui.Create("DLabel", self)
 	self.label:SetText("FILES")
@@ -437,14 +438,15 @@ function PANEL:Init()
 	--self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
 
 	self.middle = vgui.Create("DPanel")
-	self.middle:SetBackgroundColor(Color(70,70,70))
+	self.middle.Paint = function() end
 
 	self.contentPanel = vgui.Create("DPanel", self)
 	self.contentPanel:Dock( FILL )
-	self.contentPanel:SetBackgroundColor( Color(50,50,50) )
+	--self.contentPanel:SetBackgroundColor( Color(50,50,50) )
 
 	self.content = vgui.Create("DHorizontalDivider", self.contentPanel)
 	self.content:Dock( FILL )
+	self.content:DockMargin(4,4,4,4)
 	self.content:SetBackgroundColor( Color(30,30,30) )
 
 	self.remoteList = vgui.Create("BPFileList"):SetTitle(LOCTEXT"file_list_server","Server Files")

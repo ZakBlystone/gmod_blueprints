@@ -12,6 +12,7 @@ function EditStructParams( struct )
 	local width = 500
 
 	local window = vgui.Create( "DFrame" )
+	window:SetSkin("Blueprints")
 	window:SetTitle( text_edit_struct() )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
@@ -38,6 +39,7 @@ function EditEventParams( event )
 	local width = 500
 
 	local window = vgui.Create( "DFrame" )
+	window:SetSkin("Blueprints")
 	window:SetTitle( text_edit_event() )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )

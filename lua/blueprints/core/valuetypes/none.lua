@@ -15,6 +15,7 @@ function VALUE:CreateVGUI( info )
 
 	local zone = vgui.Create("DPanel")
 	zone:SetTall(16)
+	zone:SetSkin("Blueprints")
 	return zone
 
 end

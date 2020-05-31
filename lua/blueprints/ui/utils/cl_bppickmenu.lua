@@ -140,6 +140,8 @@ function PANEL:Init()
 
 	--self:SetBackgroundColor( Color(80,80,80) )
 
+	self:SetSkin("Blueprints")
+
 	hook.Add("BPEditorBecomeActive", tostring(self), function()
 		if IsValid(self) then self:Remove() end
 	end)
@@ -204,7 +206,7 @@ function PANEL:Init()
 	self.topbar.Paint = function() end
 
 	self.search = vgui.Create("DTextEntry", self.topbar)
-	self.search:DockMargin(5, 5, 5, 0)
+	--self.search:DockMargin(5, 4, 5, 0)
 	self.search:RequestFocus()
 	self.search:SetUpdateOnType(true)
 	self.search.OnValueChange = function(te, ...) self:OnSearchTerm(...) end
@@ -215,7 +217,7 @@ function PANEL:Init()
 	end
 	self.search:Dock( TOP )
 
-	self.topbar:DockMargin(0, 0, 0, 5)
+	self.topbar:DockMargin(5, 5, 5, 6)
 	self.topbar:Dock( TOP )
 
 	self.resultList = vgui.Create("DTree", self )
@@ -279,6 +281,7 @@ function PANEL:CreatePages()
 		for i, v in ipairs(self.pages) do
 
 			local tree = vgui.Create("DTree")
+			tree:SetSkin("Blueprints")
 			tree:SetBackgroundColor(Color(50,50,50))
 			local sheet = self.tabs:AddSheet( v.name, tree, v.icon, false, false, v.desc )
 			sheet.Tab.entry = v
@@ -370,8 +373,7 @@ end
 
 function PANEL:Paint(w,h)
 
-	surface.SetDrawColor( Color(80,80,80) )
-	surface.DrawRect(0,0,w,h)
+	derma.SkinHook( "Paint", "Frame", self, w, h )
 
 end
 

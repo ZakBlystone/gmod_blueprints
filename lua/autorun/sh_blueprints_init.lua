@@ -74,6 +74,7 @@ bpinclude("defs/sh_bpdefs.lua")
 
 -- UI
 bpinclude("ui/sh_bpui.lua")
+bpinclude("ui/utils/cl_bpframe.lua")
 bpinclude("ui/utils/cl_bpcategorycollapse.lua")
 bpinclude("ui/utils/cl_bpcategorylist.lua")
 bpinclude("ui/utils/cl_bprenderutils.lua")
@@ -105,6 +106,7 @@ bpinclude("ui/moduleeditor/cl_bpmoduleeditor.lua")
 bpinclude("ui/moduleeditor/cl_bppinlistentry.lua")
 bpinclude("ui/assetbrowser/cl_bpassettile.lua")
 bpinclude("ui/assetbrowser/cl_bpassetbrowser.lua")
+bpinclude("ui/cl_bpskin.lua")
 bpinclude("ui/cl_bpeditor.lua")
 
 -- TEST

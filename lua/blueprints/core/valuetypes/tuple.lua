@@ -44,8 +44,10 @@ function VALUE:CreateVGUI( info )
 		local k = self.Accessors[i] or i
 
 		local sub = vgui.Create("DPanel", zone)
+		sub:SetSkin("Blueprints")
 		local l = vgui.Create("DLabel", sub)
 		local p = ch:CreateVGUI( newInfo )
+		l:SetSkin("Blueprints")
 		p:SetParent(sub)
 		l:Dock( LEFT )
 		l:SetText( tostring(k) .. ": " )

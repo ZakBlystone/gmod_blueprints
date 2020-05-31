@@ -123,6 +123,7 @@ end
 function meta:CreateVGUI( info )
 
 	local entry = vgui.Create("DTextEntry")
+	entry:SetSkin("Blueprints")
 	entry:SetText( self:ToString() )
 	entry:SelectAllOnFocus()
 	if info.live then entry:SetUpdateOnType(true) end

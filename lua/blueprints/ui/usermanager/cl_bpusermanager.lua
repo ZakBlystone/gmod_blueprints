@@ -13,7 +13,7 @@ function PANEL:Init()
 
 	self.contentPanel = vgui.Create("DPanel", self)
 	self.contentPanel:Dock( FILL )
-	self.contentPanel:SetBackgroundColor( Color(50,50,50) )
+	--self.contentPanel:SetBackgroundColor( Color(50,50,50) )
 
 	self.content = vgui.Create("DHorizontalDivider", self.contentPanel)
 	self.content:Dock( FILL )

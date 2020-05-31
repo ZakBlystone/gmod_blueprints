@@ -6,7 +6,7 @@ local PANEL = {}
 
 function PANEL:Init()
 
-	self:SetBackgroundColor( Color(60,60,60) )
+	--self:SetBackgroundColor( Color(60,60,60) )
 	self.items = {}
 
 end
@@ -28,7 +28,7 @@ end
 
 function PANEL:Add( name, func, color, icon, right )
 
-	color = color or Color(80,80,80)
+	color = color or Color(50,50,50)
 	local textColor = Color(240,240,240)
 	local opt = vgui.Create("DButton", self)
 	local text = tostring(name)
@@ -51,7 +51,7 @@ function PANEL:Add( name, func, color, icon, right )
 			col = Color(col.r - 20, col.g - 20, col.b - 20)
 		end
 
-		local bgColor = Color(col.r + 20, col.g + 20, col.b + 20)
+		local bgColor = Color(col.r + 40, col.g + 40, col.b + 40)
 		draw.RoundedBox( 2, 0, 0, w, h, bgColor )
 		draw.RoundedBox( 2, 1, 1, w-2, h-2, col )
 	end
