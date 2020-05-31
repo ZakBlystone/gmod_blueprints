@@ -426,10 +426,11 @@ function MODULE:SerializeData( stream )
 
 end
 
-function MODULE:CompileVariable( compiler, id, var )
+function MODULE:CompileVariable( compiler, var )
 
 	local def = var:GetDefault()
 	local vtype = var:GetType()
+	local id = compiler:GetID(var)
 
 	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 	if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
@@ -561,7 +562,7 @@ function MODULE:Compile( compiler, pass )
 		if self:CanHaveVariables() then
 
 			for id, var in self:Variables() do
-				self:CompileVariable( compiler, id, var )
+				self:CompileVariable( compiler, var )
 			end
 
 		end
