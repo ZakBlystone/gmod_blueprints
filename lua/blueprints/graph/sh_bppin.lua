@@ -312,7 +312,7 @@ function meta:Serialize(stream)
 	
 	if stream:GetContext() == "defs" or stream:GetVersion() < 5 then
 		self.desc = stream:String(self.desc)
-	else
+	elseif stream:IsReading() then
 		self.desc = ""
 	end
 
@@ -321,7 +321,7 @@ function meta:Serialize(stream)
 
 	if self.dir == PD_Out or stream:GetVersion() < 5 then
 		self.connections = stream:ObjectArray(self.connections)
-	else
+	elseif stream:IsReading() then
 		self.connections = {}
 	end
 
