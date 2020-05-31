@@ -23,9 +23,6 @@ function NODE:GeneratePins(pins)
 	end
 	if dataPin == nil then print("No data pin") return end
 
-	-- we need the data pin to be the last pin for backwards compatibility
-	table.remove(pins, dataPinID)
-
 	for i=1, self.data.pinCount do
 		pins[#pins+1] = bpschema.MakePin(
 			bpschema.PD_In,
@@ -33,8 +30,6 @@ function NODE:GeneratePins(pins)
 			dataPin:GetType()
 		)
 	end
-
-	pins[#pins+1] = dataPin
 
 end
 
