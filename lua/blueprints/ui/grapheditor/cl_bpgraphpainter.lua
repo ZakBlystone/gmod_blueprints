@@ -67,6 +67,18 @@ function meta:DrawConnection(aPin, bPin, xOffset, yOffset, alpha)
 
 	local apintype = avpin:GetPin()
 	local bpintype = bvpin:GetPin()
+	local highlight = math.max( a:GetHighlight(), b:GetHighlight() )
+
+	if highlight > 0 then
+
+		bprenderutils.DrawHermite( ax, ay, bx, by, 
+			apintype:GetColor(), 
+			bpintype:GetColor(),
+			alpha*.5,
+			4 + 20 * highlight
+		)
+
+	end
 
 	bprenderutils.DrawHermite( ax, ay, bx, by, 
 		apintype:GetColor(), 
@@ -91,11 +103,14 @@ end
 
 function meta:DrawNode(vnode, xOffset, yOffset, alpha)
 
+	local dt = FrameTime()
 	local pw, ph = self:GetVGraph():GetSize()
 	local x,y = vnode:GetPos()
 	local w,h = vnode:GetSize()
 	local x0,y0 = self:PointToScreen(x,y)
 	local x1,y1 = self:PointToScreen(x+w,y+h)
+
+	vnode:Think(dt)
 
 	if x0 > pw or y0 > ph then return false end
 	if x1 < 0 or y1 < 0 then return false end

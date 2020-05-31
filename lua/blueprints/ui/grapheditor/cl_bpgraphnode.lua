@@ -43,6 +43,8 @@ local NO_HIDDEN_FILTER = function(pin) return not pin:ShouldBeHidden() end
 
 function meta:Init(node, graph, editor)
 
+	self.highlight = 0
+	self.highlighting = false
 	self.editor = editor
 	self.node = node
 	self.graph = graph
@@ -346,6 +348,18 @@ function meta:DrawBanner(x, y, alpha)
 
 end
 
+function meta:SetHighlighting(highlight) self.highlighting = highlight end
+function meta:GetHighlight() return self.highlight end
+
+function meta:Think( dt )
+
+	local t = self.highlighting and 1 or 0
+	local rate = 5
+	self.highlight = Lerp(1 - math.exp(dt * -rate), self.highlight, t)
+	if t == 0 and self.highlight < 0.01 then self.highlight = 0 end
+
+end
+
 local col = Color(0,0,0)
 function meta:Draw(xOffset, yOffset, alpha)
 
@@ -362,7 +376,16 @@ function meta:Draw(xOffset, yOffset, alpha)
 	end
 
 	local node = self.node
+	local ntc = node:GetColor()
 	local outline = 8
+
+
+	local highlight = self:GetHighlight()
+	if highlight > 0 then
+		col:SetUnpacked(ntc.r, ntc.g, ntc.b, 255*highlight*alpha)
+		drawNodeHighlight(x-outline,y-outline,w+outline*2,h+outline*2,col)
+	end
+
 	local selected = self:IsSelected()
 	if selected then
 		col:SetUnpacked(200,150,80,255*alpha)
@@ -387,7 +410,6 @@ function meta:Draw(xOffset, yOffset, alpha)
 	end
 
 
-	local ntc = node:GetColor()
 	local isCompact = self.compact
 	local role = node:GetRole()
 	if not isCompact then

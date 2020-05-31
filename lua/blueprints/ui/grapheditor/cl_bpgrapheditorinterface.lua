@@ -10,7 +10,8 @@ local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
 
 local meta = bpcommon.MetaTable("bpgrapheditorinterface")
 
-local TOOLTIP_TIME = .6
+local NODE_HIGHLIGHT_TIME = .4
+local TOOLTIP_TIME = .8
 local TOOLTIP_FONT = "HudHintTextLarge"
 local TOOLTIP_MAXWIDTH = 400
 local POPUP_TIME = 4
@@ -21,6 +22,7 @@ function meta:Init( editor, vgraph )
 	self.vgraph = vgraph
 	self.graphPainter = bpgraphpainter.New(vgraph:GetGraph(), editor:GetNodeSet(), vgraph)
 	self.hoverTimer = 0
+	self.isHovering = false
 	self.lastMouseX = 0
 	self.lastMouseY = 0
 	self.tooltipWrap = bptextwrap.New():SetFont(TOOLTIP_FONT):SetMaxWidth(TOOLTIP_MAXWIDTH)
@@ -169,34 +171,73 @@ function meta:GetTooltipUnderCursor(mx, my)
 		local vpin = self:GetEditor():TryGetNodePin( vnode, mx, my )
 
 		if vpin then
-			return vpin:GetPin():GetDescription()
+			return vpin:GetPin():GetDescription(), vpin
 		end
 
-		return vnode:GetNode():GetDescription()
+		return vnode:GetNode():GetDescription(), vnode
 
 	end
 
 end
 
-function meta:DrawTooltip()
+function meta:UpdateMouseTimer()
 
 	local mx, my = self:PointToWorld(self:GetVGraph():GetMousePos())
 
 	if mx == self.lastMouseX and my == self.lastMouseY then
 		self.hoverTimer = self.hoverTimer + FrameTime()
-		if self.hoverTimer > TOOLTIP_TIME and not self.tooltip then
-			self.tooltip = true
-			self.tooltipLocation = {mx, my}
-			self.tooltipText = self:GetTooltipUnderCursor(mx, my)
-			self.tooltipWrap:SetText( self.tooltipText )
-		end
+		self.isHovering = true
 	else
-		self.tooltip = false
 		self.hoverTimer = 0
+		self.isHovering = false
 	end
 
 	self.lastMouseX = mx
 	self.lastMouseY = my
+
+end
+
+function meta:UpdateHighlights()
+
+	local mx, my = self:PointToWorld(self:GetVGraph():GetMousePos())
+
+	if self.highlightedNode ~= nil then
+		self.highlightedNode:SetHighlighting(false)
+	end
+
+	if self.isHovering and self.hoverTimer > NODE_HIGHLIGHT_TIME then
+		local vnode = self:GetEditor():TryGetNode( mx, my )
+		if vnode then
+
+			vnode:SetHighlighting(true)
+			self.highlightedNode = vnode
+
+		end
+	end
+
+end
+
+function meta:DrawTooltip(w,h)
+
+	local mx, my = self:PointToWorld(self:GetVGraph():GetMousePos())
+
+	if self.isHovering then
+		if self.hoverTimer > TOOLTIP_TIME and not self.tooltip then
+			local text, obj = self:GetTooltipUnderCursor(mx, my)
+			self.tooltip = true
+			self.tooltipLocation = {mx, my}
+			self.tooltipText = text
+			self.tooltipWrap:SetText( self.tooltipText )
+			if isbpuigraphnode(obj) then
+				local x,y = obj:GetPos()
+				local w,h = obj:GetSize()
+				self.tooltipLocation[1] = x + w/2
+				self.tooltipLocation[2] = y
+			end
+		end
+	else
+		self.tooltip = false
+	end
 
 	local dt = FrameTime()
 	if self.tooltip then
@@ -211,11 +252,19 @@ function meta:DrawTooltip()
 
 	if self.tooltipLocation and self.tooltipText then
 
-		local sx, sy = self:PointToScreen( unpack(self.tooltipLocation) )
+		local nx, ny = self:PointToScreen( unpack(self.tooltipLocation) )
+
 		local font = "HudHintTextLarge"
 		local alpha = self.tooltipAlpha
+		local tw, th = self.tooltipWrap:GetSize()
 
-		sy = sy + 20 * (1-alpha)
+		local sx = w-tw - 20
+		local sy = 0
+
+		sy = sy + 20 * (1-alpha) + 20
+		ny = ny - 10
+
+		local cx = sx + tw/2
 
 		--[[surface.SetFont(font)
 		local tw, th = surface.GetTextSize( self.tooltipText )
@@ -223,17 +272,35 @@ function meta:DrawTooltip()
 		draw.RoundedBox(6, sx - 5, sy - 5, tw + 10, th + 10, Color(0,0,0,255 * alpha))
 		draw.SimpleText( self.tooltipText, font, sx, sy - 1, Color( 255, 255, 255, 255 * alpha ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )]]
 
-		local tw, th = self.tooltipWrap:GetSize()
+		--sx, sy = self.vgraph:LocalToScreen(sx, sy)
 
-		sx = sx + 20
-		sy = sy + 20
+		--if sx + tw > ScrW() - 20 then sx = sx - (tw + 40) end
+		--if sy + th > ScrH() - 20 then sy = sy - (th + 40) end
 
-		sx, sy = self.vgraph:LocalToScreen(sx, sy)
+		--sx, sy = self.vgraph:ScreenToLocal(sx, sy)
 
-		if sx + tw > ScrW() - 20 then sx = sx - (tw + 40) end
-		if sy + th > ScrH() - 20 then sy = sy - (th + 40) end
+		local lx, ly = self.vgraph:LocalToScreen(cx, sy+th+4)
+		local lx2, ly2 = self.vgraph:LocalToScreen(nx, ny)
 
-		sx, sy = self.vgraph:ScreenToLocal(sx, sy)
+		surface.SetDrawColor(255,255,255,255*alpha)
+		--surface.DrawLine(cx, sy+th+10, nx, ny)
+		--surface.DrawLine(cx, ny, nx, ny)
+
+		draw.NoTexture()
+
+		local s = 8
+		surface.DrawPoly({
+			{x = nx-s, y = ny-s*.5},
+			{x = nx+s, y = ny-s*.5},
+			{x = nx, y = ny+s*.5},
+		})
+
+		bprenderutils.DrawHermiteEx( lx, ly, lx2, ly2, 
+			Color(0,0,0,255), 
+			Color(255,255,255,255),
+			alpha,12,3,
+			0,500,0,500,50
+		)
 
 		draw.RoundedBox(6, sx - 5, sy - 5, tw + 10, th + 10, Color(0,0,0,255 * alpha))
 		self.tooltipWrap:Draw(sx, sy, 255, 255, 255, 255 * alpha)
@@ -311,10 +378,12 @@ end
 
 function meta:DrawOverlay(w,h)
 
+	self:UpdateMouseTimer()
+	self:UpdateHighlights()
 	self:PaintGraphTitle(w,h)
 	self:PaintZoomIndicator(w,h)
 	self:PaintPopups(w,h)
-	self:DrawTooltip()
+	self:DrawTooltip(w,h)
 	self:DrawDragged()
 
 end
