@@ -48,7 +48,6 @@ function DrawHermiteEx(x0,y0,x1,y1,c0,c1,alpha,width0,width1,t0x,t0y,t1x,t1y,sam
 	local dx = (x1 - x0)
 	local dy = (y1 - y0)
 
-	render_setColorMaterialIgnoreZ()
 	mesh.Begin( MATERIAL_TRIANGLE_STRIP, 2 * samples )
 
 	for i=1, samples do
@@ -64,8 +63,8 @@ function DrawHermiteEx(x0,y0,x1,y1,c0,c1,alpha,width0,width1,t0x,t0y,t1x,t1y,sam
 		local d = .5 * (width / math_sqrt(vdx*vdx + vdy*vdy))
 		local pdx,pdy = -vdy * d,vdx * d
 
-		v_set(__vec, x+pdx, y+pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(1, t, 0) mesh_advance()
-		v_set(__vec, x-pdx, y-pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(1, t, 1) mesh_advance()
+		v_set(__vec, x+pdx, y+pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(0, 0, t) mesh_advance()
+		v_set(__vec, x-pdx, y-pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(0, 1, t) mesh_advance()
 
 		px = x
 		py = y
@@ -99,7 +98,6 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,width,samples)
 	d = math_max(d, math_abs(dy))
 	d = math_min(d, 1000)
 
-	render_setColorMaterialIgnoreZ()
 	mesh.Begin( MATERIAL_TRIANGLE_STRIP, 2 * samples )
 
 	for i=1, samples do
@@ -114,8 +112,8 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,width,samples)
 		local d = .5 * (width / math_sqrt(vdx*vdx + vdy*vdy))
 		local pdx,pdy = -vdy * d,vdx * d
 
-		v_set(__vec, x+pdx, y+pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(1, t, 0) mesh_advance()
-		v_set(__vec, x-pdx, y-pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(1, t, 1) mesh_advance()
+		v_set(__vec, x+pdx, y+pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(0, 0, t) mesh_advance()
+		v_set(__vec, x-pdx, y-pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(0, 1, t) mesh_advance()
 
 		px = x
 		py = y

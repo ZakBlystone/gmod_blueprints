@@ -59,6 +59,7 @@ function meta:DrawGrabbedLine()
 	local ax,ay = pin:GetVNode():GetPinSpotLocation(pin:GetPinID())
 	local apintype = pin:GetPin()
 
+	render.SetColorMaterialIgnoreZ()
 	if apintype:IsOut() then
 		bprenderutils.DrawHermite( ax, ay, mx, my, 
 			apintype:GetColor(),
@@ -295,6 +296,7 @@ function meta:DrawTooltip(w,h)
 			{x = nx, y = ny+s*.5},
 		})
 
+		render.SetColorMaterialIgnoreZ()
 		bprenderutils.DrawHermiteEx( lx, ly, lx2, ly2, 
 			Color(0,0,0,255), 
 			Color(255,255,255,255),

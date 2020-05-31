@@ -12,6 +12,13 @@ local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
 	["$vertexalpha"] = 1,
 })
 
+local HighlightSplineMaterial = CreateMaterial("highlightSpline", "UnLitGeneric", {
+	["$basetexture"] = "effects/laser1",
+	["$vertexcolor"] = 1,
+	["$vertexalpha"] = 1,
+	["$additive"] = 1,
+})
+
 local meta = bpcommon.MetaTable("bpgraphpainter")
 
 function meta:Init( graph, nodeSet, vgraph )
@@ -69,17 +76,20 @@ function meta:DrawConnection(aPin, bPin, xOffset, yOffset, alpha)
 	local bpintype = bvpin:GetPin()
 	local highlight = math.max( a:GetHighlight(), b:GetHighlight() )
 
+	--highlight = 1
 	if highlight > 0 then
 
+		render.SetMaterial(HighlightSplineMaterial)
 		bprenderutils.DrawHermite( ax, ay, bx, by, 
 			apintype:GetColor(), 
 			bpintype:GetColor(),
-			alpha*.5,
-			4 + 20 * highlight
+			alpha,
+			4 + 120 * highlight
 		)
 
 	end
 
+	render.SetColorMaterialIgnoreZ()
 	bprenderutils.DrawHermite( ax, ay, bx, by, 
 		apintype:GetColor(), 
 		bpintype:GetColor(),
