@@ -17,6 +17,39 @@ function MODULE:Setup()
 
 	BaseClass.Setup(self)
 
+	self.createNodeType = bpnodetype.New():WithOuter(self)
+	self.createNodeType:SetCodeType(NT_Function)
+	self.createNodeType.GetDisplayName = function() return "Create " .. self:GetName() end
+	self.createNodeType.GetGraphThunk = function() return self end
+	self.createNodeType.GetRole = function() return ROLE_Client end
+	self.createNodeType.GetCategory = function() return self:GetName() end
+	self.createNodeType.GetRawPins = function()
+		return {
+			MakePin(PD_Out, "Panel", self:GetModulePinType()),
+		}
+	end
+	self.createNodeType.Compile =  function(node, compiler, pass)
+
+		if pass == bpcompiler.CP_ALLOCVARS then 
+
+			compiler:CreatePinVar( node:FindPin(PD_Out, "Panel") )
+			return true
+
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			local mod = "__modules[" .. compiler:GetOuter():GetID(self) .. "]"
+			local pin = compiler:GetPinCode( node:FindPin(PD_Out, "Panel") )
+
+			compiler.emit( pin .. " = " .. mod .. ".create()")
+			compiler.emit( pin .. ":MakePopup()")
+			compiler.emit( pin .. ":Center()")
+			compiler:CompileReturnPin( node )
+			return true
+
+		end
+
+	end
+
 	self.layoutRoot = nil
 
 end
@@ -40,7 +73,22 @@ function MODULE:SerializeData( stream )
 
 	BaseClass.SerializeData( self, stream )
 
+	stream:Extern( self:GetCreateNodeType(), "\xBF\x9E\x45\x7E\x48\x60\x89\x98\x80\x00\x00\x94\xA3\x3D\xCC\x4E" )
+
 	self.layoutRoot = stream:Object( self.layoutRoot, self )
+
+end
+
+function MODULE:GetCreateNodeType() return self.createNodeType end
+function MODULE:GetNodeTypes( collection, graph )
+
+	BaseClass.GetNodeTypes( self, collection, graph )
+
+	local types = {}
+
+	collection:Add( types )
+	types["__Create"] = self:GetCreateNodeType()
+	for k,v in pairs(types) do v.name = k end
 
 end
 

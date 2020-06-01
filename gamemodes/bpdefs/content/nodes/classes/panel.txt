@@ -1,0 +1,7 @@
+CLASS Panel
+{
+	FUNC Remove, CLIENT
+	{
+		DESC Marks a panel for deletion.
+	}
+}
