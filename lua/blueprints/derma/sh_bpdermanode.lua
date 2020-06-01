@@ -36,7 +36,7 @@ function meta:Init(class, parent, position)
 	self.getterNodeType.GetDisplayName = function() return "Get " .. self:GetName() end
 	self.getterNodeType.GetGraphThunk = function() return self end
 	self.getterNodeType.GetRole = function() return ROLE_Client end
-	self.getterNodeType.GetCategory = function() return self:GetName() end
+	self.getterNodeType.GetCategory = function() return self:GetModule():GetName() end
 	self.getterNodeType.GetRawPins = function()
 		return {
 			MakePin(PD_In, "Layout", self:GetModule():GetModulePinType()),
@@ -90,6 +90,18 @@ end
 function meta:GetName() return self.name end
 function meta:GetCompiledID() return self.compiledID end
 function meta:GetParent() return self.parent() end
+
+function meta:GetRoot()
+
+	local p = self:GetParent() or self
+	for i=1, 1000 do
+		local np = p:GetParent()
+		if not np then break else p = np end
+	end
+	return p
+
+end
+
 function meta:SetupDefaultLayout() return self end
 
 function meta:SetLayout(layout)
