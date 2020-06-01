@@ -5,6 +5,15 @@ CLASS Panel
 		DESC Marks a panel for deletion.
 	}
 }
+CLASS DPanel
+{
+	NOINDEXMETA
+	FUNC SetBackgroundColor, CLIENT
+	{
+		DESC Sets the background color of the panel.
+		IN color, PN_Color
+	}
+}
 CLASS DButton
 {
 	NOINDEXMETA
