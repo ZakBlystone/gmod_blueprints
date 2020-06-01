@@ -58,7 +58,7 @@ function MODULE:CreateDefaults()
 
 	print("CREATE DEFAULTS")
 
-	self.layoutRoot = bpdermanode.New("Window")
+	self.layoutRoot = bpdermanode.New("Window"):WithOuter(self)
 	self.layoutRoot:SetupDefaultLayout()
 
 end
@@ -77,6 +77,10 @@ function MODULE:SerializeData( stream )
 
 	self.layoutRoot = stream:Object( self.layoutRoot, self )
 
+	for k, child in ipairs(self:Root():GetAllChildren()) do
+		stream:Extern( child:GetGetterNodeType(), "\x41\x70\x46\x7E\xDE\x59\x98\x0C\x80\x00\x00\x44\xAB\xF5\x5F\x6E" )
+	end
+
 end
 
 function MODULE:GetCreateNodeType() return self.createNodeType end
@@ -88,6 +92,12 @@ function MODULE:GetNodeTypes( collection, graph )
 
 	collection:Add( types )
 	types["__Create"] = self:GetCreateNodeType()
+
+	for k, child in ipairs(self:Root():GetAllChildren()) do
+		local getter = child:GetGetterNodeType()
+		types["__GetPanel" ..k] = getter
+	end
+
 	for k,v in pairs(types) do v.name = k end
 
 end

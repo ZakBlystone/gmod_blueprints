@@ -352,6 +352,11 @@ local topLevelHandlers = function(block, value)
 			block.group:AddFlag( bpnodetypegroup.FL_NoWikiDoc )
 		end
 	end
+	if value.tuple[1] == "NOINDEXMETA" then
+		if block.group then
+			block.group:AddFlag( bpnodetypegroup.FL_NoIndexMeta )
+		end
+	end
 end
 
 RegisterBlock("HOOKS", 0, function(block, parent)

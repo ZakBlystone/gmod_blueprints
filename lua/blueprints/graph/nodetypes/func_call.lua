@@ -29,12 +29,17 @@ function NODE:Compile(compiler, pass)
 
 		local groupName = group:GetName()
 		local call = nil
+		local nometa = false
 
 		-- Determine function call statement based on context
 		if context == NC_Class then
 
 			call = groupName .. "_." .. name
 			if self:HasFlag(NTF_DirectCall) then call = "__self:" .. name end
+			if group:HasFlag(bpnodetypegroup.FL_NoIndexMeta) then
+				call = ":" .. name
+				nometa = true
+			end
 
 		elseif context == NC_Lib then
 
@@ -57,6 +62,15 @@ function NODE:Compile(compiler, pass)
 		local arg = {}
 		for k, pin in self:SidePins(PD_In, bpnode.PF_NoExec) do
 			arg[#arg+1] = compiler:GetPinCode( pin, true )
+		end
+
+		-- Prepend first argument in obj:Func style call
+		if nometa then
+			local selfPin = arg[1]
+			table.remove(arg,1)
+			call = selfPin .. call
+
+			print("FUNC CALL WITH NOMETA: " .. tostring(call))
 		end
 
 		-- Emit call statement

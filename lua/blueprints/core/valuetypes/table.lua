@@ -140,12 +140,18 @@ function VALUE:Index(str)
 
 end
 
-function VALUE:AddCosmeticChild( key, valueType )
+function VALUE:AddCosmeticChild( key, valueType, position )
 
-	self._children[#self._children+1] = {
+	local t = {
 		k = key,
 		vt = valueType,
 	}
+
+	if position then
+		return table.insert(self._children, position, t)
+	end
+
+	self._children[#self._children+1] = t
 	return #self._children
 
 end

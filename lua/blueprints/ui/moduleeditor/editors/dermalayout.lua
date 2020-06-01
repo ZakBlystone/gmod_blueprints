@@ -78,7 +78,7 @@ function EDITOR:NodeContextMenu(node, vnode)
 			if not cl.Creatable then continue end
 
 			local op = addChildMenu:AddOption( tostring(cl.Name), function()
-				local newNode = bpdermanode.New(v.name, node)
+				local newNode = bpdermanode.New(v.name, node):WithOuter( self:GetModule() )
 				newNode:SetupDefaultLayout()
 				self:LayoutChanged()
 			end )
@@ -105,7 +105,7 @@ function EDITOR:NodeContextMenu(node, vnode)
 			if not cl.Creatable then continue end
 
 			local op = setLayoutMenu:AddOption( tostring(cl.Name), function()
-				local newLayout = bplayout.New(v.name)
+				local newLayout = bplayout.New(v.name):WithOuter( self:GetModule() )
 				node:SetLayout(newLayout)
 				self:LayoutChanged()
 			end )
@@ -119,6 +119,7 @@ function EDITOR:NodeContextMenu(node, vnode)
 	if node:GetParent() ~= nil then
 		self.cmenu:AddOption( tostring( LOCTEXT"layout_submenu_delete","Delete" ), function()
 			node:GetParent():RemoveChild( node )
+			node:Destroy()
 			self:LayoutChanged()
 		end ):SetIcon( "icon16/delete.png" )
 	end
@@ -219,6 +220,10 @@ function EDITOR:RecursiveAddNode(vnode, node)
 	local newNode = vnode:AddNode(node:GetName(), node.Icon or "icon16/application.png")
 	newNode:SetExpanded(true)
 	newNode.node = node
+
+	node:BindRaw("nameChanged", vnode, function(old, new)
+		newNode:SetText(new)
+	end)
 
 	if not node.RootOnly then
 		newNode:Droppable("dermanode")

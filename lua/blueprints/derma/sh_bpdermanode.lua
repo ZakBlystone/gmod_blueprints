@@ -15,6 +15,8 @@ function GetClassLoader() return dermaClasses end
 
 function meta:Init(class, parent, position)
 
+	bpcommon.MakeObservable(self)
+
 	self.layout = nil
 	self.parent = Weak()
 	self.children = {}
@@ -24,21 +26,67 @@ function meta:Init(class, parent, position)
 	self.preview = nil
 	self.compiledID = nil
 
-	bpcommon.MakeObservable(self)
-
 	if self.class ~= nil then self:SetupClass() end
 	if parent then
 		parent:AddChild(self, position)
+	end
+
+	self.getterNodeType = bpnodetype.New():WithOuter(self)
+	self.getterNodeType:SetCodeType(NT_Pure)
+	self.getterNodeType.GetDisplayName = function() return "Get " .. self:GetName() end
+	self.getterNodeType.GetGraphThunk = function() return self end
+	self.getterNodeType.GetRole = function() return ROLE_Client end
+	self.getterNodeType.GetCategory = function() return self:GetName() end
+	self.getterNodeType.GetRawPins = function()
+		return {
+			MakePin(PD_In, "Layout", self:GetModule():GetModulePinType()),
+			MakePin(PD_Out, "Panel", PN_Ref, PNF_None, self.DermaBase),
+		}
+	end
+	self.getterNodeType.Compile = function(node, compiler, pass)
+
+		if pass == bpcompiler.CP_ALLOCVARS then 
+
+			compiler:CreatePinRouter( node:FindPin(PD_Out, "Panel"), function(pin)
+				local layout = compiler:GetPinCode( node:FindPin(PD_In, "Layout") )
+				return { var = layout .. ".gpanels[" .. self.compiledID .. "]" }
+			end )
+
+			return true
+
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			compiler:CompileReturnPin( node )
+			return true
+
+		end
+
 	end
 
 	return self
 
 end
 
+function meta:Destroy()
+
+	self:Broadcast("destroyed")
+	self.getterNodeType:Destroy()
+
+end
+
+function meta:GetGetterNodeType() return self.getterNodeType end
+function meta:GetModule() return self:FindOuter(bpmodule_meta) end
+
 function meta:GetEdit() return self.edit end
 function meta:SetPreview(preview) self.preview = preview end
 function meta:GetPreview() return self.preview end
-function meta:SetName(name) self.name = bpcommon.Camelize(name) end
+function meta:SetName(name) 
+
+	local oldname = self.name 
+	self.name = bpcommon.Camelize(name) 
+	self:Broadcast("nameChanged", oldname, name) 
+
+end
 function meta:GetName() return self.name end
 function meta:GetCompiledID() return self.compiledID end
 function meta:GetParent() return self.parent() end
@@ -47,7 +95,10 @@ function meta:SetupDefaultLayout() return self end
 function meta:SetLayout(layout)
 
 	self.layout = layout
-	if self.layout then self.layout.node:Set(self) end
+	if self.layout then 
+		self.layout:WithOuter( self:GetOuter() )
+		self.layout.node:Set(self)
+	end
 
 end
 
@@ -101,6 +152,12 @@ function meta:SetupClass()
 		end
 
 		self.edit = bpvaluetype.FromValue(self.data, function() return self.data end)
+		self.edit:AddCosmeticChild("name",
+			bpvaluetype.New("string", 
+				function() return self:GetName() end,
+				function(x) self:SetName(x) end ),
+			1
+		)
 		self:CustomizeEdit( self.edit )
 
 	end
@@ -158,13 +215,24 @@ function meta:RemoveChild( child )
 
 end
 
-function meta:GetChildren()
+function meta:GetChildren( out )
 
-	local t = {}
+	out = out or {}
 	for _, child in ipairs(self.children) do
-		t[#t+1] = child
+		out[#out+1] = child
 	end
-	return t
+	return out
+
+end
+
+function meta:GetAllChildren( out )
+
+	out = out or {}
+	for _, child in ipairs(self.children) do
+		out[#out+1] = child
+		child:GetAllChildren(out)
+	end
+	return out
 
 end
 
@@ -200,11 +268,21 @@ function meta:GenerateMemberCode(compiler, name)
 
 	if name == "Init" then
 
+		local id = compiler:GetID(self)
+
 		compiler.emit("self.panels = {} self.ordered = {}")
+		if self:GetParent() then
+			compiler.emit("self.root = self:GetParent().root")
+			compiler.emit("self.root.gpanels[" .. id .. "] = self")
+		else
+			compiler.emit("self.root = self")
+			compiler.emit("self.gpanels = {}")
+		end
+
 		for _, child in ipairs(self:GetChildren()) do
 
-			local id = compiler:GetID(child)
-			compiler.emit("self.panels[" .. id .. "] = __makePanel(" .. id .. ", self) self.ordered[#self.ordered+1] = " .. id)
+			local childID = compiler:GetID(child)
+			compiler.emit("self.panels[" .. childID .. "] = __makePanel(" .. childID .. ", self) self.ordered[#self.ordered+1] = " .. childID)
 
 		end
 

@@ -5,3 +5,12 @@ CLASS Panel
 		DESC Marks a panel for deletion.
 	}
 }
+CLASS DButton
+{
+	NOINDEXMETA
+	PURE IsDown, CLIENT
+	{
+		DESC Returns true if the DButton is currently depressed (a user is clicking on it).
+		OUT down, PN_Bool
+	}
+}

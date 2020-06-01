@@ -9,6 +9,7 @@ TYPE_Callbacks = 4
 
 FL_None = 0
 FL_NoWikiDoc = 1
+FL_NoIndexMeta = 2
 
 GroupTypeNames = {
 	[TYPE_Class] = "Class",
