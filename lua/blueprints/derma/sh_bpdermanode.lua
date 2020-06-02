@@ -390,14 +390,17 @@ end
 
 function meta:Compile(compiler, pass)
 
+	local withinProject = compiler:FindOuter(bpcompiler_meta) ~= nil
 	if pass == CP_PREPASS then
 
 		self.cgraphs = {}
-		self.uniqueKeys = {}
-		for id, graph in ipairs(self.callbackGraphs) do
-			local cgraph = graph:CopyInto( bpgraph.New():WithOuter( self ) )
-			cgraph:PreCompile( compiler, self.uniqueKeys )
-			self.cgraphs[#self.cgraphs+1] = cgraph
+		if withinProject then
+			self.uniqueKeys = {}
+			for id, graph in ipairs(self.callbackGraphs) do
+				local cgraph = graph:CopyInto( bpgraph.New():WithOuter( self ) )
+				cgraph:PreCompile( compiler, self.uniqueKeys )
+				self.cgraphs[#self.cgraphs+1] = cgraph
+			end
 		end
 
 	elseif pass == CP_MAINPASS then
@@ -423,7 +426,7 @@ function meta:Compile(compiler, pass)
 			self:CompileMember(compiler, "PerformLayout")
 		end
 
-		for id, graph in ipairs(self.callbackGraphs) do
+		for id, graph in ipairs(self.cgraphs) do
 			compiler.emitContext( CTX_MetaEvents .. graph:GetName() )
 		end
 
