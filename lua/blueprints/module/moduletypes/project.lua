@@ -131,11 +131,11 @@ function MODULE:EnumerateAllPinTypes( collection )
 
 end
 
-function MODULE:EnumerateAllNodeTypes( collection )
+function MODULE:EnumerateAllNodeTypes( collection, graph )
 
 	for _, asset in ipairs(self:GetAssets()) do
 		if isbpmodule(asset:GetAsset()) then
-			asset:GetAsset():GetNodeTypes( collection )
+			asset:GetAsset():GetNodeTypes( collection, graph )
 		end
 	end
 

@@ -155,9 +155,9 @@ function MODULE:AutoFillsPinType( pinType )
 end
 
 function MODULE:GetModulePinType() return nil end
-function MODULE:GetLocalNodeTypes( collection )
+function MODULE:GetLocalNodeTypes( collection, graph )
 
-	BaseClass.GetLocalNodeTypes( self, collection )
+	BaseClass.GetLocalNodeTypes( self, collection, graph )
 
 	local types = {}
 

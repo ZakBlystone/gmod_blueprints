@@ -84,7 +84,31 @@ function MODULE:SerializeData( stream )
 end
 
 function MODULE:GetCreateNodeType() return self.createNodeType end
+
+function MODULE:CanAddNode(nodeType)
+
+	if nodeType:GetRole() == ROLE_Server then return false end
+	return BaseClass.CanAddNode( self, nodeType )
+
+end
+
+function MODULE:GetLocalNodeTypes( collection, graph )
+
+	if isbpdermanode(graph:GetOuter()) then
+		print("SKIP DERMA NODE")
+		return
+	end
+
+	BaseClass.GetLocalNodeTypes( self, collection, graph )
+
+end
+
 function MODULE:GetNodeTypes( collection, graph )
+
+	if isbpdermanode(graph:GetOuter()) then
+		print("SKIP DERMA NODE")
+		return
+	end
 
 	BaseClass.GetNodeTypes( self, collection, graph )
 

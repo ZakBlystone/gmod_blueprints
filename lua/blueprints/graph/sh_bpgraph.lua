@@ -244,7 +244,7 @@ function meta:GetNodeTypes()
 
 	Profile("cache-node-types", function()
 		self:GetModule():GetAllNodeTypes( collection, self )
-		self:GetModule():GetLocalNodeTypes( collection )
+		self:GetModule():GetLocalNodeTypes( collection, self )
 
 		if self.type == GT_Function then
 			local types = {}
