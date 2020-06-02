@@ -4,8 +4,8 @@ module("module_sent", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local MODULE = {}
 
-MODULE.Name = LOCTEXT"module_entity_name","Entity"
-MODULE.Description = LOCTEXT"module_entity_desc","A Scripted Entity you can spawn in the world"
+MODULE.Name = LOCTEXT("module_entity_name","Entity")
+MODULE.Description = LOCTEXT("module_entity_desc","A Scripted Entity you can spawn in the world")
 MODULE.Icon = "icon16/bricks.png"
 MODULE.Creatable = true
 MODULE.CanBeSubmodule = true

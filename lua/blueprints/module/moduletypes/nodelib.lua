@@ -5,8 +5,8 @@ module("mod_nodelib", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpcom
 local MODULE = {}
 
 MODULE.Creatable = true
-MODULE.Name = LOCTEXT"module_nodelib_name","Node Library"
-MODULE.Description = LOCTEXT"module_nodelib_desc","Custom node library"
+MODULE.Name = LOCTEXT("module_nodelib_name","Node Library")
+MODULE.Description = LOCTEXT("module_nodelib_desc","Custom node library")
 MODULE.Icon = "icon16/table.png"
 MODULE.EditorClass = "nodelib"
 MODULE.Developer = true

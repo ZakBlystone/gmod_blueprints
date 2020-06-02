@@ -259,7 +259,7 @@ function EDITOR:ModuleDropdown()
 	end
 
 	self.cmenu:AddSpacer()
-	local templateMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"module_submenu_examples","Examples" ) )
+	local templateMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT("module_submenu_examples","Examples") ) )
 	op:SetIcon( "icon16/book.png" )
 
 	for _, v in ipairs( classes ) do
@@ -286,7 +286,7 @@ function EDITOR:ModuleDropdown()
 
 
 	self.cmenu:AddSpacer()
-	local developerMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"module_submenu_developer","Developer" ) )
+	local developerMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT("module_submenu_developer","Developer") ) )
 	op:SetIcon( "icon16/application_osx_terminal.png" )
 
 	for _, v in ipairs( classes ) do

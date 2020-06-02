@@ -449,8 +449,8 @@ function PANEL:Init()
 	self.content:DockMargin(4,4,4,4)
 	self.content:SetBackgroundColor( Color(30,30,30) )
 
-	self.remoteList = vgui.Create("BPFileList"):SetTitle(LOCTEXT"file_list_server","Server Files")
-	self.localList = vgui.Create("BPFileList"):SetTitle(LOCTEXT"file_list_client","Local Files")
+	self.remoteList = vgui.Create("BPFileList"):SetTitle(LOCTEXT("file_list_server","Server Files"))
+	self.localList = vgui.Create("BPFileList"):SetTitle(LOCTEXT("file_list_client","Local Files"))
 
 	self.remoteList.GetEditor = function() return self.editor end
 	self.localList.GetEditor = function() return self.editor end
@@ -492,7 +492,7 @@ function PANEL:ModuleDropdown()
 	end
 
 	self.cmenu:AddSpacer()
-	local templateMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"module_submenu_examples","Examples" ) )
+	local templateMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT("module_submenu_examples","Examples") ) )
 	op:SetIcon( "icon16/book.png" )
 
 	for _, v in ipairs( classes ) do
@@ -519,7 +519,7 @@ function PANEL:ModuleDropdown()
 
 
 	self.cmenu:AddSpacer()
-	local developerMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT"module_submenu_developer","Developer" ) )
+	local developerMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT("module_submenu_developer","Developer") ) )
 	op:SetIcon( "icon16/application_osx_terminal.png" )
 
 	for _, v in ipairs( classes ) do

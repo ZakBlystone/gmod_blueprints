@@ -6,7 +6,7 @@ local NODE = {}
 
 NODE.DermaBase = "DHTML"
 NODE.Icon = "icon16/application_view_tile.png"
-NODE.Name = LOCTEXT"derma_node_html","HTML"
+NODE.Name = LOCTEXT("derma_node_html","HTML")
 NODE.Creatable = true
 
 function NODE:Setup() 

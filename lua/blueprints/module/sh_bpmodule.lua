@@ -11,8 +11,8 @@ local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes
 
 function GetClassLoader() return moduleClasses end
 
-meta.Name = LOCTEXT"module_default_name","unnamed"
-meta.Description = LOCTEXT"module_default_desc","description"
+meta.Name = LOCTEXT("module_default_name","unnamed")
+meta.Description = LOCTEXT("module_default_desc","description")
 meta.EditorClass = ""
 
 function meta:Init(type)

@@ -5,7 +5,7 @@ AddCSLuaFile()
 module("dlayout_simple", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local LAYOUT = {}
-LAYOUT.Name = LOCTEXT"derma_layout_simple","Simple"
+LAYOUT.Name = LOCTEXT("derma_layout_simple","Simple")
 LAYOUT.Creatable = true
 
 function LAYOUT:Setup() end

@@ -5,7 +5,7 @@ module("mod_graphmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, b
 local MODULE = {}
 
 MODULE.Creatable = false
-MODULE.Name = LOCTEXT"GraphModule"
+MODULE.Name = LOCTEXT("module_graph_name","Graph Module")
 MODULE.HasSelfPin = false
 MODULE.EditorClass = "graphmodule"
 

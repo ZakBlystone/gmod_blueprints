@@ -5,8 +5,8 @@ module("mod_locmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpc
 local MODULE = {}
 
 MODULE.Creatable = true
-MODULE.Name = LOCTEXT"module_loc_name","Localization"
-MODULE.Description = LOCTEXT"module_loc_desc","Localization data for the editor"
+MODULE.Name = LOCTEXT("module_loc_name","Localization")
+MODULE.Description = LOCTEXT("module_loc_desc","Localization data for the editor")
 MODULE.Icon = "icon16/table.png"
 MODULE.EditorClass = "locmodule"
 MODULE.Developer = true

@@ -6,8 +6,8 @@ local MODULE = {}
 
 MODULE.Creatable = true
 MODULE.CanBeSubmodule = true
-MODULE.Name = LOCTEXT"module_dermalayout_name","Derma Layout"
-MODULE.Description = LOCTEXT"module_dermalayout_desc","Custom UI Panel"
+MODULE.Name = LOCTEXT("module_dermalayout_name","Derma Layout")
+MODULE.Description = LOCTEXT("module_dermalayout_desc","Custom UI Panel")
 MODULE.Icon = "icon16/application_edit.png"
 MODULE.EditorClass = "dermalayout"
 MODULE.SelfPinSubClass = "Panel"
