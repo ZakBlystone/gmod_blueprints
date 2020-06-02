@@ -21,6 +21,7 @@ function meta:Init(class, parent, position)
 	self.parent = Weak()
 	self.children = {}
 	self.data = {}
+	self.callbackGraphs = {}
 	self.class = class
 	self:SetName( self.class or "Unnamed" )
 	self.preview = nil
@@ -102,6 +103,56 @@ function meta:GetRoot()
 
 end
 
+function meta:RemoveCallbackGraph(callback)
+
+	for k, v in ipairs(self.callbackGraphs) do
+		if v:GetName() == callback.func then
+			table.remove(self.callbackGraphs, k)
+			self:Broadcast("callbacksChanged")
+			return true
+		end
+	end
+	return false
+
+end
+
+function meta:AddCallbackGraph(callback)
+
+	local existing = self:GetCallbackGraph(callback)
+	if existing then return existing end
+
+	local graph = bpgraph.New(GT_Function):WithOuter(self)
+	graph:SetName(callback.func)
+	graph:SetFlag(bpgraph.FL_SERIALIZE_NAME)
+
+	for _, pin in ipairs(callback.params) do
+		if pin == PD_In then graph.inputs:Add( pin ) end
+		if pin == PD_Out then graph.outputs:Add( pin ) end
+	end
+
+	graph:CreateDefaults()
+	self.callbackGraphs[#self.callbackGraphs+1] = graph
+	self:Broadcast("callbacksChanged")
+	return graph
+
+end
+
+function meta:GetCallbackGraph(callback)
+
+	for _, v in ipairs(self.callbackGraphs) do
+		if v:GetName() == callback.func then return v end
+	end
+	return nil
+
+end
+
+function meta:HasCallbackGraph(callback)
+
+	return self:GetCallbackGraph(callback) ~= nil
+
+end
+
+function meta:GetCallbacks(t) end
 function meta:SetupDefaultLayout() return self end
 
 function meta:SetLayout(layout)
@@ -272,6 +323,17 @@ function meta:Serialize(stream)
 	self.name = stream:String(self.name)
 	self.class = stream:String(self.class)
 
+	if stream:GetVersion() >= 6 then 
+		self.callbackGraphs = stream:ObjectArray( self.callbackGraphs, self ) 
+		if stream:IsReading() then
+			for i=#self.callbackGraphs, 1, -1 do
+				if self.callbackGraphs[i].name == nil then
+					table.remove(self.callbackGraphs, i)
+				end
+			end
+		end
+	end
+
 	return stream
 
 end
@@ -318,7 +380,7 @@ function meta:CompileInitializers(compiler) end
 
 function meta:CompileMember(compiler, name)
 
-	compiler.emit("function PANEL:" .. name .. "(...)")
+	compiler.emit("function meta:" .. name .. "(...)")
 	compiler.pushIndent()
 	self:GenerateMemberCode(compiler, name)
 	compiler.popIndent()
@@ -328,27 +390,53 @@ end
 
 function meta:Compile(compiler, pass)
 
-	if pass == CP_MAINPASS then
+	if pass == CP_PREPASS then
+
+		self.cgraphs = {}
+		self.uniqueKeys = {}
+		for id, graph in ipairs(self.callbackGraphs) do
+			local cgraph = graph:CopyInto( bpgraph.New():WithOuter( self ) )
+			cgraph:PreCompile( compiler, self.uniqueKeys )
+			self.cgraphs[#self.cgraphs+1] = cgraph
+		end
+
+	elseif pass == CP_MAINPASS then
+
+		for _, graph in ipairs(self.cgraphs) do
+			graph:Compile( compiler, pass )
+		end
 
 		print("COMPILE NODE: ", tostring(self))
 
 		self.compiledID = compiler:GetID(self)
 
-		for _, child in ipairs(self:GetChildren()) do
-			child:Compile(compiler, pass)
+		compiler.begin("dermanode_" .. self.compiledID)
+
+		for id, graph in ipairs(self.cgraphs) do
+			compiler.emitContext( CTX_Graph .. compiler:GetID( graph ) )
 		end
 
-		compiler.emit("local PANEL = {Base = \"" .. self.DermaBase .. "\"} __panels[" .. compiler:GetID(self) .. "] = PANEL")
+		compiler.emit("local meta = {Base = \"" .. self.DermaBase .. "\"} __panels[" .. compiler:GetID(self) .. "] = meta")
 		self:CompileMember(compiler, "Init")
 
 		if self:GetLayout() ~= nil then
 			self:CompileMember(compiler, "PerformLayout")
 		end
 
+		for id, graph in ipairs(self.callbackGraphs) do
+			compiler.emitContext( CTX_MetaEvents .. graph:GetName() )
+		end
+
+		compiler.finish()
+
 	else
 
 		print("COMPILE NODE PASS: ", tostring(self), pass)
 
+	end
+
+	for _, child in ipairs(self:GetChildren()) do
+		child:Compile(compiler, pass)
 	end
 
 end

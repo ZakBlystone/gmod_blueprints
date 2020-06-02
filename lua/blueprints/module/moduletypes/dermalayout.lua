@@ -110,27 +110,42 @@ function MODULE:RequiresNetCode() return false end
 function MODULE:Compile(compiler, pass)
 
 	local edit = self:GetConfigEdit()
+	local withinProject = compiler:FindOuter(bpcompiler_meta) ~= nil
 
-	BaseClass.Compile( self, compiler, pass )
+	if self:Root() then
+		self:Root():Compile(compiler, pass)
+	else
+		print("No root node")
+	end
 
-	if pass == CP_MAINPASS then
+	if pass == CP_PREPASS then
+
+	elseif pass == CP_MAINPASS then
 
 		compiler.begin("derma")
 		compiler.emit("local __panels = {}")
 		compiler.emit("local __makePanel = function(id, ...) return vgui.CreateFromTable(__panels[id], ...) end")
-		if self:Root() then
-			print("Compile root: ", tostring(self:Root()))
-			self:Root():Compile(compiler, pass)
-		else
-			print("No root node")
-		end
-		compiler.finish()
 
+		for k, _ in pairs( compiler.getFilteredContexts("dermanode") ) do
+			compiler.emitContext( k )
+		end
+
+		compiler.finish()
 
 	elseif pass == CP_MODULECODE then
 
-		compiler.emitContext("derma")
+		local bDebug = compiler.debug and 1 or 0
+		local bILP = compiler.ilp and 1 or 0
+		local args = bDebug .. ", " .. bILP
 
+		compiler.emit("_FR_HEAD(" .. args .. ")")   -- script header
+
+		if not withinProject then
+			compiler.emit("_FR_UTILS()") -- utilities
+		end
+
+		compiler.emit("_FR_MODHEAD(" .. bpcommon.EscapedGUID(self:GetUID()) .. ")")              -- header for module
+		compiler.emitContext("derma")
 
 	elseif pass == CP_MODULEMETA then
 
@@ -138,12 +153,32 @@ function MODULE:Compile(compiler, pass)
 
 	elseif pass == CP_MODULEBPM then
 
+		local errorHandler = bit.band(compiler.flags, CF_Standalone) ~= 0 and "1" or "0"
+
+		-- infinite-loop-protection checker
+		if compiler.ilp then
+			compiler.emit("_FR_SUPPORT(1, " .. compiler.ilpmaxh .. ", " .. errorHandler .. ")")
+		else
+			compiler.emit("_FR_SUPPORT(0, 0, " .. errorHandler .. ")")
+		end
+
 		compiler.emit([[
 __bpm.init = function() end
 __bpm.postInit = function() end
 __bpm.refresh = function() end
 __bpm.shutdown = function() end
 __bpm.create = function(...) return __makePanel(]] .. compiler:GetID(self:Root()) .. [[, ...) end]])
+
+	elseif pass == CP_MODULEFOOTER then
+
+		if bit.band(compiler.flags, CF_Standalone) ~= 0 then
+
+
+		else
+
+			compiler.emit("return __bpm")
+
+		end
 
 	end
 

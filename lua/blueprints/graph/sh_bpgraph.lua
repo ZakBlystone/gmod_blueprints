@@ -8,6 +8,7 @@ FL_LOCK_NAME = 2
 FL_HOOK = 4
 FL_ROLE_SERVER = 8
 FL_ROLE_CLIENT = 16
+FL_SERIALIZE_NAME = 32
 
 local meta = bpcommon.MetaTable("bpgraph")
 
@@ -570,6 +571,10 @@ function meta:Serialize(stream)
 
 	self.nodes:Serialize(stream)
 	self.hookNodeType = stream:String(self.hookNodeType)
+
+	if self:HasFlag(FL_SERIALIZE_NAME) then
+		self.name = stream:String(self.name)
+	end
 
 	return stream
 

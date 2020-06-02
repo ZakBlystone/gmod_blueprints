@@ -22,6 +22,20 @@ function NODE:InitParams( params )
 
 end
 
+function NODE:GetCallbacks(t) 
+
+	t[#t+1] = {
+		func = "DoClick",
+		params = {}
+	}
+
+	t[#t+1] = {
+		func = "DoDoubleClick",
+		params = {}
+	}
+
+end
+
 function NODE:ApplyPanelValue( pnl, k, v, oldValue )
 	if k == "font" then pnl:SetFont(v) end
 	if k == "text" then pnl:SetText(v) end

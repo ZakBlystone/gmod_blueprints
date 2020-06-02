@@ -47,10 +47,75 @@ function EDITOR:OpenDetails( node )
 
 	end
 
+	self:CreateCallbackList( node )
+
+end
+
+function EDITOR:OpenDesigner()
+
+	self:SetContent( self.vpreview )
+
+	self.graph = nil
+	self.vgraph:SetVisible(false)
+
+end
+
+function EDITOR:OpenGraph( graph )
+
+	self.graph = graph
+	self.vgraph:SetGraph(self.graph)
+	self.vgraph:SetVisible(true)
+	self:SetContent( self.vgraph )
+
+end
+
+function EDITOR:CreateCallbackList(node)
+
+	local callbacks = {}
+	node:GetCallbacks(callbacks)
+
+	if #callbacks > 0 then
+		local panel = self.detailsBar:Add( "Callbacks" )
+		local list = vgui.Create("DPanelList")
+		list:SetSkin("Blueprints")
+		list:SetSpacing( 4 )
+		panel:SetContents(list)
+
+		for _, v in ipairs(callbacks) do
+			local hasCallback = node:HasCallbackGraph( v )
+			local btn = vgui.Create("DButton")
+			btn:SetSkin("Blueprints")
+			btn:SetText( v.func )
+			btn:SetTall(20)
+			btn:SetToggle(hasCallback)
+			btn.DoClick = function(pnl)
+				local graph = node:AddCallbackGraph( v )
+				pnl:SetToggle(true)
+				self:OpenGraph( graph )
+			end
+			btn.DoRightClick = function(pnl)
+				if node:HasCallbackGraph( v ) then
+					local menu = DermaMenu( false, pnl )
+					menu:AddOption( "Remove Callback", function()
+						local graph = node:GetCallbackGraph(v)
+						node:RemoveCallbackGraph( v )
+						pnl:SetToggle(false)
+						if self.graph == graph then
+							self:OpenDesigner()
+						end
+					end)
+					menu:Open( gui.MouseX(), gui.MouseY(), false, pnl )
+				end
+			end
+			list:AddItem(btn)
+		end
+	end
+
 end
 
 function EDITOR:NodeSelected(node)
 
+	self:OpenDesigner()
 	self:OpenDetails(node)
 
 end
@@ -180,6 +245,8 @@ function EDITOR:PostInit()
 
 	self.detailsBar = vgui.Create("BPCategoryList")
 	self:SetDetails( self.detailsBar )
+
+	self.vgraph = vgui.Create("BPGraph")
 
 end
 
