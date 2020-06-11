@@ -126,8 +126,8 @@ function meta:AddCallbackGraph(callback)
 	graph:SetFlag(bpgraph.FL_SERIALIZE_NAME)
 
 	for _, pin in ipairs(callback.params) do
-		if pin == PD_In then graph.inputs:Add( pin ) end
-		if pin == PD_Out then graph.outputs:Add( pin ) end
+		if pin:IsIn() then graph.inputs:Add( pin ) end
+		if pin:IsOut() then graph.outputs:Add( pin ) end
 	end
 
 	graph:CreateDefaults()
@@ -427,7 +427,7 @@ function meta:Compile(compiler, pass)
 		end
 
 		for id, graph in ipairs(self.cgraphs) do
-			compiler.emitContext( CTX_MetaEvents .. graph:GetName() )
+			compiler.emitContext( CTX_MetaEvents .. compiler:GetID(graph) )
 		end
 
 		compiler.finish()

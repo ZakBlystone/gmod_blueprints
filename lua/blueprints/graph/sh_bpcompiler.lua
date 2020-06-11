@@ -1098,7 +1098,7 @@ function meta:CompileGraphMetaHook(graph, node, name)
 	self.currentNode = node
 	self.currentCode = ""
 
-	self.begin(CTX_MetaEvents .. name)
+	self.begin(CTX_MetaEvents .. self:GetID(graph))
 
 	self.emit("function meta:" .. name .. "(...)")
 	self.pushIndent()
