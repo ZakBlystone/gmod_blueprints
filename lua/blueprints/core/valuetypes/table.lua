@@ -129,12 +129,12 @@ function VALUE:Find(key)
 
 end
 
-function VALUE:Index(str)
+function VALUE:Index(str, noError)
 
 	local ch = self
 	for x in str:gmatch("[^%.]+") do
 		ch = ch:Find(x)
-		if not ch then error("Couldn't find: " .. x .. " in " .. str) end
+		if not ch then if noError then return nil else error("Couldn't find: " .. x .. " in " .. str) end end
 	end
 	return ch
 
@@ -201,6 +201,8 @@ function VALUE:ToString()
 	for i=1, #self._children do
 
 		local ch = self._children[i]
+		if ch.vt:HasFlag(bpvaluetype.FL_DONT_EMIT) then continue end
+
 		local v = ch.vt:ToString()
 		v = v:gsub("\n", "\n\t")
 

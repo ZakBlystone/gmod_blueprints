@@ -11,6 +11,7 @@ FL_MANDATORY_OPTIONS = 1
 FL_HINT_BROWSER = 2
 FL_READONLY = 4
 FL_HIDDEN = 8
+FL_DONT_EMIT = 16
 
 bpcommon.AddFlagAccessors(meta)
 

@@ -144,11 +144,28 @@ function MODULE:Compile(compiler, pass)
 
 	if pass == CP_PREPASS then
 
+		for k, v in ipairs( self:Root():GetAllChildren() ) do
+			local layout = v:GetLayout()
+			if layout and not compiler.getContext( layout:GetCodeContext(), true ) then
+				compiler.begin( layout:GetCodeContext() )
+				compiler.emit(("local %s = function(self, w, h)"):format( layout:GetFunctionName() ))
+				compiler.pushIndent()
+				compiler.emitBlock( layout.Code )
+				compiler.popIndent()
+				compiler.emit("end")
+				compiler.finish()
+			end
+		end
+
 	elseif pass == CP_MAINPASS then
 
 		compiler.begin("derma")
 		compiler.emit("local __panels = {}")
 		compiler.emit("local __makePanel = function(id, ...) return vgui.CreateFromTable(__panels[id], ...) end")
+
+		for k, _ in pairs( compiler.getFilteredContexts("dermalayout") ) do
+			compiler.emitContext( k )
+		end
 
 		for k, _ in pairs( compiler.getFilteredContexts("dermanode") ) do
 			compiler.emitContext( k )

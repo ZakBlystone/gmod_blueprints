@@ -4,6 +4,8 @@ module("bplayout", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpcompil
 
 local meta = bpcommon.MetaTable("bplayout")
 
+meta.HasSlot = false
+
 layoutClasses = bpclassloader.Get("DermaLayout", "blueprints/derma/layouts/", "BPDermaLayoutClassRefresh", meta)
 
 function GetClassLoader() return layoutClasses end
@@ -20,14 +22,13 @@ function meta:Init(class)
 
 end
 
-function meta:PostLoad()
+function meta:PostLoad() end
 
-	self:SetupClass()
-
-end
-
+function meta:RequiresSlot() return self.HasSlot end
 function meta:SetParam(k, value) self.data[k] = value return self end
 function meta:GetParam(k) return self.data[k] end
+function meta:GetCodeContext() assert(self.class) return "dermalayout_" .. self.class end
+function meta:GetFunctionName() return "__layout_" .. self.class end
 
 function meta:GetNode() return self.node() end
 function meta:GetPreview() return self:GetNode() and self:GetNode():GetPreview() end
@@ -53,7 +54,10 @@ end
 
 function meta:SetupClass()
 
-	if self.class then 
+	if self.classInitialized then return end
+	if self.class then
+		self.classInitialized = true
+
 		layoutClasses:Install(self.class, self)
 		print("Install class: " .. self.class)
 
@@ -74,6 +78,9 @@ function meta:Serialize(stream)
 
 	self.class = stream:String(self.class)
 	self.data = stream:Value(self.data)
+
+	if stream:IsReading() then self:SetupClass() end
+
 	return stream
 
 end
@@ -82,14 +89,12 @@ function meta:InitParams(params)
 
 end
 
-function meta:InitSlotParams(node)
+function meta:InitSlotParams(slot)
 
 end
 
 function meta:CompileSlotInitializers(compiler)
 
 end
-
-function meta:CompileLayout(compiler) end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end

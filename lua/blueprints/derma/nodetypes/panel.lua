@@ -39,7 +39,7 @@ function NODE:CompileInitializers(compiler)
 
 	local params = self.data.params
 	compiler.emit( ("self:SetBackgroundColor(Color(%d,%d,%d,%d))"):format(params.color.r, params.color.g, params.color.b, params.color.a) )
-	compiler.emit( ("self:SetPaintBackground(\"%s\")"):format(params.drawBackground) )
+	compiler.emit( ("self:SetPaintBackground(%s)"):format(params.drawBackground) )
 	compiler.emit( ("self:SetEnabled(%s)"):format(tostring(params.enabled)) )
 
 end

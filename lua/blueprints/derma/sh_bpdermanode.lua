@@ -157,10 +157,40 @@ function meta:SetupDefaultLayout() return self end
 
 function meta:SetLayout(layout)
 
+	local prevClass = nil
+	if self.layout then prevClass = self.layout.class end
+
 	self.layout = layout
 	if self.layout then 
 		self.layout:WithOuter( self:GetOuter() )
 		self.layout.node:Set(self)
+
+		if self.layout.class ~= prevClass then
+			for _, child in ipairs(self.children) do
+				child:SetupSlot()
+			end
+		end
+	end
+
+end
+
+function meta:SetupSlot()
+
+	if self:GetParent() == nil then return end
+	local layout = self:GetParent():GetLayout()
+
+	if layout then
+
+		if layout:RequiresSlot() then
+			local slot = self.data.slot
+			if slot and slot.__layoutClass == layout.class then return end
+
+			self.data.slot = { __layoutClass = layout.class }
+			print("INIT SLOT: " .. layout.class)
+			layout:InitSlotParams( self.data.slot )
+			PrintTable(self.data.slot)
+		end
+
 	end
 
 end
@@ -180,6 +210,7 @@ function meta:PostLoad()
 	end
 
 	self:SetLayout( self:GetLayout() )
+	self:SetupSlot()
 	self:SetupClass()
 
 end
@@ -193,6 +224,19 @@ function meta:CustomizeEdit( edit )
 		if not IsValid(pnl) then return end
 		self:ApplyPanelValue(pnl, k, new, old )
 	end)
+
+	local slot = edit:Index("slot", true)
+	if slot ~= nil then
+		slot:BindRaw("valueChanged", self, function(old, new, k)
+			local pnl = self:GetPreview()
+			if not IsValid(pnl) then return end
+			pnl.slot[k] = new
+			if pnl:GetParent() then pnl:GetParent():InvalidateLayout(true) end
+		end)
+
+		local cl = slot:Index("__layoutClass", true)
+		if cl then cl:AddFlags( bpvaluetype.FL_READONLY + bpvaluetype.FL_DONT_EMIT ) end
+	end
 
 end
 
@@ -213,6 +257,8 @@ function meta:SetupClass()
 		for k, v in pairs(parms) do
 			if self.data.params[k] == nil then self.data.params[k] = v end
 		end
+
+		PrintTable(self.data)
 
 		self.edit = bpvaluetype.FromValue(self.data, function() return self.data end)
 		self.edit:AddCosmeticChild("name",
@@ -260,6 +306,7 @@ function meta:AddChild( child, position )
 	end
 
 	child.parent:Set(self)
+	child:SetupSlot()
 	self:Broadcast("childAdded", child, self:GetChildIndex(child) )
 
 end
@@ -367,10 +414,17 @@ function meta:GenerateMemberCode(compiler, name)
 			compiler.emitBlock("self.layout = " .. edit:ToString())
 		end
 
+		local parent = self:GetParent()
+		if parent and parent:GetLayout() then
+			local parentLayout = parent:GetLayout()
+			compiler.emitBlock("self.slot = " .. self:GetEdit():Index("slot"):ToString())
+		end
+
 	elseif name == "PerformLayout" then
 
 		compiler.emit( self.DermaBase .. ".PerformLayout(self, ...)" )
-		self:GetLayout():CompileLayout(compiler)
+		compiler.emit( self:GetLayout():GetFunctionName() .. "(self, ...)" )
+		--self:GetLayout():CompileLayout(compiler)
 
 	end
 
