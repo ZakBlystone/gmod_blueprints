@@ -307,6 +307,7 @@ function meta:AddChild( child, position )
 
 	child.parent:Set(self)
 	child:SetupSlot()
+	child:SetupClass() -- temporary fix
 	self:Broadcast("childAdded", child, self:GetChildIndex(child) )
 
 end
