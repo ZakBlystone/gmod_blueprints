@@ -144,7 +144,8 @@ function MODULE:Compile(compiler, pass)
 
 	if pass == CP_PREPASS then
 
-		for k, v in ipairs( self:Root():GetAllChildren() ) do
+		local panels = { self:Root() } self:Root():GetAllChildren( panels )
+		for k, v in ipairs( panels ) do
 			local layout = v:GetLayout()
 			if layout and not compiler.getContext( layout:GetCodeContext(), true ) then
 				compiler.begin( layout:GetCodeContext() )
