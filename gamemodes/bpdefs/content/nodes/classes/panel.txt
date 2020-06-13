@@ -23,3 +23,11 @@ CLASS DButton
 		OUT down, PN_Bool
 	}
 }
+CLASS DTextEntry
+{
+	NOINDEXMETA
+	PURE GetText, CLIENT
+	{
+		OUT text, PN_String
+	}
+}
