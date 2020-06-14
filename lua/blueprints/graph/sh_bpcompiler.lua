@@ -174,7 +174,7 @@ function meta:GetThunk(type, id)
 end
 
 -- builds localized ids for objects used during compilation
-function meta:GetID(tbl)
+function meta:GetID(tbl, allowExternal)
 
 	-- nodes are indexed on a per-graph basis
 	if isbpnode(tbl) then
@@ -184,13 +184,19 @@ function meta:GetID(tbl)
 		return id[graph](tbl)
 	end
 
+	local identTable = self.idents
+	local outer = self:GetOuter()
+	if outer and isbpcompiler(outer) and allowExternal then
+		identTable = outer.idents
+	end
+
 	local mt = getmetatable(tbl)
 	mt = bpcommon.GetMetaTableFromHash( mt.__hash )
 	local classID = self.metaClasses[mt]
 	if not classID then error("Tried to ID invalid class: " .. tostring(mt) .. " -> " .. bpcommon.GetMetaTableName(mt)) end
 
-	self.idents[classID] = self.idents[classID] or bpindexer.New()
-	return self.idents[classID](tbl)
+	identTable[classID] = identTable[classID] or bpindexer.New()
+	return identTable[classID](tbl)
 
 end
 

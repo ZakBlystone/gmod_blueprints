@@ -50,7 +50,7 @@ function meta:Init(class, parent, position)
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "Panel"), function(pin)
 				local layout = compiler:GetPinCode( node:FindPin(PD_In, "Layout") )
-				return { var = layout .. ".gpanels[" .. self.compiledID .. "]" }
+				return { var = layout .. ".gpanels[" .. compiler:GetID(self, true) .. "]" }
 			end )
 
 			return true
@@ -394,7 +394,7 @@ function meta:GenerateMemberCode(compiler, name)
 
 	if name == "Init" then
 
-		local id = compiler:GetID(self)
+		local id = compiler:GetID(self, true)
 
 		compiler.emit("self.panels = {} self.ordered = {}")
 		if self:GetParent() then
@@ -407,7 +407,7 @@ function meta:GenerateMemberCode(compiler, name)
 
 		for _, child in ipairs(self:GetChildren()) do
 
-			local childID = compiler:GetID(child)
+			local childID = compiler:GetID(child, true)
 			compiler.emit("self.panels[" .. childID .. "] = __makePanel(" .. childID .. ", self) self.ordered[#self.ordered+1] = " .. childID)
 
 		end
@@ -470,7 +470,7 @@ function meta:Compile(compiler, pass)
 
 		print("COMPILE NODE: ", tostring(self))
 
-		self.compiledID = compiler:GetID(self)
+		self.compiledID = compiler:GetID(self, true)
 
 		compiler.begin("dermanode_" .. self.compiledID)
 
@@ -478,7 +478,7 @@ function meta:Compile(compiler, pass)
 			compiler.emitContext( CTX_Graph .. compiler:GetID( graph ) )
 		end
 
-		compiler.emit("local meta = {Base = \"" .. self.DermaBase .. "\"} __panels[" .. compiler:GetID(self) .. "] = meta")
+		compiler.emit("local meta = {Base = \"" .. self.DermaBase .. "\"} __panels[" .. self.compiledID .. "] = meta")
 		self:CompileMember(compiler, "Init")
 
 		if self:GetLayout() ~= nil then

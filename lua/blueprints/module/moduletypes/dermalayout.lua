@@ -37,7 +37,7 @@ function MODULE:Setup()
 
 		elseif pass == bpcompiler.CP_MAINPASS then
 
-			local mod = "__modules[" .. compiler:GetOuter():GetID(self) .. "]"
+			local mod = "__modules[" .. compiler:GetID(self, true) .. "]"
 			local pin = compiler:GetPinCode( node:FindPin(PD_Out, "Panel") )
 
 			compiler.emit( pin .. " = " .. mod .. ".create()")
@@ -221,7 +221,7 @@ __bpm.init = function() end
 __bpm.postInit = function() end
 __bpm.refresh = function() end
 __bpm.shutdown = function() end
-__bpm.create = function(...) return __makePanel(]] .. compiler:GetID(self:Root()) .. [[, ...) end]])
+__bpm.create = function(...) return __makePanel(]] .. compiler:GetID(self:Root(), true) .. [[, ...) end]])
 
 	elseif pass == CP_MODULEFOOTER then
 
