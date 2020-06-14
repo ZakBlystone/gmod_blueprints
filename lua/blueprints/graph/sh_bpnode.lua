@@ -463,8 +463,17 @@ function meta:GetOptions(tab)
 			local pnl = bptextliteraledit.LiteralEditWindow( "Comment", "DTextEntry", 300, 120, nil, 0, 0 )
 			pnl:SetText( self:GetComment() or "" )
 			pnl:SetMultiline(true)
+			pnl:SetCaretPos( #pnl:GetText() )
 			pnl.OnTextChanged = function( pnl, noMenuRemoval, keepAutoComplete )
-				self:SetComment( pnl:GetText() )
+				self:SetComment( string.Trim(pnl:GetText()) )
+			end
+			local detour = pnl.OnKeyCodeTyped
+			pnl.OnKeyCodeTyped = function(self, keyCode)
+				if keyCode == KEY_ENTER and not input.IsKeyDown( KEY_LSHIFT ) then
+					self:GetParent():Close()
+					return
+				end
+				detour(self, keyCode)
 			end
 		end
 	}
