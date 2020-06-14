@@ -418,8 +418,14 @@ end
 function meta:SetComment( comment ) self.data.comment = comment end
 function meta:GetComment() return self.data.comment or "" end
 
+function meta:IsValid()
+
+	return self.nodeType:IsValid() and self:GetType() ~= DummyNodeType
+
+end
+
 function meta:GetColor()
-	if self:GetType() == DummyNodeType then
+	if not self:IsValid() then
 		return Color(200 + math.sin(CurTime()*10)*50,50,50)
 	end
 	return NodeTypeColors[ self:GetCodeType() ]

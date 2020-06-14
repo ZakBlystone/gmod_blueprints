@@ -81,6 +81,7 @@ end
 
 function meta:ShouldBeCompact()
 
+	if self.node and not self.node:IsValid() then return false end
 	if self.compact ~= nil then return self.compact end
 
 	for _, v in pairs(self.pins) do
