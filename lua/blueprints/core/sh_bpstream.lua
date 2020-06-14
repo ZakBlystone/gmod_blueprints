@@ -32,7 +32,7 @@ DEBUG_MODE = false
 CATCH_UNFINISHED = true
 
 fmtMagic = 0x314D5042
-fmtVersion = 6
+fmtVersion = 7
 
 
 function meta:Init(context, mode, file)

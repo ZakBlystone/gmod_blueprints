@@ -77,8 +77,14 @@ function MODULE:SerializeData( stream )
 
 	self.layoutRoot = stream:Object( self.layoutRoot, self )
 
-	for k, child in ipairs(self:Root():GetAllChildren()) do
-		stream:Extern( child:GetGetterNodeType(), "\x41\x70\x46\x7E\xDE\x59\x98\x0C\x80\x00\x00\x44\xAB\xF5\x5F\x6E" )
+	if stream:GetVersion() < 7 then
+		for k, child in ipairs( self:Root():GetAllChildren() ) do
+			stream:Extern( child:GetGetterNodeType(), "\x41\x70\x46\x7E\xDE\x59\x98\x0C\x80\x00\x00\x44\xAB\xF5\x5F\x6E" )
+		end
+	else
+		for k, child in ipairs( self:GetAllPanels() ) do
+			stream:Extern( child:GetGetterNodeType(), "\x41\x70\x46\x7E\xDE\x59\x98\x0C\x80\x00\x00\x44\xAB\xF5\x5F\x6E" )
+		end
 	end
 
 end
@@ -117,7 +123,7 @@ function MODULE:GetNodeTypes( collection, graph )
 	collection:Add( types )
 	types["__Create"] = self:GetCreateNodeType()
 
-	for k, child in ipairs(self:Root():GetAllChildren()) do
+	for k, child in ipairs( self:GetAllPanels() ) do
 		local getter = child:GetGetterNodeType()
 		types["__GetPanel" ..k] = getter
 	end
@@ -130,6 +136,13 @@ function MODULE:CanHaveVariables() return true end
 function MODULE:CanHaveStructs() return true end
 function MODULE:CanHaveEvents() return false end
 function MODULE:RequiresNetCode() return false end
+
+function MODULE:GetAllPanels()
+
+	local panels = { self:Root() } self:Root():GetAllChildren( panels )
+	return panels
+
+end
 
 function MODULE:Compile(compiler, pass)
 
@@ -144,8 +157,7 @@ function MODULE:Compile(compiler, pass)
 
 	if pass == CP_PREPASS then
 
-		local panels = { self:Root() } self:Root():GetAllChildren( panels )
-		for k, v in ipairs( panels ) do
+		for k, v in ipairs( self:GetAllPanels() ) do
 			local layout = v:GetLayout()
 			if layout and not compiler.getContext( layout:GetCodeContext(), true ) then
 				compiler.begin( layout:GetCodeContext() )
