@@ -192,10 +192,10 @@ function meta:IsConnectedTo( other )
 
 end
 
-function meta:CanConnect( other )
+function meta:CanConnect( other, autoConform )
 
 	if self:GetDir() == other:GetDir() then return false, "Can't connect " .. (self:IsOut() and "m/m" or "f/f") .. " pins" end
-	if not self:IsOut() then return other:CanConnect(self) end
+	if not self:IsOut() then return other:CanConnect(self, autoConform) end
 
 	local conn = self:GetConnections()
 	local node = self:GetNode()
@@ -204,8 +204,24 @@ function meta:CanConnect( other )
 	if node == nil or otherNode == nil then return false, "Can't connect pins without nodes" end
 
 	if self:IsConnectedTo( other ) then return false, "Already connected: " .. tostring(self) .. " --> " .. tostring(other) end
-	if self:IsType(PN_Exec) and #conn > 0 then return false, "Only one connection outgoing for exec pins" end
-	if not other:IsType(PN_Exec) and #other:GetConnections() > 0 then return false, "Only one connection for inputs" end
+	if self:IsType(PN_Exec) and #conn > 0 then 
+
+		if not autoConform then
+			return false, "Only one connection outgoing for exec pins" 
+		else
+			self:BreakAllLinks()
+		end
+
+	end
+	if not other:IsType(PN_Exec) and #other:GetConnections() > 0 then
+
+		if not autoConform then
+			return false, "Only one connection for inputs" 
+		else
+			other:BreakAllLinks()
+		end
+
+	end
 
 	if node:GetTypeName() == "CORE_Pin" and self:IsType(PN_Any) then return true end
 	if otherNode:GetTypeName() == "CORE_Pin" and other:IsType(PN_Any) then return true end
@@ -237,11 +253,11 @@ function meta:MakeLink( other, force )
 
 	assert( isbppin(other), "Expected pin, got: " .. tostring(other) )
 
-	if self:GetDir() == other:GetDir() then return self:CanConnect(other) end
+	if self:GetDir() == other:GetDir() then return self:CanConnect(other, true) end
 	if not self:IsOut() then return other:MakeLink(self, force) end
 
 	if not force then
-		local allowed, msg = self:CanConnect(other)
+		local allowed, msg = self:CanConnect(other, true)
 		if not allowed then print(msg) return false end
 	end
 
