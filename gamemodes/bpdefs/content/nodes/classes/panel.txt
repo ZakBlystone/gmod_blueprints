@@ -31,3 +31,11 @@ CLASS DTextEntry
 		OUT text, PN_String
 	}
 }
+CLASS DNumSlider
+{
+	NOINDEXMETA
+	PURE GetValue, CLIENT
+	{
+		OUT value, PN_Number
+	}
+}
