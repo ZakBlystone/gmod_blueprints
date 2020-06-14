@@ -461,7 +461,9 @@ function MODULE:AddRequiredMetaTables( compiler )
 		if baseType == PN_Ref then
 
 			local class = bpdefs.Get():GetClass(t)
-			compiler:AddRequiredMetaTable( class.name )
+			if class then
+				compiler:AddRequiredMetaTable( class.name )
+			end
 
 		elseif baseType == PN_Struct then
 
