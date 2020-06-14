@@ -382,6 +382,10 @@ function meta:Serialize(stream)
 		end
 	end
 
+	if stream:IsReading() then
+		self:SetupClass()
+	end
+
 	return stream
 
 end
