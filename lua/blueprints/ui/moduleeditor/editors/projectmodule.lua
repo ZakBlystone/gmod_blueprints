@@ -200,9 +200,40 @@ function EDITOR:OpenAssetMenu(pnl, asset)
 		end,
 		LOCTEXT("query_no", "No")(), function() end)
 	end)
+	self.cmenu:AddOption( "Export", function()
+		local mod = asset:GetAsset()
+		SetClipboardText(bpmodule.SaveToText(mod))
+		Derma_Message( LOCTEXT("module_export_text", "Module copied to clipboard")(), LOCTEXT("menu_export", "Export")(), LOCTEXT("query_ok", "Ok")() )
+	end)
 
 	self.cmenu:SetMinimumWidth( 100 )
 	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, pnl )
+
+end
+
+function EDITOR:OpenAddAssetMenu(pnl)
+
+	if IsValid(self.cmenu) then self.cmenu:Remove() end
+	self.cmenu = DermaMenu( false, self )
+	self.cmenu:AddOption( "Import", function()
+		self:ImportSubModule()
+	end)
+
+	self.cmenu:SetMinimumWidth( 100 )
+	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, pnl )
+
+end
+
+function EDITOR:ImportSubModule()
+
+	self:GetMainEditor():OpenImport( function(mod)
+
+		if mod:GetType() == "projectmodule" then error("Cannot import project module as sub-module") end
+		print("IMPORT MODULE: " .. mod:GetType())
+
+		self:GetModule():AddModule( mod )
+
+	end)
 
 end
 
@@ -212,7 +243,11 @@ function EDITOR:EnumerateAssets()
 
 	for _, m in ipairs(self:GetModule():GetAssets()) do self:AddAsset(m) end
 
-	self:AddAssetTile("", "icon16/add.png", nil, function() self:NewSubModule() end ):SetColor(Color(255,255,255,150))
+	self:AddAssetTile("", "icon16/add.png", nil, 
+		function() self:NewSubModule() end,
+		function(pnl)
+			self:OpenAddAssetMenu(pnl)
+		end ):SetColor(Color(255,255,255,150))
 
 end
 

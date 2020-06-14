@@ -346,7 +346,7 @@ function PANEL:OpenAbout()
 
 end
 
-function PANEL:OpenImport()
+function PANEL:OpenImport( finishFunc )
 
 	local import = vgui.Create( "DFrame" )
 
@@ -387,7 +387,7 @@ function PANEL:OpenImport()
 
 		else
 
-			self:FinishImport( import, str )
+			self:FinishImport( import, str, finishFunc )
 
 		end
 
@@ -397,7 +397,7 @@ function PANEL:OpenImport()
 
 end
 
-function PANEL:FinishImport( import, text )
+function PANEL:FinishImport( import, text, finishFunc )
 
 	local b,e = pcall( function()
 
@@ -405,7 +405,12 @@ function PANEL:FinishImport( import, text )
 
 		local mod = bpmodule.LoadFromText( text )
 		mod:GenerateNewUID()
-		self:OpenModule(mod, "unnamed", nil)
+
+		if finishFunc then
+			finishFunc(mod)
+		else
+			self:OpenModule(mod, "unnamed", nil)
+		end
 
 		if IsValid(import) then import:Close() end
 
