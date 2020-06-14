@@ -459,7 +459,10 @@ function meta:LeftMouse(x,y,pressed)
 					self:EditPinLiteral(vnode, vpin, wx, wy)
 				else
 					self.grabPin = vpin
-					if input.IsKeyDown( KEY_LCONTROL ) then
+					if input.IsKeyDown( KEY_LALT ) then
+						vpin.pin:BreakAllLinks()
+						self.grabPin = nil
+					elseif input.IsKeyDown( KEY_LCONTROL ) then
 						self:TakeGrabbedPin()
 					end
 				end
