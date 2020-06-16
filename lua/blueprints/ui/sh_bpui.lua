@@ -6,6 +6,7 @@ if SERVER then
 	resource.AddFile("resource/fonts/JetBrainsMono-Bold.ttf")
 	resource.AddFile("materials/icon64/blueprints.png")
 	resource.AddFile("materials/bpgraphatlas.png")
+	resource.AddFile("materials/bpskin.png")
 
 else
 
