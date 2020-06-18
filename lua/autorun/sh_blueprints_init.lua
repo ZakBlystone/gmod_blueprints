@@ -33,7 +33,10 @@ bpinclude("core/sh_bpvalue.lua")
 
 -- LOCALIZATION
 bpinclude("localization/en_us.lua")
+bpinclude("localization/de_de.lua")
 bpinclude("localization/fr_fr.lua")
+bpinclude("localization/pl.lua")
+bpinclude("localization/ru.lua")
 
 -- GRAPH
 bpinclude("graph/sh_bpschema.lua")
