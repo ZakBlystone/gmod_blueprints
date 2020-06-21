@@ -1,5 +1,7 @@
 AddCSLuaFile()
 
+if G_BPInitialized then return end
+
 local enabled = CreateConVar("bp_enabled", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Enable blueprint system (you must restart the server for this to take effect)")
 if not enabled:GetBool() then return end
 
@@ -116,3 +118,5 @@ bpinclude("ui/cl_bpeditor.lua")
 include("sh_blueprints_test.lua")
 
 hook.Run("BPPostInit")
+
+G_BPInitialized = true
