@@ -730,11 +730,17 @@ function meta:CompileEntrypoint( compiler )
 
 	-- check if graph requires a callstack
 	local requireCallStack = false
+	local statics = {}
 	self:ExecWalk( function(node)
 		if node:HasFlag(NTF_CallStack) then requireCallStack = true end
+		if node.GetGraphStatics then node:GetGraphStatics( compiler, statics ) end
 	end )
 
 	compiler.begin(CTX_Graph .. graphID)
+
+	for _, v in ipairs(statics) do
+		compiler.emitContext(v)
+	end
 
 	-- graph function header and callstack
 	compiler.emit("local graph_" .. graphID .. "_entry = __graph( function( ip )\n")

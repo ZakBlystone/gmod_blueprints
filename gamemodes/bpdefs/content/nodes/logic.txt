@@ -7,6 +7,18 @@ LIB LOGIC
 		FALLTHROUGH
 		CLASS If
 	}
+	SPECIAL SwitchNumber, SHARED
+	{
+		DESC Switch on a number
+		PARAM mode, number
+		CLASS Switch
+	}
+	SPECIAL SwitchString, SHARED
+	{
+		DESC Switch on a number
+		PARAM mode, string
+		CLASS Switch
+	}
 	SPECIAL DoN, SHARED
 	{
 		DESC Only runs the output N times
