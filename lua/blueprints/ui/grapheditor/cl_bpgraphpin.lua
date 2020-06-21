@@ -58,8 +58,8 @@ function meta:GetDisplayName()
 
 	if self.displayName then return self.displayName end
 
-	local str = bpcommon.Camelize(self.pin:GetDisplayName()):gsub("%u", function(x) return " " .. x end)
-	if #str > 0 then str = str:sub(2, -1) end
+	local str = bpcommon.Camelize(self.pin:GetDisplayName()) --:gsub("%u", function(x) return " " .. x end)
+	str = string.Trim(str)
 	self.displayName = str
 	return self.displayName
 
