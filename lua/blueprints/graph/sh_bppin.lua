@@ -375,6 +375,7 @@ function meta:Copy(dir)
 	local copy = bpcommon.MakeInstance(meta, dir or self.dir, self.name, self.type, self.desc)
 	copy.default = self.default
 	copy.literal = self.literal
+	copy.displayName = self.displayName
 	return copy
 
 end
