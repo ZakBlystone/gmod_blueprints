@@ -248,7 +248,7 @@ function meta:SetupClass()
 	if self.class then
 
 		dermaClasses:Install(self.class, self)
-		print("Install class: " .. self.class)
+		--print("Install class: " .. self.class)
 
 		local parms = {}
 		self:InitParams( parms )
@@ -258,7 +258,7 @@ function meta:SetupClass()
 			if self.data.params[k] == nil then self.data.params[k] = v end
 		end
 
-		PrintTable(self.data)
+		--PrintTable(self.data)
 
 		self.edit = bpvaluetype.FromValue(self.data, function() return self.data end)
 		self.edit:AddCosmeticChild("name",
@@ -468,7 +468,7 @@ function meta:Compile(compiler, pass)
 			graph:Compile( compiler, pass )
 		end
 
-		print("COMPILE NODE: ", tostring(self))
+		--print("COMPILE NODE: ", tostring(self))
 
 		self.compiledID = compiler:GetID(self, true)
 
@@ -493,7 +493,7 @@ function meta:Compile(compiler, pass)
 
 	else
 
-		print("COMPILE NODE PASS: ", tostring(self), pass)
+		--print("COMPILE NODE PASS: ", tostring(self), pass)
 
 	end
 
