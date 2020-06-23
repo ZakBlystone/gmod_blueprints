@@ -98,7 +98,7 @@ function NODE:Compile(compiler, pass)
 	elseif pass == CP_METAPASS then
 
 		local graph = self:GetGraph()
-		compiler:CompileGraphMetaHook(graph, self, self:GetTypeName())
+		compiler:CompileGraphMetaHook(graph, self, "__Event" .. compiler:GetID(event))
 
 		return true
 
