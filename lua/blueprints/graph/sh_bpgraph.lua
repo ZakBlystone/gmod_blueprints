@@ -375,6 +375,40 @@ end
 
 function meta:WalkInforms()
 
+	for pin in self:AllPins() do
+
+		if pin:IsType(PN_Exec) then
+
+			pin:SetInformedType(nil)
+
+		end
+
+	end
+
+	self:ExecWalk( function(node)
+
+		local infer = 0
+		for _, pin in node:SidePins(PD_In, bpnode.PF_OnlyExec) do
+
+			for _, other in ipairs(pin:GetConnectedPins()) do
+
+				if other:HasFlag(PNF_Server) then infer = bit.bor(infer, PNF_Server) end
+				if other:HasFlag(PNF_Client) then infer = bit.bor(infer, PNF_Client) end
+
+			end
+
+		end
+
+		if infer == PNF_Server or infer == PNF_Client then
+			for _, pin in node:Pins(bpnode.PF_OnlyExec) do
+
+				pin:SetInformedType( pin:GetType():WithFlags( infer ) )
+
+			end
+		end
+
+	end )
+
 	Profile("walk-informs", function()
 
 		local candidateNodes = {}
