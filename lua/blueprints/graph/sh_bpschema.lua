@@ -40,7 +40,9 @@ PNF_Table = 1
 PNF_Nullable = 2
 PNF_Bitfield = 4
 PNF_Custom = 8
-PNF_All = 15
+PNF_Server = 16
+PNF_Client = 32
+PNF_All = 63
 
 -- Nodetype flags
 NTF_None = 0

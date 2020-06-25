@@ -144,6 +144,15 @@ end
 	return HSVToColor(math.fmod((self:GetBaseType() + CurTime()) * 80, 360), .75, 1)
 end]]
 
+function meta:GetColor()
+
+	if self:HasFlag(PNF_Server) then return Color( 80, 200, 255 ) end
+	if self:HasFlag(PNF_Client) then return Color( 255, 180, 80 ) end
+
+	return self:GetType():GetColor()
+
+end
+
 function meta:GetNode()
 
 	return self:FindOuter( bpnode_meta )

@@ -224,22 +224,22 @@ LIB CORE
 	SPECIAL ClientOnly, SHARED
 	{
 		IN Exec, PN_Exec
-		OUT Thru, PN_Exec
+		OUT Thru, PN_Exec, PNF_Client
 		FALLTHROUGH
 		CODE if not CLIENT then goto popcall end
 	}
 	SPECIAL ServerOnly, SHARED
 	{
 		IN Exec, PN_Exec
-		OUT Thru, PN_Exec
+		OUT Thru, PN_Exec, PNF_Server
 		FALLTHROUGH
 		CODE if not SERVER then goto popcall end
 	}
 	SPECIAL Role, SHARED
 	{
 		IN Exec, PN_Exec
-		OUT Server, PN_Exec
-		OUT Client, PN_Exec
+		OUT Server, PN_Exec, PNF_Server
+		OUT Client, PN_Exec, PNF_Client
 		CODE if SERVER then #1 else #2 end
 	}
 	PURE ToString, SHARED

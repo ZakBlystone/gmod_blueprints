@@ -11,6 +11,7 @@ nodeClasses = bpclassloader.Get("Node", "blueprints/graph/nodetypes/", "BPNodeCl
 
 --Common pin filters
 PF_NoExec = function( pin ) return not pin:IsType( PN_Exec ) end
+PF_OnlyExec = function( pin ) return pin:IsType( PN_Exec ) end
 
 function meta:Init(nodeType, x, y)
 
@@ -171,9 +172,11 @@ function meta:UpdatePins()
 
 	local keep = {}
 	local current = self.pinCache
+	local flagMask = bit.band(PNF_All, bit.bnot( PNF_Server + PNF_Client ))
 	local function findExisting( k, p )
 		if not current then return end
-		if current[k] and current[k]:GetType() == p:GetType() then
+		if current[k] and current[k]:GetType():Equal(p:GetType(), flagMask) then
+			current[k]:SetType(p:GetType())
 			current[k]:SetName(p:GetName())
 			return current[k]
 		end
@@ -292,6 +295,18 @@ function meta:PostModify()
 
 end
 
+function meta:SetRoleOnExecPins(pins, role)
+
+	for _, pin in ipairs(pins) do
+		if pin:IsType(PN_Exec) then
+			local current = bit.band( pin:GetType().flags, bit.bnot( PNF_Server + PNF_Client ) )
+			local flag = role == ROLE_Shared and 0 or (role == ROLE_Server and PNF_Server or PNF_Client)
+			pin:SetType( pin:GetType():WithFlags( bit.bor(current, flag) ) )
+		end
+	end
+
+end
+
 function meta:GeneratePins(pins)
 
 	table.Add(pins, bpcommon.CopyTable(self:GetType():GetPins()))
@@ -302,6 +317,10 @@ function meta:GeneratePins(pins)
 	elseif self.data.codeTypeOverride == NT_Function and not pins[1]:IsType(PN_Exec) then
 		table.insert(pins, 1, MakePin( PD_Out, "Thru", PN_Exec ))
 		table.insert(pins, 1, MakePin( PD_In, "Exec", PN_Exec ))
+	end
+
+	if self:GetRole() and self:GetRole() ~= ROLE_Shared then
+		self:SetRoleOnExecPins(pins, self:GetRole())
 	end
 
 end
