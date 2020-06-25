@@ -14,7 +14,7 @@ CLASS DPanel
 		IN color, PN_Color
 	}
 }
-CLASS DLABEL
+CLASS DLabel
 {
 	NOINDEXMETA
 	FUNC SetText, CLIENT
