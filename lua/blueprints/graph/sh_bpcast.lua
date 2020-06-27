@@ -79,7 +79,7 @@ local function GetNodeTypePins(ntype, module)
 	local cl = bpnode.nodeClasses:Get(nodeClass)
 	if cl and cl.GeneratePins ~= bpnode_meta.GeneratePins then
 		local node = bpnode.New(ntype):WithOuter( module )
-		node:PostInit()
+		node:Initialize(true)
 		return node:GetPins()
 	end
 
