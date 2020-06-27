@@ -29,6 +29,8 @@ function AddPinCast(from, to, bidirectional, wrapper, ignoreSub)
 
 end
 
+AddPinCast(bppintype.New(PN_Exec, PNF_Server), { bppintype.New(PN_Exec) })
+AddPinCast(bppintype.New(PN_Exec, PNF_Client), { bppintype.New(PN_Exec) })
 AddPinCast(bppintype.New(PN_Number), { bppintype.New(PN_Enum) }, true, nil, true )
 AddPinCast(bppintype.New(PN_Number), { bppintype.New(PN_String) } )
 AddPinCast(bppintype.New(PN_Ref, PNF_None, "Entity"), { 
