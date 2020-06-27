@@ -101,8 +101,13 @@ function meta:PostLink(stream)
 			print( v[1] .. tostring(v[2]) )
 		end]]
 
-		for _, set in pairs(self.objects) do
-			for _, obj in pairs(set) do
+		local sets = {}
+		for k, set in pairs(self.objects) do
+			sets[#sets+1] = set
+		end
+
+		for i=#sets, 1, -1 do
+			for _, obj in pairs(sets[i]) do
 				if obj.PostLoad then obj:PostLoad() end
 			end
 		end
