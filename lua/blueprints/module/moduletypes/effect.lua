@@ -122,10 +122,7 @@ function MODULE:Compile(compiler, pass)
 	if pass == CP_MODULEMETA then
 
 		compiler.emit([[
-for k,v in pairs(meta) do
-	local _, _, m = k:find("EFFECT_(.+)")
-	if m then meta[ m ] = v end
-end]])
+for k,v in pairs(table.Copy(meta)) do local _, _, m = k:find("EFFECT_(.+)") if m then meta[ m ] = v end end]])
 
 		compiler.emit("function meta:Init( data )")
 		compiler.emit("\tself.delays = {}")

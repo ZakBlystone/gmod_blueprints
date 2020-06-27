@@ -151,10 +151,7 @@ function MODULE:Compile(compiler, pass)
 		compiler.emit( "meta = table.Merge( meta, " .. weaponTable:ToString() .. " )")
 
 		compiler.emit([[
-for k,v in pairs(meta) do
-	local _, _, m = k:find("WEAPON_(.+)")
-	if m then meta[ m ] = v end
-end]])
+for k,v in pairs(table.Copy(meta)) do local _, _, m = k:find("WEAPON_(.+)") if m then meta[ m ] = v end end]])
 
 		compiler.emit("function meta:Initialize()")
 		compiler.emit("\tself.delays = {}")
