@@ -28,11 +28,15 @@ function meta:Init(nodeType, x, y)
 		self.nodeType():Bind("destroyed", self, self.OnNodeTypeDestroyed)
 	end
 
+	self:Initialize()
+
 	return self
 
 end
 
-function meta:PostInit()
+function meta:Initialize()
+
+	--print(debug.traceback())
 
 	if self.initialized then return true end
 
@@ -72,7 +76,7 @@ end
 function meta:PostLoad()
 
 	self.initialized = false
-	self:PostInit()
+	self:Initialize()
 
 end
 
@@ -167,7 +171,8 @@ function meta:UpdatePins()
 		newPins = {}
 		self:GeneratePins(newPins)
 	else
-		newPins = self.pinCache
+		self:Broadcast("pinsUpdated")
+		return
 	end
 
 	local keep = {}
@@ -181,6 +186,7 @@ function meta:UpdatePins()
 			return current[k]
 		end
 		for _,v in ipairs( current ) do
+			print(" CHECK: " .. tostring(v:ToString(true, true)))
 			if v:Equals(p) then return v end
 		end
 		print(" No Match for: " .. tostring(p:ToString(true, true)))

@@ -107,7 +107,7 @@ function meta:PostLink(stream)
 		end
 
 		for i=#sets, 1, -1 do
-			for _, obj in pairs(sets[i]) do
+			for _, obj in ipairs(sets[i]) do
 				if obj.PostLoad then obj:PostLoad() end
 			end
 		end

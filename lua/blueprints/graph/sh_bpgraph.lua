@@ -647,7 +647,7 @@ function meta:CopyInto(other)
 		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )
 		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs )
 
-		for _, node in other:Nodes() do node:PostInit() node.nodeType():UnbindAll(node) end
+		for _, node in other:Nodes() do node:Initialize() node.nodeType():UnbindAll(node) end
 
 		-- Restore connections
 		local ids = bpindexer.New()
