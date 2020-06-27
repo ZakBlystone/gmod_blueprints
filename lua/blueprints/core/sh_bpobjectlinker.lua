@@ -20,6 +20,7 @@ function meta:Init()
 	self.externUIDs = {}
 	self.externObjLookup = {}
 	self.UIDList = {}
+	self.postLoadTree = { objects = {}, nodes = {} }
 	--self:DSetDebug(true)
 	return self
 
@@ -57,6 +58,23 @@ function meta:Serialize(stream)
 	end)
 
 	return stream
+
+end
+
+function meta:WalkPostLoadTree( node, marked )
+
+	node = node or self.postLoadTree
+	marked = marked or {}
+
+	for _, v in ipairs(node.nodes) do
+		self:WalkPostLoadTree(v, marked)
+	end
+
+	for _, object in ipairs(node.objects) do
+		if not marked[object] then
+			if object.PostLoad then object:PostLoad() end
+		end
+	end
 
 end
 
@@ -101,16 +119,8 @@ function meta:PostLink(stream)
 			print( v[1] .. tostring(v[2]) )
 		end]]
 
-		local sets = {}
-		for k, set in pairs(self.objects) do
-			sets[#sets+1] = set
-		end
-
-		for i=#sets, 1, -1 do
-			for _, obj in ipairs(sets[i]) do
-				if obj.PostLoad then obj:PostLoad() end
-			end
-		end
+		-- Ensure objects are post-loaded backwards up the hierarchy
+		self:WalkPostLoadTree()
 
 	end
 
@@ -314,12 +324,21 @@ function meta:ReadObject(stream, outer)
 		local obj = self:Construct(hash):WithOuter(outer)
 		--self:DPrint("CONSTRUCTED: " .. tostring(obj) .. " [" .. (thisOrderNum) .. "]")
 		--self:DPushIndent()
+		local prev = self.postLoadTree
+		self.postLoadTree = { objects = {}, nodes = {} }
+		prev.nodes[#prev.nodes+1] = self.postLoadTree
+
 		obj:Serialize(stream)
+
+		self.postLoadTree = prev
 		--self:DPopIndent()
 		set[objID] = obj
 
+		self.postLoadTree.objects[#self.postLoadTree.objects+1] = obj
+
 		return obj
 	else
+		self.postLoadTree.objects[#self.postLoadTree.objects+1] = set[objID]
 		return set[objID]
 	end
 
