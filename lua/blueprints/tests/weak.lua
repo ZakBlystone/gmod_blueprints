@@ -140,8 +140,8 @@ function LINKER_TEST_EXTERN_CONNECTIONS()
 	baseType2:SetCodeType( bpschema.NT_Function )
 	baseType2:SetName("baseType2")
 
-	local nodeA = bpnode.New(baseType) nodeA:PostInit()
-	local nodeB = bpnode.New(baseType2) nodeB:PostInit()
+	local nodeA = bpnode.New(baseType) nodeA:Initialize()
+	local nodeB = bpnode.New(baseType2) nodeB:Initialize()
 
 	nodeA:FindPin(bpschema.PD_Out, "Thru"):MakeLink(nodeB:FindPin(bpschema.PD_In, "Exec"))
 
@@ -165,8 +165,8 @@ function LINKER_TEST_EXTERN_CONNECTIONS()
 	ASSERT(isbpnode(readNodeA))
 	ASSERT(isbpnode(readNodeB))
 
-	readNodeA:PostInit()
-	readNodeB:PostInit()
+	readNodeA:Initialize()
+	readNodeB:Initialize()
 
 	ASSERT(isbpnodetype(readNodeA.nodeType()) or readNodeA.nodeType() == nil)
 	ASSERT(isbpnodetype(readNodeB.nodeType()) or readNodeB.nodeType() == nil)

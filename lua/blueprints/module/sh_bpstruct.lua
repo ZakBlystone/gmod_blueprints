@@ -132,10 +132,6 @@ function meta:BreakerNodeType()
 
 end
 
-function meta:PostInit()
-
-end
-
 function meta:Serialize(stream)
 
 	stream:Extern( self:MakerNodeType(), "\xE3\x09\x45\x7E\x9D\x1E\xC1\x57\x80\x00\x00\x17\x52\x30\x5E\x96" )

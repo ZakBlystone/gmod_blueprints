@@ -112,22 +112,6 @@ function meta:CreateDefaults()
 
 end
 
-function meta:PostInit()
-
-	-- Function graphs add entry and exit nodes on creation
-	--[[if self.type == GT_Function then
-
-		self:AddNode(self.callEntryNodeType, 0, 200)
-		self:AddNode(self.callExitNodeType, 400, 200)
-
-	end]]
-
-	--self:CacheNodeTypes()
-
-	return self
-
-end
-
 function meta:PreModify()
 
 	self.callEntryNodeType:PreModify()

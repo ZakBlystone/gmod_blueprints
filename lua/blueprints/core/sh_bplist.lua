@@ -178,8 +178,6 @@ function meta:Add( item, optName, forceIndex )
 
 	self.items[i] = item
 
-	if item.PostInit then item:PostInit() end
-
 	self:Broadcast("added", i, item)
 	self:Broadcast("postModify", MODIFY_ADD, i, item)
 
@@ -252,7 +250,6 @@ function meta:Serialize(stream)
 
 		if stream:IsReading() then
 
-			if item.PostInit then item:PostInit() end
 			self:Broadcast("preModify", MODIFY_ADD, i, item)
 			self.items[i] = item
 			self:Broadcast("added", i, item)
