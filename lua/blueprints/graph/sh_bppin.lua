@@ -279,7 +279,7 @@ function meta:MakeLink( other, force )
 	otherConn[#otherConn+1] = Weak( self )
 
 	local graph = self:FindOuter( bpgraph_meta )
-	if graph then
+	if graph and not graph.suppressPinEvents then
 		graph:WalkInforms()
 		graph:Broadcast("connectionAdded", self, other)
 	end
@@ -302,7 +302,7 @@ function meta:BreakLink( other )
 				end
 			end
 
-			if graph and not noNotify then
+			if graph and not graph.suppressPinEvents then
 				graph:WalkInforms()
 				graph:Broadcast("connectionRemoved", self, c())
 			end

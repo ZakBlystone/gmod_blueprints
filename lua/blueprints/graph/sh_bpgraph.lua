@@ -375,39 +375,40 @@ end
 
 function meta:WalkInforms()
 
-	for pin in self:AllPins() do
+	Profile("walk-inform-exec", function()
 
-		if pin:IsType(PN_Exec) then
-
-			pin:SetInformedType(nil)
-
+		for pin in self:AllPins() do
+			if pin:IsType(PN_Exec) then
+				pin:SetInformedType(nil)
+			end
 		end
 
-	end
 
-	self:ExecWalk( function(node)
+		self:ExecWalk( function(node)
 
-		local infer = 0
-		for _, pin in node:SidePins(PD_In, bpnode.PF_OnlyExec) do
+			local infer = 0
+			for _, pin in node:SidePins(PD_In, bpnode.PF_OnlyExec) do
 
-			for _, other in ipairs(pin:GetConnectedPins()) do
+				for _, other in ipairs(pin:GetConnectedPins()) do
 
-				if other:HasFlag(PNF_Server) then infer = bit.bor(infer, PNF_Server) end
-				if other:HasFlag(PNF_Client) then infer = bit.bor(infer, PNF_Client) end
+					if other:HasFlag(PNF_Server) then infer = bit.bor(infer, PNF_Server) end
+					if other:HasFlag(PNF_Client) then infer = bit.bor(infer, PNF_Client) end
+
+				end
 
 			end
 
-		end
-
-		if infer == PNF_Server or infer == PNF_Client then
-			for _, pin in node:Pins(bpnode.PF_OnlyExec) do
-				if not pin:HasFlag(PNF_Server) and not pin:HasFlag(PNF_Client) then
-					pin:SetInformedType( pin:GetType():WithFlags( infer ) )
+			if infer == PNF_Server or infer == PNF_Client then
+				for _, pin in node:Pins(bpnode.PF_OnlyExec) do
+					if not pin:HasFlag(PNF_Server) and not pin:HasFlag(PNF_Client) then
+						pin:SetInformedType( pin:GetType():WithFlags( infer ) )
+					end
 				end
 			end
-		end
 
-	end, true )
+		end, true )
+
+	end)
 
 	Profile("walk-informs", function()
 
@@ -630,6 +631,7 @@ function meta:CopyInto(other)
 		other.type = self.type
 		other.flags = self.flags
 		other.hookNodeType = self.hookNodeType
+		other.suppressPinEvents = true
 
 		-- Store connections as indices
 		local connections = {}
@@ -646,18 +648,24 @@ function meta:CopyInto(other)
 		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes )
 		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )
 		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs )
+		Profile("copy-init-nodes", function()
+			for _, node in other:Nodes() do node:Initialize(true) node.nodeType():UnbindAll(node) end
+		end)
 
-		for _, node in other:Nodes() do node:Initialize() node.nodeType():UnbindAll(node) end
+		Profile("copy-restore-connections", function()
 
-		-- Restore connections
-		local ids = bpindexer.New()
-		for pin in other:AllPins() do ids:Get(pin) end
-		for _, conn in ipairs(connections) do
-			local a = ids:FindByID(conn[1])
-			local b = ids:FindByID(conn[2])
-			if a and b then a:MakeLink(b, true) end
-		end
+			-- Restore connections
+			local ids = bpindexer.New()
+			for pin in other:AllPins() do ids:Get(pin) end
+			for _, conn in ipairs(connections) do
+				local a = ids:FindByID(conn[1])
+				local b = ids:FindByID(conn[2])
+				if a and b then a:MakeLink(b, true) end
+			end
 
+		end)
+
+		other.suppressPinEvents = false
 		other:WalkInforms()
 
 	end)
@@ -820,11 +828,11 @@ function meta:ExecWalk( func, allNodes )
 		if codeType == NT_Event or codeType == NT_FuncInput or allNodes then
 
 			if allNodes then
-				local hasIncomming = false
+				local hasIncoming = false
 				for _, pin in node:SidePins(PD_In, bpnode.PF_OnlyExec) do
-					if #pin:GetConnectedPins() ~= 0 then hasIncomming = true break end
+					if #pin:GetConnections() ~= 0 then hasIncoming = true break end
 				end
-				if hasIncomming then goto skip end
+				if hasIncoming then goto skip end
 			end
 
 			local connections = self:NodeWalk(node, function(node, pinID)

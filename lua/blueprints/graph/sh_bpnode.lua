@@ -34,7 +34,7 @@ function meta:Init(nodeType, x, y)
 
 end
 
-function meta:Initialize()
+function meta:Initialize( usePinCache )
 
 	--print(debug.traceback())
 
@@ -66,7 +66,7 @@ function meta:Initialize()
 		--print("INIT NODE CLASS: " .. nodeClass )
 	end
 
-	self:UpdatePins()
+	if not usePinCache then Profile("update-pins", self.UpdatePins, self) end
 
 	self.initialized = true
 	return true
@@ -175,6 +175,7 @@ function meta:UpdatePins()
 		return
 	end
 
+
 	local keep = {}
 	local current = self.pinCache
 	local flagMask = bit.band(PNF_All, bit.bnot( PNF_Server + PNF_Client ))
@@ -186,7 +187,7 @@ function meta:UpdatePins()
 			return current[k]
 		end
 		for _,v in ipairs( current ) do
-			print(" CHECK: " .. tostring(v:ToString(true, true)))
+			--print(" CHECK: " .. tostring(v:ToString(true, true)))
 			if v:Equals(p) then return v end
 		end
 		print(" No Match for: " .. tostring(p:ToString(true, true)))
@@ -582,8 +583,11 @@ function meta:Copy()
 	newNode.pinCache = {}
 	newNode:WithOuter( self:GetOuter() )
 
-	for _, v in ipairs(self.pinCache or {}) do
-		newNode.pinCache[#newNode.pinCache+1] = v:Copy():WithOuter(self)
+	for k, v in ipairs(self.pinCache or {}) do
+		local copy = v:Copy():WithOuter(newNode)
+		copy.id = k
+		copy:InitPinClass()
+		newNode.pinCache[#newNode.pinCache+1] = copy
 	end
 
 	bpcommon.MakeObservable(newNode)
