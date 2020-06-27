@@ -401,13 +401,13 @@ function meta:WalkInforms()
 
 		if infer == PNF_Server or infer == PNF_Client then
 			for _, pin in node:Pins(bpnode.PF_OnlyExec) do
-
-				pin:SetInformedType( pin:GetType():WithFlags( infer ) )
-
+				if not pin:HasFlag(PNF_Server) and not pin:HasFlag(PNF_Client) then
+					pin:SetInformedType( pin:GetType():WithFlags( infer ) )
+				end
 			end
 		end
 
-	end )
+	end, true )
 
 	Profile("walk-informs", function()
 
@@ -809,7 +809,7 @@ function meta:CompileEntrypoint( compiler )
 
 end
 
-function meta:ExecWalk( func )
+function meta:ExecWalk( func, allNodes )
 
 	local visited = {}
 	local emitted = {}
@@ -817,7 +817,15 @@ function meta:ExecWalk( func )
 	for _, node in self:Nodes() do
 
 		local codeType = node:GetCodeType()
-		if codeType == NT_Event or codeType == NT_FuncInput then
+		if codeType == NT_Event or codeType == NT_FuncInput or allNodes then
+
+			if allNodes then
+				local hasIncomming = false
+				for _, pin in node:SidePins(PD_In, bpnode.PF_OnlyExec) do
+					if #pin:GetConnectedPins() ~= 0 then hasIncomming = true break end
+				end
+				if hasIncomming then goto skip end
+			end
 
 			local connections = self:NodeWalk(node, function(node, pinID)
 				return node:GetPin(pinID):IsType(PN_Exec) and node:GetPin(pinID):GetDir() == PD_In
@@ -836,6 +844,8 @@ function meta:ExecWalk( func )
 			if #connections == 0 and not emitted[node] then
 				func(node) emitted[node] = true 
 			end
+
+			::skip::
 
 		end
 

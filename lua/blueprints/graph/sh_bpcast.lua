@@ -48,18 +48,19 @@ AddPinCast(bppintype.New(PN_Ref, PNF_None, "NPC"), bppintype.New(PN_String), fal
 AddPinCast(bppintype.New(PN_Ref, PNF_None, "Vehicle"), bppintype.New(PN_String), false, "tostring(@)")
 ]]
 
+local castMatchFlags = PNF_Table + PNF_Server + PNF_Client
 function CanCast(outPinType, inPinType)
 
 	for _, castInfo in ipairs(NodePinImplicitCasts) do
-		if castInfo.from:Equal( outPinType, PNF_Table ) then
+		if castInfo.from:Equal( outPinType, castMatchFlags ) then
 			for _, entry in ipairs(castInfo.to) do
-				if entry.type:Equal( inPinType, PNF_Table, entry.ignoreSub ) then
+				if entry.type:Equal( inPinType, castMatchFlags, entry.ignoreSub ) then
 					return true, entry.wrapper
 				end
 			end
-		elseif castInfo.from:Equal( inPinType, PNF_Table ) then
+		elseif castInfo.from:Equal( inPinType, castMatchFlags ) then
 			for _, entry in ipairs(castInfo.to) do
-				if entry.bidir and entry.type:Equal( outPinType, PNF_Table, entry.ignoreSub ) then
+				if entry.bidir and entry.type:Equal( outPinType, castMatchFlags, entry.ignoreSub ) then
 					return true, entry.wrapper
 				end
 			end
@@ -127,7 +128,7 @@ function FindMatchingPin(ntype, pf, module, cache)
 
 			if fdir == PD_In then outType = pin:GetType() else inType = pin:GetType() end
 
-			local sameType = inType:Equal(outType, 0)
+			local sameType = inType:Equal(outType, PNF_Server + PNF_Client)
 			local sameFlags = inType:GetFlags(ignoreNullable) == outType:GetFlags(ignoreNullable)
 			local tableMatch = informs ~= nil and #informs > 0 and pin:HasFlag(PNF_Table) and pf:HasFlag(PNF_Table) and pin:IsType(PN_Any)
 			local anyMatch = informs ~= nil and #informs > 0 and not pin:HasFlag(PNF_Table) and not pf:HasFlag(PNF_Table) and pin:GetBaseType() ~= PN_Exec

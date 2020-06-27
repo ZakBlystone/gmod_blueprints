@@ -319,9 +319,9 @@ function meta:GeneratePins(pins)
 		table.insert(pins, 1, MakePin( PD_In, "Exec", PN_Exec ))
 	end
 
-	if self:GetRole() and self:GetRole() ~= ROLE_Shared then
-		self:SetRoleOnExecPins(pins, self:GetRole())
-	end
+	--if self:GetRole() and self:GetRole() ~= ROLE_Shared then
+	--	self:SetRoleOnExecPins(pins, self:GetRole())
+	--end
 
 end
 

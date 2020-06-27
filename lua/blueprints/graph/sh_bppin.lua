@@ -212,6 +212,9 @@ function meta:CanConnect( other, autoConform )
 
 	if node == nil or otherNode == nil then return false, "Can't connect pins without nodes" end
 
+	if self:HasFlag(PNF_Server) and other:HasFlag(PNF_Client) then return false, "Can't connect server pin to client pin" end
+	if self:HasFlag(PNF_Client) and other:HasFlag(PNF_Server) then return false, "Can't connect client pin to server pin" end
+
 	if self:IsConnectedTo( other ) then return false, "Already connected: " .. tostring(self) .. " --> " .. tostring(other) end
 	if self:IsType(PN_Exec) and #conn > 0 then 
 

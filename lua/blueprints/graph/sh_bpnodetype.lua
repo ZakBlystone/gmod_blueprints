@@ -11,9 +11,21 @@ local meta = bpcommon.MetaTable("bpnodetype")
 
 bpcommon.AddFlagAccessors(meta)
 
-local PIN_INPUT_EXEC = MakePin( PD_In, "Exec", PN_Exec )
-local PIN_OUTPUT_EXEC = MakePin( PD_Out, "Exec", PN_Exec )
-local PIN_OUTPUT_THRU = MakePin( PD_Out, "Thru", PN_Exec )
+local PIN_INPUT_EXEC = {
+	[ROLE_Shared] = MakePin( PD_In, "Exec", PN_Exec ),
+	[ROLE_Server] = MakePin( PD_In, "Exec", PN_Exec, PNF_Server ),
+	[ROLE_Client] = MakePin( PD_In, "Exec", PN_Exec, PNF_Client ),
+}
+local PIN_OUTPUT_EXEC = {
+	[ROLE_Shared] = MakePin( PD_Out, "Exec", PN_Exec ),
+	[ROLE_Server] = MakePin( PD_Out, "Exec", PN_Exec, PNF_Server ),
+	[ROLE_Client] = MakePin( PD_Out, "Exec", PN_Exec, PNF_Client ),
+}
+local PIN_OUTPUT_THRU = {
+	[ROLE_Shared] = MakePin( PD_Out, "Thru", PN_Exec ),
+	[ROLE_Server] = MakePin( PD_Out, "Thru", PN_Exec, PNF_Server ),
+	[ROLE_Client] = MakePin( PD_Out, "Thru", PN_Exec, PNF_Client ),
+}
 
 function meta:Init()
 
@@ -157,15 +169,16 @@ function meta:GetPins()
 
 	table.Add(pins, self:GetRawPins())
 
+	local role = self:GetRole() or ROLE_Shared
 	if self:GetCodeType() == NT_Function then
-		table.insert(pins, 1, PIN_OUTPUT_THRU)
-		table.insert(pins, 1, PIN_INPUT_EXEC)
+		table.insert(pins, 1, PIN_OUTPUT_THRU[role])
+		table.insert(pins, 1, PIN_INPUT_EXEC[role])
 	elseif self:GetCodeType() == NT_Event then
-		table.insert(pins, 1, PIN_OUTPUT_EXEC)
+		table.insert(pins, 1, PIN_OUTPUT_EXEC[role])
 	elseif self:GetCodeType() == NT_FuncInput then
-		table.insert(pins, 1, PIN_OUTPUT_EXEC)
+		table.insert(pins, 1, PIN_OUTPUT_EXEC[role])
 	elseif self:GetCodeType() == NT_FuncOutput then
-		table.insert(pins, 1, PIN_INPUT_EXEC)
+		table.insert(pins, 1, PIN_INPUT_EXEC[role])
 	end
 
 	return pins
