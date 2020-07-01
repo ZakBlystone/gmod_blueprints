@@ -330,7 +330,7 @@ end
 return str .. [[
 __bpm.delayExists = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then return true end end end
 __bpm.delay = function(key, delay, func, ...) __bpm.delayKill(key) __self.delays[#__self.delays+1] = { key = key, f = func, t = delay, a = {...} } end
-__bpm.delayKill = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then table.remove(__self.delays, i) end end end
+__bpm.delayKill = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then __self.delays[i].kill = true end end end
 __bpm.onError = function(msg, mod, graph, node) ]] .. (args[3] and "error(msg)" or "") .. [[ end
 __bpm.error = function(msg) __bpm.onError(tostring(msg), 0, __dbggraph or -1, __dbgnode or -1) end]]
 
@@ -349,7 +349,8 @@ function meta:update( rate )]] .. x .. [[
 	__self = self
 	rate = rate or FrameTime()]] .. net .. [[
 	local t,d = self.delays
-	for i=#t, 1, -1 do d = t[i] d.t = d.t - rate if d.t <= 0 then d.t = d.f(unpack(d.a)) if not d.t then table.remove(t,i) end end end
+	for i=#t, 1, -1 do d = t[i] if d.kill or d.t == nil then table.remove(t,i) end end
+	for i=#t, 1, -1 do d = t[i] d.t = d.t - rate if not d.kill and d.t <= 0 then d.t = d.f(unpack(d.a)) end end
 end]]
 
 end
