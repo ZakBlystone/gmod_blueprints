@@ -181,7 +181,7 @@ function meta:UpdatePins()
 	local flagMask = bit.band(PNF_All, bit.bnot( PNF_Server + PNF_Client ))
 	local function findExisting( k, p )
 		if not current then return end
-		if current[k] and current[k]:GetType():Equal(p:GetType(), flagMask) then
+		if current[k] and current[k]:GetType():Equal(p:GetType(), flagMask) and current[k].dir == p.dir then
 			current[k]:SetType(p:GetType())
 			current[k]:SetName(p:GetName())
 			return current[k]
