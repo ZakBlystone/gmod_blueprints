@@ -132,7 +132,9 @@ function meta:Construct(hash)
 
 	local meta = bpcommon.GetMetaTableFromHash(hash)
 	if meta == nil then error("Unable to find metatable for hash: " .. hash) end
-	return bpcommon.MakeInstance(meta)
+	local obj = bpcommon.MakeInstance(meta)
+	obj.__loaded = false
+	return obj
 
 end
 

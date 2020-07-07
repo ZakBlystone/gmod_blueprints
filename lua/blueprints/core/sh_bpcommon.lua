@@ -361,7 +361,8 @@ function MakeInstance(meta, ...)
 
 	if type(meta) == "string" then meta = G_BPMetaRegistry[name] end
 	local raw = {}
-	raw.__rawstr =tostring(raw)
+	raw.__rawstr = tostring(raw)
+	raw.__loaded = true
 	return setmetatable(raw, meta):Init(...)
 
 end
