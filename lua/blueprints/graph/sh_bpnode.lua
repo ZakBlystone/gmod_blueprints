@@ -575,7 +575,7 @@ end
 
 function meta:Copy()
 
-	local newNode = setmetatable({}, meta)
+	local newNode = setmetatable({__loaded = true}, meta)
 	newNode.x = self.x
 	newNode.y = self.y
 	newNode.data = bpcommon.CopyTable(self.data)

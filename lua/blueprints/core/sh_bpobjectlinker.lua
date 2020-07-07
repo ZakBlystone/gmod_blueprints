@@ -72,7 +72,8 @@ function meta:WalkPostLoadTree( node, marked )
 
 	for _, object in ipairs(node.objects) do
 		if not marked[object] then
-			if object.PostLoad then object:PostLoad() object.__loaded = true end
+			if object.PostLoad then object:PostLoad() end
+			object.__loaded = true
 		end
 	end
 
