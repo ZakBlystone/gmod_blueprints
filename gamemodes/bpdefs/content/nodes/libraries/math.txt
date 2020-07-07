@@ -315,4 +315,10 @@ LIB math
 		IN num, PN_Number, #The number to truncate
 		IN digits, PN_Number, PNF_Nullable, #The amount of digits to keep after the point.
 	}
+	PURE Huge, SHARED
+	{
+		DESC Returns infinity.
+		OUT value, PN_Number, #Infinity
+    CODE #1 = math.huge
+	}
 }
