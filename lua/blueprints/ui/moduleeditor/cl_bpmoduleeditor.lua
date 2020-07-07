@@ -33,7 +33,7 @@ function meta:AddSidebarPanel( ... ) return self:GetPanel():AddSidebarPanel(...)
 function meta:AddSidebarList( ... ) return self:GetPanel():AddSidebarList(...) end
 
 local function NewEditor(...)
-	return setmetatable({}, meta):Init(...)
+	return bpcommon.MakeInstance(meta, ...)
 end
 
 if SERVER then AddCSLuaFile() return end

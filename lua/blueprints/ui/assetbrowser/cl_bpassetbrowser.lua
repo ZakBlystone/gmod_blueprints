@@ -475,7 +475,7 @@ function meta:Open()
 end
 
 function New(...)
-	return setmetatable({}, meta):Init(...)
+	return bpcommon.MakeInstance(meta, ...)
 end
 
 
