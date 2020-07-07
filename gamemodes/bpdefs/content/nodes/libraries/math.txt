@@ -319,6 +319,6 @@ LIB math
 	{
 		DESC Returns infinity.
 		OUT value, PN_Number, #Infinity
-    CODE #1 = math.huge
+		CODE #1 = math.huge
 	}
 }
