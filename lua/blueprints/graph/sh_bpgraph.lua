@@ -307,6 +307,7 @@ function meta:NodeWalk(node, condition, visited)
 		for pinID, pin in node:Pins(nil, true) do
 			for _, v in ipairs( pin:GetConnectedPins() ) do
 				assert(v:GetNode() ~= nil)
+				if not v:GetNode():IsFullyLoaded() then continue end
 				-- Push connection onto stack if condition passes
 				if condition(v:GetNode(), v.id) then stack[#stack+1] = {pin, v} end
 			end
@@ -820,6 +821,7 @@ function meta:ExecWalk( func, allNodes )
 			end
 
 			local connections = self:NodeWalk(node, function(node, pinID)
+				assert(node:GetPin(pinID) ~= nil, tostring(node) .. " is missing pin " .. tostring(pinID))
 				return node:GetPin(pinID):IsType(PN_Exec) and node:GetPin(pinID):GetDir() == PD_In
 			end, visited)
 
