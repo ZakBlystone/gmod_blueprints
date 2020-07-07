@@ -289,6 +289,9 @@ local function FindOuter(self, check)
 		return FindOuter(outer, check)
 	end
 end
+local function IsFullyLoaded(self)
+	return self.__loaded
+end
 
 -- Creates and registers a metatable
 function MetaTable(name, extends)
@@ -305,6 +308,7 @@ function MetaTable(name, extends)
 	mt.GetOuter = GetOuter
 	mt.GetOutermost = GetOutermost
 	mt.FindOuter = FindOuter
+	mt.IsFullyLoaded = IsFullyLoaded
 
 	if extends then
 		local base = G_BPMetaRegistry[name]
