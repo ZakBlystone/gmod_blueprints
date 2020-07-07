@@ -38,7 +38,7 @@ LIB CORE
 	REDIRECTNODE Pin, CORE_Pin
 	PURE Pin, SHARED
 	{
-				DESC Allows redirection of connections.
+		DESC Allows redirection of connections.
 		IN In, PN_Any
 		OUT Out, PN_Any
 		INFORM 1,2
