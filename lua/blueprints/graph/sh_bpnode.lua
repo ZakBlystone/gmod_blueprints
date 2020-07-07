@@ -181,16 +181,19 @@ function meta:UpdatePins()
 	local flagMask = bit.band(PNF_All, bit.bnot( PNF_Server + PNF_Client ))
 	local function findExisting( k, p )
 		if not current then return end
+		for _,v in ipairs( current ) do
+			--print(" CHECK: " .. tostring(v:ToString(true, true)))
+			if v:Equals(p) then return v end
+		end
 		if current[k] and current[k]:GetType():Equal(p:GetType(), flagMask) and current[k].dir == p.dir then
 			current[k]:SetType(p:GetType())
 			current[k]:SetName(p:GetName())
 			return current[k]
 		end
-		for _,v in ipairs( current ) do
-			--print(" CHECK: " .. tostring(v:ToString(true, true)))
-			if v:Equals(p) then return v end
-		end
 		print(" No Match for: " .. tostring(p:ToString(true, true)))
+		for _, v in ipairs(current) do
+			print("  " .. tostring(v:ToString(true, true)))
+		end
 	end
 
 	--print(" SEARCH CACHE: " .. (current and #current or "nil"))
