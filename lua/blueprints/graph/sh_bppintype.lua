@@ -211,6 +211,11 @@ function meta:Serialize(stream)
 	self.flags = stream:Bits(self.flags, 8)
 
 	if self.basetype == PN_BPRef or self.basetype == PN_Func then
+
+		if stream:IsWriting() then
+			assert( type(self.subtype) ~= "string", "Was string on pintype: " .. tostring(self) )
+		end
+
 		self.subtype = stream:Object(self.subtype)
 		print("SERIALIZE SUBTYPE: " .. self:GetSubTypeString())
 	else

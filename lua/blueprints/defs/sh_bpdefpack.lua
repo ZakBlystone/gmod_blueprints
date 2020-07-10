@@ -223,7 +223,7 @@ function meta:GetNodeTypes()
 
 end
 
-function meta:LinkPins( e, pins, lookup )
+function meta:LinkPins( pins, lookup )
 
 	for _, pin in ipairs(pins) do
 
@@ -250,7 +250,7 @@ function meta:LinkObjects()
 		local maker = v:MakerNodeType()
 		local breaker = v:BreakerNodeType()
 
-		self:LinkPins(v, v.pins:GetTable(), lookup)
+		self:LinkPins(v.pins:GetTable(), lookup)
 
 	end
 
@@ -258,9 +258,15 @@ function meta:LinkObjects()
 
 		for _, e in v:GetEntries():Items() do
 
-			self:LinkPins(e, e:GetRawPins(), lookup)
+			self:LinkPins(e:GetRawPins(), lookup)
 
 		end
+
+	end
+
+	for _, v in ipairs(self.callbacks) do
+
+		self:LinkPins(v:GetPins(), lookup)
 
 	end
 
