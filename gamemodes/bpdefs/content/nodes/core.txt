@@ -38,6 +38,7 @@ LIB CORE
 	REDIRECTNODE Pin, CORE_Pin
 	PURE Pin, SHARED
 	{
+		DESC Allows redirection of connections.
 		IN In, PN_Any
 		OUT Out, PN_Any
 		INFORM 1,2
@@ -47,20 +48,22 @@ LIB CORE
 	}
 	SPECIAL Sequence, SHARED
 	{
+		DESC Executes a connection before incrementing to the next.
 		REDIRECTPIN 1, Out_1
 		REDIRECTPIN 2, Out_2
 		CLASS Sequence
 	}
 	SPECIAL PlayURL, CLIENT
 	{
+		DESC Plays a sound URL on the client.
 		IN Exec, PN_Exec
-		IN Url, PN_String
-		IN Flags, PN_String
+		IN Url, PN_String, #The URL of the sound to play
+		IN Flags, PN_String, #Flags for the sound
 		OUT Thru, PN_Exec
-		OUT Callback, PN_Exec
-		OUT Channel, PN_Ref, PNF_None, IGModAudioChannel
-		OUT ErrorID, PN_Number
-		OUT ErrorName, PN_String
+		OUT Callback, PN_Exec, #Callback function that is called as soon as the the stream is loaded.
+		OUT Channel, PN_Ref, PNF_None, IGModAudioChannel, #The sound channel
+		OUT ErrorID, PN_Number, #ID of an error, if an error has occurred
+		OUT ErrorName, PN_String, #Name of an error, if an error has occurred
 		LATENT
 		CODE
 		{
@@ -70,15 +73,16 @@ LIB CORE
 	}
 	SPECIAL ForEach, SHARED
 	{
+		DESC Iterates for each key-value pair in the table, calling the function with the key and value of the pair. If the function returns anything, the loop is broken.
 		IN Exec, PN_Exec
-		IN Table, PN_Any, PNF_Table
+		IN Table, PN_Any, PNF_Table, #The table to iterate over.
 		OUT Thru, PN_Exec
-		OUT Each, PN_Exec
+		OUT Each, PN_Exec, #The function to run for each index.
 		OUT Key, PN_Any
 		OUT Value, PN_Any
 		INFORM 2,6
 		JUMP iter
-		CODE 
+		CODE
 		{
 			#3 = nil
 			::^iter::
@@ -89,16 +93,17 @@ LIB CORE
 	}
 	SPECIAL ForEachI, SHARED
 	{
+		DESC Iterates for each numeric index in the table in order.
 		IN Exec, PN_Exec
-		IN Table, PN_Any, PNF_Table
+		IN Table, PN_Any, PNF_Table, #The table to iterate over.
 		OUT Thru, PN_Exec
-		OUT Each, PN_Exec
+		OUT Each, PN_Exec, #The function to run for each index.
 		OUT Num, PN_Number
 		OUT Value, PN_Any
 		INFORM 2,6
 		JUMP iter
 		LOCAL len
-		CODE 
+		CODE
 		{
 			%len = __CH~HA__$2
 			#3 = 0
@@ -113,16 +118,17 @@ LIB CORE
 	}
 	SPECIAL ForEachIReverse, SHARED
 	{
+		DESC Iterates for each numeric index in the table in reverse.
 		IN Exec, PN_Exec
-		IN Table, PN_Any, PNF_Table
+		IN Table, PN_Any, PNF_Table, #The table to iterate over.
 		OUT Thru, PN_Exec
-		OUT Each, PN_Exec
+		OUT Each, PN_Exec, #The function to run for each index.
 		OUT Num, PN_Number
 		OUT Value, PN_Any
 		INFORM 2,6
 		JUMP iter
 		LOCAL len
-		CODE 
+		CODE
 		{
 			#3 = __CH~HA__$2 + 1
 			::^iter::
@@ -136,14 +142,15 @@ LIB CORE
 	}
 	SPECIAL For, SHARED
 	{
+		DESC A loop that runs a specified amount times.
 		IN Exec, PN_Exec
-		IN Start=1, PN_Number, #Start = 1
-		IN End=1, PN_Number
+		IN Start=1, PN_Number, #Number to start iterating from.
+		IN End=1, PN_Number, #Number to stop iterating at.
 		OUT Thru, PN_Exec
-		OUT Each, PN_Exec
+		OUT Each, PN_Exec, #Function to run on each iteration.
 		OUT Num, PN_Number
 		JUMP iter
-		CODE 
+		CODE
 		{
 			#3 = $2 - 1
 			::^iter::
@@ -153,14 +160,15 @@ LIB CORE
 	}
 	SPECIAL Debounce, SHARED
 	{
+		DESC Works similar to Delay, but accepts the first input immediately.
 		IN Exec, PN_Exec
-		IN Delay, PN_Number
+		IN Delay, PN_Number, #Seconds to wait.
 		IN AlwaysReset, PN_Bool
 		OUT Thru, PN_Exec
-		OUT Debounced, PN_Exec
+		OUT Debounced, PN_Exec, #Function to run after delay.
 		LATENT
 		LOCAL debounced
-		CODE 
+		CODE
 		{
 			%debounced = __bpm.delayExists("debounce_!graph_!node")
 			if %debounced and $3 then __bpm.delay("debounce_!graph_!node", $2, function() end) end
@@ -171,11 +179,12 @@ LIB CORE
 	}
 	SPECIAL Delay, SHARED
 	{
+		DESC Waits a specified length in seconds before proceeding.
 		IN Exec, PN_Exec
-		IN Delay, PN_Number
+		IN Delay, PN_Number, #Number of seconds to wait.
 		OUT Thru, PN_Exec
 		LATENT
-		CODE 
+		CODE
 		{
 			__bpm.delay("delay_!graph_!node", $2, function() recurse(#_1) end)
 			goto popcall
@@ -184,7 +193,7 @@ LIB CORE
 	SPECIAL DelayBoxed, SHARED
 	{
 		IN Exec, PN_Exec
-		IN Delay, PN_Number
+		IN Delay, PN_Number, #Number of seconds to wait.
 		IN Value, PN_Any
 		OUT Thru, PN_Exec
 		OUT Value, PN_Any
@@ -200,8 +209,8 @@ LIB CORE
 	FUNC ChatPrintAll, SHARED
 	{
 		REQUIREMETA Player
-		DESC Sends a message to all players
-		IN Message, PN_String, #Message to send to all players
+		DESC Sends a message to all players.
+		IN Message, PN_String, #Message to send to all players.
 		CODE
 		{
 			if SERVER then
@@ -213,16 +222,19 @@ LIB CORE
 	}
 	PURE Client, SHARED
 	{
-		OUT IsClient, PN_Bool
+		DESC Returns true if ran on client.
+		OUT IsClient, PN_Bool, #True if client.
 		CODE #1 = CLIENT
 	}
 	PURE Server, SHARED
 	{
+		DESC Returns true if ran on server.
 		OUT IsServer, PN_Bool
 		CODE #1 = SERVER
 	}
 	SPECIAL ClientOnly, SHARED
 	{
+		DESC Only allows the client to execute nodes after Thru.
 		IN Exec, PN_Exec
 		OUT Thru, PN_Exec, PNF_Client
 		FALLTHROUGH
@@ -230,6 +242,7 @@ LIB CORE
 	}
 	SPECIAL ServerOnly, SHARED
 	{
+		DESC Only allows the server to execute nodes after Thru.
 		IN Exec, PN_Exec
 		OUT Thru, PN_Exec, PNF_Server
 		FALLTHROUGH
@@ -237,6 +250,7 @@ LIB CORE
 	}
 	SPECIAL Role, SHARED
 	{
+		DESC Splits the execution into the separate client and server roles.
 		IN Exec, PN_Exec
 		OUT Server, PN_Exec, PNF_Server
 		OUT Client, PN_Exec, PNF_Client
@@ -244,6 +258,7 @@ LIB CORE
 	}
 	PURE ToString, SHARED
 	{
+		DESC Attempts to convert the value to a string.
 		IN Any, PN_Any
 		OUT String, PN_String
 		INFORM 1
@@ -251,35 +266,41 @@ LIB CORE
 	}
 	PURE ToNumber, SHARED
 	{
+		DESC Attempts to convert the value to a number. Returns nil on failure.
 		IN Value, PN_String
 		OUT Number, PN_Number
 		CODE #1 = tonumber($1) or 0
 	}
 	FUNC Print, SHARED
 	{
-		IN String, PN_String
+		DESC Prints a message to the console.
+		IN String, PN_String, #Message to print.
 		CODE print($1)
 	}
 	PURE Number, SHARED
 	{
+		DESC Returns the input number.
 		IN Num, PN_Number
 		OUT Num, PN_Number
 		CODE #1 = $1
 	}
 	PURE Boolean, SHARED
 	{
+		DESC Returns the input boolean.
 		IN Bool, PN_Bool
 		OUT Bool, PN_Bool
 		CODE #1 = $1
 	}
 	PURE String, SHARED
 	{
+		DESC Returns the input string.
 		IN String, PN_String
 		OUT String, PN_String
 		CODE #1 = $1
 	}
 	PURE IsValid, SHARED
 	{
+		DESC Behaves similar to CheckValid, returning true if its valid.
 		IN Thing, PN_Any
 		OUT Valid, PN_Bool
 		CODE #1 = __genericIsValid($1)
@@ -287,6 +308,7 @@ LIB CORE
 	}
 	FUNC SetRef, SHARED
 	{
+		DESC Sets the target input to the value input.
 		IN Target, PN_Any
 		IN Value, PN_Any
 		CODE $1 = $2
@@ -294,6 +316,7 @@ LIB CORE
 	}
 	PURE Nil, SHARED
 	{
+		DESC Returns a value that is essentially nothing.
 		OUT Value, PN_Any
 		CODE #1 = nil
 		INFORM 1
@@ -301,6 +324,7 @@ LIB CORE
 	}
 	PURE IsNil, SHARED
 	{
+		DESC Checks if the input is nil.
 		IN Thing, PN_Any
 		OUT Valid, PN_Bool
 		CODE #1 = $1 == nil
@@ -308,6 +332,7 @@ LIB CORE
 	}
 	PURE IsNotNil, SHARED
 	{
+		DESC Checks if the input isn't nil.
 		IN Thing, PN_Any
 		OUT Valid, PN_Bool
 		CODE #1 = $1 ~= nil
@@ -315,12 +340,13 @@ LIB CORE
 	}
 	SPECIAL CheckValid, SHARED
 	{
+		DESC Checks if an input is valid.
 		CLASS CheckValid
 	}
 	PURE CheckValue, SHARED
 	{
-		IN Value, PN_Any, #Value to check
-		IN Default, PN_Any
+		IN Value, PN_Any, #Value to check.
+		IN Default, PN_Any, #Default value.
 		OUT Out, PN_Any
 		INFORM 1,2
 		COMPACT false
@@ -344,7 +370,8 @@ LIB CORE
 	}
 	FUNC Error, SHARED
 	{
-		IN Message, PN_String
+		DESC Prints an error message to the console.
+		IN Message, PN_String, #Error to print.
 		CODE error($1)
 	}
 }
