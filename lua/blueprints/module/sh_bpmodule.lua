@@ -161,7 +161,7 @@ function LoadHeader(filename)
 		envVersion = stream:Value(),
 	}
 
-	stream:Finish()
+	stream:Finish( true )
 	return header
 
 end

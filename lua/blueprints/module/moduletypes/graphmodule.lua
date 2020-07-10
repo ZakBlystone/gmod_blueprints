@@ -306,6 +306,25 @@ function MODULE:GetUsedPinTypes(used, noFlags)
 
 end
 
+function MODULE:RequestGraphForCallback( callback )
+
+	local id, graph = self:NewGraph(callback:GetName(), NT_Function)
+
+	for _, v in ipairs(callback:GetPins()) do
+
+		if v:IsType(PN_Exec) then continue end
+		if v:IsIn() then
+			graph.inputs:Add(v:Copy(), v:GetName())
+		else
+			graph.outputs:Add(v:Copy(), v:GetName())
+		end
+
+	end
+
+	return graph
+
+end
+
 function MODULE:RequestGraphForEvent( nodeType )
 
 	print("REQUEST GRAPH FOR: " .. nodeType:GetFullName())

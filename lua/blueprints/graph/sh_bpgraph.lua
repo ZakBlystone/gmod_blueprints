@@ -507,8 +507,9 @@ function meta:AddNode(nodeTypeName, ...)
 		if graph then return graph end
 	end
 
-	local id, newNode = self.nodes:Construct( nodeType, ... )
-	return id, newNode
+	local node = bpnode.New( nodeType, ... ):WithOuter( self )
+	node:Initialize()
+	return self.nodes:Add(node)
 
 end
 

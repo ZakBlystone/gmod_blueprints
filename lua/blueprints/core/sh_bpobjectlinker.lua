@@ -129,6 +129,41 @@ function meta:PostLink(stream)
 
 end
 
+function meta:SerializeMissingDependencies(stream)
+
+	print("SERIALIZE MISSING DEPENDENCIES")
+
+	local missing = {}
+	if stream:IsWriting() then
+
+		local marked = {}
+		for k, v in ipairs(self.order) do
+			if v[1] == WEAK_SET and v[4]() then
+				local o = v[4]()
+				local ord = self:FindObjectOrder(o)
+				if ord == 0 and not self.externObjLookup[o] then
+					if not marked[o] then
+						marked[o] = true
+						missing[#missing+1] = o
+					end
+				end
+			end
+		end
+
+		for _, v in ipairs(missing) do
+			print("Write missing dependency: " .. tostring(v))
+		end
+
+	end
+
+	missing = stream:ObjectArray(missing)
+
+	for _, v in ipairs(missing) do
+		print("Serialize missing dependency: " .. tostring(v))
+	end
+
+end
+
 function meta:Construct(hash)
 
 	local meta = bpcommon.GetMetaTableFromHash(hash)

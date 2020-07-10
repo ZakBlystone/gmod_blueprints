@@ -229,6 +229,8 @@ function LoadAndParseDefs()
 	hook.Run("BPPopulateDefs", defpack)
 	isPopulatingDefs = false
 
+	defpack:LinkObjects()
+
 end
 
 local function ParsePin(t)
@@ -314,6 +316,23 @@ end,
 function(block, parent)
 
 	block.struct.pins:PreserveNames(false)
+
+end)
+
+RegisterBlock("CALLBACK", 0, function(block, parent)
+	local name = block.tuple[2]
+	block.callback = bpcallback.New():WithOuter(defpack)
+	block.callback:SetName(name)
+
+	defpack:AddCallback(block.callback)
+
+end,
+function(block, value)
+	local key = value.tuple[1]
+	if key == "IN" or key == "OUT" then block.callback:AddPin( ParsePin(value) ) end
+
+end,
+function(block, parent)
 
 end)
 

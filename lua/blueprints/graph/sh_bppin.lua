@@ -63,7 +63,7 @@ function meta:SetLiteral(value)
 		end
 	end
 
-	value = tostring(value)
+	if not self:HasObjectLiteral() then value = tostring(value) end
 	local prevValue = self.literal
 	local changed = value ~= prevValue
 
@@ -345,7 +345,21 @@ function meta:Serialize(stream)
 	end
 
 	self.default = stream:String(self.default)
-	self.literal = stream:String(self.literal)
+
+	if stream:GetVersion() >= 8 then
+
+		local objectLiteral = stream:Bool( self:HasObjectLiteral() )
+
+		if objectLiteral then
+			if type(self.literal) == "string" then self.literal = nil end
+			self.literal = stream:Object(self.literal)
+		else
+			self.literal = stream:String(self.literal)
+		end
+
+	else
+		self.literal = stream:String(self.literal)
+	end
 
 	if self.dir == PD_Out or stream:GetVersion() < 5 then
 		self.connections = stream:ObjectArray(self.connections)

@@ -16,6 +16,7 @@ function meta:Init()
 	self.hooks = {}
 	self.structLookup = {}
 	self.enumLookup = {}
+	self.callbacks = {}
 	return self
 
 end
@@ -122,6 +123,12 @@ function meta:GetHooks()
 
 end
 
+function meta:GetCallbacks()
+
+	return self.callbacks
+
+end
+
 function meta:GetPinTypes()
 
 	local types = {}
@@ -180,6 +187,12 @@ function meta:AddNodeRedirector(oldNode, newNode)
 
 end
 
+function meta:AddCallback(callback)
+
+	self.callbacks[#self.callbacks+1] = callback
+
+end
+
 function meta:AddStruct(struct)
 
 	self.structs[#self.structs+1] = struct
@@ -210,7 +223,52 @@ function meta:GetNodeTypes()
 
 end
 
+function meta:LinkPins( e, pins, lookup )
+
+	for _, pin in ipairs(pins) do
+
+		if pin.type:GetBaseType() == PN_Func then
+
+			local cb = pin.type:GetSubType()
+			if type(cb) == "string" then
+				pin.type.subtype = bpcommon.Weak( lookup.callbacks[cb] )
+			end
+
+		end
+
+	end
+
+end
+
+function meta:LinkObjects()
+
+	local lookup = { callbacks = {} }
+	for _, v in ipairs(self.callbacks) do lookup.callbacks[v:GetName()] = v end
+
+	for k,v in ipairs(self.structs) do
+
+		local maker = v:MakerNodeType()
+		local breaker = v:BreakerNodeType()
+
+		self:LinkPins(v, v.pins:GetTable(), lookup)
+
+	end
+
+	for _, v in ipairs(self.nodeGroups) do
+
+		for _, e in v:GetEntries():Items() do
+
+			self:LinkPins(e, e:GetRawPins(), lookup)
+
+		end
+
+	end
+
+end
+
 function meta:Serialize(stream)
+
+	self.callbacks = stream:ObjectArray(self.callbacks, self)
 
 	local groupCount = stream:UInt(#self.nodeGroups)
 	local structCount = stream:UInt(#self.structs)
@@ -231,6 +289,7 @@ function meta:Serialize(stream)
 	self.redirectors = stream:StringMap(self.redirectors)
 
 	if stream:IsReading() then self:PostInit() end
+
 	return stream
 
 end

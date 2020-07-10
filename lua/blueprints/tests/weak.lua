@@ -100,7 +100,7 @@ function LINKER_TEST_NON_RELEVANT()
 	stream:Finish()
 
 	ASSERT(w ~= nil)
-	ASSERT(w() == nil)
+	ASSERT(w() ~= nil)
 
 end
 

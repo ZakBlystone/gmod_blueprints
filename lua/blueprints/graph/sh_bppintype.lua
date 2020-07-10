@@ -60,6 +60,12 @@ function meta:Copy( outer )
 	return New(self:GetBaseType(), self:GetFlags(), self:GetSubType()):WithOuter( outer or self:GetOuter() )
 end
 
+function meta:HasObjectLiteral()
+
+	return self:GetBaseType() == PN_Func
+
+end
+
 function meta:GetBaseType() return self.basetype end
 function meta:GetSubType() return type(self.subtype) == "table" and self.subtype() or self.subtype end
 function meta:GetFlags(mask) return bit.band(self.flags, mask or PNF_All) end
@@ -68,6 +74,7 @@ function meta:GetTypeName() return PinTypeNames[ self:GetBaseType() ] or "UNKNOW
 function meta:GetLiteralType() return NodeLiteralTypes[ self:GetBaseType() ] end
 function meta:GetDefault()
 
+	if self:HasObjectLiteral() then return nil end
 	if self:HasFlag(PNF_Table) then return (not self:HasFlag(PNF_Nullable)) and "{}" end
 	if self:GetBaseType() == PN_Enum and bpdefs and bpdefs.Ready() then
 		local enum = bpdefs.Get():GetEnum( self )
@@ -80,7 +87,7 @@ end
 function meta:GetSubTypeString()
 
 	local t = self:GetSubType()
-	if type(t) == "table" then return tostring(t) end --t.GetName and t:GetName() or "invalid" end
+	if type(t) == "table" then return t.GetName and t:GetName() or tostring(t) end
 	if type(t) == "string" then return t end
 	return "nil"
 
@@ -114,6 +121,10 @@ function meta:GetDisplayName()
 
 	if self:IsType(PN_BPRef) then
 		return "M_" .. self:GetSubTypeString()
+	end
+
+	if self:IsType(PN_Func) then
+		return "CB_" .. self:GetSubTypeString()
 	end
 
 	if self:IsType(PN_BPClass) then
@@ -183,6 +194,13 @@ function meta:Equal(other, flagMask, ignoreSubType)
 	if other == nil then return false end
 	if self:GetBaseType() ~= other:GetBaseType() then return false end
 	if bit.band( self:GetFlags(), flagMask ) ~= bit.band( other:GetFlags(), flagMask ) then return false end
+
+	if self:GetBaseType() == PN_Func then
+		local a = self:GetSubType()
+		local b = other:GetSubType()
+		return (a and b and a.GetName and b.GetName and a:GetName() == b:GetName()) or (a == nil and b == nil)
+	end
+
 	if self:GetSubType() ~= other:GetSubType() and not ignoreSubType then return false end
 	return true
 end
@@ -192,8 +210,9 @@ function meta:Serialize(stream)
 	self.basetype = stream:Bits(self.basetype, 8)
 	self.flags = stream:Bits(self.flags, 8)
 
-	if self.basetype == PN_BPRef then
+	if self.basetype == PN_BPRef or self.basetype == PN_Func then
 		self.subtype = stream:Object(self.subtype)
+		print("SERIALIZE SUBTYPE: " .. self:GetSubTypeString())
 	else
 		self.subtype = stream:String(self.subtype)
 	end

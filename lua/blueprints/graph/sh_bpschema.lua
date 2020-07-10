@@ -165,6 +165,7 @@ PinTypeClasses = {
 	[PN_BPRef] = "BPRef",
 	[PN_Asset] = "Asset",
 	[PN_Ref] = "Ref",
+	[PN_Func] = "Callback",
 }
 
 -- Valuetype class to use for pin

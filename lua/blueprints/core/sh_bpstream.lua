@@ -32,7 +32,7 @@ DEBUG_MODE = false
 CATCH_UNFINISHED = true
 
 fmtMagic = 0x314D5042
-fmtVersion = 7
+fmtVersion = 8
 
 
 function meta:Init(context, mode, file)
@@ -186,7 +186,7 @@ function meta:In( noRead )
 
 end
 
-function meta:Finish()
+function meta:Finish( partial )
 
 	local out = nil
 
@@ -197,8 +197,10 @@ function meta:Finish()
 
 			local contents = bpdata.OutStream( false, self:HasFlag(FL_FileBacked) )
 
-			self:MetaState( contents )
+			if self.linker and self:GetVersion() >= 8 then self.linker:SerializeMissingDependencies(self) end
 			if self.linker then self.linker:PostLink(self) end
+
+			self:MetaState( contents )
 			if self.linker then self.linker:Serialize(self) end
 			if self.stringTable then self.stringTable:Serialize(self) end
 
@@ -238,6 +240,7 @@ function meta:Finish()
 
 	elseif self:IsReading() then
 
+		if self.linker and self:GetVersion() >= 8 and not partial then self.linker:SerializeMissingDependencies(self) end
 		if self.linker then self.linker:PostLink(self) end
 
 	end

@@ -28,8 +28,6 @@ function meta:Init(nodeType, x, y)
 		self.nodeType():Bind("destroyed", self, self.OnNodeTypeDestroyed)
 	end
 
-	self:Initialize()
-
 	return self
 
 end

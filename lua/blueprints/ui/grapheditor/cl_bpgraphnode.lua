@@ -233,6 +233,8 @@ function meta:GetDisplayName()
 	if self.displayName then return self.displayName end
 
 	local name = self:GetNode():GetDisplayName()
+	if name == nil then name = "ERROR" end
+
 	local sub = string.find(name, "[:.]")
 	if sub then
 		name = name:sub(sub+1, -1)

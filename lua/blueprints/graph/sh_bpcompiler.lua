@@ -437,6 +437,10 @@ end
 function meta:GetPinLiteral(pin, sanitize)
 
 	if pin and pin:GetLiteral() and not noLiteral then
+		if pin.GetCode then
+			return { var = pin:GetCode(self) } 
+		end
+
 		local l = tostring(pin:GetLiteral())
 
 		if pin:IsType(PN_BPClass) then l = EscapedGUID(l) end
