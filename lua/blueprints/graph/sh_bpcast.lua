@@ -39,6 +39,12 @@ AddPinCast(bppintype.New(PN_Ref, PNF_None, "Entity"), {
 	bppintype.New(PN_Ref, PNF_None, "NPC"),
 	bppintype.New(PN_Ref, PNF_None, "Vehicle"),
 }, true)
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DFrame"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DPanel"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DLabel"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DButton"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DTextEntry"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DNumSlider"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
 AddPinCast(bppintype.New(PN_String), { bppintype.New(PN_Asset) }, true, nil, true )
 
 --[[

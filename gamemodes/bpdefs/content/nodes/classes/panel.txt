@@ -14,6 +14,23 @@ CLASS DPanel
 		IN color, PN_Color
 	}
 }
+CLASS DFrame
+{
+	NOINDEXMETA
+	FUNC Close, CLIENT
+	{
+		DESC Closes this frame
+	}
+	FUNC SetTitle, CLIENT
+	{
+		DESC Sets the title of the frame
+		IN title, PN_String
+	}
+	FUNC Center, CLIENT
+	{
+		DESC Centers this frame on the screen
+	}
+}
 CLASS DLabel
 {
 	NOINDEXMETA
