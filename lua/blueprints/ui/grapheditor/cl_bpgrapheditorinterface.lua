@@ -76,9 +76,7 @@ end
 
 function meta:GetZoomString()
 
-	local zoom = self:GetVGraph():GetZoomLevel()
-	if zoom > 0 then return "-" .. math.abs(zoom) end
-	return "+" .. math.abs(zoom)
+	return self:GetVGraph():GetZoomLevelText()
 
 end
 
@@ -141,6 +139,9 @@ end
 
 function meta:DrawGrid( material, pixelGridUnits, textureGridDivisions )
 
+	local vgraph = self:GetVGraph()
+	local x, y = vgraph:LocalToScreen(0,0)
+
 	local size = 400000
 	local texture = material:GetTexture("$basetexture")
 	local tw = texture:GetMappingWidth()
@@ -160,7 +161,7 @@ function meta:DrawGrid( material, pixelGridUnits, textureGridDivisions )
 	u1, v1 = ( u1 - du ) / ( 1 - 2 * du ), ( v1 - dv ) / ( 1 - 2 * dv )
 
 	surface.SetMaterial(material)
-	surface.DrawTexturedRectUV( -size, -size, size*2, size*2, u0, v0, u1, v1 )
+	surface.DrawTexturedRectUV( -size - x, -size - y, size*2, size*2, u0, v0, u1, v1 )
 
 end
 

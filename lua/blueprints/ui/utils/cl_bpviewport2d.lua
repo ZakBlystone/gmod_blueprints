@@ -11,6 +11,25 @@ local MD_Middle = 4
 
 AccessorFunc( PANEL, "m_bIsLocked",	"IsLocked", FORCE_BOOL )
 
+local ZoomLevels = {}
+
+for i=2, 15 do
+
+	local f = 1/(i*i)*8
+	local d = 4 - i
+	local lod = 1
+	if d <= -3 then lod = 2 end
+	if d <= -5 then lod = 3 end
+	if d > 0 then d = "+" .. d
+	elseif d == 0 then d = "1:1" end
+	table.insert(ZoomLevels, {f, tostring(d), lod})
+
+end
+
+function PANEL:GetDefaultZoomLevel() return 3 end
+function PANEL:GetZoomLevels() return ZoomLevels end
+function PANEL:GetZoomLevelText() return self:GetZoomLevels()[self.zoomLevel][2] end
+function PANEL:GetLOD() return self:GetZoomLevels()[self.zoomLevel][3] or 1 end
 function PANEL:Init()
 
 	self.AllowAutoRefresh = true
@@ -29,14 +48,15 @@ end
 
 function PANEL:InitRenderer()
 
-	self.renderer = bprender2d.New(self)
+	self.renderer = bpnewrender2d.New(self)
 	self.renderer.Draw2D = function(renderer) self:Draw2D() end
 
 	local x, y = self:LocalToScreen(0,0)
 	local w, h = self:GetSize()
 
+	self.zoomLevel = self:GetDefaultZoomLevel()
 	self.renderer:ViewCalculate(x,y,w,h)
-	self.renderer:SetZoom( 16 )
+	self.renderer:SetZoom( self:GetZoomLevels()[self.zoomLevel][1] )
 
 end
 
@@ -89,18 +109,21 @@ end
 
 function PANEL:GetZoomLevel()
 
-	return ((self.renderer:GetZoom() - 16) / 8)
+	return self.zoomLevel
 
 end
 
 function PANEL:SetZoomLevel( zoomLevel, pivotX, pivotY )
 
-	zoomLevel = math.Clamp(zoomLevel, -3, 8)
+	pivotX = pivotX or 0
+	pivotY = pivotY or 0
 
-	local z = (zoomLevel * 8) + 16
+	local levels = self:GetZoomLevels()
+	self.zoomLevel = math.Clamp(zoomLevel, 1, #levels)
 
+	local z = levels[self.zoomLevel]
 	local x0,y0 = self.renderer:PointToWorld(pivotX, pivotY)
-	self.renderer:SetZoom( z )
+	self.renderer:SetZoom( z[1] )
 	self.renderer:Calculate()
 	local x1,y1 = self.renderer:PointToWorld(pivotX, pivotY)
 	local sx, sy = self.renderer:GetScroll()

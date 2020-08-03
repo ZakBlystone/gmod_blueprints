@@ -364,9 +364,10 @@ function meta:Think( dt )
 end
 
 local col = Color(0,0,0)
-function meta:Draw(xOffset, yOffset, alpha)
+function meta:Draw(xOffset, yOffset, alpha, lod)
 
 	--self:Invalidate(true)
+	lod = lod or 1
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
@@ -406,10 +407,14 @@ function meta:Draw(xOffset, yOffset, alpha)
 		self.commentWrap:SetText( node:GetComment() )
 	end
 
-	if node:GetComment() ~= "" then
-		local tw, th = self.commentWrap:GetSize()
-		draw.RoundedBox(6, x - 5, y - 25 - th, tw + 10, th + 10, Color(0,0,0,200 * alpha))
-		self.commentWrap:Draw(x, y - 20 - th, 255, 255, 255, 255 * alpha)
+	if lod < 3 then
+
+		if node:GetComment() ~= "" then
+			local tw, th = self.commentWrap:GetSize()
+			draw.RoundedBox(6, x - 5, y - 25 - th, tw + 10, th + 10, Color(0,0,0,200 * alpha))
+			self.commentWrap:Draw(x, y - 20 - th, 255, 255, 255, 255 * alpha)
+		end
+
 	end
 
 
@@ -428,35 +433,44 @@ function meta:Draw(xOffset, yOffset, alpha)
 	end
 
 	self:LayoutPins()
-	self:DrawBanner(x, y, alpha)
-	self:DrawPins(xOffset, yOffset, alpha, false)
 
-	surface_setFont("NodePinFont")
-	self:DrawPins(xOffset, yOffset, alpha, true)
+	if lod < 3 then
 
-	local name = self:GetDisplayName()
+		self:DrawBanner(x, y, alpha)
+		self:DrawPins(xOffset, yOffset, alpha, false)
 
-	if not isCompact then
+		local name = self:GetDisplayName()
 
-		surface_setFont( "NodeTitleFontShadow" )
-		surface_setTextPos( math.ceil( x+10 ), math.ceil( y+6 ) )
-		surface_setTextColor( 0, 0, 0, 255*alpha )
-		surface_drawText( name )
+		if not isCompact then
 
-		surface_setFont( "NodeTitleFont" )
-		surface_setTextPos( math.ceil( x+7 ), math.ceil( y+4 ) )
-		surface_setTextColor( 255, 255, 255, 255*alpha )
-		surface_drawText( name )
-
-	else
-		-- HACK
-		if node:GetTypeName() ~= "CORE_Pin" then
+			surface_setFont( "NodeTitleFontShadow" )
+			surface_setTextPos( math.ceil( x+10 ), math.ceil( y+6 ) )
+			surface_setTextColor( 0, 0, 0, 255*alpha )
+			surface_drawText( name )
 
 			surface_setFont( "NodeTitleFont" )
-			surface_setTextPos( math.ceil( x+(w - self.titleWidth)/2 ), math.ceil( y+(h - self.titleHeight)/2 ) )
+			surface_setTextPos( math.ceil( x+7 ), math.ceil( y+4 ) )
 			surface_setTextColor( 255, 255, 255, 255*alpha )
 			surface_drawText( name )
+
+		else
+			-- HACK
+			if node:GetTypeName() ~= "CORE_Pin" then
+
+				surface_setFont( "NodeTitleFont" )
+				surface_setTextPos( math.ceil( x+(w - self.titleWidth)/2 ), math.ceil( y+(h - self.titleHeight)/2 ) )
+				surface_setTextColor( 255, 255, 255, 255*alpha )
+				surface_drawText( name )
+			end
 		end
+
+	end
+
+	if lod < 2 then
+
+		surface_setFont("NodePinFont")
+		self:DrawPins(xOffset, yOffset, alpha, true)
+
 	end
 
 end

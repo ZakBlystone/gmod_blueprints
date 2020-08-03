@@ -4,9 +4,22 @@ module("bpuidpreview", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
 local PANEL = {}
 
+local ZoomLevels = {
+	{2.0, "2x"},
+	{1.5, "1.5x"},
+	{1.0, "1:1"},
+	{0.75, "0.75x"},
+	{0.5, "0.5x"},
+}
+
 function PANEL:Init()
 
+	self:InitRenderer()
+
 end
+
+function PANEL:GetDefaultZoomLevel() return 3 end
+function PANEL:GetZoomLevels() return ZoomLevels end
 
 function PANEL:DrawSelectionBox(pnl)
 

@@ -125,7 +125,7 @@ function meta:DrawNode(vnode, xOffset, yOffset, alpha)
 	if x0 > pw or y0 > ph then return false end
 	if x1 < 0 or y1 < 0 then return false end
 
-	vnode:Draw(xOffset, yOffset, alpha)
+	vnode:Draw(xOffset, yOffset, alpha, self:GetVGraph():GetLOD())
 	return true
 
 end
