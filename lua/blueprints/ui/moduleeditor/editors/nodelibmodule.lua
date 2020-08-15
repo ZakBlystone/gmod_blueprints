@@ -51,9 +51,9 @@ function EDITOR:PopulateSideBar()
 	self.NodeList.HandleAddItem = function(pnl, list)
 
 		if list == nil then return end
-		local newNode = bpnodetype.New():WithOuter( self.currentNodeGroup )
+		local newNode = bpnodetype.New():WithOuter( self.selectedGroup )
 
-		if self.currentNodeGroup:GetType() == bpnodetypegroup.TYPE_Hooks then
+		if self.selectedGroup:GetType() == bpnodetypegroup.TYPE_Hooks then
 			newNode:SetCodeType( NT_Event )
 		else
 			newNode:SetCodeType( NT_Function )
@@ -90,7 +90,6 @@ function EDITOR:PopulateSideBar()
 
 	self.selectedGroup = nil
 	self.selectedNode = nil
-	self.currentNodeGroup = nil
 
 	self.pinLists = {}
 
@@ -112,7 +111,7 @@ function EDITOR:Shutdown()
 	local mod = self:GetModule()
 
 	mod.groups:UnbindAll(self)
-	if self.currentNodeGroup then self.currentNodeGroup:GetEntries():UnbindAll(self) end
+	if self.selectedGroup then self.selectedGroup:GetEntries():UnbindAll(self) end
 
 end
 
@@ -300,7 +299,7 @@ function EDITOR:ConstructNode( nodeType )
 			local c1 = 400 + w1/2
 			local cx = (c0/2 + c1/2)
 
-			self.vgraph:SetZoomLevel(-1,0,0)
+			--self.vgraph:SetZoomLevel(2,0,0)
 			timer.Simple(0, function()
 				self.vgraph:CenterOnPoint(cx,h0/2)
 			end)
@@ -313,7 +312,7 @@ function EDITOR:ConstructNode( nodeType )
 		if not node then return end
 		local w,h = vnode:GetSize()
 
-		self.vgraph:SetZoomLevel(-2,0,0)
+		--self.vgraph:SetZoomLevel(2,0,0)
 		timer.Simple(0, function()
 			self.vgraph:CenterOnPoint(w/2,h/2)
 		end)
@@ -324,17 +323,17 @@ end
 function EDITOR:PostNodeListModify( action, id, item )
 
 	if action ~= bplist.MODIFY_RENAME then return end
-	if item ~= self.currentNodeType then return end
+	if item ~= self.selectedNode then return end
 
-	self:ConstructNode( self.currentNodeType )
-	self:SetupNodeDetails( self.currentNodeType )
+	self:ConstructNode( self.selectedNode )
+	self:SetupNodeDetails( self.selectedNode )
 
 end
 
 function EDITOR:PostGroupListModify( action, id, item )
 
 	if action ~= bplist.MODIFY_REMOVE then return end
-	if item ~= self.currentNodeGroup then return end
+	if item ~= self.selectedGroup then return end
 
 	self.NodeList:SetList(nil)
 
@@ -342,20 +341,19 @@ end
 
 function EDITOR:Think()
 
-	local selectedGroup = self.GroupList:GetSelectedID()
+	local selectedGroup = self.GroupList:GetSelected()
 	if selectedGroup ~= self.selectedGroup then
 
-		if self.currentNodeGroup then self.currentNodeGroup:GetEntries():UnbindAll( self ) end
+		if self.selectedGroup then self.selectedGroup:GetEntries():UnbindAll( self ) end
 
 		self.selectedGroup = selectedGroup
 		self.selectedNode = nil
-		self.currentNodeGroup = self:GetModule().groups:Get( selectedGroup )
 
-		if self.currentNodeGroup then
+		if self.selectedGroup then
 
-			self.NodeList:SetList( self.currentNodeGroup:GetEntries() )
+			self.NodeList:SetList( self.selectedGroup:GetEntries() )
 			self.NodeList:ClearSelection()
-			self.currentNodeGroup:GetEntries():Bind( "postModify", self, self.PostNodeListModify )
+			self.selectedGroup:GetEntries():Bind( "postModify", self, self.PostNodeListModify )
 
 		end
 
@@ -364,14 +362,13 @@ function EDITOR:Think()
 
 	end
 
-	local selectedNode = self.NodeList:GetSelectedID()
-	if selectedNode ~= self.selectedNode and self.currentNodeGroup ~= nil then
+	local selectedNode = self.NodeList:GetSelected()
+	if selectedNode ~= self.selectedNode and self.selectedGroup ~= nil then
 
 		self.selectedNode = selectedNode
-		self.currentNodeType = self.currentNodeGroup:GetEntries():Get( selectedNode )
 
-		self:ConstructNode( self.currentNodeType )
-		self:SetupNodeDetails( self.currentNodeType )
+		self:ConstructNode( self.selectedNode )
+		self:SetupNodeDetails( self.selectedNode )
 
 	end
 
