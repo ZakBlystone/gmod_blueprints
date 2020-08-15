@@ -6,7 +6,7 @@ local EDITOR = {}
 
 EDITOR.HasSideBar = true
 EDITOR.HasDetails = true
-EDITOR.CanExportLuaScript = true
+EDITOR.CanExportLuaScript = false
 --EDITOR.CanInstallLocally = true
 --EDITOR.CanExportLuaScript = true
 
@@ -23,13 +23,15 @@ function EDITOR:PopulateSideBar()
 
 		local function MakeGroup(groupType)
 			local newGroup = bpnodetypegroup.New(groupType)
-			local id = list:Add(newGroup)
-			pnl:Rename(id)
+			local id, group = list:Add(newGroup)
+			pnl:Rename(group)
+			pnl:Select(group)
+			return newGroup
 		end
 
 		local menu = DermaMenu( false, self:GetPanel() )
 		menu:AddOption( "Library", function() MakeGroup(bpnodetypegroup.TYPE_Lib) end )
-		menu:AddOption( "Class", function() MakeGroup(bpnodetypegroup.TYPE_Class) end )
+		menu:AddOption( "Class", function() local newGroup = MakeGroup(bpnodetypegroup.TYPE_Class) newGroup:AddFlag(bpnodetypegroup.FL_NoIndexMeta) end )
 		menu:AddOption( "Hooks", function() MakeGroup(bpnodetypegroup.TYPE_Hooks) end )
 		menu:SetMinimumWidth( 100 )
 		menu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )
@@ -60,8 +62,9 @@ function EDITOR:PopulateSideBar()
 		end
 
 		newNode:SetName("untitled")
-		local id = list:Add( newNode )
-		pnl:Rename(id)
+		local id, node = list:Add( newNode )
+		pnl:Rename(node)
+		pnl:Select(node)
 
 	end
 
@@ -163,6 +166,8 @@ end
 
 function EDITOR:ApplyPins( nodeType )
 
+	nodeType:Broadcast("preModify")
+
 	nodeType.pins = {}
 
 	for _, v in self.pinLists[PD_In]:Items() do
@@ -172,6 +177,8 @@ function EDITOR:ApplyPins( nodeType )
 	for _, v in self.pinLists[PD_Out]:Items() do
 		nodeType.pins[#nodeType.pins+1] = v
 	end
+
+	nodeType:Broadcast("postModify")
 
 	 self:ConstructNode( nodeType )
 
@@ -204,7 +211,7 @@ function EDITOR:SetupNodeDetails( nodeType )
 			self.values:AddCosmeticChild("pure",
 				bpvaluetype.New("boolean", 
 					function() return nodeType:GetCodeType() == NT_Pure end,
-					function(x) nodeType:ClearFlag( NTF_Compact ) nodeType:SetCodeType( x and NT_Pure or NT_Function ) end )
+					function(x) nodeType:ClearFlag( NTF_Compact ) nodeType:Broadcast("preModify") nodeType:SetCodeType( x and NT_Pure or NT_Function ) nodeType:Broadcast("postModify") end )
 				:BindAny(self, function() self:ConstructNode( nodeType ) end )
 			)
 		end
@@ -322,6 +329,7 @@ end
 
 function EDITOR:PostNodeListModify( action, id, item )
 
+	if action == bplist.MODIFY_REMOVE then item:Broadcast("destroyed") end
 	if action ~= bplist.MODIFY_RENAME then return end
 	if item ~= self.selectedNode then return end
 
