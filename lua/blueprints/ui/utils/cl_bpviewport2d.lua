@@ -92,7 +92,8 @@ end
 function PANEL:CenterOnPoint(x, y)
 
 	self.renderer:Calculate()
-	self.renderer:SetScroll(-x,-y)
+	self.renderer:SetScroll((self.renderer.viewport[3]/2) / self.renderer.zoom - x, (self.renderer.viewport[4]/2) / self.renderer.zoom - y)
+	self.renderer:Calculate()
 
 end
 
