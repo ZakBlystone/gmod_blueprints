@@ -60,22 +60,33 @@ local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
 
 		if owner ~= nil then
 
-			local ply = game.SinglePlayer() and player.GetAll()[1] or owner:GetPlayer()
-			msg = mod:FormatErrorMessage( msg, graphID, nodeID )
+			local ply = nil
 
-			net.Start("bpnet")
-			net.WriteUInt( CMD_ErrorReport, CommandBits )
-			net.WriteData( uid, 16 )
-			net.WriteString( msg )
-			net.WriteUInt( graphID, 32 )
-			net.WriteUInt( nodeID, 32 )
-			if from then 
-				net.WriteBool(true) --Clientside Error
-				net.WriteEntity(from)
+			if game.SinglePlayer() then
+				ply = player.GetAll()[1]
 			else
-				net.WriteBool(false) --Serverside Error
+				ply = owner:GetPlayer()
 			end
-			net.Send( ply )
+
+			if IsValid(ply) then
+
+				msg = mod:FormatErrorMessage( msg, graphID, nodeID )
+
+				net.Start("bpnet")
+				net.WriteUInt( CMD_ErrorReport, CommandBits )
+				net.WriteData( uid, 16 )
+				net.WriteString( msg )
+				net.WriteUInt( graphID, 32 )
+				net.WriteUInt( nodeID, 32 )
+				if from then 
+					net.WriteBool(true) --Clientside Error
+					net.WriteEntity(from)
+				else
+					net.WriteBool(false) --Serverside Error
+				end
+				net.Send( ply )
+
+			end
 
 		end
 
