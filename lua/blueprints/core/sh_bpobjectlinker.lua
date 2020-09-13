@@ -131,7 +131,7 @@ end
 
 function meta:SerializeMissingDependencies(stream)
 
-	print("SERIALIZE MISSING DEPENDENCIES")
+	--print("SERIALIZE MISSING DEPENDENCIES")
 
 	local missing = {}
 	if stream:IsWriting() then

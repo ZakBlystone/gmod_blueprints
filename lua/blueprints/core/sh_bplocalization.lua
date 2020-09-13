@@ -122,7 +122,7 @@ meta.__eq = function(a,b) return tostring(a) == tostring(b) end
 function Create(key, default)
 
 	data[key] = default
-	print("CREATE LOCALE KEY: " .. tostring(key) .. " = " .. tostring(default))
+	--print("CREATE LOCALE KEY: " .. tostring(key) .. " = " .. tostring(default))
 	return setmetatable({key = key}, meta)
 
 end
