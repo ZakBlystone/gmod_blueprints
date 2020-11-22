@@ -296,6 +296,7 @@ CLASS Player
 		DESC Gets total count of entities of same class.
 		IN type, PN_String, #Entity type to get count of.
 		IN minus, PN_Number, PNF_Nullable, #If specified, it will reduce the counter by this value. Works only serverside.
+		OUT count, PN_Number, #The returned count
 	}
 	PURE GetCrouchedWalkSpeed, SHARED
 	{
