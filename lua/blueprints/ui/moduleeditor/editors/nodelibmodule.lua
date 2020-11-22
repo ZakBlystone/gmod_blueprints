@@ -302,6 +302,10 @@ function EDITOR:ConstructNode( nodeType )
 			exit:SetNodeClass("UserFuncExit")
 			exit.GetRole = function() return nodeType:GetRole() end
 
+			-- Explicit references to satisfy weak ref
+			nodeType.__entryRef = entry
+			nodeType.__exitRef = exit
+
 			local _, ventry = self:AddNode( entry )
 			local w0,h0 = ventry:GetSize()
 
