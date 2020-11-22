@@ -233,8 +233,14 @@ function EDITOR:SetupNodeDetails( nodeType )
 		self.sideBar = vgui.Create("BPCategoryList")
 		self.detailGUI = self.values:CreateVGUI({ live = true, })
 		self.sideBar:Add( "Details" ):SetContents( self.detailGUI )
-		self:MakePinListUI( "Inputs", PD_In, nodeType )
-		self:MakePinListUI( "Outputs", PD_Out, nodeType )
+
+		if nodeType:GetContext() == bpnodetype.NC_Lib or nodeType:GetContext() == bpnodetype.NC_Class then
+			self:MakePinListUI( "Inputs", PD_In, nodeType )
+			self:MakePinListUI( "Outputs", PD_Out, nodeType )
+		else
+			self:MakePinListUI( "Inputs", PD_Out, nodeType )
+			self:MakePinListUI( "Outputs", PD_In, nodeType )
+		end
 
 		self:SetDetails( self.sideBar )
 
