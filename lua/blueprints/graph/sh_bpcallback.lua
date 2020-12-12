@@ -18,6 +18,9 @@ function meta:AddPin( pin )
 
 end
 
+function meta:PreModify() end
+function meta:PostModify() end
+
 function meta:GetPins() return self.pins end
 
 function meta:SetName(name) self.name = name end

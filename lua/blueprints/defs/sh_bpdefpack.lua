@@ -171,6 +171,10 @@ function meta:GetPinTypes()
 		types[#types+1] = bppintype.New(PN_Enum, PNF_None, v.name)
 	end
 
+	for _, v in pairs(self:GetCallbacks()) do
+		types[#types+1] = bppintype.New(PN_Func, PNF_None, v)
+	end
+
 	types[#types+1] = bppintype.New( PN_Asset, PNF_None, "Material")
 	types[#types+1] = bppintype.New( PN_Asset, PNF_None, "Model")
 	types[#types+1] = bppintype.New( PN_Asset, PNF_None, "Sound")
