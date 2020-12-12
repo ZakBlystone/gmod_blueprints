@@ -96,7 +96,6 @@ function EditPinLiteral( pin )
 			if not gained then
 				if IsValid(self) then
 					local text = self:GetText()
-					if text then text = text:gsub("^sound/", "") end --HACK because sound paths don't start with 'sound/'
 					node:SetLiteral( pinID, tostring(text) )
 				end
 				if IsValid(window) then window:Close() end
