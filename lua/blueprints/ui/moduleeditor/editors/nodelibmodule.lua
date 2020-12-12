@@ -1,5 +1,9 @@
 if SERVER then AddCSLuaFile() return end
 
+local text_edit_callback = LOCTEXT("dialog_edit_callback", "Edit Callback Parameters")
+local text_edit_inputs = LOCTEXT("dialog_edit_graph_inputs", "Inputs")
+local text_edit_outputs = LOCTEXT("dialog_edit_graph_outputs", "Outputs")
+
 module("editor_nodelib", package.seeall, bpcommon.rescope(bpschema))
 
 local EDITOR = {}
@@ -84,8 +88,24 @@ function EDITOR:PopulateSideBar()
 
 	end
 
+	self.CallbackList = self:AddSidebarList(LOCTEXT("editor_nodelib_callbacklist","Callbacks"))
+	self.CallbackList.HandleAddItem = function(pnl, list)
+		local itemID, item = list:Construct()
+		pnl:Rename(itemID)
+	end
+
+	self.CallbackList.PopulateMenuItems = function(pnl, items, callback)
+
+		items[#items+1] = {
+			name = LOCTEXT("editor_nodelib_editcallback","Edit Callback"),
+			func = function() self:EditCallback( callback ) end,
+		}
+
+	end
+
 	self.GroupList:SetList( self:GetModule().groups )
 	self.StructList:SetList( self:GetModule().structs )
+	self.CallbackList:SetList( self:GetModule().callbacks )
 
 	for _, struct in self:GetModule().structs:Items() do
 		struct.pins:PreserveNames(true)
@@ -95,6 +115,10 @@ function EDITOR:PopulateSideBar()
 	self.selectedNode = nil
 
 	self.pinLists = {}
+
+end
+
+function EDITOR:EditCallback(callback)
 
 end
 

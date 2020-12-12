@@ -25,6 +25,7 @@ function MODULE:Setup()
 	--nodes2:SetName("GLOBAL")
 
 	self.structs = bplist.New( bpstruct_meta ):NamedItems("Struct"):WithOuter(self)
+	self.callbacks = bplist.New( bpcallback_meta ):NamedItems("Callback"):WithOuter(self)
 
 
 end
@@ -63,6 +64,10 @@ function MODULE:SerializeData( stream )
 
 	self.groups:Serialize( stream )
 	self.structs:Serialize( stream )
+
+	if stream:GetVersion() >= 9 then
+		self.callbacks:Serialize( stream )
+	end
 
 end
 
