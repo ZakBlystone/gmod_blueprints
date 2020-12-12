@@ -63,6 +63,8 @@ function PANEL:Add( name, func, color, icon, right )
 
 end
 
+function PANEL:Paint() end
+
 function PANEL:PerformLayout()
 
 	local x = 2

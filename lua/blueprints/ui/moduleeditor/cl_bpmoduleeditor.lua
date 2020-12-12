@@ -235,6 +235,7 @@ function PANEL:SetModule( mod )
 	end
 
 	self:UpdateMenuBar()
+	self:SetSkin("Blueprints")
 
 	self.moduleEditor:PostInit()
 

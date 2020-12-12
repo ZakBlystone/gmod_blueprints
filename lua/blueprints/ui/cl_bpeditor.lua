@@ -227,8 +227,6 @@ function PANEL:Init()
 	local x = (ScrW() - w)/2
 	local y = (ScrH() - h)/2
 
-	self:SetSkin("Blueprints")
-
 	self.fullScreen = false
 	self.btnMaxim:SetDisabled(false)
 	self.btnMaxim.DoClick = function ( button )
@@ -296,6 +294,8 @@ function PANEL:Init()
 
 	cookie.Set("bp_editor_open_count", openCount + 1)
 	cookie.Set("bp_editor_last_version", bpcommon.ENV_VERSION)
+
+	self:SetSkin("Blueprints")
 
 end
 

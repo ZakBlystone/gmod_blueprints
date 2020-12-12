@@ -442,6 +442,7 @@ function PANEL:Init()
 
 	self.contentPanel = vgui.Create("DPanel", self)
 	self.contentPanel:Dock( FILL )
+	self.contentPanel.Paint = function() end
 	--self.contentPanel:SetBackgroundColor( Color(50,50,50) )
 
 	self.content = vgui.Create("DHorizontalDivider", self.contentPanel)
@@ -469,6 +470,8 @@ function PANEL:Init()
 	self:UpdateLocalFiles()
 
 end
+
+--function PANEL:Paint() end
 
 function PANEL:ModuleDropdown()
 

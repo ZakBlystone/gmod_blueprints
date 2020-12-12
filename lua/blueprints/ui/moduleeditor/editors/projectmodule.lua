@@ -45,6 +45,7 @@ function EDITOR:PostInit()
 	self.tabs:SetPadding( 4 )
 	self.tabs:SetEditor( self:GetMainEditor() )
 	self.tabs.OnActiveTabChanged = function(pnl, old, new) self:OnTabChanged(old, new) end
+	self.tabs:SetSkin("Blueprints")
 	self:SetContent( self.tabs )
 
 	self.scroll = vgui.Create( "DScrollPanel" )
