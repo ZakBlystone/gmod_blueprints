@@ -84,4 +84,49 @@ function NODE:Compile(compiler, pass)
 
 end
 
+function NODE:Expand()
+
+	if self:GetCodeType() == NT_Function then
+
+		local exec = self:FindPin(PD_In, "Exec")
+		if exec then
+
+			local exec_sv = exec:HasFlag( PNF_Server )
+			local exec_cl = exec:HasFlag( PNF_Client )
+
+			local sourcePins = exec:GetConnectedPins()
+			for _, pin in ipairs(sourcePins) do
+
+				local source_sv = pin:HasFlag( PNF_Server )
+				local source_cl = pin:HasFlag( PNF_Client )
+
+				if source_sv ~= exec_sv or source_cl ~= exec_cl then
+
+					print("Expand to role check: " .. tostring(self))
+
+					local t = bpnodetype.New():WithOuter( self )
+					t:SetNodeClass("RoleCheck")
+					if exec_cl then
+						t:SetNodeParam("role", "client")
+					else
+						t:SetNodeParam("role", "server")
+					end
+
+					local node = self:GetGraph():AddIntermediate(t)
+					node:Initialize()
+
+					pin:BreakAllLinks()
+					pin:MakeLink( node:FindPin(PD_In, "Exec") )
+					node:FindPin(PD_Out, "Thru"):MakeLink( exec )
+
+				end
+
+			end
+
+		end
+
+	end
+
+end
+
 RegisterNodeClass("FuncCall", NODE)

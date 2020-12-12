@@ -722,11 +722,30 @@ function meta:AddSubGraph( subgraph, x, y )
 
 end
 
+function meta:AddIntermediate( nodeType )
+
+	local node = bpnode.New( nodeType ):WithOuter( self )
+	node:Initialize()
+	self.__intermediates[#self.__intermediates+1] = node
+	return node
+
+end
+
 function meta:PreCompile( compiler, uniqueKeys )
 
 	-- prepare graph
 	self:CacheNodeTypes()
 	self:CollapseRerouteNodes()
+
+	-- expand all nodes
+	self.__intermediates = {}
+	for id, node in self:Nodes() do
+		node:Expand()
+	end
+
+	for _, node in ipairs(self.__intermediates) do
+		self.nodes:Add(node)
+	end
 
 	-- mark all nodes reachable via execution
 	self:ExecWalk( function(node)

@@ -634,6 +634,8 @@ function meta:Compile(compiler, pass)
 
 end
 
+function meta:Expand() end
+
 bpcommon.ForwardMetaCallsVia(meta, "bpnodetype", "GetType")
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end

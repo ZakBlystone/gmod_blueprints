@@ -235,18 +235,16 @@ LIB CORE
 	SPECIAL ClientOnly, SHARED
 	{
 		DESC Only allows the client to execute nodes after Thru.
-		IN Exec, PN_Exec
-		OUT Thru, PN_Exec, PNF_Client
+		CLASS RoleCheck
+		PARAM role, client
 		FALLTHROUGH
-		CODE if not CLIENT then goto popcall end
 	}
 	SPECIAL ServerOnly, SHARED
 	{
 		DESC Only allows the server to execute nodes after Thru.
-		IN Exec, PN_Exec
-		OUT Thru, PN_Exec, PNF_Server
+		CLASS RoleCheck
+		PARAM role, server
 		FALLTHROUGH
-		CODE if not SERVER then goto popcall end
 	}
 	SPECIAL Role, SHARED
 	{
