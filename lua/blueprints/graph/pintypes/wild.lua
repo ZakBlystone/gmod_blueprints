@@ -31,8 +31,11 @@ end
 local function SetAllInforms( fromPin, node, pinType )
 
 	local isInformed = false
+	local pin = node:GetPin(fromPin)
 
-	node:GetPin(fromPin):SetInformedType( pinType )
+	if pin then
+		pin:SetInformedType( pinType )
+	end
 
 	--[[for k, v in ipairs(node:GetInforms()) do
 		if v == fromPin then isInformed = true break end
