@@ -20,6 +20,8 @@ function meta:Init( vgraph )
 	self.undo = {}
 	self.undoPtr = -1
 	self.maxUndoLevels = 20
+	self.pressx = 0
+	self.pressy = 0
 
 	bpcommon.MakeObservable(self)
 
@@ -542,23 +544,30 @@ function meta:RightMouse(x,y,pressed)
 
 	local wx, wy = self:PointToWorld(x,y)
 
+	local vnode, alreadySelected = self:TryGetNode(wx, wy)
 	if pressed then
+		self.pressx = x
+		self.pressy = y
 		local selected, count = self:GetSelectedNodes()
 		if count > 1 then
 			self:OpenMultiNodeContext(selected)
 			return false
 		end
 
-		local vnode, alreadySelected = self:TryGetNode(wx, wy)
 		if vnode ~= nil then
-
 			local vpin, literal = self:TryGetNodePin(vnode, wx, wy)
 			if vpin and not literal then
 				if vpin.pin.OnRightClick then vpin.pin:OnRightClick() end
-			else
-				self:OpenNodeContext(vnode)
 			end
-			return true
+		end
+	else
+		-- Only open context after mouse released, and mosue drag distance is less than 5
+		if math.Distance(self.pressx, self.pressy, x, y) < 5. then
+			if vnode ~= nil then
+				self:OpenNodeContext(vnode)
+			else
+				self:OpenCreationContext()
+			end
 		end
 	end
 
