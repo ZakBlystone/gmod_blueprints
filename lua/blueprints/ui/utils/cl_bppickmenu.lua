@@ -125,7 +125,7 @@ function PANEL:AddPage( name, desc, icon, filter, expanded )
 end
 
 function PANEL:FilterBySubstring( str ) return function(n)
-		return string.find( self:GetDisplayName(n):lower(), str, 1, true ) ~= nil
+		return string.find( self:GetDisplayName(n):lower(), string.Replace(str, " ", ""), 1, true ) ~= nil
 	end 
 end
 
