@@ -25,6 +25,7 @@ function meta:Init( editor, vgraph )
 	self.isHovering = false
 	self.lastMouseX = 0
 	self.lastMouseY = 0
+	self.lasthoverobj = nil
 	self.tooltipWrap = bptextwrap.New():SetFont(TOOLTIP_FONT):SetMaxWidth(TOOLTIP_MAXWIDTH)
 	self.dragVarWrap = bptextwrap.New():SetFont(TOOLTIP_FONT):SetMaxWidth(TOOLTIP_MAXWIDTH)
 	self.tooltip = false
@@ -185,8 +186,10 @@ end
 function meta:UpdateMouseTimer()
 
 	local mx, my = self:PointToWorld(self:GetVGraph():GetMousePos())
+	local vnode = self:GetEditor():TryGetNode( mx, my )
 
-	if mx == self.lastMouseX and my == self.lastMouseY then
+	--if mx == self.lastMouseX and my == self.lastMouseY then
+	if vnode == self.lasthoverobj then
 		self.hoverTimer = self.hoverTimer + FrameTime()
 		self.isHovering = true
 	else
@@ -196,6 +199,7 @@ function meta:UpdateMouseTimer()
 
 	self.lastMouseX = mx
 	self.lastMouseY = my
+	self.lasthoverobj = vnode
 
 end
 
@@ -299,13 +303,13 @@ function meta:DrawTooltip(w,h)
 
 		render.SetColorMaterialIgnoreZ()
 		bprenderutils.DrawHermiteEx( lx, ly, lx2, ly2, 
-			Color(0,0,0,255), 
+			Color(150,0,0,255), 
 			Color(255,255,255,255),
 			alpha,12,3,
 			0,500,0,500,50
 		)
 
-		draw.RoundedBox(6, sx - 5, sy - 5, tw + 10, th + 10, Color(0,0,0,255 * alpha))
+		draw.RoundedBox(6, sx - 5, sy - 5, tw + 10, th + 10, Color(150,0,0,255 * alpha))
 		self.tooltipWrap:Draw(sx, sy, 255, 255, 255, 255 * alpha)
 
 	end
@@ -341,6 +345,8 @@ function meta:Draw(w,h)
 	self:DrawGrid(BGMaterial, 16, 8)
 
 	-- Draw graph here
+	-- Draw lines underneath(before) nodes
+	self:DrawGrabbedLine()
 	self.graphPainter:Draw()
 
 	local copyInfo = self:GetEditor():GetGraphCopy()
@@ -350,8 +356,6 @@ function meta:Draw(w,h)
 		my = math.Round(my / 15) * 15
 		copyInfo.painter:Draw(mx - copyInfo.x, my - copyInfo.y, .5)
 	end
-
-	self:DrawGrabbedLine()
 
 	--surface.SetMaterial(BGMaterial)
 	--surface.SetDrawColor(Color(255,255,255))
