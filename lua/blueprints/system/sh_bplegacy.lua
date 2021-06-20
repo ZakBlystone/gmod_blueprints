@@ -17,6 +17,10 @@ function ConvertModule16( moduleFile )
 	local varIDMap = {}
 	local graphCallMap = {}
 
+	if old.config then
+		new.config = old.config
+	end
+
 	local function ConvertPinType( base, addFlags )
 		return bppintype.New( 
 			base:GetBaseType(), 
