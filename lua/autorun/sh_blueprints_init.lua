@@ -73,6 +73,7 @@ bpinclude("system/sh_bpusermanager.lua")
 bpinclude("system/sh_bpfile.lua")
 bpinclude("system/sh_bpfilesystem.lua")
 bpinclude("system/sh_bpcompat.lua")
+bpinclude("system/sh_bplegacy.lua")
 --bpinclude("system/sh_bpswep.lua")
 
 -- DEFS
