@@ -130,14 +130,10 @@ local function bpinclude(path)
 end
 
 -- CORE
---bpinclude("core/sh_bplocalization.lua")
 bpinclude("core/sh_bpcommon.lua")
 bpinclude("core/sh_bpclassloader.lua")
 bpinclude("core/sh_bpcollection.lua")
-bpinclude("core/sh_bpindexer.lua")
-bpinclude("core/sh_bpbuffer.lua")
 bpinclude("core/sh_bplist.lua")
-bpinclude("core/sh_bplistdiff.lua")
 bpinclude("core/sh_bpstringtable.lua")
 bpinclude("core/sh_bpdata.lua")
 
@@ -146,7 +142,6 @@ bpinclude("graph/sh_bpschema.lua")
 bpinclude("graph/sh_bppintype.lua")
 bpinclude("graph/sh_bppin.lua")
 bpinclude("graph/sh_bpcast.lua")
---bpinclude("graph/sh_bpcompiler.lua")
 bpinclude("graph/sh_bpnodetype.lua")
 bpinclude("graph/sh_bpnodetypegroup.lua")
 bpinclude("graph/sh_bpnode.lua")
@@ -157,11 +152,6 @@ bpinclude("module/sh_bpvariable.lua")
 bpinclude("module/sh_bpstruct.lua")
 bpinclude("module/sh_bpevent.lua")
 bpinclude("module/sh_bpmodule.lua")
---bpinclude("module/sh_bpcompiledmodule.lua")
---bpinclude("module/sh_bpenv.lua")
---bpinclude("module/sh_bpnet.lua")
-
---PrintTable(COMPAT_GLOBALS)
 
 -- DEFS
 bpinclude("defs/sh_bpdefpack.lua")
