@@ -210,6 +210,8 @@ function Deprecated(msg)
 
 end
 
+function IsReference(x) return type(x) == "table" and rawget(x, "__ref") == true end
+
 -- Weak reference object
 local wm = {}
 wm.__mode = "v"
@@ -218,7 +220,9 @@ wm.__call = function(s, r) if r then s.r = r end return s.r end
 function wm:IsValid() return self.r ~= nil end
 function wm:Reset() self.r = nil end
 function wm:Set(r) self.r = r end
-function Weak(x) return setmetatable({r=x, __ref = true}, wm) end
+function Weak(x)
+	return setmetatable({r=IsReference(x) and x() or x, __ref = true}, wm)
+end
 
 -- Strong reference object
 local wm = {}
@@ -227,7 +231,16 @@ wm.__call = function(s, r) if r then s.r = r end return s.r end
 function wm:IsValid() return self.r ~= nil end
 function wm:Reset() self.r = nil end
 function wm:Set(r) self.r = r end
-function Ref(x) return setmetatable({r=x, __ref = true}, wm) end
+function Ref(x)
+	return setmetatable({r=IsReference(x) and x() or x, __ref = true}, wm)
+end
+
+function ConvertWeakToStrong(ref)
+
+	if not IsReference(ref) then return end
+	getmetatable(ref).__mode = nil	
+
+end
 
 -- List of items which have ids
 function CreateIndexableListIterators(meta, variable)

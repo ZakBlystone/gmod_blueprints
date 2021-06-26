@@ -21,6 +21,7 @@ function meta:Init()
 	self.externObjLookup = {}
 	self.UIDList = {}
 	self.postLoadTree = { objects = {}, nodes = {} }
+	self.missingExtern = {}
 	--self:DSetDebug(true)
 	return self
 
@@ -108,8 +109,13 @@ function meta:PostLink(stream)
 			if v[1] == WEAK_SET then
 				local ord = self.order[v[2]]
 				if ord ~= nil and self.objects[ord[1]] then
+					local target = self.objects[ord[1]][ord[2]] 
 					--m[#m+1] = {"LINK WEAK[" .. v[2] .. "]: ", self.objects[ord[1]][ord[2]]}
-					v[4]:Set( self.objects[ord[1]][ord[2]] )
+					v[4]:Set( target )
+					if self.missingExtern[ target ] then
+						--m[#m+1] = {" CONVERT TO REF FOR DEPENDENCY", self.objects[ord[1]][ord[2]]}
+						bpcommon.ConvertWeakToStrong(v[4])
+					end
 				end
 			elseif v[1] == EXTERN_SET and self.extern[v[2]] then
 				--m[#m+1] = {"LINK EXTERN: ", self.extern[v[2]][v[3]]}
@@ -158,7 +164,9 @@ function meta:SerializeMissingDependencies(stream)
 
 	missing = stream:ObjectArray(missing)
 
+	self.missingExtern = {}
 	for _, v in ipairs(missing) do
+		self.missingExtern[v] = true
 		print("Serialize missing dependency: " .. tostring(v))
 	end
 
