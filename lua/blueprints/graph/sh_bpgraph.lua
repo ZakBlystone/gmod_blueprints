@@ -85,6 +85,7 @@ function meta:Destroy()
 	self.callNodeType:Destroy()
 	self.callEntryNodeType:Destroy()
 	self.callExitNodeType:Destroy()
+	self:Broadcast("destroyed")
 
 end
 

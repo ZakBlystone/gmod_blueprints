@@ -6,9 +6,11 @@ function PIN:Setup()
 
 	--BaseClass.Setup(self)
 
-	if CLIENT then
-		--self:OnLiteralChanged( nil, self:GetLiteral() )
-	end
+end
+
+function PIN:GetDefault()
+
+	return nil
 
 end
 
@@ -33,6 +35,14 @@ end
 
 function PIN:OnLiteralChanged( old, new )
 
+	if old then 
+		old:Unbind("destroyed", self) 
+	end
+	if new then
+		print("CALLBACK OBJECT: " .. type(new) .. " : " .. tostring(new))
+		new:Bind("destroyed", self, self.OnGraphDestroyed)
+	end
+
 end
 
 function PIN:GetNetworkThunk()
@@ -42,6 +52,10 @@ function PIN:GetNetworkThunk()
 		write = "net.(@)",
 	}
 
+end
+
+function PIN:OnGraphDestroyed()
+	self:SetLiteral(nil)
 end
 
 function PIN:OnClicked()

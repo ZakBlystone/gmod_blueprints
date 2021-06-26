@@ -67,7 +67,7 @@ function meta:HasObjectLiteral()
 end
 
 function meta:GetBaseType() return self.basetype end
-function meta:GetSubType() return type(self.subtype) == "table" and self.subtype() or self.subtype end
+function meta:GetSubType() return bpcommon.IsReference(self.subtype) and self.subtype() or self.subtype end
 function meta:GetFlags(mask) return bit.band(self.flags, mask or PNF_All) end
 function meta:GetColor() return NodePinColors[ self:GetBaseType() ] or Color(0,0,0,255) end
 function meta:GetTypeName() return PinTypeNames[ self:GetBaseType() ] or "UNKNOWN" end

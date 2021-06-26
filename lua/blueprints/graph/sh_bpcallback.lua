@@ -59,6 +59,16 @@ function meta:Serialize(stream)
 
 end
 
+function meta:Equals(other)
+
+	if #self.pins ~= #other.pins then return false end
+	for i=1, #self.pins do
+		if not self.pins[i]:Equals(other.pins[i]) then return false end
+	end
+	return true
+
+end
+
 function meta:ToString()
 
 	return self:GetName()

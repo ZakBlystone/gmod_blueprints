@@ -10,7 +10,7 @@ function meta:Init(dir, name, type, desc)
 	self.name = name
 	self.type = type and type:Copy( self ) or nil
 	self.desc = desc
-	self.literal = ""
+	self.literal = nil
 	self.connections = {}
 	return self
 end
@@ -18,7 +18,10 @@ end
 function meta:InitPinClass()
 
 	local pinClass = self.pinClass or self:GetType():GetPinClass()
-	if pinClass then pinClasses:Install(pinClass, self) end
+	if pinClass then 
+		pinClasses:Install(pinClass, self)
+		self.literal = self.literal or self:GetDefault()
+	end
 
 end
 
@@ -253,7 +256,22 @@ function meta:CanConnect( other, autoConform )
 
 	end
 
-	if self:GetSubType() ~= other:GetSubType() then 
+	local subA = self:GetSubType()
+	local subB = other:GetSubType()
+	local cantConnectSubtypes = false
+	if type(subA) == "table" and type(subB) == "table" then
+		if getmetatable(subA) ~= getmetatable(subB) then 
+			cantConnectSubtypes = true
+		elseif getmetatable(subA).Equals ~= nil then
+			cantConnectSubtypes = not subA:Equals(subB)
+		else
+			cantConnectSubtypes = subA ~= subB
+		end
+	else
+		cantConnectSubtypes = subA ~= subB
+	end
+
+	if cantConnectSubtypes then
 		return false, "Can't connect " .. tostring(self) .. " --> " .. tostring(other)
 	end
 
