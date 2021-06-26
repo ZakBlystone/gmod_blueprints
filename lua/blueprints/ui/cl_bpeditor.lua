@@ -5,9 +5,11 @@ module("bpuieditor", package.seeall, bpcommon.rescope(bpmodule, bpgraph))
 local text_unsaved_changes = LOCTEXT("query_unsaved_changes", "This module has unsaved changes, would you like the save them?")
 local text_wait_for_defs = LOCTEXT("editor_wait_for_defs", "Wait for definitions to download. If download stalls, run 'bp_request_definitions' in console.")
 local text_failed_to_open = LOCTEXT("editor_failed_to_open", "Failed to open module")
+local text_failed_to_convert = LOCTEXT("editor_failed_to_convert", "Error converting legacy blueprint")
 local text_blueprint_paste_hint = LOCTEXT("editor_blueprint_paste", "Paste the blueprint below ('bp-xxxxxxxxxxxxxxxxxxxx' codes work too):")
 local text_import_module = LOCTEXT("editor_import_module", "Import Module")
 local text_import = LOCTEXT("editor_import", "Import")
+local text_legacy_convert = LOCTEXT("editor_legacy_convert", "Convert Legacy Blueprint")
 
 local PANEL = {}
 
@@ -394,6 +396,74 @@ function PANEL:OpenImport( finishFunc )
 	end
 
 	text:RequestFocus()
+
+end
+
+function PANEL:OpenLegacyImporter()
+
+	local selected = nil
+	local import = vgui.Create( "DFrame" )
+
+	local info = vgui.Create("DLabel", import)
+	info:SetText(text_blueprint_paste_hint())
+	info:SetPos(0, 30)
+	info:SizeToContents()
+
+	local ok = vgui.Create("DButton", import)
+	ok:SetEnabled(false)
+
+	local browser = vgui.Create( "DFileBrowser", import )
+	browser:DockMargin(0, 30, 0, 50)
+	browser:Dock( FILL )
+	browser:SetPath( "DATA" )
+	browser:SetBaseFolder( "blueprints" )
+	browser:SetCurrentFolder( "client" )
+	browser:SetOpen( true, true )
+
+	browser.OnDoubleClick = function(b, path)
+		self:FinishLegacyImport( import, path )
+	end
+
+	browser.OnSelect = function(b, path)
+		ok:SetEnabled(true)
+		selected = path
+	end
+
+
+	import:SetTitle(text_legacy_convert())
+	import:SetSize(ScrW()*.5, ScrH()*.5)
+	import:Center()
+	import:MakePopup()
+	import:DoModal()
+
+	info:CenterHorizontal()
+
+	ok:SetText(text_import())
+	ok:SetWide(50)
+	ok:SetPos(0, import:GetTall() - 40 )
+	ok:CenterHorizontal()
+	ok.DoClick = function()
+		if selected then self:FinishLegacyImport( import, selected ) end
+	end
+
+end
+
+function PANEL:FinishLegacyImport( panel, path )
+
+	if IsValid(panel) then panel:Close() end
+	local b,e = xpcall( 
+		function()
+			local mod = bplegacy.ConvertModule16( path )
+			return self:OpenModule(mod, "unnamed", nil)
+		end, 
+		function(err)
+			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), text_failed_to_convert(), LOCTEXT("query_ok", "Ok")() )
+		end)
+	if not b then
+		
+	else
+		return e
+	end
 
 end
 
