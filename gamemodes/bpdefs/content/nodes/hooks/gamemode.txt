@@ -868,6 +868,26 @@ HOOKS GM
 		OUT player, PN_Ref, PNF_None, Player, #The player
 		IN drawPlayer=true, PN_Bool, #True to draw the player, false to hide.
 	}
+	HOOK ShowHelp, SERVER
+	{
+		DESC Called when a player executes gm_showhelp console command (F1).
+		OUT player, PN_Ref, PNF_None, Player, #The player
+	}
+	HOOK ShowSpare1, SERVER
+	{
+		DESC Called when a player executes gm_showspare1 console command (F3).
+		OUT player, PN_Ref, PNF_None, Player, #The player
+	}
+	HOOK ShowSpare2, SERVER
+	{
+		DESC Called when a player executes gm_showspare2 console command (F4).
+		OUT player, PN_Ref, PNF_None, Player, #The player
+	}
+	HOOK ShowTeam, SERVER
+	{
+		DESC Called when a player executes gm_showteam console command (F2).
+		OUT player, PN_Ref, PNF_None, Player, #The player
+	}
 	HOOK StartChat, CLIENT
 	{
 		DESC Runs when the user tries to open the chat box.
