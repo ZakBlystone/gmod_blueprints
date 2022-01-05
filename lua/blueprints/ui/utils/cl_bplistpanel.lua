@@ -91,14 +91,15 @@ function PANEL:CreateItemPanel( id, item )
 			return
 		end
 
-		Derma_Query(text_delete_item(item:GetName()),
-		"",
-		LOCTEXT("query_yes", "Yes")(),
-		function() 
-			self.list:Remove( item )
-		end,
-		LOCTEXT("query_no", "No")(),
-		function() end)
+		bpmodal.Query({
+			message = text_delete_item(item:GetName()),
+			options = {
+				{"yes", function() 
+					self.list:Remove( item )
+				end},
+				{"no", function() end},
+			},
+		})
 
 	end
 
@@ -246,18 +247,14 @@ function PANEL:OpenMenu(item )
 
 	self:CloseMenu()
 
-	self.menu = DermaMenu( false, self )
-
 	local t = {}
 	t[#t+1] = { name = LOCTEXT("list_rename","Rename"), func = function() self:Rename(item) end }
 
 	self:PopulateMenuItems(t, item)
-	for _, v in ipairs(t) do
-		self.menu:AddOption( tostring(v.name), v.func )
-	end
-
-	self.menu:SetMinimumWidth( 100 )
-	self.menu:Open( gui.MouseX(), gui.MouseY(), false, self )
+	self.menu = bpmodal.Menu({
+		options = bpcommon.Transform(t, {}, function(v) return { title = v.name, func = v.func } end),
+		width = 100,
+	})
 
 end
 

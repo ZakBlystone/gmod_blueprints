@@ -457,7 +457,10 @@ function PANEL:FinishLegacyImport( panel, path )
 			return self:OpenModule(mod, "unnamed", nil)
 		end, 
 		function(err)
-			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), text_failed_to_convert(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = tostring(err) .. "\n" .. debug.traceback(), 
+				title = text_failed_to_convert()
+			})
 		end)
 	if not b then
 		
@@ -486,7 +489,10 @@ function PANEL:FinishImport( import, text, finishFunc )
 
 	end)
 
-	if not b then Derma_Message(e, "Error importing blueprint", "Ok") end
+	if not b then bpmodal.Message({
+		message = e, 
+		title = "Error importing blueprint"
+	}) end
 
 end
 
@@ -591,7 +597,10 @@ function PANEL:OpenFile( file )
 	end
 
 	if not bpdefs.Ready() then
-		Derma_Message( text_wait_for_defs(), text_failed_to_open(), LOCTEXT("query_ok", "Ok")() )
+		bpmodal.Message({
+			message = text_wait_for_defs, 
+			title = text_failed_to_open, 
+		})
 		return
 	end
 
@@ -601,7 +610,10 @@ function PANEL:OpenFile( file )
 			return self:OpenModule( mod, file:GetName(), file )
 		end, 
 		function(err)
-			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), text_failed_to_open(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = tostring(err) .. "\n" .. debug.traceback(), 
+				title = text_failed_to_open,
+			})
 		end)
 	if not b then
 		
@@ -624,9 +636,15 @@ function PANEL:CloseFile( file, callback )
 
 	if opened and file:HasFlag( bpfile.FL_HasLocalChanges ) then 
 		self.Tabs:SetActiveTab( opened.Tab )
-		Derma_Query(text_unsaved_changes(), LOCTEXT("query_close_file", "Close")(),
-		LOCTEXT("query_yes", "Yes")(), function() opened.Panel:Save( function(ok) if ok then self:CloseFileUID( file:GetUID() ) callback() end end ) end,
-		LOCTEXT("query_no", "No")(), function() bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end)
+
+		bpmodal.Query({
+			message = text_unsaved_changes,
+			title = LOCTEXT("query_close_file", "Close"),
+			options = {
+				{ "yes", function() opened.Panel:Save( function(ok) if ok then self:CloseFileUID( file:GetUID() ) callback() end end ) end },
+				{ "no", function() bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end },
+			},
+		})
 		return
 	end
 

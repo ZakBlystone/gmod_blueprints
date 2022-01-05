@@ -29,12 +29,14 @@ function EDITOR:PopulateSideBar()
 			return newGroup
 		end
 
-		local menu = DermaMenu( false, self:GetPanel() )
-		menu:AddOption( "Library", function() MakeGroup(bpnodetypegroup.TYPE_Lib) end )
-		menu:AddOption( "Class", function() local newGroup = MakeGroup(bpnodetypegroup.TYPE_Class) newGroup:AddFlag(bpnodetypegroup.FL_NoIndexMeta) end )
-		menu:AddOption( "Hooks", function() MakeGroup(bpnodetypegroup.TYPE_Hooks) end )
-		menu:SetMinimumWidth( 100 )
-		menu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )
+		local menu = bpmodal.Menu({
+			options = {
+				{ title = "Library", func = function() MakeGroup(bpnodetypegroup.TYPE_Lib) end },
+				{ title = "Class", func = function() local newGroup = MakeGroup(bpnodetypegroup.TYPE_Class) newGroup:AddFlag(bpnodetypegroup.FL_NoIndexMeta) end },
+				{ title = "Hooks", func = function() MakeGroup(bpnodetypegroup.TYPE_Hooks) end },
+			},
+			width = 100,
+		}, self:GetPanel())
 
 	end
 

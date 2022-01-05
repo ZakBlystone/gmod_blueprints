@@ -189,7 +189,10 @@ function PANEL:DoDoubleClick()
 					if res then
 						self:OpenFile()
 					else
-						Derma_Message( msg, "Failed to take lock on file", "OK" )
+						bpmodal.Message({
+							message = msg,
+							title =  "Failed to take lock on file",
+						})
 					end
 
 				end )
@@ -229,36 +232,42 @@ end
 function PANEL:OpenMenu()
 
 	self:CloseMenu()
-
-	self.menu = DermaMenu( false, self )
+	local options = {}
 
 	if self.role == bpfilesystem.FT_Remote then
 
 		if self.file:HasFlag( bpfile.FL_Running ) then
 
-			self.menu:AddOption( "Stop File", function()
-				bpfilesystem.StopFile( self.file )
-			end)
+			options[#options+1] = {
+				title = "Stop File",
+				icon = statusIconStopped,
+				func = function() bpfilesystem.StopFile( self.file ) end,
+			}
 
 		else
 
-			self.menu:AddOption( "Run File", function()
-				bpfilesystem.RunFile( self.file )
-			end)
+			options[#options+1] = {
+				title = "Run File",
+				icon = statusIconRunning,
+				func = function() bpfilesystem.RunFile( self.file ) end,
+			}
 
 		end
 
-		self.menu:AddOption( "Download", function()
+		options[#options+1] = { title = "Download", func = function()
 
 			bpfilesystem.DownloadFile( self.file, function(res, msg)
 
 				if not res then
-					Derma_Message( msg, "Failed to download file", "OK" )
+					bpmodal.Message({
+						message = msg,
+						title =  "Failed to download file",
+					})
 				end
 
 			end )
 
-		end )
+		end }
 
 	end
 
@@ -266,70 +275,88 @@ function PANEL:OpenMenu()
 
 		if self.file:GetLock() == nil then
 
-			self.menu:AddOption( "Take Lock", function()
+			options[#options+1] = { title = "Take Lock", func = function()
 
 				bpfilesystem.TakeLock( self.file, function(res, msg)
 
 					if not res then
-						Derma_Message( msg, "Failed to take lock on file", "OK" )
+						bpmodal.Message({
+							message = msg,
+							title =  "Failed to take lock on file",
+						})
 					end
 
 				end )
 
-			end )
+			end }
 
 		else
 
-			self.menu:AddOption( "Release Lock", function()
+			options[#options+1] = { title = "Release Lock", func = function()
 
 				self.view:GetEditor():CloseFile( self.file, function()
 					bpfilesystem.ReleaseLock( self.file, function(res, msg)
 
 						if not res then
-							Derma_Message( msg, "Failed to release lock on file", "OK" )
+							bpmodal.Message({
+								message = msg,
+								title =  "Failed to release lock on file",
+							})
 						end
 
 					end )
 				end )
 
-			end )
+			end }
 
 		end
 
 	elseif self.role == bpfilesystem.FT_Local then
 
-		self.menu:AddOption( "Upload", function()
+		options[#options+1] = { title = "Upload", func = function()
 
 			self:UploadFile()
 
-		end)
+		end }
 
 	end
 
 	if self.role == bpfilesystem.FT_Local then
 
-		self.menu:AddOption( "Delete", function()
+		options[#options+1] = { title = "Delete", func = function()
 
-		Derma_Query(text_query_delete(self.file:GetName()), text_query_title_delete(),
-		LOCTEXT("query_yes", "Yes")(), function() self.view:GetEditor():CloseFileUID( self.file:GetUID() ) file.Delete(self.file:GetPath()) bpfilesystem.IndexLocalFiles() end,
-		LOCTEXT("query_no", "No")(), function() end)
+			bpmodal.Query({
+				message = text_query_delete(self.file:GetName()),
+				title = text_query_title_delete,
+				options = {
+					{ "yes", function() self.view:GetEditor():CloseFileUID( self.file:GetUID() ) file.Delete(self.file:GetPath()) bpfilesystem.IndexLocalFiles() end },
+					{ "no", function() end },
+				},
+			})
 
-		end)
+		end }
 
 	else
 
-		self.menu:AddOption( "Delete", function()
+		options[#options+1] = { title = "Delete", func = function()
 
-		Derma_Query(text_query_delete(self.file:GetName()), text_query_title_delete(),
-		LOCTEXT("query_yes", "Yes")(), function() bpfilesystem.DeleteFile( self.file ) end,
-		LOCTEXT("query_no", "No")(), function() end)
+			bpmodal.Query({
+				message = text_query_delete(self.file:GetName()),
+				title = text_query_title_delete,
+				options = {
+					{ "yes", function() bpfilesystem.DeleteFile( self.file ) end },
+					{ "no", function() end },
+				},
+			})
 
-		end)
+		end }
 
 	end
-	
-	self.menu:SetMinimumWidth( 100 )
-	self.menu:Open( gui.MouseX(), gui.MouseY(), false, self )
+
+	self.menu = bpmodal.Menu({
+		options = options,
+		width = 100,
+	}, self)
 
 end
 
@@ -477,80 +504,91 @@ end
 function PANEL:ModuleDropdown()
 
 	if IsValid(self.cmenu) then self.cmenu:Remove() end
-	self.cmenu = DermaMenu( false, self )
+
+	local options = {}
 
 	local loader = bpmodule.GetClassLoader()
 	local classes = bpcommon.Transform( loader:GetClasses(), {}, function(k) return {name = k, class = loader:Get(k)} end )
 
 	table.sort( classes, function(a,b) return tostring(a.class.Name) < tostring(b.class.Name) end )
 
-	for _, v in ipairs( classes ) do
-
+	bpcommon.Transform( classes, options, function(v)
 		local cl = v.class
-		if not cl.Creatable or cl.Developer then continue end
+		if not cl.Creatable or cl.Developer then return end
+		return {
+			title = tostring(cl.Name),
+			func = function() self:CreateModule( v.name ) end,
+			icon = cl.Icon,
+			desc = cl.Description,
+		}
+	end)
 
-		local op = self.cmenu:AddOption( tostring(cl.Name), function() self:CreateModule( v.name ) end)
-		if cl.Icon then op:SetIcon( cl.Icon ) end
-		if cl.Description then op:SetTooltip( tostring(cl.Description) ) end
+	options[#options+1] = {}
 
-	end
+	local templateCategories = {}
 
-	self.cmenu:AddSpacer()
-	local templateMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT("module_submenu_examples","Examples") ) )
-	op:SetIcon( "icon16/book.png" )
-
-	for _, v in ipairs( classes ) do
-
+	bpcommon.Transform( classes, templateCategories, function(v)
 		local cl = v.class
-		if not cl.Creatable then continue end
+		if not cl.Creatable then return end
 
 		local templates = bptemplates.GetByType( v.name )
-		if #templates > 0 then
-			local sub, op = templateMenu:AddSubMenu( tostring(cl.Name) )
-			if cl.Icon then op:SetIcon( cl.Icon ) end
+		if #templates == 0 then return end
 
-			for _, t in ipairs( templates ) do
-				local op = sub:AddOption( t.name, function()
-					local mod = bptemplates.CreateTemplate( t )
+		local options = bpcommon.Transform( templates, {}, function(v)
+
+			return {
+				title = tostring(v.name),
+				func = function()
+					local mod = bptemplates.CreateTemplate( v )
 					self.editor:OpenModule(mod, "unnamed", nil)
-				end )
-				if cl.Icon then op:SetIcon( cl.Icon ) end
-				op:SetTooltip( tostring(t.description) .. "\nby " .. tostring(t.author) )
-			end
-		end
+				end,
+				icon = cl.Icon,
+				desc = tostring(v.description) .. "\nby " .. tostring(v.author),
+			}
 
-	end
+		end )
 
+		return {
+			title = tostring(cl.Name),
+			options = options,
+			icon = cl.Icon,
+			desc = cl.Description,
+		}
+	end)
 
-	self.cmenu:AddSpacer()
-	local developerMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT("module_submenu_developer","Developer") ) )
-	op:SetIcon( "icon16/application_osx_terminal.png" )
+	options[#options+1] = {
+		title = LOCTEXT("module_submenu_examples","Examples"),
+		options = templateCategories,
+		icon = "icon16/book.png",
+	}
 
-	for _, v in ipairs( classes ) do
+	options[#options+1] = {}
 
+	local devOptions = bpcommon.Transform( classes, {}, function(v)
 		local cl = v.class
-		if not cl.Creatable or not cl.Developer then continue end
+		if not cl.Creatable or not cl.Developer then return end
+		return {
+			title = tostring(cl.Name),
+			func = function() self:CreateModule( v.name ) end,
+			icon = cl.Icon,
+			desc = cl.Description,
+		}
+	end)
 
-		local op = developerMenu:AddOption( tostring(cl.Name), function() self:CreateModule( v.name ) end)
-		if cl.Icon then op:SetIcon( cl.Icon ) end
-		if cl.Description then op:SetTooltip( tostring(cl.Description) ) end
+	options[#options+1] = {
+		title = LOCTEXT("module_submenu_developer","Developer"),
+		options = devOptions,
+		icon = "icon16/application_osx_terminal.png",
+	}
 
-	end
-
-	self.cmenu:SetMinimumWidth( 100 )
-	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, self )
+	self.cmenu = bpmodal.Menu({
+		options = options,
+		width = 100,
+	}, self)
 
 end
 
 function PANEL:CreateModule(type)
-
-	--[[print("Create Module")
-	Derma_StringRequest("New Module", "Module Name", "untitled",
-		function( text )
-			local file = bpfilesystem.NewModuleFile( text )
-			if not file then Derma_Message("Failed to create module: " .. text, "Error", "Ok") end
-			if file ~= nil then self.editor:OpenFile( file ) end
-		end, nil, "OK", "Cancel")]]
 
 	local mod = bpmodule.New(type)
 	mod:CreateDefaults()

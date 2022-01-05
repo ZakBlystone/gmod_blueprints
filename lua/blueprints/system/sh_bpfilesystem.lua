@@ -424,7 +424,7 @@ else
 				if mod:GetUID() == head.uid then
 					if mod.revision >= head.revision then
 						print("Updated local copy : " .. path)
-						mod:Save( path )
+						bpmodule.Save( path, mod )
 						local f = G_BPLocalFiles[ mod:GetUID() ]
 						f:SetRevision( mod.revision )
 						mod:WithOuter( f )
@@ -694,7 +694,10 @@ net.Receive("bpfilesystem", function(len, ply)
 			IndexLocalFiles()
 		end
 	elseif cmd == CMD_ServerMessage then
-		Derma_Message(net.ReadString(), "Message from server", "Ok")
+		bpmodal.Message({
+			message = net.ReadString(), 
+			title = "Message from server"
+		})
 	end
 
 end)

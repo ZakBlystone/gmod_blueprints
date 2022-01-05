@@ -40,14 +40,13 @@ function PANEL:Init()
 			return
 		end
 
-		Derma_Query(text_delete_pin( self:GetPinName() ),
-		"",
-		LOCTEXT("query_yes", "Yes")(),
-		function() 
-			self.vlist.list:Remove( self.item )
-		end,
-		LOCTEXT("query_no", "No")(),
-		function() end)
+		bpmodal.Query({
+			message = text_delete_pin( self:GetPinName() ),
+			options = {
+				{ "yes", function() self.vlist.list:Remove( self.item ) end },
+				{ "no", function() end },
+			},
+		})
 
 	end
 
@@ -101,14 +100,14 @@ function PANEL:OpenMenu()
 
 	self:CloseMenu()
 
-	self.menu = DermaMenu( false, self )
-
-	self.menu:AddOption( LOCTEXT( "pin_edit_type", "Edit Type" )(), function() self.typeSelector:DoClick() end )
-	self.menu:AddOption( LOCTEXT( "pin_edit_rename", "Rename" )(), function() self:EditName() end )
-	self.menu:AddOption( LOCTEXT( "pin_edit_delete", "Delete" )(), function() self.rmv:DoClick() end )
-
-	self.menu:SetMinimumWidth( 100 )
-	self.menu:Open( gui.MouseX(), gui.MouseY(), false, self )
+	self.menu = bpmodal.Menu({
+		options = {
+			{ title = LOCTEXT( "pin_edit_type", "Edit Type" ), func = function() self.typeSelector:DoClick() end },
+			{ title = LOCTEXT( "pin_edit_rename", "Rename" ), func = function() self:EditName() end },
+			{ title = LOCTEXT( "pin_edit_delete", "Delete" ), func = function() self.rmv:DoClick() end },
+		},
+		width = 100,
+	}, self)
 
 end
 

@@ -94,11 +94,13 @@ function EDITOR:PopulateSideBar()
 			list:Rename(graph)
 		end
 
-		local menu = DermaMenu( false, self:GetPanel() )
-		menu:AddOption( LOCTEXT("editor_graphmodule_add_eventgraph", "Event Graph")(), function() MakeGraph(bpschema.GT_Event) end )
-		menu:AddOption( LOCTEXT("editor_graphmodule_add_function", "Function")(), function() MakeGraph(bpschema.GT_Function) end )
-		menu:SetMinimumWidth( 100 )
-		menu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )
+		bpmodal.Menu({
+			options = {
+				{ title = LOCTEXT("editor_graphmodule_add_eventgraph", "Event Graph"), func = function() MakeGraph(bpschema.GT_Event) end },
+				{ title = LOCTEXT("editor_graphmodule_add_function", "Function"), func = function() MakeGraph(bpschema.GT_Function) end },
+			},
+			width = 100,
+		}, self:GetPanel())
 
 	end
 
