@@ -433,7 +433,7 @@ function PANEL:OpenImport( finishFunc )
 
 			bppaste.Download( str, function(ok, text)
 
-				if ok then self:FinishImport( import, text ) end
+				if ok then self:FinishImport( import, text, finishFunc ) end
 
 			end)
 
