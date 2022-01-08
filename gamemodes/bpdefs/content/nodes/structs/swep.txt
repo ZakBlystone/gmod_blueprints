@@ -5,3 +5,22 @@ STRUCT WeaponAmmoDisplay
 	PIN PrimaryAmmo, PN_Number
 	PIN SecondaryAmmo, PN_Number
 }
+
+STRUCT SWEP
+{
+	PIN ClassName, PN_String, #The classname of this SWEP
+	PIN Category, PN_String, #The category the SWEP is in
+	PIN Spawnable, PN_Bool, #Whether this SWEP should be displayed in the spawn menu
+	PIN AdminOnly, PN_Bool, #Whether or not only admins can spawn the SWEP from their Spawnmenu menu
+	PIN PrintName, PN_String, #Nice name of the SWEP
+	PIN Base, PN_String, #The base weapon to derive from
+	PIN Author, PN_String, #The author of the SWEP to be shown in weapon selection
+	PIN Purpose, PN_String, #The purpose of the SWEP creator to be shown in weapon selection
+	PIN Instructions, PN_String, #How to use your weapon, to be shown in weapon selection
+	PIN ViewModel, PN_String, #Path to the view model for your SWEP
+	PIN WorldModel, PN_String, #The world model for your SWEP
+	PIN AutoSwitchFrom, PN_Bool, #Whether this weapon can be autoswitched away from when the player runs out of ammo in this weapon or picks up another weapon or ammo
+	PIN AutoSwitchTo, PN_Bool, #Whether this weapon can be autoswitched to when the player runs out of ammo in their current weapon or they pick this weapon up
+	PIN Weight, PN_Number, #Determines the priority of the weapon when autoswitching. The weapon being autoswitched from will attempt to switch to a weapon with the same weight that has ammo, but if none exists, it will prioritise higher weight weapons.
+	PIN Folder, PN_String, #The folder from where the weapon was loaded.
+}
