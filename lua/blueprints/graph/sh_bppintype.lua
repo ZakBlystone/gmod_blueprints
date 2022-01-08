@@ -95,7 +95,8 @@ end
 
 function meta:CanCastTo( inPinType )
 
-	if self:IsType(PN_Any) or inPinType:IsType(PN_Any) then return true end
+	if self:IsType(PN_Any) and not inPinType:IsType(PN_Exec) then return true end
+	if inPinType:IsType(PN_Any) and not self:IsType(PN_Exec) then return true end
 
 	if self:IsType(PN_BPRef) and self:GetSubType() ~= nil then
 		return self:GetSubType():CanCast( self, inPinType )
