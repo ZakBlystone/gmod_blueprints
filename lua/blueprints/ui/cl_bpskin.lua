@@ -342,8 +342,8 @@ function SKIN:PaintMenuBarButton( panel, w, h )
 	if col then r,g,b = col.r, col.g, col.b end
 
 	if panel:IsEnabled() then
-		if panel.Hovered then r,g,b = 200,100,50
-		elseif panel:IsDown() then r,g,b = 50,170,200
+		if panel:IsDown() then r,g,b = 50,170,200
+		elseif panel.Hovered then r,g,b = 200,100,50
 		elseif col == nil then
 			r,g,b = self:AdjustColor(r,g,b)
 		end
