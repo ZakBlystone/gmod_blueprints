@@ -1,5 +1,9 @@
 if SERVER then AddCSLuaFile() return end
 
+local skin_hue = CreateConVar("bp_editor_ui_hue", "0", FCVAR_ARCHIVE, "Theming", 0, 360)
+local skin_sat = CreateConVar("bp_editor_ui_sat", "1", FCVAR_ARCHIVE, "Theming", 0, 3)
+local skin_val = CreateConVar("bp_editor_ui_val", "1", FCVAR_ARCHIVE, "Theming", 0, 3)
+
 SKIN = {}
 
 SKIN.PrintName		= "Blueprints Skin"
@@ -279,6 +283,120 @@ SKIN.Colours.TooltipText = GWEN.TextureColor( 4 + 8 * 26, 500 )
 
 SKIN.FlatUI = true
 
+local _permut = {
+	function(a,b,c) return a,b,c end,
+	function(a,b,c) return b,a,c end,
+	function(a,b,c) return c,a,b end,
+	function(a,b,c) return c,b,a end,
+	function(a,b,c) return b,c,a end,
+	function(a,b,c) return a,c,b end,
+}
+
+local function rgb(h,s,v)
+
+	h = h % 360 / 60
+	local x = v * s * math.abs(h % 2 - 1)
+	return _permut[1+math.floor(h)](v,v-x,v-v*s)
+
+end
+
+local function hsv(r,g,b)
+
+	local v = math.max(r,g,b)
+	local c = v - math.min(r,g,b)
+	if c * v == 0 then return 0, 0, v
+	elseif v == r then return 60 * (g-b) / c % 360, c/v, v
+	elseif v == g then return 120 + 60 * (b-r) / c, c/v, v
+	elseif v == b then return 240 + 60 * (r-g) / c, c/v, v
+	end
+
+end
+
+function SKIN:AdjustColor(r,g,b)
+
+	local h,s,v = hsv(r,g,b)
+	return rgb(
+		h + skin_hue:GetFloat(),
+		s * skin_sat:GetFloat(),
+		v * skin_val:GetFloat())
+
+end
+
+function SKIN:FlatBoxNC( d, x, y, w, h, r, g, b, a, ... )
+
+	bprenderutils.RoundedBoxFast(d,x,y,w,h,r,g,b,a,...)
+
+end
+
+function SKIN:FlatBox( d, x, y, w, h, r, g, b, a, ... )
+
+	r,g,b = self:AdjustColor(r,g,b)
+	bprenderutils.RoundedBoxFast(d,x,y,w,h,r,g,b,a,...)
+
+end
+
+function SKIN:PaintMenuBarButton( panel, w, h )
+
+	local col = panel.color
+	local r,g,b = 50,55,60
+	if col then r,g,b = col.r, col.g, col.b end
+
+	if panel:IsEnabled() then
+		if panel.Hovered then r,g,b = 200,100,50
+		elseif panel:IsDown() then r,g,b = 50,170,200
+		elseif col == nil then
+			r,g,b = self:AdjustColor(r,g,b)
+		end
+	else
+		r,g,b = r-20,g-20,b-10
+		if col == nil then
+			r,g,b = self:AdjustColor(r,g,b)
+		end
+	end
+
+	local br,bg,bb = r+40,g+40,b+40
+	self:FlatBoxNC(2, 0, 0, w, h, br,bg,bb,255,true,true,true,true)
+	self:FlatBoxNC(2, 1, 1, w-2, h-2, r,g,b,255,true,true,true,true)
+
+end
+
+function SKIN:PaintFileManagerEntry( panel, w, h )
+
+	local selected = panel:IsSelected()
+
+	if panel:IsServerFile() then
+
+		local r,g,b = HexColor("dfe6e9", true)
+		if selected then 
+			r,g,b = HexColor("ffd271", true) 
+		else
+			r,g,b = self:AdjustColor(r,g,b)
+		end
+
+		panel.nameLabel:SetTextColor( Color(r,g,b) )
+
+		local lock = panel:GetLock()
+		local isLocalLock = panel:IsLockedLocally()
+		local col = lock and (isLocalLock and HexColor("9cf196") or HexColor("edaaaa")) or HexColor("636e72")
+		self:FlatBoxNC(8, 0, 0, w, h, col.r/1.5, col.g/1.5, col.b/1.5, 255, false, true, false, true)
+
+	else
+
+		local r,g,b = HexColor("636e72", true)
+		if selected then 
+			r,g,b = HexColor("ffd271", true)
+		else
+			r,g,b = self:AdjustColor(r,g,b)
+		end
+
+		panel.nameLabel:SetTextColor( Color(r,g,b) )
+		local r,g,b = self:AdjustColor(HexColor("#2d3436", true))
+		self:FlatBoxNC(8, 0, 0, w, h, r,g,b,255,false,true,false,true)
+
+	end
+
+end
+
 function SKIN:PaintPanel( panel, w, h )
 
 	if ( !panel.m_bBackground ) then return end
@@ -287,7 +405,7 @@ function SKIN:PaintPanel( panel, w, h )
 		self.tex.Panels.Normal( 0, 0, w, h, panel.m_bgColor )
 	else
 		local r,g,b,a = (panel.m_bgColor or Color(255,255,255)):Unpack()
-		bprenderutils.RoundedBoxFast(2,0,0,w,h,r*.2,g*.22,b*.25,a,true,true,true,true)
+		self:FlatBox(2,0,0,w,h,r*.2,g*.22,b*.25,a,true,true,true,true)
 	end
 
 end
@@ -307,8 +425,8 @@ function SKIN:PaintFrame( panel, w, h )
 		if not self.FlatUI then
 			self.tex.Window.Normal( 0, 0, w, h )
 		else 
-			bprenderutils.RoundedBoxFast(2,0,0,w,h,60,70,75,255,true,true,true,true)
-			bprenderutils.RoundedBoxFast(2,0,0,w,28,230,255,255,20,true,true,false,false)
+			self:FlatBox(2,0,0,w,h,60,70,75,255,true,true,true,true)
+			self:FlatBox(2,0,0,w,28,230,255,255,20,true,true,false,false)
 		end
 
 	else
@@ -316,7 +434,7 @@ function SKIN:PaintFrame( panel, w, h )
 		if not self.FlatUI then
 			self.tex.Window.Inactive( 0, 0, w, h )
 		else
-			bprenderutils.RoundedBoxFast(2,0,0,w,h,30,35,35,255,true,true,true,true)
+			self:FlatBox(2,0,0,w,h,30,35,35,255,true,true,true,true)
 		end
 
 	end
@@ -392,7 +510,7 @@ function SKIN:PaintTab( panel, w, h )
 	if not self.FlatUI then
 		self.tex.TabT_Inactive( 0, 0, w, h )
 	else
-		bprenderutils.RoundedBoxFast(2,0,0,w,h,50,60,64,255,true,true,true,true)
+		self:FlatBox(2,0,0,w,h,50,60,64,255,true,true,true,true)
 	end
 
 end
@@ -402,7 +520,7 @@ function SKIN:PaintActiveTab( panel, w, h )
 	if not self.FlatUI then
 		self.tex.TabT_Active( 0, 0, w, h )
 	else
-		bprenderutils.RoundedBoxFast(2,0,0,w,h,80,90,94,255,true,true,true,true)
+		self:FlatBox(2,0,0,w,h,80,90,94,255,true,true,true,true)
 	end
 
 end
@@ -418,7 +536,38 @@ function SKIN:PaintPropertySheet( panel, w, h )
 	if not self.FlatUI then
 		self.tex.Tab_Control( 0, Offset, w, h-Offset )
 	else
-		bprenderutils.RoundedBoxFast(2,0,Offset,w,h-Offset,80,90,94,255,true,true,true,true)
+		self:FlatBox(2,0,Offset,w,h-Offset,80,90,94,255,true,true,true,true)
+	end
+
+end
+
+function SKIN:PaintComboBox( panel, w, h )
+
+	if not self.FlatUI then
+		if ( panel:GetDisabled() ) then
+			return self.tex.Input.ComboBox.Disabled( 0, 0, w, h )
+		end
+
+		if ( panel.Depressed || panel:IsMenuOpen() ) then
+			return self.tex.Input.ComboBox.Down( 0, 0, w, h )
+		end
+
+		if ( panel.Hovered ) then
+			return self.tex.Input.ComboBox.Hover( 0, 0, w, h )
+		end
+
+		self.tex.Input.ComboBox.Normal( 0, 0, w, h )
+	else
+
+		if panel:GetDisabled() then
+			self:FlatBox(2,0,0,w,h,30,35,35,255,true,true,true,true)
+		elseif panel.Hovered then
+			self:FlatBox(2,0,0,w,h,80,90,94,255,true,true,true,true)
+		elseif panel.Depressed or panel:IsMenuOpen() then
+			self:FlatBox(2,0,0,w,h,80,90,94,255,true,true,true,true)
+		else
+			self:FlatBox(2,0,0,w,h,50,60,64,255,true,true,true,true)
+		end
 	end
 
 end

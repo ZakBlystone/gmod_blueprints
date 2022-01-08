@@ -28,7 +28,7 @@ end
 
 function PANEL:Add( name, func, color, icon, right )
 
-	color = color or Color(50,55,60)
+	--color = color or Color(50,55,60)
 	local textColor = Color(240,240,240)
 	local opt = vgui.Create("DButton", self)
 	local text = tostring(name)
@@ -41,19 +41,9 @@ function PANEL:Add( name, func, color, icon, right )
 	opt:SetTall( 25 )
 	opt:SetTextColor(textColor)
 	opt.right = right
+	opt.color = color
 	opt.Paint = function(btn, w, h)
-		local col = color
-
-		if btn:IsEnabled() then
-			if btn.Hovered then col = Color(200,100,50) end
-			if btn:IsDown() then col = Color(50,170,200) end
-		else
-			col = Color(col.r - 20, col.g - 20, col.b - 20)
-		end
-
-		local bgColor = Color(col.r + 40, col.g + 40, col.b + 40)
-		draw.RoundedBox( 2, 0, 0, w, h, bgColor )
-		draw.RoundedBox( 2, 1, 1, w-2, h-2, col )
+		derma.SkinHook( "Paint", "MenuBarButton", btn, w, h )
 	end
 	opt.DoClick = function(btn)
 		self:RunCommand( func, opt )

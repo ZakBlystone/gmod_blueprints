@@ -325,6 +325,7 @@ end
 function PANEL:OpenAbout()
 
 	local about = vgui.Create( "DFrame" )
+	about:SetSkin("Blueprints")
 
 	local html = vgui.Create("DHTML", about)
 	html:OpenURL("samuelmaddock.github.io/gm-mediaplayer/gmblueprints/about.html")
@@ -345,6 +346,55 @@ function PANEL:OpenAbout()
 	ok:SetPos(0, about:GetTall() - 40 )
 	ok:CenterHorizontal()
 	ok.DoClick = function() if IsValid(about) then about:Close() end end
+
+end
+
+function PANEL:OpenSettings()
+
+	local window = vgui.Create( "BPFrame" )
+	window:SetSkin("Blueprints")
+	window:SetSizable( true )
+	window:SetSize( ScrW()/3, ScrH()/2 )
+	window:MakePopup()
+	window:SetTitle(LOCTEXT("menu_editorsettings", "Editor Settings")())
+	window:Center()
+	local detour = window.OnRemove
+	window.OnRemove = function(pnl)
+		hook.Remove("BPEditorBecomeActive", tostring(window))
+		if detour then detour(pnl) end
+	end
+
+	hook.Add("BPEditorBecomeActive", tostring(window), function()
+		if IsValid(window) then
+			window:Close() 
+		end
+	end)
+
+	local function makeCvar(v)
+		local convar = GetConVar(v)
+		print(v .. " : " .. convar:GetFloat())
+		return bpvaluetype.New("Number", 
+			function() return convar:GetFloat() end,
+			function(v) convar:SetFloat(v) end)
+		:SetMin(convar:GetMin())
+		:SetMax(convar:GetMax())
+		:SetPrecision(1)
+		:Set(convar:GetFloat())
+	end
+
+	local edit = bpvaluetype.FromValue({
+		["color scheme"] = {
+			["hue"] = makeCvar("bp_editor_ui_hue"),
+			["saturation"] = makeCvar("bp_editor_ui_sat"),
+			["value"] = makeCvar("bp_editor_ui_val"),
+		}
+	})
+
+	bpcommon.Profile("create-gui", function()
+		local inner = edit:CreateVGUI({ live = true, })
+		inner:SetParent(window)
+		inner:Dock(FILL)
+	end)
 
 end
 

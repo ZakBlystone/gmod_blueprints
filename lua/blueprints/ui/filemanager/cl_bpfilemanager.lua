@@ -136,27 +136,16 @@ function PANEL:PerformLayout()
 
 end
 
+function PANEL:IsServerFile() return self.file:HasFlag( bpfile.FL_IsServerFile ) end
+function PANEL:IsSelected() return self.view and self.view:GetEditor().selectedFile == self end
+function PANEL:IsLockedLocally() return self:GetLock() == bpusermanager.GetLocalUser() end
+function PANEL:GetLock() return self.file:GetLock() end
+
 function PANEL:Paint(w, h)
 
 	if not self.view then return end
 
-	local selected = self.view:GetEditor().selectedFile == self
-
-	if self.file:HasFlag( bpfile.FL_IsServerFile ) then
-
-		--draw.RoundedBoxEx(8, 0, 0, w-40, h, HexColor("#2d3436"), false, false, false, false)
-		self.nameLabel:SetTextColor( selected and HexColor("ffd271") or HexColor("#dfe6e9") )
-
-		local lock = self.file:GetLock()
-		local col = lock and (lock == bpusermanager.GetLocalUser() and HexColor("#9cf196") or HexColor("#edaaaa")) or HexColor("#636e72")
-		draw.RoundedBoxEx(8, 0, 0, w, h, Color(col.r/1.5, col.g/1.5, col.b/1.5), false, true, false, true)
-
-	else
-
-		self.nameLabel:SetTextColor( selected and HexColor("ffd271") or HexColor("#636e72") )
-		draw.RoundedBoxEx(8, 0, 0, w, h, HexColor("#2d3436"), false, true, false, true)
-
-	end
+	derma.SkinHook( "Paint", "FileManagerEntry", self, w, h )
 
 end
 
@@ -463,6 +452,7 @@ function PANEL:Init()
 	self.menu:Add(LOCTEXT("file_import_legacy","Convert Legacy"), function() self.editor:OpenLegacyImporter() end, nil, "icon16/folder_page.png")
 	self.menu:Add(LOCTEXT("file_help","Help"), function() self.editor:OpenHelp() end, nil, "icon16/help.png")
 	self.menu:Add(LOCTEXT("file_about","About"), function() self.editor:OpenAbout() end, nil)
+	self.menu:Add(LOCTEXT("file_settings","Settings"), function() self.editor:OpenSettings() end, nil)
 	--self.menu:Add("Upload", function() end, nil, "icon16/arrow_up.png")
 
 	self.middle = vgui.Create("DPanel")

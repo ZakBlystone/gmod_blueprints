@@ -46,7 +46,7 @@ local hexChars = "0123456789abcdef"
 local hexLookup = {}
 for i=1, #hexChars do hexLookup[hexChars[i]] = i hexLookup[hexChars[i]:upper()] = i end
 
-function HexColor(hex)
+function HexColor(hex, raw)
 
 	local r,g,b
 	for s in string.gmatch(hex, "(%x%x)") do
@@ -56,6 +56,7 @@ function HexColor(hex)
 		end
 	end
 
+	if raw then return r,g,b end
 	return Color(r, g, b, 255)
 
 end
