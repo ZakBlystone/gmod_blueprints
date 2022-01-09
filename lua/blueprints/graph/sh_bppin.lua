@@ -29,6 +29,10 @@ function meta:PostLoad()
 
 end
 
+function meta:PostNodePinsCreated()
+
+end
+
 function meta:MakeConnectionsBiDirectional()
 
 	for _, v in pairs(self.connections) do

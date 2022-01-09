@@ -225,6 +225,10 @@ function meta:UpdatePins()
 		end
 	end
 
+	for k, v in ipairs(self.pinCache) do
+		v:PostNodePinsCreated()
+	end
+
 	self.suppressPinEvents = false
 
 	--self:SetLiteralDefaults()
@@ -589,6 +593,10 @@ function meta:Copy()
 		copy.id = k
 		copy:InitPinClass()
 		newNode.pinCache[#newNode.pinCache+1] = copy
+	end
+
+	for k, v in ipairs(newNode.pinCache) do
+		v:PostNodePinsCreated()
 	end
 
 	bpcommon.MakeObservable(newNode)
