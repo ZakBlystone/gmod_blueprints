@@ -25,9 +25,6 @@ function VALUE:CreateVGUI( info )
 
 	if self._min and self._max then
 
-
-		print(type(self:Get()))
-
 		local entry = vgui.Create("DNumSlider", parent)
 		entry:SetSkin("Blueprints")
 		entry:SetMin( self._min )
