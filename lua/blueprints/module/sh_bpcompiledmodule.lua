@@ -428,28 +428,6 @@ fragments["jlist"] = function(jumps)
 
 end
 
-fragments["locals"] = function(locals)
-
-	local ret = ""
-	for k, v in ipairs(locals) do
-		ret = ret .. (k == 1 and "" or "\n") .. "local " .. v ..  " = nil"
-	end
-	return ret
-
-end
-
-fragments["ilocals"] = function(args)
-
-	local n = tonumber(args[1])
-	local ret = ""
-	for k=0, n-1 do
-		local id = k == 0 and "f" or "f" .. k
-		ret = ret .. (k == 0 and "" or "\n") .. "local " .. id ..  " = nil"
-	end
-	return ret
-
-end
-
 fragments["mtl"] = function(tables)
 
 	local ret = ""

@@ -981,23 +981,6 @@ function meta:CompileGlobalVarListing()
 
 end
 
--- builds local variable initializer code for graph entry function
-function meta:CompileGraphVarListing(graph)
-
-	self.begin(CTX_Vars .. self:GetID(graph))
-
-	local locals = {}
-	for _, v in ipairs(self.vars) do
-		if v.graph ~= graph then continue end
-		if not v.literal and not v.global and not v.isFunc and not v.keyAsGlobal then
-			locals[#locals+1] = v.var
-		end
-	end
-
-	self.finish()
-
-end
-
 function meta:CompileNetworkCode()
 
 	self.begin(CTX_Network)

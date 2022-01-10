@@ -11,7 +11,14 @@ LIB cvars
 		DESC Adds a callback to be called when the named convar changes.
 		IN name, PN_String, #The name of the convar to add the change callback to.
 		IN callback, PN_Func, PNF_None, FuncCvarChanged, #The function to be called when the convar changes. The arguments passed are: string convar - The name of the convar. string oldValue - The old value of the convar. string newValue - The new value of the convar.
-		IN identifier, PN_String, PNF_Nullable, #If set, you will be able to remove the callback using cvars.RemoveChangeCallback.
+		LOCAL id
+		CODE
+		{
+			%id = __guidString(__bpm.guid) .. "_" .. $1
+			if __self.destructors[%id] then __self.destructors[%id]() end
+			cvars.AddChangeCallback($1, $2, %id)
+			__self.destructors[$1] = function() cvars.RemoveChangeCallback($1, %id) end
+		}
 	}
 	FUNC Bool, SHARED
 	{

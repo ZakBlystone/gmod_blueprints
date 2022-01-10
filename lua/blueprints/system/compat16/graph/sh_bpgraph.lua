@@ -1124,7 +1124,6 @@ function meta:PreCompile( compiler, uniqueKeys )
 
 	compiler:EnumerateGraphVars(self, uniqueKeys)
 	compiler:CompileGraphJumpTable(self)
-	compiler:CompileGraphVarListing(self)
 
 	-- compile prepass on all nodes
 	for id, node in self:Nodes() do
@@ -1154,7 +1153,6 @@ function meta:CompileEntrypoint( compiler )
 	if compiler.debug then compiler.emit( "\t__dbggraph = " .. graphID) end
 
 	-- emit graph-local variables, callstack, and jumptable
-	compiler.emitContext( CTX_Vars .. graphID, 1 )
 	compiler.emit( "\t_FR_CALLSTACK()")
 	compiler.emitContext( CTX_JumpTable .. graphID, 1 )
 
