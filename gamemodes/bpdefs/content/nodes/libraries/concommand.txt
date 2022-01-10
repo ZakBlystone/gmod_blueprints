@@ -14,6 +14,7 @@ LIB concommand
 {
 	FUNC Add, SHARED
 	{
+		MODTYPE MOD
 		DESC Creates a console command that runs a function in lua with optional autocompletion function and help text.
 		IN name, PN_String, #The command name to be used in console. This cannot be a name of existing console command or console variable. It will silently fail if it is.
 		IN callback, PN_Func, PNF_None, FuncConCommandCallback, #The function to run when the concommand is executed. Arguments passed are: Player ply - The player that ran the concommand. NULL entity if command was entered with the dedicated server console. string cmd - The concommand string (if one callback is used for several concommands). table args - A table of all string arguments. string argStr - The arguments as a string.

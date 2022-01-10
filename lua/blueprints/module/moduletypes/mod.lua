@@ -30,7 +30,7 @@ function MODULE:CanAddNode(nodeType)
 	local group = nodeType:GetGroup()
 	if group and nodeType:GetContext() == bpnodetype.NC_Hook and blacklistHooks[group:GetName()] then return false end
 
-	return BaseClass:CanAddNode( nodeType )
+	return BaseClass.CanAddNode( self, nodeType )
 
 end
 
@@ -62,6 +62,7 @@ function MODULE:Compile(compiler, pass)
 
 		compiler.emit("function meta:Initialize()")
 		compiler.emit("\tself.delays = {}")
+		compiler.emit("\tself.destructors = {}")
 		compiler.emit("\tself.__bpm = __bpm")
 		compiler.emit("\tself.guid = __bpm.guid")
 		compiler.emitContext( CTX_Vars .. "global", 1 )
@@ -80,6 +81,8 @@ function meta:Shutdown()
 	self:hookEvents(false)
 	if self.CORE_Shutdown then self:CORE_Shutdown() end
 	self:netShutdown()
+	for _,v in pairs(self.destructors or {}) do v() end
+	self.bDestroyed = true
 end]])
 
 		return true

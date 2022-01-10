@@ -155,6 +155,7 @@ for k,v in pairs(table.Copy(meta)) do local _, _, m = k:find("WEAPON_(.+)") if m
 
 		compiler.emit("function meta:Initialize()")
 		compiler.emit("\tself.delays = {}")
+		compiler.emit("\tself.destructors = {}")
 		compiler.emit("\tself.__bpm = __bpm")
 		compiler.emit("\tself.guid = __hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
 		compiler.emitContext( CTX_Vars .. "global", 1 )
@@ -175,6 +176,8 @@ function meta:OnRemove()
 	self:hookEvents(false)
 	if self.WEAPON_OnRemove then self:WEAPON_OnRemove() end
 	self:netShutdown()
+	for _,v in pairs(self.destructors) do v() end
+	self.bDestroyed = true
 end]])
 
 		return true

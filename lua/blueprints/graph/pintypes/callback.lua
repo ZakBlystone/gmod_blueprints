@@ -111,7 +111,7 @@ function PIN:GetCode(compiler)
 
 	if self:GetLiteral() ~= nil then
 
-		return "function(...) return __self:" .. self:GetLiteral():GetName() .. "(...) end"
+		return "function(...) if not __self.bDestroyed then return __self:" .. self:GetLiteral():GetName() .. "(...) end end"
 
 	end
 
