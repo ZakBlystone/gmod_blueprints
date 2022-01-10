@@ -95,16 +95,22 @@ function EDITOR:CreateCallbackList(node)
 			end
 			btn.DoRightClick = function(pnl)
 				if node:HasCallbackGraph( v ) then
-					local menu = DermaMenu( false, pnl )
-					menu:AddOption( "Remove Callback", function()
-						local graph = node:GetCallbackGraph(v)
-						node:RemoveCallbackGraph( v )
-						pnl:SetToggle(false)
-						if self.graph == graph then
-							self:OpenDesigner()
-						end
-					end)
-					menu:Open( gui.MouseX(), gui.MouseY(), false, pnl )
+					bpmodal.Menu({
+						options = {
+							{
+								title = "Remove Callback", 
+								func = function()
+									local graph = node:GetCallbackGraph(v)
+									node:RemoveCallbackGraph( v )
+									pnl:SetToggle(false)
+									if self.graph == graph then
+										self:OpenDesigner()
+									end
+								end
+							}
+						},
+						width = 100,
+					}, pnl)
 				end
 			end
 			list:AddItem(btn)

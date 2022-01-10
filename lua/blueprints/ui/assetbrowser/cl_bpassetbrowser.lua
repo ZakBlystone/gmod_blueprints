@@ -450,6 +450,7 @@ function meta:Open()
 	window:SetTitle( "Asset Browser (" .. self.Title .. ")" )
 	window:MakePopup()
 	window:Center()
+	window:SetSkin("Blueprints")
 	local detour = window.OnRemove
 	window.OnRemove = function(pnl)
 		hook.Remove("BPEditorBecomeActive", tostring(window))

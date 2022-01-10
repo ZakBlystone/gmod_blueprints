@@ -75,7 +75,10 @@ function EDITOR:Export()
 	local text = bpmodule.SaveToText( self:GetTargetModule() )
 	SetClipboardText( text )
 	if not suppressExportMsg:GetBool() then 
-		Derma_Message( text_module_copied(), text_menu_export(), LOCTEXT("query_ok", "Ok")() )
+		bpmodal.Message({
+			message = text_module_copied, 
+			title = text_menu_export
+		})
 	end
 
 end
@@ -91,9 +94,15 @@ function EDITOR:ExportShareableKey( pnl )
 		if IsValid(pnl) then pnl:SetEnabled(true) end
 		if ok then
 			SetClipboardText( result )
-			Derma_Message( text_module_key_copied(), text_menu_export_shareable(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = text_module_key_copied, 
+				title = text_menu_export_shareable
+			})
 		else
-			Derma_Message( text_module_key_failed(tostring(result)), text_menu_export_shareable(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = text_module_key_failed(tostring(result)), 
+				title = text_menu_export_shareable
+			})
 		end
 
 	end)
@@ -111,10 +120,16 @@ function EDITOR:SendToServer()
 		if ok then
 			self:Save( function(ok) if ok then print("**Uploading Module") self:Upload(true) end end )
 		else
-			Derma_Message( res, text_run_fail(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = res,
+				title = text_run_fail
+			})
 		end
 	else
-		Derma_Message( res, text_compile_fail(), LOCTEXT("query_ok", "Ok")() )
+		bpmodal.Message({
+			message = res,
+			title = text_compile_fail
+		})
 	end
 
 end
@@ -122,7 +137,10 @@ end
 function EDITOR:InstallLocally()
 
 	if not bpusermanager.GetLocalUser():HasPermission( bpgroup.FL_CanRunLocally ) then
-		Derma_Message( text_local_no_permission(), text_menu_local_install(), LOCTEXT("query_ok", "Ok")() )
+		bpmodal.Message({
+			message = text_local_no_permission, 
+			title = text_menu_local_install, 
+		})
 		return
 	end
 
@@ -134,10 +152,16 @@ function EDITOR:InstallLocally()
 			bpenv.Install( res )
 			bpenv.Instantiate( res:GetUID() )
 		else
-			Derma_Message( res, text_run_fail(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = res,
+				title = text_run_fail
+			})
 		end
 	else
-		Derma_Message( res, text_compile_fail(), LOCTEXT("query_ok", "Ok")() )
+		bpmodal.Message({
+			message = res,
+			title = text_compile_fail
+		})
 	end
 
 end
@@ -154,7 +178,10 @@ function EDITOR:ExportLua()
 	if ok then
 		SetClipboardText( res:GetCode() )
 		if not suppressExportMsg:GetBool() then
-			Derma_Message( text_script_copied(), text_menu_export_lua(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = text_script_copied,
+				title = text_menu_export_lua
+			})
 		end
 	else
 		ErrorNoHalt( res )
@@ -179,18 +206,24 @@ function EDITOR:Save( callback )
 	local tab = self:GetTab()
 	if file == nil then
 
-		print("**Add Local Module")
-		Derma_StringRequest(text_menu_save(), text_module_name(), "untitled",
-		function( text )
-			local file = bpfilesystem.AddLocalModule( self:GetTargetModule(), text )
-			if file ~= nil then
-				tab:SetLabel( text )
-				if callback then callback(true) end
-			else
-				if callback then callback(false) end
-				Derma_Message(text_module_save_fail(text), LOCTEXT("query_error", "Error")(), LOCTEXT("query_ok", "Ok")())
-			end
-		end, nil, LOCTEXT("query_ok", "Ok")(), LOCTEXT("query_cancel", "Cancel")())
+		bpmodal.String({
+			title = text_menu_save,
+			message = text_module_name,
+			default = "untitled",
+			confirm = function( text )
+				local file = bpfilesystem.AddLocalModule( self:GetTargetModule(), text )
+				if file ~= nil then
+					tab:SetLabel( text )
+					if callback then callback(true) end
+				else
+					if callback then callback(false) end
+					bpmodal.Message({
+						message = text_module_save_fail(text),
+						title = "error",
+					})
+				end
+			end,
+		})
 
 	else
 

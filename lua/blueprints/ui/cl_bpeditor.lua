@@ -325,6 +325,7 @@ end
 function PANEL:OpenAbout()
 
 	local about = vgui.Create( "DFrame" )
+	about:SetSkin("Blueprints")
 
 	local html = vgui.Create("DHTML", about)
 	html:OpenURL("samuelmaddock.github.io/gm-mediaplayer/gmblueprints/about.html")
@@ -345,6 +346,55 @@ function PANEL:OpenAbout()
 	ok:SetPos(0, about:GetTall() - 40 )
 	ok:CenterHorizontal()
 	ok.DoClick = function() if IsValid(about) then about:Close() end end
+
+end
+
+function PANEL:OpenSettings()
+
+	local window = vgui.Create( "BPFrame" )
+	window:SetSkin("Blueprints")
+	window:SetSizable( true )
+	window:SetSize( ScrW()/3, ScrH()/2 )
+	window:MakePopup()
+	window:SetTitle(LOCTEXT("menu_editorsettings", "Editor Settings")())
+	window:Center()
+	local detour = window.OnRemove
+	window.OnRemove = function(pnl)
+		hook.Remove("BPEditorBecomeActive", tostring(window))
+		if detour then detour(pnl) end
+	end
+
+	hook.Add("BPEditorBecomeActive", tostring(window), function()
+		if IsValid(window) then
+			window:Close() 
+		end
+	end)
+
+	local function makeCvar(v)
+		local convar = GetConVar(v)
+		print(v .. " : " .. convar:GetFloat())
+		return bpvaluetype.New("Number", 
+			function() return convar:GetFloat() end,
+			function(v) convar:SetFloat(v) end)
+		:SetMin(convar:GetMin())
+		:SetMax(convar:GetMax())
+		:SetPrecision(1)
+		:Set(convar:GetFloat())
+	end
+
+	local edit = bpvaluetype.FromValue({
+		["color scheme"] = {
+			["hue"] = makeCvar("bp_editor_ui_hue"),
+			["saturation"] = makeCvar("bp_editor_ui_sat"),
+			["value"] = makeCvar("bp_editor_ui_val"),
+		}
+	})
+
+	bpcommon.Profile("create-gui", function()
+		local inner = edit:CreateVGUI({ live = true, })
+		inner:SetParent(window)
+		inner:Dock(FILL)
+	end)
 
 end
 
@@ -383,7 +433,7 @@ function PANEL:OpenImport( finishFunc )
 
 			bppaste.Download( str, function(ok, text)
 
-				if ok then self:FinishImport( import, text ) end
+				if ok then self:FinishImport( import, text, finishFunc ) end
 
 			end)
 
@@ -457,7 +507,10 @@ function PANEL:FinishLegacyImport( panel, path )
 			return self:OpenModule(mod, "unnamed", nil)
 		end, 
 		function(err)
-			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), text_failed_to_convert(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = tostring(err) .. "\n" .. debug.traceback(), 
+				title = text_failed_to_convert()
+			})
 		end)
 	if not b then
 		
@@ -486,7 +539,10 @@ function PANEL:FinishImport( import, text, finishFunc )
 
 	end)
 
-	if not b then Derma_Message(e, "Error importing blueprint", "Ok") end
+	if not b then bpmodal.Message({
+		message = e, 
+		title = "Error importing blueprint"
+	}) end
 
 end
 
@@ -591,7 +647,10 @@ function PANEL:OpenFile( file )
 	end
 
 	if not bpdefs.Ready() then
-		Derma_Message( text_wait_for_defs(), text_failed_to_open(), LOCTEXT("query_ok", "Ok")() )
+		bpmodal.Message({
+			message = text_wait_for_defs, 
+			title = text_failed_to_open, 
+		})
 		return
 	end
 
@@ -601,7 +660,10 @@ function PANEL:OpenFile( file )
 			return self:OpenModule( mod, file:GetName(), file )
 		end, 
 		function(err)
-			Derma_Message( tostring(err) .. "\n" .. debug.traceback(), text_failed_to_open(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = tostring(err) .. "\n" .. debug.traceback(), 
+				title = text_failed_to_open,
+			})
 		end)
 	if not b then
 		
@@ -624,9 +686,15 @@ function PANEL:CloseFile( file, callback )
 
 	if opened and file:HasFlag( bpfile.FL_HasLocalChanges ) then 
 		self.Tabs:SetActiveTab( opened.Tab )
-		Derma_Query(text_unsaved_changes(), LOCTEXT("query_close_file", "Close")(),
-		LOCTEXT("query_yes", "Yes")(), function() opened.Panel:Save( function(ok) if ok then self:CloseFileUID( file:GetUID() ) callback() end end ) end,
-		LOCTEXT("query_no", "No")(), function() bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end)
+
+		bpmodal.Query({
+			message = text_unsaved_changes,
+			title = LOCTEXT("query_close_file", "Close"),
+			options = {
+				{ "yes", function() opened.Panel:Save( function(ok) if ok then self:CloseFileUID( file:GetUID() ) callback() end end ) end },
+				{ "no", function() bpfilesystem.MarkFileAsChanged( file, false ) self:CloseFileUID( file:GetUID() ) callback() end },
+			},
+		})
 		return
 	end
 

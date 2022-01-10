@@ -82,6 +82,7 @@ bpinclude("defs/sh_bpdefs.lua")
 
 -- UI
 bpinclude("ui/sh_bpui.lua")
+bpinclude("ui/utils/cl_bpmodal.lua")
 bpinclude("ui/utils/cl_bpframe.lua")
 bpinclude("ui/utils/cl_bpcategorycollapse.lua")
 bpinclude("ui/utils/cl_bpcategorylist.lua")

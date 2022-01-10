@@ -185,43 +185,72 @@ end
 function EDITOR:OpenAssetMenu(pnl, asset)
 
 	if IsValid(self.cmenu) then self.cmenu:Remove() end
-	self.cmenu = DermaMenu( false, self )
-	self.cmenu:AddOption( "Rename", function()
-		Derma_StringRequest("Rename", "Module Name", asset:GetName(),
-		function( text )
-			asset:SetName( text )
-			self:EnumerateAssets()
-		end, nil, LOCTEXT("query_ok", "Ok")(), LOCTEXT("query_cancel", "Cancel")())
-	end)
-	self.cmenu:AddOption( "Delete", function()
-		Derma_Query("Delete " .. asset:GetName() .. "? This cannot be undone", "Delete Asset",
-		LOCTEXT("query_yes", "Yes")(), function()
-			self:GetModule():RemoveAsset( asset )
-			self:EnumerateAssets()
-		end,
-		LOCTEXT("query_no", "No")(), function() end)
-	end)
-	self.cmenu:AddOption( "Export", function()
-		local mod = asset:GetAsset()
-		SetClipboardText(bpmodule.SaveToText(mod))
-		Derma_Message( LOCTEXT("module_export_text", "Module copied to clipboard")(), LOCTEXT("menu_export", "Export")(), LOCTEXT("query_ok", "Ok")() )
-	end)
 
-	self.cmenu:SetMinimumWidth( 100 )
-	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, pnl )
+	local options = {}
+
+	options[#options+1] = {
+		title = "Rename",
+		func = function()
+			bpmodal.String({
+				title = "Rename",
+				message = "Module Name",
+				default = asset:GetName(),
+				confirm = function( text )
+					asset:SetName( text )
+					self:EnumerateAssets()
+				end,
+			})
+		end,
+	}
+
+	options[#options+1] = {
+		title = "Delete",
+		func = function()
+			bpmodal.Query({
+				title = "Delete Asset",
+				message = "Delete " .. asset:GetName() .. "? This cannot be undone",
+				options = {
+					{"yes", function()
+						self:GetModule():RemoveAsset( asset )
+						self:EnumerateAssets()
+					end},
+					{"no", function() end},
+				},
+			})
+		end,
+	}
+
+	options[#options+1] = {
+		title = "Export",
+		func = function()
+			local mod = asset:GetAsset()
+			SetClipboardText(bpmodule.SaveToText(mod))
+			bpmodal.Message({
+				message = LOCTEXT("module_export_text", "Module copied to clipboard"), 
+				title = LOCTEXT("menu_export", "Export"),
+			})
+		end,
+	}
+
+	self.cmenu = bpmodal.Menu({
+		options = options,
+		width = 100,
+	}, pnl)
 
 end
 
 function EDITOR:OpenAddAssetMenu(pnl)
 
 	if IsValid(self.cmenu) then self.cmenu:Remove() end
-	self.cmenu = DermaMenu( false, self )
-	self.cmenu:AddOption( "Import", function()
-		self:ImportSubModule()
-	end)
 
-	self.cmenu:SetMinimumWidth( 100 )
-	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, pnl )
+	self.cmenu = bpmodal.Menu({
+		options = {
+			{ title = "Import", func = function() 
+				self:ImportSubModule()
+			end }
+		},
+		width = 100,
+	}, pnl)
 
 end
 
@@ -276,68 +305,87 @@ end
 function EDITOR:ModuleDropdown()
 
 	if IsValid(self.cmenu) then self.cmenu:Remove() end
-	self.cmenu = DermaMenu( false, self )
+
+	local options = {}
 
 	local loader = bpmodule.GetClassLoader()
 	local classes = bpcommon.Transform( loader:GetClasses(), {}, function(k) return {name = k, class = loader:Get(k)} end )
 
 	table.sort( classes, function(a,b) return tostring(a.class.Name) < tostring(b.class.Name) end )
 
-	for _, v in ipairs( classes ) do
-
+	bpcommon.Transform( classes, options, function(v)
 		local cl = v.class
-		if not cl.Creatable or cl.Developer or not cl.CanBeSubmodule then continue end
+		if not cl.Creatable or cl.Developer or not cl.CanBeSubmodule then return end
+		return {
+			title = tostring(cl.Name),
+			func = function() self:CreateModule( v.name ) end,
+			icon = cl.Icon,
+			desc = cl.Description,
+		}
+	end)
 
-		local op = self.cmenu:AddOption( tostring(cl.Name), function() self:CreateModule( v.name ) end)
-		if cl.Icon then op:SetIcon( cl.Icon ) end
-		if cl.Description then op:SetTooltip( tostring(cl.Description) ) end
+	options[#options+1] = {}
 
-	end
+	local templateCategories = {}
 
-	self.cmenu:AddSpacer()
-	local templateMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT("module_submenu_examples","Examples") ) )
-	op:SetIcon( "icon16/book.png" )
-
-	for _, v in ipairs( classes ) do
-
+	bpcommon.Transform( classes, templateCategories, function(v)
 		local cl = v.class
-		if not cl.Creatable or not cl.CanBeSubmodule then continue end
+		if not cl.Creatable or not cl.CanBeSubmodule then return end
 
 		local templates = bptemplates.GetByType( v.name )
-		if #templates > 0 then
-			local sub, op = templateMenu:AddSubMenu( tostring(cl.Name) )
-			if cl.Icon then op:SetIcon( cl.Icon ) end
+		if #templates == 0 then return end
 
-			for _, t in ipairs( templates ) do
-				local op = sub:AddOption( t.name, function()
-					local mod = bptemplates.CreateTemplate( t )
+		local options = bpcommon.Transform( templates, {}, function(v)
+
+			return {
+				title = tostring(v.name),
+				func = function()
+					local mod = bptemplates.CreateTemplate( v )
 					self:AddModule(mod)
-				end )
-				if cl.Icon then op:SetIcon( cl.Icon ) end
-				op:SetTooltip( tostring(t.description) .. "\nby " .. tostring(t.author) )
-			end
-		end
+				end,
+				icon = cl.Icon,
+				desc = tostring(v.description) .. "\nby " .. tostring(v.author),
+			}
 
-	end
+		end )
 
+		return {
+			title = tostring(cl.Name),
+			options = options,
+			icon = cl.Icon,
+			desc = cl.Description,
+		}
+	end)
 
-	self.cmenu:AddSpacer()
-	local developerMenu, op = self.cmenu:AddSubMenu( tostring( LOCTEXT("module_submenu_developer","Developer") ) )
-	op:SetIcon( "icon16/application_osx_terminal.png" )
+	options[#options+1] = {
+		title = LOCTEXT("module_submenu_examples","Examples"),
+		options = templateCategories,
+		icon = "icon16/book.png",
+	}
 
-	for _, v in ipairs( classes ) do
+	options[#options+1] = {}
 
+	local devOptions = bpcommon.Transform( classes, {}, function(v)
 		local cl = v.class
-		if not cl.Creatable or not cl.Developer or not cl.CanBeSubmodule then continue end
+		if not cl.Creatable or not cl.Developer or not cl.CanBeSubmodule then return end
+		return {
+			title = tostring(cl.Name),
+			func = function() self:CreateModule( v.name ) end,
+			icon = cl.Icon,
+			desc = cl.Description,
+		}
+	end)
 
-		local op = developerMenu:AddOption( tostring(cl.Name), function() self:CreateModule( v.name ) end)
-		if cl.Icon then op:SetIcon( cl.Icon ) end
-		if cl.Description then op:SetTooltip( tostring(cl.Description) ) end
+	options[#options+1] = {
+		title = LOCTEXT("module_submenu_developer","Developer"),
+		options = devOptions,
+		icon = "icon16/application_osx_terminal.png",
+	}
 
-	end
-
-	self.cmenu:SetMinimumWidth( 100 )
-	self.cmenu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )
+	self.cmenu = bpmodal.Menu({
+		options = options,
+		width = 100,
+	}, self:GetPanel())
 
 end
 

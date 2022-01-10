@@ -6,6 +6,12 @@ local PIN = {}
 
 function PIN:Setup()
 
+	--self:UpdateGhost()
+
+end
+
+function PIN:PostNodePinsCreated()
+
 	self:UpdateGhost()
 
 end
@@ -31,10 +37,13 @@ end
 local function SetAllInforms( fromPin, node, pinType )
 
 	local isInformed = false
-	local pin = node:GetPin(fromPin)
 
-	if pin then
+	local pin = node:GetPin(fromPin)
+	if pin ~= nil then
 		pin:SetInformedType( pinType )
+	else
+		print("Failed to inform pin " .. tostring(fromPin) .. " on " .. tostring(node))
+		print("Node has " .. #node:GetPins() .. " pin(s).")
 	end
 
 	--[[for k, v in ipairs(node:GetInforms()) do

@@ -43,9 +43,14 @@ function EDITOR:InstallLocally()
 
 	BaseClass.InstallLocally( self )
 
-	Derma_Query("Editor must restart to see changes, do this now?", "Install Locally",
-	"Yes", function() self:Save( function(status) if status == true then bpuieditor.OpenEditor( true ) end end ) end,
-	"No", function() end)
+	bpmodal.Query({
+		message = "Editor must restart to see changes, do this now?",
+		title = "Install Locally",
+		options = {
+			{"yes", function() self:Save( function(status) if status == true then bpuieditor.OpenEditor( true ) end end ) end},
+			{"no", function() end},
+		},
+	})
 
 end
 
@@ -53,9 +58,14 @@ function EDITOR:UninstallLocally()
 
 	BaseClass.UninstallLocally( self )
 
-	Derma_Query("Editor must restart to see changes, do this now?", "Install Locally",
-	"Yes", function() self:Save( function(status) if status == true then bpuieditor.OpenEditor( true ) end end ) end,
-	"No", function() end)
+	bpmodal.Query({
+		message = "Editor must restart to see changes, do this now?",
+		title = "Uninstall Locally",
+		options = {
+			{"yes", function() self:Save( function(status) if status == true then bpuieditor.OpenEditor( true ) end end ) end},
+			{"no", function() end},
+		},
+	})
 
 end
 

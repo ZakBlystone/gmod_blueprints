@@ -488,21 +488,22 @@ function meta:LeftMouse(x,y,pressed)
 
 			else
 
-				self.dragVarMenu = DermaMenu( false, self.vgraph )
-
+				local options = {}
 				if isbpevent( v ) then
-					self.dragVarMenu:AddOption( text_call( v:GetName() ), function() self:PlaceEvent( v, wx, wy, true ) end )
-					self.dragVarMenu:AddOption( text_hook( v:GetName() ), function() self:PlaceEvent( v, wx, wy, false ) end )
+					options[#options+1] = { title = text_call( v:GetName() ), func = function() self:PlaceEvent( v, wx, wy, true ) end }
+					options[#options+1] = { title = text_hook( v:GetName() ), func = function() self:PlaceEvent( v, wx, wy, false ) end }
 				elseif isbpvariable(v) then
-					self.dragVarMenu:AddOption( text_set( v:GetName() ), function() self:PlaceVar( v, wx, wy, true ) end )
-					self.dragVarMenu:AddOption( text_get( v:GetName() ), function() self:PlaceVar( v, wx, wy, false ) end )
+					options[#options+1] = { title = text_set( v:GetName() ), func = function() self:PlaceVar( v, wx, wy, true ) end }
+					options[#options+1] = { title = text_get( v:GetName() ), func = function() self:PlaceVar( v, wx, wy, false ) end }
 				elseif isbpstruct(v) then
-					self.dragVarMenu:AddOption( text_make( v:GetName() ), function() self:PlaceStruct( v, wx, wy, true ) end )
-					self.dragVarMenu:AddOption( text_break( v:GetName() ), function() self:PlaceStruct( v, wx, wy, false ) end )
+					options[#options+1] = { title = text_make( v:GetName() ), func = function() self:PlaceStruct( v, wx, wy, true ) end }
+					options[#options+1] = { title = text_break( v:GetName() ), func = function() self:PlaceStruct( v, wx, wy, false ) end }
 				end
 
-				self.dragVarMenu:SetMinimumWidth( 100 )
-				self.dragVarMenu:Open( gui.MouseX(), gui.MouseY(), false, self.vgraph )
+				self.dragVarMenu = bpmodal.Menu({
+					options = options,
+					width = 100,
+				}, self.vgraph)
 
 			end
 
@@ -548,11 +549,6 @@ function meta:RightMouse(x,y,pressed)
 	if pressed then
 		self.pressx = x
 		self.pressy = y
-		local selected, count = self:GetSelectedNodes()
-		if count > 1 then
-			self:OpenMultiNodeContext(selected)
-			return false
-		end
 
 		if vnode ~= nil then
 			local vpin, literal = self:TryGetNodePin(vnode, wx, wy)
@@ -563,6 +559,12 @@ function meta:RightMouse(x,y,pressed)
 	else
 		-- Only open context after mouse released, and mosue drag distance is less than 5
 		if math.Distance(self.pressx, self.pressy, x, y) < 5. then
+			local selected, count = self:GetSelectedNodes()
+			if count > 1 then
+				self:OpenMultiNodeContext(selected)
+				return false
+			end
+
 			if vnode ~= nil then
 				self:OpenNodeContext(vnode)
 			else
@@ -702,29 +704,6 @@ function meta:CloseEnumContext()
 
 end
 
-function meta:OpenEnumContext(node, pin, pinID, value)
-
-	local x,y = self.vgraph:GetMousePos(true)
-
-	self:CloseEnumContext()
-	self.enumContextMenu = DermaMenu( false, self.vgraph )
-
-	local enum = bpdefs.Get():GetEnum( pin )
-	if enum == nil then
-		ErrorNoHalt("NO ENUM FOR " .. tostring( self.pinType ))
-	else
-		for k, entry in pairs(enum.entries) do
-			self.enumContextMenu:AddOption( entry.shortkey, function()
-				node:SetLiteral(pinID, entry.key)
-			end )
-		end
-	end
-
-	self.enumContextMenu:SetMinimumWidth( 100 )
-	self.enumContextMenu:Open( x, y, false, self.vgraph )
-
-end
-
 function meta:CloseNodeContext()
 
 	if IsValid( self.nodeMenu ) then self.nodeMenu:Remove() end
@@ -739,17 +718,18 @@ function meta:OpenNodeContext(vnode)
 	node:GetOptions(options)
 
 	if #options == 0 then return end
+	
+	local menuOptions = bpcommon.Transform(options, {}, function(v)
+		return { title = v[1], func = v[2], icon = v[3] }
+	end)
 
 	self:CloseNodeContext()
-	self.nodeMenu = DermaMenu( false, self.vgraph )
-
-	for k,v in pairs(options) do
-		local op = self.nodeMenu:AddOption( v[1], v[2] )
-		if v[3] then op:SetIcon( v[3] ) end
-	end
-
-	self.nodeMenu:SetMinimumWidth( 100 )
-	self.nodeMenu:Open( x, y, false, self.vgraph )
+	self.nodeMenu = bpmodal.Menu({
+		options = menuOptions,
+		width = 100,
+		x = x,
+		y = y,
+	}, self.vgraph)
 
 end
 
@@ -760,15 +740,17 @@ function meta:OpenMultiNodeContext(selected)
 
 	if #options == 0 then return end
 
+	local menuOptions = bpcommon.Transform(options, {}, function(v)
+		return { title = v[1], func = v[2] }
+	end)
+
 	self:CloseNodeContext()
-	self.nodeMenu = DermaMenu( false, self.vgraph )
-
-	for k,v in pairs(options) do
-		self.nodeMenu:AddOption( v[1], v[2] )
-	end
-
-	self.nodeMenu:SetMinimumWidth( 100 )
-	self.nodeMenu:Open( x, y, false, self.vgraph )
+	self.nodeMenu = bpmodal.Menu({
+		options = menuOptions,
+		width = 100,
+		x = x,
+		y = y,
+	}, self.vgraph)
 
 end
 
@@ -795,7 +777,6 @@ function meta:OpenCreationContext( pinFilter )
 
 	self:CloseCreationContext()
 	self:LockGrabbedPinPos()
-	--self.menu = DermaMenu( false, self )
 
 	local x, y = gui.MouseX(), gui.MouseY()
 	local wx, wy = self:PointToWorld( self.vgraph:GetMousePos() )
