@@ -65,6 +65,7 @@ local categoryOrder = {
 	["Classes"] = 5,
 	["Structs"] = 6,
 	["Enums"] = 7,
+	["Callbacks"] = 8,
 }
 
 local function SearchRanker( entry, query, queryLength, panel )
@@ -167,6 +168,7 @@ function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 		if e:IsType(PN_Ref) then return "Classes", "icon16/bricks.png" end
 		if e:IsType(PN_Enum) then return "Enums", "icon16/book_open.png" end
 		if e:IsType(PN_Struct) then return "Structs", "icon16/table.png" end
+		if e:IsType(PN_Func) then return "Callbacks", "icon16/bricks.png" end
 		return "Basic", "icon16/brick.png"
 	end
 	menu.GetEntryPanel = function(pnl, e)
