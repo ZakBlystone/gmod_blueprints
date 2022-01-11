@@ -9,11 +9,15 @@ if SERVER then
 	util.AddNetworkString("bphandshake")
 	util.AddNetworkString("bpmessage")
 	util.AddNetworkString("bpclosechannel")
+
+	AddCSLuaFile("thirdparty/sh_cami.lua")
 end
 
 local function bpinclude(path)
 	include("blueprints/" .. path)
 end
+
+include("thirdparty/sh_cami.lua")
 
 -- CORE
 bpinclude("core/sh_bplocalization.lua")
@@ -98,9 +102,6 @@ bpinclude("ui/utils/cl_bpviewport2d.lua")
 bpinclude("ui/dermaeditor/cl_bpdpreview.lua")
 bpinclude("ui/filemanager/cl_bpfilemanager.lua")
 bpinclude("ui/filemanager/cl_bptemplates.lua")
-bpinclude("ui/usermanager/cl_bpuser.lua")
-bpinclude("ui/usermanager/cl_bpgroup.lua")
-bpinclude("ui/usermanager/cl_bpusermanager.lua")
 bpinclude("ui/grapheditor/cl_bpgraph.lua")
 bpinclude("ui/grapheditor/cl_bpgraphpin.lua")
 bpinclude("ui/grapheditor/cl_bpgraphnode.lua")
