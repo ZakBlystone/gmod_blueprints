@@ -284,6 +284,15 @@ function meta:TryBuild(flags)
 
 end
 
+function meta:ContainsProtectedElements()
+
+	local compiler = bpcompiler.New(self, bpcompiler.CF_None)
+	compiler:Setup()
+	compiler:RunModuleCompile( bpcompiler.CP_PREPASS )
+	return compiler.containsProtected
+
+end
+
 function meta:ToString()
 
 	return GUIDToString(self:GetUID())

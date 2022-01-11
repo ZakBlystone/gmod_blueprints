@@ -8,6 +8,7 @@ CF_Comments = 2
 CF_Debug = 4
 CF_ILP = 8
 CF_CompactVars = 16
+CF_AllowProtected = 32
 
 CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
 
@@ -133,6 +134,7 @@ function meta:Setup()
 	self.compactVars = bit.band(self.flags, CF_CompactVars) ~= 0
 	self.debug = bit.band(self.flags, CF_Debug) ~= 0
 	self.debugcomments = bit.band(self.flags, CF_Comments) ~= 0
+	self.allowProtected = bit.band(self.flags, CF_AllowProtected) ~= 0
 	self.ilp = bit.band(self.flags, CF_ILP) ~= 0
 	self.ilpmax = 10000
 	self.ilpmaxh = 100
@@ -140,6 +142,8 @@ function meta:Setup()
 	self.varscope = nil
 	self.pinRouters = {}
 	self.jumpsRequired = {}
+	self.containsProtected = false
+	self.protectedElements = {}
 
 	return self
 
@@ -1154,6 +1158,13 @@ function meta:CompileGraphMetaHook(graph, node, name)
 
 end
 
+function meta:FlagProtected( name )
+
+	self.containsProtected = true
+	self.protectedElements[name] = true
+
+end
+
 function meta:Compile( noExport )
 
 	--print("COMPILING MODULE...")
@@ -1181,6 +1192,11 @@ function meta:Compile( noExport )
 	Profile("debug-symbols", self.CreateDebugSymbols, self)
 
 	if noExport then return nil end
+	if self.containsProtected and not self.allowProtected then
+		local elements = ""
+		for k, _ in pairs(self.protectedElements) do elements = elements .. "\n" .. k end
+		error("Context does not allow the following protected nodes, check your permissions: \n" .. elements)
+	end
 
 	local compiledModule = nil
 

@@ -111,10 +111,15 @@ end
 
 function EDITOR:SendToServer()
 
+	local cflags = bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars)
+	if bpusermanager.GetLocalUser():HasPermission( bpgroup.FL_CanUseProtected ) then
+		cflags = bit.bor(cflags, bpcompiler.CF_AllowProtected)
+	end
+
 	_G.G_BPError = nil
 	self:GetMainEditor():ClearReport()
 	--bpnet.SendModule( self.module )
-	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	local ok, res = self:GetTargetModule():TryBuild( cflags )
 	if ok then
 		ok, res = res:TryLoad()
 		if ok then
@@ -144,7 +149,7 @@ function EDITOR:InstallLocally()
 		return
 	end
 
-	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars, bpcompiler.CF_AllowProtected) )
 	if ok then
 		ok, res = res:TryLoad()
 		if ok then
@@ -174,7 +179,7 @@ end
 
 function EDITOR:ExportLua()
 
-	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
+	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments, bpcompiler.CF_AllowProtected) )
 	if ok then
 		SetClipboardText( res:GetCode() )
 		if not suppressExportMsg:GetBool() then
@@ -184,7 +189,10 @@ function EDITOR:ExportLua()
 			})
 		end
 	else
-		ErrorNoHalt( res )
+		bpmodal.Message({
+			message = res,
+			title = text_compile_fail
+		})
 	end
 
 end

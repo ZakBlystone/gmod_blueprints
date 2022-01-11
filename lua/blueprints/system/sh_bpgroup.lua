@@ -12,7 +12,7 @@ FL_CanDelete = 32         --User can delete files on the server
 PermissionInfo = {
 	[FL_CanUpload] = {"Can Upload", "blueprint upload", "User can upload their blueprints to the server"},
 	[FL_CanRunLocally] = {"Can Run Locally", "blueprint run-local", "User can run their blueprints locally"},
-	--[FL_CanUseProtected] = {"Can Use Protected", "blueprint protected", "User can create protected / unsafe nodes"},
+	[FL_CanUseProtected] = {"Can Use Protected", "blueprint protected", "User can create protected / unsafe nodes", "superadmin"},
 	[FL_CanToggle] = {"Can Toggle Blueprints", "blueprint toggle", "User can toggle running blueprints on server"},
 	--[FL_CanViewAny] = {"Can View Any", "blueprint view-any", "User can view any blueprint on the server"},
 	[FL_CanDelete] = {"Can Delete", "blueprint delete", "User can delete files on the server"},
@@ -38,7 +38,7 @@ for k,v in pairs(PermissionInfo) do
 
 	CAMI.RegisterPrivilege({
 		Name = v[2],
-		MinAccess = "admin",
+		MinAccess = v[4] or "admin",
 		Description = v[3],
 	})
 

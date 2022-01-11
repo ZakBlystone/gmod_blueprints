@@ -326,8 +326,9 @@ end
 
 function meta:DrawBanner(x, y, alpha)
 
+	local protected = self.node:HasFlag(NTF_Protected)
 	local deprecated = self.node:HasFlag(NTF_Deprecated)
-	local shouldDraw = self.node:HasFlag(NTF_Experimental) or deprecated
+	local shouldDraw = self.node:HasFlag(NTF_Experimental) or deprecated or protected
 	if not shouldDraw then return end
 
 	-- Node banner
@@ -337,7 +338,7 @@ function meta:DrawBanner(x, y, alpha)
 	local bannerY = y - bannerH
 	local cr, cg, cb = 255,190,60
 
-	if deprecated then cg = 60 bannerW = 150 end
+	if deprecated or protected then cg = 60 bannerW = 150 end
 
 	--surface_drawRect(bannerX,bannerY,w,NODE_HEADER_HEIGHT)
 	roundedBox(12, bannerX, bannerY, bannerW, bannerH, cr,cg,cb, 255*alpha, true, true, false, false)
@@ -347,7 +348,7 @@ function meta:DrawBanner(x, y, alpha)
 	surface_setFont( "NodeTitleFont" )
 	surface_setTextPos( bannerX + 10, bannerY )
 	surface_setTextColor( 0, 0, 0, 255*alpha )
-	surface_drawText( deprecated and "Obsolete" or "Experimental" )
+	surface_drawText( protected and "Protected" or (deprecated and "Obsolete" or "Experimental") )
 
 end
 

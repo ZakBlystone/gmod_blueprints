@@ -631,7 +631,14 @@ end
 
 function meta:Compile(compiler, pass)
 
-	if pass == CP_METAPASS then
+	if pass == CP_PREPASS then
+
+		if self:HasFlag(NTF_Protected) then
+			print("PROTECTED CHECK: " .. self:GetFullName())
+			compiler:FlagProtected( self:GetGraph():GetName() .. "." .. self:GetFullName() )
+		end
+
+	elseif pass == CP_METAPASS then
 
 		local rm = self:GetRequiredMeta()
 		if rm == nil then return end

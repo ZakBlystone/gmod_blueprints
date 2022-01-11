@@ -166,6 +166,16 @@ function meta:DrawGrid( material, pixelGridUnits, textureGridDivisions )
 
 end
 
+function meta:GetNodeDescription(node)
+
+	local desc = node:GetDescription()
+	if node:HasFlag(NTF_Protected) then
+		desc = desc .. "\n\nThis node is protected, to use it on this server you need permission to use it"
+	end
+	return desc
+
+end
+
 function meta:GetTooltipUnderCursor(mx, my)
 
 	local vnode = self:GetEditor():TryGetNode( mx, my )
@@ -177,7 +187,7 @@ function meta:GetTooltipUnderCursor(mx, my)
 			return vpin:GetPin():GetDescription(), vpin
 		end
 
-		return vnode:GetNode():GetDescription(), vnode
+		return self:GetNodeDescription(vnode:GetNode()), vnode
 
 	end
 

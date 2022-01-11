@@ -60,7 +60,7 @@ end
 
 function meta:GetPlayer()
 
-	if SERVER and game.SinglePlayer() then error("Cannot find player by steamID on SERVER in singleplayer") end
+	if SERVER and game.SinglePlayer() then return player.GetAll()[1] end -- assume it's the only player in the server
 
 	return player.GetBySteamID( self:GetSteamID() )
 

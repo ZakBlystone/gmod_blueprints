@@ -270,7 +270,7 @@ local function RunLocalFile( file )
 
 	local modulePath = UIDToModulePath( file:GetUID() )
 	local mod = bpmodule.Load(modulePath):WithOuter( file )
-	local cmod = mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	local cmod = mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars, bpcompiler.CF_AllowProtected) )
 
 	assert( cmod ~= nil )
 
@@ -357,6 +357,13 @@ if SERVER then
 			local execute = stream:Value()
 			local name = stream:Value()
 			stream:Finish()
+
+			local hasProtected = mod:ContainsProtectedElements()
+			if hasProtected then
+				if not owner:HasPermission(bpgroup.FL_CanUseProtected) then
+					error("User is not allowed to upload protected nodes") 
+				end
+			end
 			
 			local filename = UIDToModulePath( mod:GetUID() )
 			local file = FindFileByUID( mod:GetUID() )
