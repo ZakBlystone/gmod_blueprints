@@ -446,10 +446,11 @@ function meta:GetPinLiteral(pin, sanitize)
 		end
 
 		local l = tostring(pin:GetLiteral())
+		if l == "{}" then l = "__emptyTable" end
 
 		if pin:IsType(PN_BPClass) then l = EscapedGUID(l) end
 		if sanitize then l = SanitizeString(l) end
-		if pin:IsType(PN_String) then l = "\"" .. l .. "\"" end
+		if pin:IsType(PN_String) and not pin:HasFlag(PNF_Table) then l = "\"" .. l .. "\"" end
 		if pin:IsType(PN_Asset) then l = "\"" .. l .. "\"" end
 
 		--print("LITERAL FOR NODEPIN: " .. node:ToString(pin.id) .. " [" .. l .. "]")

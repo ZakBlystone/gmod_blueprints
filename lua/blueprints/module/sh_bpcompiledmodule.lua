@@ -516,6 +516,7 @@ fragments["utils"] = function(args)
 
 	return [[
 local __hex = "0123456789ABCDEF"
+local __emptyTable = setmetatable({}, { __newindex = function() end })
 local function __genericIsValid(x) return type(x) == 'number' or type(x) == 'boolean' or IsValid(x) end
 local function __guidString(str) return str:gsub(".", function(x) local b = string.byte(x) return __hex[1+b/16] .. __hex[1+b%16] end) end
 local function __hexBytes(str) return str:gsub("%w%w", function(x) return string.char(tonumber(x[1],16) * 16 + tonumber(x[2],16)) end) end
