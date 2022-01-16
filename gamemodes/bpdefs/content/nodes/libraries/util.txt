@@ -219,6 +219,7 @@ LIB util
 		DESC Checks if the specified model is valid.
 		IN modelName, PN_String, #Name/Path of the model to check.
 		OUT valid, PN_Bool, #Whether the model is valid or not. Returns false clientside if the model is not precached by the server.
+		CODE util.IsValidModel(type($1) == "string" and $1 or nil)
 	}
 	PURE IsValidPhysicsObject, SHARED
 	{

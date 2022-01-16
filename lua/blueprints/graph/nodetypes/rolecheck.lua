@@ -9,6 +9,8 @@ function NODE:Setup()
 	self:AddFlag(NTF_FallThrough)
 	self:SetCodeType(NT_Special)
 
+	assert(self:GetNodeParam("role") ~= nil, "NO ROLE ASSIGNED")
+
 end
 
 function NODE:GeneratePins(pins)
