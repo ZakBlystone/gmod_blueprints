@@ -17,7 +17,7 @@ if SERVER then
 	util.AddNetworkString("bpnet")
 end
 
-local function HandleRemoteErrorReport( uid, msg, graphID, nodeID, from )
+local function HandleRemoteErrorReport( uid, msg, modUID, graphID, nodeID, from )
 
 	if from then
 		msg = msg .. " [ on player: " .. from:GetName() .. " ] "
@@ -26,6 +26,7 @@ local function HandleRemoteErrorReport( uid, msg, graphID, nodeID, from )
 	_G.G_BPError = {
 		uid = uid,
 		msg = msg,
+		modUID = modUID,
 		graphID = graphID,
 		nodeID = nodeID,
 		from = from,
@@ -33,7 +34,7 @@ local function HandleRemoteErrorReport( uid, msg, graphID, nodeID, from )
 
 end
 
-local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
+local function NetErrorDispatch( uid, msg, modUID, graphID, nodeID, from )
 
 	if CLIENT then
 
@@ -41,6 +42,7 @@ local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
 		net.WriteUInt( CMD_ErrorReport, CommandBits )
 		net.WriteData( uid, 16 )
 		net.WriteString( msg )
+		net.WriteData( modUID, 16 )
 		net.WriteUInt( graphID, 32 )
 		net.WriteUInt( nodeID, 32 )
 		net.SendToServer()
@@ -61,12 +63,13 @@ local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
 		if owner ~= nil then
 
 			local ply = game.SinglePlayer() and player.GetAll()[1] or owner:GetPlayer()
-			msg = mod:FormatErrorMessage( msg, graphID, nodeID )
+			msg = mod:FormatErrorMessage( msg, modUID, graphID, nodeID )
 
 			net.Start("bpnet")
 			net.WriteUInt( CMD_ErrorReport, CommandBits )
 			net.WriteData( uid, 16 )
 			net.WriteString( msg )
+			net.WriteData( modUID, 16 )
 			net.WriteUInt( graphID, 32 )
 			net.WriteUInt( nodeID, 32 )
 			if from then 
@@ -85,10 +88,12 @@ local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
 
 end
 
-local function ErrorHandler( mod, msg, graphID, nodeID )
+local function ErrorHandler( mod, msg, modUID, graphID, nodeID )
+
+	local formatted = mod:FormatErrorMessage( msg, modUID, graphID, nodeID )
 
 	print("***BLUEPRINT ERROR*** : " .. tostring(msg))
-	NetErrorDispatch( mod:GetUID(), msg, graphID, nodeID )
+	NetErrorDispatch( mod:GetUID(), msg, modUID, graphID, nodeID )
 
 end
 hook.Add("BPModuleError", "bpnetHandleError", ErrorHandler)
@@ -243,16 +248,17 @@ net.Receive("bpnet", function(len, ply)
 
 		local uid = net.ReadData( 16 )
 		local msg = net.ReadString()
+		local modUID = net.ReadData( 16 )
 		local graphID = net.ReadUInt( 32 )
 		local nodeID = net.ReadUInt( 32 )
 
 		if SERVER then
-			NetErrorDispatch( uid, msg, graphID, nodeID, ply )
+			NetErrorDispatch( uid, msg, modUID, graphID, nodeID, ply )
 		else
 			local clientSide = net.ReadBool()
 			local ply = nil
 			if clientSide then ply = net.ReadEntity() end
-			HandleRemoteErrorReport( uid, msg, graphID, nodeID, ply )
+			HandleRemoteErrorReport( uid, msg, modUID, graphID, nodeID, ply )
 		end
 
 	elseif cmd == CMD_InstallMultiple then

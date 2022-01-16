@@ -15,6 +15,7 @@ function meta:Init( mod, code, debugSymbols )
 	self.code = code
 	self.debugSymbols = debugSymbols
 	self.unit = nil
+
 	return self
 
 end
@@ -121,10 +122,10 @@ function meta:TryLoad()
 
 end
 
-function meta:FormatErrorMessage( msg, graphID, nodeID )
+function meta:FormatErrorMessage( msg, modUID, graphID, nodeID )
 
-	local dbgGraph = self:LookupGraph( graphID )
-	local dbgNode = self:LookupNode( nodeID )
+	local dbgGraph = self:LookupGraph( modUID, graphID )
+	local dbgNode = self:LookupNode( modUID, nodeID )
 	if not dbgNode or not dbgGraph then return msg end
 
 	msg = msg:gsub("bpmodule%[.+%]:%d+:", "")
@@ -235,7 +236,7 @@ function meta:AttachErrorHandler()
 
 	if self.errorHandler ~= nil then
 		self:Get().onError = function(msg, mod, graph, node)
-			self.errorHandler(self, msg, graph, node)
+			self.errorHandler(self, msg, mod, graph, node)
 		end
 	end
 
@@ -256,20 +257,22 @@ function meta:Serialize(stream)
 	self.uniqueID = stream:GUID(self.uniqueID)
 	self.type = stream:Value(self.type)
 	self.code = stream:Value(self.code)
-	--self.debugSymbols = stream:Value(self.debugSymbols)
+	self.debugSymbols = stream:Value(self.debugSymbols)
 	return stream
 
 end
 
-function meta:LookupNode(id)
+function meta:LookupNode(modUID, id)
 
-	return self.debugSymbols.nodes[id]
+	if not self.debugSymbols[modUID] then return end
+	return self.debugSymbols[modUID].nodes[id]
 
 end
 
-function meta:LookupGraph(id)
+function meta:LookupGraph(modUID, id)
 
-	return self.debugSymbols.graphs[id]
+	if not self.debugSymbols[modUID] then return end
+	return self.debugSymbols[modUID].graphs[id]
 
 end
 
@@ -332,7 +335,7 @@ __bpm.delayExists = function(key) for i=#__self.delays, 1, -1 do if __self.delay
 __bpm.delay = function(key, delay, func, ...) __bpm.delayKill(key) __self.delays[#__self.delays+1] = { key = key, f = func, t = delay, a = {...} } end
 __bpm.delayKill = function(key) for i=#__self.delays, 1, -1 do if __self.delays[i].key == key then __self.delays[i].kill = true end end end
 __bpm.onError = function(msg, mod, graph, node) ]] .. (args[3] and "error(msg)" or "") .. [[ end
-__bpm.error = function(msg) __bpm.onError(tostring(msg), 0, __dbggraph or -1, __dbgnode or -1) end]]
+__bpm.error = function(msg) __bpm.onError(tostring(msg), __bpm.guid, __dbggraph or -1, __dbgnode or -1) end]]
 
 end
 

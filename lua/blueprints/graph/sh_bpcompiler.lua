@@ -1055,11 +1055,25 @@ function meta:CompileCodeSegment( noExport )
 
 end
 
+function meta:GetDebugSymbols()
+
+	return self.debugSymbols
+
+end
+
 function meta:AddGraphSymbols( graph )
 
 	local t = self.debugSymbols
+	local moduleID = self.module:GetUID()
+	if not t[moduleID] then
+		t[moduleID] = {
+			graphs = {},
+			nodes = {},
+		}
+	end
+	t = t[moduleID]
 
-	for _, node in graph:Nodes() do
+	for k, node in graph:Nodes() do
 		local id = self:GetID( node )
 		local typename = node:GetTypeName()
 		local name = node:GetDisplayName()
@@ -1067,21 +1081,23 @@ function meta:AddGraphSymbols( graph )
 		t.nodes[id] = {
 			typename,
 			name,
+			node.uid,
 		}
 	end
 
 	t.graphs[self:GetID( graph )] = {
-		graph:GetTitle()
+		graph:GetTitle(),
+		graph.uid,
 	}
 
 end
 
 function meta:CreateDebugSymbols()
 
-	self.debugSymbols = nil
+	if self.debugSymbols ~= nil then return end
 	if not self.debug then return end
 
-	self.debugSymbols = { nodes = {}, graphs = {} }
+	self.debugSymbols = {}
 
 	self:RunModuleCompile( CP_MODULEDEBUG )
 

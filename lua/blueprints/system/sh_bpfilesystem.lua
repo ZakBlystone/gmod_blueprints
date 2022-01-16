@@ -266,10 +266,13 @@ function LoadServerFile( file )
 
 end
 
-local function RunLocalFile( file )
+local function RunLocalFile( file, mod )
 
-	local modulePath = UIDToModulePath( file:GetUID() )
-	local mod = bpmodule.Load(modulePath):WithOuter( file )
+	if not mod then
+		local modulePath = UIDToModulePath( file:GetUID() )
+		mod = bpmodule.Load(modulePath):WithOuter( file )
+	end
+
 	local cmod = mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars, bpcompiler.CF_AllowProtected) )
 
 	assert( cmod ~= nil )
@@ -405,7 +408,7 @@ if SERVER then
 			--print("Module marked for execute: " .. tostring(execute))
 
 			if execute and owner:HasPermission(bpgroup.FL_CanToggle) then
-				RunLocalFile( file )
+				RunLocalFile( file, mod )
 			end
 
 			SaveIndex()

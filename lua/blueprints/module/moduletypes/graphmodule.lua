@@ -521,7 +521,7 @@ function MODULE:Compile( compiler, pass )
 		self.cgraphs = {}
 		self.uniqueKeys = {}
 		for id, graph in self:Graphs() do
-			local cgraph = graph:CopyInto( bpgraph.New():WithOuter( self ) )
+			local cgraph = graph:CopyInto( bpgraph.New():WithOuter( self ), true )
 			cgraph:PreCompile( compiler, self.uniqueKeys )
 			self.cgraphs[#self.cgraphs+1] = cgraph
 		end

@@ -86,6 +86,10 @@ function meta:PaintGraphTitle(w,h)
 	local title = self:GetEditor():GetGraph():GetTitle()
 	draw.SimpleText( title, "GraphTitle", 10, 10, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 
+	if false then
+		draw.SimpleText( bpcommon.GUIDToString(self:GetEditor():GetGraph().uid), "NodePinFont", 10, 60, Color( 255, 255, 255, 60 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+	end
+
 end
 
 function meta:PaintZoomIndicator(w,h)

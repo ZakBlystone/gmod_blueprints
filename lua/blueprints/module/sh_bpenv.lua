@@ -8,9 +8,9 @@ active = active or {}
 DestroyAll = nil
 Uninstall = nil
 
-function HandleModuleError( mod, msg, graphID, nodeID )
+function HandleModuleError( mod, msg, modUID, graphID, nodeID )
 
-	hook.Run("BPModuleError", mod, msg, graphID, nodeID)
+	hook.Run("BPModuleError", mod, msg, modUID, graphID, nodeID)
 
 end
 

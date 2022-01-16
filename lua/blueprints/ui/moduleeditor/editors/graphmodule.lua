@@ -278,27 +278,56 @@ function EDITOR:GraphRemoved( graph )
 
 end
 
+function EDITOR:FindVGraphByUID( uid )
+
+	for k,v in pairs(self.vgraphs) do
+		if k.uid == uid then return v end
+	end
+
+end
+
 function EDITOR:HandleError( errorData )
 
 	-- TODO, restructure error handling
 
-	--[[local vgraph = self.vgraphs[ errorData.graphID ]
-	if not vgraph then return end
+	local compiled = bpenv.Get( errorData.uid )
+	if not compiled then return end
+
+	local dbgGraph = compiled:LookupGraph( errorData.modUID, errorData.graphID )
+	local dbgNode = compiled:LookupNode( errorData.modUID, errorData.nodeID )
+	local vgraph = self:FindVGraphByUID(dbgGraph[2])
+	if not vgraph then 
+		print("Couldn't find graph: " .. tostring(dbgGraph[1]) .. " : " .. bpcommon.GUIDToString( dbgGraph[2] ) ) 
+		return
+	else
+		print("Found graph: " .. tostring(dbgGraph[1]) .. " : " .. bpcommon.GUIDToString( dbgGraph[2] ) ) 
+	end
 
 	local edit = vgraph:GetEditor()
 	local nodeset = edit:GetNodeSet()
-	local vnode = nodeset:GetVNodes()[ errorData.nodeID ]
+	local vnode = nil
 
-	self.GraphList:Select( errorData.graphID )
+	self.GraphList:Select( vgraph:GetGraph() )
 
-	if vnode then
+	if dbgNode then
+
+		for k,v in pairs(nodeset:GetVNodes()) do
+			if k.uid == dbgNode[3] then
+				vnode = v
+			end
+		end
+
+		if not vnode then print("Couldn't find node: " .. tostring(dbgNode[2]) .. " : " ..  bpcommon.GUIDToString( dbgNode[3] )) return end
+
 		local x,y = vnode:GetPos()
 		local w,h = vnode:GetSize()
+		vgraph:GetRenderer():Calculate()
 		vgraph:SetZoomLevel(0,x,y)
 		timer.Simple(0, function()
 			vgraph:CenterOnPoint(x + w/2,y + h/2)
 		end)
-	end]]
+
+	end
 
 end
 

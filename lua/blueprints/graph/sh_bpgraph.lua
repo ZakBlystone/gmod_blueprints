@@ -24,6 +24,7 @@ function meta:Init(type)
 	self.flags = FL_NONE
 	self.type = type or GT_Event
 	self.hookNodeType = nil
+	self.uid = bpcommon.GUID()
 
 	-- Create lists for graph elements
 	self.nodes = bplist.New(bpnode_meta):WithOuter(self)
@@ -597,6 +598,10 @@ function meta:Serialize(stream)
 		self.name = stream:String(self.name)
 	end
 
+	if stream:IsNetwork() then
+		self.uid = stream:GUID(self.uid)
+	end
+
 	return stream
 
 end
@@ -608,7 +613,7 @@ function meta:PostLoad()
 end
 
 -- Quickly banging this out using existing tech
-function meta:CopyInto(other)
+function meta:CopyInto(other, keepUIDs)
 
 	Profile("copy-graph", function()
 
@@ -618,6 +623,12 @@ function meta:CopyInto(other)
 		other.flags = self.flags
 		other.hookNodeType = self.hookNodeType
 		other.suppressPinEvents = true
+
+		if keepUIDs then 
+			other.uid = self.uid
+		else
+			other.uid = bpcommon.GUID()
+		end
 
 		-- Store connections as indices
 		local connections = {}
@@ -631,7 +642,7 @@ function meta:CopyInto(other)
 			end
 		end
 
-		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes )
+		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes, keepUIDs )
 		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )
 		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs )
 		Profile("copy-init-nodes", function()
@@ -667,7 +678,7 @@ function meta:CreateSubGraph( subNodes )
 	for _, node in self:Nodes() do pre:Get(node) end
 	for _, node in ipairs(subNodes) do discard[pre:Get(node)] = true end
 
-	local copy = self:CopyInto( New():WithOuter( self:GetModule() ) )
+	local copy = self:CopyInto( New():WithOuter( self:GetModule() ), false )
 	local hold = {}
 
 	local post = bpindexer.New()
@@ -700,7 +711,7 @@ end
 function meta:AddSubGraph( subgraph, x, y )
 
 	local connectionRemap = {}
-	local copy = subgraph:CopyInto( New() )
+	local copy = subgraph:CopyInto( New(), false )
 	local nodeCount = 0
 	local connectionCount = 0
 
@@ -793,7 +804,7 @@ function meta:CompileEntrypoint( compiler )
 	compiler.emit("local graph_" .. graphID .. "_entry = __graph( function( ip )\n")
 
 	-- debugging info
-	if compiler.debug then compiler.emit( "\t__dbggraph = " .. graphID) end
+	if compiler.debug then compiler.emit( "\t__prev, __dbggraph = __dbggraph, " .. graphID) end
 
 	-- emit graph-local variables, callstack, and jumptable
 	compiler.emitContext( CTX_Vars .. graphID, 1 )
@@ -813,6 +824,10 @@ function meta:CompileEntrypoint( compiler )
 		compiler.emit("\n\t::popcall:: ::__terminus::\n")
 	else
 		compiler.emit("\n\t::__terminus::\n")
+	end
+
+	if compiler.debug then
+		compiler.emit("\t__dbggraph = __prev")
 	end
 
 	compiler.emit("end)")

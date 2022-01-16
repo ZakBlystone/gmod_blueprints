@@ -389,4 +389,16 @@ function EDITOR:ModuleDropdown()
 
 end
 
+function EDITOR:HandleError( errorData )
+
+	local found = self:GetModule():FindAssetByUID( errorData.modUID )
+	if found then 
+		local sheet = self:OpenModule(found)
+		if sheet then
+			sheet.Panel:HandleError( errorData )
+		end
+	end
+
+end
+
 RegisterModuleEditorClass("projectmodule", EDITOR, "basemodule")

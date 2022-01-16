@@ -19,6 +19,7 @@ function meta:Init(nodeType, x, y)
 	self.x = x or 0
 	self.y = y or 0
 	self.data = {}
+	self.uid = bpcommon.GUID()
 
 	bpcommon.MakeObservable(self)
 
@@ -578,7 +579,7 @@ function meta:Move(x, y)
 
 end
 
-function meta:Copy()
+function meta:Copy( keepUIDs )
 
 	local t = {__loaded = true}
 	t.__rawstr = tostring(t)
@@ -586,6 +587,11 @@ function meta:Copy()
 	local newNode = setmetatable(t, meta)
 	newNode.x = self.x
 	newNode.y = self.y
+	if keepUIDs then 
+		newNode.uid = self.uid
+	else
+		newNode.uid = bpcommon.GUID()
+	end
 	newNode.data = bpcommon.CopyTable(self.data)
 	newNode.nodeType = Weak(self.nodeType())
 	newNode.pinCache = {}
@@ -621,6 +627,10 @@ function meta:Serialize(stream)
 
 	--print("PINS:")
 	self.pinCache = stream:ObjectArray( self.pinCache or {}, self )
+
+	if stream:IsNetwork() then
+		self.uid = stream:GUID(self.uid)
+	end
 
 	--[[for _,v in ipairs(self.pinCache) do
 		print(" " .. v:ToString(true, true))

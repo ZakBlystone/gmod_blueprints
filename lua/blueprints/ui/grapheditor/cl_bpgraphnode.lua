@@ -437,6 +437,14 @@ function meta:Draw(xOffset, yOffset, alpha, lod)
 
 	if lod < 3 then
 
+		-- for debugging node uids
+		if false then
+			surface_setFont("NodePinFont")
+			surface_setTextPos( math.ceil( x+10 ), math.ceil( y-30 ) )
+			surface_setTextColor( 255, 255, 255, 255*alpha )
+			surface_drawText( bpcommon.GUIDToString( self:GetNode().uid ) )
+		end
+
 		self:DrawBanner(x, y, alpha)
 		self:DrawPins(xOffset, yOffset, alpha, false)
 
