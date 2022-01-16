@@ -207,6 +207,7 @@ LIB util
 		DESC Checks if the model is loaded in the game.
 		IN modelName, PN_String, #Name/Path of the model to check.
 		OUT loaded, PN_Bool, #Returns true if the model is loaded in the game; otherwise false.
+		CODE util.IsModelLoaded($1 or "")
 	}
 	PURE IsSkyboxVisibleFromPoint, CLIENT
 	{
@@ -219,7 +220,7 @@ LIB util
 		DESC Checks if the specified model is valid.
 		IN modelName, PN_String, #Name/Path of the model to check.
 		OUT valid, PN_Bool, #Whether the model is valid or not. Returns false clientside if the model is not precached by the server.
-		CODE util.IsValidModel(type($1) == "string" and $1 or nil)
+		CODE util.IsValidModel($1 or "")
 	}
 	PURE IsValidPhysicsObject, SHARED
 	{
