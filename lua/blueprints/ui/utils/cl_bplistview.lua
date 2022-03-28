@@ -12,12 +12,19 @@ function PANEL:GetSelected(...) return self.listview:GetSelected(...) end
 function PANEL:Clear(...) return self.listview:Clear(...) end
 function PANEL:Rename( ... ) return self.listview:Rename(...) end
 function PANEL:CreateItemPanel( ... ) return self.defaultCreateItemPanel( self.listview, ... ) end
+function PANEL:SetGroup( ... ) self.listview:SetGroup( ... ) end
 
 function PANEL:OnItemSelected( item ) end
 function PANEL:ItemBackgroundColor( item, selected ) return selected and Color(80,80,80,255) or Color(50,50,50,255) end
 function PANEL:ItemIcon( id, item ) return nil end
 function PANEL:PopulateMenuItems( items, item ) end
 function PANEL:HandleAddItem( list ) end
+function PANEL:SetText( text ) 
+
+	self.label:SetText( text )
+	self.label:SizeToContents()
+
+end
 
 function PANEL:Init()
 

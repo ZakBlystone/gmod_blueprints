@@ -54,26 +54,24 @@ end
 
 function PANEL:SetDetails( panel )
 
-	if IsValid(self.ContentSplit2) then
-		self.ContentSplit2:SetRight( panel )
+	if IsValid(self.ContentSplit) then
+		local prev = self.ContentSplit:GetRight()
+		if IsValid(prev) then
+			prev:Remove()
+		end
+
+		self.ContentSplit:SetRight( panel )
+		self.ContentSplit:InvalidateLayout()
 	end
 
 end
 
 function PANEL:SetContent( panel )
 
-	if IsValid(self.ContentSplit2) and not IsValid(self.ContentSplit) then
-
-		print("SET LEFT")
-		self.ContentSplit2:SetLeft( panel )
-		return
-
-	end
-
 	if IsValid(self.ContentSplit) then
 
-		print("SET RIGHT")
-		self.ContentSplit:SetRight( panel )
+		self.ContentSplit:SetMiddle( panel )
+		self.ContentSplit:InvalidateLayout()
 
 	else
 
@@ -92,7 +90,7 @@ function PANEL:CreateContentPanel()
 
 	self.ContentPanel = vgui.Create("DPanel", self)
 	self.ContentPanel:Dock( FILL )
-	--self.ContentPanel:SetBackgroundColor( Color(180,180,180) )
+	self.ContentPanel:SetBackgroundColor( Color(220,220,220) )
 
 end
 
@@ -200,39 +198,27 @@ function PANEL:SetModule( mod )
 
 	self:CreateContentPanel()
 
-	if self.moduleEditor.HasDetails then
-
-		self.ContentSplit2 = vgui.Create("DHorizontalDivider", self.ContentPanel)
-		self.ContentSplit2:Dock( FILL )
-		self.ContentSplit2:SetBackgroundColor( Color(30,30,30) )
-		self.ContentSplit2:SetDividerWidth( 3 )
-		self.ContentSplit2:SetLeftWidth(self:GetParent():GetWide() - 400)
-
-	end
+	self.ContentSplit = vgui.Create("BPTripleDivider", self.ContentPanel)
+	self.ContentSplit:SetBackgroundColor( Color(30,30,30) )
+	self.ContentSplit:SetDividerWidth( 3 )
+	self.ContentSplit:SetLeftWidth( 150 )
+	self.ContentSplit:SetRightWidth( 400 )
 
 	if IsValid(self.SideBar) then self.SideBar:Remove() end
+
 	if self.moduleEditor.HasSideBar then
-
-		self.ContentSplit = vgui.Create("DHorizontalDivider", self.ContentPanel)
-		self.ContentSplit:SetBackgroundColor( Color(30,30,30) )
-		self.ContentSplit:SetDividerWidth( 3 )
-
+		
 		self.SideBar = vgui.Create("BPCategoryList", self.ContentSplit)
+
 		self.moduleEditor:PopulateSideBar()
+		self.ContentSplit:SetLeft(self.SideBar)
 
 		self.SideBar:InvalidateLayout( true )
 
-		if IsValid(self.ContentSplit2) then
-			self.ContentSplit2:SetLeft(self.ContentSplit)
-			--self.ContentSplit:Dock( FILL )
-		else
-			self.ContentSplit:Dock( FILL )
-		end
-
-		self.ContentSplit:SetLeft(self.SideBar)
-		self.ContentSplit:SetLeftWidth(150)
-
 	end
+
+	self.ContentSplit:Dock( FILL )
+	self.ContentSplit:InvalidateLayout()
 
 	self:UpdateMenuBar()
 	self:SetSkin("Blueprints")
