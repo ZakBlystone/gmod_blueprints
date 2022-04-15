@@ -62,7 +62,7 @@ function meta:CreateUndo(text)
 
 	if #self.undo >= self.maxUndoLevels then table.remove(self.undo, 1) end
 
-	local undoGraph = self.graph:CopyInto( bpgraph.New() )
+	local undoGraph = self.graph:CopyInto( bpgraph.New(), true )
 	self.undo[#self.undo+1] = {
 		graph = undoGraph,
 		text = text,
@@ -89,11 +89,11 @@ function meta:Undo()
 
 	if self.undoPtr <= 0 then return end
 	if self.undoPtr == #self.undo then
-		self.baseUndoGraph = self.graph:CopyInto( bpgraph.New() )
+		self.baseUndoGraph = self.graph:CopyInto( bpgraph.New(), true )
 	end
 	local apply = self.undo[self.undoPtr]
 	self:Popup("Undo " .. tostring(apply.text))
-	apply.graph:CopyInto( self.graph )
+	apply.graph:CopyInto( self.graph, true )
 	self:CreateAllNodes()
 	self.undoPtr = self.undoPtr - 1
 
@@ -104,12 +104,12 @@ function meta:Redo()
 	local apply = self.undo[self.undoPtr+2]
 	if apply then
 		self:Popup("Redo " .. tostring(apply.text))
-		apply.graph:CopyInto( self.graph )
+		apply.graph:CopyInto( self.graph, true )
 		self:CreateAllNodes()
 		self.undoPtr = self.undoPtr + 1
 	elseif #self.undo ~= 0 and self.undoPtr ~= #self.undo then
 		self:Popup("Redo " .. tostring(self.undo[#self.undo].text))
-		self.baseUndoGraph:CopyInto( self.graph )
+		self.baseUndoGraph:CopyInto( self.graph, true )
 		self:CreateAllNodes()
 		self.undoPtr = #self.undo
 	end

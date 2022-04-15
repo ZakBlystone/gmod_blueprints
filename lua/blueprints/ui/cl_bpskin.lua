@@ -405,7 +405,7 @@ function SKIN:PaintPanel( panel, w, h )
 		self.tex.Panels.Normal( 0, 0, w, h, panel.m_bgColor )
 	else
 		local r,g,b,a = (panel.m_bgColor or Color(255,255,255)):Unpack()
-		self:FlatBox(2,0,0,w,h,r*.2,g*.22,b*.25,a,true,true,true,true)
+		self:FlatBox(2,0,0,w,h,r*.25,g*.30,b*.35,a,true,true,true,true)
 	end
 
 end

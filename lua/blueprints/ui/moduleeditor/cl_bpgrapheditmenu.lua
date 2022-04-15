@@ -1,8 +1,8 @@
 if SERVER then AddCSLuaFile() return end
 
-local text_edit_graph = LOCTEXT("dialog_edit_graph", "Edit Graph Parameters")
-local text_edit_inputs = LOCTEXT("dialog_edit_graph_inputs", "Inputs")
-local text_edit_outputs = LOCTEXT("dialog_edit_graph_outputs", "Outputs")
+text_edit_graph = LOCTEXT("dialog_edit_graph", "Edit Graph Parameters")
+text_edit_inputs = LOCTEXT("dialog_edit_graph_inputs", "Inputs")
+text_edit_outputs = LOCTEXT("dialog_edit_graph_outputs", "Outputs")
 
 module("bpuigrapheditmenu", package.seeall, bpcommon.rescope(bpschema))
 
@@ -25,13 +25,15 @@ function EditGraphParams( graph )
 	local inputs = bpuivarcreatemenu.VarList( graph, window, graph.inputs, text_edit_inputs(), "In" )
 	local outputs = bpuivarcreatemenu.VarList( graph, window, graph.outputs, text_edit_outputs(), "Out" )
 
-	inputs:SetWide( width / 2 - 10 )
-	outputs:SetWide( width / 2 - 10 )
+	inputs:SetSize( width, 200 )
+	outputs:SetSize( width, 200 )
 
-	inputs:Dock( LEFT )
-	outputs:Dock( RIGHT )
+	inputs:DockMargin(5,5,5,5)
+	inputs:Dock( TOP )
+	outputs:DockMargin(5,5,5,5)
+	outputs:Dock( TOP )
 
-	window:SetSize( 500, 400 )
+	window:SetSize( 500, 500 )
 	window:Center()
 
 	window:MakePopup()

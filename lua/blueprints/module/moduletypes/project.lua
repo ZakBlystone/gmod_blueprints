@@ -48,6 +48,15 @@ function MODULE:GetAssets()
 
 end
 
+function MODULE:FindAssetByUID(uid)
+
+	for _, asset in ipairs(self:GetAssets()) do
+		local mod = asset:GetAsset()
+		if mod.GetUID and mod:GetUID() == uid then return mod end
+	end
+
+end
+
 function MODULE:UniqueAssetName(name)
 
 	local lut = {}
@@ -181,6 +190,7 @@ function MODULE:Compile( compiler, pass )
 	if pass == CP_PREPASS then
 
 		self.compilers = {}
+		if compiler.debug then self.allDebugSymbols = {} end
 
 		for k, asset in ipairs(self:GetAssets()) do
 			if isbpmodule(asset:GetAsset()) then
@@ -190,7 +200,14 @@ function MODULE:Compile( compiler, pass )
 				for k, v in pairs(self.compilers[mod]:GetRequiredMetaTables()) do
 					compiler:AddRequiredMetaTable(k)
 				end
+				if compiler.debug then 
+					table.Merge(self.allDebugSymbols, self.compilers[mod]:GetDebugSymbols())
+				end
 			end
+		end
+
+		if compiler.debug then 
+			compiler.debugSymbols = self.allDebugSymbols
 		end
 
 	elseif pass == CP_MODULECODE then

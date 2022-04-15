@@ -4,6 +4,7 @@ module("bpuilistpanel", package.seeall)
 
 local text_delete_item = LOCTEXT("query_list_delete_item", "Delete %s? This cannot be undone")
 local PANEL = {}
+GROUPS = setmetatable({}, {__mode = "k"})
 
 function PANEL:Init()
 
@@ -11,6 +12,24 @@ function PANEL:Init()
 	self:SetBackgroundColor( Color(30,30,30) )
 	self.selected = bpcommon.Weak()
 	self.vitems = setmetatable({}, {__mode = "k"})
+
+end
+
+function PANEL:SetGroup( id )
+
+	if id == nil then
+		if self.group then
+			table.RemoveByValue(self.group, self)
+		end
+		return
+	end
+
+	GROUPS[id] = GROUPS[id] or {}
+	local group = GROUPS[id]
+	if not table.HasValue(group, self) then
+		group[#group+1] = self
+		self.group = group
+	end
 
 end
 
@@ -137,6 +156,7 @@ end
 function PANEL:OnRemove()
 
 	if self.list then self.list:UnbindAll(self) end
+	self:SetGroup(nil)
 
 end
 
@@ -156,7 +176,7 @@ function PANEL:ItemAdded(id, item)
 
 	if self.selectedID == nil then
 		self.selectedID = id
-		self:OnItemSelected( id, item )
+		self:OnItemSelected( item )
 	end
 
 	self.selectedID = id
@@ -194,9 +214,20 @@ end
 
 function PANEL:Select(item)
 
-	if self.selected() ~= item or self.alwaysSelect then
+	if self.group then
+		for _,v in ipairs(self.group) do
+			if v ~= self and v.selected() ~= nil then 
+				v:ClearSelection()
+				v:OnItemSelected(nil)
+			end
+		end
+	end
+
+	if self.selected() ~= item then
 		self.selected:Set(item)
-		self:OnItemSelected( item )
+		self:OnItemSelected( item, false )
+	else
+		self:OnItemSelected( item, true )
 	end
 
 end
@@ -207,7 +238,7 @@ function PANEL:GetSelected()
 
 end
 
-function PANEL:OnItemSelected( item )
+function PANEL:OnItemSelected( item, reselected )
 
 end
 

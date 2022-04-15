@@ -4,6 +4,14 @@ module("node_funccall", package.seeall, bpcommon.rescope(bpschema, bpcompiler, b
 
 local NODE = {}
 
+local ServerRoleCheckType = bpnodetype.New():WithOuter( self )
+ServerRoleCheckType:SetNodeClass("RoleCheck")
+ServerRoleCheckType:SetNodeParam("role", "server")
+
+local ClientRoleCheckType = bpnodetype.New():WithOuter( self )
+ClientRoleCheckType:SetNodeClass("RoleCheck")
+ClientRoleCheckType:SetNodeParam("role", "client")
+
 function NODE:Setup() end
 function NODE:Compile(compiler, pass)
 
@@ -104,13 +112,8 @@ function NODE:Expand()
 
 					print("Expand to role check: " .. tostring(self))
 
-					local t = bpnodetype.New():WithOuter( self )
-					t:SetNodeClass("RoleCheck")
-					if exec_cl then
-						t:SetNodeParam("role", "client")
-					else
-						t:SetNodeParam("role", "server")
-					end
+					local t = exec_cl and ClientRoleCheckType or ServerRoleCheckType
+					assert(t ~= nil)
 
 					local node = self:GetGraph():AddIntermediate(t)
 					node:Initialize()

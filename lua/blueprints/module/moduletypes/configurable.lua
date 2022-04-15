@@ -29,7 +29,7 @@ function MODULE:OpenVGUI( parent )
 	window:SetSizable( true )
 	window:SetSize( ScrW()/3, ScrH()/2 )
 	window:MakePopup()
-	window:SetTitle(LOCTEXT("menu_setdefaults", "Set Defaults")())
+	window:SetTitle(LOCTEXT("menu_configure", "Configure")())
 	window:Center()
 	local detour = window.OnRemove
 	window.OnRemove = function(pnl)

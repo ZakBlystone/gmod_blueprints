@@ -19,6 +19,7 @@ function meta:Init(nodeType, x, y)
 	self.x = x or 0
 	self.y = y or 0
 	self.data = {}
+	self.uid = bpcommon.GUID()
 
 	bpcommon.MakeObservable(self)
 
@@ -578,11 +579,19 @@ function meta:Move(x, y)
 
 end
 
-function meta:Copy()
+function meta:Copy( keepUIDs )
 
-	local newNode = setmetatable({__loaded = true}, meta)
+	local t = {__loaded = true}
+	t.__rawstr = tostring(t)
+
+	local newNode = setmetatable(t, meta)
 	newNode.x = self.x
 	newNode.y = self.y
+	if keepUIDs then 
+		newNode.uid = self.uid
+	else
+		newNode.uid = bpcommon.GUID()
+	end
 	newNode.data = bpcommon.CopyTable(self.data)
 	newNode.nodeType = Weak(self.nodeType())
 	newNode.pinCache = {}
@@ -619,6 +628,10 @@ function meta:Serialize(stream)
 	--print("PINS:")
 	self.pinCache = stream:ObjectArray( self.pinCache or {}, self )
 
+	if stream:IsNetwork() then
+		self.uid = stream:GUID(self.uid)
+	end
+
 	--[[for _,v in ipairs(self.pinCache) do
 		print(" " .. v:ToString(true, true))
 	end]]
@@ -631,7 +644,14 @@ end
 
 function meta:Compile(compiler, pass)
 
-	if pass == CP_METAPASS then
+	if pass == CP_PREPASS then
+
+		if self:HasFlag(NTF_Protected) then
+			print("PROTECTED CHECK: " .. self:GetFullName())
+			compiler:FlagProtected( self:GetGraph():GetName() .. "." .. self:GetFullName() )
+		end
+
+	elseif pass == CP_METAPASS then
 
 		local rm = self:GetRequiredMeta()
 		if rm == nil then return end

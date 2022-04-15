@@ -8,6 +8,7 @@ CF_Comments = 2
 CF_Debug = 4
 CF_ILP = 8
 CF_CompactVars = 16
+CF_AllowProtected = 32
 
 CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
 
@@ -133,6 +134,7 @@ function meta:Setup()
 	self.compactVars = bit.band(self.flags, CF_CompactVars) ~= 0
 	self.debug = bit.band(self.flags, CF_Debug) ~= 0
 	self.debugcomments = bit.band(self.flags, CF_Comments) ~= 0
+	self.allowProtected = bit.band(self.flags, CF_AllowProtected) ~= 0
 	self.ilp = bit.band(self.flags, CF_ILP) ~= 0
 	self.ilpmax = 10000
 	self.ilpmaxh = 100
@@ -140,6 +142,8 @@ function meta:Setup()
 	self.varscope = nil
 	self.pinRouters = {}
 	self.jumpsRequired = {}
+	self.containsProtected = false
+	self.protectedElements = {}
 
 	return self
 
@@ -442,10 +446,11 @@ function meta:GetPinLiteral(pin, sanitize)
 		end
 
 		local l = tostring(pin:GetLiteral())
+		if l == "{}" then l = "__emptyTable" end
 
 		if pin:IsType(PN_BPClass) then l = EscapedGUID(l) end
 		if sanitize then l = SanitizeString(l) end
-		if pin:IsType(PN_String) then l = "\"" .. l .. "\"" end
+		if pin:IsType(PN_String) and not pin:HasFlag(PNF_Table) then l = "\"" .. l .. "\"" end
 		if pin:IsType(PN_Asset) then l = "\"" .. l .. "\"" end
 
 		--print("LITERAL FOR NODEPIN: " .. node:ToString(pin.id) .. " [" .. l .. "]")
@@ -1035,11 +1040,25 @@ function meta:CompileCodeSegment( noExport )
 
 end
 
+function meta:GetDebugSymbols()
+
+	return self.debugSymbols
+
+end
+
 function meta:AddGraphSymbols( graph )
 
 	local t = self.debugSymbols
+	local moduleID = self.module:GetUID()
+	if not t[moduleID] then
+		t[moduleID] = {
+			graphs = {},
+			nodes = {},
+		}
+	end
+	t = t[moduleID]
 
-	for _, node in graph:Nodes() do
+	for k, node in graph:Nodes() do
 		local id = self:GetID( node )
 		local typename = node:GetTypeName()
 		local name = node:GetDisplayName()
@@ -1047,21 +1066,23 @@ function meta:AddGraphSymbols( graph )
 		t.nodes[id] = {
 			typename,
 			name,
+			node.uid,
 		}
 	end
 
 	t.graphs[self:GetID( graph )] = {
-		graph:GetTitle()
+		graph:GetTitle(),
+		graph.uid,
 	}
 
 end
 
 function meta:CreateDebugSymbols()
 
-	self.debugSymbols = nil
+	if self.debugSymbols ~= nil then return end
 	if not self.debug then return end
 
-	self.debugSymbols = { nodes = {}, graphs = {} }
+	self.debugSymbols = {}
 
 	self:RunModuleCompile( CP_MODULEDEBUG )
 
@@ -1139,6 +1160,13 @@ function meta:CompileGraphMetaHook(graph, node, name)
 
 end
 
+function meta:FlagProtected( name )
+
+	self.containsProtected = true
+	self.protectedElements[name] = true
+
+end
+
 function meta:Compile( noExport )
 
 	--print("COMPILING MODULE...")
@@ -1166,6 +1194,11 @@ function meta:Compile( noExport )
 	Profile("debug-symbols", self.CreateDebugSymbols, self)
 
 	if noExport then return nil end
+	if self.containsProtected and not self.allowProtected then
+		local elements = ""
+		for k, _ in pairs(self.protectedElements) do elements = elements .. "\n" .. k end
+		error("Context does not allow the following protected nodes, check your permissions: \n" .. elements)
+	end
 
 	local compiledModule = nil
 

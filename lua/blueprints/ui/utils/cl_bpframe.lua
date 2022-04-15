@@ -1,6 +1,6 @@
 if SERVER then AddCSLuaFile() return end
 
-module("bpuicategorylist", package.seeall)
+module("bpuiframe", package.seeall)
 
 local PANEL = {}
 

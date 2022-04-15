@@ -1,0 +1,34 @@
+LIB CAMI
+{
+	FUNC GetPrivileges, SHARED
+	{
+		PROTECTED
+		DESC Retrieves all registered privileges.
+		OUT Privileges, PN_Struct, PNF_Table, CAMI_PRIVILEGE
+	}
+	FUNC GetPrivilege, SHARED
+	{
+		PROTECTED
+		DESC Receives information about a privilege.
+		IN PrivilegeName, PN_String
+		OUT Privilege, PN_Struct, PNF_Nullable, CAMI_PRIVILEGE
+	}
+	FUNC PlayerHasAccess, SHARED
+	{
+		PROTECTED
+		IN Player, PN_Ref, PNF_None, Player
+		IN PrivilegeName, PN_String
+		IN TargetPlayer, PN_Ref, PNF_Nullable, Player
+		CODE CAMI.PlayerHasAccess($1, $2, nil, $3)
+	}
+	FUNC RegisterPrivilege, SHARED
+	{
+		PROTECTED
+		IN Privilege, PN_Struct, PNF_None, CAMI_PRIVILEGE
+	}
+	FUNC UnregisterPrivilege, SHARED
+	{
+		PROTECTED
+		IN PrivilegeName, PN_String
+	}
+}

@@ -123,12 +123,12 @@ function meta:MoveInto( other )
 
 end
 
-function meta:CopyInto( other )
+function meta:CopyInto( other, ... )
 
 	other.items = {}
 
 	for id, item in self:Items() do
-		local copy = item.Copy and item:Copy() or bpcommon.CopyTable( item )
+		local copy = item.Copy and item:Copy(...) or bpcommon.CopyTable( item )
 		copy:WithOuter( other )
 		other.items[#other.items+1] = copy
 	end

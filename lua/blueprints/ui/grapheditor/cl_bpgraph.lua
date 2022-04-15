@@ -38,6 +38,18 @@ function PANEL:GetEditor()
 
 end
 
+function PANEL:SetModuleEditor( moduleEditor )
+
+	self.moduleEditor = moduleEditor
+
+end
+
+function PANEL:GetModuleEditor()
+
+	return self.moduleEditor
+
+end
+
 function PANEL:SetGraph( graph )
 
 	if self.editor then self.editor:Shutdown() end
@@ -75,11 +87,22 @@ function PANEL:OnRemove()
 
 end
 
-function PANEL:LeftMouse(x,y,pressed) return self.editor:LeftMouse(x,y,pressed) end
+function PANEL:LeftMouse(x,y,pressed)
+
+	if self.moduleEditor and pressed then
+		self.moduleEditor:SetDetails(nil)
+	end
+	return self.editor:LeftMouse(x,y,pressed) 
+
+end
 function PANEL:RightMouse(x,y,pressed) return self.editor:RightMouse(x,y,pressed) end
 function PANEL:MiddleMouse(x,y,pressed) return self.editor:MiddleMouse(x,y,pressed) end
 --function PANEL:RightClick() self.editor:OpenCreationContext() end
-function PANEL:AnyPress() self.editor:CloseCreationContext() end
+function PANEL:AnyPress()
+
+	self.editor:CloseCreationContext() 
+
+end
 
 function PANEL:OnKeyCodePressed( code )
 
