@@ -492,7 +492,7 @@ end
 
 function meta:GetPinCode(pin, ...)
 
-	local var = self:GetPinVar(pin)
+	local var = self:GetPinVar(pin, true)
 	if var then
 		return self:GetVarCode(var, ...)
 	end
