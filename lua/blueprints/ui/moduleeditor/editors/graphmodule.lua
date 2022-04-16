@@ -199,6 +199,8 @@ function EDITOR:PopulateSideBar()
 
 		end
 
+		self:OnGraphSelected( item )
+
 	end
 
 	-- Variable List
@@ -336,7 +338,47 @@ function EDITOR:PopulateSideBar()
 
 	end
 
+	-- Local Variable List
+	if self:GetModule():CanHaveVariables() then
+
+		self.LocalVarList = self:AddSidebarList(LOCTEXT("editor_graphmodule_localvariablelist","Local Variables"))
+		self.LocalVarList:SetGroup( self )
+		self.LocalVarList.CreateItemPanel = function(pnl, id, item)
+
+			local entry = vgui.Create("BPPinListEntry", pnl)
+			entry.vlist = pnl
+			entry.item = item
+			entry.module = self:GetModule()
+			function entry:SetPinType(t) item:SetType( t ) end
+			function entry:GetPinType() return item:GetType() end
+			function entry:SetPinName(n) pnl.list:Rename( item, n ) end
+			function entry:GetPinName() return item.name end
+			SetupDrag(entry, item)
+			return entry
+
+		end
+		self.LocalVarList.HandleAddItem = function(list)
+			--local id, item = self:GetModule():NewVariable( "", bppintype.New( bpschema.PN_Bool ) )
+		end
+		--self.LocalVarList:SetList( self:GetModule().variables )
+
+	end
+
 	self.GraphList:SetList( self:GetModule().graphs )
+
+end
+
+function EDITOR:OnGraphSelected( graph )
+
+	if graph ~= nil then
+		self.LocalVarList:SetList( graph.locals )
+		self.LocalVarList.HandleAddItem = function(list)
+			local id, item = graph.locals:ConstructNamed( "", bppintype.New( bpschema.PN_Bool ) )
+		end
+	else
+		self.LocalVarList:SetList( nil )
+		self.LocalVarList.HandleAddItem = function() end
+	end
 
 end
 

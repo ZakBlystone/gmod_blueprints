@@ -9,6 +9,7 @@ FL_HOOK = 4
 FL_ROLE_SERVER = 8
 FL_ROLE_CLIENT = 16
 FL_SERIALIZE_NAME = 32
+FL_LOCAL_VARIABLES = 64 -- has local variables
 
 local meta = bpcommon.MetaTable("bpgraph")
 
@@ -17,11 +18,12 @@ New = nil
 bpcommon.CreateIndexableListIterators(meta, "nodes")
 bpcommon.CreateIndexableListIterators(meta, "inputs")
 bpcommon.CreateIndexableListIterators(meta, "outputs")
+bpcommon.CreateIndexableListIterators(meta, "locals")
 bpcommon.AddFlagAccessors(meta)
 
 function meta:Init(type)
 
-	self.flags = FL_NONE
+	self.flags = bit.bor(FL_NONE, FL_LOCAL_VARIABLES)
 	self.type = type or GT_Event
 	self.hookNodeType = nil
 	self.uid = bpcommon.GUID()
@@ -30,6 +32,7 @@ function meta:Init(type)
 	self.nodes = bplist.New(bpnode_meta):WithOuter(self)
 	self.inputs = bplist.New(bppin_meta):NamedItems("Inputs"):WithOuter(self)
 	self.outputs = bplist.New(bppin_meta):NamedItems("Outputs"):WithOuter(self)
+	self.locals = bplist.New(bpvariable_meta):NamedItems("Locals"):WithOuter(self)
 
 	-- Listen for changes in the input variable list (function graph)
 	self.inputs:Bind("preModify", self, self.PreModify)
@@ -591,6 +594,14 @@ function meta:Serialize(stream)
 
 	end
 
+	if bit.band( self.flags, FL_LOCAL_VARIABLES ) ~= 0 then
+
+		self.locals:SuppressAllEvents(true)
+		self.locals:Serialize(stream)
+		self.locals:SuppressAllEvents(false)
+
+	end
+
 	self.nodes:Serialize(stream)
 	self.hookNodeType = stream:String(self.hookNodeType)
 
@@ -645,6 +656,7 @@ function meta:CopyInto(other, keepUIDs)
 		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes, keepUIDs )
 		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )
 		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs )
+		Profile("copy-locals", self.locals.CopyInto, self.locals, other.locals )
 		Profile("copy-init-nodes", function()
 			for _, node in other:Nodes() do node:Initialize(true) node.nodeType():UnbindAll(node) end
 		end)
@@ -802,6 +814,14 @@ function meta:CompileEntrypoint( compiler )
 
 	-- graph function header and callstack
 	compiler.emit("local graph_" .. graphID .. "_entry = __graph( function( ip )\n")
+
+	compiler.pushIndent()
+	print("Compile graph locals")
+	for _, var in self:Locals() do
+		print("Emit Variable: " .. tostring(var))
+		var:Compile( compiler )
+	end
+	compiler.popIndent()
 
 	-- debugging info
 	if compiler.debug then compiler.emit( "\t__prev, __dbggraph = __dbggraph, " .. graphID) end
