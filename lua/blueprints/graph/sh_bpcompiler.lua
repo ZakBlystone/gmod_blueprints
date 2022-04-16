@@ -449,8 +449,6 @@ function meta:GetPinLiteral(pin, sanitize)
 		if l == "{}" then l = "__emptyTable()"
 		elseif l == "__emptyTable" then l = "__emptyTable()" end
 
-		print("****: " .. tostring(l))
-
 		if pin:IsType(PN_BPClass) then l = EscapedGUID(l) end
 		if sanitize then l = SanitizeString(l) end
 		if pin:IsType(PN_String) and not pin:HasFlag(PNF_Table) then l = "\"" .. l .. "\"" end
