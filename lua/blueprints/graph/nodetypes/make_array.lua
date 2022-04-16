@@ -4,12 +4,21 @@ local NODE = {}
 
 function NODE:Setup()
 
-	self.data.pinCount = self.data.pinCount or 1
+	self.data.pinCount = self.data.pinCount or 0
+
+	if self:GetCodeType() == bpschema.NT_Pure then
+		for k,v in ipairs(self:GetPins()) do
+			if #v:GetConnectedPins() > 0 then return end
+		end
+
+		self:ConvertType(bpschema.NT_Function)
+	end
 
 end
 
 function NODE:GeneratePins(pins)
 
+	print("***GENERATING PINS")
 	local anyPin = bppintype.New(bpschema.PN_Any)
 	for i=1, self.data.pinCount do
 		pins[#pins+1] = bpschema.MakePin(
