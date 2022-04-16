@@ -96,6 +96,7 @@ end
 
 function meta:GetDefault()
 
+	if self.default == "__emptyTable" then return "__emptyTable()" end
 	return self.default or self.pintype:GetDefault()
 
 end
