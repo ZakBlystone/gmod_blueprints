@@ -35,6 +35,37 @@ function meta:Init(basetype, flags, subtype)
 	return self
 end
 
+function meta:FromTypeString(str)
+
+	local basetype, flags, subtype = string.match(str, "([%w_]+),*([%w_|]*),*([%w_]*)")
+	self.basetype = bpschema[basetype] or -1
+	self.flags = bpschema[flags] or 0
+	self.subtype = subtype
+
+	return self
+
+end
+
+function meta:ToTypeString()
+
+	local str_basetype = "PN_" .. (bpschema.PinTypeNames[ self.basetype ] or "Dummy")
+	local str_flags = self.flags == 0 and "PNF_None"
+	if self.flags ~= 0 then
+		local flags = {}
+		for k,v in parirs(bpschema.PinFlagNames) do
+			if bit.band(self.flags, k) ~= 0 then
+				flags[#flags+1] = v
+			end
+		end
+		str_flags = table.concat(flags, "|")
+	end
+
+	local str = str_basetype .. "," .. str_flags
+	if self.subtype and self.subtype ~= "" then str = str .. "," .. self.subtype end
+	return str
+
+end
+
 function meta:UpdateHash()
 	local hashStr = string.format("%0.2d_%0.2x_%s", self.basetype or -1, self.flags, tostring(self.subtype) )
 	self.hash = util.CRC( hashStr )
