@@ -4,6 +4,13 @@ module("node_eventbind", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local NODE = {}
 
+function NODE:GetSanitizedTypeName()
+
+	local name = self:GetTypeName()
+	return string.gsub(name, "[^%w]", "_")
+
+end
+
 function NODE:Setup() end
 function NODE:Compile(compiler, pass)
 
@@ -25,14 +32,14 @@ function NODE:Compile(compiler, pass)
 	elseif pass == CP_METAPASS then
 
 		local graph = self:GetGraph()
-		compiler:CompileGraphMetaHook(graph, self, self:GetTypeName())
+		compiler:CompileGraphMetaHook(graph, self, self:GetSanitizedTypeName())
 
 		-- compile hook listing if this node is a hook
 		local hook = self:GetHook()
 		if hook then
 			local graphID = compiler:GetID(graph)
 			compiler.begin(CTX_Hooks .. graphID)
-			local args = {self:GetTypeName(), hook, graphID, compiler:GetID(self)}
+			local args = {self:GetSanitizedTypeName(), hook, graphID, compiler:GetID(self)}
 			compiler.emit("_FR_HOOK(" .. table.concat(args, ",") .. ")")
 			compiler.finish()
 		end
