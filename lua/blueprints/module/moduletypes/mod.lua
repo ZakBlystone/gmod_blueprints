@@ -91,6 +91,7 @@ end]])
 
 		compiler.emit([[
 __bpm.init = function()
+	G_BPInstances = G_BPInstances or {}
 	if G_BPInstances[__bpm.guid] ~= nil then return end
 	__bpm.ref = setmetatable({}, __bpm.meta)
 	__bpm.ref:Initialize()
