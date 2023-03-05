@@ -464,6 +464,13 @@ function meta:GetColor()
 	return NodeTypeColors[ self:GetCodeType() ]
 end
 
+function meta:GetSanitizedTypeName()
+
+	local name = self:GetTypeName()
+	return string.gsub(name, "[^%w]", "_")
+
+end
+
 function meta:GetTypeName() return self.nodeType:IsValid() and self.nodeType():GetFullName() or "unknown" end
 function meta:GetPos() return self.x, self.y end
 function meta:RemapPin(name) return self:GetType():RemapPin(name) end

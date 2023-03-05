@@ -303,7 +303,7 @@ function meta:CreatePinVar(pin)
 
 		if not isFunctionPin then
 
-			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "fcall_" .. node:GetTypeName() .. "_ret_" .. pinName)
+			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "fcall_" .. node:GetSanitizedTypeName() .. "_ret_" .. pinName)
 			self.vars[#self.vars+1] = {
 				var = key,
 				global = codeType ~= NT_Pure,

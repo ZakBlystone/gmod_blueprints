@@ -4,13 +4,6 @@ module("node_eventbind", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local NODE = {}
 
-function NODE:GetSanitizedTypeName()
-
-	local name = self:GetTypeName()
-	return string.gsub(name, "[^%w]", "_")
-
-end
-
 function NODE:Setup() end
 function NODE:Compile(compiler, pass)
 
