@@ -228,9 +228,7 @@ function SanitizeString(str)
 	local r = str:gsub("\\n", "__CH~NL__")
 	r = r:gsub("\\", "\\\\")
 	r = r:gsub("\"", "\\\"")
-	r = r:gsub("[%%!@%^#]", function(x)
-		return codenames[x] or "INVALID"
-	end)
+	r = r:gsub("__CH~NL__", "\\n")
 	return r
 
 end
