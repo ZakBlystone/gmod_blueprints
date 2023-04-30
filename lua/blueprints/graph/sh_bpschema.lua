@@ -99,6 +99,17 @@ PinTypeNames = {
 	[PN_Asset] = "Asset",
 }
 
+-- Pin flag names
+PinFlagNames = {
+	[PNF_None] = "PNF_None",
+	[PNF_Table] = "PNF_Table",
+	[PNF_Nullable] = "PNF_Nullable",
+	[PNF_Bitfield] = "PNF_Bitfield",
+	[PNF_Custom] = "PNF_Custom",
+	[PNF_Server] = "PNF_Server",
+	[PNF_Client] = "PNF_Client",
+}
+
 -- Colors the graph entries in the sidebar
 GraphTypeColors = {
 	[GT_Event] = Color(120,80,80),

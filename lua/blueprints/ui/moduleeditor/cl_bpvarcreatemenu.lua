@@ -98,10 +98,7 @@ local function CreateEntryWidget( pnl, entry )
 
 end
 
-function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
-
-	local collection = bpcollection.New()
-	module:GetAllPinTypes( collection )
+function OpenPinSelectionMenuEx( collection, onSelected, current, allowFlagEdit )
 
 	current = current or bppintype.New(PN_Bool)
 
@@ -184,5 +181,14 @@ function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 	end
 	menu:Setup()
 	return menu
+
+end
+
+function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
+
+	local collection = bpcollection.New()
+	module:GetAllPinTypes( collection )
+
+	return OpenPinSelectionMenuEx( collection, onSelected, current, allowFlagEdit )
 
 end

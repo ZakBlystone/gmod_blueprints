@@ -445,31 +445,6 @@ function MODULE:SerializeData( stream )
 
 end
 
-function MODULE:CompileVariable( compiler, var )
-
-	local def = var:GetDefault()
-	local vtype = var:GetType()
-	local id = compiler:GetID(var)
-
-	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-	if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-
-	--print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
-
-	local varName = var:GetName()
-	if compiler.compactVars then varName = id end
-	if type(def) == "string" then
-		compiler.emit("self.__" .. varName .. " = " .. tostring(def))
-	else
-		print("Emit variable as non-string")
-		local pt = bpvaluetype.FromPinType( vtype, function() return def end, function(v) def = v end )
-		if def and pt then
-			compiler.emit("self.__" .. varName .. " = " .. pt:ToString())
-		end
-	end
-
-end
-
 function MODULE:AddRequiredMetaTables( compiler )
 
 	-- Collect all used types from module and write out the needed meta tables
@@ -583,7 +558,7 @@ function MODULE:Compile( compiler, pass )
 		if self:CanHaveVariables() then
 
 			for id, var in self:Variables() do
-				self:CompileVariable( compiler, var )
+				var:Compile( compiler )
 			end
 
 		end

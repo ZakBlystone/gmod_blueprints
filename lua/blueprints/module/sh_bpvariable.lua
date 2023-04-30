@@ -21,13 +21,10 @@ function meta:Init(type, repmode)
 	self.getterNodeType.GetRawPins = function() return { MakePin( PD_Out, "value", self.pintype ) } end
 	self.getterNodeType.Compile = function(node, compiler, pass)
 
-		local varName = "__self.__" .. self:GetName()
-		if compiler.compactVars then varName = "__self.__" .. compiler:GetID(self) end
-
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
-				return { var = varName }
+				return { var = self:GetAlias( compiler, true ) }
 			end )
 
 			return true
@@ -50,19 +47,16 @@ function meta:Init(type, repmode)
 	self.setterNodeType.GetRawPins = function() return { MakePin( PD_In, "value", self.pintype ), MakePin( PD_Out, "value", self.pintype ) } end
 	self.setterNodeType.Compile = function(node, compiler, pass)
 
-		local varName = "__self.__" .. self:GetName()
-		if compiler.compactVars then varName = "__self.__" .. compiler:GetID(self) end
-
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
-				return { var = varName }
+				return { var = self:GetAlias( compiler, true ) }
 			end )
 			return true
 
 		elseif pass == bpcompiler.CP_MAINPASS then
 
-			compiler.emit( varName .. " = " .. compiler:GetPinCode( node:FindPin(PD_In, "value") ) )
+			compiler.emit( self:GetAlias( compiler, true ) .. " = " .. compiler:GetPinCode( node:FindPin(PD_In, "value") ) )
 			compiler:CompileReturnPin( node )
 			return true
 
@@ -96,6 +90,7 @@ end
 
 function meta:GetDefault()
 
+	if self.default == "__emptyTable" then return "__emptyTable()" end
 	return self.default or self.pintype:GetDefault()
 
 end
@@ -128,6 +123,19 @@ function meta:SetType( type )
 
 end
 
+function meta:GetAlias( compiler, inGraph )
+
+	local name = self:GetName()
+	if compiler.compactVars then name = tostring(compiler:GetID(self)) end
+	local varName = "__" .. name
+	if self:FindOuter( bpgraph_meta ) == nil then
+		varName = "self." .. varName
+		if inGraph then varName = "__" .. varName end
+	end
+	return varName
+
+end
+
 function meta:GetterNodeType()
 
 	return self.getterNodeType
@@ -150,6 +158,31 @@ function meta:Serialize(stream)
 	self.repmode = stream:Value(self.repmode)
 
 	return stream
+
+end
+
+function meta:Compile( compiler )
+
+	local def = self:GetDefault()
+	local vtype = self:GetType()
+	local id = compiler:GetID(self)
+
+	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+	if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+
+	--print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
+
+	local varName = self:GetName()
+	if compiler.compactVars then varName = id end
+	if type(def) == "string" then
+		compiler.emit(self:GetAlias(compiler, false) .. " = " .. tostring(def))
+	else
+		print("Emit variable as non-string")
+		local pt = bpvaluetype.FromPinType( vtype, function() return def end, function(v) def = v end )
+		if def and pt then
+			compiler.emit(self:GetAlias(compiler, false) .. " = " .. pt:ToString())
+		end
+	end
 
 end
 

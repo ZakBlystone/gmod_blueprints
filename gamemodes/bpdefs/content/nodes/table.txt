@@ -10,10 +10,27 @@ LIB TABLE
 		COMPACT
 		CODE #1 = $1[$2]
 	}
+	PURE GetIndex, SHARED
+	{
+		IN Table, PN_Any, PNF_Table
+		IN Key, PN_Number
+		OUT Value, PN_Any
+		COMPACT
+		CODE #1 = $1[$2]
+	}
 	FUNC Set, SHARED
 	{
 		IN Table, PN_Any, PNF_Table
 		IN Key, PN_Any
+		IN Value, PN_Any, PNF_Nullable
+		INFORM 3,5
+		COMPACT
+		CODE $1[$2] = $3
+	}
+	FUNC SetIndex, SHARED
+	{
+		IN Table, PN_Any, PNF_Table
+		IN Key, PN_Number
 		IN Value, PN_Any, PNF_Nullable
 		INFORM 3,5
 		COMPACT

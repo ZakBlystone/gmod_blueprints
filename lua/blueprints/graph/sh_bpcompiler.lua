@@ -228,9 +228,7 @@ function SanitizeString(str)
 	local r = str:gsub("\\n", "__CH~NL__")
 	r = r:gsub("\\", "\\\\")
 	r = r:gsub("\"", "\\\"")
-	r = r:gsub("[%%!@%^#]", function(x)
-		return codenames[x] or "INVALID"
-	end)
+	r = r:gsub("__CH~NL__", "\\n")
 	return r
 
 end
@@ -303,7 +301,7 @@ function meta:CreatePinVar(pin)
 
 		if not isFunctionPin then
 
-			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "fcall_" .. node:GetTypeName() .. "_ret_" .. pinName)
+			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "fcall_" .. node:GetSanitizedTypeName() .. "_ret_" .. pinName)
 			self.vars[#self.vars+1] = {
 				var = key,
 				global = codeType ~= NT_Pure,
@@ -446,7 +444,8 @@ function meta:GetPinLiteral(pin, sanitize)
 		end
 
 		local l = tostring(pin:GetLiteral())
-		if l == "{}" then l = "__emptyTable" end
+		if l == "{}" then l = "__emptyTable()"
+		elseif l == "__emptyTable" then l = "__emptyTable()" end
 
 		if pin:IsType(PN_BPClass) then l = EscapedGUID(l) end
 		if sanitize then l = SanitizeString(l) end

@@ -284,7 +284,7 @@ local function ParseNodeValue(nodeType, v)
 	if key == "METATABLE" then nodeType:AddRequiredMeta(v.tuple[2]) end
 	if key == "MODTYPE" then nodeType:SetModFilter(v.tuple[2]) end
 	if key == "NOHOOK" then nodeType:AddFlag(NTF_NotHook) end
-	if key == "PARAM" then nodeType:SetNodeParam(v.tuple[2], v.tuple[3]) end
+	if key == "PARAM" then nodeType:SetNodeParam(v.tuple[2], table.concat(v.tuple, ",", 3)) end
 	if key == "PROTECTED" then nodeType:AddFlag(NTF_Protected) end
 	if key == "REDIRECTPIN" then nodeType:AddPinRedirect(v.tuple[2], v.tuple[3]) end
 	if key == "REQUIREMETA" then nodeType:AddRequiredMeta(v.tuple[2]) end
