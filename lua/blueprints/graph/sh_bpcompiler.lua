@@ -534,13 +534,6 @@ function meta:CompileVars(code, inVars, outVars, node)
 	str = string.Replace( str, "!graph", tostring(graphID))
 	str = string.Replace( str, "!module", tostring(self.guidString))
 
-	-- replace input pin codes
-	str = str:gsub("$(%d+)", function(x) return self:GetVarCode(inVars[tonumber(x) + inBase]) end)
-
-	-- replace output pin codes
-	str = str:gsub("#_(%d+)", function(x) return self:GetVarCode(outVars[tonumber(x) + outBase]) end)
-	str = str:gsub("#(%d+)", function(x) return self:GetVarCode(outVars[tonumber(x) + outBase], true) end)
-
 	local lmap = {}
 	for k,v in ipairs(node:GetLocals()) do
 		local var = self:FindVarForNode(node, v)
@@ -558,6 +551,13 @@ function meta:CompileVars(code, inVars, outVars, node)
 		if not lmap[x] then error("FAILED TO FIND LOCAL: " .. tostring(x)) end
 		return self:GetVarCode(lmap[x]) end
 	)
+
+	-- replace input pin codes
+	str = str:gsub("$(%d+)", function(x) return self:GetVarCode(inVars[tonumber(x) + inBase]) end)
+
+	-- replace output pin codes
+	str = str:gsub("#_(%d+)", function(x) return self:GetVarCode(outVars[tonumber(x) + outBase]) end)
+	str = str:gsub("#(%d+)", function(x) return self:GetVarCode(outVars[tonumber(x) + outBase], true) end)
 
 	-- replace jumps
 	local jumpTable = self:GetGraphJumpTable(graph)[nodeID] or {}
