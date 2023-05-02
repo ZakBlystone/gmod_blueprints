@@ -11,11 +11,21 @@ local meta = bpcommon.MetaTable("bpnodetype")
 
 bpcommon.AddFlagAccessors(meta)
 
-meta.__tostring = function(self) return self:ToString() end
-
-local PIN_INPUT_EXEC = MakePin( PD_In, "Exec", PN_Exec )
-local PIN_OUTPUT_EXEC = MakePin( PD_Out, "Exec", PN_Exec )
-local PIN_OUTPUT_THRU = MakePin( PD_Out, "Thru", PN_Exec )
+local PIN_INPUT_EXEC = {
+	[ROLE_Shared] = MakePin( PD_In, "Exec", PN_Exec ),
+	[ROLE_Server] = MakePin( PD_In, "Exec", PN_Exec, PNF_Server ),
+	[ROLE_Client] = MakePin( PD_In, "Exec", PN_Exec, PNF_Client ),
+}
+local PIN_OUTPUT_EXEC = {
+	[ROLE_Shared] = MakePin( PD_Out, "Exec", PN_Exec ),
+	[ROLE_Server] = MakePin( PD_Out, "Exec", PN_Exec, PNF_Server ),
+	[ROLE_Client] = MakePin( PD_Out, "Exec", PN_Exec, PNF_Client ),
+}
+local PIN_OUTPUT_THRU = {
+	[ROLE_Shared] = MakePin( PD_Out, "Thru", PN_Exec ),
+	[ROLE_Server] = MakePin( PD_Out, "Thru", PN_Exec, PNF_Server ),
+	[ROLE_Client] = MakePin( PD_Out, "Thru", PN_Exec, PNF_Client ),
+}
 
 function meta:Init()
 
@@ -37,7 +47,15 @@ function meta:Init()
 	self.pins = {}
 	self.warning = nil
 	self.modFilter = nil
+
+	bpcommon.MakeObservable(self)
 	return self
+
+end
+
+function meta:Destroy()
+
+	self:Broadcast("destroyed")
 
 end
 
@@ -52,7 +70,7 @@ function meta:SetModFilter(filter) self.modFilter = filter:lower() end
 function meta:SetRole(role) self.role = role end
 function meta:SetCodeType(codeType) self.codeType = codeType end
 function meta:SetName(name) self.name = name end
-function meta:SetCode(code) self.code = code end
+function meta:SetCode(code) self.code = code if code:find("pushjmp") then self:AddFlag(NTF_CallStack) end end
 function meta:SetCategory(category) self.category = category end
 function meta:SetDisplayName(name) self.displayName = name end
 function meta:SetDescription(desc) self.desc = desc end
@@ -151,20 +169,16 @@ function meta:GetPins()
 
 	table.Add(pins, self:GetRawPins())
 
+	local role = self:GetRole() or ROLE_Shared
 	if self:GetCodeType() == NT_Function then
-		table.insert(pins, 1, PIN_OUTPUT_THRU)
-		table.insert(pins, 1, PIN_INPUT_EXEC)
+		table.insert(pins, 1, PIN_OUTPUT_THRU[role])
+		table.insert(pins, 1, PIN_INPUT_EXEC[role])
 	elseif self:GetCodeType() == NT_Event then
-		table.insert(pins, 1, PIN_OUTPUT_EXEC)
+		table.insert(pins, 1, PIN_OUTPUT_EXEC[role])
 	elseif self:GetCodeType() == NT_FuncInput then
-		table.insert(pins, 1, PIN_OUTPUT_EXEC)
+		table.insert(pins, 1, PIN_OUTPUT_EXEC[role])
 	elseif self:GetCodeType() == NT_FuncOutput then
-		table.insert(pins, 1, PIN_INPUT_EXEC)
-	end
-
-	--HACK
-	if #pins <= 2 and self:GetCodeType() == NT_Pure then
-		self:AddFlag(NTF_Compact)
+		table.insert(pins, 1, PIN_INPUT_EXEC[role])
 	end
 
 	return pins
@@ -215,7 +229,7 @@ function meta:GetFullName()
 		if groupName == "GLOBAL" then return self.name end
 	end
 
-	return groupName .. "_" .. self.name
+	return groupName .. "_" .. tostring(self.name)
 
 end
 
@@ -236,65 +250,37 @@ function meta:GetDisplayName()
 end
 
 function meta:GetCode() return self.code end
-function meta:WriteToStream(stream)
+function meta:PreModify() self:Broadcast("preModify") end
+function meta:PostModify() self:Broadcast("postModify") end
 
-	assert(stream:IsUsingStringTable())
-	stream:WriteBits(self.flags, 16)
-	stream:WriteBits(self.role, 8)
-	stream:WriteBits(self.codeType, 8)
-	stream:WriteStr(self.name)
-	stream:WriteStr(self.code)
-	stream:WriteStr(self.category)
-	stream:WriteStr(self.displayName)
-	stream:WriteStr(self.nodeClass)
-	stream:WriteStr(self.warning)
-	stream:WriteStr(self.desc)
-	bpdata.WriteValue(self.nodeParams, stream)
-	bpdata.WriteValue(self.requiredMeta, stream)
-	bpdata.WriteValue(self.pinRedirects, stream)
-	bpdata.WriteValue(self.jumpSymbols, stream)
-	bpdata.WriteValue(self.locals, stream)
-	bpdata.WriteValue(self.globals, stream)
-	bpdata.WriteValue(self.informs, stream)
-	bpdata.WriteValue(self.modFilter, stream)
+function meta:Serialize(stream)
 
-	stream:WriteBits(#self.pins, 8)
-	for i=1, #self.pins do
-		self.pins[i]:WriteToStream(stream)
-	end
+	self.flags = stream:Bits(self.flags, 16)
+	self.role = stream:Bits(self.role, 8)
+	self.codeType = stream:Bits(self.codeType, 8)
+	self.name = stream:String(self.name)
+	self.code = stream:String(self.code)
+	self.category = stream:String(self.category)
+	self.displayName = stream:String(self.displayName)
+	self.nodeClass = stream:String(self.nodeClass)
+	self.warning = stream:String(self.warning)
+	self.desc = stream:String(self.desc)
 
-	return self
+	self.nodeParams = stream:StringMap(self.nodeParams)
+	self.requiredMeta = stream:StringArray(self.requiredMeta)
+	self.pinRedirects = stream:StringMap(self.pinRedirects)
+	self.jumpSymbols = stream:StringArray(self.jumpSymbols)
+	self.locals = stream:StringArray(self.locals)
+	self.globals = stream:StringArray(self.globals)
+	self.informs = stream:Value(self.informs)
+	self.modFilter = stream:String(self.modFilter)
 
-end
-
-function meta:ReadFromStream(stream)
-
-	assert(stream:IsUsingStringTable())
-	self.flags = stream:ReadBits(16)
-	self.role = stream:ReadBits(8)
-	self.codeType = stream:ReadBits(8)
-	self.name = stream:ReadStr()
-	self.code = stream:ReadStr()
-	self.category = stream:ReadStr()
-	self.displayName = stream:ReadStr()
-	self.nodeClass = stream:ReadStr()
-	self.warning = stream:ReadStr()
-	self.desc = stream:ReadStr()
-	self.nodeParams = bpdata.ReadValue(stream)
-	self.requiredMeta = bpdata.ReadValue(stream)
-	self.pinRedirects = bpdata.ReadValue(stream)
-	self.jumpSymbols = bpdata.ReadValue(stream)
-	self.locals = bpdata.ReadValue(stream)
-	self.globals = bpdata.ReadValue(stream)
-	self.informs = bpdata.ReadValue(stream)
-	self.modFilter = bpdata.ReadValue(stream)
-
-	local numPins = stream:ReadBits(8)
+	local numPins = stream:Bits(#self.pins, 8)
 	for i=1, numPins do
-		self.pins[#self.pins+1] = bppin.New():ReadFromStream(stream)
+		self.pins[i] = stream:Object(self.pins[i] or bppin.New(), nil, true)
 	end
 
-	return self
+	return stream
 
 end
 
@@ -302,19 +288,6 @@ function meta:ToString()
 
 	return tostring( self:GetFullName() )
 
-end
-
-function meta:SamePins(other)
-	local a,b = self, other
-	local aPins = a:GetPins()
-	local bPins = b:GetPins()
-	if #aPins ~= #bPins then return false end
-	for k, pin in pairs(aPins) do
-		if not bPins[k] then return false end
-		if pin:GetName() ~= bPins[k]:GetName() then return false end
-		if pin:GetType() ~= bPins[k]:GetType() then return false end
-	end
-	return true
 end
 
 function New(...) return bpcommon.MakeInstance(meta, ...) end

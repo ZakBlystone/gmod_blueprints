@@ -24,12 +24,23 @@ local text_script_copied = LOCTEXT("module_lua_export", "Lua script copied to cl
 local text_local_no_permission = LOCTEXT("module_local_no_permission", "You do not have permission to run local scripts")
 local text_module_save_fail = LOCTEXT("module_save_fail", "Failed to create module: %s")
 
+local suppressExportMsg = CreateConVar("bp_suppress_export_message", "0", FCVAR_ARCHIVE, "For debugging, disables to popup notification when exporting things")
+
 EDITOR.CanSave = true
 EDITOR.CanSendToServer = false
 EDITOR.CanInstallLocally = false
 EDITOR.CanExportLuaScript = false
 
+function EDITOR:ShouldCreateMenuBar()
+
+	if self:GetModule():FindOuter( bpmodule_meta ) then return false end
+	return true
+
+end
+
 function EDITOR:PopulateMenuBar( t )
+
+	if self:GetModule():FindOuter( bpmodule_meta ) then return end
 
 	if self.CanSave then
 
@@ -61,15 +72,20 @@ end
 
 function EDITOR:Export()
 
-	local text = self:GetModule():SaveToText()
+	local text = bpmodule.SaveToText( self:GetTargetModule() )
 	SetClipboardText( text )
-	Derma_Message( text_module_copied(), text_menu_export(), LOCTEXT("query_ok", "Ok")() )
+	if not suppressExportMsg:GetBool() then 
+		bpmodal.Message({
+			message = text_module_copied, 
+			title = text_menu_export
+		})
+	end
 
 end
 
 function EDITOR:ExportShareableKey( pnl )
 
-	local text = self:GetModule():SaveToText()
+	local text = bpmodule.SaveToText( self:GetTargetModule() )
 	local prev = pnl:GetText()
 
 	pnl:SetEnabled(false)
@@ -78,9 +94,15 @@ function EDITOR:ExportShareableKey( pnl )
 		if IsValid(pnl) then pnl:SetEnabled(true) end
 		if ok then
 			SetClipboardText( result )
-			Derma_Message( text_module_key_copied(), text_menu_export_shareable(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = text_module_key_copied, 
+				title = text_menu_export_shareable
+			})
 		else
-			Derma_Message( text_module_key_failed(tostring(result)), text_menu_export_shareable(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = text_module_key_failed(tostring(result)), 
+				title = text_menu_export_shareable
+			})
 		end
 
 	end)
@@ -89,19 +111,30 @@ end
 
 function EDITOR:SendToServer()
 
+	local cflags = bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars)
+	if bpusermanager.GetLocalUser():HasPermission( bpgroup.FL_CanUseProtected ) then
+		cflags = bit.bor(cflags, bpcompiler.CF_AllowProtected)
+	end
+
 	_G.G_BPError = nil
 	self:GetMainEditor():ClearReport()
 	--bpnet.SendModule( self.module )
-	local ok, res = self:GetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	local ok, res = self:GetTargetModule():TryBuild( cflags )
 	if ok then
 		ok, res = res:TryLoad()
 		if ok then
-			self:Save( function(ok) if ok then self:Upload(true) end end )
+			self:Save( function(ok) if ok then print("**Uploading Module") self:Upload(true) end end )
 		else
-			Derma_Message( res, text_run_fail(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = res,
+				title = text_run_fail
+			})
 		end
 	else
-		Derma_Message( res, text_compile_fail(), LOCTEXT("query_ok", "Ok")() )
+		bpmodal.Message({
+			message = res,
+			title = text_compile_fail
+		})
 	end
 
 end
@@ -109,40 +142,57 @@ end
 function EDITOR:InstallLocally()
 
 	if not bpusermanager.GetLocalUser():HasPermission( bpgroup.FL_CanRunLocally ) then
-		Derma_Message( text_local_no_permission(), text_menu_local_install(), LOCTEXT("query_ok", "Ok")() )
+		bpmodal.Message({
+			message = text_local_no_permission, 
+			title = text_menu_local_install, 
+		})
 		return
 	end
 
-	local ok, res = self:GetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars, bpcompiler.CF_AllowProtected) )
 	if ok then
 		ok, res = res:TryLoad()
 		if ok then
-			bpenv.Uninstall( self:GetModule():GetUID() )
+			bpenv.Uninstall( self:GetTargetModule():GetUID() )
 			bpenv.Install( res )
 			bpenv.Instantiate( res:GetUID() )
 		else
-			Derma_Message( res, text_run_fail(), LOCTEXT("query_ok", "Ok")() )
+			bpmodal.Message({
+				message = res,
+				title = text_run_fail
+			})
 		end
 	else
-		Derma_Message( res, text_compile_fail(), LOCTEXT("query_ok", "Ok")() )
+		bpmodal.Message({
+			message = res,
+			title = text_compile_fail
+		})
 	end
 
 end
 
 function EDITOR:UninstallLocally()
 
-	bpenv.Uninstall( self:GetModule():GetUID() )
+	bpenv.Uninstall( self:GetTargetModule():GetUID() )
 
 end
 
 function EDITOR:ExportLua()
 
-	local ok, res = self:GetModule():TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments) )
+	local ok, res = self:GetTargetModule():TryBuild( bit.bor(bpcompiler.CF_Standalone, bpcompiler.CF_Comments, bpcompiler.CF_AllowProtected) )
 	if ok then
 		SetClipboardText( res:GetCode() )
-		Derma_Message( text_script_copied(), text_menu_export_lua(), LOCTEXT("query_ok", "Ok")() )
+		if not suppressExportMsg:GetBool() then
+			bpmodal.Message({
+				message = text_script_copied,
+				title = text_menu_export_lua
+			})
+		end
 	else
-		ErrorNoHalt( res )
+		bpmodal.Message({
+			message = res,
+			title = text_compile_fail
+		})
 	end
 
 end
@@ -153,7 +203,7 @@ function EDITOR:Upload( execute )
 	if not file then return end
 
 	local name = bpfilesystem.ModulePathToName( file:GetPath() )
-	bpfilesystem.UploadObject(self:GetModule(), name or file:GetPath(), execute)
+	bpfilesystem.UploadObject(self:GetTargetModule(), name or file:GetPath(), execute)
 
 end
 
@@ -164,26 +214,45 @@ function EDITOR:Save( callback )
 	local tab = self:GetTab()
 	if file == nil then
 
-		Derma_StringRequest(text_menu_save(), text_module_name(), "untitled",
-		function( text )
-			local file = bpfilesystem.AddLocalModule( self:GetModule(), text )
-			if file ~= nil then
-				tab:SetLabel( text )
-				if callback then callback(true) end
-			else
-				if callback then callback(false) end
-				Derma_Message(text_module_save_fail(text), LOCTEXT("query_error", "Error")(), LOCTEXT("query_ok", "Ok")())
-			end
-		end, nil, LOCTEXT("query_ok", "Ok")(), LOCTEXT("query_cancel", "Cancel")())
+		bpmodal.String({
+			title = text_menu_save,
+			message = text_module_name,
+			default = "untitled",
+			confirm = function( text )
+				local file = bpfilesystem.AddLocalModule( self:GetTargetModule(), text )
+				if file ~= nil then
+					tab:SetLabel( text )
+					if callback then callback(true) end
+				else
+					if callback then callback(false) end
+					bpmodal.Message({
+						message = text_module_save_fail(text),
+						title = "error",
+					})
+				end
+			end,
+		})
 
 	else
 
-		self:GetModule():Save( file:GetPath() )
+		print("**Saving Module")
+		bpmodule.Save( file:GetPath(), self:GetTargetModule() )
 		bpfilesystem.MarkFileAsChanged( file, false )
 		if tab then tab:SetSuffix("") end
 		if callback then callback(true) end
 
 	end
+
+end
+
+function EDITOR:GetTargetModule()
+
+	local mod = self:GetModule()
+	local outer = mod:FindOuter(bpmodule_meta)
+	if outer then
+		return outer
+	end
+	return mod
 
 end
 

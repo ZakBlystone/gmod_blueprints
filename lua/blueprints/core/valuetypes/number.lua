@@ -23,6 +23,31 @@ function VALUE:GetDefault() return 0 end
 
 function VALUE:CreateVGUI( info )
 
+	if self._min and self._max then
+
+		local entry = vgui.Create("DNumSlider", parent)
+		entry:SetSkin("Blueprints")
+		entry:SetMin( self._min )
+		entry:SetMax( self._max )
+		entry:SetDecimals( self._prec )
+		entry:SetValue( self:Get() )
+
+		entry.OnValueChanged = function(pnl, value)
+			self:Set( value )
+			if info.onChanged then info.onChanged() end
+		end
+
+		entry.OnRemove = function(pnl) self:UnbindAll( pnl ) end
+		entry:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
+
+		self:BindRaw("valueChanged", entry, function(old, new, key)
+			entry:SetValue( new )
+		end)
+
+		return entry
+
+	end
+
 	local entry = BaseClass.CreateVGUI(self, info)
 	entry:SetNumeric(true)
 	return entry
@@ -37,27 +62,34 @@ function VALUE:ToString()
 
 end
 
+function VALUE:SetMin( min )
+
+	self._min = min
+	return self
+
+end
+
+function VALUE:SetMax( max )
+
+	self._max = max
+	return self
+
+end
+
 function VALUE:SetFromString( str )
 
 	local _,_,dec = str:find("%-*%d*%.(%d+)")
 	dec = dec and (#dec) or 0
 	self._prec = dec
-	self:Set( tonumber(str) )
+	self:Set( tonumber(str) or 0 )
 	return self
 
 end
 
-function VALUE:WriteToStream(stream)
+function VALUE:Serialize(stream)
 
-	bpdata.WriteValue( self._prec, stream )
-	return BaseClass.WriteToStream( self, stream )
-
-end
-
-function VALUE:ReadFromStream(stream)
-
-	self._prec = bpdata.ReadValue( stream )
-	return BaseClass.ReadFromStream( self, stream )
+	BaseClass.Serialize( self, stream )
+	self._prec = stream:Value( self._prec )
 
 end
 

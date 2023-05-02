@@ -1,0 +1,82 @@
+CLASS Panel
+{
+	FUNC Remove, CLIENT
+	{
+		DESC Marks a panel for deletion.
+	}
+}
+CLASS DPanel
+{
+	NOINDEXMETA
+	FUNC SetBackgroundColor, CLIENT
+	{
+		DESC Sets the background color of the panel.
+		IN color, PN_Color
+	}
+}
+CLASS DFrame
+{
+	NOINDEXMETA
+	FUNC Close, CLIENT
+	{
+		DESC Closes this frame
+	}
+	FUNC SetTitle, CLIENT
+	{
+		DESC Sets the title of the frame
+		IN title, PN_String
+	}
+	FUNC Center, CLIENT
+	{
+		DESC Centers this frame on the screen
+	}
+}
+CLASS DLabel
+{
+	NOINDEXMETA
+	FUNC SetText, CLIENT
+	{
+		IN text, PN_String
+	}
+	PURE GetText, CLIENT
+	{
+		OUT text, PN_String
+	}
+}
+CLASS DButton
+{
+	NOINDEXMETA
+	PURE IsDown, CLIENT
+	{
+		DESC Returns true if the DButton is currently depressed (a user is clicking on it).
+		OUT down, PN_Bool
+	}
+	FUNC SetText, CLIENT
+	{
+		IN text, PN_String
+	}
+	PURE GetText, CLIENT
+	{
+		OUT text, PN_String
+	}
+}
+CLASS DTextEntry
+{
+	NOINDEXMETA
+	PURE GetText, CLIENT
+	{
+		OUT text, PN_String
+	}
+	FUNC SetText, CLIENT
+	{
+		IN text, PN_String
+	}
+}
+CLASS DNumSlider
+{
+	NOINDEXMETA
+	PURE GetValue, CLIENT
+	{
+		OUT value, PN_Number
+	}
+}

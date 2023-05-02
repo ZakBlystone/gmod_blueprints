@@ -7,7 +7,9 @@ G_BPMetaRegistry = G_BPMetaRegistry or {}
 
 module("bpcommon", package.seeall)
 
-file.CreateDir("blueprints")
+BLUEPRINT_DATA_PATH = "blueprints2"
+
+file.CreateDir(BLUEPRINT_DATA_PATH)
 
 ENABLE_PROFILING = true
 ENABLE_DEEP_PROFILING = false
@@ -16,7 +18,7 @@ STREAM_FILE = 1
 STREAM_NET = 2
 
 -- This version of Blueprints
-ENV_VERSION = "1.6"
+ENV_VERSION = "2.0"
 
 -- Moves external variables into module scope
 function rescope(...)
@@ -46,7 +48,7 @@ local ps = {
 -- Check to see if environment version is compatible
 function CheckVersionCompat(v, what, msg)
 
-	if type(v) == "string" and v:len() > 0 and v[1] == "1" then
+	if type(v) == "string" and v:len() > 0 and v[1] == "2" then
 		return true
 	end
 
@@ -201,20 +203,41 @@ function CreateUniqueKey(tab, key)
 
 end
 
+-- Shows deprecation message and traceback
+function Deprecated(msg)
+
+	print(debug.traceback( "****" .. msg .. "****", 2))
+
+end
+
+-- Weak reference object
+local wm = {}
+wm.__mode = "v"
+wm.__index = function(s, k) return wm[k] or (rawget(s,"r") and rawget(s,"r")[k]) end
+wm.__call = function(s, r) if r then s.r = r end return s.r end
+function wm:IsValid() return self.r ~= nil end
+function wm:Reset() self.r = nil end
+function wm:Set(r) self.r = r end
+function Weak(x) return setmetatable({r=x, __ref = true}, wm) end
+
+-- Strong reference object
+local wm = {}
+wm.__index = function(s, k) return wm[k] or (rawget(s,"r") and rawget(s,"r")[k]) end
+wm.__call = function(s, r) if r then s.r = r end return s.r end
+function wm:IsValid() return self.r ~= nil end
+function wm:Reset() self.r = nil end
+function wm:Set(r) self.r = r end
+function Ref(x) return setmetatable({r=x, __ref = true}, wm) end
+
 -- List of items which have ids
 function CreateIndexableListIterators(meta, variable)
 
 	local singular = GetSingular(variable)
 	local varName = Camelize(singular)
 	local iteratorName = varName .. "s"
-	local idIteratorName = varName .. "IDs"
 
 	meta[iteratorName] = function(self, ...)
 		return self[variable]:Items(...)
-	end
-
-	meta[idIteratorName] = function(self, ...)
-		return self[variable]:ItemIDs(...)
 	end
 
 	meta["Get" .. varName] = function(self, ...)
@@ -229,6 +252,14 @@ function CreateIndexableListIterators(meta, variable)
 		return self[variable]:Remove(...)
 	end
 
+end
+
+function RawToString(obj)
+	local m = getmetatable(obj)
+	setmetatable(obj, nil)
+	local s = tostring(obj)
+	setmetatable(obj, m)
+	return s
 end
 
 -- Outer utility functions
@@ -258,6 +289,9 @@ local function FindOuter(self, check)
 		return FindOuter(outer, check)
 	end
 end
+local function IsFullyLoaded(self)
+	return self.__loaded
+end
 
 -- Creates and registers a metatable
 function MetaTable(name, extends)
@@ -266,10 +300,15 @@ function MetaTable(name, extends)
 	local mt = G_BPMetaRegistry[name]
 	mt.__index = mt
 	mt.__hash = util.CRC(name)
+	mt.__tostring = function(s)
+		local str = s.ToString and s:ToString() or ""
+		return ("%s(%s): %s"):format(name, tostring(s.__rawstr), str)
+	end
 	mt.WithOuter = WithOuter
 	mt.GetOuter = GetOuter
 	mt.GetOutermost = GetOutermost
 	mt.FindOuter = FindOuter
+	mt.IsFullyLoaded = IsFullyLoaded
 
 	if extends then
 		local base = G_BPMetaRegistry[name]
@@ -283,7 +322,7 @@ function MetaTable(name, extends)
 		end
 	end
 
-	_G["is" .. name] = function(tbl) return (getmetatable(tbl) or {}).__hash == mt.__hash end
+	_G["is" .. name] = function(tbl) return tbl ~= nil and (getmetatable(tbl) or {}).__hash == mt.__hash end
 	_G[name .. "_meta"] = mt
 
 	return mt
@@ -294,7 +333,7 @@ end
 function GetMetaTableFromHash(hash)
 
 	for k,v in pairs(G_BPMetaRegistry) do
-		if v.__hash == hash then return v end
+		if v.__hash - hash == 0 then return v end
 	end
 
 end
@@ -309,6 +348,7 @@ end
 -- Gets the name of the given metatable
 function GetMetaTableName(tbl)
 
+	if tbl == nil then return "nil" end
 	for k,v in pairs(G_BPMetaRegistry) do
 		if v.__hash == tbl.__hash then return k end
 	end
@@ -320,7 +360,10 @@ end
 function MakeInstance(meta, ...)
 
 	if type(meta) == "string" then meta = G_BPMetaRegistry[name] end
-	return setmetatable({}, meta):Init(...)
+	local raw = {}
+	raw.__rawstr = tostring(raw)
+	raw.__loaded = true
+	return setmetatable(raw, meta):Init(...)
 
 end
 
@@ -351,6 +394,7 @@ function AddFlagAccessors(meta, readOnly, var)
 	if not readOnly then
 		meta["Set" .. key] = function(self, fl) self[var] = fl return self end
 		meta["Set" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) return self end
+		meta["Add" .. key] = function(self, fl) self[var] = bit.bor(self[var], fl) return self end
 		meta["Add" .. singular] = function(self, fl) self[var] = bit.bor(self[var], fl) return self end
 		meta["Clear" .. singular] = function(self, fl) self[var] = bit.band(self[var], bit.bnot(fl)) return self end
 	end
@@ -375,7 +419,7 @@ function MakeObservable(obj)
 
 	local function GetCB(name, target)
 		local t = obj.__callbacks
-		t[name] = t[name] or {}
+		t[name] = t[name] or setmetatable({}, {__mode = "k"})
 		if target then
 			t[name][target] = t[name][target] or {}
 			return t[name][target]
@@ -512,7 +556,7 @@ function GUID()
 
 end
 
--- Converts bytes into hexadecimal representation
+-- Converts hexadecimal representation to bytes
 function HexBytes(str)
 
 	if str == nil or str == "" or str:len() % 2 ~= 0 then return "" end
@@ -571,15 +615,30 @@ function CopyTable( tab, lookup_table )
 		if ( !istable( v ) ) then
 			copy[ i ] = v
 		elseif i ~= "__outer" then
-			lookup_table = lookup_table or {}
-			lookup_table[ tab ] = copy
-			if ( lookup_table[ v ] ) then
-				copy[ i ] = lookup_table[ v ] -- we already copied this table. reuse the copy.
+			if v.Copy then
+				copy[ i ] = v:Copy()
 			else
-				copy[ i ] = CopyTable( v, lookup_table ) -- not yet copied. copy it.
+				lookup_table = lookup_table or {}
+				lookup_table[ tab ] = copy
+				if ( lookup_table[ v ] ) then
+					copy[ i ] = lookup_table[ v ] -- we already copied this table. reuse the copy.
+				else
+					copy[ i ] = CopyTable( v, lookup_table ) -- not yet copied. copy it.
+				end
 			end
 		end
 	end
 	return copy
+
+end
+
+if CLIENT then
+
+	concommand.Add("bp_guid", function(p,c,a)
+		local uid = EscapedGUID( GUID() )
+		local str = a[1] and ("local %s = %s"):format(a[1], uid) or uid
+		SetClipboardText( str )
+		print(str)
+	end)
 
 end

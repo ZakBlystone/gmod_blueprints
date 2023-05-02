@@ -1,0 +1,6 @@
+STRUCT CAMI_PRIVILEGE
+{
+	PIN Name, PN_String
+	PIN MinAccess, PN_String
+	PIN Description, PN_String
+}

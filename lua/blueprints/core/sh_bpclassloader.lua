@@ -39,6 +39,9 @@ function meta:Register(name, tab, base)
 		local b = base and registered[base] if b then return b.__index(s, k) end
 		return parentMeta[k]
 	end
+	tab.__tostring = function(s)
+		return ("|%s|%s"):format( name, parentMeta.__tostring(s) )
+	end
 
 	tab.__raw = tab
 	tab.__indexer = setmetatable({}, tab)

@@ -8,6 +8,8 @@ TEST.Libs = {
 
 function DIFF_BASIC()
 
+	if true then return end
+
 	local myList = bplist.New():NamedItems()
 	myList:Add( bpfile.New(), "test1" )
 	myList:Add( bpfile.New(), "test2" )

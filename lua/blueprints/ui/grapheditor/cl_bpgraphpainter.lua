@@ -12,6 +12,13 @@ local BGMaterial = CreateMaterial("gridMaterial2", "UnLitGeneric", {
 	["$vertexalpha"] = 1,
 })
 
+local HighlightSplineMaterial = CreateMaterial("highlightSpline", "UnLitGeneric", {
+	["$basetexture"] = "effects/laser1",
+	["$vertexcolor"] = 1,
+	["$vertexalpha"] = 1,
+	["$additive"] = 1,
+})
+
 local meta = bpcommon.MetaTable("bpgraphpainter")
 
 function meta:Init( graph, nodeSet, vgraph )
@@ -29,16 +36,19 @@ function meta:GetVGraph() return self.vgraph end
 function meta:PointToWorld(x,y) return self:GetVGraph():GetRenderer():PointToWorld(x,y) end
 function meta:PointToScreen(x,y) return self:GetVGraph():GetRenderer():PointToScreen(x,y) end
 
-function meta:DrawConnection(connection, xOffset, yOffset, alpha)
+function meta:DrawConnection(aPin, bPin, xOffset, yOffset, alpha)
+
+	assert( isbppin(aPin), "Expected pin, got: " .. tostring(aPin) )
+	assert( isbppin(bPin), "Expected pin, got: " .. tostring(bPin) )
 
 	local nodes = self:GetNodeSet():GetVNodes()
 	local pw, ph = self:GetVGraph():GetSize()
-	local a = nodes[connection[1]]
-	local apin = connection[2]
-	local b = nodes[connection[3]]
-	local bpin = connection[4]
+	local a = nodes[aPin:GetNode()]
+	local apin = aPin.id
+	local b = nodes[bPin:GetNode()]
+	local bpin = bPin.id
 
-	if a == nil or b == nil then print("Invalid connection") return end
+	if a == nil or b == nil then return end --print("Invalid connection") 
 
 	local ax, ay = a:GetPinSpotLocation(apin)
 	local bx, by = b:GetPinSpotLocation(bpin)
@@ -64,7 +74,22 @@ function meta:DrawConnection(connection, xOffset, yOffset, alpha)
 
 	local apintype = avpin:GetPin()
 	local bpintype = bvpin:GetPin()
+	local highlight = math.max( a:GetHighlight(), b:GetHighlight() )
 
+	--highlight = 1
+	if highlight > 0 then
+
+		render.SetMaterial(HighlightSplineMaterial)
+		bprenderutils.DrawHermite( ax, ay, bx, by, 
+			apintype:GetColor(), 
+			bpintype:GetColor(),
+			alpha,
+			4 + 120 * highlight
+		)
+
+	end
+
+	render.SetColorMaterialIgnoreZ()
 	bprenderutils.DrawHermite( ax, ay, bx, by, 
 		apintype:GetColor(), 
 		bpintype:GetColor(),
@@ -88,16 +113,19 @@ end
 
 function meta:DrawNode(vnode, xOffset, yOffset, alpha)
 
+	local dt = FrameTime()
 	local pw, ph = self:GetVGraph():GetSize()
 	local x,y = vnode:GetPos()
 	local w,h = vnode:GetSize()
 	local x0,y0 = self:PointToScreen(x,y)
 	local x1,y1 = self:PointToScreen(x+w,y+h)
 
+	vnode:Think(dt)
+
 	if x0 > pw or y0 > ph then return false end
 	if x1 < 0 or y1 < 0 then return false end
 
-	vnode:Draw(xOffset, yOffset, alpha)
+	vnode:Draw(xOffset, yOffset, alpha, self:GetVGraph():GetLOD())
 	return true
 
 end
@@ -121,10 +149,21 @@ end
 function meta:DrawConnections(xOffset, yOffset, alpha)
 
 	local connectionsDrawn = 0
-	for _, connection in self:GetGraph():Connections() do
-		if self:DrawConnection(connection, xOffset, yOffset, alpha) then connectionsDrawn = connectionsDrawn + 1 end
+	for _, vnode in pairs(self:GetNodeSet():GetVNodes()) do
+
+		for pinID, pin in vnode:GetNode():SidePins(PD_Out) do
+
+			for _, other in ipairs(pin:GetConnections()) do
+
+				if other() ~= nil then
+					if self:DrawConnection(pin, other(), xOffset, yOffset, alpha) then connectionsDrawn = connectionsDrawn + 1 end
+				end
+
+			end
+
+		end
+
 	end
-	--print("Connections: " .. connectionsDrawn)
 
 end
 

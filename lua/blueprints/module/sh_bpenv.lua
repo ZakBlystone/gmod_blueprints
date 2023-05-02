@@ -8,9 +8,9 @@ active = active or {}
 DestroyAll = nil
 Uninstall = nil
 
-function HandleModuleError( mod, msg, graphID, nodeID )
+function HandleModuleError( mod, msg, modUID, graphID, nodeID )
 
-	hook.Run("BPModuleError", mod, msg, graphID, nodeID)
+	hook.Run("BPModuleError", mod, msg, modUID, graphID, nodeID)
 
 end
 
@@ -25,11 +25,7 @@ function Install( mod )
 	local uid = mod:GetUID()
 
 	if installed[uid] then
-		if mod:GetType() == "mod" then
-			Uninstall( uid )
-		else
-			mod:Refresh()
-		end
+		mod:Refresh()
 	end
 
 	--print("INSTALL MODULE: " .. GUIDToString(uid))

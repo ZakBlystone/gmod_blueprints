@@ -8,6 +8,8 @@ FL_LOCK_NAME = 2
 FL_HOOK = 4
 FL_ROLE_SERVER = 8
 FL_ROLE_CLIENT = 16
+FL_SERIALIZE_NAME = 32
+FL_LOCAL_VARIABLES = 64 -- has local variables
 
 local meta = bpcommon.MetaTable("bpgraph")
 
@@ -16,21 +18,21 @@ New = nil
 bpcommon.CreateIndexableListIterators(meta, "nodes")
 bpcommon.CreateIndexableListIterators(meta, "inputs")
 bpcommon.CreateIndexableListIterators(meta, "outputs")
+bpcommon.CreateIndexableListIterators(meta, "locals")
 bpcommon.AddFlagAccessors(meta)
 
 function meta:Init(type)
 
-	self.flags = FL_NONE
+	self.flags = bit.bor(FL_NONE, FL_LOCAL_VARIABLES)
 	self.type = type or GT_Event
 	self.hookNodeType = nil
+	self.uid = bpcommon.GUID()
 
 	-- Create lists for graph elements
-	self.deferredNodes = bplist.New(bpnode_meta):WithOuter(self)
 	self.nodes = bplist.New(bpnode_meta):WithOuter(self)
 	self.inputs = bplist.New(bppin_meta):NamedItems("Inputs"):WithOuter(self)
 	self.outputs = bplist.New(bppin_meta):NamedItems("Outputs"):WithOuter(self)
-	self.connections = {}
-	self.heldConnections = {}
+	self.locals = bplist.New(bpvariable_meta):NamedItems("Locals"):WithOuter(self)
 
 	-- Listen for changes in the input variable list (function graph)
 	self.inputs:Bind("preModify", self, self.PreModify)
@@ -41,15 +43,10 @@ function meta:Init(type)
 	self.outputs:Bind("postModify", self, self.PostModify)
 
 	-- Listen for changes in the node list
-	self.nodes:BindRaw("added", self, function(id) self:Broadcast("nodeAdded", id) end)
-	self.nodes:BindRaw("removed", self, function(id)
-		for i, c in self:Connections() do
-			if c[1] == id or c[3] == id then
-				self:RemoveConnectionID(i)
-			end
-		end
-
-		self:Broadcast("nodeRemoved", id)
+	self.nodes:BindRaw("added", self, function(id, node) self:Broadcast("nodeAdded", node) end)
+	self.nodes:BindRaw("removed", self, function(id, node)
+		node:BreakAllLinks()
+		self:Broadcast("nodeRemoved", node)
 	end)
 
 	local pinmeta = bpcommon.FindMetaTable("bppin")
@@ -61,6 +58,7 @@ function meta:Init(type)
 	self.callNodeType:SetCodeType(NT_Function)
 	self.callNodeType:SetNodeClass("UserFuncCall")
 	self.callNodeType.GetDisplayName = function() return self:GetName() end
+	self.callNodeType.GetCategory = function() return self:GetModule() and self:GetModule():GetName() or self:GetName() end
 	self.callNodeType.GetGraphThunk = function() return self end
 	self.callNodeType.GetRole = function() return self:GetNetworkRole() end
 
@@ -86,13 +84,27 @@ function meta:Init(type)
 
 end
 
+function meta:Destroy()
+
+	self.callNodeType:Destroy()
+	self.callEntryNodeType:Destroy()
+	self.callExitNodeType:Destroy()
+
+end
+
+function meta:ToString()
+
+	return self:GetName() or "unnamed"
+
+end
+
 function meta:GetModule()
 
 	return self:FindOuter( bpmodule_meta )
 
 end
 
-function meta:PostInit()
+function meta:CreateDefaults()
 
 	-- Function graphs add entry and exit nodes on creation
 	if self.type == GT_Function then
@@ -102,131 +114,25 @@ function meta:PostInit()
 
 	end
 
-	self:CacheNodeTypes()
-
-	return self
-
 end
 
 function meta:PreModify()
 
-	self:GetModule():PreModifyNodeType( self.callNodeType )
-	self:PreModifyNodeType( self.callEntryNodeType )
-	self:PreModifyNodeType( self.callExitNodeType )
+	self.callEntryNodeType:PreModify()
+	self.callExitNodeType:PreModify()
+	self.callNodeType:PreModify()
 
 end
 
 function meta:PostModify()
 
-	self:GetModule():PostModifyNodeType( self.callNodeType )
-	self:PostModifyNodeType( self.callEntryNodeType )
-	self:PostModifyNodeType( self.callExitNodeType )
+	self.callEntryNodeType:PostModify()
+	self.callExitNodeType:PostModify()
+	self.callNodeType:PostModify()
 
 end
 
 function meta:CanRename() return not self:HasFlag(FL_LOCK_NAME) end
-
-function meta:PreModifyNode( node, action, subaction )
-
-	self:Broadcast("preModifyNode", node.id, action)
-
-	self.heldConnections[node.id] = {}
-	local held = self.heldConnections[node.id]
-	local pins = node:GetPins()
-
-	node.holdPinCount = #pins
-
-	for i, c in self:Connections() do
-
-		if c[1] == node.id then --output
-			local other = self:GetNode(c[3])
-			local pin = pins[c[2]]
-			self:RemoveConnectionID(i)
-			held[#held+1] = {pin:GetDir(), pin:GetName(), c[3], PD_In, other:GetPin(c[4]):GetName(), c[2]}
-		elseif c[3] == node.id then --input
-			local other = self:GetNode(c[1])
-			local pin = pins[c[4]]
-			self:RemoveConnectionID(i)
-			held[#held+1] = {pin:GetDir(), pin:GetName(), c[1], PD_Out, other:GetPin(c[2]):GetName(), c[4]}
-		end
-
-	end
-
-end
-
-function meta:PostModifyNode( node )
-
-	--print("NODE MODIFICATION: " .. node:ToString() )
-
-	node:UpdatePins()
-	self:Broadcast("postModifyNode", node.id)
-
-	local ntype = node:GetType()
-	local held = self.heldConnections[node.id]
-	self.heldConnections[node.id] = nil
-
-	if ntype == nil then return end
-	if held == nil then return end
-
-	local pins = node:GetPins()
-	local pinCountSame = node.holdPinCount == #pins
-
-	for _, c in ipairs(held) do
-		local found = node:FindPin(c[1], c[2])
-		local pinID = found and found.id
-		if pinID == nil and pinCountSame then pinID = c[6] end
-		if pinID then
-			local other = self:GetNode(c[3])
-			local otherPin = other:FindPin(c[4], c[5]).id
-			if otherPin ~= nil then self:ConnectNodes(node.id, pinID, other.id, otherPin) end
-		else
-			print("Couldn't find pin: " .. tostring(c[2]))
-		end
-	end
-
-end
-
-function meta:PreModifyNodeType( nodeType)
-
-	if type(nodeType) == "table" then
-
-		for id, node in self:Nodes() do
-			if node:GetType() ~= nodeType then continue end
-			self:PreModifyNode( node, action, subaction )
-		end
-
-	else
-
-		for id, node in self:Nodes() do
-			if node:GetTypeName() ~= nodeType then continue end
-			self:PreModifyNode( node, action, subaction )
-		end
-
-	end
-
-end
-
-function meta:PostModifyNodeType( nodeType )
-
-	self:CacheNodeTypes()
-
-	if type(nodeType) == "table" then
-
-		for id, node in self:Nodes() do
-			if node:GetType() ~= nodeType then continue end
-			self:PostModifyNode( node, action, subaction )
-		end
-
-	else
-
-		for id, node in self:Nodes() do
-			if node:GetTypeName() ~= nodeType then continue end
-			self:PostModifyNode( node, action, subaction )
-		end
-
-	end
-
-end
 
 function meta:SetHookType( nodeType )
 
@@ -325,7 +231,8 @@ function meta:GetNodeTypes()
 	local collection = bpcollection.New()
 
 	Profile("cache-node-types", function()
-		self:GetModule():GetNodeTypes( collection, self )
+		self:GetModule():GetAllNodeTypes( collection, self )
+		self:GetModule():GetLocalNodeTypes( collection, self )
 
 		if self.type == GT_Function then
 			local types = {}
@@ -341,20 +248,28 @@ function meta:GetNodeTypes()
 
 end
 
-function meta:Connections(forward)
+function meta:AllPins()
 
-	if forward then
-		local i, n = 0, #self.connections
-		return function()
+	local nodes = self.nodes:GetTable()
+	local i = 1
+	local j = 1
+	local num = #nodes
+
+	return function()
+		if i > num then return end
+		local n = nodes[i]
+		local p = n:GetPins()
+		local o
+		if j >= #p then
 			i = i + 1
-			if i <= n then return i, self.connections[i] end
+			o = p[j]
+			j = 1
+			return o
+		else
+			o = p[j]
+			j = j + 1
+			return o
 		end
-	end
-
-	local i = #self.connections + 1
-	return function() 
-		i = i - 1
-		if i > 0 then return i, self.connections[i] end
 	end
 
 end
@@ -362,18 +277,6 @@ end
 function meta:GetNodePin(nodeID, pinID)
 
 	return self:GetNode(nodeID):GetPin(pinID)
-
-end
-
-function meta:GetPinConnections(pinDir, nodeID, pinID)
-
-	local out = {}
-	for k, v in self:Connections() do
-		if pinDir == PD_In and (v[3] ~= nodeID or v[4] ~= pinID) then continue end
-		if pinDir == PD_Out and (v[1] ~= nodeID or v[2] ~= pinID) then continue end
-		out[#out+1] = v
-	end
-	return out
 
 end
 
@@ -394,7 +297,7 @@ function meta:GetUsedPinTypes(used, noFlags)
 end
 
 -- Starting at a given node, traverses connections in the graph which match a condition
-function meta:NodeWalk(nodeID, condition, visited)
+function meta:NodeWalk(node, condition, visited)
 
 	visited = visited or {}
 
@@ -406,19 +309,17 @@ function meta:NodeWalk(nodeID, condition, visited)
 	local function AddNodeConnections(node)
 		if visited[node] then return end visited[node] = true
 		for pinID, pin in node:Pins(nil, true) do
-			for _, v in ipairs( self:GetPinConnections(pin:GetDir(), node.id, pinID) ) do
-				local other = pin:GetDir() == PD_In and v[1] or v[3]
-				local otherPin = pin:GetDir() == PD_In and v[2] or v[4]
-				local otherNode = self:GetNode( other )
-
+			for _, v in ipairs( pin:GetConnectedPins() ) do
+				assert(v:GetNode() ~= nil)
+				if not v:GetNode():IsFullyLoaded() then continue end
 				-- Push connection onto stack if condition passes
-				if condition(otherNode, otherPin) then stack[#stack+1] = v end
+				if condition(v:GetNode(), v.id) then stack[#stack+1] = {pin, v} end
 			end
 		end
 	end
 
 	-- Add current node's connections
-	AddNodeConnections(self:GetNode(nodeID))
+	AddNodeConnections(node)
 
 	while #stack > 0 and max > 0 do
 		max = max - 1
@@ -428,8 +329,8 @@ function meta:NodeWalk(nodeID, condition, visited)
 		table.remove(stack, #stack)
 		connections[#connections+1] = conn
 
-		local node0 = self:GetNode(conn[1])
-		local node1 = self:GetNode(conn[3])
+		local node0 = conn[1]:GetNode()
+		local node1 = conn[2]:GetNode()
 
 		-- Recurse into the node that hasn't been visited yet
 		AddNodeConnections(visited[node0] and node1 or node0)
@@ -446,14 +347,10 @@ function meta:BuildInformDirectionalCandidates(dir, candidateNodes)
 	for id, node in self:Nodes() do
 		for pinID, pin in node:SidePins(dir) do
 			if node:IsInformPin(pinID) then
-				for _, v in ipairs( self:GetPinConnections(dir, id, pinID) ) do
-					local other = self:GetNode( dir == PD_In and v[1] or v[3] )
+				for _, v in ipairs( pin:GetConnectedPins() ) do
+					local other = v:GetNode()
 					if other == nil then continue end
-
-					local otherPin = dir == PD_In and v[2] or v[4]
-					if other:GetPin( otherPin ) == nil then continue end
-
-					if other:IsInformPin( otherPin ) == false and other:GetPin( otherPin ):GetBaseType() ~= PN_Any then
+					if other:IsInformPin( v.id ) == false and v:GetBaseType() ~= PN_Any then
 						if not table.HasValue(candidateNodes, other) then
 							candidateNodes[#candidateNodes+1] = other
 						end
@@ -466,6 +363,41 @@ function meta:BuildInformDirectionalCandidates(dir, candidateNodes)
 end
 
 function meta:WalkInforms()
+
+	Profile("walk-inform-exec", function()
+
+		for pin in self:AllPins() do
+			if pin:IsType(PN_Exec) then
+				pin:SetInformedType(nil)
+			end
+		end
+
+
+		self:ExecWalk( function(node)
+
+			local infer = 0
+			for _, pin in node:SidePins(PD_In, bpnode.PF_OnlyExec) do
+
+				for _, other in ipairs(pin:GetConnectedPins()) do
+
+					if other:HasFlag(PNF_Server) then infer = bit.bor(infer, PNF_Server) end
+					if other:HasFlag(PNF_Client) then infer = bit.bor(infer, PNF_Client) end
+
+				end
+
+			end
+
+			if infer == PNF_Server or infer == PNF_Client then
+				for _, pin in node:Pins(bpnode.PF_OnlyExec) do
+					if not pin:HasFlag(PNF_Server) and not pin:HasFlag(PNF_Client) then
+						pin:SetInformedType( pin:GetType():WithFlags( infer ) )
+					end
+				end
+			end
+
+		end, true )
+
+	end)
 
 	Profile("walk-informs", function()
 
@@ -480,26 +412,26 @@ function meta:WalkInforms()
 		self:BuildInformDirectionalCandidates(PD_In, candidateNodes)
 
 		for _, v in ipairs(candidateNodes) do
-			local connections = self:NodeWalk(v.id, function(node, pinID)
+			local connections = self:NodeWalk(v, function(node, pinID)
 				return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_In
 			end, visited)
 			local pinType = nil
 			for _,c in ipairs(connections) do
-				if not self:GetNode(c[1]):IsInformPin(c[2]) then pinType = self:GetNode(c[1]):GetPin(c[2]):GetType(true) end
-				self:GetNode(c[3]):SetInform(pinType)
+				if not c[1]:GetNode():IsInformPin(c[1].id) then pinType = c[1]:GetType(true) end
+				c[2]:GetNode():SetInform(pinType)
 			end
 		end
 
 		self:BuildInformDirectionalCandidates(PD_Out, candidateNodes)
 
 		for _, v in ipairs(candidateNodes) do
-			local connections = self:NodeWalk(v.id, function(node, pinID)
+			local connections = self:NodeWalk(v, function(node, pinID)
 				return node:IsInformPin(pinID) and node:GetPin(pinID):GetDir() == PD_Out
 			end, visited)
 			local pinType = nil
 			for _,c in ipairs(connections) do
-				if not self:GetNode(c[3]):IsInformPin(c[4]) then pinType = self:GetNode(c[3]):GetPin(c[4]):GetType(true) end
-				self:GetNode(c[1]):SetInform(pinType)
+				if not c[1]:GetNode():IsInformPin(c[1].id) then pinType = c[1]:GetType(true) end
+				c[2]:GetNode():SetInform(pinType)
 			end
 		end
 
@@ -524,125 +456,9 @@ function meta:FindNodeByType(nodeType)
 
 end
 
-function meta:FindConnection(nodeID0, pinID0, nodeID1, pinID1)
-
-	local p0 = self:GetNodePin( nodeID0, pinID0 )
-	local dir = p0:GetDir()
-
-	if dir == PD_Out then
-
-		for _, connection in self:Connections() do
-
-			if connection[1] ~= nodeID0 or connection[2] ~= pinID0 then continue end
-			if connection[3] == nodeID1 and connection[4] == pinID1 then return connection end
-
-		end
-
-	else
-
-		for _, connection in self:Connections() do
-
-			if connection[3] ~= nodeID0 or connection[4] ~= pinID0 then continue end
-			if connection[1] == nodeID1 and connection[2] == pinID1 then return connection end
-
-		end
-
-	end
-
-end
-
-function meta:IsPinConnected(nodeID, pinID, killConnections)
-
-	for i, connection in self:Connections() do
-
-		if connection[1] == nodeID and connection[2] == pinID then
-			if killConnections then self:RemoveConnectionID(i) continue end
-			return true, connection
-		end
-		if connection[3] == nodeID and connection[4] == pinID then
-			if killConnections then self:RemoveConnectionID(i) continue end
-			return true, connection
-		end
-
-	end
-
-end
-
 function meta:NodePinToString(nodeID, pinID)
 
 	return self:GetNode(nodeID):ToString(pinID)
-
-end
-
-function meta:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
-
-	if self:FindConnection(nodeID0, pinID0, nodeID1, pinID1) ~= nil then return false, "Already connected" end
-
-	local p0 = self:GetNodePin(nodeID0, pinID0) --always PD_Out
-	local p1 = self:GetNodePin(nodeID1, pinID1) --always PD_In
-
-	if p0:IsType(PN_Exec) and self:IsPinConnected(nodeID0, pinID0, true) then return false, "Only one connection outgoing for exec pins" end
-	if not p1:IsType(PN_Exec) and self:IsPinConnected(nodeID1, pinID1, true) then return false, "Only one connection for inputs" end
-
-	if p0:GetDir() == p1:GetDir() then return false, "Can't connect " .. (p0:IsOut() and "m/m" or "f/f") .. " pins" end
-
-	if self:GetNode(nodeID0):GetTypeName() == "CORE_Pin" and p0:IsType(PN_Any) then return true end
-	if self:GetNode(nodeID1):GetTypeName() == "CORE_Pin" and p1:IsType(PN_Any) then return true end
-
-	if p0:HasFlag(PNF_Table) ~= p1:HasFlag(PNF_Table) then return false, "Can't connect table to non-table pin" end
-
-	if not p0:GetType():Equal(p1:GetType(), 0) then
-
-		if p0:IsType(PN_Any) and not p1:IsType(PN_Exec) then return true end
-		if p1:IsType(PN_Any) and not p0:IsType(PN_Exec) then return true end
-
-		if self:GetModule():CanCast(p0:GetType(), p1:GetType()) then
-			return true
-		else
-			return false, "No explicit conversion between " .. self:NodePinToString(nodeID0, pinID0) .. " and " .. self:NodePinToString(nodeID1, pinID1)
-		end
-
-	end
-
-	if p0:GetSubType() ~= p1:GetSubType() then 
-		return false, "Can't connect " .. self:NodePinToString(nodeID0, pinID0) .. " to " .. self:NodePinToString(nodeID1, pinID1)
-	end
-
-	return true
-
-end
-
-function meta:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
-
-	local p0 = self:GetNodePin(nodeID0, pinID0)
-	local p1 = self:GetNodePin(nodeID1, pinID1)
-
-	if p0 == nil then print("P0 pin not found: " .. nodeID0 .. " -> " .. pinID0) return false end
-	if p1 == nil then print("P1 pin not found: " .. nodeID1 .. " -> " .. pinID1) return false end
-
-	-- swap connection to ensure first is output and second is input
-	if p0:IsIn() and p1:IsOut() then
-		local t = nodeID0 nodeID0 = nodeID1 nodeID1 = t
-		local t = pinID0 pinID0 = pinID1 pinID1 = t
-	end
-
-	local cc, m = self:CanConnect(nodeID0, pinID0, nodeID1, pinID1)
-	if not cc then print(m) return false end
-
-	self.connections[#self.connections+1] = { nodeID0, pinID0, nodeID1, pinID1 }
-
-	local node0 = self:GetNode(nodeID0)
-	local node1 = self:GetNode(nodeID1)
-
-	if node0.ConnectionAdded then node0:ConnectionAdded( p0 ) end
-	if node1.ConnectionAdded then node1:ConnectionAdded( p1 ) end
-
-	--print("CONNECTED: " .. self:GetNode(nodeID0):ToString(pinID0) .. " -> " .. self:GetNode(nodeID1):ToString(pinID1))
-
-	self:WalkInforms()
-	self:Broadcast("connectionAdded", #self.connections, self.connections[#self.connections])
-
-	return true
 
 end
 
@@ -651,7 +467,6 @@ function meta:Clear()
 	self.nodes:Clear()
 	self.inputs:Clear()
 	self.outputs:Clear()
-	self.connections = {}
 
 	self:Broadcast("cleared")
 
@@ -696,96 +511,26 @@ function meta:AddNode(nodeTypeName, ...)
 		if graph then return graph end
 	end
 
-	local id, newNode = self.nodes:Construct( nodeType, ... )
-	return id, newNode
+	local node = bpnode.New( nodeType, ... ):WithOuter( self )
+	node:Initialize()
+	return self.nodes:Add(node)
 
 end
 
-function meta:RemoveConnectionID(id)
+function meta:CollapseSingleRerouteNode( node )
 
-	local c = self.connections[id]
-	if c ~= nil then
-		table.remove(self.connections, id)
-		self:WalkInforms()
-		self:Broadcast("connectionRemoved", id, c)
-	else
-		print("Could not find connection: " .. tostring(id))
-	end
+	local inputs = {}
+	local outputs = {}
 
-end
+	for _, pin in ipairs(node:GetPin(1):GetConnectedPins()) do inputs[#inputs+1] = pin end
+	for _, pin in ipairs(node:GetPin(2):GetConnectedPins()) do outputs[#outputs+1] = pin end
 
-function meta:RemoveConnection(nodeID0, pinID0, nodeID1, pinID1)
+	node:BreakAllLinks()
 
-	for i, c in self:Connections() do
-
-		if (c[1] == nodeID0 and c[3] == nodeID1) and (c[2] == pinID0 and c[4] == pinID1) then
-			self:RemoveConnectionID(i)
-		elseif (c[1] == nodeID1 and c[3] == nodeID0) and (c[2] == pinID1 and c[4] == pinID0) then
-			self:RemoveConnectionID(i)
-		end
-
-	end
-
-end
-
-function meta:RemoveInvalidConnections()
-
-	local connections = self.connections
-	for i=#connections, 1, -1 do
-
-		local c = connections[i]
-		local node1 = self:GetNode(c[1])
-		local node2 = self:GetNode(c[3])
-		if not node1 then
-			print("Removed invalid connection: " .. i .. " [output node not found : " .. tostring(c[1]) .. "]")
-			table.remove(connections, i)
-		elseif not node2 then
-			print("Removed invalid connection: " .. i .. " [input node not found : " .. tostring(c[3]) .. "]")
-			table.remove(connections, i)
-		elseif not node1:GetPin(c[2]) then
-			print("Removed invalid connection: " .. i .. " [output pin not found : " .. node1:ToString() .. " : " .. tostring(c[2]) .. "]")
-			table.remove(connections, i)
-			PrintTable(c)
-		elseif not node2:GetPin(c[4]) then
-			print("Removed invalid connection: " .. i .. " [input pin not found : " .. node2:ToString() .. " : " .. tostring(c[4]) .. "]")
-			table.remove(connections, i)
-			PrintTable(c)
-		end
-
-	end	
-
-end
-
-function meta:CollapseSingleRerouteNode(nodeID)
-
-	local node = self:GetNode( nodeID )
-
-	local insert = {}
-	local connections = self.connections
-	local input = nil
-	for i, c in self:Connections() do
-
-		if c[1] == nodeID then --output
-			insert[#insert+1] = {c[3],c[4]}
-			self:RemoveConnectionID(i)
-		elseif c[3] == nodeID then --input
-			input = {c[1],c[2]}
-			self:RemoveConnectionID(i)
-		end
-
-	end	
-
-	if input == nil then print("Reroute node did not have input connection") return end
-
-	for _, c in ipairs(insert) do
-		if not self:ConnectNodes(input[1], input[2], c[1], c[2]) then 
-			error("Unable to reconnect re-route nodes: " .. 
-				self:NodePinToString(input[1], input[2]) .. " -> " .. 
-				self:NodePinToString(c[1], c[2])) 
-		end
-	end
-
-	self:RemoveNode( nodeID )
+	if #inputs == 0 or #outputs == 0 then return
+	elseif #inputs == 1 then for _, pin in ipairs(outputs) do inputs[1]:MakeLink( pin ) end
+	elseif #outputs == 1 then for _, pin in ipairs(inputs) do outputs[1]:MakeLink( pin ) end
+	else error("Invalid state on reroute node: " .. #inputs .. " inputs, " .. #outputs .. " outputs") end
 
 end
 
@@ -795,7 +540,7 @@ function meta:CollapseRerouteNodes()
 
 	for _, node in self:Nodes(true) do
 		if node:GetType():HasFlag(NTF_Collapse) then
-			self:CollapseSingleRerouteNode( node.id )
+			self:CollapseSingleRerouteNode( node )
 		end
 	end
 
@@ -804,231 +549,132 @@ function meta:CollapseRerouteNodes()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
 
-	Profile("write-single-graph", function()
+	self:CacheNodeTypes()
 
-		stream:WriteInt( self.type, false )
-		stream:WriteInt( self.flags, false )
-
-		if self.type == GT_Function then
-			Profile("write-inputs", self.inputs.WriteToStream, self.inputs, stream, mode, version)
-			Profile("write-outputs", self.outputs.WriteToStream, self.outputs, stream, mode, version)
-		end
-
-		Profile("write-nodes", self.nodes.WriteToStream, self.nodes, stream, mode, version)
-		Profile("write-connections", bpdata.WriteValue, self.connections, stream )
-
-		if mode == bpmodule.STREAM_FILE then
-
-			Profile("write-connection-meta", self.WriteConnectionMeta, self, stream, version)
-
-		end
-
-		bpdata.WriteValue( self.hookNodeType, stream )
-
-	end)
-
-end
-
-function meta:WriteConnectionMeta(stream, version)
-
-	local connnectionMeta = {}
-	local n = 0
-	local maxid = 0
-
-	local newver = true
-	local idf = stream.WriteInt
-	if newver then
-		for id, c in self:Connections(true) do n = n + 1 maxid = math.max(maxid, id) end
-		local bits = 24
-		if maxid < 65536 then bits = 16 end
-		if maxid < 256 then bits = 8 end
-		stream:WriteBits( bits, 8 )
-		for id, c in self:Connections(true) do stream:WriteBits( id, bits ) end
-		stream:WriteBits( 0, bits )
-	end
-
-	for id, c in self:Connections(true) do
-
-		local n0 = self:GetNode(c[1])
-		local n1 = self:GetNode(c[3])
-		local pin0 = n0:GetPins()[c[2]]
-		local pin1 = n1:GetPins()[c[4]]
-		if newver then
-			stream:WriteStr( n0:GetTypeName() )
-			stream:WriteStr( pin0:GetName() )
-			stream:WriteStr( n1:GetTypeName() )
-			stream:WriteStr( pin1:GetName() )
+	local external = {}
+	for _, v in self.nodes:Items() do
+		if stream:IsNetwork() or true then
+			if v:GetType():FindOuter(bpdefpack_meta) ~= nil then
+				external[#external+1] = v:GetType():GetFullName()
+			end
 		else
-			connnectionMeta[id] = {n0:GetTypeName(), pin0:GetName(), n1:GetTypeName(), pin1:GetName()}
+			external[#external+1] = v:GetType()
 		end
-
 	end
 
-	if not newver then
-		bpdata.WriteValue( connnectionMeta, stream )
-	end
-
-end
-
-function meta:ReadFromStream(stream, mode, version)
-
-	Profile("read-single-graph", function()
-
-		self:Clear()
-
-		self.type = stream:ReadInt( false )
-		self.flags = stream:ReadInt( false )
-
-		if self.type == GT_Function then
-
-			self.inputs:SuppressAllEvents(true)
-			self.outputs:SuppressAllEvents(true)
-			self.inputs:ReadFromStream(stream, mode, version)
-			self.outputs:ReadFromStream(stream, mode, version)
-			self.inputs:SuppressAllEvents(false)
-			self.outputs:SuppressAllEvents(false)
+	if stream:IsNetwork() or true then
+		local types = self:GetNodeTypes()
+		for _, v in ipairs( stream:StringArray(external) ) do
+			stream:Extern(types:Find(v), "\xE3\x01\x45\x7E\x79\x4E\xEE\x21\x80\x00\x00\x0B\x4F\xEF\x14\x26")
+			--print("EXTERNAL NODE TYPE: " .. tostring(types:Find(v)) )
 		end
-
-		self.deferredNodes:ReadFromStream(stream, mode, version)
-		self.connections = bpdata.ReadValue( stream )
-
-		if mode == bpmodule.STREAM_FILE then
-
-			self:ReadConnectionMeta(stream, version)
-
-		end
-
-		if version >= 3 then self.hookNodeType = bpdata.ReadValue( stream ) end
-
-	end)
-
-end
-
-function meta:ReadConnectionMeta(stream, version)
-
-	if version >= 4 then
-		local cmeta = {}
-		local ids = {}
-		local bits = stream:ReadBits(8)
-		local id = stream:ReadBits(bits)
-		local k = 0
-		while id ~= 0 and k ~= 100000 do
-			k = k + 1
-			ids[#ids+1] = id
-			id = stream:ReadBits(bits)
-		end
-		if k == 100000 then error("NO STOP BIT!!!") end
-		for i=1, #ids do
-			cmeta[ids[i]] = {stream:ReadStr(), stream:ReadStr(), stream:ReadStr(), stream:ReadStr()}
-		end
-		self.connectionMeta = cmeta
-
 	else
-		self.connectionMeta = bpdata.ReadValue( stream )
+		-- TODO, reconstitute outer groups on external nodetypes
+		external = stream:ObjectArray(external)
+		self.strongNodeTypeRef = external
 	end
+
+	stream:Extern( self:GetCallNodeType(), "\xE3\x01\x45\x7E\x7A\x7A\x16\x2F\x80\x00\x00\x0C\x50\x2A\xF7\x62" )
+	stream:Extern( self:GetEntryNodeType(), "\xE3\x01\x45\x7E\x4E\x7A\x49\x9F\x80\x00\x00\x0D\x50\x41\x15\x7A" )
+	stream:Extern( self:GetExitNodeType(), "\xE3\x01\x45\x7E\xC5\x9C\x09\x94\x80\x00\x00\x0E\x50\x4C\x94\x86" )
+
+	self.type = stream:UInt(self.type)
+	self.flags = stream:UInt(self.flags)
+
+	if self.type == GT_Function then
+
+		self.inputs:SuppressAllEvents(true)
+		self.outputs:SuppressAllEvents(true)
+		self.inputs:Serialize(stream)
+		self.outputs:Serialize(stream)
+		self.inputs:SuppressAllEvents(false)
+		self.outputs:SuppressAllEvents(false)
+
+	end
+
+	if bit.band( self.flags, FL_LOCAL_VARIABLES ) ~= 0 then
+
+		self.locals:SuppressAllEvents(true)
+		self.locals:Serialize(stream)
+		self.locals:SuppressAllEvents(false)
+
+	end
+
+	self.nodes:Serialize(stream)
+	self.hookNodeType = stream:String(self.hookNodeType)
+
+	if self:HasFlag(FL_SERIALIZE_NAME) then
+		self.name = stream:String(self.name)
+	end
+
+	if stream:IsNetwork() then
+		self.uid = stream:GUID(self.uid)
+	end
+
+	return stream
 
 end
 
-function meta:ResolveConnectionMeta()
+function meta:PostLoad()
 
-	if self.connectionMeta ~= nil then
-
-		--print("Resolving connection meta...")
-		for i, c in self:Connections(true) do
-			local meta = self.connectionMeta[i]
-			local nt0 = self:GetNode(c[1])
-			local nt1 = self:GetNode(c[3])
-
-			if nt0 == nil then continue end
-			if nt1 == nil then continue end
-
-			local pin0 = nt0:GetPin(c[2])
-			local pin1 = nt1:GetPin(c[4])
-			local ignorePin0 = false
-			local ignorePin1 = false
-
-			meta[2] = nt0:RemapPin(meta[2])
-			meta[4] = nt1:RemapPin(meta[4])
-
-			-- Reroute pins don't require fixup
-			if nt0:GetTypeName() == "CORE_Pin" then ignorePin0 = true end
-			if nt1:GetTypeName() == "CORE_Pin" then ignorePin1 = true end
-
-			--print("Check Connection: " .. nt0:ToString(c[2]) .. " -> " .. nt1:ToString(c[4]))
-
-			if meta == nil then continue end
-			if (pin0 == nil or pin0:GetName():lower() ~= meta[2]:lower()) and not ignorePin0 then
-				MsgC( Color(255,100,100), " -Pin[OUT] not valid: " .. c[2] .. ", was " .. meta[1] .. "." .. meta[2] .. ", resolving...")
-				local found = nt0:FindPin( PD_Out, meta[2] )
-				c[2] = found and found.id or nil
-				MsgC( c[2] ~= nil and Color(100,255,100) or Color(255,100,100), c[2] ~= nil and " Resolved\n" or " Not resolved\n" )
-			end
-
-			if (pin1 == nil or pin1:GetName():lower() ~= meta[4]:lower()) and not ignorePin1 then
-				MsgC( Color(255,100,100), " -Pin[IN] not valid: " .. c[4] .. ", was " .. meta[3] .. "." .. meta[4] .. ", resolving...")
-				local found = nt0:FindPin( PD_In, meta[4] )
-				c[4] = found and found.id or nil
-				MsgC( c[4] ~= nil and Color(100,255,100) or Color(255,100,100), c[4] ~= nil and " Resolved\n" or " Not resolved\n" )
-			end
-		end
-		self.connectionMeta = nil
-	end
-
-end
-
-function meta:CreateDeferredData()
-
-	--print("CREATE DEFERRED NODES: " .. #self.deferred)
-
-	Profile("create-deferred", function()
-
-		self.deferredNodes:MoveInto(self.nodes)
-
-		self:CacheNodeTypes()
-		self:RemoveNodeIf( function(node) return not node:PostInit() end )
-
-		for id, node in self:Nodes() do
-			self:Broadcast("nodeAdded", id)
-		end
-
-		self:ResolveConnectionMeta()
-		self:WalkInforms()
-		self:RemoveInvalidConnections()
-		for i, connection in self:Connections() do
-			self:Broadcast("connectionAdded", i, connection)
-		end
-
-	end)
+	self:WalkInforms()
 
 end
 
 -- Quickly banging this out using existing tech
-function meta:CopyInto(other)
+function meta:CopyInto(other, keepUIDs)
 
 	Profile("copy-graph", function()
 
 		other:Clear()
-		other.id = self.id
 		other.name = self.name
 		other.type = self.type
 		other.flags = self.flags
 		other.hookNodeType = self.hookNodeType
+		other.suppressPinEvents = true
 
-		-- Deep copy will copy all members including graph which includes module etc...
-		-- So clear graph variable and set it on the other side of the deep copy
-
-		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes )
-		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )
-		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs )
-
-		for _, node in other:Nodes() do node:PostInit() end
-
-		for _, c in self:Connections() do
-			other.connections[#other.connections+1] = {c[1], c[2], c[3], c[4]}
+		if keepUIDs then 
+			other.uid = self.uid
+		else
+			other.uid = bpcommon.GUID()
 		end
 
+		-- Store connections as indices
+		local connections = {}
+		local ids = bpindexer.New()
+		for pin in self:AllPins() do ids:Get(pin) end
+		for pin in self:AllPins() do
+			if not pin:IsOut() then continue end
+			for _, conn in ipairs(pin:GetConnections()) do
+				if not conn:IsValid() then continue end
+				connections[#connections+1] = {ids:Get(pin), ids:Get(conn())}
+			end
+		end
+
+		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes, keepUIDs )
+		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )
+		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs )
+		Profile("copy-locals", self.locals.CopyInto, self.locals, other.locals )
+		Profile("copy-init-nodes", function()
+			for _, node in other:Nodes() do node:Initialize(true) node.nodeType():UnbindAll(node) end
+		end)
+
+		Profile("copy-restore-connections", function()
+
+			-- Restore connections
+			local ids = bpindexer.New()
+			for pin in other:AllPins() do ids:Get(pin) end
+			for _, conn in ipairs(connections) do
+				local a = ids:FindByID(conn[1])
+				local b = ids:FindByID(conn[2])
+				if a and b then a:MakeLink(b, true) end
+			end
+
+		end)
+
+		other.suppressPinEvents = false
 		other:WalkInforms()
 
 	end)
@@ -1037,22 +683,26 @@ function meta:CopyInto(other)
 
 end
 
-function meta:CreateSubGraph(subNodeIds)
+function meta:CreateSubGraph( subNodes )
 
-	local copy = self:CopyInto( New():WithOuter( self:GetModule() ) )
+	local pre = bpindexer.New()
+	local discard = {}
+	for _, node in self:Nodes() do pre:Get(node) end
+	for _, node in ipairs(subNodes) do discard[pre:Get(node)] = true end
+
+	local copy = self:CopyInto( New():WithOuter( self:GetModule() ), false )
 	local hold = {}
 
-	for i, c in self:Connections() do
-		hold[#hold+1] = c
-	end
+	local post = bpindexer.New()
+	for _, node in copy:Nodes() do post:Get(node) end
 
 	copy:CacheNodeTypes()
-	copy:RemoveNodeIf( function(node) return not table.HasValue(subNodeIds, node.id) end )
+	copy:RemoveNodeIf( function(node) return not discard[post:Get(node)] end )
 	copy:WalkInforms()
-	copy:RemoveInvalidConnections()
 
 	local severedPins = {}
-	for _, v in ipairs(hold) do
+	-- TODO: Fix this
+	--[[for _, v in ipairs(hold) do
 
 		if table.HasValue(subNodeIds, v[1]) and not table.HasValue(subNodeIds, v[3]) then
 			severedPins[#severedPins+1] = {v[1], v[2]}
@@ -1062,7 +712,7 @@ function meta:CreateSubGraph(subNodeIds)
 			severedPins[#severedPins+1] = {v[3], v[4]}
 		end
 
-	end
+	end]]
 
 	copy.severedPins = severedPins
 
@@ -1073,7 +723,7 @@ end
 function meta:AddSubGraph( subgraph, x, y )
 
 	local connectionRemap = {}
-	local copy = subgraph:CopyInto( New() )
+	local copy = subgraph:CopyInto( New(), false )
 	local nodeCount = 0
 	local connectionCount = 0
 
@@ -1093,21 +743,14 @@ function meta:AddSubGraph( subgraph, x, y )
 
 	end
 
-	for _, c in copy:Connections() do
+end
 
-		connectionCount = connectionCount + 1
-		local nodeID0 = connectionRemap[c[1]]
-		local nodeID1 = connectionRemap[c[3]]
-		local pinID0 = c[2]
-		local pinID1 = c[4]
+function meta:AddIntermediate( nodeType )
 
-		if nodeID0 and nodeID1 then
-			self:ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
-		end
-
-	end
-
-	--print("Added " .. nodeCount .. " nodes and " .. connectionCount .. " connections.")
+	local node = bpnode.New( nodeType ):WithOuter( self )
+	node:Initialize()
+	self.__intermediates[#self.__intermediates+1] = node
+	return node
 
 end
 
@@ -1116,6 +759,16 @@ function meta:PreCompile( compiler, uniqueKeys )
 	-- prepare graph
 	self:CacheNodeTypes()
 	self:CollapseRerouteNodes()
+
+	-- expand all nodes
+	self.__intermediates = {}
+	for id, node in self:Nodes() do
+		node:Expand()
+	end
+
+	for _, node in ipairs(self.__intermediates) do
+		self.nodes:Add(node)
+	end
 
 	-- mark all nodes reachable via execution
 	self:ExecWalk( function(node)
@@ -1145,17 +798,37 @@ function meta:CompileEntrypoint( compiler )
 
 	compiler:CompileGraphNodeJumps( self )
 
+	-- check if graph requires a callstack
+	local requireCallStack = false
+	local statics = {}
+	self:ExecWalk( function(node)
+		if node:HasFlag(NTF_CallStack) then requireCallStack = true end
+		if node.GetGraphStatics then node:GetGraphStatics( compiler, statics ) end
+	end )
+
 	compiler.begin(CTX_Graph .. graphID)
 
+	for _, v in ipairs(statics) do
+		compiler.emitContext(v)
+	end
+
 	-- graph function header and callstack
-	compiler.emit("\nlocal function graph_" .. graphID .. "_entry( ip )\n")
+	compiler.emit("local graph_" .. graphID .. "_entry = __graph( function( ip )\n")
+
+	compiler.pushIndent()
+	print("Compile graph locals")
+	for _, var in self:Locals() do
+		print("Emit Variable: " .. tostring(var))
+		var:Compile( compiler )
+	end
+	compiler.popIndent()
 
 	-- debugging info
-	if compiler.debug then compiler.emit( "\t__dbggraph = " .. graphID) end
+	if compiler.debug then compiler.emit( "\t__prev, __dbggraph = __dbggraph, " .. graphID) end
 
 	-- emit graph-local variables, callstack, and jumptable
 	compiler.emitContext( CTX_Vars .. graphID, 1 )
-	compiler.emit( "\t_FR_CALLSTACK()")
+	if requireCallStack then compiler.emit( "\t_FR_CALLSTACK()") end
 	compiler.emitContext( CTX_JumpTable .. graphID, 1 )
 
 	-- emit all functions belonging to this graph
@@ -1167,16 +840,24 @@ function meta:CompileEntrypoint( compiler )
 	end )
 
 	-- emit terminus jump vector
-	compiler.emit("\n\t::__terminus::\n")
-	compiler.emit("end")
-	compiler.emit("setfenv(graph_" .. graphID .. "_entry, setmetatable({}, {__index = _G}))")
+	if not requireCallStack then
+		compiler.emit("\n\t::popcall:: ::__terminus::\n")
+	else
+		compiler.emit("\n\t::__terminus::\n")
+	end
+
+	if compiler.debug then
+		compiler.emit("\t__dbggraph = __prev")
+	end
+
+	compiler.emit("end)")
 	compiler.finish()
 
 	--print("COMPILED GRAPH: " .. graphID)
 
 end
 
-function meta:ExecWalk( func )
+function meta:ExecWalk( func, allNodes )
 
 	local visited = {}
 	local emitted = {}
@@ -1184,22 +865,36 @@ function meta:ExecWalk( func )
 	for _, node in self:Nodes() do
 
 		local codeType = node:GetCodeType()
-		if codeType == NT_Event or codeType == NT_FuncInput then
+		if codeType == NT_Event or codeType == NT_FuncInput or allNodes then
 
-			local connections = self:NodeWalk(node.id, function(node, pinID)
+			if allNodes then
+				local hasIncoming = false
+				for _, pin in node:SidePins(PD_In, bpnode.PF_OnlyExec) do
+					if #pin:GetConnections() ~= 0 then hasIncoming = true break end
+				end
+				if hasIncoming then goto skip end
+			end
+
+			local connections = self:NodeWalk(node, function(node, pinID)
+				assert(node:GetPin(pinID) ~= nil, tostring(node) .. " is missing pin " .. tostring(pinID))
 				return node:GetPin(pinID):IsType(PN_Exec) and node:GetPin(pinID):GetDir() == PD_In
 			end, visited)
 
 
 			for k, v in ipairs(connections) do
 
-				local nodeA = self:GetNode(v[1])
-				local nodeB = self:GetNode(v[3])
-
+				local nodeA = v[1]:GetNode()
+				local nodeB = v[2]:GetNode()
 				if not emitted[nodeA] then func(nodeA) emitted[nodeA] = true end
 				if not emitted[nodeB] then func(nodeB) emitted[nodeB] = true end
 
 			end
+
+			if #connections == 0 and not emitted[node] then
+				func(node) emitted[node] = true 
+			end
+
+			::skip::
 
 		end
 

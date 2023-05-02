@@ -36,6 +36,13 @@ function meta:Init()
 
 end
 
+function meta:Destroy()
+
+	self.makerNodeType:Destroy()
+	self.breakerNodeType:Destroy()
+
+end
+
 function meta:GetModule()
 
 	return self:FindOuter( bpmodule_meta )
@@ -44,19 +51,15 @@ end
 
 function meta:PreModify()
 
-	local mod = self:GetModule()
-	if not mod then return end
-	mod:PreModifyNodeType( self.makerNodeType )
-	mod:PreModifyNodeType( self.breakerNodeType )
+	self.makerNodeType:PreModify()
+	self.breakerNodeType:PreModify()
 
 end
 
 function meta:PostModify()
 
-	local mod = self:GetModule()
-	if not mod then return end
-	mod:PostModifyNodeType( self.makerNodeType )
-	mod:PostModifyNodeType( self.breakerNodeType )
+	self.makerNodeType:PostModify()
+	self.breakerNodeType:PostModify()
 
 end
 
@@ -129,28 +132,17 @@ function meta:BreakerNodeType()
 
 end
 
-function meta:PostInit()
+function meta:Serialize(stream)
 
-end
+	stream:Extern( self:MakerNodeType(), "\xE3\x09\x45\x7E\x9D\x1E\xC1\x57\x80\x00\x00\x17\x52\x30\x5E\x96" )
+	stream:Extern( self:BreakerNodeType(), "\xE3\x09\x45\x7E\xBB\xD4\x3D\x65\x80\x00\x00\x18\x52\x3E\xF5\xA2" )
 
-function meta:WriteToStream(stream, mode, version)
+	self.pins:Serialize(stream)
+	self.nameMap = stream:Value(self.nameMap)
+	self.invNameMap = stream:Value(self.invNameMap)
+	self.metaTable = stream:Value(self.metaTable)
 
-	self.pins:WriteToStream(stream, mode, version)
-	bpdata.WriteValue(self.nameMap, stream)
-	bpdata.WriteValue(self.invNameMap, stream)
-	bpdata.WriteValue(self.metaTable, stream)
-	return self
-
-end
-
-function meta:ReadFromStream(stream, mode, version)
-
-	self.pins:ReadFromStream(stream, mode, version)
-	self.nameMap = bpdata.ReadValue(stream)
-	self.invNameMap = bpdata.ReadValue(stream)
-	self.metaTable = bpdata.ReadValue(stream)
-
-	return self
+	return stream
 
 end
 

@@ -11,6 +11,7 @@ FL_MANDATORY_OPTIONS = 1
 FL_HINT_BROWSER = 2
 FL_READONLY = 4
 FL_HIDDEN = 8
+FL_DONT_EMIT = 16
 
 bpcommon.AddFlagAccessors(meta)
 
@@ -123,6 +124,7 @@ end
 function meta:CreateVGUI( info )
 
 	local entry = vgui.Create("DTextEntry")
+	entry:SetSkin("Blueprints")
 	entry:SetText( self:ToString() )
 	entry:SelectAllOnFocus()
 	if info.live then entry:SetUpdateOnType(true) end
@@ -142,9 +144,12 @@ function meta:CreateVGUI( info )
 		if info.onChanged then info.onChanged() end
 	end
 
+	entry.OnRemove = function(pnl) self:UnbindAll( pnl ) end
 	entry:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
 
-	self:BindRaw( "valueChanged", self, function(old, new, key) entry:SetText( new ) end )
+	self:BindRaw( "valueChanged", entry, function(old, new, key) 
+		entry:SetText( new ) 
+	end )
 
 	return entry
 
@@ -160,20 +165,12 @@ function meta:SetFromString( str )
 
 end
 
-function meta:WriteToStream(stream)
+function meta:Serialize(stream)
 
-	bpdata.WriteValue( self._class, stream )
-	stream:WriteBits( self.flags, 8 )
-	return self
-
-end
-
-function meta:ReadFromStream(stream)
-
-	self._class = bpdata.ReadValue( stream )
-	self.flags = stream:ReadBits(8)
-	valueClasses:Install(self._class, self)
-	return self
+	self._class = stream:String(self._class)
+	self.flags = stream:Bits(self.flags)
+	if stream:IsReading() then valueClasses:Install(self._class, self) end
+	return stream
 
 end
 

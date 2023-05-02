@@ -36,18 +36,17 @@ function PANEL:Init()
 	self.rmv.DoClick = function( pnl )
 
 		if self.vlist.noConfirm then
-			self.vlist.list:Remove( self.id )
+			self.vlist.list:Remove( self.item )
 			return
 		end
 
-		Derma_Query(text_delete_pin( self:GetPinName() ),
-		"",
-		LOCTEXT("query_yes", "Yes")(),
-		function() 
-			self.vlist.list:Remove( self.id )
-		end,
-		LOCTEXT("query_no", "No")(),
-		function() end)
+		bpmodal.Query({
+			message = text_delete_pin( self:GetPinName() ),
+			options = {
+				{ "yes", function() self.vlist.list:Remove( self.item ) end },
+				{ "no", function() end },
+			},
+		})
 
 	end
 
@@ -69,13 +68,13 @@ function PANEL:OnMousePressed( code )
 
 	if code == MOUSE_LEFT then
 		self:RequestFocus()
-		self.vlist:Select( self.id )
+		self.vlist:Select( self.item )
 		if RealTime() - self.dclickTime < 0.5 then
 			self:EditName()
 		end
 		self.dclickTime = RealTime()
 	elseif code == MOUSE_RIGHT then
-		self.vlist:Select( self.id )
+		self.vlist:Select( self.item )
 		self:OpenMenu()
 	end
 
@@ -101,14 +100,14 @@ function PANEL:OpenMenu()
 
 	self:CloseMenu()
 
-	self.menu = DermaMenu( false, self )
-
-	self.menu:AddOption( LOCTEXT( "pin_edit_type", "Edit Type" )(), function() self.typeSelector:DoClick() end )
-	self.menu:AddOption( LOCTEXT( "pin_edit_rename", "Rename" )(), function() self:EditName() end )
-	self.menu:AddOption( LOCTEXT( "pin_edit_delete", "Delete" )(), function() self.rmv:DoClick() end )
-
-	self.menu:SetMinimumWidth( 100 )
-	self.menu:Open( gui.MouseX(), gui.MouseY(), false, self )
+	self.menu = bpmodal.Menu({
+		options = {
+			{ title = LOCTEXT( "pin_edit_type", "Edit Type" ), func = function() self.typeSelector:DoClick() end },
+			{ title = LOCTEXT( "pin_edit_rename", "Rename" ), func = function() self:EditName() end },
+			{ title = LOCTEXT( "pin_edit_delete", "Delete" ), func = function() self.rmv:DoClick() end },
+		},
+		width = 100,
+	}, self)
 
 end
 
@@ -141,7 +140,7 @@ function PANEL:Paint(w,h)
 	local pinType = self:GetPinType()
 	local color = pinType:GetColor()
 
-	if self.vlist:GetSelectedID() == self.id then
+	if self.vlist:GetSelected() == self.item then
 		draw.RoundedBox( 0, 0, 1, w-32, h-2, Color(80,80,80) )
 	else
 		draw.RoundedBox( 0, 0, 1, w-32, h-2, Color(50,50,50) )

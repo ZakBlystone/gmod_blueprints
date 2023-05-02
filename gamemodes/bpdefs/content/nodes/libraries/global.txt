@@ -450,7 +450,7 @@ LIB GLOBAL
 		OUT material, PN_Ref, PNF_None, IMaterial, #Generated material
 		OUT time, PN_Number, #How long it took for the function to run
 	}
-	PURE Matrix, SHARED
+	FUNC Matrix, SHARED
 	{
 		DESC Returns a VMatrix object.
 		IN data, PN_Any, PNF_Nullable|PNF_Table, #Initial data to initialize the matrix with. Leave empty to initialize an identity matrix. See examples for usage. Can be a VMatrix to copy its data.

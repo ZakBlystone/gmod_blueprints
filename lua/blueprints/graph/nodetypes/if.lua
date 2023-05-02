@@ -41,9 +41,16 @@ function NODE:GeneratePins(pins)
 		bpschema.PN_Exec
 	)
 
-	pins[#pins+1] = dataPin
+end
+
+function NODE:GetConditionCode(compiler)
+
+	return compiler:GetPinCode( self:FindPin(PD_In, "Condition") )
 
 end
+
+function NODE:GetFalsePin() return self:FindPin(PD_Out, "False") end
+function NODE:GetTruePin() return self:FindPin(PD_Out, "True") end
 
 function NODE:Compile(compiler, pass)
 
@@ -55,22 +62,22 @@ function NODE:Compile(compiler, pass)
 
 	elseif pass == CP_MAINPASS then
 
-		local pinFalse = self:FindPin(PD_Out, "False")
-		local pinTrue = self:FindPin(PD_Out, "True")
+		local pinFalse = self:GetFalsePin()
+		local pinTrue = self:GetTruePin()
 
 		local falseConnections = pinFalse:GetConnectedPins()
 		local trueConnections = pinTrue:GetConnectedPins()
-		local cond = compiler:GetPinCode( self:FindPin(PD_In, "Condition") )
+		local cond = self:GetConditionCode(compiler)
 
-		if self.__nextExec then print( self:ToString() .. " NEXT: " .. self.__nextExec:ToString() ) else print( self:ToString() .. " NO NEXT") end
+		--if self.__nextExec then print( self:ToString() .. " NEXT: " .. self.__nextExec:ToString() ) else print( self:ToString() .. " NO NEXT") end
 
 		if #falseConnections == 0 and #trueConnections == 0 then
-			compiler.emit("goto jmp_0")
+			compiler.emit("goto popcall")
 		elseif #trueConnections == 1 and #falseConnections == 0 then
-			compiler.emit("if not " .. cond .. " then goto jmp_0 end" )
+			compiler.emit("if not " .. cond .. " then goto popcall end" )
 			if self.__nextExec ~= trueConnections[1]:GetNode() then compiler.emit( compiler:GetPinCode( pinTrue, true ) ) end
 		elseif #trueConnections == 0 and #falseConnections == 1 then
-			compiler.emit("if " .. cond .. " then goto jmp_0 end" )
+			compiler.emit("if " .. cond .. " then goto popcall end" )
 			if self.__nextExec ~= falseConnections[1]:GetNode() then compiler.emit( compiler:GetPinCode( pinFalse, true ) ) end
 		else
 			compiler.emit("if not " .. cond .. " then " .. compiler:GetPinCode( pinFalse, true ) .. " end" )
@@ -81,10 +88,6 @@ function NODE:Compile(compiler, pass)
 		return true
 
 	end
-
-end
-
-function NODE:GetOptions(tab)
 
 end
 

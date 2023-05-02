@@ -8,6 +8,7 @@ CF_Comments = 2
 CF_Debug = 4
 CF_ILP = 8
 CF_CompactVars = 16
+CF_AllowProtected = 32
 
 CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
 
@@ -109,7 +110,10 @@ function meta:Init( mod, flags )
 		[bpcommon.FindMetaTable("bpnodetype")] = 2,
 		[bpcommon.FindMetaTable("bppin")] = 3,
 		[bpcommon.FindMetaTable("bppintype")] = 4,
-		[bpcommon.FindMetaTable("bpmodule")] = 4,
+		[bpcommon.FindMetaTable("bpmodule")] = 5,
+		[bpcommon.FindMetaTable("bpvariable")] = 6,
+		[bpcommon.FindMetaTable("bpevent")] = 7,
+		[bpcommon.FindMetaTable("bpdermanode")] = 8,
 	}
 
 
@@ -130,6 +134,7 @@ function meta:Setup()
 	self.compactVars = bit.band(self.flags, CF_CompactVars) ~= 0
 	self.debug = bit.band(self.flags, CF_Debug) ~= 0
 	self.debugcomments = bit.band(self.flags, CF_Comments) ~= 0
+	self.allowProtected = bit.band(self.flags, CF_AllowProtected) ~= 0
 	self.ilp = bit.band(self.flags, CF_ILP) ~= 0
 	self.ilpmax = 10000
 	self.ilpmaxh = 100
@@ -137,6 +142,8 @@ function meta:Setup()
 	self.varscope = nil
 	self.pinRouters = {}
 	self.jumpsRequired = {}
+	self.containsProtected = false
+	self.protectedElements = {}
 
 	return self
 
@@ -171,7 +178,7 @@ function meta:GetThunk(type, id)
 end
 
 -- builds localized ids for objects used during compilation
-function meta:GetID(tbl)
+function meta:GetID(tbl, allowExternal)
 
 	-- nodes are indexed on a per-graph basis
 	if isbpnode(tbl) then
@@ -181,13 +188,19 @@ function meta:GetID(tbl)
 		return id[graph](tbl)
 	end
 
+	local identTable = self.idents
+	local outer = self:GetOuter()
+	if outer and isbpcompiler(outer) and allowExternal then
+		identTable = outer.idents
+	end
+
 	local mt = getmetatable(tbl)
 	mt = bpcommon.GetMetaTableFromHash( mt.__hash )
 	local classID = self.metaClasses[mt]
 	if not classID then error("Tried to ID invalid class: " .. tostring(mt) .. " -> " .. bpcommon.GetMetaTableName(mt)) end
 
-	self.idents[classID] = self.idents[classID] or bpindexer.New()
-	return self.idents[classID](tbl)
+	identTable[classID] = identTable[classID] or bpindexer.New()
+	return identTable[classID](tbl)
 
 end
 
@@ -215,9 +228,7 @@ function SanitizeString(str)
 	local r = str:gsub("\\n", "__CH~NL__")
 	r = r:gsub("\\", "\\\\")
 	r = r:gsub("\"", "\\\"")
-	r = r:gsub("[%%!@%^#]", function(x)
-		return codenames[x] or "INVALID"
-	end)
+	r = r:gsub("__CH~NL__", "\\n")
 	return r
 
 end
@@ -290,7 +301,7 @@ function meta:CreatePinVar(pin)
 
 		if not isFunctionPin then
 
-			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "fcall_" .. node:GetTypeName() .. "_ret_" .. pinName)
+			local key = bpcommon.CreateUniqueKey(unique, compactVars and "f" or "fcall_" .. node:GetSanitizedTypeName() .. "_ret_" .. pinName)
 			self.vars[#self.vars+1] = {
 				var = key,
 				global = codeType ~= NT_Pure,
@@ -427,13 +438,18 @@ end
 
 function meta:GetPinLiteral(pin, sanitize)
 
-	local node = pin:GetNode()
-	if node and node.literals[pin.id] ~= nil and not noLiteral then
-		local l = tostring(node.literals[pin.id])
+	if pin and pin:GetLiteral() and not noLiteral then
+		if pin.GetCode then
+			return { var = pin:GetCode(self) } 
+		end
+
+		local l = tostring(pin:GetLiteral())
+		if l == "{}" then l = "__emptyTable()"
+		elseif l == "__emptyTable" then l = "__emptyTable()" end
 
 		if pin:IsType(PN_BPClass) then l = EscapedGUID(l) end
 		if sanitize then l = SanitizeString(l) end
-		if pin:IsType(PN_String) then l = "\"" .. l .. "\"" end
+		if pin:IsType(PN_String) and not pin:HasFlag(PNF_Table) then l = "\"" .. l .. "\"" end
 		if pin:IsType(PN_Asset) then l = "\"" .. l .. "\"" end
 
 		--print("LITERAL FOR NODEPIN: " .. node:ToString(pin.id) .. " [" .. l .. "]")
@@ -465,7 +481,8 @@ function meta:GetVarCode(var, jump)
 		if execCount > 1 then s = "__targetPin = " .. var.pin.id .. " " end
 	end
 
-	if jump and var.jump then s = s .. "goto jmp_" end
+	if jump and var.term then return s .. "goto popcall"
+	elseif jump and var.jump then s = s .. "goto jmp_" end
 	if var.literal then return s .. var.var end
 	if var.global or var.isFunc or var.keyAsGlobal then return "__self." .. var.var end
 	return s .. var.var
@@ -474,7 +491,12 @@ end
 
 function meta:GetPinCode(pin, ...)
 
-	local var = self:GetPinVar(pin)
+	if pin.GetCode then
+		local r = pin:GetCode(self, ...)
+		if r then return r end
+	end
+
+	local var = self:GetPinVar(pin, true)
 	return self:GetVarCode(var, ...)
 
 end
@@ -506,17 +528,9 @@ function meta:CompileVars(code, inVars, outVars, node)
 	end
 
 	-- replace macros
-	str = string.Replace( str, "@graph", "graph_" .. graphID .. "_entry" )
 	str = string.Replace( str, "!node", tostring(nodeID))
 	str = string.Replace( str, "!graph", tostring(graphID))
 	str = string.Replace( str, "!module", tostring(self.guidString))
-
-	-- replace input pin codes
-	str = str:gsub("$(%d+)", function(x) return self:GetVarCode(inVars[tonumber(x) + inBase]) end)
-
-	-- replace output pin codes
-	str = str:gsub("#_(%d+)", function(x) return self:GetVarCode(outVars[tonumber(x) + outBase]) end)
-	str = str:gsub("#(%d+)", function(x) return self:GetVarCode(outVars[tonumber(x) + outBase], true) end)
 
 	local lmap = {}
 	for k,v in ipairs(node:GetLocals()) do
@@ -535,6 +549,13 @@ function meta:CompileVars(code, inVars, outVars, node)
 		if not lmap[x] then error("FAILED TO FIND LOCAL: " .. tostring(x)) end
 		return self:GetVarCode(lmap[x]) end
 	)
+
+	-- replace input pin codes
+	str = str:gsub("$(%d+)", function(x) return self:GetVarCode(inVars[tonumber(x) + inBase]) end)
+
+	-- replace output pin codes
+	str = str:gsub("#_(%d+)", function(x) return self:GetVarCode(outVars[tonumber(x) + outBase]) end)
+	str = str:gsub("#(%d+)", function(x) return self:GetVarCode(outVars[tonumber(x) + outBase], true) end)
 
 	-- replace jumps
 	local jumpTable = self:GetGraphJumpTable(graph)[nodeID] or {}
@@ -605,7 +626,8 @@ function meta:GetPinVar(pin, sanitize)
 				-- unconnected exec pins jump to ::jmp_0:: which just pops the stack
 				local pins = pin:GetConnectedPins()
 				return {
-					var = #pins == 0 and "0" or self:GetID(pins[1]:GetNode()),
+					var = #pins ~= 0 and self:GetID(pins[1]:GetNode()) or "0",
+					term = #pins == 0,
 					jump = true,
 					pin = #pins > 0 and pins[1],
 				}
@@ -692,6 +714,10 @@ function meta:CompileNodeSingle(node)
 		ErrorNoHalt("No code for node: " .. node:ToString() .. "\n")
 		return
 	end
+
+	code = code:gsub("pushjmp%(([^%)]+)%)", function(x)
+		return "sp=sp+1 cs[sp]=" .. x
+	end)
 
 	-- grab code off node type and remove tabs
 	code = string.Replace(code, "\t", "")
@@ -857,6 +883,12 @@ function meta:AddRequiredMetaTable(t)
 
 end
 
+function meta:GetRequiredMetaTables()
+
+	return self.requiredMetaTables or {}
+
+end
+
 -- emits some boilerplate code for indexing gmod's metatables
 function meta:CompileMetaTableLookup()
 
@@ -1002,31 +1034,45 @@ function meta:CompileNetworkCode()
 end
 
 -- glues all the code together
-function meta:CompileCodeSegment()
+function meta:CompileCodeSegment( noExport )
 
 	local moduleID = self:GetID(self.module)
 
 	self.begin(CTX_Code)
 
-	if bit.band(self.flags, CF_Standalone) ~= 0 then
+	if bit.band(self.flags, CF_Standalone) ~= 0 and not noExport then
 		self.emit("-- Compiled using gm_blueprints v" .. bpcommon.ENV_VERSION .. " ( https://github.com/ZakBlystone/gmod_blueprints )")
 	end
 
-	self.emitContext( CTX_MetaTables )
+	if not noExport then self.emitContext( CTX_MetaTables ) end
 	self:RunModuleCompile( CP_MODULECODE )
 	self:RunModuleCompile( CP_MODULEMETA )
 	self:RunModuleCompile( CP_MODULEBPM )
-	self:RunModuleCompile( CP_MODULEFOOTER )
+	if not noExport then self:RunModuleCompile( CP_MODULEFOOTER ) end
 
 	self.finish()
+
+end
+
+function meta:GetDebugSymbols()
+
+	return self.debugSymbols
 
 end
 
 function meta:AddGraphSymbols( graph )
 
 	local t = self.debugSymbols
+	local moduleID = self.module:GetUID()
+	if not t[moduleID] then
+		t[moduleID] = {
+			graphs = {},
+			nodes = {},
+		}
+	end
+	t = t[moduleID]
 
-	for _, node in graph:Nodes() do
+	for k, node in graph:Nodes() do
 		local id = self:GetID( node )
 		local typename = node:GetTypeName()
 		local name = node:GetDisplayName()
@@ -1034,21 +1080,23 @@ function meta:AddGraphSymbols( graph )
 		t.nodes[id] = {
 			typename,
 			name,
+			node.uid,
 		}
 	end
 
 	t.graphs[self:GetID( graph )] = {
-		graph:GetTitle()
+		graph:GetTitle(),
+		graph.uid,
 	}
 
 end
 
 function meta:CreateDebugSymbols()
 
-	self.debugSymbols = nil
+	if self.debugSymbols ~= nil then return end
 	if not self.debug then return end
 
-	self.debugSymbols = { nodes = {}, graphs = {} }
+	self.debugSymbols = {}
 
 	self:RunModuleCompile( CP_MODULEDEBUG )
 
@@ -1080,7 +1128,7 @@ function meta:CompileGraphMetaHook(graph, node, name)
 	self.currentNode = node
 	self.currentCode = ""
 
-	self.begin(CTX_MetaEvents .. name)
+	self.begin(CTX_MetaEvents .. self:GetID(graph))
 
 	self.emit("function meta:" .. name .. "(...)")
 	self.pushIndent()
@@ -1126,7 +1174,14 @@ function meta:CompileGraphMetaHook(graph, node, name)
 
 end
 
-function meta:Compile()
+function meta:FlagProtected( name )
+
+	self.containsProtected = true
+	self.protectedElements[name] = true
+
+end
+
+function meta:Compile( noExport )
 
 	--print("COMPILING MODULE...")
 
@@ -1147,10 +1202,17 @@ function meta:Compile()
 	Profile("meta-lookup", self.CompileMetaTableLookup, self)
 
 	-- compile main code segment
-	Profile("code-segment", self.CompileCodeSegment, self)
+	Profile("code-segment", self.CompileCodeSegment, self, noExport)
 
 	-- debugging info
 	Profile("debug-symbols", self.CreateDebugSymbols, self)
+
+	if noExport then return nil end
+	if self.containsProtected and not self.allowProtected then
+		local elements = ""
+		for k, _ in pairs(self.protectedElements) do elements = elements .. "\n" .. k end
+		error("Context does not allow the following protected nodes, check your permissions: \n" .. elements)
+	end
 
 	local compiledModule = nil
 
@@ -1162,8 +1224,8 @@ function meta:Compile()
 	Profile("write-files", function()
 
 		-- write compiled output to file for debugging
-		file.Write("blueprints/last_compile_.txt", compiledModule:GetCode(true))
-		file.Write("blueprints/last_compile.txt", compiledModule:GetCode())
+		file.Write(bpcommon.BLUEPRINT_DATA_PATH .. "/last_compile_.txt", compiledModule:GetCode(true))
+		file.Write(bpcommon.BLUEPRINT_DATA_PATH .. "/last_compile.txt", compiledModule:GetCode())
 
 	end)
 

@@ -25,13 +25,15 @@ function meta:GetModule() return self:GetPanel():GetModule() end
 function meta:GetFile() return self:GetModule():FindOuter( bpfile_meta ) end
 function meta:SetContent( panel ) self:GetPanel():SetContent( panel ) end
 function meta:SetDetails( panel ) self:GetPanel():SetDetails( panel ) end
+function meta:ShouldCreateMenuBar() return true end
 function meta:PopulateMenuBar( menu ) end
 function meta:PopulateSideBar() end
+function meta:UpdateMenuBar() self:GetPanel():UpdateMenuBar() end
 function meta:AddSidebarPanel( ... ) return self:GetPanel():AddSidebarPanel(...) end
 function meta:AddSidebarList( ... ) return self:GetPanel():AddSidebarList(...) end
 
 local function NewEditor(...)
-	return setmetatable({}, meta):Init(...)
+	return bpcommon.MakeInstance(meta, ...)
 end
 
 if SERVER then AddCSLuaFile() return end
@@ -44,8 +46,6 @@ function PANEL:Init()
 
 	local editor = self:GetParent()
 
-	self.Menu = bpuimenubar.AddTo(self)
-
 	self.callback = function(...)
 		self:OnModuleCallback(...)
 	end
@@ -54,26 +54,24 @@ end
 
 function PANEL:SetDetails( panel )
 
-	if IsValid(self.ContentSplit2) then
-		self.ContentSplit2:SetRight( panel )
+	if IsValid(self.ContentSplit) then
+		local prev = self.ContentSplit:GetRight()
+		if IsValid(prev) then
+			prev:Remove()
+		end
+
+		self.ContentSplit:SetRight( panel )
+		self.ContentSplit:InvalidateLayout()
 	end
 
 end
 
 function PANEL:SetContent( panel )
 
-	if IsValid(self.ContentSplit2) and not IsValid(self.ContentSplit) then
-
-		print("SET LEFT")
-		self.ContentSplit2:SetLeft( panel )
-		return
-
-	end
-
 	if IsValid(self.ContentSplit) then
 
-		print("SET RIGHT")
-		self.ContentSplit:SetRight( panel )
+		self.ContentSplit:SetMiddle( panel )
+		self.ContentSplit:InvalidateLayout()
 
 	else
 
@@ -92,7 +90,7 @@ function PANEL:CreateContentPanel()
 
 	self.ContentPanel = vgui.Create("DPanel", self)
 	self.ContentPanel:Dock( FILL )
-	self.ContentPanel:SetBackgroundColor( Color(50,50,50) )
+	self.ContentPanel:SetBackgroundColor( Color(220,220,220) )
 
 end
 
@@ -154,6 +152,32 @@ function PANEL:MarkAsModified()
 
 end
 
+function PANEL:UpdateMenuBar()
+
+	if self.moduleEditor:ShouldCreateMenuBar() then
+		if not IsValid(self.Menu) then
+			self.Menu = bpuimenubar.AddTo(self)
+		else
+			self.Menu:Clear()
+		end
+
+		local menu = {}
+		self.moduleEditor:PopulateMenuBar( menu )
+		self.module:GetMenuItems( menu )
+
+		--[[self.Menu:Add("Refresh", function()
+
+			self:Refresh()
+
+		end, Color(10,100,5), nil, false)]]
+
+		for k,v in ipairs(menu) do
+			self.Menu:Add(v.name, v.func, v.color, v.icon, v.right)
+		end
+	end
+
+end
+
 function PANEL:SetModule( mod )
 
 	if self.module then
@@ -172,56 +196,32 @@ function PANEL:SetModule( mod )
 
 	self.moduleEditor = NewEditor( self, self.module )
 
-	self.Menu:Clear()
 	self:CreateContentPanel()
 
-	if self.moduleEditor.HasDetails then
-
-		self.ContentSplit2 = vgui.Create("DHorizontalDivider", self.ContentPanel)
-		self.ContentSplit2:Dock( FILL )
-		self.ContentSplit2:SetBackgroundColor( Color(30,30,30) )
-		self.ContentSplit2:SetDividerWidth( 3 )
-		self.ContentSplit2:SetLeftWidth(self:GetParent():GetWide() - 400)
-
-	end
+	self.ContentSplit = vgui.Create("BPTripleDivider", self.ContentPanel)
+	self.ContentSplit:SetBackgroundColor( Color(30,30,30) )
+	self.ContentSplit:SetDividerWidth( 3 )
+	self.ContentSplit:SetLeftWidth( 150 )
+	self.ContentSplit:SetRightWidth( 400 )
 
 	if IsValid(self.SideBar) then self.SideBar:Remove() end
+
 	if self.moduleEditor.HasSideBar then
-
-		self.ContentSplit = vgui.Create("DHorizontalDivider", self.ContentPanel)
-		self.ContentSplit:SetBackgroundColor( Color(30,30,30) )
-		self.ContentSplit:SetDividerWidth( 3 )
-
+		
 		self.SideBar = vgui.Create("BPCategoryList", self.ContentSplit)
+
 		self.moduleEditor:PopulateSideBar()
+		self.ContentSplit:SetLeft(self.SideBar)
 
 		self.SideBar:InvalidateLayout( true )
 
-		if IsValid(self.ContentSplit2) then
-			self.ContentSplit2:SetLeft(self.ContentSplit)
-			--self.ContentSplit:Dock( FILL )
-		else
-			self.ContentSplit:Dock( FILL )
-		end
-
-		self.ContentSplit:SetLeft(self.SideBar)
-		self.ContentSplit:SetLeftWidth(150)
-
 	end
 
-	local menu = {}
-	self.moduleEditor:PopulateMenuBar( menu )
-	self.module:GetMenuItems( menu )
+	self.ContentSplit:Dock( FILL )
+	self.ContentSplit:InvalidateLayout()
 
-	--[[self.Menu:Add("Refresh", function()
-
-		self:Refresh()
-
-	end, Color(10,100,5), nil, false)]]
-
-	for k,v in ipairs(menu) do
-		self.Menu:Add(v.name, v.func, v.color, v.icon, v.right)
-	end
+	self:UpdateMenuBar()
+	self:SetSkin("Blueprints")
 
 	self.moduleEditor:PostInit()
 

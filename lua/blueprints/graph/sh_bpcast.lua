@@ -29,6 +29,8 @@ function AddPinCast(from, to, bidirectional, wrapper, ignoreSub)
 
 end
 
+AddPinCast(bppintype.New(PN_Exec, PNF_Server), { bppintype.New(PN_Exec) })
+AddPinCast(bppintype.New(PN_Exec, PNF_Client), { bppintype.New(PN_Exec) })
 AddPinCast(bppintype.New(PN_Number), { bppintype.New(PN_Enum) }, true, nil, true )
 AddPinCast(bppintype.New(PN_Number), { bppintype.New(PN_String) } )
 AddPinCast(bppintype.New(PN_Ref, PNF_None, "Entity"), { 
@@ -37,6 +39,12 @@ AddPinCast(bppintype.New(PN_Ref, PNF_None, "Entity"), {
 	bppintype.New(PN_Ref, PNF_None, "NPC"),
 	bppintype.New(PN_Ref, PNF_None, "Vehicle"),
 }, true)
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DFrame"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DPanel"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DLabel"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DButton"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DTextEntry"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
+AddPinCast(bppintype.New(PN_Ref, PNF_None, "DNumSlider"), { bppintype.New(PN_Ref, PNF_None, "Panel"), })
 AddPinCast(bppintype.New(PN_String), { bppintype.New(PN_Asset) }, true, nil, true )
 
 --[[
@@ -48,25 +56,26 @@ AddPinCast(bppintype.New(PN_Ref, PNF_None, "NPC"), bppintype.New(PN_String), fal
 AddPinCast(bppintype.New(PN_Ref, PNF_None, "Vehicle"), bppintype.New(PN_String), false, "tostring(@)")
 ]]
 
+local castMatchFlags = PNF_Table + PNF_Server + PNF_Client
 function CanCast(outPinType, inPinType)
 
 	for _, castInfo in ipairs(NodePinImplicitCasts) do
-		if castInfo.from:Equal( outPinType, PNF_Table ) then
+		if castInfo.from:Equal( outPinType, castMatchFlags ) then
 			for _, entry in ipairs(castInfo.to) do
-				if entry.type:Equal( inPinType, PNF_Table, entry.ignoreSub ) then
+				if entry.type:Equal( inPinType, castMatchFlags, entry.ignoreSub ) then
 					return true, entry.wrapper
 				end
 			end
-		elseif castInfo.from:Equal( inPinType, PNF_Table ) then
+		elseif castInfo.from:Equal( inPinType, castMatchFlags ) then
 			for _, entry in ipairs(castInfo.to) do
-				if entry.bidir and entry.type:Equal( outPinType, PNF_Table, entry.ignoreSub ) then
+				if entry.bidir and entry.type:Equal( outPinType, castMatchFlags, entry.ignoreSub ) then
 					return true, entry.wrapper
 				end
 			end
 		end
 	end
 
-	return false
+	return outPinType:CanCastTo( inPinType )
 
 end
 
@@ -78,7 +87,7 @@ local function GetNodeTypePins(ntype, module)
 	local cl = bpnode.nodeClasses:Get(nodeClass)
 	if cl and cl.GeneratePins ~= bpnode_meta.GeneratePins then
 		local node = bpnode.New(ntype):WithOuter( module )
-		node:PostInit()
+		node:Initialize()
 		return node:GetPins()
 	end
 
@@ -118,8 +127,8 @@ function FindMatchingPin(ntype, pf, module, cache)
 	local outType = nil
 	local fdir = pf:GetDir()
 
-	if fdir == PD_In then inType = pf end
-	if fdir == PD_Out then outType = pf end
+	if fdir == PD_In then inType = pf:GetType() end
+	if fdir == PD_Out then outType = pf:GetType() end
 
 	for id, pin in ipairs(pins) do
 
@@ -127,7 +136,7 @@ function FindMatchingPin(ntype, pf, module, cache)
 
 			if fdir == PD_In then outType = pin:GetType() else inType = pin:GetType() end
 
-			local sameType = inType:Equal(outType, 0)
+			local sameType = inType:Equal(outType, PNF_Server + PNF_Client)
 			local sameFlags = inType:GetFlags(ignoreNullable) == outType:GetFlags(ignoreNullable)
 			local tableMatch = informs ~= nil and #informs > 0 and pin:HasFlag(PNF_Table) and pf:HasFlag(PNF_Table) and pin:IsType(PN_Any)
 			local anyMatch = informs ~= nil and #informs > 0 and not pin:HasFlag(PNF_Table) and not pf:HasFlag(PNF_Table) and pin:GetBaseType() ~= PN_Exec
@@ -142,11 +151,11 @@ function FindMatchingPin(ntype, pf, module, cache)
 					if cache[outH][inH] ~= nil then 
 						castMatch = cache[outH][inH]
 					else
-						castMatch = module:CanCast(outType, inType)
+						castMatch = CanCast(outType, inType)
 						cache[outH][inH] = castMatch
 					end
 				else
-					castMatch = module:CanCast(outType, inType)
+					castMatch = CanCast(outType, inType)
 				end
 
 			end

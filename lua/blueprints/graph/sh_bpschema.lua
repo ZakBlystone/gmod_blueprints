@@ -40,7 +40,9 @@ PNF_Table = 1
 PNF_Nullable = 2
 PNF_Bitfield = 4
 PNF_Custom = 8
-PNF_All = 15
+PNF_Server = 16
+PNF_Client = 32
+PNF_All = 63
 
 -- Nodetype flags
 NTF_None = 0
@@ -56,6 +58,7 @@ NTF_HidePinNames = 256
 NTF_Experimental = 512
 NTF_DirectCall = 1024
 NTF_FallThrough = 2048
+NTF_CallStack = 4096
 
 -- Graph types
 GT_Event = 0
@@ -94,6 +97,17 @@ PinTypeNames = {
 	[PN_BPRef] = "BPRef",
 	[PN_BPClass] = "BPClass",
 	[PN_Asset] = "Asset",
+}
+
+-- Pin flag names
+PinFlagNames = {
+	[PNF_None] = "PNF_None",
+	[PNF_Table] = "PNF_Table",
+	[PNF_Nullable] = "PNF_Nullable",
+	[PNF_Bitfield] = "PNF_Bitfield",
+	[PNF_Custom] = "PNF_Custom",
+	[PNF_Server] = "PNF_Server",
+	[PNF_Client] = "PNF_Client",
 }
 
 -- Colors the graph entries in the sidebar
@@ -159,8 +173,10 @@ PinTypeClasses = {
 	[PN_Angles] = "Angle",
 	[PN_Any] = "Wild",
 	[PN_BPClass] = "Class",
+	[PN_BPRef] = "BPRef",
 	[PN_Asset] = "Asset",
 	[PN_Ref] = "Ref",
+	[PN_Func] = "Callback",
 }
 
 -- Valuetype class to use for pin

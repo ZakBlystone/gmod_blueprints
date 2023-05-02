@@ -11,6 +11,11 @@ function NODE:GeneratePins(pins)
 
 	BaseClass.GeneratePins(self, pins)
 
+	if graph == nil then
+		print("Failed to constitute pins for missing graph on node: " .. tostring(self))
+		return
+	end
+
 	local mod = graph:GetModule()
 	if mod and mod.HasSelfPin then
 		pins[#pins+1] = MakePin( PD_In, "Self", mod:GetModulePinType() )

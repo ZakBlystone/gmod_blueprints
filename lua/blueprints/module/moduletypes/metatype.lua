@@ -38,7 +38,7 @@ function MODULE:Setup()
 	BaseClass.Setup(self)
 
 	self.autoFills = {}
-	self.modulePinType = bppintype.New( PN_BPRef, PNF_None, self:GetUID() ):WithOuter(self)
+	self.modulePinType = bppintype.New( PN_BPRef, PNF_None, self ):WithOuter(self)
 
 	self.getSelfNodeType = bpnodetype.New():WithOuter(self)
 	self.getSelfNodeType:SetCodeType(NT_Pure)
@@ -81,6 +81,12 @@ function MODULE:Setup()
 	end
 
 	self:AddAutoFill( self:GetModulePinType(), "__self" )
+
+end
+
+function MODULE:IsStatic()
+
+	return false
 
 end
 
@@ -145,24 +151,22 @@ function MODULE:GetSelfNodeType() return self.getSelfNodeType end
 function MODULE:GetClassNodeType() return self.getClassNodeType end
 function MODULE:GetOwnerNodeType() return self.getOwnerNodeType end
 
+function MODULE:SerializeData( stream )
+
+	stream:Extern( self:GetModulePinType(), "\xE3\x05\x45\x7E\xA6\x93\xC1\x32\x80\x00\x00\x0F\x51\x68\x87\xB6" )
+	stream:Extern( self:GetSelfNodeType(), "\xE3\x05\x45\x7E\x53\x60\x58\xAB\x80\x00\x00\x10\x51\x78\x1D\xC6" )
+	stream:Extern( self:GetClassNodeType(), "\xE3\x05\x45\x7E\x49\x74\x30\xFA\x80\x00\x00\x11\x51\x8A\x8D\xDA" )
+	stream:Extern( self:GetOwnerNodeType(), "\xE3\x05\x45\x7E\xF7\xB7\xCB\xA9\x80\x00\x00\x12\x51\x96\xE4\xE6" )
+
+	return BaseClass.SerializeData( self, stream )
+
+end
+
 function MODULE:IsConstructable() return false end
 
 function MODULE:CanCast( outPinType, inPinType )
 
-	if outPinType:GetBaseType() == PN_BPClass and inPinType:GetBaseType() == PN_BPClass then
-
-		local inSub = inPinType:GetSubType()
-		local outSub = outPinType:GetSubType()
-		if not bpcommon.IsGUID( inSub ) and bpcommon.IsGUID( outSub )then
-
-			local mod = self:ResolveModuleUID( outSub )
-			return mod:GetType() == inSub
-
-		end
-
-	end
-
-	if outPinType:Equal(self.modulePinType) then
+	if outPinType:Equal(self:GetModulePinType(), PNF_None) then
 
 		if inPinType:GetSubType() == self.SelfPinSubClass then return true end
 
@@ -172,9 +176,9 @@ function MODULE:CanCast( outPinType, inPinType )
 
 end
 
-function MODULE:GetNodeTypes( collection, graph )
+function MODULE:GetLocalNodeTypes( collection, graph )
 
-	BaseClass.GetNodeTypes( self, collection, graph )
+	BaseClass.GetLocalNodeTypes( self, collection, graph )
 
 	local types = {}
 
@@ -190,6 +194,12 @@ function MODULE:GetNodeTypes( collection, graph )
 	end
 
 	for k,v in pairs(types) do v.name = k end
+
+end
+
+function MODULE:GetNodeTypes( collection, graph )
+
+	BaseClass.GetNodeTypes( self, collection, graph )
 
 end
 

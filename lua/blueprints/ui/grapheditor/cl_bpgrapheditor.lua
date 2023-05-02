@@ -20,6 +20,8 @@ function meta:Init( vgraph )
 	self.undo = {}
 	self.undoPtr = -1
 	self.maxUndoLevels = 20
+	self.pressx = 0
+	self.pressy = 0
 
 	bpcommon.MakeObservable(self)
 
@@ -36,7 +38,6 @@ function meta:Init( vgraph )
 	self.graph:Bind("connectionAdded", self, self.ConnectionAdded)
 	self.graph:Bind("connectionRemoved", self, self.ConnectionRemoved)
 	self.graph:Bind("cleared", self, self.GraphCleared)
-	self.graph:Bind("postModifyNode", self, self.PostModifyNode)
 
 	return self
 
@@ -61,7 +62,7 @@ function meta:CreateUndo(text)
 
 	if #self.undo >= self.maxUndoLevels then table.remove(self.undo, 1) end
 
-	local undoGraph = self.graph:CopyInto( bpgraph.New() )
+	local undoGraph = self.graph:CopyInto( bpgraph.New(), true )
 	self.undo[#self.undo+1] = {
 		graph = undoGraph,
 		text = text,
@@ -88,11 +89,11 @@ function meta:Undo()
 
 	if self.undoPtr <= 0 then return end
 	if self.undoPtr == #self.undo then
-		self.baseUndoGraph = self.graph:CopyInto( bpgraph.New() )
+		self.baseUndoGraph = self.graph:CopyInto( bpgraph.New(), true )
 	end
 	local apply = self.undo[self.undoPtr]
 	self:Popup("Undo " .. tostring(apply.text))
-	apply.graph:CopyInto( self.graph )
+	apply.graph:CopyInto( self.graph, true )
 	self:CreateAllNodes()
 	self.undoPtr = self.undoPtr - 1
 
@@ -103,12 +104,12 @@ function meta:Redo()
 	local apply = self.undo[self.undoPtr+2]
 	if apply then
 		self:Popup("Redo " .. tostring(apply.text))
-		apply.graph:CopyInto( self.graph )
+		apply.graph:CopyInto( self.graph, true )
 		self:CreateAllNodes()
 		self.undoPtr = self.undoPtr + 1
 	elseif #self.undo ~= 0 and self.undoPtr ~= #self.undo then
 		self:Popup("Redo " .. tostring(self.undo[#self.undo].text))
-		self.baseUndoGraph:CopyInto( self.graph )
+		self.baseUndoGraph:CopyInto( self.graph, true )
 		self:CreateAllNodes()
 		self.undoPtr = #self.undo
 	end
@@ -130,10 +131,12 @@ end
 function meta:GetSelectedNodes()
 
 	local selection = {}
+	local count = 0
 	for k,v in pairs(self.selectedNodes) do
-		selection[k:GetNode().id] = k
+		selection[k:GetNode()] = k
+		count = count + 1
 	end
-	return selection
+	return selection, count
 
 end
 function meta:ClearSelection() self.selectedNodes = {} end
@@ -145,34 +148,35 @@ function meta:GetCoordinateScaleFactor() return 2 end
 function meta:GetVNodes() return self.nodeSet:GetVNodes() end
 
 function meta:CreateAllNodes() self.nodeSet:CreateAllNodes() end
-function meta:NodeAdded( id ) self.nodeSet:NodeAdded(id) end
-function meta:NodeRemoved( id ) self.nodeSet:NodeRemoved(id) end
-function meta:NodeMove( id, x, y ) end
+function meta:NodeAdded( node ) self.nodeSet:NodeAdded(node) end
+function meta:NodeRemoved( node ) self.nodeSet:NodeRemoved(node) end
+function meta:NodeMove( node, x, y ) end
 
-function meta:PinPreEditLiteral( nodeID, pinID, value )
-	local node = self.nodeSet:GetVNodes()[nodeID]:GetNode()
-	self:CreateUndo("Edit: " .. node:GetDisplayName() .. "." .. node:GetPin(pinID):GetDisplayName())
+function meta:PinPreEditLiteral( node, pinID, value )
+	local vnode = self.nodeSet:GetVNodes()[node]
+	local node = vnode and vnode:GetNode()
+	if node then self:CreateUndo("Edit: " .. node:GetDisplayName() .. "." .. node:GetPin(pinID):GetDisplayName()) end
 end
 
-function meta:PinPostEditLiteral( nodeID, pinID, value )
-	local node = self.nodeSet:GetVNodes()[nodeID]
+function meta:PinPostEditLiteral( node, pinID, value )
+	local node = self.nodeSet:GetVNodes()[node]
 	if node then node:Invalidate(true) end
 end
 
-function meta:ConnectionAdded( id, conn )
+function meta:ConnectionAdded( a, b )
 
 	local nodes = self.nodeSet:GetVNodes()
-	local nodeA = nodes[conn[1]]
-	local nodeB = nodes[conn[3]]
+	local nodeA = nodes[a:GetNode()]
+	local nodeB = nodes[b:GetNode()]
 	if nodeA then nodeA:Invalidate(true) end
 	if nodeB then nodeB:Invalidate(true) end
 
 end
-function meta:ConnectionRemoved( id, conn ) 
+function meta:ConnectionRemoved( a, b ) 
 
 	local nodes = self.nodeSet:GetVNodes()
-	local nodeA = nodes[conn[1]]
-	local nodeB = nodes[conn[3]]
+	local nodeA = nodes[a:GetNode()]
+	local nodeB = nodes[b:GetNode()]
 	if nodeA then nodeA:Invalidate(true) end
 	if nodeB then nodeB:Invalidate(true) end
 
@@ -193,7 +197,6 @@ function meta:InvalidateAllNodes( pins )
 end
 
 function meta:GraphCleared() self.nodeSet:CreateAllNodes() end
-function meta:PostModifyNode( id ) self.nodeSet:PostModifyNode(id) end
 
 function meta:IsLocked() return self.vgraph:GetIsLocked() end
 
@@ -323,35 +326,34 @@ end
 
 function meta:ConnectPins(vpin0, vpin1)
 
-	local nodeID0 = vpin0:GetVNode():GetNode().id
-	local nodeID1 = vpin1:GetVNode():GetNode().id
-	local pinID0 = vpin0:GetPinID()
-	local pinID1 = vpin1:GetPinID()
-	return self:GetGraph():ConnectNodes(nodeID0, pinID0, nodeID1, pinID1)
+	return vpin0.pin:MakeLink(vpin1.pin)
+
+end
+
+function meta:FindVPin(pin)
+
+	local vnodes = self:GetVNodes()
+	local vnode = vnodes[pin:GetNode()]
+	if vnode == nil then return nil end
+
+	for _, vpin in ipairs(vnode.pins) do
+		if vpin.pin == pin then return vpin end
+	end
 
 end
 
 function meta:TakeGrabbedPin()
 
-	local nodeID = self.grabPin:GetVNode():GetNode().id
-	local pinID = self.grabPin:GetPinID()
-	local graph = self:GetGraph()
-	local vnodes = self:GetVNodes()
-	for k,v in graph:Connections() do
+	for _, pin in ipairs(self.grabPin.pin:GetConnectedPins()) do
 
-		if v[1] == nodeID and v[2] == pinID then
-
-			self.grabPin = vnodes[v[3]]:GetVPin(v[4])
-			graph:RemoveConnectionID(k)
-			break
-
-		elseif v[3] == nodeID and v[4] == pinID then
-
-			self.grabPin = vnodes[v[1]]:GetVPin(v[2])
-			graph:RemoveConnectionID(k)
-			break
-
+		self.grabPin.pin:BreakLink( pin )
+		local p = self:FindVPin( pin )
+		if not p then
+			print("Couldn't find pin: ", pin)
+		else
+			self.grabPin = p
 		end
+		break
 
 	end
 
@@ -459,7 +461,10 @@ function meta:LeftMouse(x,y,pressed)
 					self:EditPinLiteral(vnode, vpin, wx, wy)
 				else
 					self.grabPin = vpin
-					if input.IsKeyDown( KEY_LCONTROL ) then
+					if input.IsKeyDown( KEY_LALT ) then
+						vpin.pin:BreakAllLinks()
+						self.grabPin = nil
+					elseif input.IsKeyDown( KEY_LCONTROL ) then
 						self:TakeGrabbedPin()
 					end
 				end
@@ -483,21 +488,22 @@ function meta:LeftMouse(x,y,pressed)
 
 			else
 
-				self.dragVarMenu = DermaMenu( false, self.vgraph )
-
+				local options = {}
 				if isbpevent( v ) then
-					self.dragVarMenu:AddOption( text_call( v:GetName() ), function() self:PlaceEvent( v, wx, wy, true ) end )
-					self.dragVarMenu:AddOption( text_hook( v:GetName() ), function() self:PlaceEvent( v, wx, wy, false ) end )
+					options[#options+1] = { title = text_call( v:GetName() ), func = function() self:PlaceEvent( v, wx, wy, true ) end }
+					options[#options+1] = { title = text_hook( v:GetName() ), func = function() self:PlaceEvent( v, wx, wy, false ) end }
 				elseif isbpvariable(v) then
-					self.dragVarMenu:AddOption( text_set( v:GetName() ), function() self:PlaceVar( v, wx, wy, true ) end )
-					self.dragVarMenu:AddOption( text_get( v:GetName() ), function() self:PlaceVar( v, wx, wy, false ) end )
+					options[#options+1] = { title = text_set( v:GetName() ), func = function() self:PlaceVar( v, wx, wy, true ) end }
+					options[#options+1] = { title = text_get( v:GetName() ), func = function() self:PlaceVar( v, wx, wy, false ) end }
 				elseif isbpstruct(v) then
-					self.dragVarMenu:AddOption( text_make( v:GetName() ), function() self:PlaceStruct( v, wx, wy, true ) end )
-					self.dragVarMenu:AddOption( text_break( v:GetName() ), function() self:PlaceStruct( v, wx, wy, false ) end )
+					options[#options+1] = { title = text_make( v:GetName() ), func = function() self:PlaceStruct( v, wx, wy, true ) end }
+					options[#options+1] = { title = text_break( v:GetName() ), func = function() self:PlaceStruct( v, wx, wy, false ) end }
 				end
 
-				self.dragVarMenu:SetMinimumWidth( 100 )
-				self.dragVarMenu:Open( gui.MouseX(), gui.MouseY(), false, self.vgraph )
+				self.dragVarMenu = bpmodal.Menu({
+					options = options,
+					width = 100,
+				}, self.vgraph)
 
 			end
 
@@ -514,6 +520,7 @@ function meta:LeftMouse(x,y,pressed)
 				local scaleFactor = self:GetCoordinateScaleFactor()
 				local _, pinNode = self:GetGraph():AddNode("CORE_Pin", wx/scaleFactor - 32, wy/scaleFactor - 32)
 				pinNode:FindPin(PD_In, "In"):Connect( self.grabPin:GetPin() )
+				pinNode:FindPin(PD_Out, "Out"):Connect( self.grabPin:GetPin() )
 			elseif input.IsKeyDown( KEY_B ) and self.grabPin:GetPin():IsType(PN_Bool) then
 				local scaleFactor = self:GetCoordinateScaleFactor()
 				local _, pinNode = self:GetGraph():AddNode("LOGIC_If", wx/scaleFactor - 5, wy/scaleFactor - 50)
@@ -538,23 +545,31 @@ function meta:RightMouse(x,y,pressed)
 
 	local wx, wy = self:PointToWorld(x,y)
 
+	local vnode, alreadySelected = self:TryGetNode(wx, wy)
 	if pressed then
-		local selected = self:GetSelectedNodes()
-		if #selected > 1 then
-			self:OpenMultiNodeContext(selected)
-			return false
-		end
+		self.pressx = x
+		self.pressy = y
 
-		local vnode, alreadySelected = self:TryGetNode(wx, wy)
 		if vnode ~= nil then
-
 			local vpin, literal = self:TryGetNodePin(vnode, wx, wy)
 			if vpin and not literal then
 				if vpin.pin.OnRightClick then vpin.pin:OnRightClick() end
-			else
-				self:OpenNodeContext(vnode)
 			end
-			return true
+		end
+	else
+		-- Only open context after mouse released, and mosue drag distance is less than 5
+		if math.Distance(self.pressx, self.pressy, x, y) < 5. then
+			local selected, count = self:GetSelectedNodes()
+			if count > 1 then
+				self:OpenMultiNodeContext(selected)
+				return false
+			end
+
+			if vnode ~= nil then
+				self:OpenNodeContext(vnode)
+			else
+				self:OpenCreationContext()
+			end
 		end
 	end
 
@@ -607,17 +622,17 @@ function meta:KeyPress( code )
 		end
 
 		if code == KEY_C or code == KEY_X then
-			local selected = self:GetSelectedNodes()
-			local selectedIDs = {}
-			for k,v in pairs(selected) do selectedIDs[#selectedIDs+1] = v:GetNode().id end
+			local selected, count = self:GetSelectedNodes()
+			local selectedNodes = {}
+			for k,v in pairs(selected) do selectedNodes[#selectedNodes+1] = k end
 
-			if #selectedIDs == 0 then
+			if #selectedNodes == 0 then
 				print("Tried copy, but no nodes selected")
 				G_BPGraphEditorCopyState = nil 
 				return 
 			end
 
-			local subGraph = self:GetGraph():CreateSubGraph( selectedIDs )
+			local subGraph = self:GetGraph():CreateSubGraph( selectedNodes )
 			local nodeSet = bpgraphnodeset.New( subGraph )
 			nodeSet:CreateAllNodes()
 
@@ -689,29 +704,6 @@ function meta:CloseEnumContext()
 
 end
 
-function meta:OpenEnumContext(node, pin, pinID, value)
-
-	local x,y = self.vgraph:GetMousePos(true)
-
-	self:CloseEnumContext()
-	self.enumContextMenu = DermaMenu( false, self.vgraph )
-
-	local enum = bpdefs.Get():GetEnum( pin )
-	if enum == nil then
-		ErrorNoHalt("NO ENUM FOR " .. tostring( self.pinType ))
-	else
-		for k, entry in pairs(enum.entries) do
-			self.enumContextMenu:AddOption( entry.shortkey, function()
-				node:SetLiteral(pinID, entry.key)
-			end )
-		end
-	end
-
-	self.enumContextMenu:SetMinimumWidth( 100 )
-	self.enumContextMenu:Open( x, y, false, self.vgraph )
-
-end
-
 function meta:CloseNodeContext()
 
 	if IsValid( self.nodeMenu ) then self.nodeMenu:Remove() end
@@ -726,16 +718,18 @@ function meta:OpenNodeContext(vnode)
 	node:GetOptions(options)
 
 	if #options == 0 then return end
+	
+	local menuOptions = bpcommon.Transform(options, {}, function(v)
+		return { title = v[1], func = v[2], icon = v[3] }
+	end)
 
 	self:CloseNodeContext()
-	self.nodeMenu = DermaMenu( false, self.vgraph )
-
-	for k,v in pairs(options) do
-		self.nodeMenu:AddOption( v[1], v[2] )
-	end
-
-	self.nodeMenu:SetMinimumWidth( 100 )
-	self.nodeMenu:Open( x, y, false, self.vgraph )
+	self.nodeMenu = bpmodal.Menu({
+		options = menuOptions,
+		width = 100,
+		x = x,
+		y = y,
+	}, self.vgraph)
 
 end
 
@@ -746,15 +740,17 @@ function meta:OpenMultiNodeContext(selected)
 
 	if #options == 0 then return end
 
+	local menuOptions = bpcommon.Transform(options, {}, function(v)
+		return { title = v[1], func = v[2] }
+	end)
+
 	self:CloseNodeContext()
-	self.nodeMenu = DermaMenu( false, self.vgraph )
-
-	for k,v in pairs(options) do
-		self.nodeMenu:AddOption( v[1], v[2] )
-	end
-
-	self.nodeMenu:SetMinimumWidth( 100 )
-	self.nodeMenu:Open( x, y, false, self.vgraph )
+	self.nodeMenu = bpmodal.Menu({
+		options = menuOptions,
+		width = 100,
+		x = x,
+		y = y,
+	}, self.vgraph)
 
 end
 
@@ -766,7 +762,7 @@ function meta:ConnectNodeToGrabbedPin( node )
 		local pf = self.grabPin:GetPin()
 		local match = bpcast.FindMatchingPin( node:GetType(), pf, self.graph:GetModule() )
 		if match ~= nil then
-			self:GetGraph():ConnectNodes(grabbedNode.id, self.grabPin:GetPinID(), node.id, match)
+			self.grabPin.pin:MakeLink( node:GetPin( match ) )
 		end
 
 		self.grabPin = nil
@@ -781,7 +777,6 @@ function meta:OpenCreationContext( pinFilter )
 
 	self:CloseCreationContext()
 	self:LockGrabbedPinPos()
-	--self.menu = DermaMenu( false, self )
 
 	local x, y = gui.MouseX(), gui.MouseY()
 	local wx, wy = self:PointToWorld( self.vgraph:GetMousePos() )

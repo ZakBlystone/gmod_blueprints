@@ -19,6 +19,7 @@ function VALUE:CreateVGUI( info )
 	newInfo.depth = (info.depth or 0) + 1
 
 	local list = vgui.Create("DPanelList")
+	list:SetSkin("Blueprints")
 
 	if info.outer then
 		list:SetAutoSize(true)
@@ -38,6 +39,7 @@ function VALUE:CreateVGUI( info )
 		if ch:HasFlag( bpvaluetype.FL_HIDDEN ) then continue end
 
 		local l = vgui.Create("DLabel", p)
+		l:SetSkin("Blueprints")
 		l:SetText( tostring(key) )
 		l:SizeToContentsX()
 		labels[i] = l
@@ -58,11 +60,11 @@ function VALUE:CreateVGUI( info )
 			if IsValid(inner) then
 
 				local p = vgui.Create("DPanel")
-				p:SetBackgroundColor(Color(30,30,30))
+				p:SetBackgroundColor(Color(120,120,120))
 
 				if info.depth ~= nil then
 					if info.depth < 2 then
-						p:SetBackgroundColor(Color(50,50,50))
+						p:SetBackgroundColor(Color(180,180,180))
 					else
 						p.Paint = function() end
 					end
@@ -127,23 +129,29 @@ function VALUE:Find(key)
 
 end
 
-function VALUE:Index(str)
+function VALUE:Index(str, noError)
 
 	local ch = self
 	for x in str:gmatch("[^%.]+") do
 		ch = ch:Find(x)
-		if not ch then error("Couldn't find: " .. x .. " in " .. str) end
+		if not ch then if noError then return nil else error("Couldn't find: " .. x .. " in " .. str) end end
 	end
 	return ch
 
 end
 
-function VALUE:AddCosmeticChild( key, valueType )
+function VALUE:AddCosmeticChild( key, valueType, position )
 
-	self._children[#self._children+1] = {
+	local t = {
 		k = key,
 		vt = valueType,
 	}
+
+	if position then
+		return table.insert(self._children, position, t)
+	end
+
+	self._children[#self._children+1] = t
 	return #self._children
 
 end
@@ -193,6 +201,8 @@ function VALUE:ToString()
 	for i=1, #self._children do
 
 		local ch = self._children[i]
+		if ch.vt:HasFlag(bpvaluetype.FL_DONT_EMIT) then continue end
+
 		local v = ch.vt:ToString()
 		v = v:gsub("\n", "\n\t")
 

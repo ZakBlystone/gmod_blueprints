@@ -4,10 +4,11 @@ module("module_sent", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local MODULE = {}
 
-MODULE.Name = LOCTEXT"module_entity_name","Entity"
-MODULE.Description = LOCTEXT"module_entity_desc","A Scripted Entity you can spawn in the world"
+MODULE.Name = LOCTEXT("module_entity_name","Entity")
+MODULE.Description = LOCTEXT("module_entity_desc","A Scripted Entity you can spawn in the world")
 MODULE.Icon = "icon16/bricks.png"
 MODULE.Creatable = true
+MODULE.CanBeSubmodule = true
 MODULE.AdditionalConfig = true
 MODULE.HasOwner = true
 MODULE.SelfPinSubClass = "Entity"
@@ -19,6 +20,64 @@ function MODULE:Setup()
 
 	self:AddAutoFill( bppintype.New( PN_Ref, PNF_None, "PhysObj" ), "__self:GetPhysicsObject()" )
 	self:AddAutoFill( bppintype.New( PN_Ref, PNF_None, "Entity" ), "__self" )
+
+	self.createNodeType = bpnodetype.New():WithOuter(self)
+	self.createNodeType:SetCodeType(NT_Function)
+	self.createNodeType.GetDisplayName = function() return "Create " .. self:GetName() end
+	self.createNodeType.GetGraphThunk = function() return self end
+	self.createNodeType.GetRole = function() return ROLE_Server end
+	self.createNodeType.GetCategory = function() return self:GetName() end
+	self.createNodeType.GetRawPins = function()
+		return {
+			MakePin(PD_Out, "Entity", self:GetModulePinType()),
+		}
+	end
+	self.createNodeType.Compile =  function(node, compiler, pass)
+
+		if pass == bpcompiler.CP_ALLOCVARS then 
+
+			compiler:CreatePinVar( node:FindPin(PD_Out, "Entity") )
+			return true
+
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			local edit = self:GetConfigEdit()
+			compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Entity") ) .. [[ = ents.Create(]] .. edit:Index("classname"):ToString() .. [[)]])
+			compiler:CompileReturnPin( node )
+			return true
+
+		end
+
+	end
+
+	self.findAllNodeType = bpnodetype.New():WithOuter(self)
+	self.findAllNodeType:SetCodeType(NT_Function)
+	self.findAllNodeType.GetDisplayName = function() return "Find All " .. self:GetName() .. "s" end
+	self.findAllNodeType.GetGraphThunk = function() return self end
+	self.findAllNodeType.GetRole = function() return ROLE_Server end
+	self.findAllNodeType.GetCategory = function() return self:GetName() end
+	self.findAllNodeType.GetRawPins = function()
+		return {
+			MakePin(PD_Out, "Entities", self:GetModulePinType():AsTable()),
+		}
+	end
+	self.findAllNodeType.Compile =  function(node, compiler, pass)
+
+		if pass == bpcompiler.CP_ALLOCVARS then 
+
+			compiler:CreatePinVar( node:FindPin(PD_Out, "Entities") )
+			return true
+
+		elseif pass == bpcompiler.CP_MAINPASS then
+
+			local edit = self:GetConfigEdit()
+			compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Entities") ) .. [[ = ents.FindByClass(]] .. edit:Index("classname"):ToString() .. [[)]])
+			compiler:CompileReturnPin( node )
+			return true
+
+		end
+
+	end
 
 end
 
@@ -50,6 +109,30 @@ function MODULE:GetDefaultConfigTable()
 			AdminOnly = false,
 		}
 	}
+
+end
+
+function MODULE:GetCreateNodeType() return self.createNodeType end
+function MODULE:GetFindAllNodeType() return self.findAllNodeType end
+function MODULE:GetNodeTypes( collection, graph )
+
+	BaseClass.GetNodeTypes( self, collection, graph )
+
+	local types = {}
+
+	collection:Add( types )
+	types["__Create"] = self:GetCreateNodeType()
+	types["__FindAll"] = self:GetFindAllNodeType()
+	for k,v in pairs(types) do v.name = k end
+
+end
+
+function MODULE:SerializeData( stream )
+
+	stream:Extern( self:GetCreateNodeType(), "\xE3\x09\x45\x7E\xE1\xE5\xBB\xEE\x80\x00\x00\x13\x51\xC1\x24\x22" )
+	stream:Extern( self:GetFindAllNodeType(), "\xE3\x09\x45\x7E\x71\xC5\xA0\xE6\x80\x00\x00\x14\x51\xD1\x5C\x32" )
+
+	return BaseClass.SerializeData( self, stream )
 
 end
 
@@ -96,13 +179,12 @@ function MODULE:Compile(compiler, pass)
 		compiler.emit( "meta = table.Merge( meta, " .. entityTable:ToString() .. " )")
 
 		compiler.emit([[
-for k,v in pairs(meta) do local _, _, m = k:find("ENTITY_(.+)") if m then meta[ m ] = v end end]])
+for k,v in pairs(table.Copy(meta)) do local _, _, m = k:find("ENTITY_(.+)") if m then meta[ m ] = v end end]])
 
 		compiler.emit("function meta:Initialize()")
-		compiler.emit("\tlocal instance = self")
-		compiler.emit("\tinstance.delays = {}")
-		compiler.emit("\tinstance.__bpm = __bpm")
-		compiler.emit("\tinstance.guid = __hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
+		compiler.emit("\tself.delays = {}")
+		compiler.emit("\tself.__bpm = __bpm")
+		compiler.emit("\tself.guid = __hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
 		compiler.emitContext( CTX_Vars .. "global", 1 )
 		compiler.emit("\tself.bInitialized = true")
 		compiler.emit("\tself.lastThink = CurTime()")
@@ -137,7 +219,7 @@ end]])
 		compiler.emit("__bpm.class = " .. classname:ToString())
 		compiler.emit([[
 __bpm.init = function()
-	scripted_ents.Register( meta, __bpm.class )
+	scripted_ents.Register( __bpm.meta, __bpm.class )
 	if CLIENT and bpsandbox then bpsandbox.RefreshSENTs() end
 end
 __bpm.refresh = function()

@@ -2,13 +2,14 @@ CALLBACK ProviderFunc
 {
 	IN text, PN_String, #Text to "Copy to clipboard"
 	IN spawner, PN_Func, PN_None, VOID, #Function to use/spawn the item
-	IN icon, PN_Panel, PNF_Nullable, #A panel to add to spawnmenu
+	IN icon, PN_Ref, PNF_Nullable, Panel, #A panel to add to spawnmenu
 	IN words, PN_String, PNF_Table, #A table of words? (seriously, that's all the wiki says)
 }
 LIB search
 {
 	FUNC AddProvider, CLIENT
 	{
+		TBD
 		DESC Adds a search result provider. For examples, see gamemodes/sandbox/gamemode/cl_search_models.lua
 		IN provider, PN_Func, PNF_None, ProviderFunc, #Provider function. It has one argument: string searchQuery You must return a list of tables structured like this: string text - Text to "Copy to clipboard" function func - Function to use/spawn the item Panel icon - A panel to add to spawnmenu table words - A table of words?
 		IN id, PN_String, PNF_Nullable, #If provided, ensures that only one provider exists with the given ID at a time.

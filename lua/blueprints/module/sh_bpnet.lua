@@ -17,7 +17,7 @@ if SERVER then
 	util.AddNetworkString("bpnet")
 end
 
-local function HandleRemoteErrorReport( uid, msg, graphID, nodeID, from )
+local function HandleRemoteErrorReport( uid, msg, modUID, graphID, nodeID, from )
 
 	if from then
 		msg = msg .. " [ on player: " .. from:GetName() .. " ] "
@@ -26,6 +26,7 @@ local function HandleRemoteErrorReport( uid, msg, graphID, nodeID, from )
 	_G.G_BPError = {
 		uid = uid,
 		msg = msg,
+		modUID = modUID,
 		graphID = graphID,
 		nodeID = nodeID,
 		from = from,
@@ -33,7 +34,7 @@ local function HandleRemoteErrorReport( uid, msg, graphID, nodeID, from )
 
 end
 
-local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
+local function NetErrorDispatch( uid, msg, modUID, graphID, nodeID, from )
 
 	if CLIENT then
 
@@ -41,6 +42,7 @@ local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
 		net.WriteUInt( CMD_ErrorReport, CommandBits )
 		net.WriteData( uid, 16 )
 		net.WriteString( msg )
+		net.WriteData( modUID, 16 )
 		net.WriteUInt( graphID, 32 )
 		net.WriteUInt( nodeID, 32 )
 		net.SendToServer()
@@ -60,10 +62,19 @@ local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
 
 		if owner ~= nil then
 
-			local ply = nil
+			local ply = game.SinglePlayer() and player.GetAll()[1] or owner:GetPlayer()
+			msg = mod:FormatErrorMessage( msg, modUID, graphID, nodeID )
 
-			if game.SinglePlayer() then
-				ply = player.GetAll()[1]
+			net.Start("bpnet")
+			net.WriteUInt( CMD_ErrorReport, CommandBits )
+			net.WriteData( uid, 16 )
+			net.WriteString( msg )
+			net.WriteData( modUID, 16 )
+			net.WriteUInt( graphID, 32 )
+			net.WriteUInt( nodeID, 32 )
+			if from then 
+				net.WriteBool(true) --Clientside Error
+				net.WriteEntity(from)
 			else
 				ply = owner:GetPlayer()
 			end
@@ -96,10 +107,12 @@ local function NetErrorDispatch( uid, msg, graphID, nodeID, from )
 
 end
 
-local function ErrorHandler( mod, msg, graphID, nodeID )
+local function ErrorHandler( mod, msg, modUID, graphID, nodeID )
+
+	local formatted = mod:FormatErrorMessage( msg, modUID, graphID, nodeID )
 
 	print("***BLUEPRINT ERROR*** : " .. tostring(msg))
-	NetErrorDispatch( mod:GetUID(), msg, graphID, nodeID )
+	NetErrorDispatch( mod:GetUID(), msg, modUID, graphID, nodeID )
 
 end
 hook.Add("BPModuleError", "bpnetHandleError", ErrorHandler)
@@ -116,18 +129,18 @@ function Install( mod, owner )
 	bpenv.Install( mod )
 	bpenv.Instantiate( mod:GetUID(), instanceUID )
 
-	local stream = bpdata.OutStream(false, true, true):UseStringTable()
-	mod:WriteToStream(stream, STREAM_NET)
+	local stream = bpstream.New("bpnet", bpstream.MODE_Network):Out()
+	stream:Object(mod)
 
 	net.Start("bpnet")
 	net.WriteUInt( CMD_Install, CommandBits )
 	net.WriteData( instanceUID, 16 )
-	local s,p = stream:WriteToNet(true)
+	stream:Finish()
 	--print("Send compiled module size: " .. p .. " bytes")
 	net.Broadcast()
 
 	local instances = bpenv.GetInstances( mod:GetUID() )
-	print("NUM INSTANCES: " .. #instances)
+	--print("NUM INSTANCES: " .. #instances)
 
 end
 
@@ -152,7 +165,7 @@ if SERVER then
 		print("SENDING BLUEPRINTS TO CLIENT: " .. ply:Nick() )
 
 		local files = bpfilesystem.GetFiles()
-		local agg = bpdata.OutStream(false, true, true):UseStringTable()
+		local agg = bpstream.New("bpnet", bpstream.MODE_Network):Out()
 
 		local count = 0
 		for k,v in ipairs(files) do
@@ -160,7 +173,7 @@ if SERVER then
 			if bpenv.IsInstalled( uid ) then count = count + 1 end
 		end
 
-		agg:WriteInt(count, false)
+		agg:UInt(count)
 		print("Send " .. count .. " blueprints...")
 
 		for k,v in ipairs(files) do
@@ -172,19 +185,19 @@ if SERVER then
 
 				print("Packing Blueprint " .. v:GetName() .. "...")
 				local cmod = bpenv.Get( v:GetUID() )  --mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
-				cmod:WriteToStream(agg, STREAM_NET)
+				agg:Object(cmod)
 
 				print("Write " .. #instances .. " instances.")
-				agg:WriteInt(#instances, false)
+				agg:UInt(#instances)
 				for _, inst in ipairs(instances) do
-					agg:WriteStr(inst.guid)
+					agg:GUID(inst.guid)
 				end
 			end
 		end
 
 		net.Start("bpnet")
 		net.WriteUInt( CMD_InstallMultiple, CommandBits )
-		local s,p = agg:WriteToNet(true)
+		local p = agg:Finish()
 		print("Send compiled chunk size: " .. p .. " bytes")
 		net.Send( ply )
 
@@ -237,13 +250,13 @@ net.Receive("bpnet", function(len, ply)
 	if cmd == CMD_Install then
 
 		local uid = net.ReadData( 16 )
-		local stream = bpdata.InStream(false, true, true):UseStringTable()
-		stream:ReadFromNet(true)
-		local mod = bpcompiledmodule.New():ReadFromStream( stream, STREAM_NET )
+		local stream = bpstream.New("bpnet", bpstream.MODE_Network):In()
+		local mod = stream:Object()
 
 		mod:Load()
 		bpenv.Install( mod )
 		bpenv.Instantiate( mod:GetUID(), uid )
+		stream:Finish()
 
 	elseif cmd == CMD_Uninstall then
 
@@ -254,16 +267,17 @@ net.Receive("bpnet", function(len, ply)
 
 		local uid = net.ReadData( 16 )
 		local msg = net.ReadString()
+		local modUID = net.ReadData( 16 )
 		local graphID = net.ReadUInt( 32 )
 		local nodeID = net.ReadUInt( 32 )
 
 		if SERVER then
-			NetErrorDispatch( uid, msg, graphID, nodeID, ply )
+			NetErrorDispatch( uid, msg, modUID, graphID, nodeID, ply )
 		else
 			local clientSide = net.ReadBool()
 			local ply = nil
 			if clientSide then ply = net.ReadEntity() end
-			HandleRemoteErrorReport( uid, msg, graphID, nodeID, ply )
+			HandleRemoteErrorReport( uid, msg, modUID, graphID, nodeID, ply )
 		end
 
 	elseif cmd == CMD_InstallMultiple then
@@ -271,23 +285,21 @@ net.Receive("bpnet", function(len, ply)
 		assert(CLIENT)
 
 		--print("Module pack " .. len .. " bytes.")
-		local stream = bpdata.InStream(false, true, true):UseStringTable()
-		stream:ReadFromNet(true)
-
-		local count = stream:ReadInt(false)
+		local stream = bpstream.New("bpnet", bpstream.MODE_Network):In()
+		local count = stream:UInt()
 		--print("Reading " .. count .. " blueprints")
 
 		for i=1, count do
 
 			--print("Reading module " .. i)
-			local mod = bpcompiledmodule.New():ReadFromStream( stream, STREAM_NET )
-			local numInstances = stream:ReadInt(false)
+			local mod = stream:Object()
+			local numInstances = stream:UInt()
 
 			--print(numInstances .. " instances")
 
 			local instances = {}
 			for i=1, numInstances do
-				instances[#instances+1] = stream:ReadStr()
+				instances[#instances+1] = stream:GUID()
 			end
 
 			--print("Loading module")
@@ -299,6 +311,8 @@ net.Receive("bpnet", function(len, ply)
 			end
 
 		end
+
+		stream:Finish()
 
 	end
 

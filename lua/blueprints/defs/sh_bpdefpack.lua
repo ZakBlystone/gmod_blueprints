@@ -3,7 +3,6 @@ AddCSLuaFile()
 module("bpdefpack", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bpdefpack")
-meta.__tostring = function(self) return self:ToString() end
 
 function meta:Init()
 
@@ -17,6 +16,7 @@ function meta:Init()
 	self.hooks = {}
 	self.structLookup = {}
 	self.enumLookup = {}
+	self.callbacks = {}
 	return self
 
 end
@@ -54,7 +54,6 @@ function meta:PostInit()
 			local exist = self.classes[v:GetName()]
 			if exist and exist ~= v then
 				for _, entry in v:GetEntries():Items() do
-					entry.id = nil
 					entry:WithOuter( exist )
 					exist:AddEntry( entry )
 				end
@@ -124,6 +123,12 @@ function meta:GetHooks()
 
 end
 
+function meta:GetCallbacks()
+
+	return self.callbacks
+
+end
+
 function meta:GetPinTypes()
 
 	local types = {}
@@ -182,6 +187,12 @@ function meta:AddNodeRedirector(oldNode, newNode)
 
 end
 
+function meta:AddCallback(callback)
+
+	self.callbacks[#self.callbacks+1] = callback
+
+end
+
 function meta:AddStruct(struct)
 
 	self.structs[#self.structs+1] = struct
@@ -212,49 +223,80 @@ function meta:GetNodeTypes()
 
 end
 
-function meta:WriteToStream(stream)
+function meta:LinkPins( pins, lookup )
 
-	assert(stream:IsUsingStringTable())
-	stream:WriteInt(#self.nodeGroups, false)
-	stream:WriteInt(#self.structs, false)
-	for i=1, #self.nodeGroups do self.nodeGroups[i]:WriteToStream(stream) end
-	for i=1, #self.structs do
-		-- This is a dumb out-of-bounds hack, fix later
-		self.structs[i]:WriteToStream(stream)
-		stream:WriteStr(self.structs[i]:GetName())
-		stream:WriteInt(self.structs[i].pinTypeOverride or -1, true)
+	for _, pin in ipairs(pins) do
+
+		if pin.type:GetBaseType() == PN_Func then
+
+			local cb = pin.type:GetSubType()
+			if type(cb) == "string" then
+				pin.type.subtype = bpcommon.Weak( lookup.callbacks[cb] )
+			end
+
+		end
+
 	end
-	bpdata.WriteValue(self.enums, stream)
-	bpdata.WriteValue(self.redirectors, stream)
-	return self
 
 end
 
-function meta:ReadFromStream(stream)
+function meta:LinkObjects()
 
-	local groupCount = stream:ReadInt(false)
-	local structCount = stream:ReadInt(false)
+	local lookup = { callbacks = {} }
+	for _, v in ipairs(self.callbacks) do lookup.callbacks[v:GetName()] = v end
+
+	for k,v in ipairs(self.structs) do
+
+		local maker = v:MakerNodeType()
+		local breaker = v:BreakerNodeType()
+
+		self:LinkPins(v.pins:GetTable(), lookup)
+
+	end
+
+	for _, v in ipairs(self.nodeGroups) do
+
+		for _, e in v:GetEntries():Items() do
+
+			self:LinkPins(e:GetRawPins(), lookup)
+
+		end
+
+	end
+
+	for _, v in ipairs(self.callbacks) do
+
+		self:LinkPins(v:GetPins(), lookup)
+
+	end
+
+end
+
+function meta:Serialize(stream)
+
+	self.callbacks = stream:ObjectArray(self.callbacks, self)
+
+	local groupCount = stream:UInt(#self.nodeGroups)
+	local structCount = stream:UInt(#self.structs)
 
 	for i=1, groupCount do
-		self.nodeGroups[#self.nodeGroups+1] = bpnodetypegroup.New():WithOuter(self):ReadFromStream(stream)
+		self.nodeGroups[i] = stream:Object( self.nodeGroups[i] or bpnodetypegroup.New(), self, true )
 	end
 
 	for i=1, structCount do
-		local struct = bpstruct.New():WithOuter(self):ReadFromStream(stream)
-		local structName = stream:ReadStr()
-		local pinTypeOverride = stream:ReadInt(true)
-
-		struct:SetName( structName )
-		self.structs[#self.structs+1] = struct
 		-- This is a dumb out-of-bounds hack, fix later
-		if pinTypeOverride ~= -1 then struct.pinTypeOverride = pinTypeOverride end
+		self.structs[i] = stream:Object( self.structs[i] or bpstruct.New(), self, true )
+		self.structs[i].name = stream:String(self.structs[i].name)
+		self.structs[i].pinTypeOverride = stream:Int(self.structs[i].pinTypeOverride or -1)
+		if self.structs[i].pinTypeOverride == -1 then self.structs[i].pinTypeOverride = nil end
 	end
 
-	self.enums = bpdata.ReadValue(stream)
-	self.redirectors = bpdata.ReadValue(stream)
+	self.enums = stream:Value(self.enums)
+	self.redirectors = stream:StringMap(self.redirectors)
 
-	self:PostInit()
-	return self
+	if stream:IsReading() then self:PostInit() end
+
+	return stream
 
 end
 

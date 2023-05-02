@@ -2,16 +2,14 @@ LIB weapons
 {
 	PURE Get, SHARED
 	{
-		TBD
 		DESC Get a copy of weapon table by name. This function also inherits fields from the weapon's base class, unlike weapons.GetStored.
 		IN classname, PN_String, #Class name of weapon to retrieve
-		OUT swep, PN_Any, PNF_Table, #The retrieved table or nil
+		OUT swep, PN_Struct, PNF_None, SWEP, #The retrieved table or nil
 	}
 	PURE GetList, SHARED
 	{
-		TBD
 		DESC Get a list of all the registered SWEPs. This does not include weapons added to spawnmenu manually.
-		OUT sweps, PN_Any, PNF_Table, #List of all the registered SWEPs
+		OUT sweps, PN_Struct, PNF_Table, SWEP, #List of all the registered SWEPs
 	}
 	PURE GetStored, SHARED
 	{

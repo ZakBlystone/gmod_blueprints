@@ -1,9 +1,9 @@
 if SERVER then AddCSLuaFile() return end
 
-local text_edit_event = LOCTEXT("dialog_edit_event", "Edit Event")
-local text_net_mode = LOCTEXT("dialog_edit_event_net", "Net Mode:")
-local text_edit_pins = LOCTEXT("dialog_edit_event_pins", "Pins")
-local text_edit_struct = LOCTEXT("dialog_edit_struct", "Edit Struct")
+text_edit_event = LOCTEXT("dialog_edit_event", "Edit Event")
+text_net_mode = LOCTEXT("dialog_edit_event_net", "Net Mode:")
+text_edit_pins = LOCTEXT("dialog_edit_event_pins", "Pins")
+text_edit_struct = LOCTEXT("dialog_edit_struct", "Edit Struct")
 
 module("bpuistructeditmenu", package.seeall, bpcommon.rescope(bpschema))
 
@@ -12,6 +12,7 @@ function EditStructParams( struct )
 	local width = 500
 
 	local window = vgui.Create( "DFrame" )
+	window:SetSkin("Blueprints")
 	window:SetTitle( text_edit_struct() )
 	window:SetDraggable( true )
 	window:ShowCloseButton( true )
@@ -33,26 +34,9 @@ function EditStructParams( struct )
 
 end
 
-function EditEventParams( event )
+function EditEventParamsPanel( event, parent )
 
-	local width = 500
-
-	local window = vgui.Create( "DFrame" )
-	window:SetTitle( text_edit_event() )
-	window:SetDraggable( true )
-	window:ShowCloseButton( true )
-	window.OnRemove = function(self)
-		hook.Remove("BPEditorBecomeActive", tostring(self))
-	end
-
-	hook.Add("BPEditorBecomeActive", tostring(window), function()
-		if IsValid(window) then window:Remove() end
-	end)
-
-	window:SetSize( 500, 400 )
-	window:Center()
-
-	local param = vgui.Create("DPanel", window)
+	local param = vgui.Create("DPanel", parent)
 	param:SetPaintBackground(false)
 	param:SetWide(300)
 
@@ -83,8 +67,35 @@ function EditEventParams( event )
 	param:DockMargin(10,10,10,10)
 	param:Dock( TOP )
 
-	local pins = bpuivarcreatemenu.VarList( event, window, event.pins, text_edit_pins(), "Out" )
+	local pins = bpuivarcreatemenu.VarList( event, parent, event.pins, text_edit_pins(), "Out" )
+	pins:DockMargin(5,5,5,5)
 	pins:Dock( FILL )
+
+	return param
+
+end
+
+function EditEventParams( event )
+
+	local width = 500
+
+	local window = vgui.Create( "DFrame" )
+	window:SetSkin("Blueprints")
+	window:SetTitle( text_edit_event() )
+	window:SetDraggable( true )
+	window:ShowCloseButton( true )
+	window.OnRemove = function(self)
+		hook.Remove("BPEditorBecomeActive", tostring(self))
+	end
+
+	hook.Add("BPEditorBecomeActive", tostring(window), function()
+		if IsValid(window) then window:Remove() end
+	end)
+
+	window:SetSize( 500, 400 )
+	window:Center()
+
+	EditEventParamsPanel(event, window)
 
 	window:MakePopup()
 

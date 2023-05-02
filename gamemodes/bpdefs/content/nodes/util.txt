@@ -1,5 +1,6 @@
 LIB UTIL
 {
+	NOWIKIDOC
 	PURE AngleVectors, SHARED
 	{
 		IN Angles, PN_Angles
@@ -138,7 +139,7 @@ LIB UTIL
 				%time = math.max(%time - FrameTime(), 0)
 				local t = (%time / $2)
 				#2 = $3 and t or (1 - t)
-				@graph(#_1)
+				recurse(#_1)
 				if %time > 0 then return 0 end
 			end)
 			goto popcall
@@ -161,11 +162,11 @@ LIB UTIL
 				function( body, len, headers, code )
 					#2 = body
 					#5 = code
-					@graph(#_1)
+					recurse(#_1)
 				end,
 				function( error )
 					#4 = error
-					@graph(#_3)
+					recurse(#_3)
 				end
 			)
 			goto popcall
@@ -189,11 +190,11 @@ LIB UTIL
 				function( body, len, headers, code )
 					#2 = body
 					#5 = code
-					@graph(#_1)
+					recurse(#_1)
 				end,
 				function( error )
 					#4 = error
-					@graph(#_3)
+					recurse(#_3)
 				end
 			)
 			goto popcall

@@ -6,63 +6,86 @@ local DummyNodeType = bpnodetype.New()
 DummyNodeType:SetDisplayName("InvalidNode")
 
 local meta = bpcommon.MetaTable("bpnode")
-meta.__tostring = function(self) return self:ToString() end
 
 nodeClasses = bpclassloader.Get("Node", "blueprints/graph/nodetypes/", "BPNodeClassRefresh", meta)
 
 --Common pin filters
 PF_NoExec = function( pin ) return not pin:IsType( PN_Exec ) end
+PF_OnlyExec = function( pin ) return pin:IsType( PN_Exec ) end
 
-function meta:Init(nodeType, x, y, literals)
+function meta:Init(nodeType, x, y)
 
-	if type(nodeType) == "table" then
-		self.nodeTypeObject = nodeType
-		self.nodeType = self.nodeTypeObject:GetFullName()
-	else
-		self.nodeType = nodeType or "invalid"
-	end
-
-	assert(self.nodeType ~= nil)
-
+	self.nodeType = Weak(nodeType or DummyNodeType)
 	self.x = x or 0
 	self.y = y or 0
-	self.literals = literals or {}
 	self.data = {}
+	self.uid = bpcommon.GUID()
 
 	bpcommon.MakeObservable(self)
+
+	if self.nodeType() then
+		self.nodeType():Bind("preModify", self, self.PreModify)
+		self.nodeType():Bind("postModify", self, self.PostModify)
+		self.nodeType():Bind("destroyed", self, self.OnNodeTypeDestroyed)
+	end
 
 	return self
 
 end
 
-function meta:PostInit()
+function meta:Initialize( usePinCache )
+
+	--print(debug.traceback())
+
+	if self.initialized then return true end
 
 	self.x = math.Round(self.x / 16) * 16
 	self.y = math.Round(self.y / 16) * 16
 
-	local ntype = self.nodeTypeObject
-	if not self.nodeTypeObject then
-		self.nodeType = bpdefs:Get():RemapNodeType(self.nodeType)
+	local ntype = self.nodeType()
+	if ntype == nil then
+		--print("Node without valid nodetype, replacing with dummy!")
+		ntype = DummyNodeType
+		self.nodeType:Set( ntype )
 
-		ntype = self:GetType()
-		if ntype == nil then 
-			if self.nodeType ~= "invalid" then print("Node type not found for: " .. self.nodeType) end
-			return false
+		for _, pin in ipairs(self.pinCache or {}) do
+			--print(" PIN WAS: " .. pin:ToStringEx(true, true))
 		end
 	end
 
+	if self.nodeType() then
+		self.nodeType():Bind("preModify", self, self.PreModify)
+		self.nodeType():Bind("postModify", self, self.PostModify)
+		self.nodeType():Bind("destroyed", self, self.OnNodeTypeDestroyed)
+	end
+
 	local nodeClass = ntype:GetNodeClass()
-	if nodeClass then nodeClasses:Install(nodeClass, self) end
+	if nodeClass then 
+		nodeClasses:Install(nodeClass, self)
+		--print("INIT NODE CLASS: " .. nodeClass )
+	end
 
-	self:UpdatePins()
+	if not usePinCache then Profile("update-pins", self.UpdatePins, self) end
 
+	self.initialized = true
 	return true
 
 end
 
-function meta:SetLiteralDefaults( force )
+function meta:PostLoad()
 
-	local ntype = self:GetType()
+	self.initialized = false
+	self:Initialize()
+
+end
+
+function meta:OnNodeTypeDestroyed()
+
+	self.nodeType:Set(DummyNodeType)
+
+end
+
+function meta:SetLiteralDefaults( force )
 
 	self.suppressPinEvents = true
 
@@ -70,20 +93,6 @@ function meta:SetLiteralDefaults( force )
 	for pinID, pin, pos in self:SidePins(PD_In) do
 		pin:SetDefaultLiteral( force )
 	end
-
-	self.suppressPinEvents = false
-
-end
-
-function meta:ShiftLiterals(d)
-
-	self.suppressPinEvents = true
-
-	local l = bpcommon.CopyTable(self.literals)
-	for pinID, literal in pairs(l) do
-		self:SetLiteral(pinID+d, literal)
-	end
-	self:RemoveInvalidLiterals()
 
 	self.suppressPinEvents = false
 
@@ -101,22 +110,31 @@ function meta:ToString(pinID)
 		if pinID then
 			local p = type(pinID) == "table" and pinID or self:GetPin(pinID)
 			if getmetatable(p) == nil then error("NO METATABLE ON PIN: " .. str .. "." .. tostring(p[3])) end
-			if p then str = str .. "." .. p:ToString(true,true) end
+			if p then str = str .. "." .. p:ToStringEx(true,true) end
 		end
 	end
 
 	local outerGraph = self:GetGraph()
-	if outerGraph then str = outerGraph:GetName() .. ":" .. str end
+	if outerGraph then str = tostring(outerGraph:GetName()) .. ":" .. tostring(str) end
 
 	return str
 
 end
 
+function meta:GetDisplayName()
+
+	local ntype = self:GetType()
+	if ntype ~= nil then
+		return ntype:GetDisplayName()
+	end
+
+end
+
 function meta:IsPinConnected( pinID )
 
-	local outerGraph = self:GetGraph()
-	if outerGraph == nil then return false end
-	return outerGraph:IsPinConnected( self.id, pinID )
+	local pins = self:GetPins()
+	if pin[pinID] and #pin[pinID]:GetConnections() > 0 then return true end
+	return false
 
 end
 
@@ -143,27 +161,78 @@ end
 
 function meta:UpdatePins()
 
-	local prev = self.pinCache
+	--print("UPDATING PINS[" .. self:ToString() .. "]...")
 
-	self.pinCache = {}
-	self:GeneratePins(self.pinCache)
+	local newPins = nil
 
-	for k, v in ipairs(self:GetPins()) do
-		v:WithOuter( self )
-		v.id = k
+	-- This will do for now
+	if self:GetType() ~= DummyNodeType then
+		newPins = {}
+		self:GeneratePins(newPins)
+	else
+		self:Broadcast("pinsUpdated")
+		return
 	end
 
-	for k, v in ipairs(self:GetPins()) do
-		v:InitPinClass()
 
-		if prev ~= nil and prev[k] ~= nil and v:GetLiteral() ~= nil and not prev[k]:Equal(v) then
-			v:SetLiteral(nil)
-			--print("Force default literal on pin: " .. v:ToString(true) .. " : " .. tostring(v:GetLiteral()) .. "->" .. tostring(v:GetDefault()) )
+	local keep = {}
+	local current = self.pinCache
+	local flagMask = bit.band(PNF_All, bit.bnot( PNF_Server + PNF_Client ))
+	local function findExisting( k, p )
+		if not current then return end
+		for _,v in ipairs( current ) do
+			--print(" CHECK: " .. tostring(v:ToString(true, true)))
+			if v:Equals(p) then return v end
 		end
-
+		if current[k] and current[k]:GetType():Equal(p:GetType(), flagMask) and current[k].dir == p.dir then
+			current[k]:SetType(p:GetType())
+			current[k]:SetName(p:GetName())
+			return current[k]
+		end
+		print(" No Match for: " .. tostring(p:ToString(true, true)))
+		for _, v in ipairs(current) do
+			print("  " .. tostring(v:ToString(true, true)))
+		end
 	end
 
-	self:SetLiteralDefaults()
+	--print(" SEARCH CACHE: " .. (current and #current or "nil"))
+
+	self.suppressPinEvents = true
+	self.pinCache = {}
+	for k, v in ipairs(newPins) do
+		local p = findExisting(k, v)
+		if not p then 
+			--print(" CREATE NEW: " .. tostring(v) .. " ... init literal" )
+			v:WithOuter( self )
+			v.id = k
+			v:InitPinClass()
+			v:SetLiteral( v:GetDefault() )
+			self.pinCache[k] = v
+		else
+			keep[p] = true
+			p:WithOuter( self )
+			p.id = k
+			p.desc = v.desc
+			p.displayName = v.displayName
+			p:InitPinClass()
+			self.pinCache[k] = p
+			--print(" LOAD FROM CACHE: " .. p:GetName() )
+		end
+	end
+
+	if current then
+		for _, v in ipairs(current) do
+			if not keep[v] then v:BreakAllLinks() end
+		end
+	end
+
+	for k, v in ipairs(self.pinCache) do
+		v:PostNodePinsCreated()
+	end
+
+	self.suppressPinEvents = false
+
+	--self:SetLiteralDefaults()
 	self:Broadcast("pinsUpdated")
 
 end
@@ -228,17 +297,26 @@ end
 
 function meta:PreModify()
 
-	local outerGraph = self:GetGraph()
-	if not outerGraph then return end
-	outerGraph:PreModifyNode( self )
+	self:Broadcast("preModify")
 
 end
 
 function meta:PostModify()
 
-	local outerGraph = self:GetGraph()
-	if not outerGraph then return end
-	outerGraph:PostModifyNode( self )
+	self:UpdatePins()
+	self:Broadcast("postModify")
+
+end
+
+function meta:SetRoleOnExecPins(pins, role)
+
+	for _, pin in ipairs(pins) do
+		if pin:IsType(PN_Exec) then
+			local current = bit.band( pin:GetType().flags, bit.bnot( PNF_Server + PNF_Client ) )
+			local flag = role == ROLE_Shared and 0 or (role == ROLE_Server and PNF_Server or PNF_Client)
+			pin:SetType( pin:GetType():WithFlags( bit.bor(current, flag) ) )
+		end
+	end
 
 end
 
@@ -253,6 +331,10 @@ function meta:GeneratePins(pins)
 		table.insert(pins, 1, MakePin( PD_Out, "Thru", PN_Exec ))
 		table.insert(pins, 1, MakePin( PD_In, "Exec", PN_Exec ))
 	end
+
+	--if self:GetRole() and self:GetRole() ~= ROLE_Shared then
+	--	self:SetRoleOnExecPins(pins, self:GetRole())
+	--end
 
 end
 
@@ -329,9 +411,18 @@ function meta:FindPin(dir, name)
 
 end
 
+function meta:BreakAllLinks()
+
+	for _, pin in ipairs(self:GetPins()) do
+		pin:BreakAllLinks()
+	end
+
+end
+
 function meta:GetLiteral(pinID)
 
-	return self.literals[pinID]
+	local pins = self:GetPins()
+	return pins[pinID] ~= nil and pins[pinID]:GetLiteral() or ""
 
 end
 
@@ -341,55 +432,13 @@ function meta:SetLiteral(pinID, value)
 	if pinID < 1 or pinID > #pins then return end
 	if pins[pinID]:IsOut() or pins[pinID]:IsType(PN_Exec) then return end
 
-	local literalType = pins[pinID]:GetLiteralType()
-	if literalType == "number" then
-		if not tonumber(value) then
-			value = 0
-		end
-	end
-
-	value = tostring(value)
-	local prevValue = self.literals[pinID]
-	local changed = value ~= prevValue
-	local outerGraph = self:GetGraph()
-
-	if not self.suppressPinEvents and outerGraph then
-		outerGraph:Broadcast("preModifyLiteral", self.id, pinID, value)
-	end
-
-	self.literals[pinID] = value
-
-	if not self.suppressPinEvents and outerGraph then
-		outerGraph:Broadcast("postModifyLiteral", self.id, pinID, value)
-	end
-
-	if changed and pins[pinID].OnLiteralChanged then
-		pins[pinID]:OnLiteralChanged( prevValue, value )
-	end
-
-end
-
-function meta:RemoveInvalidLiterals()
-
-	local pins = self:GetPins()
-	for pinID, value in ipairs(self.literals) do
-		if pins[pinID] == nil or pins[pinID]:IsOut() or pins[pinID]:IsType(PN_Exec) then self.literals[pinID] = nil end
-	end
+	pins[pinID]:SetLiteral( value )
 
 end
 
 function meta:GetType()
 
-	if self.nodeTypeObject then return self.nodeTypeObject end
-
-	local nodeTypes = self:GetGraph():GetNodeTypes()
-	local ntype = nodeTypes:Find( self.nodeType )
-	if self.nodeType ~= "invalid" and ntype == nil then --[[print("Unable to find node type: " .. tostring(self.nodeType))]] end
-	self.nodeTypeObject = ntype
-
-	if ntype == nil then return DummyNodeType end
-
-	return ntype
+	return self.nodeType() or DummyNodeType
 
 end
 
@@ -399,8 +448,30 @@ function meta:GetCodeType()
 
 end
 
-function meta:GetColor() return NodeTypeColors[ self:GetCodeType() ] end
-function meta:GetTypeName() return self.nodeType end
+function meta:SetComment( comment ) self.data.comment = comment end
+function meta:GetComment() return self.data.comment or "" end
+
+function meta:IsValid()
+
+	return self.nodeType:IsValid() and self:GetType() ~= DummyNodeType
+
+end
+
+function meta:GetColor()
+	if not self:IsValid() then
+		return Color(200 + math.sin(CurTime()*10)*50,50,50)
+	end
+	return NodeTypeColors[ self:GetCodeType() ]
+end
+
+function meta:GetSanitizedTypeName()
+
+	local name = self:GetTypeName()
+	return string.gsub(name, "[^%w]", "_")
+
+end
+
+function meta:GetTypeName() return self.nodeType:IsValid() and self.nodeType():GetFullName() or "unknown" end
 function meta:GetPos() return self.x, self.y end
 function meta:RemapPin(name) return self:GetType():RemapPin(name) end
 
@@ -409,12 +480,6 @@ function meta:ConvertType(t)
 	self:PreModify()
 	self.data.codeTypeOverride = t
 	self:PostModify()
-
-	if t == NT_Pure then
-		self:ShiftLiterals(-2)
-	elseif t == NT_Function then
-		self:ShiftLiterals(2)
-	end
 
 end
 
@@ -431,6 +496,67 @@ function meta:GetOptions(tab)
 	elseif self:GetCodeType() == NT_Pure then
 		tab[#tab+1] = {"ConvertToNonPure", function() self:ConvertType(NT_Function) end }
 	end
+
+	tab[#tab+1] = {
+		"Edit Comment",
+		function() 
+			local pnl = bptextliteraledit.LiteralEditWindow( "Comment", "DTextEntry", 300, 120, nil, 0, 0 )
+			pnl:SetText( self:GetComment() or "" )
+			pnl:SetMultiline(true)
+			pnl:SetCaretPos( #pnl:GetText() )
+			pnl.OnTextChanged = function( pnl, noMenuRemoval, keepAutoComplete )
+				self:SetComment( string.Trim(pnl:GetText()) )
+			end
+			local detour = pnl.OnKeyCodeTyped
+			pnl.OnKeyCodeTyped = function(self, keyCode)
+				if keyCode == KEY_ENTER and not input.IsKeyDown( KEY_LSHIFT ) then
+					self:GetParent():Close()
+					return
+				end
+				detour(self, keyCode)
+			end
+		end
+	}
+
+	local doc = self:GetDocumentationURL()
+	if doc ~= nil then
+
+		tab[#tab+1] = {
+			"Open GMod Wiki",
+			function()
+				gui.OpenURL(doc)
+			end, "icon16/help.png"
+		}
+
+	end
+
+end
+
+function meta:GetDocumentationURL()
+
+	local ntype = self:GetType()
+	local group = ntype:GetGroup()
+
+	if group ~= nil and not group:HasFlag(bpnodetypegroup.FL_NoWikiDoc) then
+
+		local groupName = group:GetName()
+		local ctx = ntype:GetContext()
+		local name = ""
+		if ctx == bpnodetype.NC_Class or ctx == bpnodetype.NC_Hook then
+			name = groupName .. ":" .. ntype:GetName()
+		elseif ctx == bpnodetype.NC_Lib then
+			if groupName == "GLOBAL" then
+				name = ntype:GetName()
+			else
+				name = groupName .. "." .. ntype:GetName()
+			end
+		end
+
+		return "https://wiki.facepunch.com/gmod/" .. name
+
+	end
+
+	return nil
 
 end
 
@@ -454,81 +580,85 @@ function meta:Move(x, y)
 
 	local outerGraph = self:GetGraph()
 	if outerGraph == nil then return px ~= self.x or py ~= self.y end
-	outerGraph:Broadcast("nodeMoved", self.id, x, y)
+	outerGraph:Broadcast("nodeMoved", self, x, y)
 
 	return px ~= self.x or py ~= self.y
 
 end
 
-function meta:Copy()
+function meta:Copy( keepUIDs )
 
-	local newNode = setmetatable({}, meta)
+	local t = {__loaded = true}
+	t.__rawstr = tostring(t)
+
+	local newNode = setmetatable(t, meta)
 	newNode.x = self.x
 	newNode.y = self.y
-	newNode.literals = bpcommon.CopyTable(self.literals)
+	if keepUIDs then 
+		newNode.uid = self.uid
+	else
+		newNode.uid = bpcommon.GUID()
+	end
 	newNode.data = bpcommon.CopyTable(self.data)
-	newNode.nodeType = self.nodeType
-	newNode.nodeTypeObject = self.nodeTypeObject
+	newNode.nodeType = Weak(self.nodeType())
+	newNode.pinCache = {}
 	newNode:WithOuter( self:GetOuter() )
+
+	for k, v in ipairs(self.pinCache or {}) do
+		local copy = v:Copy():WithOuter(newNode)
+		copy.id = k
+		copy:InitPinClass()
+		newNode.pinCache[#newNode.pinCache+1] = copy
+	end
+
+	for k, v in ipairs(newNode.pinCache) do
+		v:PostNodePinsCreated()
+	end
 
 	bpcommon.MakeObservable(newNode)
 	return newNode
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
 
-	assert(stream:IsUsingStringTable())
+	--print("NODE SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]")
 
-	Profile("write-node", function()
+	self.nodeType = stream:Object(self.nodeType)
+	self.x = stream:Float(self.x)
+	self.y = stream:Float(self.y)
 
-		if version < 4 then
-			bpdata.WriteValue( self.nodeType, stream )
-			bpdata.WriteValue( self.literals, stream )
-		else
-			stream:WriteStr( self.nodeType )
-			for k,v in pairs(self.literals) do
-				stream:WriteBits(k, 16)
-				stream:WriteStr(v)
-			end
-			stream:WriteBits(0, 16)
-		end
-
-		bpdata.WriteValue( self.data, stream )
-		stream:WriteFloat( self.x )
-		stream:WriteFloat( self.y )
-
-	end)
-
-end
-
-function meta:ReadFromStream(stream, mode, version)
-
-	assert(stream:IsUsingStringTable())
-
-	if version < 4 then
-		self.nodeType = bpdata.ReadValue(stream)
-		self.literals = bpdata.ReadValue(stream)
-	else
-		self.nodeType = stream:ReadStr()
-		self.literals = {}
-
-		local r = stream:ReadBits(16)
-		while r ~= 0 do
-			self.literals[r] = stream:ReadStr()
-			r = stream:ReadBits(16)
-		end
+	if stream:GetVersion() >= 2 then
+		self.data = stream:Value(self.data)
 	end
 
-	self.data = bpdata.ReadValue(stream)
-	self.x = stream:ReadFloat()
-	self.y = stream:ReadFloat()
+	--print("PINS:")
+	self.pinCache = stream:ObjectArray( self.pinCache or {}, self )
+
+	if stream:IsNetwork() then
+		self.uid = stream:GUID(self.uid)
+	end
+
+	--[[for _,v in ipairs(self.pinCache) do
+		print(" " .. v:ToString(true, true))
+	end]]
+
+	--print("NODE DONE")
+
+	return stream
 
 end
 
 function meta:Compile(compiler, pass)
 
-	if pass == CP_METAPASS then
+	if pass == CP_PREPASS then
+
+		if self:HasFlag(NTF_Protected) then
+			print("PROTECTED CHECK: " .. self:GetFullName())
+			compiler:FlagProtected( self:GetGraph():GetName() .. "." .. self:GetFullName() )
+		end
+
+	elseif pass == CP_METAPASS then
 
 		local rm = self:GetRequiredMeta()
 		if rm == nil then return end
@@ -538,6 +668,8 @@ function meta:Compile(compiler, pass)
 	end
 
 end
+
+function meta:Expand() end
 
 bpcommon.ForwardMetaCallsVia(meta, "bpnodetype", "GetType")
 

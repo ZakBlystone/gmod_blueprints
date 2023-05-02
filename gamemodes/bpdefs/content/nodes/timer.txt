@@ -1,5 +1,6 @@
 LIB TIMER
 {
+	NOWIKIDOC
 	SPECIAL Create, SHARED
 	{
 		IN Exec, PN_Exec, #Starts the timer
@@ -9,7 +10,7 @@ LIB TIMER
 		LATENT
 		CODE 
 		{
-			__bpm.delay(tostring($3), $2, function() @graph(#_1) end)
+			__bpm.delay(tostring($3), $2, function() recurse(#_1) end)
 			goto popcall
 		}
 	}
@@ -25,7 +26,7 @@ LIB TIMER
 		LATENT
 		CODE
 		{
-			__bpm.delay(tostring($3), $2, function(x) #2 = x @graph(#_1) end, $4)
+			__bpm.delay(tostring($3), $2, function(x) #2 = x recurse(#_1) end, $4)
 			goto popcall
 		}
 	}

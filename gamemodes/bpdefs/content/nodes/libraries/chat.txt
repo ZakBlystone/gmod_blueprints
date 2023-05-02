@@ -3,7 +3,10 @@ LIB chat
 	FUNC AddText, CLIENT
 	{
 		DESC Adds text to the local player's chat box (which only they can read).
-		IN arguments, PN_Color, PNF_None, #The arguments. Arguments can be: table - Color structure. Will set the color for all following strings until the next Color argument. string - Text to be added to the chat box. Player - Adds the name of the player in the player's team color to the chat box. any - Any other type, such as Entity will be converted to string and added as text.
+		CLASS VariadicFunction
+		PARAM empty, true
+		PARAM filter, {PN_String}{PN_Color}{PN_Ref, PNF_None, Player}
+		IN arguments, PN_Any, PNF_None, #The arguments. Arguments can be: table - Color structure. Will set the color for all following strings until the next Color argument. string - Text to be added to the chat box. Player - Adds the name of the player in the player's team color to the chat box. any - Any other type, such as Entity will be converted to string and added as text.
 	}
 	FUNC Close, CLIENT
 	{

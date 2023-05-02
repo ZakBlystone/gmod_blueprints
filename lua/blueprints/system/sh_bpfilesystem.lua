@@ -3,7 +3,7 @@ AddCSLuaFile()
 G_BPFiles = G_BPFiles or {}
 G_BPLocalFiles = G_BPLocalFiles or {}
 
-module("bpfilesystem", package.seeall, bpcommon.rescope( bpcommon ))
+module("bpfilesystem", package.seeall, bpcommon.rescope( bpcommon, bpstream ))
 
 FT_Local = 0
 FT_Remote = 1
@@ -20,11 +20,11 @@ local CMD_DownloadFile = 7
 local CMD_AckUpload = 8
 local CMD_ServerMessage = 9
 
-local FileDirectory = "blueprints/server/"
+local FileDirectory = bpcommon.BLUEPRINT_DATA_PATH .. "/server/"
 local FileIndex = FileDirectory .. "__index.txt"
 local FileIndexVersion = 1
 
-local ClientFileDirectory = "blueprints/client/"
+local ClientFileDirectory = bpcommon.BLUEPRINT_DATA_PATH .. "/client/"
 local ClientPendingCommands = {}
 
 if SERVER then
@@ -152,7 +152,7 @@ function AddLocalModule( mod, name )
 		return nil
 	end
 
-	mod:Save( path )
+	bpmodule.Save( path, mod )
 	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, fileName)
 	entry:SetPath( path )
 	mod:WithOuter( entry )
@@ -174,7 +174,7 @@ function NewModuleFile( name )
 
 	local mod = bpmodule.New()
 	mod:CreateDefaults()
-	mod:Save( path )
+	bpmodule.Save( path, mod )
 	local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, fileName)
 	entry:SetPath( path )
 	mod:WithOuter( entry )
@@ -194,19 +194,18 @@ function PushFiles(ply)
 	net.Start("bpfilesystem")
 	net.WriteUInt(CMD_UpdateFileTable, CommandBits)
 
-	local stream = bpdata.OutStream(false, true)
-	bpdata.WriteArray(bpfile_meta, G_BPFiles, stream, STREAM_NET)
-	stream:WriteToNet(true)
+	local stream = bpstream.New("files", MODE_Network):Out()
+	stream:ObjectArray(G_BPFiles)
+	stream:Finish()
 	if ply then net.Send(ply) else net.Broadcast() end
 
 end
 
 local function SaveIndex()
 
-	local stream = bpdata.OutStream(false, true)
-	stream:WriteInt(FileIndexVersion, false)
-	bpdata.WriteArray(bpfile_meta, G_BPFiles, stream, STREAM_FILE)
-	stream:WriteToFile( FileIndex, false, false )
+	local stream = bpstream.New("files", MODE_File, FileIndex):Out()
+	stream:ObjectArray(G_BPFiles)
+	stream:Finish()
 
 end
 
@@ -214,10 +213,9 @@ local function LoadIndex()
 
 	if file.Exists( FileIndex, "DATA" ) then
 
-		local stream = bpdata.InStream(false, true)
-		stream:LoadFile( FileIndex, false, false )
-		local version = stream:ReadInt(false)
-		G_BPFiles = bpdata.ReadArray(bpfile_meta, stream, STREAM_FILE)
+		local stream = bpstream.New("files", MODE_File, FileIndex):In()
+		G_BPFiles = stream:ObjectArray()
+		stream:Finish()
 
 		for _, f in ipairs(G_BPFiles) do
 			local path = UIDToModulePath( f:GetUID() )
@@ -264,18 +262,18 @@ function LoadServerFile( file )
 	assert(SERVER)
 
 	local modulePath = UIDToModulePath( file:GetUID() )
-	local mod = bpmodule.New():WithOuter( file )
-	mod:Load( modulePath )
-	return mod
+	return bpmodule.Load(modulePath):WithOuter( file )
 
 end
 
-local function RunLocalFile( file )
+local function RunLocalFile( file, mod )
 
-	local modulePath = UIDToModulePath( file:GetUID() )
-	local mod = bpmodule.New():WithOuter( file )
-	mod:Load( modulePath )
-	local cmod = mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars) )
+	if not mod then
+		local modulePath = UIDToModulePath( file:GetUID() )
+		mod = bpmodule.Load(modulePath):WithOuter( file )
+	end
+
+	local cmod = mod:Build( bit.bor(bpcompiler.CF_Debug, bpcompiler.CF_ILP, bpcompiler.CF_CompactVars, bpcompiler.CF_AllowProtected) )
 
 	assert( cmod ~= nil )
 
@@ -311,14 +309,13 @@ end
 local function DownloadLocalFile( file, ply )
 
 	local state = bptransfer.GetState( ply )
-	local stream = bpdata.OutStream(false, true, true):UseStringTable()
 
 	local modulePath = UIDToModulePath( file:GetUID() )
-	local mod = bpmodule.New():WithOuter( file )
-	mod:Load( modulePath )
-	mod:WriteToStream(stream, STREAM_NET)
+	local mod = bpmodule.Load(modulePath):WithOuter( file )
+	local stream = bpstream.New("module", MODE_NetworkString):Out()
+	stream:Object(mod)
 
-	local data = stream:GetString(true, false)
+	local data = stream:Finish()
 	if not state:AddData(data, "module", file:GetName()) then
 		return false
 	end
@@ -357,12 +354,20 @@ if SERVER then
 			if owner == nil then error("Unable to get user for file owner") end
 
 			local moduleData = data.buffer:GetString()
-			local stream = bpdata.InStream(false, true):UseStringTable()
-			if not stream:LoadString(moduleData, true, false) then error("Failed to load file locally") end
+			local stream = bpstream.New("module", MODE_NetworkString, moduleData):In()
+			mod = stream:Object()
 
-			local execute = bpdata.ReadValue(stream)
-			local name = bpdata.ReadValue(stream)
-			local mod = bpmodule.New():ReadFromStream(stream, STREAM_NET)
+			local execute = stream:Value()
+			local name = stream:Value()
+			stream:Finish()
+
+			local hasProtected = mod:ContainsProtectedElements()
+			if hasProtected then
+				if not owner:HasPermission(bpgroup.FL_CanUseProtected) then
+					error("User is not allowed to upload protected nodes") 
+				end
+			end
+			
 			local filename = UIDToModulePath( mod:GetUID() )
 			local file = FindFileByUID( mod:GetUID() )
 
@@ -389,7 +394,7 @@ if SERVER then
 
 			mod.revision = mod.revision + 1
 			--print("Module increment revision: " .. mod.revision)
-			mod:Save(filename)
+			bpmodule.Save(filename, mod)
 
 			file:SetRevision( mod.revision )
 
@@ -403,7 +408,7 @@ if SERVER then
 			--print("Module marked for execute: " .. tostring(execute))
 
 			if execute and owner:HasPermission(bpgroup.FL_CanToggle) then
-				RunLocalFile( file )
+				RunLocalFile( file, mod )
 			end
 
 			SaveIndex()
@@ -418,19 +423,18 @@ else
 		if data.tag == "module" then
 
 			local moduleData = data.buffer:GetString()
-			local stream = bpdata.InStream(false, true):UseStringTable()
-			if not stream:LoadString(moduleData, true, false) then error("Failed to load file locally") end
+			local stream = bpstream.New("module", MODE_NetworkString, moduleData):In()
+			local mod = stream:Object()
+			stream:Finish()
 
 			local path = ClientFileDirectory .. ModuleNameToFilename(data.name)
-			local mod = bpmodule.New()
-			mod:ReadFromStream( stream, STREAM_NET )
 
 			if file.Exists(path, "DATA") then
 				local head = bpmodule.LoadHeader(path)
 				if mod:GetUID() == head.uid then
 					if mod.revision >= head.revision then
 						print("Updated local copy : " .. path)
-						mod:Save( path )
+						bpmodule.Save( path, mod )
 						local f = G_BPLocalFiles[ mod:GetUID() ]
 						f:SetRevision( mod.revision )
 						mod:WithOuter( f )
@@ -441,7 +445,7 @@ else
 					print("Unmatched module with same path : " .. bpcommon.GUIDToString( head.uid ) .. " <<-- " .. bpcommon.GUIDToString( mod:GetUID() ))
 				end
 			else
-				mod:Save( path )
+				bpmodule.Save( path, mod )
 
 				local entry = bpfile.New(mod:GetUID(), bpfile.FT_Module, path)
 				entry:SetPath( path )
@@ -505,13 +509,12 @@ function UploadObject( object, name, execute )
 	assert( CLIENT )
 	assert( isbpmodule(object) )
 
-	local stream = bpdata.OutStream(false, true, true):UseStringTable()
+	local stream = bpstream.New("module", MODE_NetworkString):Out()
+	stream:Object( object )
+	stream:Value( execute )
+	stream:Value( name )
 
-	bpdata.WriteValue(execute, stream)
-	bpdata.WriteValue(name, stream)
-	object:WriteToStream(stream, STREAM_NET)
-
-	local data = stream:GetString(true, false)
+	local data = stream:Finish()
 	local transfer = bptransfer.GetState(LocalPlayer())
 	if not transfer:AddData(data, "module", "test") then
 		print("Failed to add file to transfer")
@@ -616,10 +619,9 @@ net.Receive("bpfilesystem", function(len, ply)
 		if v then v.callback( not res, str ) end
 		ClientPendingCommands[cc] = nil
 	elseif cmd == CMD_UpdateFileTable then
-		local stream = bpdata.InStream(false, true)
-		stream:ReadFromNet(true)
-		G_BPFiles = bpdata.ReadArray(bpfile_meta, stream, STREAM_NET)
-		--print("Updated remote files: " .. #G_BPFiles)
+		local stream = bpstream.New("files", MODE_Network):In()
+		G_BPFiles = stream:ObjectArray()
+		stream:Finish()
 		hook.Run("BPFileTableUpdated", FT_Remote)
 		IndexLocalFiles()
 	elseif cmd == CMD_TakeLock then
@@ -694,16 +696,18 @@ net.Receive("bpfilesystem", function(len, ply)
 		local rev = net.ReadUInt(32)
 		local file = G_BPLocalFiles[uid]
 		if file then
-			local mod = bpmodule.New():WithOuter( file )
-			mod:Load( file:GetPath() )
+			local mod = bpmodule.Load( file:GetPath() ):WithOuter( file )
 			assert(mod.revision <= rev)
 			mod.revision = rev
-			mod:Save( file:GetPath() )
+			bpmodule.Save( file:GetPath(), mod )
 			file:SetRevision( rev )
 			IndexLocalFiles()
 		end
 	elseif cmd == CMD_ServerMessage then
-		Derma_Message(net.ReadString(), "Message from server", "Ok")
+		bpmodal.Message({
+			message = net.ReadString(), 
+			title = "Message from server"
+		})
 	end
 
 end)

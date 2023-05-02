@@ -48,7 +48,6 @@ function meta:Init(vnode, pinID, sideIndex)
 	self.literalPos = nil
 	self.cacheWidth = nil
 	self.cacheHeight = nil
-	self.connections = self.pin:GetConnectedPins()
 	self.invalidateMetrics = true
 
 	return self
@@ -59,16 +58,10 @@ function meta:GetDisplayName()
 
 	if self.displayName then return self.displayName end
 
-	local str = bpcommon.Camelize(self.pin:GetDisplayName()):gsub("%u", function(x) return " " .. x end)
-	if #str > 0 then str = str:sub(2, -1) end
+	local str = bpcommon.Camelize(self.pin:GetDisplayName()) --:gsub("%u", function(x) return " " .. x end)
+	str = string.Trim(str)
 	self.displayName = str
 	return self.displayName
-
-end
-
-function meta:GetConnections()
-
-	return self.connections
 
 end
 
@@ -159,7 +152,6 @@ function meta:Invalidate()
 	self.titlePos = nil
 	self.literalPos = nil
 	self.literalText = nil
-	self.connections = self.pin:GetConnectedPins()
 	self.invalidateMetrics = true
 	self.literalW = nil
 	self.literalH = nil
@@ -178,7 +170,7 @@ function meta:GetSize()
 	local height = PIN_SIZE
 	local node = self.vnode:GetNode()
 
-	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
+	if not self.vnode:ShouldBeCompact() and not node:HasFlag(NTF_HidePinNames) then
 		surface.SetFont( self.font )
 		local title = self:GetDisplayName()
 		if not PIN_TITLE_BLACKLIST[title] then
@@ -220,7 +212,7 @@ function meta:Layout()
 	self.titlePos = 0
 	self.literalPos = 0
 
-	if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
+	if not self.vnode:ShouldBeCompact() and not node:HasFlag(NTF_HidePinNames) then
 		local title = self:GetDisplayName()
 		if not PIN_TITLE_BLACKLIST[title] then
 			local titleWidth = surface.GetTextSize( title )
@@ -232,7 +224,7 @@ function meta:Layout()
 	end
 
 	if self.pin:IsIn() then
-		self.autoPin = node:GetModule():AutoFillsPinType( self.pin:GetType() )
+		self.autoPin = node:GetModule():AutoFillsPinType( self.pin:GetType() ) or self.pin:AlwaysAutoFill()
 	end
 	if not self:IsConnected() then
 		self.literalPos = LITERAL_OFFSET + x
@@ -287,7 +279,7 @@ function meta:IsConnected()
 
 	local node = self.vnode:GetNode()
 	local graph = node:GetGraph()
-	self.connectionState = graph:IsPinConnected( node.id, self.pinID )
+	self.connectionState =  #node:GetPin( self.pinID ):GetConnections() > 0
 
 	return self.connectionState
 
@@ -303,7 +295,7 @@ function meta:GetLiteralValue()
 
 	local literal = node:GetLiteral(self.pinID) or "!!!UNASSIGNED LITERAL!!!"
 
-	self.literalText = bpcommon.ZipStringLeft(literal, 26)
+	self.literalText = bpcommon.ZipStringLeft(tostring(literal), 26)
 
 	return literal
 
@@ -352,7 +344,7 @@ function meta:DrawHotspot(x,y,alpha)
 	local f = drawPin
 	if isTable then f = drawPinTable end
 	if isExec then f = drawPinExec end
-	if isAuto then f = drawPinAuto end
+	if isAuto and not self:IsConnected() then f = drawPinAuto end
 
 	col:SetUnpacked(r,g,b,a * alpha)
 	f(x+ox-PIN_SIZE/2, y+oy-PIN_SIZE/2, PIN_SIZE, PIN_SIZE, col)
@@ -383,11 +375,12 @@ end
 
 function meta:Draw(xOffset, yOffset, alpha)
 
+	--if true then return end
+
 	if self.currentPinType == nil or not self.currentPinType:Equal(self.pin:GetType()) then
 		self:Invalidate()
-		self.currentPinType = bpcommon.CopyTable( self.pin:GetType() )
+		self.currentPinType = self.pin:GetType():Copy()
 		self.vnode:Invalidate()
-		--print("PIN TYPE CHANGED")
 	end
 
 	self:Layout()
@@ -415,7 +408,7 @@ function meta:DrawTitle(xOffset, yOffset, alpha)
 	local title = self:GetDisplayName()
 	if not PIN_TITLE_BLACKLIST[title] then
 		local node = self.vnode:GetNode()
-		if not node:HasFlag(NTF_Compact) and not node:HasFlag(NTF_HidePinNames) then
+		if not self.vnode:ShouldBeCompact() and not node:HasFlag(NTF_HidePinNames) then
 			local x,y = self:GetPos()
 
 			x = x + xOffset

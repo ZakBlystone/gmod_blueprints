@@ -12,11 +12,11 @@ function VarList( element, window, list, name, itemName )
 	vlist.CreateItemPanel = function(pnl, id, item)
 		local entry = vgui.Create("BPPinListEntry", pnl)
 		entry.vlist = pnl
-		entry.id = id
+		entry.item = item
 		entry.module = module
 		function entry:SetPinType(t) element:PreModify() item:SetType( t ) element:PostModify() end
 		function entry:GetPinType() return item:GetType() end
-		function entry:SetPinName(n) pnl.list:Rename( id, n ) end
+		function entry:SetPinName(n) pnl.list:Rename( item, n ) end
 		function entry:GetPinName() return item.name end
 		return entry
 	end
@@ -97,10 +97,7 @@ local function CreateEntryWidget( pnl, entry )
 
 end
 
-function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
-
-	local collection = bpcollection.New()
-	module:GetPinTypes( collection )
+function OpenPinSelectionMenuEx( collection, onSelected, current, allowFlagEdit )
 
 	current = current or bppintype.New(PN_Bool)
 
@@ -121,6 +118,7 @@ function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 
 	local menu = bpuipickmenu.Create(nil, nil, 300)
 	local top = vgui.Create("DPanel")
+	top:SetSkin("Blueprints")
 	top:SetBackgroundColor(Color(40,40,40))
 	top:SetTall(30)
 
@@ -181,5 +179,14 @@ function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
 	end
 	menu:Setup()
 	return menu
+
+end
+
+function OpenPinSelectionMenu( module, onSelected, current, allowFlagEdit )
+
+	local collection = bpcollection.New()
+	module:GetAllPinTypes( collection )
+
+	return OpenPinSelectionMenuEx( collection, onSelected, current, allowFlagEdit )
 
 end

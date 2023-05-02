@@ -24,11 +24,12 @@ function MODULE:OpenVGUI( parent )
 
 	bpcommon.ProfileStart("edit defaults")
 
-	local window = vgui.Create( "DFrame" )
+	local window = vgui.Create( "BPFrame" )
+	window:SetSkin("Blueprints")
 	window:SetSizable( true )
 	window:SetSize( ScrW()/3, ScrH()/2 )
 	window:MakePopup()
-	window:SetTitle(LOCTEXT("menu_setdefaults", "Set Defaults")())
+	window:SetTitle(LOCTEXT("menu_configure", "Configure")())
 	window:Center()
 	local detour = window.OnRemove
 	window.OnRemove = function(pnl)
@@ -88,21 +89,16 @@ function MODULE:GetConfigEdit( refresh )
 
 end
 
-function MODULE:WriteData( stream, mode, version )
+function MODULE:SerializeData(stream)
 
 	if self.AdditionalConfig then
-		bpdata.WriteValue( self:GetConfig(), stream )
+		self.config = stream:Value(self.config or {})
+		if stream:IsReading() then
+			self.config = table.Merge(self:GetDefaultConfigTable(), self.config)
+		end
 	end
 
-end
-
-function MODULE:ReadData( stream, mode, version )
-
-	if self.AdditionalConfig then
-		local config = bpdata.ReadValue( stream )
-		local defaults = self:GetDefaultConfigTable()
-		self.config = table.Merge(defaults, config)
-	end
+	return stream
 
 end
 

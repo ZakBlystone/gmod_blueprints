@@ -37,30 +37,42 @@ local NODE_COMPACT_FOOTER_HEIGHT = 0
 local NODE_COMPACT_OFFSET = 45
 local PIN_SPACING = 8
 local PIN_EDGE_SPACING = 8
+local COMMENT_FONT = "NodePinFont"
+local COMMENT_MAXWIDTH = 300
+local NO_HIDDEN_FILTER = function(pin) return not pin:ShouldBeHidden() end
 
 function meta:Init(node, graph, editor)
 
+	self.highlight = 0
+	self.highlighting = false
 	self.editor = editor
 	self.node = node
 	self.graph = graph
 	self.width = nil
 	self.height = nil
 	self.pins = {}
+	self.commentWrap = bptextwrap.New():SetFont(COMMENT_FONT):SetMaxWidth(COMMENT_MAXWIDTH)
 	self:CreatePins()
 	self:LayoutPins()
+	self.node:BindRaw("postModify", self, function()
+		self:CreatePins()
+		self:LayoutPins()
+		self:Invalidate(true)
+	end)
 	return self
 
 end
 
 function meta:Invalidate(invalidatePins)
 
+	self.compact = nil
 	self.width = nil
 	self.height = nil
 	self.displayName = nil
 	self.pinsNeedLayout = true
 
 	if invalidatePins then
-		for _, v in ipairs(self.pins) do
+		for _, v in pairs(self.pins) do
 			v:Invalidate()
 		end
 	end
@@ -69,12 +81,17 @@ end
 
 function meta:ShouldBeCompact()
 
-	for _, v in ipairs(self.pins) do
-		if v.pin:IsIn() and v.pin:GetLiteralType() == "string" and #v:GetConnections() == 0 then
-			return false
+	if self.node and not self.node:IsValid() then return false end
+	if self.compact ~= nil then return self.compact end
+
+	for _, v in pairs(self.pins) do
+		if v.pin:IsIn() and v.pin:GetLiteralType() == "string" and #v.pin:GetConnections() == 0 then
+			self.compact = false
+			return self.compact
 		end
 	end
-	return self.node:HasFlag(NTF_Compact)
+	self.compact = self.node:HasFlag(NTF_Compact) or ( #self.node:GetPins() <= 2 and self.node:GetCodeType() == NT_Pure )
+	return self.compact
 
 end
 
@@ -101,7 +118,7 @@ function meta:GetSize()
 	local footHeight = NODE_FOOTER_HEIGHT
 	local pinSideSpacing = NODE_PINSIDE_SPACING
 
-	for pinID, pin, pos in node:SidePins(PD_In) do
+	for pinID, pin, pos in node:SidePins(PD_In, NO_HIDDEN_FILTER) do
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
 		maxPinWidthIn = math.max(maxPinWidthIn, w)
@@ -109,7 +126,7 @@ function meta:GetSize()
 	end
 	if totalPinHeightIn ~= 0 then totalPinHeightIn = totalPinHeightIn - PIN_SPACING end
 
-	for pinID, pin, pos in node:SidePins(PD_Out) do
+	for pinID, pin, pos in node:SidePins(PD_Out, NO_HIDDEN_FILTER) do
 		local vpin = self.pins[pinID]
 		local w,h = vpin:GetSize()
 		maxPinWidthOut = math.max(maxPinWidthOut, w)
@@ -122,7 +139,6 @@ function meta:GetSize()
 
 	self.titleWidth = titleWidth
 	self.titleHeight = titleHeight
-	self.compact = self:ShouldBeCompact()
 
 	if self:ShouldBeCompact() then
 		width = math.max(titleWidth+40, 0)
@@ -170,11 +186,11 @@ function meta:CreatePins()
 	self.pins = {}
 
 	local node = self.node
-	for pinID, pin, pos in node:SidePins(PD_In) do
+	for pinID, pin, pos in node:SidePins(PD_In, NO_HIDDEN_FILTER) do
 		self.pins[pinID] = bpuigraphpin.New(self, pinID, pos)
 	end
 
-	for pinID, pin, pos in node:SidePins(PD_Out) do
+	for pinID, pin, pos in node:SidePins(PD_Out, NO_HIDDEN_FILTER) do
 		self.pins[pinID] = bpuigraphpin.New(self, pinID, pos)
 	end
 
@@ -191,7 +207,7 @@ function meta:LayoutPins()
 		if self:ShouldBeCompact() then y = NODE_COMPACT_HEADER_HEIGHT + NODE_COMPACT_HEADER_SPACING end
 
 		local node = self.node
-		for pinID, pin, pos in node:SidePins(s) do
+		for pinID, pin, pos in node:SidePins(s, NO_HIDDEN_FILTER) do
 			local vpin = self.pins[pinID]
 			local w,h = vpin:GetSize()
 			vpin:SetPos(s == PD_In and PIN_EDGE_SPACING or (nw - w - PIN_EDGE_SPACING), y)
@@ -205,7 +221,7 @@ function meta:LayoutPins()
 	self.pinsNeedLayout = false
 
 
-	--[[for _, vpin in ipairs(self.pins) do
+	--[[for _, vpin in pairs(self.pins) do
 		local x,y = self:CalculatePinLocation(vpin)
 		vpin:SetPos(x,y)
 	end]]
@@ -217,6 +233,8 @@ function meta:GetDisplayName()
 	if self.displayName then return self.displayName end
 
 	local name = self:GetNode():GetDisplayName()
+	if name == nil then name = "ERROR" end
+
 	local sub = string.find(name, "[:.]")
 	if sub then
 		name = name:sub(sub+1, -1)
@@ -283,7 +301,7 @@ end
 function meta:DrawPins(xOffset, yOffset, alpha, textPass)
 
 	local x,y = self:GetPos()
-	for k,v in ipairs(self.pins) do
+	for k,v in pairs(self.pins) do
 		if textPass then
 			v:DrawTitle(x+xOffset, y+yOffset, alpha)
 		else
@@ -308,8 +326,9 @@ end
 
 function meta:DrawBanner(x, y, alpha)
 
+	local protected = self.node:HasFlag(NTF_Protected)
 	local deprecated = self.node:HasFlag(NTF_Deprecated)
-	local shouldDraw = self.node:HasFlag(NTF_Experimental) or deprecated
+	local shouldDraw = self.node:HasFlag(NTF_Experimental) or deprecated or protected
 	if not shouldDraw then return end
 
 	-- Node banner
@@ -319,7 +338,7 @@ function meta:DrawBanner(x, y, alpha)
 	local bannerY = y - bannerH
 	local cr, cg, cb = 255,190,60
 
-	if deprecated then cg = 60 bannerW = 150 end
+	if deprecated or protected then cg = 60 bannerW = 150 end
 
 	--surface_drawRect(bannerX,bannerY,w,NODE_HEADER_HEIGHT)
 	roundedBox(12, bannerX, bannerY, bannerW, bannerH, cr,cg,cb, 255*alpha, true, true, false, false)
@@ -329,14 +348,27 @@ function meta:DrawBanner(x, y, alpha)
 	surface_setFont( "NodeTitleFont" )
 	surface_setTextPos( bannerX + 10, bannerY )
 	surface_setTextColor( 0, 0, 0, 255*alpha )
-	surface_drawText( deprecated and "Obsolete" or "Experimental" )
+	surface_drawText( protected and "Protected" or (deprecated and "Obsolete" or "Experimental") )
+
+end
+
+function meta:SetHighlighting(highlight) self.highlighting = highlight end
+function meta:GetHighlight() return self.highlight end
+
+function meta:Think( dt )
+
+	local t = self.highlighting and 1 or 0
+	local rate = 5
+	self.highlight = Lerp(1 - math.exp(dt * -rate), self.highlight, t)
+	if t == 0 and self.highlight < 0.01 then self.highlight = 0 end
 
 end
 
 local col = Color(0,0,0)
-function meta:Draw(xOffset, yOffset, alpha)
+function meta:Draw(xOffset, yOffset, alpha, lod)
 
 	--self:Invalidate(true)
+	lod = lod or 1
 
 	local x,y = self:GetPos()
 	local w,h = self:GetSize()
@@ -349,21 +381,44 @@ function meta:Draw(xOffset, yOffset, alpha)
 	end
 
 	local node = self.node
+	local ntc = node:GetColor()
 	local outline = 8
+
+
+	local highlight = self:GetHighlight()
+	if highlight > 0 then
+		col:SetUnpacked(ntc.r, ntc.g, ntc.b, 255*highlight*alpha)
+		drawNodeHighlight(x-outline,y-outline,w+outline*2,h+outline*2,col)
+	end
+
 	local selected = self:IsSelected()
 	if selected then
 		col:SetUnpacked(200,150,80,255*alpha)
 		drawNodeHighlight(x-outline,y-outline,w+outline*2,h+outline*2,col)
 	end
 
-	local err = _G.G_BPError
+	-- TODO restructure error handling
+	--[[local err = _G.G_BPError
 	if err ~= nil and err.nodeID == self.node.id and err.graphID == self.graph.id then
 		col:SetUnpacked(200,80,80,255*alpha)
 		drawNodeHighlight(x-4,y-4,w+8,h+8,col)
+	end]]
+
+	if node:GetComment() ~= self.commentWrap:GetText() then
+		self.commentWrap:SetText( node:GetComment() )
+	end
+
+	if lod < 3 then
+
+		if node:GetComment() ~= "" then
+			local tw, th = self.commentWrap:GetSize()
+			draw.RoundedBox(6, x - 5, y - 25 - th, tw + 10, th + 10, Color(0,0,0,200 * alpha))
+			self.commentWrap:Draw(x, y - 20 - th, 255, 255, 255, 255 * alpha)
+		end
+
 	end
 
 
-	local ntc = node:GetColor()
 	local isCompact = self.compact
 	local role = node:GetRole()
 	if not isCompact then
@@ -379,35 +434,52 @@ function meta:Draw(xOffset, yOffset, alpha)
 	end
 
 	self:LayoutPins()
-	self:DrawBanner(x, y, alpha)
-	self:DrawPins(xOffset, yOffset, alpha, false)
 
-	surface_setFont("NodePinFont")
-	self:DrawPins(xOffset, yOffset, alpha, true)
+	if lod < 3 then
 
-	local name = self:GetDisplayName()
+		-- for debugging node uids
+		if false then
+			surface_setFont("NodePinFont")
+			surface_setTextPos( math.ceil( x+10 ), math.ceil( y-30 ) )
+			surface_setTextColor( 255, 255, 255, 255*alpha )
+			surface_drawText( bpcommon.GUIDToString( self:GetNode().uid ) )
+		end
 
-	if not isCompact then
+		self:DrawBanner(x, y, alpha)
+		self:DrawPins(xOffset, yOffset, alpha, false)
 
-		surface_setFont( "NodeTitleFontShadow" )
-		surface_setTextPos( math.ceil( x+10 ), math.ceil( y+6 ) )
-		surface_setTextColor( 0, 0, 0, 255*alpha )
-		surface_drawText( name )
+		local name = self:GetDisplayName()
 
-		surface_setFont( "NodeTitleFont" )
-		surface_setTextPos( math.ceil( x+7 ), math.ceil( y+4 ) )
-		surface_setTextColor( 255, 255, 255, 255*alpha )
-		surface_drawText( name )
+		if not isCompact then
 
-	else
-		-- HACK
-		if node:GetTypeName() ~= "CORE_Pin" then
+			surface_setFont( "NodeTitleFontShadow" )
+			surface_setTextPos( math.ceil( x+10 ), math.ceil( y+6 ) )
+			surface_setTextColor( 0, 0, 0, 255*alpha )
+			surface_drawText( name )
 
 			surface_setFont( "NodeTitleFont" )
-			surface_setTextPos( math.ceil( x+(w - self.titleWidth)/2 ), math.ceil( y+(h - self.titleHeight)/2 ) )
+			surface_setTextPos( math.ceil( x+7 ), math.ceil( y+4 ) )
 			surface_setTextColor( 255, 255, 255, 255*alpha )
 			surface_drawText( name )
+
+		else
+			-- HACK
+			if node:GetTypeName() ~= "CORE_Pin" then
+
+				surface_setFont( "NodeTitleFont" )
+				surface_setTextPos( math.ceil( x+(w - self.titleWidth)/2 ), math.ceil( y+(h - self.titleHeight)/2 ) )
+				surface_setTextColor( 255, 255, 255, 255*alpha )
+				surface_drawText( name )
+			end
 		end
+
+	end
+
+	if lod < 2 then
+
+		surface_setFont("NodePinFont")
+		self:DrawPins(xOffset, yOffset, alpha, true)
+
 	end
 
 end

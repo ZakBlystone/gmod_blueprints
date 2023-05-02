@@ -1,29 +1,23 @@
 AddCSLuaFile()
 
-module("bpmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema))
+module("bpmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpstream))
 
 
 STREAM_FILE = 1
 STREAM_NET = 2
-
-fmtMagic = 0x42504D31
-fmtVersion = 4
 
 local meta = bpcommon.MetaTable("bpmodule")
 local moduleClasses = bpclassloader.Get("Module", "blueprints/module/moduletypes/", "BPModuleClassRefresh", meta)
 
 function GetClassLoader() return moduleClasses end
 
-nextModuleID = nextModuleID or 0
-
-meta.Name = LOCTEXT"module_default_name","unnamed"
-meta.Description = LOCTEXT"module_default_desc","description"
+meta.Name = LOCTEXT("module_default_name","unnamed")
+meta.Description = LOCTEXT("module_default_desc","description")
 meta.EditorClass = ""
 
 function meta:Init(type)
 
-	self.version = fmtVersion
-	self.id = nextModuleID
+	self.version = bpstream.fmtVersion
 	self.type = type or "mod"
 	self.revision = 1
 	self.uniqueID = bpcommon.GUID()
@@ -31,9 +25,13 @@ function meta:Init(type)
 	bpcommon.MakeObservable(self)
 
 	moduleClasses:Install( self:GetType(), self )
-
-	nextModuleID = nextModuleID + 1
 	return self
+
+end
+
+function meta:Destroy()
+
+	self:Broadcast("destroyed")
 
 end
 
@@ -57,15 +55,19 @@ end
 
 function meta:GetName()
 
+	local outerModule = self:FindOuter( bpmodule_meta )
+	if outerModule then return outerModule:GetModuleName(self) end
+
 	local outerFile = self:FindOuter( bpfile_meta )
 	if outerFile then return outerFile:GetName() end
+
 	return "unnamed"
 
 end
 
-function meta:IsConstructable()
+function meta:CanCast( outPinType, inPinType )
 
-	return true
+	return false
 
 end
 
@@ -78,33 +80,40 @@ function meta:CanAddNode(nodeType)
 
 end
 
-function meta:PreModifyNodeType( nodeType )
-
-end
-
-function meta:PostModifyNodeType( nodeType )
-
-	self:Broadcast("nodetypeModified", nodeType)
-
-end
-
 function meta:NodeTypeInUse( nodeType )
 
 	return false
 
 end
 
-function meta:GetNodeTypes( collection )
+function meta:GetAllNodeTypes( collection, graph )
 
 	collection:Add( bpdefs.Get():GetNodeTypes() )
+	local outerModule = self:FindOuter(bpmodule_meta)
+	if outerModule and outerModule.EnumerateAllNodeTypes then
+		outerModule:EnumerateAllNodeTypes( collection, graph )
+	else
+		self:GetNodeTypes( collection, graph )
+	end
 
 end
 
-function meta:GetPinTypes( collection )
+function meta:GetAllPinTypes( collection )
 
 	collection:Add( bpdefs.Get():GetPinTypes() )
+	local outerModule = self:FindOuter(bpmodule_meta)
+	if outerModule and outerModule.EnumerateAllPinTypes then
+		outerModule:EnumerateAllPinTypes( collection )
+	else
+		self:GetPinTypes( collection )
+	end
 
 end
+
+function meta:GetLocalNodeTypes( collection, graph ) end
+
+function meta:GetNodeTypes( collection, graph ) end
+function meta:GetPinTypes( collection ) end
 
 function meta:GetMenuItems( tab )
 
@@ -139,181 +148,121 @@ function meta:GetAllModules()
 
 end
 
-function meta:NetSend()
-
-	bpcommon.ProfileStart("module:NetSend")
-	bpcommon.Profile("module-net-write", function()
-		local outStream = bpdata.OutStream()
-		outStream:UseStringTable()
-		bpcommon.Profile( "write-module", self.WriteToStream, self, outStream, STREAM_NET )
-		bpcommon.Profile( "write-net-stream", outStream.WriteToNet, outStream, true )
-	end)
-	bpcommon.ProfileEnd()
-
-end
-
-function meta:NetRecv()
-
-	bpcommon.ProfileStart("module:NetRecv")
-	bpcommon.Profile("module-net-read", function()
-		local inStream = bpdata.InStream()
-		inStream:UseStringTable()
-		bpcommon.Profile( "read-net-stream", inStream.ReadFromNet, inStream, true )
-		bpcommon.Profile( "read-module", self.ReadFromStream, self, inStream, STREAM_NET )
-	end)
-	bpcommon.ProfileEnd()
-
-end
-
 function LoadHeader(filename)
 
-	local inStream = bpdata.InStream(false, true):UseStringTable()
-	if not inStream:LoadFile(filename, true, true) then
-		error("Failed to load blueprint, try using 'Convert'")
-	end
-
-	local magic = inStream:ReadInt( false )
-	local version = inStream:ReadInt( false )
-
-	-- Compat for pre-release blueprints
-	if magic == 0x42504D30 then
-		magic = 0x42504D31
-		version = 1
-	end
-
-	local modtype = version < 2 and inStream:ReadInt( false ) or bpdata.ReadValue( inStream )
-	if type(modtype) == "number" then modtype = "Mod" end
-
-	return {
-		magic = magic,
-		version = version,
+	local stream = bpstream.New("module-head", MODE_File, filename):AddFlags(FL_Base64):In()
+	local modtype = stream:String()
+	local header = {
+		magic = stream:GetMagic(),
+		version = stream:GetVersion(),
 		type = modtype,
-		revision = inStream:ReadInt( false ),
-		uid = inStream:ReadStr( 16 ),
-		envVersion = bpdata.ReadValue( inStream ),
+		revision = stream:ReadInt( false ),
+		uid = stream:GUID(),
+		envVersion = stream:Value(),
 	}
 
+	stream:Finish( true )
+	return header
+
 end
 
-function meta:LoadFromText(text)
+function Load(filename)
 
 	bpcommon.ProfileStart("bpmodule:Load")
 
-	local inStream = bpdata.InStream(false, true):UseStringTable()
-	if not inStream:LoadString(text, true, true) then
-		error("Failed to load blueprint")
+	local stream = bpstream.New("module-file", MODE_File, filename):AddFlag(FL_Base64):In()
+	local mod = stream:Object() stream:Finish()
+
+	bpcommon.ProfileEnd()
+
+	assert( isbpmodule(mod) )
+	return mod
+
+end
+
+function LoadFromText(text)
+
+	bpcommon.ProfileStart("bpmodule:Load")
+
+	local mod = nil
+	local b,e = pcall( function()
+
+		local stream = bpstream.New("module-text", MODE_String, text):AddFlag(FL_Base64):In()
+		mod = stream:Object() stream:Finish()
+
+	end )
+
+	if not b then 
+		print("Failed to load, trying old string specification...")
+		local stream = bpstream.New("module-text", MODE_String, text):AddFlag(FL_Base64):ClearFlag(FL_Compressed):ClearFlag(FL_Checksum):In()
+		mod = stream:Object() stream:Finish()
 	end
 
-	self:ReadFromStream( inStream, STREAM_FILE )
+	bpcommon.ProfileEnd()
+
+	assert( isbpmodule(mod) )
+	return mod
+
+end
+
+function Save(filename, mod)
+
+	assert( isbpmodule(mod) )
+	bpcommon.ProfileStart("bpmodule:Save")
+	
+	local stream = bpstream.New("module-file", MODE_File, filename):AddFlag(FL_Base64):Out()
+	stream:Object(mod)
+	stream:Finish()
 
 	bpcommon.ProfileEnd()
 
 end
 
-function meta:Load(filename)
+function SaveToText(mod)
 
-	bpcommon.ProfileStart("bpmodule:Load")
-
-	local head = LoadHeader(filename)
-	local magic = head.magic
-	local version = head.version
-
-	local inStream = bpdata.InStream(false, true):UseStringTable()
-	if not inStream:LoadFile(filename, true, true) then
-		error("Failed to load blueprint, try using 'Convert'")
-	end
-
-	self:ReadFromStream( inStream, STREAM_FILE )
-
-	bpcommon.ProfileEnd()
-
-end
-
-function meta:SaveToText()
-
+	assert( isbpmodule(mod) )
 	bpcommon.ProfileStart("bpmodule:Save")
 
-	local outStream = bpdata.OutStream(false, true)
-	outStream:UseStringTable()
-	self:WriteToStream( outStream, STREAM_FILE )
-	local out = outStream:GetString(true, true)
+	local stream = bpstream.New("module-text", MODE_String, filename):AddFlag(FL_Base64):Out()
+	stream:Object(mod)
+	local out = stream:Finish()
 
 	bpcommon.ProfileEnd()
 	return out
 
 end
 
-function meta:Save(filename)
+function meta:SerializeData(stream) end
+function meta:Serialize(stream)
 
-	bpcommon.ProfileStart("bpmodule:Save")
+	local magic = stream:GetMagic()
+	local version = stream:GetVersion()
 
-	local outStream = bpdata.OutStream(false, true)
-	outStream:UseStringTable()
-	self:WriteToStream( outStream, STREAM_FILE )
-	outStream:WriteToFile(filename, true, true)
+	self.type = stream:String( self.type )
+	self.revision = stream:UInt( self.revision )
+	self.uniqueID = stream:GUID( self.uniqueID )
 
-	bpcommon.ProfileEnd()
+	--print("MODULE: " .. magic .. " | " .. version .. " | " .. self.revision .. " | " .. self.type)
+	--print(bpcommon.GUIDToString(self.uniqueID))
 
-end
-
-function meta:WriteData( stream, mode, version ) end
-function meta:WriteToStream(stream, mode)
-
-	stream:WriteInt( fmtMagic, false )
-	stream:WriteInt( fmtVersion, false )
-	bpdata.WriteValue( self.type, stream )
-	stream:WriteInt( self.revision, false )
-	stream:WriteStr( self.uniqueID )
-
-	if mode == STREAM_FILE then
-		bpdata.WriteValue( bpcommon.ENV_VERSION, stream )
+	if stream:IsFile() or stream:IsString() then
+		self.envVersion = stream:Value( self.envVersion or bpcommon.ENV_VERSION )
 	end
 
-	self:WriteData(stream, mode, fmtVersion )
+	if stream:IsReading() then
 
-end
+		--print("INSTALL CLASS FOR: " .. tostring(self:GetType()))
+		moduleClasses:Install( self:GetType(), self )
+		self:Clear()
 
-function meta:ReadData( stream, mode, version ) end
-function meta:ReadFromStream(stream, mode)
-
-	local magic = stream:ReadInt( false )
-	local version = stream:ReadInt( false )
-
-	-- Compat for pre-release blueprints
-	if magic == 0x42504D30 and version == 7 then
-		magic = 0x42504D31
-		version = 1
 	end
 
-	if magic ~= fmtMagic then error("Invalid blueprint data: " .. fmtMagic .. " != " .. magic) end
-	if version > fmtVersion then error("Blueprint data version is newer") end
+	local mode = STREAM_FILE
+	if stream:IsNetwork() then mode = STREAM_NET end
 
-	self.version = version
-	if version < 2 then
-		stream:ReadInt( false ) self.type = "Mod"
-	else
-		self.type = bpdata.ReadValue( stream )
-	end
-	self.revision = stream:ReadInt( false )
-	self.uniqueID = stream:ReadStr( 16 )
+	self:SerializeData( stream )
 
-	if mode == STREAM_FILE then
-		self.envVersion = bpdata.ReadValue( stream )
-	else
-		self.envVersion = ""
-	end
-
-	print("INSTALL CLASS FOR: " .. tostring(self:GetType()))
-
-	moduleClasses:Install( self:GetType(), self )
-
-	self:Clear()
-
-	--print( bpcommon.GUIDToString( self.uniqueID ) .. " v" .. self.revision  )
-
-	self:ReadData(stream, mode, version )
-
-	return self
+	return stream
 
 end
 
@@ -335,6 +284,15 @@ function meta:TryBuild(flags)
 
 end
 
+function meta:ContainsProtectedElements()
+
+	local compiler = bpcompiler.New(self, bpcompiler.CF_None)
+	compiler:Setup()
+	compiler:RunModuleCompile( bpcompiler.CP_PREPASS )
+	return compiler.containsProtected
+
+end
+
 function meta:ToString()
 
 	return GUIDToString(self:GetUID())
@@ -342,5 +300,5 @@ function meta:ToString()
 end
 
 function New(...)
-	return setmetatable({}, meta):Init(...)
+	return bpcommon.MakeInstance(meta, ...)
 end

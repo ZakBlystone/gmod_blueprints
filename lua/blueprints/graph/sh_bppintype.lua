@@ -4,19 +4,71 @@ AddCSLuaFile()
 module("bppintype", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bppintype")
-meta.__tostring = function(self)
-	return self:ToString()
+
+meta.__eq = function(a, b)
+	return a.basetype == b.basetype and a.flags == b.flags and a:GetSubType() == b:GetSubType()
 end
 
-function meta:Init(type, flags, subtype)
-	self.basetype = type
+meta.__lt = function(a, b)
+	if a.basetype ~= b.basetype then return a.basetype < b.basetype end
+	if a:GetSubType() ~= b:GetSubType() then return a:GetSubType() < b:GetSubType() end
+	return false
+end
+
+meta.__le = function(a, b)
+	if a.basetype ~= b.basetype then return a.basetype <= b.basetype end
+	if a:GetSubType() ~= b:GetSubType() then return a:GetSubType() <= b:GetSubType() end
+	return true
+end
+
+function meta:Init(basetype, flags, subtype)
+
+	if type(subtype) == "table" then
+		subtype = bpcommon.Weak(subtype)
+	end
+
+	self.basetype = basetype
 	self.flags = flags or PNF_None
 	self.subtype = subtype
-
-	local hashStr = string.format("%0.2d_%0.2x_%s", self.basetype or -1, self.flags, tostring(self.subtype) )
-	self.hash = util.CRC( hashStr )
+	self:UpdateHash()
 
 	return self
+end
+
+function meta:FromTypeString(str)
+
+	local basetype, flags, subtype = string.match(str, "([%w_]+),*([%w_|]*),*([%w_]*)")
+	self.basetype = bpschema[basetype] or -1
+	self.flags = bpschema[flags] or 0
+	self.subtype = subtype
+
+	return self
+
+end
+
+function meta:ToTypeString()
+
+	local str_basetype = "PN_" .. (bpschema.PinTypeNames[ self.basetype ] or "Dummy")
+	local str_flags = self.flags == 0 and "PNF_None"
+	if self.flags ~= 0 then
+		local flags = {}
+		for k,v in parirs(bpschema.PinFlagNames) do
+			if bit.band(self.flags, k) ~= 0 then
+				flags[#flags+1] = v
+			end
+		end
+		str_flags = table.concat(flags, "|")
+	end
+
+	local str = str_basetype .. "," .. str_flags
+	if self.subtype and self.subtype ~= "" then str = str .. "," .. self.subtype end
+	return str
+
+end
+
+function meta:UpdateHash()
+	local hashStr = string.format("%0.2d_%0.2x_%s", self.basetype or -1, self.flags, tostring(self.subtype) )
+	self.hash = util.CRC( hashStr )
 end
 
 function meta:GetHash()
@@ -39,15 +91,22 @@ function meta:Copy( outer )
 	return New(self:GetBaseType(), self:GetFlags(), self:GetSubType()):WithOuter( outer or self:GetOuter() )
 end
 
+function meta:HasObjectLiteral()
+
+	return self:GetBaseType() == PN_Func
+
+end
+
 function meta:GetBaseType() return self.basetype end
-function meta:GetSubType() return self.subtype end
+function meta:GetSubType() return type(self.subtype) == "table" and self.subtype() or self.subtype end
 function meta:GetFlags(mask) return bit.band(self.flags, mask or PNF_All) end
 function meta:GetColor() return NodePinColors[ self:GetBaseType() ] or Color(0,0,0,255) end
 function meta:GetTypeName() return PinTypeNames[ self:GetBaseType() ] or "UNKNOWN" end
 function meta:GetLiteralType() return NodeLiteralTypes[ self:GetBaseType() ] end
 function meta:GetDefault()
 
-	if self:HasFlag(PNF_Table) then return (not self:HasFlag(PNF_Nullable)) and "{}" end
+	if self:HasObjectLiteral() then return nil end
+	if self:HasFlag(PNF_Table) then return (not self:HasFlag(PNF_Nullable)) and "__emptyTable()" or nil end
 	if self:GetBaseType() == PN_Enum and bpdefs and bpdefs.Ready() then
 		local enum = bpdefs.Get():GetEnum( self )
 		if enum and enum.entries[1] then return enum.entries[1].key end
@@ -56,13 +115,48 @@ function meta:GetDefault()
 
 end
 
+function meta:GetSubTypeString()
+
+	local t = self:GetSubType()
+	if type(t) == "table" then return t.GetName and t:GetName() or tostring(t) end
+	if type(t) == "string" then return t end
+	return "nil"
+
+end
+
+function meta:CanCastTo( inPinType )
+
+	if self:IsType(PN_Any) and not inPinType:IsType(PN_Exec) then return true end
+	if inPinType:IsType(PN_Any) and not self:IsType(PN_Exec) then return true end
+
+	if self:IsType(PN_BPRef) and self:GetSubType() ~= nil then
+		return self:GetSubType():CanCast( self, inPinType )
+	end
+
+	if self:IsType(PN_BPClass) and inPinType:IsType(PN_BPClass) then
+
+		--[[local inSub = inPinType:GetSubType()
+		local outSub = self:GetSubType()
+		if not bpcommon.IsGUID( inSub ) and bpcommon.IsGUID( outSub )then
+
+			local mod = self:ResolveModuleUID( outSub )
+			return mod:GetType() == inSub
+
+		end]]
+		return false
+
+	end
+
+end
+
 function meta:GetDisplayName()
 
 	if self:IsType(PN_BPRef) then
-		local mod = self:FindOuter( bpmodule_meta )
-		if mod then return mod:GetName() end
-		local sub = self:GetSubType()
-		return sub and bpcommon.GUIDToString(self:GetSubType(), true) or "unknown blueprint"
+		return "M_" .. self:GetSubTypeString()
+	end
+
+	if self:IsType(PN_Func) then
+		return "CB_" .. self:GetSubTypeString()
 	end
 
 	if self:IsType(PN_BPClass) then
@@ -132,43 +226,39 @@ function meta:Equal(other, flagMask, ignoreSubType)
 	if other == nil then return false end
 	if self:GetBaseType() ~= other:GetBaseType() then return false end
 	if bit.band( self:GetFlags(), flagMask ) ~= bit.band( other:GetFlags(), flagMask ) then return false end
+
+	if self:GetBaseType() == PN_Func then
+		local a = self:GetSubType()
+		local b = other:GetSubType()
+		return (a and b and a.GetName and b.GetName and a:GetName() == b:GetName()) or (a == nil and b == nil)
+	end
+
 	if self:GetSubType() ~= other:GetSubType() and not ignoreSubType then return false end
 	return true
 end
 
-meta.__eq = function(a, b)
-	return a.basetype == b.basetype and a.flags == b.flags and a.subtype == b.subtype
-end
+function meta:Serialize(stream)
 
-meta.__lt = function(a, b)
-	if a.basetype ~= b.basetype then return a.basetype < b.basetype end
-	if a.subtype ~= b.subtype then return a.subtype < b.subtype end
-	return false
-end
+	self.basetype = stream:Bits(self.basetype, 8)
+	self.flags = stream:Bits(self.flags, 8)
 
-meta.__le = function(a, b)
-	if a.basetype ~= b.basetype then return a.basetype <= b.basetype end
-	if a.subtype ~= b.subtype then return a.subtype <= b.subtype end
-	return true
-end
+	if self.basetype == PN_BPRef or self.basetype == PN_Func then
 
-function meta:WriteToStream(stream)
+		if stream:IsWriting() then
+			assert( type(self.subtype) ~= "string", "Was string on pintype: " .. tostring(self) )
+		end
 
-	assert(stream:IsUsingStringTable())
-	stream:WriteBits(self.basetype, 8)
-	stream:WriteBits(self.flags, 8)
-	stream:WriteStr(self.subtype)
-	return self
+		self.subtype = stream:Object(self.subtype)
+		print("SERIALIZE SUBTYPE: " .. self:GetSubTypeString())
+	else
+		self.subtype = stream:String(self.subtype)
+	end
 
-end
+	if stream:IsReading() then self:UpdateHash() end
 
-function meta:ReadFromStream(stream)
+	--print("PINTYPE SERIALIZE [" .. (stream:IsReading() and "READ" or "WRITE") .. "][" .. stream:GetContext() .. "]: " .. self:ToString())
 
-	assert(stream:IsUsingStringTable())
-	self.basetype = stream:ReadBits(8)
-	self.flags = stream:ReadBits(8)
-	self.subtype = stream:ReadStr()
-	return self
+	return stream
 
 end
 

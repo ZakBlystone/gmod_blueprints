@@ -8,7 +8,7 @@ local pinFlagLookup = {}
 local defpack = bpdefpack.New()
 
 local WITH_DOCUMENTATION = true
-local DEFPACK_LOCATION = "blueprints/bp_newdefinitionpack.txt"
+local DEFPACK_LOCATION = bpcommon.BLUEPRINT_DATA_PATH .. "/bp_newdefinitionpack.txt"
 
 function Ready()
 	return ready
@@ -229,6 +229,8 @@ function LoadAndParseDefs()
 	hook.Run("BPPopulateDefs", defpack)
 	isPopulatingDefs = false
 
+	defpack:LinkObjects()
+
 end
 
 local function ParsePin(t)
@@ -282,11 +284,12 @@ local function ParseNodeValue(nodeType, v)
 	if key == "METATABLE" then nodeType:AddRequiredMeta(v.tuple[2]) end
 	if key == "MODTYPE" then nodeType:SetModFilter(v.tuple[2]) end
 	if key == "NOHOOK" then nodeType:AddFlag(NTF_NotHook) end
-	if key == "PARAM" then nodeType:SetNodeParam(v.tuple[2], v.tuple[3]) end
+	if key == "PARAM" then nodeType:SetNodeParam(v.tuple[2], table.concat(v.tuple, ",", 3)) end
 	if key == "PROTECTED" then nodeType:AddFlag(NTF_Protected) end
 	if key == "REDIRECTPIN" then nodeType:AddPinRedirect(v.tuple[2], v.tuple[3]) end
 	if key == "REQUIREMETA" then nodeType:AddRequiredMeta(v.tuple[2]) end
 	if key == "FALLTHROUGH" then nodeType:AddFlag(NTF_FallThrough) end
+	if key == "CALLSTACK" then nodeType:AddFlag(NTF_CallStack) end
 	if key == "TBD" then nodeType.TBD = true end
 	if key == "WARN" then nodeType:SetWarning(v.literal) end
 	if key == "IN" or key == "OUT" then nodeType:AddPin( ParsePin(v) ) end
@@ -313,6 +316,23 @@ end,
 function(block, parent)
 
 	block.struct.pins:PreserveNames(false)
+
+end)
+
+RegisterBlock("CALLBACK", 0, function(block, parent)
+	local name = block.tuple[2]
+	block.callback = bpcallback.New():WithOuter(defpack)
+	block.callback:SetName(name)
+
+	defpack:AddCallback(block.callback)
+
+end,
+function(block, value)
+	local key = value.tuple[1]
+	if key == "IN" or key == "OUT" then block.callback:AddPin( ParsePin(value) ) end
+
+end,
+function(block, parent)
 
 end)
 
@@ -345,6 +365,16 @@ end)
 local topLevelHandlers = function(block, value)
 	if value.tuple[1] == "REDIRECTNODE" then
 		defpack:AddNodeRedirector( value.tuple[2], value.tuple[3] )
+	end
+	if value.tuple[1] == "NOWIKIDOC" then
+		if block.group then
+			block.group:AddFlag( bpnodetypegroup.FL_NoWikiDoc )
+		end
+	end
+	if value.tuple[1] == "NOINDEXMETA" then
+		if block.group then
+			block.group:AddFlag( bpnodetypegroup.FL_NoIndexMeta )
+		end
 	end
 end
 
@@ -411,12 +441,13 @@ local function LoadDefinitionPack(data)
 	--print("Unpacking definitions")
 
 	local co = coroutine.create( function()
-		local stream = bpdata.InStream(false, true)
-		stream:UseStringTable()
-		stream:LoadString(data, true, false)
-		defpack = bpdefpack.New():ReadFromStream(stream)
 
-		defpack:PostInit()
+		local stream = bpstream.New("defs", bpstream.MODE_String, data)
+			:AddFlags(bpstream.FL_Compressed + bpstream.FL_Checksum + bpstream.FL_FileBacked + bpstream.FL_NoHeader)
+			:In()
+
+		defpack = stream:Object()
+		stream:Finish()
 		ready = true
 	end)
 
@@ -438,12 +469,12 @@ local function ParseAndSave()
 	bpcommon.ProfileStart("parse definitions")
 	LoadAndParseDefs()
 
-	local stream = bpdata.OutStream(false, true, true)
-	stream:UseStringTable()
+	local stream = bpstream.New("defs", bpstream.MODE_File, DEFPACK_LOCATION)
+		:AddFlags(bpstream.FL_Compressed + bpstream.FL_Checksum + bpstream.FL_FileBacked + bpstream.FL_NoHeader)
+		:Out()
 
-	defpack:WriteToStream(stream)
-
-	stream:WriteToFile(DEFPACK_LOCATION, true, false)
+	stream:Object(defpack)
+	stream:Finish()
 	bpcommon.ProfileEnd()
 
 	defpack:PostInit()
@@ -461,8 +492,10 @@ end
 
 if game.SinglePlayer() then
 	timer.Simple(0, function()
+		bpcommon.ProfileStart("parse definitions")
 		LoadAndParseDefs()
 		defpack:PostInit()
+		bpcommon.ProfileEnd()
 		ready = true
 	end)
 elseif SERVER then

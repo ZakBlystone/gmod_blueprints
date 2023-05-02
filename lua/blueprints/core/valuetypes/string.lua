@@ -50,6 +50,7 @@ end
 function VALUE:CreateTextEntry( info, parent )
 
 	local entry = vgui.Create("DTextEntry", parent)
+	entry:SetSkin("Blueprints")
 	entry:SetText( self:Get() )
 	entry:SelectAllOnFocus()
 	if info.live then entry:SetUpdateOnType(true) end
@@ -69,9 +70,10 @@ function VALUE:CreateTextEntry( info, parent )
 		if info.onChanged then info.onChanged() end
 	end
 
+	entry.OnRemove = function(pnl) self:UnbindAll( pnl ) end
 	entry:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
 
-	self:BindRaw("valueChanged", self, function(old, new, key)
+	self:BindRaw("valueChanged", entry, function(old, new, key)
 		entry:SetText( new )
 	end)
 

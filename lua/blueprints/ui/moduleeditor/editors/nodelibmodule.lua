@@ -6,7 +6,7 @@ local EDITOR = {}
 
 EDITOR.HasSideBar = true
 EDITOR.HasDetails = true
-EDITOR.CanExportLuaScript = true
+EDITOR.CanExportLuaScript = false
 --EDITOR.CanInstallLocally = true
 --EDITOR.CanExportLuaScript = true
 
@@ -23,20 +23,24 @@ function EDITOR:PopulateSideBar()
 
 		local function MakeGroup(groupType)
 			local newGroup = bpnodetypegroup.New(groupType)
-			local id = list:Add(newGroup)
-			pnl:Rename(id)
+			local id, group = list:Add(newGroup)
+			pnl:Rename(group)
+			pnl:Select(group)
+			return newGroup
 		end
 
-		local menu = DermaMenu( false, self:GetPanel() )
-		menu:AddOption( "Library", function() MakeGroup(bpnodetypegroup.TYPE_Lib) end )
-		menu:AddOption( "Class", function() MakeGroup(bpnodetypegroup.TYPE_Class) end )
-		menu:AddOption( "Hooks", function() MakeGroup(bpnodetypegroup.TYPE_Hooks) end )
-		menu:SetMinimumWidth( 100 )
-		menu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )
+		local menu = bpmodal.Menu({
+			options = {
+				{ title = "Library", func = function() MakeGroup(bpnodetypegroup.TYPE_Lib) end },
+				{ title = "Class", func = function() local newGroup = MakeGroup(bpnodetypegroup.TYPE_Class) newGroup:AddFlag(bpnodetypegroup.FL_NoIndexMeta) end },
+				{ title = "Hooks", func = function() MakeGroup(bpnodetypegroup.TYPE_Hooks) end },
+			},
+			width = 100,
+		}, self:GetPanel())
 
 	end
 
-	self.GroupList.ItemBackgroundColor = function( list, id, item, selected )
+	self.GroupList.ItemBackgroundColor = function( list, item, selected )
 
 		local vcolor = nodeGroupTypeColors[item:GetType()]
 		if selected then
@@ -51,17 +55,18 @@ function EDITOR:PopulateSideBar()
 	self.NodeList.HandleAddItem = function(pnl, list)
 
 		if list == nil then return end
-		local newNode = bpnodetype.New():WithOuter( self.currentNodeGroup )
+		local newNode = bpnodetype.New():WithOuter( self.selectedGroup )
 
-		if self.currentNodeGroup:GetType() == bpnodetypegroup.TYPE_Hooks then
+		if self.selectedGroup:GetType() == bpnodetypegroup.TYPE_Hooks then
 			newNode:SetCodeType( NT_Event )
 		else
 			newNode:SetCodeType( NT_Function )
 		end
 
 		newNode:SetName("untitled")
-		local id = list:Add( newNode )
-		pnl:Rename(id)
+		local id, node = list:Add( newNode )
+		pnl:Rename(node)
+		pnl:Select(node)
 
 	end
 
@@ -72,11 +77,11 @@ function EDITOR:PopulateSideBar()
 		pnl:Rename(itemID)
 	end
 
-	self.StructList.PopulateMenuItems = function(pnl, items, id)
+	self.StructList.PopulateMenuItems = function(pnl, items, struct)
 
 		items[#items+1] = {
 			name = LOCTEXT("editor_graphmodule_editstruct","Edit Struct"),
-			func = function() bpuistructeditmenu.EditStructParams( self:GetModule().structs:Get(id) ) end,
+			func = function() bpuistructeditmenu.EditStructParams( struct ) end,
 		}
 
 	end
@@ -90,7 +95,6 @@ function EDITOR:PopulateSideBar()
 
 	self.selectedGroup = nil
 	self.selectedNode = nil
-	self.currentNodeGroup = nil
 
 	self.pinLists = {}
 
@@ -112,7 +116,7 @@ function EDITOR:Shutdown()
 	local mod = self:GetModule()
 
 	mod.groups:UnbindAll(self)
-	if self.currentNodeGroup then self.currentNodeGroup:GetEntries():UnbindAll(self) end
+	if self.selectedGroup then self.selectedGroup:GetEntries():UnbindAll(self) end
 
 end
 
@@ -133,7 +137,6 @@ function EDITOR:MakePinListUI( name, dir, nodeType )
 
 	for _, v in ipairs(nodeType:GetRawPins()) do
 		if v:GetDir() == dir and not v:IsType(PN_Exec) then
-			v.id = nil
 			list:Add(v)
 		end
 	end
@@ -149,11 +152,11 @@ function EDITOR:MakePinListUI( name, dir, nodeType )
 	view.CreateItemPanel = function(pnl, id, item)
 		local entry = vgui.Create("BPPinListEntry", pnl)
 		entry.vlist = pnl
-		entry.id = id
+		entry.item = item
 		entry.module = module
 		function entry:SetPinType(t) item:SetType( t ) editor:ApplyPins( nodeType ) end
 		function entry:GetPinType() return item:GetType() end
-		function entry:SetPinName(n) pnl.list:Rename( id, n ) editor:ApplyPins( nodeType ) end
+		function entry:SetPinName(n) pnl.list:Rename( item, n ) editor:ApplyPins( nodeType ) end
 		function entry:GetPinName() return item.name end
 		return entry
 	end
@@ -165,6 +168,8 @@ end
 
 function EDITOR:ApplyPins( nodeType )
 
+	nodeType:Broadcast("preModify")
+
 	nodeType.pins = {}
 
 	for _, v in self.pinLists[PD_In]:Items() do
@@ -174,6 +179,8 @@ function EDITOR:ApplyPins( nodeType )
 	for _, v in self.pinLists[PD_Out]:Items() do
 		nodeType.pins[#nodeType.pins+1] = v
 	end
+
+	nodeType:Broadcast("postModify")
 
 	 self:ConstructNode( nodeType )
 
@@ -206,7 +213,7 @@ function EDITOR:SetupNodeDetails( nodeType )
 			self.values:AddCosmeticChild("pure",
 				bpvaluetype.New("boolean", 
 					function() return nodeType:GetCodeType() == NT_Pure end,
-					function(x) nodeType:ClearFlag( NTF_Compact ) nodeType:SetCodeType( x and NT_Pure or NT_Function ) end )
+					function(x) nodeType:ClearFlag( NTF_Compact ) nodeType:Broadcast("preModify") nodeType:SetCodeType( x and NT_Pure or NT_Function ) nodeType:Broadcast("postModify") end )
 				:BindAny(self, function() self:ConstructNode( nodeType ) end )
 			)
 		end
@@ -228,8 +235,14 @@ function EDITOR:SetupNodeDetails( nodeType )
 		self.sideBar = vgui.Create("BPCategoryList")
 		self.detailGUI = self.values:CreateVGUI({ live = true, })
 		self.sideBar:Add( "Details" ):SetContents( self.detailGUI )
-		self:MakePinListUI( "Inputs", PD_In, nodeType )
-		self:MakePinListUI( "Outputs", PD_Out, nodeType )
+
+		if nodeType:GetContext() == bpnodetype.NC_Lib or nodeType:GetContext() == bpnodetype.NC_Class then
+			self:MakePinListUI( "Inputs", PD_In, nodeType )
+			self:MakePinListUI( "Outputs", PD_Out, nodeType )
+		else
+			self:MakePinListUI( "Inputs", PD_Out, nodeType )
+			self:MakePinListUI( "Outputs", PD_In, nodeType )
+		end
 
 		self:SetDetails( self.sideBar )
 
@@ -291,6 +304,10 @@ function EDITOR:ConstructNode( nodeType )
 			exit:SetNodeClass("UserFuncExit")
 			exit.GetRole = function() return nodeType:GetRole() end
 
+			-- Explicit references to satisfy weak ref
+			nodeType.__entryRef = entry
+			nodeType.__exitRef = exit
+
 			local _, ventry = self:AddNode( entry )
 			local w0,h0 = ventry:GetSize()
 
@@ -301,7 +318,7 @@ function EDITOR:ConstructNode( nodeType )
 			local c1 = 400 + w1/2
 			local cx = (c0/2 + c1/2)
 
-			self.vgraph:SetZoomLevel(-1,0,0)
+			--self.vgraph:SetZoomLevel(2,0,0)
 			timer.Simple(0, function()
 				self.vgraph:CenterOnPoint(cx,h0/2)
 			end)
@@ -314,7 +331,7 @@ function EDITOR:ConstructNode( nodeType )
 		if not node then return end
 		local w,h = vnode:GetSize()
 
-		self.vgraph:SetZoomLevel(-2,0,0)
+		--self.vgraph:SetZoomLevel(2,0,0)
 		timer.Simple(0, function()
 			self.vgraph:CenterOnPoint(w/2,h/2)
 		end)
@@ -324,18 +341,19 @@ end
 
 function EDITOR:PostNodeListModify( action, id, item )
 
+	if action == bplist.MODIFY_REMOVE then item:Broadcast("destroyed") end
 	if action ~= bplist.MODIFY_RENAME then return end
-	if item ~= self.currentNodeType then return end
+	if item ~= self.selectedNode then return end
 
-	self:ConstructNode( self.currentNodeType )
-	self:SetupNodeDetails( self.currentNodeType )
+	self:ConstructNode( self.selectedNode )
+	self:SetupNodeDetails( self.selectedNode )
 
 end
 
 function EDITOR:PostGroupListModify( action, id, item )
 
 	if action ~= bplist.MODIFY_REMOVE then return end
-	if item ~= self.currentNodeGroup then return end
+	if item ~= self.selectedGroup then return end
 
 	self.NodeList:SetList(nil)
 
@@ -343,20 +361,19 @@ end
 
 function EDITOR:Think()
 
-	local selectedGroup = self.GroupList:GetSelectedID()
+	local selectedGroup = self.GroupList:GetSelected()
 	if selectedGroup ~= self.selectedGroup then
 
-		if self.currentNodeGroup then self.currentNodeGroup:GetEntries():UnbindAll( self ) end
+		if self.selectedGroup then self.selectedGroup:GetEntries():UnbindAll( self ) end
 
 		self.selectedGroup = selectedGroup
 		self.selectedNode = nil
-		self.currentNodeGroup = self:GetModule().groups:Get( selectedGroup )
 
-		if self.currentNodeGroup then
+		if self.selectedGroup then
 
-			self.NodeList:SetList( self.currentNodeGroup:GetEntries() )
+			self.NodeList:SetList( self.selectedGroup:GetEntries() )
 			self.NodeList:ClearSelection()
-			self.currentNodeGroup:GetEntries():Bind( "postModify", self, self.PostNodeListModify )
+			self.selectedGroup:GetEntries():Bind( "postModify", self, self.PostNodeListModify )
 
 		end
 
@@ -365,14 +382,13 @@ function EDITOR:Think()
 
 	end
 
-	local selectedNode = self.NodeList:GetSelectedID()
-	if selectedNode ~= self.selectedNode and self.currentNodeGroup ~= nil then
+	local selectedNode = self.NodeList:GetSelected()
+	if selectedNode ~= self.selectedNode and self.selectedGroup ~= nil then
 
 		self.selectedNode = selectedNode
-		self.currentNodeType = self.currentNodeGroup:GetEntries():Get( selectedNode )
 
-		self:ConstructNode( self.currentNodeType )
-		self:SetupNodeDetails( self.currentNodeType )
+		self:ConstructNode( self.selectedNode )
+		self:SetupNodeDetails( self.selectedNode )
 
 	end
 

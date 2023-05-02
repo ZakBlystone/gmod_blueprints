@@ -7,6 +7,10 @@ TYPE_Lib = 1
 TYPE_Hooks = 2
 TYPE_Callbacks = 4
 
+FL_None = 0
+FL_NoWikiDoc = 1
+FL_NoIndexMeta = 2
+
 GroupTypeNames = {
 	[TYPE_Class] = "Class",
 	[TYPE_Lib] = "Lib",
@@ -27,10 +31,12 @@ function NodeContextFromGroupType( type )
 end
 
 local meta = bpcommon.MetaTable("bpnodetypegroup")
-meta.__tostring = function(self) return self:ToString() end
+
+bpcommon.AddFlagAccessors(meta)
 
 function meta:Init(entryType)
 
+	self.flags = FL_None
 	self.entryType = entryType
 	self.name = ""
 	self.entries = bplist.New(bpnodetype_meta):WithOuter(self):Indexed(false):PreserveNames(true)
@@ -68,29 +74,17 @@ function meta:RemoveEntry( entry )
 
 end
 
-function meta:WriteToStream(stream)
+function meta:Serialize(stream)
 
-	assert(stream:IsUsingStringTable())
-	stream:WriteBits(self.entryType, 8)
-	stream:WriteStr(self.name)
-	bpdata.WriteValue(self.params, stream)
+	if stream:GetVersion() > 5 then
+		self.flags = stream:Bits(self.flags, 8)
+	end
 
-	print("WRITE GROUP: " .. self.entries:Size())
-	self.entries:WriteToStream(stream)
-
-	return self
-
-end
-
-function meta:ReadFromStream(stream)
-
-	assert(stream:IsUsingStringTable())
-	self.entryType = stream:ReadBits(8)
-	self.name = stream:ReadStr()
-	self.params = bpdata.ReadValue(stream)
-	self.entries:ReadFromStream(stream)
-
-	return self
+	self.entryType = stream:Bits(self.entryType, 8)
+	self.name = stream:String(self.name)
+	self.params = stream:Value(self.params)
+	self.entries:Serialize(stream)
+	return stream
 
 end
 

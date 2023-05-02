@@ -4,10 +4,11 @@ module("_", package.seeall, bpcommon.rescope(bpschema, bpcompiler))
 
 local MODULE = {}
 
-MODULE.Name = LOCTEXT"module_swep_name","Weapon"
-MODULE.Description = LOCTEXT"module_swep_desc","A Scripted Weapon you can pick up and shoot"
+MODULE.Name = LOCTEXT("module_swep_name","Weapon")
+MODULE.Description = LOCTEXT("module_swep_desc","A Scripted Weapon you can pick up and shoot")
 MODULE.Icon = "icon16/gun.png"
 MODULE.Creatable = true
+MODULE.CanBeSubmodule = true
 MODULE.AdditionalConfig = true
 MODULE.HasOwner = true
 MODULE.SelfPinSubClass = "Weapon"
@@ -150,16 +151,12 @@ function MODULE:Compile(compiler, pass)
 		compiler.emit( "meta = table.Merge( meta, " .. weaponTable:ToString() .. " )")
 
 		compiler.emit([[
-for k,v in pairs(meta) do
-	local _, _, m = k:find("WEAPON_(.+)")
-	if m then meta[ m ] = v end
-end]])
+for k,v in pairs(table.Copy(meta)) do local _, _, m = k:find("WEAPON_(.+)") if m then meta[ m ] = v end end]])
 
 		compiler.emit("function meta:Initialize()")
-		compiler.emit("\tlocal instance = self")
-		compiler.emit("\tinstance.delays = {}")
-		compiler.emit("\tinstance.__bpm = __bpm")
-		compiler.emit("\tinstance.guid = __hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
+		compiler.emit("\tself.delays = {}")
+		compiler.emit("\tself.__bpm = __bpm")
+		compiler.emit("\tself.guid = __hexBytes(string.format(\"%0.32X\", self:EntIndex()))")
 		compiler.emitContext( CTX_Vars .. "global", 1 )
 		compiler.emit("\tself.bInitialized = true")
 		compiler.emit("\tself:netInit()")
@@ -190,7 +187,7 @@ end]])
 		compiler.emit([[
 __bpm.playerKey = "bpplayerhadweapon_" .. __bpm.class
 __bpm.init = function()
-	weapons.Register( meta, __bpm.class )
+	weapons.Register( __bpm.meta, __bpm.class )
 	if CLIENT and bpsandbox then bpsandbox.RefreshSWEPs() end
 	if CLIENT then return end
 	timer.Simple(.5, function()

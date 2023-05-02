@@ -119,15 +119,17 @@ meta.__lt = function(a,b) return tostring(a) < tostring(b) end
 meta.__le = function(a,b) return tostring(a) <= tostring(b) end
 meta.__eq = function(a,b) return tostring(a) == tostring(b) end
 
-function Create(key)
+function Create(key, default)
 
+	data[key] = default
+	--print("CREATE LOCALE KEY: " .. tostring(key) .. " = " .. tostring(default))
 	return setmetatable({key = key}, meta)
 
 end
 
-function Get(key)
+function Get(key, default)
 
-	cache[key] = cache[key] or Create(key)
+	cache[key] = cache[key] or Create(key, default)
 	return cache[key]
 
 end

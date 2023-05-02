@@ -1,7 +1,7 @@
 TEST.Name = "String Table"
 TEST.Libs = {
 	"bpstringtable",
-	"bpdata",
+	"bpstream",
 }
 TEST.After = {
 	"data"
@@ -56,13 +56,13 @@ function TRANSMIT()
 	local fromIds = {}
 	for _, str in ipairs(strings) do fromIds[#fromIds+1] = from:Add(str) end
 
-	local outs = bpdata.OutStream(false, false, false)
-	from:WriteToStream(outs)
+	local outs = bpstream.New("test-stringtable", bpstream.MODE_String):Out()
+	from:Serialize(outs)
 
-	local ins = bpdata.InStream(false, false)
-	local str = outs:GetString()
-	ins:LoadString(str)
-	dest:ReadFromStream(ins)
+	local serialized = outs:Finish()
+	local ins = bpstream.New("test-stringtable", bpstream.MODE_String, serialized):In()
+	dest:Serialize(ins)
+	ins:Finish()
 
 	for i, id in ipairs(fromIds) do
 		EXPECT( dest:Get(id), strings[i] )

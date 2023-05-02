@@ -5,8 +5,8 @@ module("mod_locmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpc
 local MODULE = {}
 
 MODULE.Creatable = true
-MODULE.Name = LOCTEXT"module_loc_name","Localization"
-MODULE.Description = LOCTEXT"module_loc_desc","Localization data for the editor"
+MODULE.Name = LOCTEXT("module_loc_name","Localization")
+MODULE.Description = LOCTEXT("module_loc_desc","Localization data for the editor")
 MODULE.Icon = "icon16/table.png"
 MODULE.EditorClass = "locmodule"
 MODULE.Developer = true
@@ -41,41 +41,14 @@ function MODULE:GetLocString( key )
 
 end
 
-function MODULE:WriteData( stream, mode, version )
+function MODULE:SerializeData(stream)
 
-	BaseClass.WriteData( self, stream, mode, version )
+	BaseClass.SerializeData( self, stream )
 
-	stream:WriteStr( self.data.locale )
+	self.data.locale = stream:String( self.data.locale )
+	self.data.keys = stream:StringMap( self.data.keys )
 
-	local num = 0
-	for k,v in pairs(self.data.keys) do
-		num = num + 1
-	end
-
-	stream:WriteInt( num, false )
-
-	for k,v in pairs(self.data.keys) do
-		stream:WriteStr( k )
-		stream:WriteStr( v )
-	end
-
-end
-
-function MODULE:ReadData( stream, mode, version )
-
-	BaseClass.ReadData( self, stream, mode, version )
-
-	self.data.locale = stream:ReadStr()
-
-	local num = stream:ReadInt()
-
-	for i=1, num do
-
-		local k = stream:ReadStr()
-		local v = stream:ReadStr()
-		self.data.keys[k] = v
-
-	end
+	return stream
 
 end
 

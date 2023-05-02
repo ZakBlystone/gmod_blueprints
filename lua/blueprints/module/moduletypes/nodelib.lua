@@ -5,13 +5,15 @@ module("mod_nodelib", package.seeall, bpcommon.rescope(bpcommon, bpschema, bpcom
 local MODULE = {}
 
 MODULE.Creatable = true
-MODULE.Name = LOCTEXT"module_nodelib_name","Node Library"
-MODULE.Description = LOCTEXT"module_nodelib_desc","Custom node library"
+MODULE.Name = LOCTEXT("module_nodelib_name","Node Library")
+MODULE.Description = LOCTEXT("module_nodelib_desc","Custom node library")
 MODULE.Icon = "icon16/table.png"
 MODULE.EditorClass = "nodelib"
 MODULE.Developer = true
+MODULE.CanBeSubmodule = true
 
 bpcommon.CreateIndexableListIterators(MODULE, "structs")
+bpcommon.CreateIndexableListIterators(MODULE, "groups")
 
 function MODULE:Setup()
 
@@ -27,7 +29,40 @@ function MODULE:Setup()
 
 end
 
-function MODULE:GetNodeTypes()
+function MODULE:GetNodeTypes( collection, graph )
+
+	local tab = {}
+	collection:Add(tab)
+
+	for k,v in ipairs(self.structs) do
+
+		local maker = v:MakerNodeType()
+		local breaker = v:BreakerNodeType()
+
+		local makerName = "Make" .. v:GetName()
+		local breakerName = "Break" .. v:GetName()
+		tab[makerName] = maker
+		tab[breakerName] = breaker
+
+		maker.name = makerName
+		breaker.name = breakerName
+
+	end
+
+	for _,v in self:Groups() do
+		for _, e in v:GetEntries():Items() do
+			tab[e:GetFullName()] = e
+		end
+	end
+
+end
+
+function MODULE:SerializeData( stream )
+
+	BaseClass.SerializeData(self, stream)
+
+	self.groups:Serialize( stream )
+	self.structs:Serialize( stream )
 
 end
 
@@ -45,11 +80,14 @@ function MODULE:GetPinTypes( collection )
 
 	end
 
-end
+	for id, v in self:Groups() do
 
-function MODULE:AutoFillsPinType( pinType )
+		if v:GetType() == bpnodetypegroup.TYPE_Class then
+			if v:GetParam("pinTypeOverride") then print("SKIP CLASS: " .. tostring(v)) continue end
+			types[#types+1] = bppintype.New(PN_Ref, PNF_None, v.name)
+		end
 
-	return false
+	end
 
 end
 
@@ -59,42 +97,14 @@ function MODULE:RequestGraphForEvent( nodeType )
 
 end
 
-function MODULE:WriteData( stream, mode, version )
+function MODULE:AutoFillsPinType( pinType )
 
-	BaseClass.WriteData( self, stream, mode, version )
-
-	self.groups:WriteToStream( stream, mode, version )
-	self.structs:WriteToStream( stream, mode, version )
-
-end
-
-function MODULE:ReadData( stream, mode, version )
-
-	BaseClass.ReadData( self, stream, mode, version )
-
-	self.groups:ReadFromStream( stream, mode, version )
-	self.structs:ReadFromStream( stream, mode, version )
+	return false
 
 end
 
 function MODULE:Compile( compiler, pass )
 
-
-	if pass == CP_MODULECODE then
-
-		local mod = self:SaveToText()
-		compiler.emit("if not game.SinglePlayer() and CLIENT then return end")
-		compiler.emit("local data = [[" .. mod .. "]]")
-		compiler.emit([[hook.Add("BPPopulateDefs", ]] .. bpcommon.EscapedGUID( self:GetUID() ) .. [[, function(pack)]])
-		compiler.emit([[
-	if not bpcommon.CheckVersionCompat("]] .. bpcommon.ENV_VERSION ..  [[", "nodelib", "Tried to load outdated node library: ]] .. self:GetName() .. [[") then return end
-	local mod = bpmodule.New()
-	mod:LoadFromText(data)
-	for _, group in mod.groups:Items() do pack:AddNodeGroup(group) end
-	for _, struct in mod.structs:Items() do pack:AddStruct(struct) end]])
-		compiler.emit("end)")
-
-	end
 
 end
 

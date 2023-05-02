@@ -17,6 +17,7 @@ function VALUE:CreateVGUI( info )
 	zone:SetTall(16)
 
 	local check = vgui.Create("DCheckBox", zone)
+	check:SetSkin("Blueprints")
 	check:InvalidateLayout(true)
 	check:SetChecked( self:Get() )
 	check.OnChange = function( pnl, val )

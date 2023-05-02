@@ -5,6 +5,7 @@ module("editor_graphmodule", package.seeall, bpcommon.rescope(bpschema))
 local EDITOR = {}
 
 EDITOR.HasSideBar = true
+EDITOR.HasDetails = true
 EDITOR.CanSendToServer = true
 EDITOR.CanInstallLocally = true
 EDITOR.CanExportLuaScript = true
@@ -13,8 +14,8 @@ function EDITOR:Setup()
 
 	print("SETUP GRAPH MODULE EDITOR")
 
-	self.vvars = {}
-	self.vgraphs = {}
+	self.vvars = setmetatable({}, {__mode = "k"})
+	self.vgraphs = setmetatable({}, {__mode = "k"})
 
 	self:GetModule():Bind("graphAdded", self, self.GraphAdded)
 	self:GetModule():Bind("graphRemoved", self, self.GraphRemoved)
@@ -24,7 +25,7 @@ end
 function EDITOR:PostInit()
 
 	for id, graph in self:GetModule().graphs:Items() do
-		self:GraphAdded( id )
+		self:GraphAdded( graph )
 	end
 
 	hook.Add("BPPinClassRefresh", "pinrefresh_" .. self:GetModule():GetUID(), function(class)
@@ -58,10 +59,10 @@ function EDITOR:Think()
 
 	if self.GraphList then
 
-		local selectedGraphID = self.GraphList:GetSelectedID()
+		local selected = self.GraphList:GetSelected()
 
-		for id, vgraph in pairs( self.vgraphs ) do
-			if id == selectedGraphID then
+		for graph, vgraph in pairs( self.vgraphs ) do
+			if graph == selected then
 				if not vgraph:IsVisible() then
 					vgraph:SetVisible(true)
 					self:SetContent( vgraph )
@@ -85,24 +86,57 @@ end
 
 function EDITOR:PopulateSideBar()
 
+	local function EditLabel( panel, text )
+
+		local label = vgui.Create("DLabel", panel)
+		label:SetFont("DermaDefaultBold")
+		label:SetText( text )
+		label:DockMargin(5,5,5,5)
+		label:Dock( TOP )
+		return label
+
+	end
+
+	local function SetupDrag( panel, item, leftwait )
+		local detour = panel.OnMousePressed
+		panel.OnMousePressed = function( pnl, code )
+			if code ~= MOUSE_LEFT or not leftwait then detour(pnl, code) end
+			pnl.wantDrag = true
+		end
+		panel.OnMouseReleased = function( pnl, code )
+			if code == MOUSE_LEFT and leftwait then detour(pnl, code) end
+			pnl.wantDrag = false
+		end
+		panel.OnCursorExited = function(pnl)
+			timer.Simple(.05, function()
+				if pnl.wantDrag then
+					_G.G_BPDraggingElement = item
+					pnl.wantDrag = false
+				end
+			end)
+		end
+	end
+
 	-- Graph List
 	self.GraphList = self:AddSidebarList(LOCTEXT("editor_graphmodule_graphlist","Graphs"))
 	self.GraphList.HandleAddItem = function(list)
 
 		local function MakeGraph(graphType)
-			local id = self:GetModule():NewGraph( nil, graphType )
-			list:Rename(id)
+			local id, graph = self:GetModule():NewGraph( nil, graphType )
+			list:Rename(graph)
 		end
 
-		local menu = DermaMenu( false, self:GetPanel() )
-		menu:AddOption( LOCTEXT("editor_graphmodule_add_eventgraph", "Event Graph")(), function() MakeGraph(bpschema.GT_Event) end )
-		menu:AddOption( LOCTEXT("editor_graphmodule_add_function", "Function")(), function() MakeGraph(bpschema.GT_Function) end )
-		menu:SetMinimumWidth( 100 )
-		menu:Open( gui.MouseX(), gui.MouseY(), false, self:GetPanel() )
+		bpmodal.Menu({
+			options = {
+				{ title = LOCTEXT("editor_graphmodule_add_eventgraph", "Event Graph"), func = function() MakeGraph(bpschema.GT_Event) end },
+				{ title = LOCTEXT("editor_graphmodule_add_function", "Function"), func = function() MakeGraph(bpschema.GT_Function) end },
+			},
+			width = 100,
+		}, self:GetPanel())
 
 	end
 
-	self.GraphList.ItemBackgroundColor = function( list, id, item, selected )
+	self.GraphList.ItemBackgroundColor = function( list, item, selected )
 
 		local vcolor = bpschema.GraphTypeColors[item:GetType()]
 		if selected then
@@ -113,9 +147,8 @@ function EDITOR:PopulateSideBar()
 
 	end
 
-	self.GraphList.PopulateMenuItems = function(pnl, items, id)
+	self.GraphList.PopulateMenuItems = function(pnl, items, graph)
 
-		local graph = self:GetModule():GetGraph(id)
 		if graph.type == bpschema.GT_Function and not graph:HasFlag(bpgraph.FL_LOCK_PINS) then
 			items[#items+1] = {
 				name = LOCTEXT("editor_graphmodule_editgraphpins","Edit Pins"),
@@ -130,55 +163,62 @@ function EDITOR:PopulateSideBar()
 		local p = detour(pnl, id, item)
 
 		if item:GetType() == GT_Function then
+			SetupDrag(p, item, true)
+		else
 			local detour = p.OnMousePressed
 			p.OnMousePressed = function( pnl, code )
-				if code ~= MOUSE_LEFT then detour(pnl, code) end
-				pnl.wantDrag = true
-			end
-			p.OnMouseReleased = function( pnl, code )
-				if code == MOUSE_LEFT then detour(pnl, code) end
-				pnl.wantDrag = false
-			end
-			p.OnCursorExited = function(pnl)
-				if pnl.wantDrag then
-					_G.G_BPDraggingElement = item
-					pnl.wantDrag = false
-				end
+				detour(pnl, code)
+				self:SetDetails(nil)
 			end
 		end
 		return p
+	end
+
+	self.GraphList.OnItemSelected = function(pnl, item, reselected)
+
+		if item == nil then self:SetDetails(nil) end
+		if item:GetType() == GT_Function and reselected then
+
+			local editPanel = vgui.Create("DPanel")
+			editPanel:SetDrawBackground(false)
+
+			EditLabel( editPanel, bpuigrapheditmenu.text_edit_graph() .. ": " .. item:GetName() )
+
+			local inputs = bpuivarcreatemenu.VarList( item, editPanel, item.inputs, "Inputs", "In" )
+			local outputs = bpuivarcreatemenu.VarList( item, editPanel, item.outputs, "Outputs", "Out" )
+
+			inputs:SetTall( 200 )
+			outputs:SetTall( 200 )
+
+			inputs:DockMargin(5,5,5,5)
+			inputs:Dock( TOP )
+			outputs:DockMargin(5,5,5,5)
+			outputs:Dock( TOP )
+
+			self:SetDetails(editPanel)
+
+		end
+
+		self:OnGraphSelected( item )
+
 	end
 
 	-- Variable List
 	if self:GetModule():CanHaveVariables() then
 
 		self.VarList = self:AddSidebarList(LOCTEXT("editor_graphmodule_variablelist","Variables"))
+		self.VarList:SetGroup( self )
 		self.VarList.CreateItemPanel = function(pnl, id, item)
 
 			local entry = vgui.Create("BPPinListEntry", pnl)
 			entry.vlist = pnl
-			entry.id = id
+			entry.item = item
 			entry.module = self:GetModule()
 			function entry:SetPinType(t) item:SetType( t ) end
 			function entry:GetPinType() return item:GetType() end
-			function entry:SetPinName(n) pnl.list:Rename( id, n ) end
+			function entry:SetPinName(n) pnl.list:Rename( item, n ) end
 			function entry:GetPinName() return item.name end
-			local detour = entry.OnMousePressed
-			entry.OnMousePressed = function( pnl, code )
-				detour(pnl, code)
-				pnl.wantDrag = true
-			end
-			entry.OnMouseReleased = function( pnl, code )
-				pnl.wantDrag = false
-			end
-			entry.OnCursorExited = function(pnl)
-				timer.Simple(.05, function()
-					if pnl.wantDrag then
-						_G.G_BPDraggingElement = item
-						pnl.wantDrag = false
-					end
-				end)
-			end
+			SetupDrag(entry, item)
 			return entry
 
 		end
@@ -193,27 +233,43 @@ function EDITOR:PopulateSideBar()
 	if self:GetModule():CanHaveStructs() then
 
 		self.StructList = self:AddSidebarList(LOCTEXT("editor_graphmodule_structlist","Structs"))
+		self.StructList:SetGroup( self )
 		self.StructList.HandleAddItem = function(pnl, list)
 			local itemID, item = list:Construct()
-			pnl:Rename(itemID)
+			pnl:Rename(item)
 		end
 
 		local detour = self.StructList.CreateItemPanel
 		self.StructList.CreateItemPanel = function(pnl, id, item)
-			local p = detour(pnl, id, item)
-			local detour = p.OnMousePressed
-			p.OnMousePressed = function( pnl, code )
-				detour(pnl, code)
-				_G.G_BPDraggingElement = item
-			end
-			return p
+			local entry = detour(pnl, id, item)
+			SetupDrag(entry, item)
+			return entry
 		end
 
-		self.StructList.PopulateMenuItems = function(pnl, items, id)
+		self.StructList.OnItemSelected = function(pnl, item, reselected)
+
+			if item == nil then self:SetDetails(nil) end
+			if reselected then
+				local editPanel = vgui.Create("DPanel")
+				editPanel:SetDrawBackground(false)
+
+				EditLabel( editPanel, bpuistructeditmenu.text_edit_struct() .. ": " .. item:GetName() )
+
+				local pins = bpuivarcreatemenu.VarList( item, editPanel, item.pins, bpuistructeditmenu.text_edit_pins(), "Pin" )
+				pins:SetTall( 200 )
+				pins:DockMargin(5,5,5,5)
+				pins:Dock( FILL )
+
+				self:SetDetails(editPanel)
+			end
+
+		end
+
+		self.StructList.PopulateMenuItems = function(pnl, items, struct)
 
 			items[#items+1] = {
 				name = LOCTEXT("editor_graphmodule_editstruct","Edit Struct"),
-				func = function() bpuistructeditmenu.EditStructParams( self:GetModule():GetStruct(id) ) end,
+				func = function() bpuistructeditmenu.EditStructParams( struct ) end,
 			}
 
 		end
@@ -225,9 +281,10 @@ function EDITOR:PopulateSideBar()
 	if self:GetModule():CanHaveEvents() then
 
 		self.EventList = self:AddSidebarList(LOCTEXT("editor_graphmodule_eventlist","Events"))
+		self.EventList:SetGroup( self )
 		self.EventList.HandleAddItem = function(pnl, list)
 			local itemID, item = list:Construct()
-			pnl:Rename(itemID)
+			pnl:Rename(item)
 		end
 
 		local detour = self.EventList.CreateItemPanel
@@ -236,20 +293,74 @@ function EDITOR:PopulateSideBar()
 			local detour = p.OnMousePressed
 			p.OnMousePressed = function( pnl, code )
 				detour(pnl, code)
-				_G.G_BPDraggingElement = item
+				pnl.wantDrag = true
+			end
+			p.OnMouseReleased = function( pnl, code )
+				pnl.wantDrag = false
+			end
+			p.OnCursorExited = function(pnl)
+				timer.Simple(.05, function()
+					if pnl.wantDrag then
+						_G.G_BPDraggingElement = item
+						pnl.wantDrag = false
+					end
+				end)
 			end
 			return p
 		end
 
-		self.EventList.PopulateMenuItems = function(pnl, items, id)
+		self.EventList.PopulateMenuItems = function(pnl, items, event)
 
 			items[#items+1] = {
 				name = LOCTEXT("editor_graphmodule_editevent","Edit Event"),
-				func = function() bpuistructeditmenu.EditEventParams( self:GetModule():GetEvent(id) ) end,
+				func = function() bpuistructeditmenu.EditEventParams( event ) end,
 			}
 
 		end
+
+		self.EventList.OnItemSelected = function(pnl, item, reselected)
+
+			if item == nil then self:SetDetails(nil) end
+			if reselected then
+				local editPanel = vgui.Create("DPanel")
+				editPanel:SetDrawBackground(false)
+
+				EditLabel( editPanel, bpuistructeditmenu.text_edit_event() .. ": " .. item:GetName() )
+
+				bpuistructeditmenu.EditEventParamsPanel( item, editPanel )
+
+				editPanel:SetSkin("blueprints")
+				self:SetDetails(editPanel)
+			end
+
+		end
 		self.EventList:SetList( self:GetModule().events )
+
+	end
+
+	-- Local Variable List
+	if self:GetModule():CanHaveVariables() then
+
+		self.LocalVarList = self:AddSidebarList(LOCTEXT("editor_graphmodule_localvariablelist","Local Variables"))
+		self.LocalVarList:SetGroup( self )
+		self.LocalVarList.CreateItemPanel = function(pnl, id, item)
+
+			local entry = vgui.Create("BPPinListEntry", pnl)
+			entry.vlist = pnl
+			entry.item = item
+			entry.module = self:GetModule()
+			function entry:SetPinType(t) item:SetType( t ) end
+			function entry:GetPinType() return item:GetType() end
+			function entry:SetPinName(n) pnl.list:Rename( item, n ) end
+			function entry:GetPinName() return item.name end
+			SetupDrag(entry, item)
+			return entry
+
+		end
+		self.LocalVarList.HandleAddItem = function(list)
+			--local id, item = self:GetModule():NewVariable( "", bppintype.New( bpschema.PN_Bool ) )
+		end
+		--self.LocalVarList:SetList( self:GetModule().variables )
 
 	end
 
@@ -257,48 +368,90 @@ function EDITOR:PopulateSideBar()
 
 end
 
-function EDITOR:GraphAdded( id )
+function EDITOR:OnGraphSelected( graph )
 
-	local graph = self:GetModule():GetGraph(id)
-	local vgraph = vgui.Create("BPGraph", self.Content)
-
-	vgraph:SetGraph( graph )
-	vgraph:SetVisible(false)
-	vgraph:CenterToOrigin()
-	self.vgraphs[id] = vgraph
+	if graph ~= nil then
+		self.LocalVarList:SetList( graph.locals )
+		self.LocalVarList.HandleAddItem = function(list)
+			local id, item = graph.locals:ConstructNamed( "", bppintype.New( bpschema.PN_Bool ) )
+		end
+	else
+		self.LocalVarList:SetList( nil )
+		self.LocalVarList.HandleAddItem = function() end
+	end
 
 end
 
-function EDITOR:GraphRemoved( id )
+function EDITOR:GraphAdded( graph )
 
-	if IsValid(self.SelectedGraph) and self.SelectedGraph.id == id then
-		self.SelectedGraph:SetVisible(false)
-		self.SelectedGraph = nil
+	local vgraph = vgui.Create("BPGraph", self.Content)
+
+	vgraph:SetModuleEditor( self )
+	vgraph:SetGraph( graph )
+	vgraph:SetVisible(false)
+	vgraph:CenterToOrigin()
+	self.vgraphs[graph] = vgraph
+
+	self.GraphList:Select( graph )
+
+end
+
+function EDITOR:GraphRemoved( graph )
+
+	self.vgraphs[graph]:Remove()
+	self.vgraphs[graph] = nil
+
+end
+
+function EDITOR:FindVGraphByUID( uid )
+
+	for k,v in pairs(self.vgraphs) do
+		if k.uid == uid then return v end
 	end
-
-	self.vgraphs[id]:Remove()
-	self.vgraphs[id] = nil
 
 end
 
 function EDITOR:HandleError( errorData )
 
-	local vgraph = self.vgraphs[ errorData.graphID ]
-	if not vgraph then return end
+	-- TODO, restructure error handling
+
+	local compiled = bpenv.Get( errorData.uid )
+	if not compiled then return end
+
+	local dbgGraph = compiled:LookupGraph( errorData.modUID, errorData.graphID )
+	local dbgNode = compiled:LookupNode( errorData.modUID, errorData.nodeID )
+	local vgraph = self:FindVGraphByUID(dbgGraph[2])
+	if not vgraph then 
+		print("Couldn't find graph: " .. tostring(dbgGraph[1]) .. " : " .. bpcommon.GUIDToString( dbgGraph[2] ) ) 
+		return
+	else
+		print("Found graph: " .. tostring(dbgGraph[1]) .. " : " .. bpcommon.GUIDToString( dbgGraph[2] ) ) 
+	end
 
 	local edit = vgraph:GetEditor()
 	local nodeset = edit:GetNodeSet()
-	local vnode = nodeset:GetVNodes()[ errorData.nodeID ]
+	local vnode = nil
 
-	self.GraphList:Select( errorData.graphID )
+	self.GraphList:Select( vgraph:GetGraph() )
 
-	if vnode then
+	if dbgNode then
+
+		for k,v in pairs(nodeset:GetVNodes()) do
+			if k.uid == dbgNode[3] then
+				vnode = v
+			end
+		end
+
+		if not vnode then print("Couldn't find node: " .. tostring(dbgNode[2]) .. " : " ..  bpcommon.GUIDToString( dbgNode[3] )) return end
+
 		local x,y = vnode:GetPos()
 		local w,h = vnode:GetSize()
+		vgraph:GetRenderer():Calculate()
 		vgraph:SetZoomLevel(0,x,y)
 		timer.Simple(0, function()
 			vgraph:CenterOnPoint(x + w/2,y + h/2)
 		end)
+
 	end
 
 end

@@ -20,7 +20,6 @@ FT_Unknown = 0
 FT_Module = 1
 
 local meta = bpcommon.MetaTable("bpfile")
-meta.__tostring = function(self) return self:ToString() end
 
 bpcommon.AddFlagAccessors(meta)
 
@@ -139,51 +138,29 @@ function meta:GetName()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
 
-	stream:WriteBits(self.flags, 8)
-	stream:WriteStr(self.uid)
-	bpdata.WriteValue(self.name, stream)
+	self.flags = stream:Bits(self.flags, 8)
+	self.uid = stream:GUID(self.uid)
+	self.name = stream:Value(self.name)
 
-	if mode == bpcommon.STREAM_NET then
-		stream:WriteInt(self.revision or 0, false)
-	end
-
-	if self:HasFlag(FL_HasOwner) then
-		self.owner:WriteToStream(stream, mode, version)
-	end
-
-	if self:HasFlag(FL_HasLock) then
-		self.lock:WriteToStream(stream, mode, version)
-	end
-
-end
-
-function meta:ReadFromStream(stream, mode, version)
-
-	self.flags = stream:ReadBits(8)
-	self.uid = stream:ReadStr(16)
-	self.name = bpdata.ReadValue(stream)
-
-	if mode == bpcommon.STREAM_FILE then
+	if stream:IsFile() and stream:IsReading() then
 		if not self:HasFlag( FL_AlwaysRun ) then self:ClearFlag( FL_Running ) end
 	end
 
-	if mode == bpcommon.STREAM_NET then
-		self.revision = stream:ReadInt(false)
+	if stream:IsNetwork() then
+		self.revision = stream:UInt(self.revision or 0)
 	end
 
 	if self:HasFlag(FL_HasOwner) then
-		self.owner = bpuser.New()
-		self.owner:ReadFromStream(stream, mode, version)
+		self.owner = stream:Object( self.owner )
 	end
 
 	if self:HasFlag(FL_HasLock) then
-		self.lock = bpuser.New()
-		self.lock:ReadFromStream(stream, mode, version)
+		self.lock = stream:Object( self.lock )
 	end
 
-	return self
+	return stream
 
 end
 

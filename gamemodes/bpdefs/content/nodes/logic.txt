@@ -1,10 +1,23 @@
 LIB LOGIC
 {
+	NOWIKIDOC
 	SPECIAL If, SHARED
 	{
 		DESC Conditional 'If' statement
 		FALLTHROUGH
 		CLASS If
+	}
+	SPECIAL SwitchNumber, SHARED
+	{
+		DESC Switch on a number
+		PARAM mode, number
+		CLASS Switch
+	}
+	SPECIAL SwitchString, SHARED
+	{
+		DESC Switch on a number
+		PARAM mode, string
+		CLASS Switch
 	}
 	SPECIAL DoN, SHARED
 	{

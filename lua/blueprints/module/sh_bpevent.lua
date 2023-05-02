@@ -53,6 +53,27 @@ function meta:Init()
 
 end
 
+function meta:Destroy()
+
+	self.eventNodeType:Destroy()
+	self.callNodeType:Destroy()
+
+end
+
+function meta:GetEventNodes()
+
+	local nodes = {}
+	for _, graph in self:GetModule():Graphs() do
+		for _, node in graph:Nodes() do
+			if node:GetNodeClass() == "UserEventBind" and node:GetEvent() == self then
+				nodes[#nodes+1] = node
+			end
+		end
+	end
+	return nodes
+
+end
+
 function meta:GetModule()
 
 	return self:FindOuter( bpmodule_meta )
@@ -61,17 +82,15 @@ end
 
 function meta:PreModify()
 
-	local mod = self:GetModule()
-	mod:PreModifyNodeType( self.eventNodeType )
-	mod:PreModifyNodeType( self.callNodeType )
+	self.eventNodeType:PreModify()
+	self.callNodeType:PreModify()
 
 end
 
 function meta:PostModify()
 
-	local mod = self:GetModule()
-	mod:PostModifyNodeType( self.eventNodeType )
-	mod:PostModifyNodeType( self.callNodeType )
+	self.eventNodeType:PostModify()
+	self.callNodeType:PostModify()
 
 end
 
@@ -99,19 +118,15 @@ function meta:EventNodeType()
 
 end
 
-function meta:WriteToStream(stream, mode, version)
+function meta:Serialize(stream)
 
-	self.pins:WriteToStream(stream, mode, version)
-	stream:WriteBits(self.flags, 8)
-	return self
+	stream:Extern( self:CallNodeType(), "\xE3\x09\x45\x7E\x0B\x9E\xAD\x2B\x80\x00\x00\x15\x52\x01\xD6\x66" )
+	stream:Extern( self:EventNodeType(), "\xE3\x09\x45\x7E\x50\xED\x28\x25\x80\x00\x00\x16\x52\x10\xAC\x72" )
 
-end
+	self.pins:Serialize(stream)
+	self.flags = stream:Bits(self.flags, 8)
 
-function meta:ReadFromStream(stream, mode, version)
-
-	self.pins:ReadFromStream(stream, mode, version)
-	self.flags = stream:ReadBits(8)
-	return self
+	return stream
 
 end
 

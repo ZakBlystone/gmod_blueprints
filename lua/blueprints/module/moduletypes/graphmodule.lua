@@ -5,7 +5,7 @@ module("mod_graphmodule", package.seeall, bpcommon.rescope(bpcommon, bpschema, b
 local MODULE = {}
 
 MODULE.Creatable = false
-MODULE.Name = LOCTEXT"GraphModule"
+MODULE.Name = LOCTEXT("module_graph_name","Graph Module")
 MODULE.HasSelfPin = false
 MODULE.EditorClass = "graphmodule"
 
@@ -24,13 +24,14 @@ function MODULE:Setup()
 	-- Graphs
 	self.graphs:BindRaw("added", self, function(id, graph)
 		graph:BindAny(self, function() self:PostModifyGraph(graph) end)
-		self:Broadcast("graphAdded", id)
+		self:Broadcast("graphAdded", graph)
 		self:RecacheNodeTypes()
 	end)
 	self.graphs:BindRaw("removed", self, function(id, graph)
 		self:RemoveNodeTypes({ graph:GetCallNodeType() })
-		self:Broadcast("graphRemoved", id)
+		self:Broadcast("graphRemoved", graph)
 		self:RecacheNodeTypes()
+		graph:Destroy()
 	end)
 	self.graphs:BindRaw("preModify", self, function(action, id, graph)
 		if action == bplist.MODIFY_RENAME then graph:PreModify() end
@@ -54,14 +55,14 @@ function MODULE:Setup()
 		list:BindRaw("preModify", self, function(action, id, e)
 			if action ~= bplist.MODIFY_RENAME then return end
 			for _, v in ipairs(bpcommon.Transform(t, {}, cv, e)) do
-				self:PreModifyNodeType( v )
+				v:PreModify()
 			end
 		end)
 
 		list:BindRaw("postModify", self, function(action, id, e)
 			if action ~= bplist.MODIFY_RENAME then return end
 			for _, v in ipairs(bpcommon.Transform(t, {}, cv, e)) do
-				self:PostModifyNodeType( v )
+				v:PostModify()
 			end
 		end)
 
@@ -91,27 +92,19 @@ function MODULE:Setup()
 
 	end
 
-	print("SETUP GRAPH MODULE")
+	--print("SETUP GRAPH MODULE")
 
 end
 
-function MODULE:PreModifyNodeType( nodeType )
+function MODULE:Destroy()
 
-	for _, graph in self:Graphs() do
-		graph:PreModifyNodeType( nodeType )
-	end
+	BaseClass.Destroy(self)
 
-	BaseClass.PreModifyNodeType( self, nodeType )
+	self.graphs:Destroy()
 
-end
-
-function MODULE:PostModifyNodeType( nodeType )
-
-	for _, graph in self:Graphs() do
-		graph:PostModifyNodeType( nodeType )
-	end
-
-	BaseClass.PostModifyNodeType( self, nodeType )
+	if self.structs then self.structs:Destroy() end
+	if self.events then self.events:Destroy() end
+	if self.variables then self.variables:Destroy() end
 
 end
 
@@ -162,9 +155,9 @@ function MODULE:AutoFillsPinType( pinType )
 end
 
 function MODULE:GetModulePinType() return nil end
-function MODULE:GetNodeTypes( collection, graph )
+function MODULE:GetLocalNodeTypes( collection, graph )
 
-	BaseClass.GetNodeTypes( self, collection )
+	BaseClass.GetLocalNodeTypes( self, collection, graph )
 
 	local types = {}
 
@@ -181,6 +174,29 @@ function MODULE:GetNodeTypes( collection, graph )
 		end
 
 	end
+
+	if self:CanHaveEvents() then
+
+		for id, v in self:Events() do
+
+			types["__EventCall" .. id] = v:CallNodeType()
+			types["__Event" .. id] = v:EventNodeType()
+
+		end
+
+	end
+
+	for k,v in pairs(types) do v.name = k end
+
+end
+
+function MODULE:GetNodeTypes( collection, graph )
+
+	BaseClass.GetNodeTypes( self, collection )
+
+	local types = {}
+
+	collection:Add( types )
 
 	for id, v in self:Graphs() do
 
@@ -199,17 +215,6 @@ function MODULE:GetNodeTypes( collection, graph )
 
 			types["__Make" .. id] = v:MakerNodeType()
 			types["__Break" .. id] = v:BreakerNodeType()
-
-		end
-
-	end
-
-	if self:CanHaveEvents() then
-
-		for id, v in self:Events() do
-
-			types["__EventCall" .. id] = v:CallNodeType()
-			types["__Event" .. id] = v:EventNodeType()
 
 		end
 
@@ -286,6 +291,7 @@ end
 function MODULE:NewGraph(name, type)
 
 	local id, graph = self.graphs:ConstructNamed( name, type )
+	graph:CreateDefaults()
 	return id, graph
 
 end
@@ -297,6 +303,25 @@ function MODULE:GetUsedPinTypes(used, noFlags)
 		graph:GetUsedPinTypes(used, noFlags)
 	end
 	return BaseClass.GetUsedPinTypes(self, used, noFlags)
+
+end
+
+function MODULE:RequestGraphForCallback( callback )
+
+	local id, graph = self:NewGraph(callback:GetName(), NT_Function)
+
+	for _, v in ipairs(callback:GetPins()) do
+
+		if v:IsType(PN_Exec) then continue end
+		if v:IsIn() then
+			graph.inputs:Add(v:Copy(), v:GetName())
+		else
+			graph.outputs:Add(v:Copy(), v:GetName())
+		end
+
+	end
+
+	return graph
 
 end
 
@@ -343,17 +368,18 @@ end
 function MODULE:CanHaveVariables() return true end
 function MODULE:CanHaveStructs() return true end
 function MODULE:CanHaveEvents() return true end
+function MODULE:RequiresNetCode() return true end
 
 function MODULE:CanCast( outPinType, inPinType )
 
-	return bpcast.CanCast( outPinType, inPinType )
+	return false
 
 end
 
 function MODULE:GetMenuItems( tab )
 
 	tab[#tab+1] = {
-		name = LOCTEXT("menu_setdefaults", "Set Defaults"),
+		name = LOCTEXT("menu_configure", "Configure"),
 		func = function(...) self:OpenVGUI(...) end,
 		color = Color(60,120,200),
 	}
@@ -391,57 +417,31 @@ function MODULE:BuildCosmeticVars( values )
 
 end
 
-function MODULE:WriteData( stream, mode, version )
+function MODULE:SerializeData( stream )
 
-	if self:CanHaveVariables() then Profile("write-variables", self.variables.WriteToStream, self.variables, stream, mode, version) end
-	Profile("write-graphs", self.graphs.WriteToStream, self.graphs, stream, mode, version)
-	if self:CanHaveStructs() then Profile("write-structs", self.structs.WriteToStream, self.structs, stream, mode, version) end
-	if self:CanHaveEvents() then Profile("write-events", self.events.WriteToStream, self.events, stream, mode, version) end
-
-	BaseClass.WriteData( self, stream, mode, version )
-
-end
-
-function MODULE:ReadData( stream, mode, version )
+	BaseClass.SerializeData( self, stream )
 
 	self.suppressGraphNotify = true
 
-	if self:CanHaveVariables() then Profile("read-variables", self.variables.ReadFromStream, self.variables, stream, mode, version) end
-	Profile("read-graphs", self.graphs.ReadFromStream, self.graphs, stream, mode, version)
-	if self:CanHaveStructs() then Profile("read-structs", self.structs.ReadFromStream, self.structs, stream, mode, version) end
-	if self:CanHaveEvents() then Profile("read-events", self.events.ReadFromStream, self.events, stream, mode, version) end
+	--print("Serialize graph module")
 
-	BaseClass.ReadData( self, stream, mode, version )
+	if self:CanHaveVariables() then self.variables:Serialize( stream ) end
 
-	for _, graph in self:Graphs() do
-		graph:CreateDeferredData()
+	if stream:GetVersion() >= 3 then
+		if self:CanHaveStructs() then self.structs:Serialize( stream ) end
+		if self:CanHaveEvents() then self.events:Serialize( stream ) end
+	end
+
+	self.graphs:Serialize( stream )
+
+	if stream:GetVersion() < 3 then
+		if self:CanHaveStructs() then self.structs:Serialize( stream ) end
+		if self:CanHaveEvents() then self.events:Serialize( stream ) end
 	end
 
 	self.suppressGraphNotify = false
 
-end
-
-function MODULE:CompileVariable( compiler, id, var )
-
-	local def = var:GetDefault()
-	local vtype = var:GetType()
-
-	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-	if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-
-	--print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
-
-	local varName = var:GetName()
-	if compiler.compactVars then varName = id end
-	if type(def) == "string" then
-		compiler.emit("instance.__" .. varName .. " = " .. tostring(def))
-	else
-		print("Emit variable as non-string")
-		local pt = bpvaluetype.FromPinType( vtype, function() return def end, function(v) def = v end )
-		if def and pt then
-			compiler.emit("instance.__" .. varName .. " = " .. pt:ToString())
-		end
-	end
+	return stream
 
 end
 
@@ -455,7 +455,9 @@ function MODULE:AddRequiredMetaTables( compiler )
 		if baseType == PN_Ref then
 
 			local class = bpdefs.Get():GetClass(t)
-			compiler:AddRequiredMetaTable( class.name )
+			if class then
+				compiler:AddRequiredMetaTable( class.name )
+			end
 
 		elseif baseType == PN_Struct then
 
@@ -485,14 +487,16 @@ end
 
 function MODULE:Compile( compiler, pass )
 
+	local withinProject = self:FindOuter(bpmodule_meta) ~= nil
+
 	if pass == CP_PREPASS then
 
-		print("MODULE PRE-COMPILE")
+		--print("MODULE PRE-COMPILE")
 		-- make local copies of all module graphs so they can be edited without changing the module
 		self.cgraphs = {}
 		self.uniqueKeys = {}
 		for id, graph in self:Graphs() do
-			local cgraph = graph:CopyInto( bpgraph.New():WithOuter( self ) )
+			local cgraph = graph:CopyInto( bpgraph.New():WithOuter( self ), true )
 			cgraph:PreCompile( compiler, self.uniqueKeys )
 			self.cgraphs[#self.cgraphs+1] = cgraph
 		end
@@ -501,7 +505,7 @@ function MODULE:Compile( compiler, pass )
 
 	elseif pass == CP_MAINPASS then
 
-		print("MODULE COMPILE: " .. #self.cgraphs)
+		--print("MODULE COMPILE: " .. #self.cgraphs)
 		for _, graph in ipairs(self.cgraphs) do
 			graph:Compile( compiler, pass )
 		end
@@ -510,13 +514,19 @@ function MODULE:Compile( compiler, pass )
 
 		local bDebug = compiler.debug and 1 or 0
 		local bILP = compiler.ilp and 1 or 0
-		local bGUID = self:IsConstructable() and 1 or 0
 		local args = bDebug .. ", " .. bILP
 
 		compiler.emit("_FR_HEAD(" .. args .. ")")   -- script header
-		compiler.emit("_FR_UTILS(" .. bGUID .. ")") -- utilities
-		compiler.emitContext( CTX_Network )         -- network boilerplate
-		compiler.emit("_FR_MODHEAD()")              -- header for module
+
+		if not withinProject then
+			compiler.emit("_FR_UTILS()") -- utilities
+
+			if self:RequiresNetCode() then
+				compiler.emitContext( CTX_Network )         -- network boilerplate
+			end
+		end
+
+		compiler.emit("_FR_MODHEAD(" .. bpcommon.EscapedGUID(self:GetUID()) .. ")")              -- header for module
 
 		-- emit each graph's entry function
 		for _, graph in ipairs(self.cgraphs) do
@@ -530,10 +540,10 @@ function MODULE:Compile( compiler, pass )
 		end
 
 		-- network meta functions
-		compiler.emitContext( CTX_NetworkMeta )
+		if self:RequiresNetCode() then compiler.emitContext( CTX_NetworkMeta ) end
 
 		-- update function, runs delays and resets the ilp recursion value for hooks
-		compiler.emit("_FR_UPDATE(" .. bILP .. ")")
+		compiler.emit("_FR_UPDATE(" .. bILP .. ", " .. (self:RequiresNetCode() and "1" or "0") .. ")")
 
 	elseif pass == CP_NETCODEMSG then
 
@@ -548,7 +558,7 @@ function MODULE:Compile( compiler, pass )
 		if self:CanHaveVariables() then
 
 			for id, var in self:Variables() do
-				self:CompileVariable( compiler, id, var )
+				var:Compile( compiler )
 			end
 
 		end
@@ -559,20 +569,6 @@ function MODULE:Compile( compiler, pass )
 		for _, graph in ipairs(self.cgraphs) do compiler:AddGraphSymbols( graph ) end
 
 	elseif pass == CP_MODULEBPM then
-
-		if self:IsConstructable() then
-
-			-- constructor
-			compiler.emit("__bpm.new = function()")
-			compiler.emit("\tlocal instance = setmetatable({}, meta)")
-			compiler.emit("\tinstance.delays = {}")
-			compiler.emit("\tinstance.__bpm = __bpm")
-			compiler.emit("\tinstance.guid = __makeGUID()")
-			compiler.emitContext( CTX_Vars .. "global", 1 )
-			compiler.emit("\treturn instance")
-			compiler.emit("end")
-
-		end
 
 		-- event listing
 		compiler.emit("__bpm.events = {")
@@ -594,9 +590,6 @@ function MODULE:Compile( compiler, pass )
 
 		if bit.band(compiler.flags, CF_Standalone) ~= 0 then
 
-			if self:IsConstructable() then
-				compiler.emit("_FR_STANDALONE()")
-			end
 
 		else
 

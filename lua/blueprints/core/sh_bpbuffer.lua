@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-local cacheDirectory = "blueprints/__cache"
+local cacheDirectory = bpcommon.BLUEPRINT_DATA_PATH .. "/__cache"
 file.CreateDir(cacheDirectory)
 
 local function GCHandle(func)

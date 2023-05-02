@@ -9,12 +9,9 @@ local function CubicHermite(p0, p1, m0, m1, t)
 	return (2*tC - 3*tS + 1)*p0 + (tC - 2*tS + t)*m0 + (-2*tC + 3*tS)*p1 + (tC - tS)*m1
 end
 
-function ClosestDistanceToCubicHermite(k, p0, p1, m0, m1)
+function DistanceToCubicHermite(k, p0, p1, m0, m1)
 
 end
-
-local vsamples = {}
-for i=1, 100 do vsamples[#vsamples+1] = {Vector(0,0,0), Color(0,0,0,0)} end
 
 local math_sqrt = math.sqrt
 local math_abs = math.abs
@@ -25,15 +22,60 @@ local math_pi = math.pi
 
 local mtVector =  FindMetaTable("Vector")
 local mtColor = FindMetaTable("Color")
-local render_setColorMaterial = render.SetColorMaterial
-local render_startBeam = render.StartBeam
-local render_endBeam = render.EndBeam
-local render_addBeam = render.AddBeam
-local setVecUnpacked = mtVector.SetUnpacked
-local setColUnpacked = mtColor.SetUnpacked
+local render_setColorMaterialIgnoreZ = render.SetColorMaterialIgnoreZ
 local colUnpack = mtColor.Unpack
 
-function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
+local v_set = mtVector.SetUnpacked
+local __vec = Vector()
+
+local mesh_position = mesh.Position
+local mesh_color = mesh.Color
+local mesh_texcoord = mesh.TexCoord
+local mesh_advance = mesh.AdvanceVertex
+
+function DrawHermiteEx(x0,y0,x1,y1,c0,c1,alpha,width0,width1,t0x,t0y,t1x,t1y,samples)
+
+	local r0,g0,b0,a0 = colUnpack(c0)
+	local r1,g1,b1,a1 = colUnpack(c1)
+
+	alpha = alpha or 1
+	width0 = width0 or 4
+	width1 = width1 or 4
+	samples = samples or 20
+
+	local px = x0
+	local py = y0
+	local dx = (x1 - x0)
+	local dy = (y1 - y0)
+
+	mesh.Begin( MATERIAL_TRIANGLE_STRIP, 2 * samples )
+
+	for i=1, samples do
+
+		local t = 1 - (.5 + math_cos((i/samples) * math_pi) * .5)
+		local ti = 1-t
+		local width = width0 * ti + width1 * t
+
+		local x = CubicHermite(x0, x1, t0x, t1x, t)
+		local y = CubicHermite(y0, y1, t0y, t1y, t)
+
+		local vdx,vdy = x - px,y - py
+		local d = .5 * (width / math_sqrt(vdx*vdx + vdy*vdy))
+		local pdx,pdy = -vdy * d,vdx * d
+
+		v_set(__vec, x+pdx, y+pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(0, 0, t) mesh_advance()
+		v_set(__vec, x-pdx, y-pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(0, 1, t) mesh_advance()
+
+		px = x
+		py = y
+
+	end
+
+	mesh.End()
+
+end
+
+function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,width,samples)
 
 	--[[if x0 < 0 and x1 < 0 then return end
 	if x0 > w and x1 > w then return end
@@ -44,14 +86,11 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
 	local r1,g1,b1,a1 = colUnpack(c1)
 
 	alpha = alpha or 1
-
-	local width = 4
-	local px = x0
-	local py = y0
-	local positions = vsamples
-
+	width = width or 4
 	samples = samples or 20
 
+	local px = x0
+	local py = y0
 	local dx = (x1 - x0)
 	local dy = (y1 - y0)
 
@@ -59,39 +98,29 @@ function DrawHermite(x0,y0,x1,y1,c0,c1,alpha,samples)
 	d = math_max(d, math_abs(dy))
 	d = math_min(d, 1000)
 
-	setVecUnpacked(positions[1][1],x0,y0,0)
-	positions[1][2] = c0
+	mesh.Begin( MATERIAL_TRIANGLE_STRIP, 2 * samples )
 
 	for i=1, samples do
 
-		local t = i/samples
-
-		t = 1 - (.5 + math_cos(t * math_pi) * .5)
+		local t = 1 - (.5 + math_cos((i/samples) * math_pi) * .5)
+		local ti = 1-t
 
 		local x = CubicHermite(x0, x1, d, d, t)
 		local y = CubicHermite(y0, y1, 0, 0, t)
 
-		setVecUnpacked(positions[i+1][1],x,y,0)
-		setColUnpacked(positions[i+1][2],Lerp(t, r0, r1), Lerp(t, g0, g1), Lerp(t, b0, b1), a0 * alpha)
+		local vdx,vdy = x - px,y - py
+		local d = .5 * (width / math_sqrt(vdx*vdx + vdy*vdy))
+		local pdx,pdy = -vdy * d,vdx * d
+
+		v_set(__vec, x+pdx, y+pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(0, 0, t) mesh_advance()
+		v_set(__vec, x-pdx, y-pdy, 0) mesh_position( __vec ) mesh_color(r0*ti+r1*t, g0*ti+g1*t, b0*ti+b1*t, a0*alpha) mesh_texcoord(0, 1, t) mesh_advance()
 
 		px = x
 		py = y
 
 	end
 
-	--render.SetMaterial(Material("cable/smoke.vmt"))
-	render_setColorMaterial()
-	render_startBeam(samples+1)
-	local t = CurTime()
-	local dist = 0
-	local prev = positions[1][1]
-	for i=1, samples+1 do
-		local curr = positions[i][1]
-		--dist = dist + curr:Distance(prev)
-		render_addBeam(curr, width, dist/30 - t, positions[i][2])
-		prev = curr
-	end
-	render_endBeam()
+	mesh.End()
 
 end
 

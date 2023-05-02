@@ -68,8 +68,7 @@ end
 
 function CreateTemplate( template )
 
-	local mod = bpmodule.New()
-	mod:LoadFromText( template.code )
+	local mod = bpmodule.LoadFromText( template.code )
 	mod:GenerateNewUID()
 	return mod
 
