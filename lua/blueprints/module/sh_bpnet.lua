@@ -76,9 +76,28 @@ local function NetErrorDispatch( uid, msg, modUID, graphID, nodeID, from )
 				net.WriteBool(true) --Clientside Error
 				net.WriteEntity(from)
 			else
-				net.WriteBool(false) --Serverside Error
+				ply = owner:GetPlayer()
 			end
-			net.Send( ply )
+
+			if IsValid(ply) then
+
+				msg = mod:FormatErrorMessage( msg, graphID, nodeID )
+
+				net.Start("bpnet")
+				net.WriteUInt( CMD_ErrorReport, CommandBits )
+				net.WriteData( uid, 16 )
+				net.WriteString( msg )
+				net.WriteUInt( graphID, 32 )
+				net.WriteUInt( nodeID, 32 )
+				if from then 
+					net.WriteBool(true) --Clientside Error
+					net.WriteEntity(from)
+				else
+					net.WriteBool(false) --Serverside Error
+				end
+				net.Send( ply )
+
+			end
 
 		end
 

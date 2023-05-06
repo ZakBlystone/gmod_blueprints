@@ -832,7 +832,7 @@ CLASS Player
 	{
 		DESC Fades the screen
 		IN flags, PN_Enum, PNF_None, SCREENFADE, #Fade flags defined with SCREENFADE_ Enums.
-		IN clr, PN_Number, PNF_Nullable, #The color of the screenfade
+		IN clr, PN_Color, #The color of the screenfade
 		IN fadeTime, PN_Number, #Fade(in/out) effect transition time ( From no fade to full fade and vice versa )
 		IN fadeHold, PN_Number, #Fade effect hold time
 	}
