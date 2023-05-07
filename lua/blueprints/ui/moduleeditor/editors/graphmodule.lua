@@ -214,6 +214,7 @@ function EDITOR:PopulateSideBar()
 			entry.vlist = pnl
 			entry.item = item
 			entry.module = self:GetModule()
+			entry.allow_dclick_rename = false
 			function entry:SetPinType(t) item:SetType( t ) end
 			function entry:GetPinType() return item:GetType() end
 			function entry:SetPinName(n) pnl.list:Rename( item, n ) end
@@ -225,6 +226,25 @@ function EDITOR:PopulateSideBar()
 		self.VarList.HandleAddItem = function(list)
 			local id, item = self:GetModule():NewVariable( "", bppintype.New( bpschema.PN_Bool ) )
 		end
+
+		self.VarList.OnItemSelected = function(pnl, item, reselected)
+
+			if reselected then
+
+				local editPanel = vgui.Create("DPanel")
+				editPanel:SetSkin("Blueprints")
+				editPanel:SetDrawBackground(false)
+
+				EditLabel( editPanel, bpuigrapheditmenu.var_edit_text() .. ": " .. item:GetName() )
+
+				bpuigrapheditmenu.EditVariable(item, editPanel, self:GetModule(), pnl)
+
+				self:SetDetails(editPanel)
+
+			end
+
+		end
+
 		self.VarList:SetList( self:GetModule().variables )
 
 	end

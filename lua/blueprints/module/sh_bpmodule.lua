@@ -119,6 +119,14 @@ function meta:GetMenuItems( tab )
 
 end
 
+function meta:IsVariableRepModeAllowed( repmode )
+
+	return repmode == REP_None
+
+end
+
+function meta:GetNetworkedVariables( tab ) end
+
 function meta:Clear()
 
 	self:Broadcast("cleared")

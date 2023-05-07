@@ -16,6 +16,7 @@ local text_menu_export_lua = LOCTEXT("menu_export_lua","Export Lua script")
 local text_menu_local_install = LOCTEXT("menu_localinstall","Local: Install")
 local text_menu_local_uninstall = LOCTEXT("menu_localuninstall","Local: Uninstall")
 local text_menu_send_to_server = LOCTEXT("menu_sendtoserver","Send to server")
+local text_menu_stop_on_server = LOCTEXT("menu_stoponserver","Stop on server")
 
 local text_run_fail = LOCTEXT("module_run_fail", "Failed to run")
 local text_compile_fail = LOCTEXT("module_compile_fail", "Failed to compile")
@@ -53,6 +54,7 @@ function EDITOR:PopulateMenuBar( t )
 	if self.CanSendToServer then
 
 		t[#t+1] = { name = text_menu_send_to_server, func = function(...) self:SendToServer(...) end, color = Color(80,180,80), icon = "icon16/server_go.png" }
+		t[#t+1] = { name = text_menu_stop_on_server, func = function(...) self:StopOnServer(...) end, color = Color(180,80,80), icon = "icon16/server_delete.png" }
 
 	end
 
@@ -136,6 +138,16 @@ function EDITOR:SendToServer()
 			title = text_compile_fail
 		})
 	end
+
+end
+
+function EDITOR:StopOnServer()
+
+	local file = self:GetFile()
+	if not file then return end
+
+	local name = bpfilesystem.ModulePathToName( file:GetPath() )
+	bpfilesystem.StopFile(file)
 
 end
 

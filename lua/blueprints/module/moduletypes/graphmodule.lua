@@ -386,6 +386,17 @@ function MODULE:GetMenuItems( tab )
 
 end
 
+function MODULE:GetNetworkedVariables( tab )
+
+	BaseClass.GetNetworkedVariables(self, tab)
+	for _,v in self:Variables() do
+		if v.repmode ~= REP_None and v:SupportsReplication() then
+			tab[#tab+1] = v
+		end
+	end
+
+end
+
 function MODULE:BuildCosmeticVars( values )
 
 	local varDefaults = bpvaluetype.FromValue({}, function() return {} end)
@@ -543,9 +554,32 @@ function MODULE:Compile( compiler, pass )
 		if self:RequiresNetCode() then compiler.emitContext( CTX_NetworkMeta ) end
 
 		-- update function, runs delays and resets the ilp recursion value for hooks
-		compiler.emit("_FR_UPDATE(" .. bILP .. ", " .. (self:RequiresNetCode() and "1" or "0") .. ")")
+		local netcode = "0"
+		if self:RequiresNetCode() then 
+			netcode = "1"
+			local vars = {}
+			self:GetNetworkedVariables(vars)
+			if #vars > 0 then netcode = "2" end
+		end
+		compiler.emit("_FR_UPDATE(" .. bILP .. ", " .. (netcode) .. ")")
+
+	elseif pass == CP_NETCODEHEAD then
+
+		local vars = {}
+		self:GetNetworkedVariables(vars)
+
+		if #vars ~= 0 then
+			compiler.emit("_FR_SYNCVARS()")
+		end
 
 	elseif pass == CP_NETCODEMSG then
+
+		local vars = {}
+		self:GetNetworkedVariables(vars)
+
+		if #vars ~= 0 then
+			compiler.emit("_FR_SYNCVARSMSG()")
+		end
 
 		for _, graph in ipairs(self.cgraphs) do
 			for _, node in graph:Nodes() do
@@ -576,6 +610,37 @@ function MODULE:Compile( compiler, pass )
 			compiler.emitContext( k, 1 )
 		end
 		compiler.emit("}")
+
+		local vars = {}
+		self:GetNetworkedVariables(vars)
+
+		local modes = {}
+		local strmodes = ""
+		for _,var in ipairs(vars) do modes[var.repmode] = 1 end
+		for k,v in pairs(modes) do strmodes = strmodes .. "[" .. k .. "]=1," end
+
+		if #vars > 0 then
+			compiler.emit("__bpm.netvarrepmodes = {" .. strmodes .. "}")
+			compiler.emit("__bpm.netvarbits = " .. #vars)
+			compiler.emit("__bpm.netvars = {")
+			compiler.pushIndent()
+			for i=1, #vars do
+				local copy = vars[i]:BuildCopyFunctor(compiler)
+				compiler.emit("{")
+				compiler.pushIndent()
+				compiler.emit("var = \"" .. vars[i]:GetAlias(compiler, false, true) .. "\",")
+				compiler.emit("mode = " .. vars[i].repmode .. ",")
+				compiler.emit("read = " .. tostring(vars[i]:BuildRecvFunctor(compiler)) .. ",")
+				compiler.emit("write = " .. tostring(vars[i]:BuildSendFunctor(compiler)) .. ",")
+				compiler.emit("default = " .. vars[i]:GetCompileDefault() .. ",")
+				if copy then compiler.emit("copy = " .. copy .. ",") end
+				compiler.emit("mask = 0x1p" .. (i-1) .. ",")
+				compiler.popIndent()
+				compiler.emit("},")
+			end
+			compiler.popIndent()
+			compiler.emit("}")
+		end
 
 		local errorHandler = bit.band(compiler.flags, CF_Standalone) ~= 0 and "1" or "0"
 

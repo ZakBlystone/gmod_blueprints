@@ -115,6 +115,7 @@ function PIN:GetNetworkThunk()
 	return {
 		read = "net.ReadVector()",
 		write = "net.WriteVector(@)",
+		copy = "Vector(@)",
 	}
 
 end

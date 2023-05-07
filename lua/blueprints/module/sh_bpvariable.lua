@@ -8,9 +8,11 @@ function meta:Init(type, repmode)
 
 	if type then
 		self.pintype = type:WithOuter( self )
+		self.pintemplate = MakePin( PD_Out, "value", self.pintype )
+		self.pintemplate:InitPinClass()
 	end
 
-	self.repmode = repmode
+	self.repmode = repmode or REP_None
 
 	self.getterNodeType = bpnodetype.New():WithOuter( self )
 	self.getterNodeType:AddFlag( NTF_Compact )
@@ -115,6 +117,8 @@ function meta:SetType( type )
 	self.getterNodeType:PreModify()
 	self.setterNodeType:PreModify()
 	self.pintype = type:Copy(self)
+	self.pintemplate = MakePin( PD_Out, "value", self.pintype )
+	self.pintemplate:InitPinClass()
 	self.default = self.pintype:GetDefault()
 	self.getterNodeType:PostModify()
 	self.setterNodeType:PostModify()
@@ -123,13 +127,13 @@ function meta:SetType( type )
 
 end
 
-function meta:GetAlias( compiler, inGraph )
+function meta:GetAlias( compiler, inGraph, noSelf )
 
 	local name = self:GetName()
 	if compiler.compactVars then name = tostring(compiler:GetID(self)) end
 	local varName = "__" .. name
 	if self:FindOuter( bpgraph_meta ) == nil then
-		varName = "self." .. varName
+		if not noSelf then varName = "self." .. varName end
 		if inGraph then varName = "__" .. varName end
 	end
 	return varName
@@ -157,31 +161,103 @@ function meta:Serialize(stream)
 	self.default = stream:Value(self.default)
 	self.repmode = stream:Value(self.repmode)
 
+	if stream:IsReading() then
+		self.repmode = self.repmode or REP_None
+
+		self.pintemplate = MakePin( PD_Out, "value", self.pintype )
+		self.pintemplate:InitPinClass()
+	end
+
 	return stream
+
+end
+
+function meta:BuildSendFunctor( compiler )
+
+	local pin = MakePin( PD_Out, "value", self.pintype ):InitPinClass()
+	local nthunk = pin.GetNetworkThunk and pin:GetNetworkThunk()
+	print("NTHUNK: " .. tostring(pin))
+	if not nthunk then return nil end
+
+	if pin:HasFlag(PNF_Table) then
+		return ("function(self) _wu(#_V, 24) for _,v in ipairs(_V) do " .. nthunk.write:gsub("@","_V") .. " end end"):gsub("_V", self:GetAlias(compiler, false))
+	else
+		return "function(self) " .. nthunk.write:gsub("@", self:GetAlias(compiler, false)) .. " end"
+	end
+
+end
+
+function meta:BuildRecvFunctor( compiler )
+
+	local pin = self.pintemplate
+	local nthunk = pin.GetNetworkThunk and pin:GetNetworkThunk()
+	if not nthunk then return nil end
+
+	if pin:HasFlag(PNF_Table) then
+		return "function() local t = {} for i=1, _ru(24) do t[#t+1] = " .. nthunk.read .. " end return t end"
+	else
+		return "function() return " .. nthunk.read .. " end"
+	end
+
+end
+
+function meta:BuildCopyFunctor( compiler )
+
+	local pin = self.pintemplate
+	local nthunk = pin.GetNetworkThunk and pin:GetNetworkThunk()
+	if not nthunk then return nil end
+
+	if nthunk.copy then
+		return "function(self) return " .. nthunk.copy:gsub("@", self:GetAlias(compiler, false)) .. " end"
+	end
+
+end
+
+function meta:GetCompileDefault()
+
+	local def = self:GetDefault()
+	local vtype = self:GetType()
+
+	if def == nil then
+		if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+		if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+	end
+
+	if type(def) == "string" then
+		return tostring(def)
+	else
+		print("Emit variable as non-string")
+		local pt = bpvaluetype.FromPinType( vtype, function() return def end, function(v) def = v end )
+		if def and pt then return pt:ToString() end
+	end
+
+	return nil
+
+end
+
+function meta:SupportsReplication()
+
+	local pin = self.pintemplate
+	local vtype = self:GetType()
+	local nthunk = pin.GetNetworkThunk and pin:GetNetworkThunk()
+	if not nthunk then return false end
+	if bit.band(vtype:GetFlags(), PNF_Table) ~= 0 then return false end
+	return true
 
 end
 
 function meta:Compile( compiler )
 
-	local def = self:GetDefault()
+	local def = self:GetCompileDefault()
 	local vtype = self:GetType()
 	local id = compiler:GetID(self)
-
-	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-	if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
 
 	--print("COMPILE VARIABLE: " .. vtype:ToString(true) .. " type: " .. type(def))
 
 	local varName = self:GetName()
 	if compiler.compactVars then varName = id end
-	if type(def) == "string" then
+	if def ~= nil then
 		compiler.emit(self:GetAlias(compiler, false) .. " = " .. tostring(def))
-	else
-		print("Emit variable as non-string")
-		local pt = bpvaluetype.FromPinType( vtype, function() return def end, function(v) def = v end )
-		if def and pt then
-			compiler.emit(self:GetAlias(compiler, false) .. " = " .. pt:ToString())
-		end
 	end
 
 end

@@ -139,6 +139,15 @@ function MODULE:CanCast( outPinType, inPinType )
 
 end
 
+function MODULE:IsVariableRepModeAllowed( repmode )
+
+	if repmode == REP_SyncEveryone then return true end
+	if repmode == REP_SyncPVS then return true end
+	if repmode == REP_SyncOwner then return true end
+	return BaseClass.IsVariableRepModeAllowed( self, repmode )
+
+end
+
 function MODULE:Compile(compiler, pass)
 
 	local edit = self:GetConfigEdit()

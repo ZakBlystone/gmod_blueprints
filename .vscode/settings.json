@@ -1,0 +1,5 @@
+{
+    "files.exclude": {
+        "lua/blueprints/system/compat16": true
+    }
+}

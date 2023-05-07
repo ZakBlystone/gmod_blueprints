@@ -315,6 +315,44 @@ fragments["netmain"] = [[
 table.Merge( meta, G_BPNet.m )
 function meta:netPostCall(f, ...) self.ncl[#self.ncl+1] = {f = f, a = {...}, g = __dbggraph or -1, n = __dbgnode or -1} end]]
 
+fragments["syncvarsmsg"] = [[
+if msgID == 0xFFFF then
+	local mask = net.ReadUInt(__bpm.netvarbits)
+	for _,v in ipairs(__bpm.netvars) do
+		if bit.band(mask, v.mask) ~= 0 then self[v.var] = v.read() end
+	end
+end]]
+
+fragments["syncvars"] = [[
+function meta:netWriteToShadow(t, defaults)
+	for _,v in ipairs(__bpm.netvars) do t[v.var] = defaults and v.default or (v.copy and v.copy(self) or self[v.var]) end return t
+end
+function meta:netGetPlayerShadow(ply)
+	if not IsValid(ply) then return end self.shadows = self.shadows or {}
+	if not self.shadows[ply] then self.shadows[ply] = self:netWriteToShadow({}, true) end
+	return self.shadows[ply]
+end
+function meta:netVarComputeMask(shadow, mode, mask)
+	for _,v in ipairs(__bpm.netvars) do mask = bit.bor(mask, (self[v.var] ~= shadow[v.var] and v.mode == mode) and v.mask or 0) end
+	return mask
+end
+function meta:netPostVarsPly(ply, mode)
+	local shadow = self:netGetPlayerShadow(ply) if not shadow then return end
+	local mask = self:netVarComputeMask(shadow, mode, 0)
+	if mask == 0 then return end
+	if mode == 1 and ply ~= self:GetOwner() then return end
+	if mode == 2 and not ply:TestPVS(self) then return end
+	self:netStartMessage(0xFFFF)
+	net.WriteUInt(mask, __bpm.netvarbits)
+	for _,v in ipairs(__bpm.netvars) do if bit.band(mask, v.mask) ~= 0 then v.write(self) end end
+	self:netWriteToShadow(shadow, false)
+	net.Send(ply)
+end
+function meta:netPostVars()
+	if CLIENT then return end
+	for _,ply in ipairs(player.GetHumans()) do for i=1,3 do if __bpm.netvarrepmodes[i] then self:netPostVarsPly(ply, i) end end end
+end]]
+
 fragments["support"] = function(args) 
 
 	local str = ""
@@ -343,6 +381,7 @@ fragments["update"] = function(args)
 
 	local net = "\n"
 	if args[2] == "1" then net = "\n\tif self.netReady then self:netUpdate() end\n" end
+	if args[2] == "2" then net = "\n\tif self.netReady then self:netUpdate() self:netPostVars() end\n" end
 
 	return [[
 function meta:update( rate )]] .. x .. [[

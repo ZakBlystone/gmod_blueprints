@@ -25,6 +25,7 @@ function PANEL:Init()
 	function self.typeSelector.Paint(btn, w, h) self:PaintSelector(w, h) end
 
 	self.dclickTime = 0
+	self.allow_dclick_rename = true
 
 	self.rmv = vgui.Create("DButton", self)
 	self.rmv:SetWide(18)
@@ -69,7 +70,7 @@ function PANEL:OnMousePressed( code )
 	if code == MOUSE_LEFT then
 		self:RequestFocus()
 		self.vlist:Select( self.item )
-		if RealTime() - self.dclickTime < 0.5 then
+		if RealTime() - self.dclickTime < 0.5 and self.allow_dclick_rename then
 			self:EditName()
 		end
 		self.dclickTime = RealTime()

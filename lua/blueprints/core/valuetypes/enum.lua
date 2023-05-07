@@ -10,6 +10,7 @@ VALUE.Type = "Enum"
 function VALUE:Setup()
 
 	self.options = { "None", 0 }
+	self.allow_sort = true
 
 end
 
@@ -36,9 +37,10 @@ function VALUE:InitPinType( pinType )
 
 end
 
-function VALUE:SetOptions(list)
+function VALUE:SetOptions(list, allow_sort)
 
 	self.options = list
+	if allow_sort ~= nil then self.allow_sort = allow_sort end
 	return self
 
 end
@@ -105,6 +107,8 @@ function VALUE:CreateVGUI( info )
 		draw.RoundedBox(4,0,0,w,h, col)
 	end
 
+	btn:SetEnabled(not self:HasFlag(bpvaluetype.FL_READONLY))
+
 	function btn.DoClick()
 
 		local menu = bpuipickmenu.Create(nil, nil, 300, 200)
@@ -112,12 +116,14 @@ function VALUE:CreateVGUI( info )
 		menu.OnEntrySelected = function(pnl, e) self:Set(e[2]) label:SetText(e[3] or e[1]) end
 		menu.GetDisplayName = function(pnl, e) return e[3] or e[1] end
 		menu.GetTooltip = function(pnl, e) return e[4] or e[3] or e[1] end
-		menu:SetSorter( function(a,b)
-			local aname = menu:GetDisplayName(a)
-			local bname = menu:GetDisplayName(b)
-			return aname:lower() < bname:lower()
+
+		if self.allow_sort then
+			menu:SetSorter( function(a,b)
+				local aname = menu:GetDisplayName(a)
+				local bname = menu:GetDisplayName(b)
+				return aname:lower() < bname:lower()
+			end )
 		end
-		)
 		menu:Setup()
 
 	end

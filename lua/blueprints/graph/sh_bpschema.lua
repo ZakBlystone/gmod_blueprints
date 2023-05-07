@@ -69,6 +69,12 @@ ROLE_Shared = 0
 ROLE_Server = 1
 ROLE_Client = 2
 
+-- Rep Modes (these must match netPostVars in compiled module)
+REP_None = 0
+REP_SyncOwner = 1
+REP_SyncPVS = 2
+REP_SyncEveryone = 3
+
 -- Node header colors
 NodeTypeColors = {
 	[NT_Pure] = Color(60,150,60),
@@ -190,6 +196,22 @@ PinValueTypes = {
 	[PN_Struct] = "struct",
 	[PN_Asset] = "asset",
 	[PN_Enum] = "enum",
+}
+
+-- Rep mode names
+RepModeNames = {
+	[REP_None] = "None",
+	[REP_SyncEveryone] = "Sync Everyone",
+	[REP_SyncPVS] = "Sync PVS",
+	[REP_SyncOwner] = "Sync Owner",
+}
+
+-- Rep mode descriptions
+RepModeDesc = {
+	[REP_None] = LOCTEXT("repmode_desc_none", "Do not sync this variable over the network"),
+	[REP_SyncEveryone] = LOCTEXT("repmode_desc_everyone", "Keep variable in sync for all clients"),
+	[REP_SyncPVS] = LOCTEXT("repmode_desc_pvs", "Keep variable in sync for clients who can see this entity"),
+	[REP_SyncOwner] = LOCTEXT("repmode_desc_owner", "Keep variable in sync for the owner of this entity"),
 }
 
 -- Determines if value is, or can be use like a bppintype

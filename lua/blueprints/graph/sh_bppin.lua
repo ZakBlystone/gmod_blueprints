@@ -22,6 +22,7 @@ function meta:InitPinClass()
 		pinClasses:Install(pinClass, self)
 		self.literal = self.literal or self:GetDefault()
 	end
+	return self
 
 end
 
