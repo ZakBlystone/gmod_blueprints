@@ -134,7 +134,7 @@ LIB util
 	FUNC GetPixelVisibleHandle, CLIENT
 	{
 		DESC Creates a new PixVis handle. See util.PixelVisible.
-		OUT vis, PN_Ref, PNF_None, pixelvis handle t, #PixVis
+		OUT vis, PN_Ref, PNF_None, pixelvis, #PixVis
 	}
 	PURE GetPlayerTrace, SHARED
 	{
