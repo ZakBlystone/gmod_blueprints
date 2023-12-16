@@ -2,7 +2,7 @@ if SERVER then AddCSLuaFile() return end
 
 module("bptemplates", package.seeall, bpcommon.rescope(bpgraph, bpschema))
 
-local TEMPLATE_SEARCH = "gamemodes/bpdefs/content/templates/*"
+local TEMPLATE_SEARCH = "data_static/bpdefs/templates/*"
 local templates = {}
 
 local function EnumerateTemplates( base, output, search )

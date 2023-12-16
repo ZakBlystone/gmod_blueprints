@@ -4,6 +4,7 @@
 	"tags"		:	[ "fun" ],
 	"ignore"	:
 	[
+		".vscode/*",
 		".git/*",
 		".gitignore",
 		".github/*",
