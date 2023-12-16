@@ -217,7 +217,7 @@ function LoadAndParseDefs()
 	defpack = bpdefpack.New()
 
 	local foundDefs = {}
-	EnumerateDefs( "gamemodes/bpdefs/content/nodes/*", foundDefs, "THIRDPARTY" )
+	EnumerateDefs( "data_static/bpdefs/nodes/*", foundDefs, "THIRDPARTY" )
 
 	for _, v in ipairs(foundDefs) do
 		--if string.find(v[1], "core") or string.find(v[1], "gamemode") then
