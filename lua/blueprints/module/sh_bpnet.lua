@@ -107,12 +107,18 @@ local function NetErrorDispatch( uid, msg, modUID, graphID, nodeID, from )
 
 end
 
+local error_guard = false
 local function ErrorHandler( mod, msg, modUID, graphID, nodeID )
 
+	-- prevent re-entrant error stacking
+	if error_guard then return end
+
+	error_guard = true
 	local formatted = mod:FormatErrorMessage( msg, modUID, graphID, nodeID )
 
 	print("***BLUEPRINT ERROR*** : " .. tostring(msg))
 	NetErrorDispatch( mod:GetUID(), msg, modUID, graphID, nodeID )
+	error_guard = false
 
 end
 hook.Add("BPModuleError", "bpnetHandleError", ErrorHandler)

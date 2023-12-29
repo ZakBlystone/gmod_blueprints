@@ -140,6 +140,18 @@ LIB CORE
 			#1
 		}
 	}
+	SPECIAL While, SHARED
+	{
+		DESC A loop that runs while the specified condition is true
+		CLASS While
+	}
+	SPECIAL Break, SHARED
+	{
+		DESC Break out of an active loop
+		IN Exec, PN_Exec
+		CALLSTACK
+		CODE if sp > 0 then sp=sp-1 goto popcall end
+	}
 	SPECIAL For, SHARED
 	{
 		DESC A loop that runs a specified amount times.

@@ -14,16 +14,17 @@ CF_Default = bit.bor(CF_Comments, CF_Debug, CF_ILP)
 
 CP_PREPASS = 0
 CP_MAINPASS = 1
-CP_NETCODEHEAD = 2
-CP_NETCODEMSG = 3
-CP_ALLOCVARS = 4
-CP_METAPASS = 5
-CP_MODULEMETA = 6
-CP_MODULEBPM = 7
-CP_MODULEGLOBALS = 8
-CP_MODULECODE = 9
-CP_MODULEDEBUG = 10
-CP_MODULEFOOTER = 11
+CP_FUNCTIONPASS = 2
+CP_NETCODEHEAD = 3
+CP_NETCODEMSG = 4
+CP_ALLOCVARS = 5
+CP_METAPASS = 6
+CP_MODULEMETA = 7
+CP_MODULEBPM = 8
+CP_MODULEGLOBALS = 9
+CP_MODULECODE = 10
+CP_MODULEDEBUG = 11
+CP_MODULEFOOTER = 12
 
 TK_GENERIC = 0
 TK_NETCODE = 1
@@ -137,7 +138,7 @@ function meta:Setup()
 	self.debugcomments = bit.band(self.flags, CF_Comments) ~= 0
 	self.allowProtected = bit.band(self.flags, CF_AllowProtected) ~= 0
 	self.ilp = bit.band(self.flags, CF_ILP) ~= 0
-	self.ilpmax = 10000
+	self.ilpmax = 1000000
 	self.ilpmaxh = 100
 	self.guidString = bpcommon.GUIDToString(self.module:GetUID(), true)
 	self.varscope = nil
@@ -804,6 +805,7 @@ function meta:CompileNodeFunction(node)
 
 	self.begin(CTX_FunctionNode .. graphID .. "_" .. nodeID)
 	if self.debugcomments and (codeType == NT_Event or codeType == NT_FuncInput) then self.emit("-- " .. node:ToString()) end
+	if self:RunNodeCompile(node, CP_FUNCTIONPASS) then self.finish() return end
 
 	local needsJump = (codeType == NT_Event or codeType == NT_FuncInput)
 	if not needsJump then
