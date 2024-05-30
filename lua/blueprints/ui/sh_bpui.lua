@@ -42,22 +42,15 @@ surface.CreateFont( "NodeLiteralFont", {
 	weight = 1000,
 } )
 
-local hexChars = "0123456789abcdef"
-local hexLookup = {}
-for i=1, #hexChars do hexLookup[hexChars[i]] = i hexLookup[hexChars[i]:upper()] = i end
+function HexColor(hex, raw, with_alpha)
 
-function HexColor(hex, raw)
-
-	local r,g,b
-	for s in string.gmatch(hex, "(%x%x)") do
-		if not r then r = hexLookup[s[1]] * 0x10 + hexLookup[s[2]]
-		elseif not g then g = hexLookup[s[1]] * 0x10 + hexLookup[s[2]]
-		elseif not b then b = hexLookup[s[1]] * 0x10 + hexLookup[s[2]]
-		end
+	local r,g,b,a = 0,0,0,255
+	for x in string.gmatch(hex, "(%x%x)") do
+		r,g,b,a = g,b,a,tonumber(x,16)
 	end
-
+	if not with_alpha then r,g,b,a = g,b,a,255 end
 	if raw then return r,g,b end
-	return Color(r, g, b, 255)
+	return Color(r,g,b,a)
 
 end
 
