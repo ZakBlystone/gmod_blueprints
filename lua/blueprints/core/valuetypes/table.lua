@@ -38,7 +38,7 @@ function VALUE:CreateVGUI( info )
 		local ch, key = self:GetChild(i)
 		if ch:HasFlag( bpvaluetype.FL_HIDDEN ) then continue end
 
-		local l = vgui.Create("DLabel", p)
+		local l = vgui.Create("DLabel", list)
 		l:SetSkin("Blueprints")
 		l:SetText( tostring(key) )
 		l:SizeToContentsX()
