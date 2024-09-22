@@ -79,7 +79,6 @@ function meta:PostInit()
 		self.enumLookup[v.name] = v
 
 		if v.is_bitfield then
-			print("Create bitwise funcs for: " .. v.name)
 			self:CreateEnumBitwiseFunctions(v, tab)
 		end
 	end
