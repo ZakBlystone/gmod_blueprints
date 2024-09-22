@@ -12,6 +12,7 @@ ENUM BLOOD_COLOR, #Enumerations used by Entity:GetBloodColor and Entity:SetBlood
 
 ENUM BONE, #Used by Entity:BoneHasFlag.
 {
+	BITFIELD
 	VALUE BONE_PHYSICALLY_SIMULATED 
 	VALUE BONE_PHYSICS_PROCEDURAL 
 	VALUE BONE_ALWAYS_PROCEDURAL 
@@ -72,6 +73,7 @@ ENUM SOLID
 
 ENUM FSOLID, #Enumerations used by Entity:SetSolidFlags and Entity:GetSolidFlags.
 {
+	BITFIELD
 	VALUE FSOLID_CUSTOMRAYTEST, #Ignore solid type + always call into the entity for ray tests
 	VALUE FSOLID_CUSTOMBOXTEST, #Ignore solid type + always call into the entity for swept box tests
 	VALUE FSOLID_NOT_SOLID, #The object is currently not solid
@@ -87,6 +89,7 @@ ENUM FSOLID, #Enumerations used by Entity:SetSolidFlags and Entity:GetSolidFlags
 
 ENUM FVPHYSICS, #Enumerations used by PhysObj:AddGameFlag, PhysObj:HasGameFlag and PhysObj:ClearGameFlag.
 {
+	BITFIELD
 	VALUE FVPHYSICS_CONSTRAINT_STATIC, #Won't receive physics forces from collisions and won't collide with other PhysObj with the same flag set.
 	VALUE FVPHYSICS_DMG_DISSOLVE, #Colliding with entities will cause 1000 damage with DMG_DISSOLVE as the damage type, but only if EFL_NO_DISSOLVE is not set.
 	VALUE FVPHYSICS_DMG_SLICE, #Does slice damage, not just blunt damage.
@@ -130,6 +133,7 @@ ENUM COLLISION_GROUP
 
 ENUM EF, #Enumerations used by Entity:AddEffects, Entity:RemoveEffects and Entity:IsEffectActive.
 {
+	BITFIELD
 	VALUE EF_BONEMERGE, #Performs bone merge on client side
 	VALUE EF_BONEMERGE_FASTCULL, #For use with EF_BONEMERGE. If this is set, then it places this ents origin at its parent and uses the parent's bbox + the max extents of the aiment. Otherwise, it sets up the parent's bones every frame to figure out where to place the aiment, which is inefficient because it'll setup the parent's bones even if the parent is not in the PVS.
 	VALUE EF_BRIGHTLIGHT, #DLIGHT centered at entity origin
@@ -145,6 +149,7 @@ ENUM EF, #Enumerations used by Entity:AddEffects, Entity:RemoveEffects and Entit
 
 ENUM EFL, #Enumerations used by Entity:AddEFlags, Entity:RemoveEFlags and Entity:IsEFlagSet.
 {
+	BITFIELD
 	VALUE EFL_BOT_FROZEN, #This is set on bots that are frozen
 	VALUE EFL_CHECK_UNTOUCH 
 	VALUE EFL_DIRTY_ABSANGVELOCITY, #Some dirty bits with respect to abs computations
@@ -181,6 +186,7 @@ ENUM EFL, #Enumerations used by Entity:AddEFlags, Entity:RemoveEFlags and Entity
 
 ENUM FL, #Enumerations used by Entity:AddFlags, Entity:RemoveFlags and Entity:IsFlagSet.
 {
+	BITFIELD
 	VALUE FL_ONGROUND, #Is the entity on ground or not
 	VALUE FL_DUCKING, #Is player ducking or not
 	VALUE FL_ANIMDUCKING, #Is the player in the process of ducking or standing up
@@ -217,6 +223,7 @@ ENUM FL, #Enumerations used by Entity:AddFlags, Entity:RemoveFlags and Entity:Is
 
 ENUM DMG
 {
+	BITFIELD
 	VALUE DMG_GENERIC, #Generic damage
 	VALUE DMG_CRUSH, #Caused by physics interaction. Ignored by airboat drivers. Used by the Crowbar
 	VALUE DMG_BULLET, #Bullet damage
@@ -270,6 +277,7 @@ ENUM _USE, #Enumerations used by Entity:SetUseType. Affects when ENTITY:Use is t
 
 ENUM SF, #Enumerations describing certain spawnflags. Everything except for SF_PHYS* is serverside only.
 {
+	BITFIELD
 	VALUE SF_CITIZEN_AMMORESUPPLIER, #Citizen that resupplies ammo
 	VALUE SF_CITIZEN_FOLLOW "Follow the player as soon as I spawn"
 	VALUE SF_CITIZEN_IGNORE_SEMAPHORE "Work outside the speech semaphore system"

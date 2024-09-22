@@ -1,5 +1,6 @@
 ENUM SND
 {
+	BITFIELD
 	VALUE SND_NOFLAGS, #To keep the compiler happy
 	VALUE SND_CHANGE_VOL, #Change sound vol
 	VALUE SND_CHANGE_PITCH, #Change sound pitch

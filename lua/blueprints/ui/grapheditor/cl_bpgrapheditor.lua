@@ -791,6 +791,7 @@ function meta:OpenCreationContext( pinFilter )
 		[bpnodetype.NC_Class] = 2,
 		[bpnodetype.NC_Lib] = 3,
 		[bpnodetype.NC_Struct] = 4,
+		[bpnodetype.NC_Enum] = 5,
 		other = 5,
 	}
 
@@ -834,6 +835,7 @@ function meta:OpenCreationContext( pinFilter )
 		elseif context == bpnodetype.NC_Class then return tostring( LOCTEXT("nodecat_class", "Classes") ), "icon16/bricks.png"
 		elseif context == bpnodetype.NC_Lib then return tostring( LOCTEXT("nodecat_library", "Libs") ), "icon16/brick.png"
 		elseif context == bpnodetype.NC_Struct then return tostring( LOCTEXT("nodecat_struct", "Structs") ), "icon16/table.png"
+		elseif context == bpnodetype.NC_Enum then return tostring( LOCTEXT("nodecat_enum", "Enums") ), "icon16/tag_green.png"
 		end
 		return tostring( LOCTEXT("nodecat_other", "Other") )
 	end

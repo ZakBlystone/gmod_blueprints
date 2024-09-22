@@ -67,10 +67,33 @@ function NODE:GetOperator()
 
 end
 
+function NODE:GetMode()
+
+	return self:GetType():GetNodeParam("mode") or "operands"
+
+end
+
 function NODE:GetCode()
 
-	local str = "#1 ="
 	local operator = self:GetOperator()
+	local mode = self:GetMode()
+	if mode == "function" then
+	
+		local pins = {}
+		for i=1, self.data.pinCount do
+			pins[#pins+1] = "$" .. i
+		end
+		local str = "#1 = " .. operator .. "(" .. table.concat(pins, ",") .. ")"
+
+		if self:GetType():GetNodeParam("test_nonzero") ~= nil then
+			str = str .. " #2 = (#1 ~= 0)"
+		end
+
+		return str
+
+	end
+
+	local str = "#1 ="
 	for i=1, self.data.pinCount do
 		str = str .. " $" .. i
 		if i ~= self.data.pinCount then

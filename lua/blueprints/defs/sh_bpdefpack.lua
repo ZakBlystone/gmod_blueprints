@@ -21,6 +21,40 @@ function meta:Init()
 
 end
 
+function meta:CreateEnumBitwiseFunctions( enum, out_nodes )
+
+	local pin_type = bppintype.New(PN_Enum, PNF_Bitfield, enum.name)
+	local bit_or = bpnodetype.New():WithOuter(self)
+	bit_or:AddFlag(NTF_Compact)
+	bit_or:SetContext(bpnodetype.NC_Enum)
+	bit_or:SetName(enum.name .. "_BITOR")
+	bit_or:SetNodeClass("VariadicOperator")
+	bit_or:SetNodeParam("operator", "bit.bor")
+	bit_or:SetNodeParam("mode", "function")
+	bit_or.GetDisplayName = function() return "|" end
+	bit_or.GetDescription = function() return enum.name .. " | " .. enum.name end
+	bit_or.GetCategory = function() return enum.name end
+	bit_or:AddPin( bppin.New( PD_Out, "Result", pin_type ) )
+
+	local bit_and = bpnodetype.New():WithOuter(self)
+	bit_and:AddFlag(NTF_Compact)
+	bit_and:SetContext(bpnodetype.NC_Enum)
+	bit_and:SetName(enum.name .. "_BITAND")
+	bit_and:SetNodeClass("VariadicOperator")
+	bit_and:SetNodeParam("operator", "bit.band")
+	bit_and:SetNodeParam("mode", "function")
+	bit_and:SetNodeParam("test_nonzero", "1")
+	bit_and.GetDisplayName = function() return "&" end
+	bit_and.GetDescription = function() return enum.name .. " & " .. enum.name end
+	bit_and.GetCategory = function() return enum.name end
+	bit_and:AddPin( bppin.New( PD_Out, "Result", pin_type ) )
+	bit_and:AddPin( MakePin( PD_Out, "NonZero", PN_Bool, PNF_None, nil, "Tests if result is non-zero" ) )
+
+	out_nodes[enum.name .. "_BITOR"] = bit_or
+	out_nodes[enum.name .. "_BITAND"] = bit_and
+
+end
+
 function meta:PostInit()
 
 	self.nodeTypes = {}
@@ -43,6 +77,11 @@ function meta:PostInit()
 
 	for _,v in ipairs(self.enums) do
 		self.enumLookup[v.name] = v
+
+		if v.is_bitfield then
+			print("Create bitwise funcs for: " .. v.name)
+			self:CreateEnumBitwiseFunctions(v, tab)
+		end
 	end
 
 	for _,v in ipairs(self.nodeGroups) do

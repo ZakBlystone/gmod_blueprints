@@ -39,6 +39,7 @@ ENUM TEXFILTER, #Enumerations used by render.PushFilterMin and render.PushFilter
 
 ENUM TEXTUREFLAGS, #Bit flags used by GetRenderTargetEx. Clientside only. Information taken from here
 {
+	BITFIELD
 	VALUE TEXTUREFLAGS_POINTSAMPLE, #Low quality, "pixel art" texture filtering.
 	VALUE TEXTUREFLAGS_TRILINEAR, #Medium quality texture filtering.
 	VALUE TEXTUREFLAGS_CLAMPS, #Clamp S coordinates.

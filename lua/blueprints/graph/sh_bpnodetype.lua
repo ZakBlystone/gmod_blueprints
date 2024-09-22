@@ -6,6 +6,7 @@ NC_Class = 0
 NC_Lib = 1
 NC_Hook = 2
 NC_Struct = 3
+NC_Enum = 4
 
 local meta = bpcommon.MetaTable("bpnodetype")
 

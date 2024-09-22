@@ -147,6 +147,7 @@ ENUM HULL, #Enumerations used by NPC:SetHullType and NPC:GetHullType. Serverside
 
 ENUM CAP, #Enumerations used by NPC:CapabilitiesAdd, WEAPON:GetCapabilities and NPC:CapabilitiesGet. Serverside only.
 {
+	BITFIELD
 	VALUE CAP_SIMPLE_RADIUS_DAMAGE, #When hit by an explosion, we'll simply block it instead of spilling it to entities behind us, the sv_robust_explosions cvar can also enable this globally when set to 0
 	VALUE CAP_MOVE_GROUND, #Walk/Run
 	VALUE CAP_MOVE_JUMP, #Jump/Leap

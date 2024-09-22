@@ -1,5 +1,6 @@
 ENUM IN
 {
+	BITFIELD
 	VALUE IN_ATTACK, #+attack bound key ( Default: Left Mouse Button )
 	VALUE IN_JUMP, #+jump bound key ( Default: Space )
 	VALUE IN_DUCK, #+duck bound key ( Default: CTRL )

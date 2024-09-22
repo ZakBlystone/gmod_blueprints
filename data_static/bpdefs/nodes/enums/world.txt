@@ -1,5 +1,6 @@
 ENUM CONTENTS
 {
+	BITFIELD
 	VALUE CONTENTS_EMPTY, #Things that are not solid
 	VALUE CONTENTS_SOLID, #Things that are solid
 	VALUE CONTENTS_WINDOW, #Glass
@@ -38,6 +39,7 @@ ENUM CONTENTS
 
 ENUM MASK, #Enumerations used as trace masks in Trace structure and HullTrace structure. These enumerations are simply combinations of CONTENTS_ Enums.
 {
+	BITFIELD
 	VALUE MASK_ALL, #Anything that is not empty space
 	VALUE MASK_BLOCKLOS, #Anything that blocks line of sight for AI
 	VALUE MASK_BLOCKLOS_AND_NPCS, #Anything that blocks line of sight for AI or NPCs

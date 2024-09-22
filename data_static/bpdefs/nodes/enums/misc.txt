@@ -1,5 +1,6 @@
 ENUM FCVAR, #Enumerations used by concommand.Add, CreateClientConVar and CreateConVar.
 {
+	BITFIELD
 	VALUE FCVAR_ARCHIVE, #Save the ConVar value into config.cfg Reported as "a" by cvarlist, except Lua ConVars
 	VALUE FCVAR_ARCHIVE_XBOX, #Save the ConVar value into config.cfg on XBox
 	VALUE FCVAR_CHEAT, #Requires sv_cheats to be enabled to change the ConVar or run the command. Reported as "cheat" by cvarlist

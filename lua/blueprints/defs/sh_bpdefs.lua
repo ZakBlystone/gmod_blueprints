@@ -346,13 +346,17 @@ RegisterBlock("ENUM", 0, function(block, parent)
 end,
 function(block, value)
 
-	if value.tuple[1] == "VALUE" then
+	local key = value.tuple[1]
+	if key == "VALUE" then
 		local e = block.enum.entries
 		e[#e+1] = {
 			key = value.tuple[2],
 			desc = WITH_DOCUMENTATION and value.literal or nil,
 		}
 		block.enum.lookup[value.tuple[2]] = #block.enum.entries
+	end
+	if key == "BITFIELD" then
+		block.enum.is_bitfield = true
 	end
 
 end,
