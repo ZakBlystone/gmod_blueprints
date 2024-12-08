@@ -217,10 +217,16 @@ function meta:GetCompileDefault()
 
 	local def = self:GetDefault()
 	local vtype = self:GetType()
+	local is_literal_string = false
 
-	if def == nil then
-		if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
-		if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then def = "\"\"" end
+	if vtype:GetBaseType() == PN_String and bit.band(vtype:GetFlags(), PNF_Table) == 0 then is_literal_string = true end
+	if vtype:GetBaseType() == PN_Asset and bit.band(vtype:GetFlags(), PNF_Table) == 0 then is_literal_string = true end
+
+	if is_literal_string then
+		def = tostring(def)
+		-- ensure minimal quotation (TODO: actually fix how quotes are handled for literal string variables)
+		if def[1] ~= '"' then def = '"' .. def end
+		if #def == 1 or def[#def] ~= '"' then def = def .. '"' end
 	end
 
 	if type(def) == "string" then
