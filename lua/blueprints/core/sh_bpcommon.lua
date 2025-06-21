@@ -18,7 +18,7 @@ STREAM_FILE = 1
 STREAM_NET = 2
 
 -- This version of Blueprints
-ENV_VERSION = "2.0"
+ENV_VERSION = "2.01"
 
 -- Moves external variables into module scope
 function rescope(...)
