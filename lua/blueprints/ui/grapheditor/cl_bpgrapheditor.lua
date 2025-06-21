@@ -93,7 +93,7 @@ function meta:Undo()
 	end
 	local apply = self.undo[self.undoPtr]
 	self:Popup("Undo " .. tostring(apply.text))
-	apply.graph:CopyInto( self.graph, true )
+	apply.graph:CopyInto( self.graph, true, true )
 	self:CreateAllNodes()
 	self.undoPtr = self.undoPtr - 1
 
@@ -104,12 +104,12 @@ function meta:Redo()
 	local apply = self.undo[self.undoPtr+2]
 	if apply then
 		self:Popup("Redo " .. tostring(apply.text))
-		apply.graph:CopyInto( self.graph, true )
+		apply.graph:CopyInto( self.graph, true, true )
 		self:CreateAllNodes()
 		self.undoPtr = self.undoPtr + 1
 	elseif #self.undo ~= 0 and self.undoPtr ~= #self.undo then
 		self:Popup("Redo " .. tostring(self.undo[#self.undo].text))
-		self.baseUndoGraph:CopyInto( self.graph, true )
+		self.baseUndoGraph:CopyInto( self.graph, true, true )
 		self:CreateAllNodes()
 		self.undoPtr = #self.undo
 	end

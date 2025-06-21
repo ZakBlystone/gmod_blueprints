@@ -463,11 +463,13 @@ function meta:NodePinToString(nodeID, pinID)
 
 end
 
-function meta:Clear()
+function meta:Clear(keep_io)
 
 	self.nodes:Clear()
-	self.inputs:Clear()
-	self.outputs:Clear()
+	if not keep_io then
+		self.inputs:Clear()
+		self.outputs:Clear()
+	end
 
 	self:Broadcast("cleared")
 
@@ -625,16 +627,25 @@ function meta:PostLoad()
 end
 
 -- Quickly banging this out using existing tech
-function meta:CopyInto(other, keepUIDs)
+function meta:CopyInto(other, keepUIDs, active_graph)
 
 	Profile("copy-graph", function()
 
-		other:Clear()
-		other.name = self.name
-		other.type = self.type
-		other.flags = self.flags
-		other.hookNodeType = self.hookNodeType
+		other:Clear(active_graph)
 		other.suppressPinEvents = true
+
+		if not active_graph then
+			other.name = self.name
+			other.type = self.type
+			other.flags = self.flags
+			other.hookNodeType = self.hookNodeType
+			other.locals = self.locals
+			other.inputs = self.inputs
+			other.outputs = self.outputs
+			other.callNodeType = self.callNodeType
+			other.callEntryNodeType = self.callEntryNodeType
+			other.callExitNodeType = self.callExitNodeType
+		end
 
 		if keepUIDs then 
 			other.uid = self.uid
@@ -655,11 +666,11 @@ function meta:CopyInto(other, keepUIDs)
 		end
 
 		Profile("copy-nodes", self.nodes.CopyInto, self.nodes, other.nodes, keepUIDs )
-		Profile("copy-inputs", self.inputs.CopyInto, self.inputs, other.inputs )
-		Profile("copy-outputs", self.outputs.CopyInto, self.outputs, other.outputs )
-		Profile("copy-locals", self.locals.CopyInto, self.locals, other.locals )
 		Profile("copy-init-nodes", function()
-			for _, node in other:Nodes() do node:Initialize(true) node.nodeType():UnbindAll(node) end
+			for _, node in other:Nodes() do 
+				node:Initialize(true) 
+				if not active_graph then node.nodeType():UnbindAll(node) end
+			end
 		end)
 
 		Profile("copy-restore-connections", function()
@@ -875,7 +886,9 @@ function meta:ExecWalk( func, allNodes )
 			end
 
 			local connections = self:NodeWalk(node, function(node, pinID)
-				assert(node:GetPin(pinID) ~= nil, tostring(node) .. " is missing pin " .. tostring(pinID))
+				--assert(node:GetPin(pinID) ~= nil, tostring(node) .. " is missing pin " .. tostring(pinID))
+				local pin = node:GetPin(pinID)
+				if pin == nil then return false end
 				return node:GetPin(pinID):IsType(PN_Exec) and node:GetPin(pinID):GetDir() == PD_In
 			end, visited)
 
