@@ -28,7 +28,7 @@ function MODULE:Setup()
 			MakePin(PD_Out, "Panel", self:GetModulePinType()),
 		}
 	end
-	self.createNodeType.Compile =  function(node, compiler, pass)
+	self.createNodeType.Compile = function(ntype, node, compiler, pass)
 
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
@@ -37,7 +37,7 @@ function MODULE:Setup()
 
 		elseif pass == bpcompiler.CP_MAINPASS then
 
-			local mod = "__modules[" .. compiler:GetID(self, true) .. "]"
+			local mod = "__modules[" .. compiler:GetID(ntype:GetOuter(), true) .. "]"
 			local pin = compiler:GetPinCode( node:FindPin(PD_Out, "Panel") )
 
 			compiler.emit( pin .. " = " .. mod .. ".create()")

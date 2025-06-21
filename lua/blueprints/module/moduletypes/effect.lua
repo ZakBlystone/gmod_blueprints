@@ -30,7 +30,7 @@ function MODULE:Setup()
 			MakePin(PD_In, "EffectData", PN_Ref, PNF_None, "CEffectData"),
 		}
 	end
-	self.dispatchNodeType.Compile =  function(node, compiler, pass)
+	self.dispatchNodeType.Compile = function(ntype, node, compiler, pass)
 
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
@@ -39,7 +39,7 @@ function MODULE:Setup()
 
 		elseif pass == bpcompiler.CP_MAINPASS then
 
-			local edit = self:GetConfigEdit()
+			local edit = ntype:GetOuter():GetConfigEdit()
 			compiler.emit( [[util.Effect(]] .. edit:Index("classname"):ToString() .. [[, ]] .. compiler:GetPinCode( node:FindPin(PD_In, "EffectData") ) .. [[)]])
 			compiler:CompileReturnPin( node )
 			return true

@@ -32,7 +32,7 @@ function MODULE:Setup()
 			MakePin(PD_Out, "Entity", self:GetModulePinType()),
 		}
 	end
-	self.createNodeType.Compile =  function(node, compiler, pass)
+	self.createNodeType.Compile = function(ntype, node, compiler, pass)
 
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
@@ -41,7 +41,7 @@ function MODULE:Setup()
 
 		elseif pass == bpcompiler.CP_MAINPASS then
 
-			local edit = self:GetConfigEdit()
+			local edit = ntype:GetOuter():GetConfigEdit()
 			compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Entity") ) .. [[ = ents.Create(]] .. edit:Index("classname"):ToString() .. [[)]])
 			compiler:CompileReturnPin( node )
 			return true
@@ -61,7 +61,7 @@ function MODULE:Setup()
 			MakePin(PD_Out, "Entities", self:GetModulePinType():AsTable()),
 		}
 	end
-	self.findAllNodeType.Compile =  function(node, compiler, pass)
+	self.findAllNodeType.Compile =  function(ntype, node, compiler, pass)
 
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
@@ -70,7 +70,7 @@ function MODULE:Setup()
 
 		elseif pass == bpcompiler.CP_MAINPASS then
 
-			local edit = self:GetConfigEdit()
+			local edit = ntype:GetOuter():GetConfigEdit()
 			compiler.emit( compiler:GetPinCode( node:FindPin(PD_Out, "Entities") ) .. [[ = ents.FindByClass(]] .. edit:Index("classname"):ToString() .. [[)]])
 			compiler:CompileReturnPin( node )
 			return true

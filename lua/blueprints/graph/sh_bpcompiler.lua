@@ -1095,7 +1095,7 @@ end
 function meta:RunNodeCompile(node, pass)
 
 	local ntype = node:GetType()
-	if ntype.Compile then return ntype.Compile(node, self, pass) end
+	if ntype.Compile then return ntype:Compile(node, self, pass) end
 	if node.Compile then return node:Compile(self, pass) end
 	return false
 

@@ -4,6 +4,78 @@ module("bpvariable", package.seeall, bpcommon.rescope(bpschema))
 
 local meta = bpcommon.MetaTable("bpvariable")
 
+-- Getter thunks
+local function GetterDisplayName(ntype)
+	local var = ntype:GetOuter()
+	return var and ("Get" .. var:GetName()) or "Get <Invalid>"
+end
+
+local function GetterRawPins(ntype)
+	local var = ntype:GetOuter()
+	if not var then return {} end
+	return { MakePin( PD_Out, "value", var.pintype ) }
+end
+
+local function GetterCompile(ntype, node, compiler, pass)
+
+	if pass == bpcompiler.CP_ALLOCVARS then 
+
+		local var = ntype:GetOuter()
+		if not var then return true end
+		compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
+			return { var = var:GetAlias( compiler, true ) }
+		end )
+
+		return true
+
+	elseif pass == bpcompiler.CP_MAINPASS then
+
+		compiler:CompileReturnPin( node )
+		return true
+
+	end
+
+end
+
+-- Setter thunks
+local function SetterDisplayName(ntype)
+	local var = ntype:GetOuter()
+	return var and ("Set" .. var:GetName()) or "Set <Invalid>"
+end
+
+local function SetterRawPins(ntype)
+	local var = ntype:GetOuter()
+	if not var then return {} end
+	return { 
+		MakePin( PD_In, "value", var.pintype ), 
+		MakePin( PD_Out, "value", var.pintype ) 
+	}
+end
+
+local function SetterCompile(ntype, node, compiler, pass)
+
+	if pass == bpcompiler.CP_ALLOCVARS then 
+
+		local var = ntype:GetOuter()
+		if not var then return true end
+		compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
+			return { var = var:GetAlias( compiler, true ) }
+		end )
+		return true
+
+	elseif pass == bpcompiler.CP_MAINPASS then
+
+		local var = ntype:GetOuter()
+		if var then
+			compiler.emit( var:GetAlias( compiler, true ) .. " = " .. compiler:GetPinCode( node:FindPin(PD_In, "value") ) )
+		end
+		compiler:CompileReturnPin( node )
+		return true
+
+	end
+
+end
+
 function meta:Init(type, repmode)
 
 	if type then
@@ -19,52 +91,18 @@ function meta:Init(type, repmode)
 	self.getterNodeType:AddFlag( NTF_Custom )
 	self.getterNodeType:SetCodeType( NT_Pure )
 	self.getterNodeType:SetCode("")
-	self.getterNodeType.GetDisplayName = function() return "Get" .. self:GetName() end
-	self.getterNodeType.GetRawPins = function() return { MakePin( PD_Out, "value", self.pintype ) } end
-	self.getterNodeType.Compile = function(node, compiler, pass)
-
-		if pass == bpcompiler.CP_ALLOCVARS then 
-
-			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
-				return { var = self:GetAlias( compiler, true ) }
-			end )
-
-			return true
-
-		elseif pass == bpcompiler.CP_MAINPASS then
-
-			compiler:CompileReturnPin( node )
-			return true
-
-		end
-
-	end
+	self.getterNodeType.GetDisplayName = GetterDisplayName
+	self.getterNodeType.GetRawPins = GetterRawPins
+	self.getterNodeType.Compile = GetterCompile
 
 	self.setterNodeType = bpnodetype.New():WithOuter( self )
 	self.setterNodeType:AddFlag( NTF_Compact )
 	self.setterNodeType:AddFlag( NTF_Custom )
 	self.setterNodeType:SetCodeType( NT_Function )
 	self.setterNodeType:SetCode("")
-	self.setterNodeType.GetDisplayName = function() return "Set" .. self:GetName() end
-	self.setterNodeType.GetRawPins = function() return { MakePin( PD_In, "value", self.pintype ), MakePin( PD_Out, "value", self.pintype ) } end
-	self.setterNodeType.Compile = function(node, compiler, pass)
-
-		if pass == bpcompiler.CP_ALLOCVARS then 
-
-			compiler:CreatePinRouter( node:FindPin(PD_Out, "value"), function(pin)
-				return { var = self:GetAlias( compiler, true ) }
-			end )
-			return true
-
-		elseif pass == bpcompiler.CP_MAINPASS then
-
-			compiler.emit( self:GetAlias( compiler, true ) .. " = " .. compiler:GetPinCode( node:FindPin(PD_In, "value") ) )
-			compiler:CompileReturnPin( node )
-			return true
-
-		end
-
-	end
+	self.setterNodeType.GetDisplayName = SetterDisplayName
+	self.setterNodeType.GetRawPins = SetterRawPins
+	self.setterNodeType.Compile = SetterCompile
 
 	return self
 
@@ -72,6 +110,7 @@ end
 
 function meta:Destroy()
 
+	print("DESTROY BP_VARIABLE: " .. tostring(self))
 	self.getterNodeType:Destroy()
 	self.setterNodeType:Destroy()
 

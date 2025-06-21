@@ -19,6 +19,13 @@ function meta:Init( meta )
 
 end
 
+function meta:DestroyOnRemove(b)
+
+	self.destroy_on_remove = b
+	return self
+
+end
+
 function meta:Destroy()
 
 	for _, item in self:Items() do
@@ -206,6 +213,8 @@ function meta:RemoveIf( cond )
 			self:Broadcast("removed", i, item)
 			self:Broadcast("postModify", MODIFY_REMOVE, i, item)
 			removed = removed + 1
+
+			if self.destroy_on_remove and item.Destroy then item:Destroy() end
 
 		end
 

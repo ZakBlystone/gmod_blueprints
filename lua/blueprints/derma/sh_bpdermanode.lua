@@ -34,23 +34,23 @@ function meta:Init(class, parent, position)
 
 	self.getterNodeType = bpnodetype.New():WithOuter(self)
 	self.getterNodeType:SetCodeType(NT_Pure)
-	self.getterNodeType.GetDisplayName = function() return "Get " .. self:GetName() end
-	self.getterNodeType.GetGraphThunk = function() return self end
+	self.getterNodeType.GetDisplayName = function(ntype) return "Get " .. ntype:GetOuter():GetName() end
+	self.getterNodeType.GetGraphThunk = function(ntype) return ntype:GetOuter() end
 	self.getterNodeType.GetRole = function() return ROLE_Client end
-	self.getterNodeType.GetCategory = function() return self:GetModule():GetName() end
-	self.getterNodeType.GetRawPins = function()
+	self.getterNodeType.GetCategory = function(ntype) return ntype:GetOuter():GetModule():GetName() end
+	self.getterNodeType.GetRawPins = function(ntype)
 		return {
-			MakePin(PD_In, "Layout", self:GetModule():GetModulePinType()),
+			MakePin(PD_In, "Layout", ntype:GetOuter():GetModule():GetModulePinType()),
 			MakePin(PD_Out, "Panel", PN_Ref, PNF_None, self.DermaBase),
 		}
 	end
-	self.getterNodeType.Compile = function(node, compiler, pass)
+	self.getterNodeType.Compile = function(ntype, node, compiler, pass)
 
 		if pass == bpcompiler.CP_ALLOCVARS then 
 
 			compiler:CreatePinRouter( node:FindPin(PD_Out, "Panel"), function(pin)
 				local layout = compiler:GetPinCode( node:FindPin(PD_In, "Layout") )
-				return { var = layout .. ".gpanels[" .. compiler:GetID(self, true) .. "]" }
+				return { var = layout .. ".gpanels[" .. compiler:GetID(ntype:GetOuter(), true) .. "]" }
 			end )
 
 			return true

@@ -12,7 +12,7 @@ MODULE.HasUIDClassname = false
 
 function InlineVarCompileFunc( pinName, var )
 
-	return function(node, compiler, pass)
+	return function(ntype, node, compiler, pass)
 
 		if pass == bpcompiler.CP_ALLOCVARS then
 

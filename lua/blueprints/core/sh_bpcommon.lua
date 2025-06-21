@@ -221,6 +221,7 @@ function wm:IsValid() return self.r ~= nil end
 function wm:Reset() self.r = nil end
 function wm:Set(r) self.r = r end
 function Weak(x)
+	if not x then return setmetatable({__ref = true}, wm) end
 	return setmetatable({r=IsReference(x) and x() or x, __ref = true}, wm)
 end
 
@@ -275,18 +276,24 @@ function RawToString(obj)
 	return s
 end
 
+local function GetWeak(t, k)
+	local w = rawget(t, k)
+	if w then return w() else return nil end
+end
+
 -- Outer utility functions
 local function WithOuter(self, outer)
-	rawset(self, "__outer", outer)
+	if rawget(self, "__outer") == nil then rawset(self, "__outer", Weak()) end
+	self.__outer(outer)
 	return self
 end
 local function GetOuter(self, check)
-	local outer = rawget(self, "__outer")
+	local outer = GetWeak(self, "__outer")
 	if outer and check and getmetatable(outer).__hash ~= check.__hash then return nil end
 	return outer
 end
 local function GetOutermost(self, check)
-	local outer = rawget(self, "__outer")
+	local outer = GetWeak(self, "__outer")
 	if not outer then
 		if check and getmetatable(self).__hash ~= check.__hash then return nil end
 		return self
@@ -295,7 +302,7 @@ local function GetOutermost(self, check)
 	return GetOutermost(outer, check)
 end
 local function FindOuter(self, check)
-	local outer = rawget(self, "__outer")
+	local outer = GetWeak(self, "__outer")
 	if outer then
 		if type(check) == "function" then if check(outer) then return outer end
 		elseif getmetatable(outer).__hash == check.__hash then return outer end
@@ -440,6 +447,12 @@ function MakeObservable(obj)
 		return t[name]
 	end
 
+	function obj:__defer(mode, ...)
+		table.insert(self.__deferred, setmetatable({...}, {__mode = "v"}))
+		self.__handleDeferred = true
+		return self, true
+	end
+
 	function obj:SuppressAllEvents( suppressed )
 		self.__suppressed = suppressed
 	end
@@ -473,34 +486,36 @@ function MakeObservable(obj)
 	end
 
 	function obj:BindRaw( name, target, func )
-		if self.__incall then table.insert(self.__deferred, {mode=0, name, target, func}) self.__handleDeferred = true return self, true end
+		if self.__incall then return self:__defer(0, name, target, func) end
 		local t = GetCB(name, target)
 		t[#t+1] = func
 		return self
 	end
 
 	function obj:Bind( name, target, func )
-		if self.__incall then table.insert(self.__deferred, {mode=1, name, target, func}) self.__handleDeferred = true return self, true end
+		if self.__incall then return self:__defer(1, name, target, func) end
 		local t = GetCB(name, target)
-		t[#t+1] = function(...) func(target, ...) end
+		local w = Weak(target)
+		t[#t+1] = function(...) func(w(), ...) end
 		return self
 	end
 
 	function obj:BindAny( target, func )
-		if self.__incall then table.insert(self.__deferred, {mode=2, target, func}) self.__handleDeferred = true return self, true end
+		if self.__incall then return self:__defer(2, target, func) end
 		local t = GetCB(__any, target)
-		t[#t+1] = function(...) func(target, ...) end
+		local w = Weak(target)
+		t[#t+1] = function(...) func(w(), ...) end
 		return self
 	end
 
 	function obj:Unbind( name, target )
-		if self.__incall then table.insert(self.__deferred, {mode=3, name, target}) self.__handleDeferred = true return true end
+		if self.__incall then return self:__defer(3, name, target) end
 		local t = GetCB(name)
 		t[target] = nil
 	end
 
 	function obj:UnbindAll( target )
-		if self.__incall then table.insert(self.__deferred, {mode=4, target}) self.__handleDeferred = true return true end
+		if self.__incall then return self:__defer(4, target) end
 		for k, v in pairs(obj.__callbacks) do
 			v[target] = nil
 		end
