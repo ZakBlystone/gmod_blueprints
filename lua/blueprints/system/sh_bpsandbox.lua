@@ -6,21 +6,15 @@ module("bpsandbox", package.seeall, bpcommon.rescope( bpcommon ))
 function RefreshCreationMenu( name )
 
 	if not g_SpawnMenu or not g_SpawnMenu.CreateMenu then return end
-	for _, v in ipairs( g_SpawnMenu.CreateMenu:GetItems() ) do
-		if v.Name == name and IsValid(v.Panel) then
-			local children = v.Panel:GetChildren()
-			if #children == 0 then return end
+	local tab = g_SpawnMenu.CreateMenu:GetCreationTabs()[name]
+	local spawn_tab = spawnmenu.GetCreationTabs()[name]
 
-			local tab = spawnmenu.GetCreationTabs()[v.Name]
-			if tab == nil then return end
-
-			children[1]:Remove()
-
-			local newchild = tab.Function()
-			newchild:SetParent( v.Panel )
-			newchild:Dock( FILL )
-			return
-		end
+	if tab and spawn_tab then
+		if IsValid(tab.ContentPanel) then tab.ContentPanel:Remove() end
+		local new_child = spawn_tab.Function()
+		new_child:SetParent( tab.Panel )
+		new_child:Dock( FILL )
+		tab.ContentPanel = new_child
 	end
 
 end
