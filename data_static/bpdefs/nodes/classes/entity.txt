@@ -729,6 +729,15 @@ CLASS Entity, entity
 		DESC Gets networked origin for entity.
 		OUT origin, PN_Vector, #origin
 	}
+	PURE GetNetworkVars, SHARED
+	{
+		DESC Returns a table containing all network vars the entity has.
+		OUT values, PN_Any, PNF_Table, #A table of key values.
+		CODE
+		{
+			if $1.GetNetworkVars ~= nil then #1 = $1:GetNetworkVars() else #1 = {} end
+		}
+	}
 	PURE GetNumBodyGroups, SHARED
 	{
 		DESC Returns the body group count of the entity.
